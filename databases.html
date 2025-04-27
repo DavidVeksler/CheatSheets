@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Diagram Cheatsheet - Philosophies & Tradeoffs</title>
+
+    <!-- SEO Meta Description -->
+    <meta name="description" content="Interactive database diagram cheatsheet comparing SQL (Postgres, MySQL, SQL Server, SQLite) vs NoSQL (MongoDB, Redis, Cassandra, Neo4j) vs Search (Elasticsearch) on philosophies, tradeoffs, scalability, and use cases.">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://cheatsheets.davidveksler.com/databases.html">
+
+    <!-- Social Media Metadata -->
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Database Diagram Cheatsheet - Philosophies & Tradeoffs">
+    <meta property="og:description" content="Interactive visual guide comparing SQL vs NoSQL vs Search databases (Postgres, MySQL, Mongo, Redis, Cassandra, Neo4j, Elasticsearch) on design, tradeoffs & use cases.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://cheatsheets.davidveksler.com/databases.html">
+    <meta property="og:image" content="https://cheatsheets.davidveksler.com/images/databases.png">
+    <meta property="og:image:alt" content="Diagram showing connections between database categories and specific database examples like PostgreSQL, MongoDB, Redis.">
+    <!-- Optional: og:site_name -->
+    <!-- <meta property="og:site_name" content="David Veksler Cheatsheets"> -->
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Database Diagram Cheatsheet - Philosophies & Tradeoffs">
+    <meta name="twitter:description" content="Interactive visual guide comparing SQL vs NoSQL vs Search databases (Postgres, MySQL, Mongo, Redis, Cassandra, Neo4j, Elasticsearch) on design, tradeoffs & use cases.">
+    <meta name="twitter:image" content="https://cheatsheets.davidveksler.com/images/databases.png">
+    <meta name="twitter:image:alt" content="Diagram showing connections between database categories and specific database examples like PostgreSQL, MongoDB, Redis.">
+    <!-- Optional: twitter:site and twitter:creator -->
+    <!-- <meta name="twitter:site" content="@YourTwitterHandle"> -->
+    <!-- <meta name="twitter:creator" content="@DavidVekslerTwitterHandle"> -->
+
+    <!-- Favicon links (optional but recommended) -->
+    <!-- <link rel="icon" href="/favicon.ico" sizes="any"> -->
+    <!-- <link rel="icon" href="/favicon.svg" type="image/svg+xml"> -->
+    <!-- <link rel="apple-touch-icon" href="/apple-touch-icon.png"> -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Include LeaderLine library -->
+    <script src="https://cdn.jsdelivr.net/npm/leader-line-new@1.1.9/leader-line.min.js"></script>
+
+    <style>
+        :root {
+            --bs-body-bg: #e9eef2;
+            --bs-primary: #2563eb;
+            --bs-primary-dark: #1d4ed8;
+            --bs-primary-light: #dbeafe;
+            --card-border-color: #9ca3af;
+            --card-shadow-color: rgba(0, 40, 100, .1);
+            --text-color-main: #111827;
+            --text-color-secondary: #4b5563;
+            --text-color-highlight: var(--bs-primary-dark);
+            --blueprint-grid-color: rgba(156, 163, 175, 0.15);
+            --schema-bg-color: rgba(255, 255, 255, 0.6);
+            --schema-border-color: #a5b4fc;
+
+            /* --- Database Category Colors --- */
+            --db-color-sql: #3b82f6;
+            --db-color-nosql-doc: #10b981;
+            --db-color-nosql-kv: #f97316;
+            --db-color-nosql-wc: #ef4444;
+            --db-color-nosql-graph: #8b5cf6;
+            --db-color-search: #f59e0b;
+            --db-color-concept: #6b7280;
+            --db-color-tradeoff: #64748b;
+            --db-color-choosing: #4f46e5;
+
+            --db-category-color: var(--db-color-concept); /* Default */
+        }
+
+        @keyframes blueprintGridAnimation {
+            0% { background-position: 0 0, 0 0; }
+            100% { background-position: 50px 50px, -50px -50px; }
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            background-image:
+                linear-gradient(to right, var(--blueprint-grid-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--blueprint-grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: blueprintGridAnimation 75s linear infinite;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 3rem;
+            font-size: 16px;
+            color: var(--text-color-main);
+            box-sizing: border-box;
+        }
+         *, *::before, *::after { box-sizing: inherit; }
+
+        .page-header {
+            background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            border-bottom: 2px solid var(--schema-border-color);
+            margin-bottom: 3rem;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0, 80, 180, 0.1);
+        }
+        .page-header h1 {
+            color: var(--bs-primary-dark);
+            font-weight: 200;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            font-size: 2.8rem;
+        }
+         .page-header h1 .bi { font-size: 0.9em; vertical-align: -0.05em; margin-right: 0.3em;}
+        .page-header .lead { color: #374151; font-size: 1.15rem; max-width: 800px; margin: auto; }
+
+        .schema-container {
+            background-color: var(--schema-bg-color);
+            border: 2px solid var(--schema-border-color);
+            border-radius: 8px;
+            padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.08);
+            backdrop-filter: blur(3px);
+            position: relative;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .section-title {
+            color: var(--db-category-color);
+            margin: -2.8rem 0 1.5rem 0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            font-size: 1.1rem;
+            border-bottom: none;
+            padding: 0.4rem 1rem;
+            background-color: var(--bs-body-bg);
+            display: inline-block;
+            position: relative;
+            left: 1rem;
+            z-index: 15;
+            border: 2px solid var(--schema-border-color);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        /* --- ERD Card Styling --- */
+        .info-card {
+            background: #fff;
+            border: 1px solid var(--card-border-color);
+            border-radius: 2px;
+            box-shadow: 0 3px 8px var(--card-shadow-color);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.3s ease, opacity 0.3s ease;
+            position: relative;
+            z-index: 5;
+            opacity: 1;
+        }
+
+        /* --- Dimming Logic --- */
+        /* Dim cards inside non-highlighted sections */
+        #main-container.is-dimmed .schema-container:not(.is-highlighted-section) .info-card {
+             opacity: 0.4;
+        }
+         /* Dim title of non-highlighted sections */
+         #main-container.is-dimmed .schema-container:not(.is-highlighted-section) > .section-title {
+             opacity: 0.5;
+         }
+
+        /* Highlight style */
+         .info-card.is-highlighted {
+            opacity: 1 !important;
+            box-shadow: 0 0 0 3px var(--db-category-color), 0 6px 12px rgba(0, 60, 150, .15) !important;
+            z-index: 25 !important;
+         }
+
+         /* Subtle hover effect when NOT highlighted */
+         .info-card:not(.is-highlighted):hover {
+             box-shadow: 0 5px 12px rgba(0, 60, 150, .15);
+             z-index: 20;
+         }
+
+        .info-card .card-body { padding: 0; flex-grow: 1; display: flex; flex-direction: column; }
+        .info-card h5 {
+            color: #fff; background-color: var(--db-category-color);
+            font-size: 1rem; text-align: center; margin: 0; padding: 0.6rem 0.5rem;
+            font-weight: 600; display: flex; justify-content: center; align-items: center;
+            gap: .5rem; font-family: Consolas, Menlo, Monaco, 'Courier New', monospace;
+            border-bottom: 1px solid var(--card-border-color);
+        }
+         .info-card h5 .bi { font-size: 1.2em; color: #fff; opacity: 0.8; }
+         .card-content-wrapper { padding: 1rem; flex-grow: 1; display: flex; flex-direction: column; }
+        .info-card p.summary { font-size: .9rem; color: var(--text-color-secondary); margin-bottom: .8rem; flex-grow: 1; }
+
+        /* Attribute List Styling */
+        .collapse-content { font-size: 0.9rem; border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-top: 1rem; color: var(--text-color-main); }
+        .collapse-content h6 { font-weight: 700; color: var(--text-color-highlight); margin-top: 0.8rem; margin-bottom: 0.3rem; font-size: 0.95rem; }
+        .collapse-content ul { padding-left: 0.5rem; margin-bottom: 0.8rem; list-style: none; }
+        .collapse-content li { margin-bottom: 0.6rem; padding-bottom: 0.6rem; font-size: 0.88rem; line-height: 1.5; border-bottom: 1px dotted #d1d5db; position: relative; padding-left: 1.5rem; }
+        .collapse-content li:last-child { border-bottom: none; margin-bottom: 0; }
+         .collapse-content li::before { content: "\f47a"; font-family: "bootstrap-icons"; position: absolute; left: 0; top: 2px; color: var(--db-category-color); opacity: 0.7; font-size: 0.9em; }
+         .collapse-content li strong { color: var(--text-color-highlight); display: block; margin-bottom: 0.2rem; font-weight: 600; }
+         .collapse-content p { font-size: 0.9rem; margin-bottom: 0.6rem; line-height: 1.55; }
+         .collapse-content code { font-size: 0.85rem; color: #c0392b; background-color: #f8f9fa; padding: 0.1em 0.4em; border-radius: 3px; }
+
+        .row > * { margin-bottom: 2rem; } /* Restore bottom margin for multi-card rows */
+        footer { padding-top: 3rem; font-size: .85em; color: #6b7280; position: relative; z-index: 10; text-align: center; }
+
+        .details-toggle {
+            font-size: 0.8rem; margin-top: auto; align-self: flex-start;
+            padding: 0.3rem 0.6rem; color: var(--db-category-color);
+            border: 1px solid var(--db-category-color); background-color: transparent;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+         .details-toggle:hover { background-color: var(--db-category-color); color: white; }
+         .details-toggle .bi { transition: transform 0.2s ease-in-out; }
+         .details-toggle[aria-expanded="true"] .bi { transform: rotate(180deg); }
+
+        .term { font-weight: 600; color: var(--bs-primary-dark); background-color: #e0e7ff; padding: 0.1em 0.3em; border-radius: 3px;}
+
+        .leader-line { pointer-events: none; z-index: 20; transition: opacity 0.3s ease-in-out; }
+
+        /* Color Coding Class Assignments */
+        .cat-concept, .db-type-concept { --db-category-color: var(--db-color-concept); }
+        .cat-sql, .db-type-sql { --db-category-color: var(--db-color-sql); }
+        .cat-nosql .db-type-nosql-doc { --db-category-color: var(--db-color-nosql-doc); }
+        .cat-nosql .db-type-nosql-kv { --db-category-color: var(--db-color-nosql-kv); }
+        .cat-nosql .db-type-nosql-wc { --db-category-color: var(--db-color-nosql-wc); }
+        .cat-nosql .db-type-nosql-graph { --db-category-color: var(--db-color-nosql-graph); }
+        .cat-nosql .db-type-search { --db-category-color: var(--db-color-search); }
+        /* Give NoSQL container a default color if needed, maybe doc green? */
+        .cat-nosql { --db-category-color: var(--db-color-nosql-doc); }
+        .cat-tradeoff, .db-type-tradeoff { --db-category-color: var(--db-color-tradeoff); }
+        .cat-choosing, .db-type-choosing { --db-category-color: var(--db-color-choosing); }
+
+    </style>
+</head>
+<body>
+<header class="page-header">
+    <h1 class="display-5"><i class="bi bi-diagram-3"></i> Database Diagram Cheatsheet</h1>
+    <p class="lead">An interactive visual guide to database philosophies, tradeoffs, and use cases.</p>
+</header>
+<div class="container" id="main-container">
+
+    <!-- 1. FOUNDATIONAL CONCEPTS -->
+    <div class="schema-container cat-concept" data-section-id="section-concepts">
+        <h2 class="section-title" id="section-concepts">Foundational Concepts</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card db-type-concept" id="card-sql-vs-nosql">
+                    <div class="card-body">
+                        <h5><i class="bi bi-diagram-2"></i> SQL vs. NoSQL</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">The primary database division: SQL prioritizes <span class="term">structure</span> and <span class="term">consistency</span> (ACID), while NoSQL prioritizes <span class="term">flexibility</span> and <span class="term">scalability</span> (often BASE).</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConcept1" aria-expanded="false" aria-controls="collapseConcept1">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseConcept1">
+                         <p>This represents the most fundamental philosophical split in database design.</p>
+                        <h6>SQL (Relational Databases - RDBMS)</h6>
+                        <ul>
+                            <li><strong>Philosophy:</strong> Data integrity, predefined structure (<span class="term">Schema-on-Write</span>), consistency, relationships are first-class citizens, standardized query language (SQL).</li>
+                            <li><strong>Data Model:</strong> Tables with rows and columns, relationships enforced via foreign keys.</li>
+                            <li><strong>Consistency Model:</strong> Typically strong <span class="term">ACID</span> compliance.</li>
+                            <li><strong>Scalability:</strong> Traditionally <span class="term">Vertical Scaling</span> (Scale-Up), though Horizontal Scaling (Scale-Out) via replication/sharding is possible but often complex.</li>
+                            <li><strong>Use Cases:</strong> Transactional systems, applications requiring complex queries/joins, systems where data integrity is paramount (finance, ERP).</li>
+                        </ul>
+                         <h6>NoSQL (Non-Relational Databases)</h6>
+                        <ul>
+                            <li><strong>Philosophy:</strong> Flexibility (<span class="term">Schema-on-Read</span> or schema-less), high availability, massive scalability (often horizontal), performance for specific data models.</li>
+                             <li><strong>Data Model:</strong> Varies widely – Documents, Key-Value, Wide-Column, Graph. Relationships are often implicit or handled at the application level.</li>
+                            <li><strong>Consistency Model:</strong> Often favors <span class="term">BASE</span> (Basically Available, Soft state, Eventually consistent), prioritizing Availability/Partition Tolerance (CAP Theorem). Consistency is often tunable.</li>
+                            <li><strong>Scalability:</strong> Primarily <span class="term">Horizontal Scaling</span> (Scale-Out), often built-in.</li>
+                            <li><strong>Use Cases:</strong> Big Data, real-time applications, content management, IoT, caching, applications needing high availability/scalability where strict immediate consistency isn't always required.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card db-type-concept" id="card-acid-base">
+                    <div class="card-body">
+                         <h5><i class="bi bi-shield-check"></i> ACID vs. BASE</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><span class="term">ACID</span> guarantees transaction reliability (common in SQL). <span class="term">BASE</span> prioritizes availability and eventual consistency (common in NoSQL).</p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConcept2" aria-expanded="false" aria-controls="collapseConcept2">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseConcept2">
+                        <h6>ACID (Atomicity, Consistency, Isolation, Durability)</h6>
+                         <ul>
+                            <li><strong>Atomicity:</strong> Transactions are all-or-nothing. If any part fails, the entire transaction is rolled back.</li>
+                            <li><strong>Consistency:</strong> Transactions bring the database from one valid state to another, preserving defined rules (constraints, triggers).</li>
+                            <li><strong>Isolation:</strong> Concurrent transactions are isolated from each other; intermediate states are not visible. Effects appear sequential.</li>
+                            <li><strong>Durability:</strong> Once a transaction is committed, it persists even in the event of system failure (power loss, crash).</li>
+                            <li><strong>Focus:</strong> Prioritizes data correctness and reliability, often at the potential cost of performance or availability in highly distributed systems. Typical of relational databases.</li>
+                        </ul>
+                         <h6>BASE (Basically Available, Soft state, Eventually consistent)</h6>
+                         <ul>
+                             <li><strong>Basically Available:</strong> The system guarantees availability (responds to requests) but may return stale data or fail to commit writes immediately.</li>
+                            <li><strong>Soft State:</strong> The state of the system may change over time even without input, due to eventual consistency.</li>
+                            <li><strong>Eventually Consistent:</strong> If no new updates are made, eventually all replicas will converge to the same value. Data consistency is not immediate across all nodes.</li>
+                             <li><strong>Focus:</strong> Prioritizes availability and partition tolerance, especially in large distributed systems, accepting weaker consistency guarantees. Common in many NoSQL databases.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card db-type-concept" id="card-cap">
+                    <div class="card-body">
+                         <h5><i class="bi bi-hdd-network"></i> CAP Theorem</h5>
+                          <div class="card-content-wrapper">
+                             <p class="summary">In a distributed system, you can strongly guarantee only two of: <span class="term">Consistency</span>, <span class="term">Availability</span>, <span class="term">Partition Tolerance</span>. Most choose P and either C or A.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConcept3" aria-expanded="false" aria-controls="collapseConcept3">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseConcept3">
+                       <p>Formulated by Eric Brewer, the CAP Theorem states that it's impossible for a distributed data store to simultaneously provide more than two out of the following three guarantees:</p>
+                        <ul>
+                            <li><strong>Consistency (C):</strong> Every read receives the most recent write or an error. All nodes see the same data at the same time (specifically, linearizability).</li>
+                            <li><strong>Availability (A):</strong> Every request receives a (non-error) response, without guarantee that it contains the most recent write. The system remains operational.</li>
+                             <li><strong>Partition Tolerance (P):</strong> The system continues to operate despite an arbitrary number of messages being dropped (or delayed) by the network between nodes (i.e., network partitions).</li>
+                        </ul>
+                        <p>Since network partitions (P) are a reality in distributed systems, the theorem implies a direct tradeoff between strong Consistency (C) and high Availability (A) during a partition:</p>
+                        <ul>
+                            <li><strong>CP Systems (Consistency & Partition Tolerance):</strong> Sacrifice availability during a partition to maintain consistency. If nodes can't communicate to ensure consistency, they may become unavailable for reads/writes. (e.g., HBase, some MongoDB configurations).</li>
+                            <li><strong>AP Systems (Availability & Partition Tolerance):</strong> Sacrifice strong consistency during a partition to maintain availability. Nodes remain responsive but might serve stale data until the partition heals and consistency is restored eventually. (e.g., Cassandra, DynamoDB, Riak, most default NoSQL configurations).</li>
+                        </ul>
+                        <p>Traditional single-node SQL databases are often considered CA (consistent and available) because they don't typically operate in a partitioned environment. However, when distributed, they face the same CAP tradeoffs.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card db-type-concept" id="card-scaling">
+                     <div class="card-body">
+                         <h5><i class="bi bi-hdd-stack"></i> Scalability Approaches</h5>
+                         <div class="card-content-wrapper">
+                            <p class="summary"><span class="term">Vertical Scaling</span> (Scale-Up) adds resources to one server. <span class="term">Horizontal Scaling</span> (Scale-Out) adds more servers. NoSQL often favors horizontal.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConcept4" aria-expanded="false" aria-controls="collapseConcept4">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseConcept4">
+                         <p>How databases handle increasing load (data volume, traffic) is crucial.</p>
+                        <h6>Vertical Scaling (Scale-Up)</h6>
+                        <ul>
+                            <li><strong>Method:</strong> Adding more resources (CPU, RAM, faster storage) to an existing server.</li>
+                            <li><strong>Pros:</strong> Simpler management initially (single machine), application transparency (usually no code changes needed).</li>
+                            <li><strong>Cons:</strong> Physical limits (can only add so much to one box), diminishing returns, potential single point of failure, often higher cost per unit of performance at the high end, downtime often required for upgrades.</li>
+                            <li><strong>Typical Use:</strong> Often the primary/initial scaling strategy for traditional SQL databases.</li>
+                        </ul>
+                         <h6>Horizontal Scaling (Scale-Out)</h6>
+                        <ul>
+                             <li><strong>Method:</strong> Adding more servers (nodes) to a cluster and distributing the data and/or load across them. Common techniques include replication (for read scaling), sharding/partitioning (distributing data subsets), and clustering.</li>
+                            <li><strong>Pros:</strong> Potentially limitless scalability, often better cost-effectiveness using commodity hardware, improved fault tolerance (if one node fails, others take over).</li>
+                            <li><strong>Cons:</strong> Increased management complexity (multiple machines, networking), potential consistency challenges (CAP theorem), application may need awareness of distribution (sharding logic).</li>
+                            <li><strong>Typical Use:</strong> The native approach for many NoSQL databases designed for distributed environments. Increasingly supported, though often complex, in SQL databases.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card db-type-concept" id="card-schema">
+                     <div class="card-body">
+                         <h5><i class="bi bi-file-earmark-ruled"></i> Schema Design</h5>
+                         <div class="card-content-wrapper">
+                            <p class="summary"><span class="term">Schema-on-Write</span> (SQL) defines structure upfront, ensuring consistency. <span class="term">Schema-on-Read</span> (NoSQL) offers flexibility, interpreting structure at query time.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConcept5" aria-expanded="false" aria-controls="collapseConcept5">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseConcept5">
+                       <p>How and when data structure is defined impacts development and data integrity.</p>
+                        <h6>Schema-on-Write (Relational / SQL)</h6>
+                        <ul>
+                            <li><strong>Concept:</strong> The structure (tables, columns, data types, constraints) is defined *before* data is inserted.</li>
+                            <li><strong>Process:</strong> Data must conform to the predefined schema upon insertion or update. Changes typically require formal schema migrations (e.g., `ALTER TABLE`).</li>
+                            <li><strong>Pros:</strong> Enforces data consistency and integrity, makes data structure explicit and predictable, optimizes storage and querying based on known structure.</li>
+                            <li><strong>Cons:</strong> Less flexible; changes can be slow and complex, requiring careful planning and potential downtime. Not ideal for rapidly evolving data structures or unstructured data.</li>
+                            <li><strong>Typical Databases:</strong> PostgreSQL, MySQL, SQL Server, SQLite.</li>
+                        </ul>
+                         <h6>Schema-on-Read / Schema-less (Non-Relational / NoSQL)</h6>
+                         <ul>
+                             <li><strong>Concept:</strong> Data is ingested without a strict predefined structure. The structure is inferred or interpreted *when* the data is read or queried. Often used in Document, Key-Value, and Wide-Column stores. Some systems allow optional schema validation.</li>
+                            <li><strong>Process:</strong> Applications handle data validation and interpretation. Structure can vary from item to item.</li>
+                            <li><strong>Pros:</strong> High flexibility; easy to accommodate changes and diverse data types, faster initial development for evolving applications.</li>
+                            <li><strong>Cons:</strong> Potential for inconsistent or messy data, requires robust application-level validation, querying across diverse structures can be complex or inefficient, data meaning might be ambiguous without external context.</li>
+                             <li><strong>Typical Databases:</strong> MongoDB, Cassandra, Redis (value structure is up to application), Elasticsearch (mapping often used for performance but flexible by default).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- 2. RELATIONAL DATABASES (SQL) -->
+    <div class="schema-container cat-sql" data-section-id="section-sql">
+        <h2 class="section-title" id="section-sql">Relational Databases (SQL / RDBMS)</h2>
+        <div class="row">
+            <div class="col-lg-3 col-md-6">
+                <div class="info-card db-type-sql" id="card-postgres">
+                     <div class="card-body">
+                        <h5><i class="bi bi-database-gear"></i> PostgreSQL</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Object-Relational DB known for <span class="term">extensibility</span>, <span class="term">standards compliance</span>, data integrity, and advanced features (JSONB, GIS).</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSQL1" aria-expanded="false" aria-controls="collapseSQL1">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseSQL1">
+                        <h6>Philosophy & Core</h6>
+                        <p>Focus on standards adherence (often strictest SQL compliance), robustness, data integrity, and extensibility. It's an Object-Relational Database Management System (ORDBMS), supporting complex data types, inheritance, and functions beyond standard SQL.</p>
+                        <h6>Schema & Consistency</h6>
+                        <p>Schema-on-Write with strong ACID compliance. Uses Multi-Version Concurrency Control (MVCC) for high concurrency with minimal locking contention between readers and writers.</p>
+                        <h6>Scalability</h6>
+                        <p>Primarily Vertical Scaling. Horizontal scaling options include Streaming Replication (physical/logical for read replicas), connection pooling (e.g., PgBouncer), and more complex built-in/third-party partitioning and sharding solutions.</p>
+                        <h6>Strengths</h6>
+                        <ul>
+                            <li>Excellent for complex queries and data analysis.</li>
+                            <li>Superior data integrity features.</li>
+                            <li>Rich set of data types (JSON/JSONB with indexing, GIS via PostGIS, Arrays, Hstore).</li>
+                            <li>Highly extensible (custom functions, data types, procedural languages - PL/pgSQL, PL/Python, etc.).</li>
+                            <li>Strong community support, open-source.</li>
+                            <li>MVCC provides good concurrent performance.</li>
+                        </ul>
+                        <h6>Tradeoffs</h6>
+                        <ul>
+                            <li>Can have higher resource usage per connection (process-based model historically).</li>
+                            <li>Potentially steeper learning curve for advanced features compared to simpler databases.</li>
+                            <li>Horizontal scaling configuration can be complex.</li>
+                        </ul>
+                         <h6>Use Cases</h6>
+                        <p>Complex applications, data warehousing, geospatial applications, systems needing strong data integrity (finance), general-purpose OLTP/OLAP where advanced features are valuable.</p>
+                     </div>
+                </div>
+            </div>
+             <div class="col-lg-3 col-md-6">
+                <div class="info-card db-type-sql" id="card-mysql">
+                    <div class="card-body">
+                        <h5><i class="bi bi-database"></i> MySQL</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Widely popular RDBMS known for <span class="term">ease of use</span>, <span class="term">performance</span> (esp. reads), reliability, and large ecosystem (LAMP stack).</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSQL2" aria-expanded="false" aria-controls="collapseSQL2">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                     <div class="collapse collapse-content" id="collapseSQL2">
+                        <h6>Philosophy & Core</h6>
+                        <p>Emphasis on ease of use, speed (particularly read-heavy workloads), reliability, and being a versatile, widely adopted database, especially in web development (LAMP/LEMP stacks). Offers flexibility via pluggable storage engines (e.g., InnoDB, MyISAM).</p>
+                        <h6>Schema & Consistency</h6>
+                        <p>Schema-on-Write. ACID compliance primarily provided by the default InnoDB storage engine. Older/other engines like MyISAM may trade ACID guarantees for performance or specific features (e.g., full-text search historically).</p>
+                        <h6>Scalability</h6>
+                        <p>Primarily Vertical Scaling. Strong built-in asynchronous/semi-synchronous Replication capabilities for read scaling (Horizontal). Group Replication and InnoDB Cluster provide more advanced HA/write scaling options. Third-party solutions like Vitess offer large-scale sharding.</p>
+                        <h6>Strengths</h6>
+                        <ul>
+                            <li>Very popular, large community, extensive documentation and tooling.</li>
+                            <li>Relatively easy to set up and manage for common use cases.</li>
+                            <li>Excellent performance for read-intensive applications.</li>
+                            <li>Mature and widely used replication features.</li>
+                             <li>Flexible storage engine architecture (though InnoDB is standard now).</li>
+                        </ul>
+                        <h6>Tradeoffs</h6>
+                        <ul>
+                            <li>Historically lagged behind PostgreSQL in advanced SQL features and standards compliance (though catching up rapidly).</li>
+                            <li>Full ACID compliance depends on using InnoDB.</li>
+                            <li>Default asynchronous replication can lead to stale reads on replicas.</li>
+                        </ul>
+                        <h6>Use Cases</h6>
+                        <p>Web applications (CMS, e-commerce), read-heavy workloads, general-purpose OLTP, applications where ease of deployment and a large ecosystem are priorities.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="info-card db-type-sql" id="card-sqlserver">
+                     <div class="card-body">
+                        <h5><i class="bi bi-microsoft"></i> SQL Server</h5>
+                         <div class="card-content-wrapper">
+                            <p class="summary">Microsoft's RDBMS focused on <span class="term">enterprise features</span>, performance, security, and tight integration with the Windows/.NET/Azure ecosystem.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSQL3" aria-expanded="false" aria-controls="collapseSQL3">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                     </div>
+                    <div class="collapse collapse-content" id="collapseSQL3">
+                        <h6>Philosophy & Core</h6>
+                        <p>A comprehensive enterprise data platform offering robust performance, security, and a wide array of integrated services (Business Intelligence - SSAS, ETL - SSIS, Reporting - SSRS). Deeply integrated with Microsoft products and Azure cloud.</p>
+                        <h6>Schema & Consistency</h6>
+                        <p>Schema-on-Write with strong ACID compliance.</p>
+                        <h6>Scalability</h6>
+                        <p>Strong Vertical Scaling. Horizontal scaling achieved through features like Replication, Log Shipping, and sophisticated Always On Availability Groups (providing HA/DR and read scaling). Built-in table partitioning.</p>
+                        <h6>Strengths</h6>
+                        <ul>
+                            <li>Excellent performance and optimization tools.</li>
+                            <li>Comprehensive suite of enterprise features (BI, analytics, reporting).</li>
+                            <li>Robust security capabilities.</li>
+                            <li>Strong tooling (SQL Server Management Studio - SSMS).</li>
+                            <li>Good integration with Windows Server, Active Directory, .NET, Azure.</li>
+                            <li>Available on Linux and Docker containers.</li>
+                        </ul>
+                        <h6>Tradeoffs</h6>
+                        <ul>
+                            <li>Licensing costs can be substantial, especially for Enterprise edition features.</li>
+                            <li>Historically Windows-centric, though cross-platform support is mature now.</li>
+                             <li>Can feel somewhat vendor-locked into the Microsoft ecosystem.</li>
+                        </ul>
+                        <h6>Use Cases</h6>
+                        <p>Enterprise applications (ERP, CRM), business intelligence and data warehousing, applications built on the Microsoft stack (.NET), systems requiring high levels of security and built-in analytics/reporting.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="info-card db-type-sql" id="card-sqlite">
+                     <div class="card-body">
+                        <h5><i class="bi bi-phone"></i> SQLite</h5>
+                         <div class="card-content-wrapper">
+                            <p class="summary">An <span class="term">embedded</span>, serverless, zero-configuration, transactional SQL database engine contained in a single file. Ideal for local/device storage.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSQL4" aria-expanded="false" aria-controls="collapseSQL4">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseSQL4">
+                         <h6>Philosophy & Core</h6>
+                        <p>Simplicity, portability, reliability. Provides a full-featured SQL database engine as a library linked directly into an application. The entire database (schema, tables, data) is stored in a single cross-platform file. No separate server process.</p>
+                        <h6>Schema & Consistency</h6>
+                        <p>Schema-on-Write, but uses dynamic typing ('manifest typing') - you can store any value type in almost any column. Fully ACID compliant; transactions are serializable by default, ensuring strong consistency for single-user or low-concurrency scenarios.</p>
+                        <h6>Scalability</h6>
+                        <p>Limited to the resources of the single host machine. Not designed for high concurrency, especially write concurrency (default mode allows only one writer at a time). Not suitable as a backend for client-server applications with many concurrent users.</p>
+                        <h6>Strengths</h6>
+                        <ul>
+                            <li>Extremely lightweight and fast for single-user access.</li>
+                            <li>Zero configuration, easy to deploy (just include the library/file).</li>
+                            <li>Fully ACID transactional guarantees.</li>
+                            <li>Database contained in a single portable file.</li>
+                            <li>Full SQL implementation (most standard features).</li>
+                             <li>Excellent for read-heavy workloads from multiple processes.</li>
+                        </ul>
+                        <h6>Tradeoffs</h6>
+                        <ul>
+                            <li>Poor performance under high write concurrency.</li>
+                            <li>No built-in client-server networking capabilities.</li>
+                            <li>Database size and performance limited by host resources.</li>
+                            <li>Lacks user management and granular permissions found in server databases.</li>
+                        </ul>
+                        <h6>Use Cases</h6>
+                        <p>Mobile applications (Android, iOS), desktop applications, embedded systems, application file formats, browser data storage (historically Web SQL), testing environments, websites with low write concurrency.</p>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- 3. NON-RELATIONAL DATABASES (NOSQL & SEARCH) -->
+    <div class="schema-container cat-nosql" data-section-id="section-nosql">
+        <h2 class="section-title" id="section-nosql">Non-Relational Databases (NoSQL & Search)</h2>
+        <div class="row">
+             <div class="col-lg-3 col-md-6">
+                 <div class="info-card db-type-nosql-doc" id="card-mongodb">
+                     <div class="card-body">
+                        <h5><i class="bi bi-file-earmark-text"></i> MongoDB (Doc)</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Leading <span class="term">Document DB</span> storing BSON/JSON-like documents. Known for <span class="term">flexibility</span>, scalability, and developer productivity.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNoSQL1" aria-expanded="false" aria-controls="collapseNoSQL1">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseNoSQL1">
+                         <h6>Philosophy & Core</h6>
+                        <p>Store data in flexible, JSON-like documents (BSON format). Designed for ease of development (documents map well to objects in code), flexible schemas, and horizontal scalability.</p>
+                        <h6>Schema & Consistency</h6>
+                        <p>Schema-on-Read (dynamic schema). Optional schema validation can be enforced. Consistency is tunable per operation using Read/Write Concerns. Can operate as CP or AP depending on configuration. Supports multi-document ACID transactions in recent versions (with performance considerations).</p>
+                        <h6>Scalability</h6>
+                        <p>Excellent Horizontal Scalability via built-in sharding (distributing data across multiple servers/clusters). Read scaling achieved through replica sets (providing redundancy and failover).</p>
+                        <h6>Strengths</h6>
+                        <ul>
+                            <li>Flexible schema is great for evolving applications.</li>
+                            <li>Developer-friendly; intuitive mapping to application objects.</li>
+                            <li>Rich query language for documents, including nested structures and arrays.</li>
+                            <li>Good horizontal scalability via sharding.</li>
+                            <li>Built-in replication for high availability.</li>
+                             <li>Secondary indexes improve query performance.</li>
+                        </ul>
+                        <h6>Tradeoffs</h6>
+                        <ul>
+                            <li>Complex multi-document transactions or JOIN-like operations can be less efficient than in SQL.</li>
+                            <li>Eventual consistency (default on secondary reads) requires careful application design.</li>
+                             <li>Can consume more storage space than relational due to repeated field names in documents.</li>
+                            <li>Multi-document ACID transactions can impact performance and complexity.</li>
+                        </ul>
+                        <h6>Use Cases</h6>
+                        <p>Content management systems, product catalogs, user profiles, real-time analytics, IoT platforms, applications with rapidly changing requirements, mobile app backends.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                 <div class="info-card db-type-nosql-kv" id="card-redis">
+                    <div class="card-body">
+                        <h5><i class="bi bi-key-fill"></i> Redis (Key-Value)</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">In-memory <span class="term">Key-Value</span> store known for extreme <span class="term">speed</span> and versatility (caching, queues, pub/sub, data structures).</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNoSQL2" aria-expanded="false" aria-controls="collapseNoSQL2">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseNoSQL2">
+                        <h6>Philosophy & Core</h6>
+                        <p>Simplicity and performance. Primarily an in-memory data structure server, used as a key-value store, cache, message broker, and more. Maps keys to various value types (strings, lists, sets, sorted sets, hashes, bitmaps, streams).</p>
+                        <h6>Schema & Consistency</h6>
+                        <p>Schema-less (value structure is defined by application). Single-node Redis offers strong consistency (atomic operations). Redis Cluster prioritizes Availability (AP) during partitions, though efforts are made to maintain consistency.</p>
+                        <h6>Scalability</h6>
+                        <p>Primarily Vertical Scaling for a single instance. Redis Cluster provides Horizontal Scaling (sharding data across nodes). Replication (master-slave) used for read scaling and HA.</p>
+                        <h6>Strengths</h6>
+                        <ul>
+                            <li>Blazing fast performance (mostly in-memory operations).</li>
+                            <li>Simple key-based access patterns.</li>
+                            <li>Supports diverse data structures beyond simple strings.</li>
+                            <li>Atomic operations on data structures.</li>
+                            <li>Features like Pub/Sub, Lua scripting, Transactions (atomic command blocks), Geospatial indexes.</li>
+                            <li>Optional persistence (snapshotting, AOF log).</li>
+                        </ul>
+                        <h6>Tradeoffs</h6>
+                        <ul>
+                            <li>Data size primarily limited by available RAM (though disk persistence exists).</li>
+                            <li>Querying is limited to key lookups or operations on specific data structures (no complex ad-hoc querying).</li>
+                            <li>Cluster management adds complexity.</li>
+                             <li>Persistence options have performance tradeoffs.</li>
+                        </ul>
+                        <h6>Use Cases</h6>
+                        <p>Caching (database query results, web pages), session management, real-time leaderboards/counters, rate limiting, message queues (Pub/Sub, Streams), geospatial indexing, fast data ingest buffer.</p>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-3 col-md-6">
+                 <div class="info-card db-type-nosql-wc" id="card-cassandra">
+                     <div class="card-body">
+                        <h5><i class="bi bi-grid-3x3-gap"></i> Cassandra (WC)</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Distributed <span class="term">Wide-Column</span> store designed for <span class="term">massive scalability</span>, high availability, and heavy write workloads.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNoSQL3" aria-expanded="false" aria-controls="collapseNoSQL3">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                     </div>
+                    <div class="collapse collapse-content" id="collapseNoSQL3">
+                        <h6>Philosophy & Core</h6>
+                        <p>Handle huge datasets across many commodity servers with no single point of failure. Prioritizes availability and partition tolerance (AP system). Masterless architecture ensures high availability and excellent write performance.</p>
+                        <h6>Schema & Consistency</h6>
+                        <p>Schema uses Keyspaces (like DBs), Tables, Rows, and Columns. Rows identified by a primary key can have varying sets of columns (wide-column aspect). Consistency is tunable per-query (from `ONE` to `ALL`), defaulting to eventual consistency. Designed for Availability.</p>
+                        <h6>Scalability</h6>
+                        <p>Excellent linear Horizontal Scalability for both reads and writes (especially writes). Adding nodes increases capacity and throughput proportionally. Designed for multi-datacenter deployments.</p>
+                        <h6>Strengths</h6>
+                        <ul>
+                            <li>Massive write throughput.</li>
+                            <li>High availability and fault tolerance (no single point of failure).</li>
+                            <li>Linear scalability by adding nodes.</li>
+                            <li>Tunable consistency levels per operation.</li>
+                            <li>Good for geographically distributed deployments.</li>
+                        </ul>
+                        <h6>Tradeoffs</h6>
+                        <ul>
+                            <li>Eventual consistency requires careful application design.</li>
+                            <li>Reads can be slower than writes, especially with higher consistency levels.</li>
+                            <li>Query language (CQL) is SQL-like but lacks JOINs, group by aggregates (limited), and complex transactions. Data modeling requires query-first thinking.</li>
+                            <li>Operational complexity (managing/tuning clusters).</li>
+                             <li>Limited ad-hoc querying capabilities.</li>
+                        </ul>
+                        <h6>Use Cases</h6>
+                        <p>Big Data applications, time-series data (IoT metrics, logs), write-heavy applications, systems needing constant uptime across multiple datacenters, activity feeds, fraud detection patterns.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                 <div class="info-card db-type-nosql-graph" id="card-neo4j">
+                     <div class="card-body">
+                        <h5><i class="bi bi-diagram-3"></i> Neo4j (Graph)</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Leading native <span class="term">Graph DB</span> optimized for storing, querying, and traversing highly <span class="term">connected data</span> and relationships.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNoSQL4" aria-expanded="false" aria-controls="collapseNoSQL4">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseNoSQL4">
+                         <h6>Philosophy & Core</h6>
+                        <p>Relationships are first-class citizens. Data is modeled as Nodes (entities) and Relationships (edges connecting nodes), both of which can have properties. Optimized for traversing these connections efficiently (performance often independent of total dataset size).</p>
+                        <h6>Schema & Consistency</h6>
+                        <p>Typically schema-flexible or optional schema. Structure emerges from the graph connections. Neo4j provides ACID compliance for transactions within a single instance or causal consistency in clustered deployments.</p>
+                        <h6>Scalability</h6>
+                        <p>Vertical scaling is common. Horizontal scaling is achieved via Causal Clustering (primarily for read scaling and HA). Scaling writes across a cluster involves careful data modeling and architecture, potentially more complex than sharding in other NoSQL types.</p>
+                        <h6>Strengths</h6>
+                        <ul>
+                            <li>Ideal for managing and querying highly interconnected data.</li>
+                            <li>Fast traversal of relationships (e.g., finding friends-of-friends).</li>
+                            <li>Intuitive data modeling for relational concepts.</li>
+                            <li>Powerful declarative graph query language (Cypher).</li>
+                            <li>ACID compliance provides reliability.</li>
+                        </ul>
+                        <h6>Tradeoffs</h6>
+                        <ul>
+                            <li>Not optimized for queries requiring aggregation over the entire dataset (e.g., counting all nodes of a certain type across the whole graph).</li>
+                            <li>May be less suitable for simple tabular data structures or bulk updates unrelated to relationships.</li>
+                            <li>Requires learning a different query paradigm (Cypher).</li>
+                            <li>Write scaling across large clusters can be challenging.</li>
+                        </ul>
+                        <h6>Use Cases</h6>
+                        <p>Social networks, recommendation engines, fraud detection, network and IT operations mapping, identity and access management, knowledge graphs, supply chain management, bioinformatics.</p>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-3 col-md-6">
+                 <div class="info-card db-type-search" id="card-elasticsearch">
+                    <div class="card-body">
+                        <h5><i class="bi bi-search"></i> Elasticsearch</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Distributed <span class="term">search and analytics</span> engine optimized for full-text search, log analysis, monitoring, and data exploration.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNoSQL5" aria-expanded="false" aria-controls="collapseNoSQL5">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseNoSQL5">
+                        <h6>Philosophy & Core</h6>
+                        <p>Provide powerful and fast search and analytics capabilities over large volumes of (primarily text) data. Built on Apache Lucene, it uses inverted indices for efficient term lookups. Often used alongside a primary database.</p>
+                        <h6>Schema & Consistency</h6>
+                        <p>Document-oriented (stores JSON documents). Primarily Schema-on-Read, but defining explicit mappings (schema) is highly recommended for performance, relevance tuning, and controlling data types. Operates with near real-time (NRT) consistency – changes are typically searchable within seconds (eventual consistency). Distributed nature prioritizes Availability/Partition Tolerance (AP).</p>
+                        <h6>Scalability</h6>
+                        <p>Excellent Horizontal Scalability. Designed as a distributed system using nodes, indices (like databases), and shards (partitions of an index). Adding nodes increases storage capacity, indexing throughput, and query performance.</p>
+                        <h6>Strengths</h6>
+                        <ul>
+                            <li>Powerful and fast full-text search capabilities (relevance scoring, fuzzy matching, aggregations).</li>
+                            <li>Strong aggregation framework for analytics and data exploration.</li>
+                            <li>RESTful API makes integration easy.</li>
+                            <li>Scales horizontally very well.</li>
+                            <li>Part of the popular ELK/Elastic Stack (Elasticsearch, Logstash, Kibana, Beats) for logging and monitoring.</li>
+                             <li>Supports complex queries combining text search, filtering, and aggregations.</li>
+                        </ul>
+                        <h6>Tradeoffs</h6>
+                        <ul>
+                            <li>Not designed as a primary transactional store (lacks traditional ACID transactions across multiple documents).</li>
+                            <li>Eventual consistency means writes aren't immediately searchable.</li>
+                            <li>Can require significant resources (RAM, CPU, disk I/O) due to indexing overhead.</li>
+                            <li>Cluster management, tuning, and query optimization can be complex.</li>
+                            <li>Updates require reindexing documents (though optimized internally).</li>
+                        </ul>
+                        <h6>Use Cases</h6>
+                        <p>Website/application search, log aggregation and analysis (ELK Stack), application performance monitoring (APM), security information and event management (SIEM), business intelligence dashboards, geospatial search, product search and filtering.</p>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- 4. KEY DESIGN CONSIDERATIONS (TRADEOFFS) -->
+    <div class="schema-container cat-tradeoff" data-section-id="section-tradeoffs">
+         <h2 class="section-title" id="section-tradeoffs">Key Design Considerations</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card db-type-tradeoff" id="card-tradeoff-cap">
+                     <div class="card-body">
+                        <h5><i class="bi bi-shield-exclamation"></i> Consistency vs. Availability</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">During network partitions, distributed systems must often choose between guaranteeing <span class="term">up-to-date data (C)</span> or <span class="term">always responding (A)</span>. Critical tradeoff (CAP).</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTradeoff1" aria-expanded="false" aria-controls="collapseTradeoff1">
+                                Explore <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                     <div class="collapse collapse-content" id="collapseTradeoff1">
+                       <p>As described by the CAP Theorem, when a network partition prevents nodes in a distributed database from communicating reliably, a choice must be made:</p>
+                        <ul>
+                            <li><strong>Prioritize Consistency (CP):</strong> The system refuses to respond (becomes unavailable) if it cannot guarantee that the data read or written is consistent across the partition. This prevents stale reads or conflicting writes but impacts uptime during network issues. <br/><em>Example Use Case:</em> Financial transactions where data accuracy is non-negotiable.</li>
+                            <li><strong>Prioritize Availability (AP):</strong> The system continues to respond to requests even if it cannot guarantee consistency across the partition. Nodes might serve potentially stale data or accept writes that need later reconciliation. This maximizes uptime but requires applications to handle potential inconsistencies.<br/><em>Example Use Case:</em> Social media feeds or shopping carts where showing slightly old data is often acceptable to keep the service responsive.</li>
+                        </ul>
+                        <p>Understanding the application's tolerance for inconsistency vs. downtime is crucial when selecting a distributed database and configuring its consistency levels.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card db-type-tradeoff" id="card-tradeoff-pacelc">
+                    <div class="card-body">
+                        <h5><i class="bi bi-hourglass-split"></i> Latency vs. Consistency</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Even without partitions, systems often trade <span class="term">lower latency (L)</span> for <span class="term">weaker consistency (C)</span>, or vice versa (PACELC).</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTradeoff2" aria-expanded="false" aria-controls="collapseTradeoff2">
+                                Explore <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                     <div class="collapse collapse-content" id="collapseTradeoff2">
+                       <p>The PACELC theorem extends CAP by observing that even in the absence of Partitions (P), distributed systems face another fundamental tradeoff: choosing between lower <span class="term">Latency (L)</span> and higher <span class="term">Consistency (C)</span> during normal operation.</p>
+                        <p>The theorem states: If there is a Partition (P), how does the system trade off Availability (A) versus Consistency (C)? Else (E), when operating normally, how does the system trade off Latency (L) versus Consistency (C)?</p>
+                        <ul>
+                            <li><strong>Prioritize Consistency (PC/EC):</strong> Achieving higher consistency (e.g., ensuring a write is replicated to multiple nodes before acknowledging success) often requires more network communication and coordination, increasing the time (latency) it takes to complete an operation.</li>
+                            <li><strong>Prioritize Latency (PA/EL):</strong> Responding faster might mean acknowledging a write after it's only been accepted by one or a few nodes, relying on asynchronous replication to propagate it later. This reduces latency but introduces a window where reads might see stale data (lower consistency).</li>
+                        </ul>
+                        <p>Different databases optimize for different points on this spectrum. For example, systems designed for strong consistency might inherently have higher latency than those prioritizing speed with eventual consistency.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card db-type-tradeoff" id="card-tradeoff-scaling">
+                     <div class="card-body">
+                        <h5><i class="bi bi-arrows-angle-expand"></i> Scale Strategy</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary"><span class="term">Vertical scaling</span> is simpler initially but limited. <span class="term">Horizontal scaling</span> offers greater potential but adds complexity. Choice depends on growth needs.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTradeoff3" aria-expanded="false" aria-controls="collapseTradeoff3">
+                                Explore <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                     <div class="collapse collapse-content" id="collapseTradeoff3">
+                       <p>Choosing how a database will grow impacts cost, complexity, and ultimate capacity.</p>
+                        <ul>
+                            <li><strong>Vertical Scaling (Scale-Up):</strong>
+                                <ul>
+                                    <li><em>Approach:</em> Add more power (CPU, RAM, faster disks) to the existing server.</li>
+                                    <li><em>Best For:</em> Applications with moderate growth expectations, systems where operational simplicity is paramount initially, traditional monolithic applications. Often the default starting point for SQL databases.</li>
+                                    <li><em>Limits:</em> Physical hardware constraints, cost increases non-linearly at the high end, potential single point of failure.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Horizontal Scaling (Scale-Out):</strong>
+                                <ul>
+                                    <li><em>Approach:</em> Add more servers (nodes) and distribute the load/data (replication, sharding).</li>
+                                    <li><em>Best For:</em> Applications expecting massive growth, systems requiring high availability and fault tolerance, cloud-native applications. The native approach for most NoSQL databases.</li>
+                                    <li><em>Limits:</em> Increased architectural and operational complexity (managing clusters, network latency, consistency issues), potential need for application changes to leverage distribution effectively.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <p>Many modern systems use a combination, starting vertical and implementing horizontal strategies (like read replicas) as needed, or using databases specifically designed for horizontal scaling from the start.</p>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card db-type-tradeoff" id="card-tradeoff-schema">
+                    <div class="card-body">
+                        <h5><i class="bi bi-pencil-square"></i> Schema Flexibility</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary"><span class="term">Rigid schemas</span> (SQL) enforce data quality but require migrations. <span class="term">Flexible schemas</span> (NoSQL) speed development but can complicate querying.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTradeoff4" aria-expanded="false" aria-controls="collapseTradeoff4">
+                                Explore <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseTradeoff4">
+                        <p>The approach to data structure definition involves significant tradeoffs.</p>
+                        <ul>
+                            <li><strong>Rigid Schema (Schema-on-Write):</strong>
+                                <ul>
+                                    <li><em>Benefit:</em> Ensures data consistency, integrity, and predictability. Clearly defines the expected data structure. Optimizes storage and indexing.</li>
+                                    <li><em>Drawback:</em> Requires upfront design effort. Adapting to changes requires formal schema migrations, which can be complex, slow, and potentially require downtime. Less suitable for unstructured or rapidly evolving data.</li>
+                                    <li><em>Typical Databases:</em> SQL databases (Postgres, MySQL, SQL Server, SQLite).</li>
+                                </ul>
+                            </li>
+                             <li><strong>Flexible Schema (Schema-on-Read / Schema-less):</strong>
+                                <ul>
+                                    <li><em>Benefit:</em> Allows for rapid development and easy adaptation to changing requirements. Can handle diverse and evolving data structures easily. No need for complex migrations for simple field additions.</li>
+                                    <li><em>Drawback:</em> Can lead to inconsistent or messy data if not managed carefully at the application layer. Querying data with heterogeneous structures can be complex and less performant. Data meaning might depend on application logic.</li>
+                                    <li><em>Typical Databases:</em> Document DBs (MongoDB), Key-Value Stores (Redis), Wide-Column Stores (Cassandra). (Note: Even flexible systems often benefit from some level of schema definition or validation).</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card db-type-tradeoff" id="card-tradeoff-query">
+                    <div class="card-body">
+                        <h5><i class="bi bi-question-diamond"></i> Query Complexity</h5>
+                         <div class="card-content-wrapper">
+                            <p class="summary"><span class="term">SQL</span> excels at complex JOINs and ad-hoc queries. <span class="term">NoSQL</span> often optimizes for specific, simpler query patterns for high performance.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTradeoff5" aria-expanded="false" aria-controls="collapseTradeoff5">
+                                Explore <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseTradeoff5">
+                         <p>The database's design influences the types of queries it handles efficiently.</p>
+                        <ul>
+                            <li><strong>SQL Databases:</strong>
+                                <ul>
+                                    <li><em>Strength:</em> Designed for complex, ad-hoc queries involving multiple tables (JOINs), aggregations, subqueries, and filtering on various columns. The relational model and SQL language provide a powerful, standardized way to access related data.</li>
+                                    <li><em>Consideration:</em> Performance of very complex JOINs across huge tables can still be a challenge, requiring careful indexing and query optimization.</li>
+                                </ul>
+                            </li>
+                            <li><strong>NoSQL Databases:</strong>
+                                <ul>
+                                    <li><em>Strength:</em> Often optimized for very high performance on specific query patterns based on their data model:
+                                        <ul>
+                                            <li><em>Key-Value:</em> Extremely fast lookups by key.</li>
+                                            <li><em>Document:</em> Fast retrieval/update of entire documents or querying fields within a document.</li>
+                                            <li><em>Wide-Column:</em> Efficient retrieval of specific columns for a range of rows.</li>
+                                            <li><em>Graph:</em> Fast traversal of relationships between nodes.</li>
+                                        </ul>
+                                    </li>
+                                    <li><em>Consideration:</em> Queries that don't fit the optimized pattern (e.g., JOIN-like operations across different document types in a Document DB, complex filtering on non-indexed fields, graph-wide aggregations) might be inefficient, require multiple application-level queries, or may not be possible directly. Data modeling often needs to be done with specific query patterns in mind ("query-first design").</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card db-type-tradeoff" id="card-tradeoff-model">
+                     <div class="card-body">
+                        <h5><i class="bi bi-puzzle"></i> Data Model Fit</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Choose a database whose <span class="term">native data model</span> (tables, documents, key-value, graph) best represents your application's primary data structures.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTradeoff6" aria-expanded="false" aria-controls="collapseTradeoff6">
+                                Explore <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseTradeoff6">
+                        <p>Aligning your application's data structure with the database's native model significantly impacts development ease and performance.</p>
+                        <ul>
+                            <li><strong>Relational Model (SQL - Tables):</strong> Best fit for highly structured data with well-defined relationships that need to be enforced, requiring complex queries across different entities. Examples: Financial records, inventory systems, user accounts with complex permissions.</li>
+                            <li><strong>Document Model (MongoDB):</strong> Ideal for semi-structured data where each entity might have varying attributes, or data naturally nests (like blog posts with comments). Good when data maps closely to application objects. Examples: Content management, product catalogs, user profiles.</li>
+                            <li><strong>Key-Value Model (Redis):</strong> Suitable when the primary access pattern is retrieving a value based on a known key, requiring very low latency. Examples: Caching, session state, user preferences lookups.</li>
+                             <li><strong>Wide-Column Model (Cassandra):</strong> Good for handling massive datasets where access is typically by row key, but the columns needed per row might vary or be very numerous (sparse data). Examples: Time-series data, IoT sensor readings, activity logs.</li>
+                            <li><strong>Graph Model (Neo4j):</strong> The best choice when the relationships *between* data points are as important as the data points themselves, and queries involve traversing these connections. Examples: Social networks, recommendation systems, fraud detection rings.</li>
+                            <li><strong>Search Model (Elasticsearch):</strong> Optimal for text-heavy data requiring sophisticated search capabilities (relevance, faceting, geospatial) or complex aggregations for analytics. Examples: Log analysis, product search, document repositories.</li>
+                        </ul>
+                        <p>Trying to force data into an unsuitable model often leads to complexity and poor performance (e.g., simulating complex relationships in a Key-Value store, or storing large binary blobs in a relational database optimized for structured data).</p>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- 5. CHOOSING THE RIGHT DATABASE -->
+    <div class="schema-container cat-choosing" data-section-id="section-choosing">
+         <h2 class="section-title" id="section-choosing">Choosing the Right Database(s)</h2>
+        <div class="row">
+            <div class="col-12">
+                <div class="info-card db-type-choosing" id="card-polyglot">
+                    <div class="card-body">
+                        <h5 class="text-center"><i class="bi bi-check2-circle"></i> Selection & Polyglot Persistence</h5>
+                         <div class="card-content-wrapper">
+                            <p class="summary text-center">Consider consistency, structure, queries, scale, availability, schema needs, and operations. Modern systems often use <span class="term">multiple database types</span> (Polyglot Persistence) for different tasks.</p>
+                            <button class="btn btn-sm details-toggle mx-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChoosing" aria-expanded="false" aria-controls="collapseChoosing">
+                                Key Questions & Strategy <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseChoosing">
+                        <h6>Key Questions to Ask:</h6>
+                        <ul>
+                            <li><strong>Consistency Needs:</strong> Is immediate, strong consistency (ACID) required for all operations, or is eventual consistency (BASE) acceptable for some/all parts of the application?</li>
+                            <li><strong>Data Structure:</strong> Is the data highly structured and relational? Semi-structured (like JSON documents)? Simple key-value pairs? Highly interconnected (graph)? Primarily text for searching?</li>
+                            <li><strong>Query Patterns:</strong> What are the most frequent and critical queries? Do they involve complex joins across multiple tables? Simple key lookups? Full-text search? Traversing relationships? Aggregations?</li>
+                            <li><strong>Scalability Requirements:</strong> What is the expected data volume and request load (reads vs. writes)? How critical is seamless horizontal scaling?</li>
+                            <li><strong>Availability Needs:</strong> What level of uptime is required? Can the system tolerate brief unavailability during network issues to ensure consistency (CP), or must it remain available even if data might be temporarily stale (AP)?</li>
+                            <li><strong>Schema Evolution:</strong> How often is the data structure expected to change? Is schema flexibility a major advantage, or is enforcing structure more important?</li>
+                             <li><strong>Operational Capacity:</strong> What is the team's expertise? What is the budget for licensing, hardware/cloud resources, and operational overhead (management, monitoring, backups)? Are managed services an option?</li>
+                             <li><strong>Ecosystem & Tooling:</strong> How well does the database integrate with existing languages, frameworks, and infrastructure? How strong is the community support?</li>
+                        </ul>
+                        <h6>Polyglot Persistence Strategy</h6>
+                        <p>Recognize that <span class="term">no single database is best for every task</span>. Modern complex applications often benefit from using multiple database technologies concurrently, choosing the best tool for each specific job within the application architecture.</p>
+                        <p><em>Example Scenario:</em> An e-commerce site might use:</p>
+                        <ul>
+                            <li>A <span class="term">Relational Database (e.g., PostgreSQL)</span> for core transactional data like orders, user accounts, and billing (requiring ACID).</li>
+                            <li>A <span class="term">Search Engine (e.g., Elasticsearch)</span> for product catalog search and filtering.</li>
+                            <li>A <span class="term">Key-Value Store (e.g., Redis)</span> for caching user sessions and frequently accessed data.</li>
+                             <li>Perhaps a <span class="term">Graph Database (e.g., Neo4j)</span> for generating product recommendations ("users who bought this also bought...").</li>
+                        </ul>
+                        <p>This approach leverages the strengths of each database type but introduces complexity in managing multiple data stores and ensuring consistency between them where necessary.</p>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+</div> <!-- /container -->
+
+<footer class="container text-center">
+    <p>© 2025 David Veksler</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Final Script incorporating fixes
+document.addEventListener('DOMContentLoaded', () => {
+
+    const mainContainer = document.getElementById('main-container');
+    const cards = document.querySelectorAll('.info-card'); // Select all cards again
+    let currentHoverState = { card: null, line: null }; // Track active state
+
+    // --- Debounce function ---
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // --- Get Computed Color ---
+    function getElementColor(element) {
+        if (!element) return '#6b7280'; // Default concept color
+        return window.getComputedStyle(element).getPropertyValue('--db-category-color').trim() || '#6b7280';
+    }
+
+    // --- Clear Hover State ---
+    function clearHoverState(forceClear = false) {
+        const isMouseStillOverCard = currentHoverState.card && currentHoverState.card.matches(':hover');
+
+        // Clear only if forced, or if mouse left the currently hovered card
+        if (forceClear || !isMouseStillOverCard) {
+            if (currentHoverState.line) {
+                try { currentHoverState.line.remove(); } catch (e) { /* Ignore */ }
+            }
+            mainContainer.classList.remove('is-dimmed');
+            // Remove highlight from potentially previously highlighted card
+            if(currentHoverState.card) {
+                 currentHoverState.card.classList.remove('is-highlighted');
+                 const oldSchemaContainer = currentHoverState.card.closest('.schema-container');
+                 if (oldSchemaContainer) {
+                     oldSchemaContainer.classList.remove('is-highlighted-section');
+                     const oldTitle = oldSchemaContainer.querySelector('.section-title');
+                     if (oldTitle) oldTitle.style.opacity = ''; // Reset opacity
+                 }
+            }
+            currentHoverState = { card: null, line: null };
+        }
+    }
+
+    // --- Apply Hover State ---
+    function applyHoverState(card) {
+        if (!card || card === currentHoverState.card) return; // Already handling this card
+
+        clearHoverState(true); // Force clear previous state before applying new one
+
+        const schemaContainer = card.closest('.schema-container');
+        const sectionHeader = schemaContainer ? schemaContainer.querySelector('.section-title') : null;
+
+        if (!sectionHeader || !card.id || !sectionHeader.id) {
+             console.warn("Missing ID on card or section header, cannot draw line for:", card);
+             return; // Need IDs for LeaderLine
+        }
+
+        // Set new state
+        currentHoverState.card = card;
+        mainContainer.classList.add('is-dimmed');
+        card.classList.add('is-highlighted');
+        if (schemaContainer) {
+            schemaContainer.classList.add('is-highlighted-section');
+             const title = schemaContainer.querySelector('.section-title');
+             if (title) title.style.opacity = '1'; // Ensure title is fully visible
+        }
+
+        // Draw Line
+        try {
+            const cardColor = getElementColor(card);
+            // Using element IDs is generally reliable
+            const line = new LeaderLine(
+                document.getElementById(sectionHeader.id),
+                document.getElementById(card.id),
+                {
+                    color: cardColor,
+                    size: 2,
+                    path: 'fluid',
+                    startSocket: 'bottom',
+                    endSocket: 'top',
+                    dash: { animation: true, len: 6, gap: 3 },
+                }
+            );
+            currentHoverState.line = line;
+        } catch (e) {
+            console.error("LeaderLine error:", e, "From:", sectionHeader.id, "To:", card.id);
+            clearHoverState(true);
+        }
+    }
+
+    // --- Event Listeners using Event Delegation ---
+    mainContainer.addEventListener('mouseover', (event) => {
+        const targetCard = event.target.closest('.info-card');
+        if (targetCard && targetCard !== currentHoverState.card) {
+             applyHoverState(targetCard);
+        }
+    });
+
+    mainContainer.addEventListener('mouseout', (event) => {
+        // Check if moving outside the main container entirely
+         if (!mainContainer.contains(event.relatedTarget)) {
+             clearHoverState(true);
+         }
+         // Check if moving from a card to a non-card area within the container
+         else if (event.target.classList.contains('info-card') && !event.relatedTarget?.closest('.info-card')) {
+              // Delay slightly to see if we immediately enter another card
+             setTimeout(() => {
+                 const isOverAnotherCard = mainContainer.querySelector('.info-card:hover');
+                 if (!isOverAnotherCard) { // If not over another card after delay, clear
+                    clearHoverState(true);
+                 }
+             }, 50); // Increased delay slightly
+         }
+    });
+
+     // --- Update lines on resize ---
+     const positionLines = debounce(() => {
+         if (currentHoverState.line) {
+             try { currentHoverState.line.position(); }
+             catch (e) { console.warn("Reposition error", e); clearHoverState(true); }
+         }
+     }, 150); // Restore debounce for potentially many elements
+
+     window.addEventListener('resize', positionLines);
+
+    // --- Toggle Chevron Icons on Collapse Buttons ---
+    const collapseToggles = document.querySelectorAll('.details-toggle');
+    collapseToggles.forEach(button => {
+        const targetId = button.getAttribute('data-bs-target');
+        const targetCollapse = document.querySelector(targetId);
+        const icon = button.querySelector('.bi');
+
+        if (targetCollapse && icon) {
+            // Initial state
+            if (targetCollapse.classList.contains('show')) {
+                icon.classList.remove('bi-chevron-down'); icon.classList.add('bi-chevron-up');
+                button.setAttribute('aria-expanded', 'true');
+            } else {
+                icon.classList.remove('bi-chevron-up'); icon.classList.add('bi-chevron-down');
+                button.setAttribute('aria-expanded', 'false');
+            }
+
+            // Use Bootstrap events
+            targetCollapse.addEventListener('shown.bs.collapse', positionLines);
+            targetCollapse.addEventListener('hidden.bs.collapse', positionLines);
+            targetCollapse.addEventListener('show.bs.collapse', () => {
+                icon.classList.remove('bi-chevron-down'); icon.classList.add('bi-chevron-up');
+                 // Reposition slightly after animation starts helps leader-line cope
+                setTimeout(positionLines, 50);
+            });
+            targetCollapse.addEventListener('hide.bs.collapse', () => {
+                icon.classList.remove('bi-chevron-up'); icon.classList.add('bi-chevron-down');
+                setTimeout(positionLines, 50);
+            });
+        }
+    });
+
+});
+</script>
+</body>
+</html>
