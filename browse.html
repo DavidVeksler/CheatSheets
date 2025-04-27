@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cheatsheet Browser - DavidVeksler.com</title>
+    <link rel="canonical" href="https://cheatsheets.davidveksler.com/browse.html">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <style>
+        /* Style for the iframe container to maintain aspect ratio or fixed height */
+        .iframe-container {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 400px; /* Fixed height for preview */
+            border: 1px solid #dee2e6; /* Add a light border around iframe area */
+        }
+
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+        .card-title-link {
+            text-decoration: none;
+            color: inherit;
+        }
+        .card-title-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">DavidVeksler.com Cheatsheets</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="mb-4">Browse Cheatsheets</h1>
+
+        <div id="loading-indicator" class="alert alert-info">
+            Loading cheatsheet index...
+        </div>
+
+        <div id="error-indicator" class="alert alert-danger d-none">
+            <!-- Error messages will be placed here -->
+        </div>
+
+        <div id="cheatsheet-gallery" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <!-- Gallery items will be inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <footer class="py-4 mt-5 bg-light text-center">
+        <div class="container">
+            <span class="text-muted">Cheatsheets by David Veksler</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryContainer = document.getElementById('cheatsheet-gallery');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const errorIndicator = document.getElementById('error-indicator');
+            const directoryUrl = '/'; // Fetch from the root of the current domain
+            // Alternatively, use absolute URL: const directoryUrl = 'https://cheatsheets.davidveksler.com/';
+            const baseHref = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1); // Base URL for resolving relative links
+
+            // Files/directories to exclude from the gallery
+            const excludedItems = [
+                '../',
+                'images/',
+                'LICENSE',
+                'README.md',
+                'browse.html', // Exclude this page itself
+                'safety_data.js' // Exclude non-html files explicitly if needed
+            ];
+
+            fetch(directoryUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    loadingIndicator.classList.add('d-none'); // Hide loading indicator
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const links = doc.querySelectorAll('pre a'); // Links are within <pre> in the example
+
+                    let foundCheatsheets = false;
+
+                    links.forEach(link => {
+                        const href = link.getAttribute('href');
+                        const linkText = link.textContent.trim();
+
+                        // Basic filtering: must end with .html and not be in the excluded list
+                        if (href && href.endsWith('.html') && !excludedItems.includes(href)) {
+                            foundCheatsheets = true;
+                            const fullUrl = new URL(href, baseHref).href; // Construct full URL
+
+                            // Create a user-friendly title from the filename
+                            let title = href.replace('.html', '');
+                            title = title.replace(/[-_]/g, ' '); // Replace hyphens/underscores with spaces
+                            title = title.charAt(0).toUpperCase() + title.slice(1); // Capitalize first letter
+
+                            // Create Bootstrap Card element
+                            const cardCol = document.createElement('div');
+                            cardCol.className = 'col'; // Bootstrap handles column distribution
+
+                            const card = document.createElement('div');
+                            card.className = 'card h-100 shadow-sm'; // h-100 for equal height cards in a row
+
+                            const cardHeader = document.createElement('div');
+                            cardHeader.className = 'card-header';
+                            // Link the title to the actual page, opening in a new tab
+                            cardHeader.innerHTML = `<h5 class="card-title mb-0"><a href="${fullUrl}" target="_blank" class="card-title-link">${title}</a></h5>`;
+
+                            const cardBody = document.createElement('div');
+                            cardBody.className = 'card-body p-0'; // No padding to let iframe fill it
+
+                            const iframeContainer = document.createElement('div');
+                            iframeContainer.className = 'iframe-container';
+
+                            const iframe = document.createElement('iframe');
+                            iframe.setAttribute('src', fullUrl);
+                            iframe.setAttribute('title', `Preview of ${title} Cheatsheet`);
+                            iframe.setAttribute('loading', 'lazy'); // Lazy load iframes for performance
+                            // iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin'); // Optional: sandbox for security, might break cheatsheet functionality
+                            iframe.style.border = '0'; // Ensure no border via style attribute too
+
+                            iframeContainer.appendChild(iframe);
+                            cardBody.appendChild(iframeContainer);
+
+                            const cardFooter = document.createElement('div');
+                            cardFooter.className = 'card-footer text-center';
+                            cardFooter.innerHTML = `<a href="${fullUrl}" target="_blank" class="btn btn-sm btn-outline-primary">Open Full Page</a>`;
+
+                            card.appendChild(cardHeader);
+                            card.appendChild(cardBody);
+                            card.appendChild(cardFooter);
+                            cardCol.appendChild(card);
+                            galleryContainer.appendChild(cardCol);
+                        }
+                    });
+
+                    if (!foundCheatsheets) {
+                         showError('No cheatsheet HTML files found in the directory index.');
+                    }
+
+                })
+                .catch(error => {
+                    console.error('Error fetching or parsing directory index:', error);
+                    loadingIndicator.classList.add('d-none');
+                    showError(`Failed to load cheatsheets: ${error.message}. Please check the console for details.`);
+                });
+
+            function showError(message) {
+                errorIndicator.textContent = message;
+                errorIndicator.classList.remove('d-none');
+            }
+        });
+    </script>
+
+</body>
+</html>
