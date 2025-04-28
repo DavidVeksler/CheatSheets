@@ -1,0 +1,299 @@
+:root {
+    /* Core Structure */
+    --trunk-color: #343a40;        /* Darker trunk */
+    --branch-color: #adb5bd;       /* Lighter gray branch line */
+    --card-bg: #ffffff;
+    --card-border: #dee2e6;
+    --card-shadow: rgba(0, 0, 0, 0.07);
+    --trunk-width: 8px;            /* Slightly thicker trunk */
+    --branch-height: 4px;          /* Slightly thicker branch lines */
+    --node-spacing: 2rem;         /* Vertical space between section nodes */
+    --branch-length: 70px;         /* How far the horizontal branch line extends */
+    --branch-offset: 120px;        /* How far "branched off" sections are pushed right */
+    --container-left-padding: 120px; /* Space for trunk + dot + branch line */
+
+    /* Standard Cheatsheet Styles */
+    --bs-body-bg: #f0f2f5;         /* Slightly different background */
+    --bs-primary: #0d6efd;
+    --bs-primary-dark: #0a58ca;
+    --bs-primary-light: #cfe2ff;
+    --text-color-main: #212529;
+    --text-color-secondary: #495057;
+    --text-color-highlight: var(--bs-primary-dark);
+
+    /* Platform/Tool Specific Colors (Add more if needed) */
+    --sc-color-git: #f05033;
+    --sc-color-mercurial: #93cde8;
+    --sc-color-github: #6f42c1; /* Default platform purple */
+    --sc-color-gitlab: #fc6d26;
+    --sc-color-bitbucket: #0052cc;
+    --sc-color-azure: #0078d4;
+    --sc-color-workflow: #fd7e14;
+    --sc-color-choosing: #0d6efd;
+}
+
+body {
+    background-color: var(--bs-body-bg);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-color-main);
+    font-size: 16px;
+    box-sizing: border-box;
+}
+*, *::before, *::after { box-sizing: inherit; }
+
+
+.page-header {
+    background: linear-gradient(135deg, #ffffff, #e9ecef);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 3rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.page-header h1 {
+    color: #343a40;
+    font-weight: 300;
+}
+.page-header h1 .bi {
+    color: var(--trunk-color); /* Match trunk color */
+     vertical-align: -0.1em;
+     margin-right: 0.2em;
+}
+.page-header .lead {
+    color: var(--text-color-secondary);
+    font-size: 1.15rem;
+    max-width: 800px;
+    margin: auto;
+}
+
+/* --- History Tree Structure --- */
+
+.history-container {
+    position: relative;
+    max-width: 1200px; /* Wider container */
+    margin: 0 auto;
+    padding: 2rem 2rem 2rem var(--container-left-padding); /* Adjusted padding */
+    overflow-x: hidden; /* Prevent horizontal scroll from offsets */
+}
+
+.history-trunk {
+    position: absolute;
+    top: 0;
+    /* Position trunk based on container padding and desired margin */
+    left: calc(var(--container-left-padding) - var(--branch-length) - var(--trunk-width) - 15px);
+    width: var(--trunk-width);
+    height: 100%;
+    background-color: var(--trunk-color);
+    border-radius: var(--trunk-width);
+    z-index: 1;
+}
+
+/* A major section node on the timeline */
+.history-node {
+    position: relative;
+    /* Space for the branch line + dot */
+    padding-left: calc(var(--branch-length) + 10px);
+    margin-bottom: var(--node-spacing);
+    z-index: 2; /* Above trunk */
+}
+
+/* Horizontal connector line for each section node */
+.history-node .branch-line {
+    position: absolute;
+    left: 10px; /* Start just inside the node's padding */
+    /* Adjust top to align better with the section title */
+    top: 28px;
+    width: var(--branch-length);
+    height: var(--branch-height);
+    background-color: var(--branch-color);
+    border-radius: var(--branch-height);
+    z-index: 1; /* Behind card, above trunk */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Connection dot on the trunk */
+.history-node::before {
+    content: '';
+    position: absolute;
+    /* Position center point over the trunk */
+    left: calc(var(--branch-length) * -1 + 10px - var(--trunk-width)/2 - var(--branch-height)/2);
+    /* Vertically align with branch line */
+    top: calc(28px - 6px + var(--branch-height)/2); /* 6px is half the dot size */
+    width: 12px;
+    height: 12px;
+    background-color: var(--bs-body-bg); /* Punch hole in trunk */
+    border: var(--branch-height) solid var(--branch-color);
+    border-radius: 50%;
+    z-index: 3; /* Above trunk and branch line */
+    transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+/* "Branched off" sections pushed right */
+.history-node.branch-off {
+    margin-left: var(--branch-offset);
+}
+/* Style the connecting line for branched off sections differently */
+.history-node.branch-off .branch-line {
+    background-color: var(--sc-color-workflow); /* Use workflow orange for contrast */
+}
+.history-node.branch-off::before {
+     border-color: var(--sc-color-workflow);
+}
+
+
+/* --- Section & Info Card Styling --- */
+
+/* The main card for a history node (section) */
+.section-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 3px 8px var(--card-shadow);
+    position: relative; /* Ensure it's above lines */
+    z-index: 2;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.section-title-inline {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--trunk-color);
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--card-border);
+}
+.section-title-inline .bi {
+    margin-right: 0.5em;
+    opacity: 0.8;
+}
+
+/* Content area within the section card */
+.section-content {
+    /* Styles for content within the section card */
+}
+
+/* Inner info cards (Git, GitHub, Commit, etc.) */
+.info-card {
+    background: #fff;
+    border: 1px solid #e9ecef; /* Lighter border for inner cards */
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s ease;
+    font-size: 0.95rem; /* Slightly smaller font for inner cards */
+}
+.info-card:hover {
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+}
+
+.info-card .card-body { padding: 0; flex-grow: 1; display: flex; flex-direction: column; }
+
+.info-card h5 {
+    /* Resetting some styles from original cheatsheet if needed */
+    color: var(--text-color-main);
+    background-color: #f8f9fa; /* Light header bg */
+    font-size: 0.9rem; /* Smaller heading for inner cards */
+    text-align: left; /* Align left */
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 3px 3px 0 0;
+    display: flex; /* Keep icon alignment */
+    align-items: center;
+    gap: .5rem;
+}
+.info-card h5 .bi {
+    font-size: 1.1em;
+    opacity: 0.8;
+    color: var(--text-color-secondary); /* Icon color */
+}
+
+/* Specific tool/platform card header colors */
+.vcs-git h5 { background-color: #fceded; color: var(--sc-color-git); }
+.vcs-git h5 .bi { color: var(--sc-color-git); }
+.vcs-mercurial h5 { background-color: #e0f2f7; color: #1a7f9f; }
+.vcs-mercurial h5 .bi { color: #1a7f9f; }
+
+.platform-github h5 { background-color: #f3eafd; color: var(--sc-color-github); }
+.platform-github h5 .bi { color: var(--sc-color-github); }
+.platform-gitlab h5 { background-color: #fff0e6; color: var(--sc-color-gitlab); }
+.platform-gitlab h5 .bi { color: var(--sc-color-gitlab); }
+.platform-bitbucket h5 { background-color: #e6f0ff; color: var(--sc-color-bitbucket); }
+.platform-bitbucket h5 .bi { color: var(--sc-color-bitbucket); }
+.platform-azure h5 { background-color: #e6f2fa; color: var(--sc-color-azure); }
+.platform-azure h5 .bi { color: var(--sc-color-azure); }
+
+.workflow-branching h5 { background-color: #fff2e8; color: var(--sc-color-workflow); }
+.workflow-branching h5 .bi { color: var(--sc-color-workflow); }
+.workflow-pr h5 { background-color: #fceded; color: var(--sc-color-git); } /* Use Git color */
+.workflow-pr h5 .bi { color: var(--sc-color-git); }
+.workflow-cicd h5 { background-color: #f0f0f0; color: #586069; } /* Neutral gray */
+.workflow-cicd h5 .bi { color: #586069; }
+
+.choosing-card h5 { background-color: #e7f0ff; color: var(--sc-color-choosing); }
+.choosing-card h5 .bi { color: var(--sc-color-choosing); }
+
+
+.card-content-wrapper { padding: 1rem; flex-grow: 1; display: flex; flex-direction: column; }
+.info-card p.summary { font-size: .85rem; color: var(--text-color-secondary); margin-bottom: .8rem; flex-grow: 1; }
+
+/* Collapse content styling (from original cheatsheet) */
+.collapse-content { font-size: 0.85rem; border-top: 1px solid #e9ecef; padding: 1rem; margin-top: 1rem; color: var(--text-color-main); }
+.collapse-content h6 { font-weight: 700; color: var(--text-color-highlight); margin-top: 0.8rem; margin-bottom: 0.3rem; font-size: 0.9rem; }
+.collapse-content ul { padding-left: 0.5rem; margin-bottom: 0.8rem; list-style: none; }
+.collapse-content li { margin-bottom: 0.6rem; padding-bottom: 0.6rem; font-size: 0.83rem; line-height: 1.5; border-bottom: 1px dotted #dee2e6; position: relative; padding-left: 1.5rem; }
+.collapse-content li:last-child { border-bottom: none; margin-bottom: 0; }
+.collapse-content li::before { content: "\F288"; font-family: "bootstrap-icons"; position: absolute; left: 0; top: 2px; color: var(--bs-primary); opacity: 0.6; font-size: 0.9em; }
+.collapse-content li strong { color: var(--text-color-highlight); display: block; margin-bottom: 0.2rem; font-weight: 600; }
+.collapse-content p { font-size: 0.85rem; margin-bottom: 0.6rem; line-height: 1.55; }
+.collapse-content code { font-size: 0.8rem; color: #d63384; background-color: #f8f9fa; padding: 0.1em 0.4em; border-radius: 3px; font-family: Consolas, Menlo, Monaco, 'Courier New', monospace; }
+
+.details-toggle {
+    font-size: 0.75rem; /* Smaller toggle button */
+    margin-top: auto; align-self: flex-start;
+    padding: 0.25rem 0.5rem;
+    color: var(--bs-primary);
+    border: 1px solid var(--bs-primary-light); background-color: transparent;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border-radius: 3px;
+}
+ .details-toggle:hover { background-color: var(--bs-primary-light); color: var(--bs-primary-dark); }
+ .details-toggle .bi { transition: transform 0.2s ease-in-out; }
+ .details-toggle[aria-expanded="true"] .bi { transform: rotate(180deg); }
+
+.term { font-weight: 600; color: var(--bs-primary-dark); background-color: var(--bs-primary-light); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.9em;}
+
+
+/* --- Node Hover Effects --- */
+.history-node.is-hovered .branch-line {
+    background-color: var(--trunk-color); /* Darken branch line */
+    transform: scaleX(1.05); /* Slightly lengthen */
+}
+.history-node.is-hovered::before {
+    border-color: var(--trunk-color); /* Darken dot */
+    transform: scale(1.2); /* Enlarge dot */
+}
+.history-node.is-hovered > .section-card {
+    transform: scale(1.01); /* Slightly scale up section card */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+/* Highlight branched off sections more prominently on hover */
+.history-node.branch-off.is-hovered .branch-line {
+     background-color: #e65100; /* Brighter orange */
+     transform: scaleX(1.05);
+}
+.history-node.branch-off.is-hovered::before {
+     border-color: #e65100;
+     transform: scale(1.2);
+}
+
+
+footer {
+    padding-top: 3rem;
+    font-size: .85em;
+    color: #6c757d;
+}
