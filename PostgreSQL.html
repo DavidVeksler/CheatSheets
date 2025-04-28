@@ -1,0 +1,2090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostgreSQL Power User Cheatsheet - For DBAs & Developers</title>
+
+    <!-- SEO Meta Description -->
+    <meta name="description" content="A comprehensive PostgreSQL cheatsheet for DBAs and Developers covering architecture, unique features, performance tuning, indexing, extensibility, replication, security, and key terminology/quirks.">
+
+    <!-- Canonical URL (Update if hosted) -->
+    <!-- <link rel="canonical" href="http://your-domain.com/postgresql-cheatsheet.html"> -->
+
+    <!-- Social Media Metadata (Add URLs if needed) -->
+    <meta property="og:title" content="PostgreSQL Power User Cheatsheet">
+    <meta property="og:description" content="Comprehensive guide for DBAs & Developers on PostgreSQL features, performance, architecture, and quirks.">
+    <meta property="og:type" content="article">
+    <!-- <meta property="og:url" content="http://your-domain.com/postgresql-cheatsheet.html"> -->
+    <!-- <meta property="og:image" content="http://your-domain.com/images/postgres-cheatsheet.png"> -->
+    <!-- <meta property="og:image:alt" content="PostgreSQL logo with sections on performance, indexing, and extensions."> -->
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PostgreSQL Power User Cheatsheet">
+    <meta name="twitter:description" content="Comprehensive guide for DBAs & Developers on PostgreSQL features, performance, architecture, and quirks.">
+    <!-- <meta name="twitter:image" content="http://your-domain.com/images/postgres-cheatsheet.png"> -->
+    <!-- <meta name="twitter:image:alt" content="PostgreSQL logo with sections on performance, indexing, and extensions."> -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --bs-body-bg: #eef3f8; /* Lighter blue-gray background */
+            --pg-primary: #336791;   /* Core PostgreSQL Blue */
+            --pg-primary-dark: #244b6e;
+            --pg-primary-light: #d6e1eb;
+            --card-border-color: #c6d3e0; /* Softer border */
+            --card-shadow-color: rgba(51, 103, 145, .1); /* Shadow based on primary color */
+            --text-color-main: #2f353d;
+            --text-color-secondary: #5a6f82;
+            --text-color-highlight: var(--pg-primary-dark);
+            --blueprint-grid-color: rgba(51, 103, 145, 0.08); /* Grid based on primary */
+            --schema-bg-color: rgba(255, 255, 255, 0.75);
+            --schema-border-color: var(--pg-primary-light);
+
+            /* --- Category Colors (Shades of Blue/Teal/Gray) --- */
+            --pg-color-concept: #5a6f82;      /* Grayish Blue */
+            --pg-color-datatype: #00838f;     /* Teal */
+            --pg-color-indexing: #3f7cac;     /* Medium Blue */
+            --pg-color-sql: #1565c0;         /* Stronger Blue */
+            --pg-color-concurrency: #4682b4;  /* Steel Blue */
+            --pg-color-performance: #d32f2f;  /* RED - Warning/Action Needed */
+            --pg-color-extensions: #7b1fa2;   /* Purple */
+            --pg-color-replication: #0277bd;   /* Light Blue */
+            --pg-color-backup: #2e7d32;       /* Green */
+            --pg-color-security: #6a1b9a;     /* Dark Purple */
+            --pg-color-tools: #546e7a;       /* Blue Gray */
+            --pg-color-quirks: #ef6c00;      /* Orange - Warning/Attention */
+
+            --pg-category-color: var(--pg-color-concept); /* Default */
+        }
+
+        @keyframes blueprintGridAnimation {
+            0% { background-position: 0 0, 0 0; }
+            100% { background-position: 40px 40px, -40px -40px; } /* Smaller grid */
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            background-image:
+                linear-gradient(to right, var(--blueprint-grid-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--blueprint-grid-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: blueprintGridAnimation 90s linear infinite;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding-bottom: 3rem;
+            font-size: 16px;
+            color: var(--text-color-main);
+            box-sizing: border-box;
+        }
+         *, *::before, *::after { box-sizing: inherit; }
+
+        .page-header {
+            background: linear-gradient(135deg, #ffffff, #e4edf5); /* Lighter gradient */
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--card-border-color);
+            margin-bottom: 3rem;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 4px 10px var(--card-shadow-color);
+        }
+        .page-header h1 {
+            color: var(--pg-primary-dark);
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            font-size: 2.8rem;
+        }
+         .page-header h1 .bi {
+             font-size: 1em; /* Make icon slightly larger */
+             vertical-align: -0.1em;
+             margin-right: 0.3em;
+             color: var(--pg-primary);
+             opacity: 0.8;
+            }
+        .page-header .lead {
+            color: var(--text-color-secondary);
+            font-size: 1.15rem;
+            max-width: 850px;
+            margin: auto;
+        }
+
+        .schema-container {
+            background-color: var(--schema-bg-color);
+            border: 1px solid var(--schema-border-color);
+            border-radius: 8px;
+            padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 5px 15px var(--card-shadow-color);
+            backdrop-filter: blur(4px);
+            position: relative;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .section-title {
+            color: var(--pg-category-color);
+            margin: -2.9rem 0 1.5rem 0; /* Adjust overlap */
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            font-size: 1.05rem; /* Slightly smaller */
+            border-bottom: none;
+            padding: 0.5rem 1.2rem; /* Adjust padding */
+            background-color: #fff; /* Solid background */
+            display: inline-block;
+            position: relative;
+            left: 1rem;
+            z-index: 15;
+            border: 1px solid var(--schema-border-color);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            transition: opacity 0.3s ease-in-out;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.03);
+        }
+
+        /* --- Card Styling --- */
+        .info-card {
+            background: #fff;
+            border: 1px solid var(--card-border-color);
+            border-left: 4px solid var(--pg-category-color); /* Category color stripe */
+            border-radius: 4px;
+            box-shadow: 0 2px 5px var(--card-shadow-color);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+            position: relative;
+            z-index: 5;
+            opacity: 1;
+        }
+
+        /* --- Dimming Logic (Copied from previous examples) --- */
+        #main-container.is-dimmed .schema-container:not(.is-highlighted-section) .info-card {
+             opacity: 0.4;
+        }
+         #main-container.is-dimmed .schema-container:not(.is-highlighted-section) > .section-title {
+             opacity: 0.5;
+         }
+         .info-card.is-highlighted {
+            opacity: 1 !important;
+            box-shadow: 0 0 0 3px var(--pg-category-color), 0 6px 12px rgba(51, 103, 145, .15) !important;
+            z-index: 25 !important;
+            transform: translateY(-3px);
+         }
+         .info-card:not(.is-highlighted):hover {
+             box-shadow: 0 5px 12px rgba(51, 103, 145, .15);
+             transform: translateY(-2px);
+             z-index: 20;
+         }
+
+        .info-card .card-body { padding: 0; flex-grow: 1; display: flex; flex-direction: column; }
+        .info-card h5 {
+            color: var(--text-color-main);
+            background-color: transparent; /* Remove header background */
+            font-size: 1.05rem; /* Slightly larger title */
+            text-align: left;
+            margin: 0;
+            padding: 0.8rem 1rem; /* Adjust padding */
+            font-weight: 600; display: flex; justify-content: flex-start; align-items: center;
+            gap: .6rem;
+            border-bottom: 1px solid #e9ecef; /* Separator line */
+            font-family: inherit; /* Use body font */
+        }
+         .info-card h5 .bi {
+             font-size: 1.3em; /* Larger icon */
+             color: var(--pg-category-color); /* Use category color for icon */
+             opacity: 0.9;
+             flex-shrink: 0;
+             }
+         .card-content-wrapper { padding: 1rem; flex-grow: 1; display: flex; flex-direction: column; }
+        .info-card p.summary { font-size: .9rem; color: var(--text-color-secondary); margin-bottom: .8rem; flex-grow: 1; line-height: 1.5; }
+
+        /* Attribute List Styling */
+        .collapse-content { font-size: 0.9rem; border-top: 1px solid #e9ecef; padding: 1rem 1.2rem; margin-top: 1rem; color: var(--text-color-main); background-color: #fdfdff; /* Slight off-white */ }
+        .collapse-content h6 { font-weight: 700; color: var(--text-color-highlight); margin-top: 1rem; margin-bottom: 0.4rem; font-size: 0.95rem; }
+        .collapse-content h6:first-child { margin-top: 0; }
+        .collapse-content ul { padding-left: 0.5rem; margin-bottom: 0.8rem; list-style: none; }
+        .collapse-content li { margin-bottom: 0.7rem; padding-bottom: 0.7rem; font-size: 0.88rem; line-height: 1.55; border-bottom: 1px dotted #d6e1eb; position: relative; padding-left: 1.7rem; }
+        .collapse-content li:last-child { border-bottom: none; margin-bottom: 0; }
+         .collapse-content li::before {
+             /* Use a specific icon related to the category if possible, default to check */
+             content: "\F23A"; /* Box arrow right - more neutral */
+             font-family: "bootstrap-icons"; position: absolute; left: 0; top: 4px;
+             color: var(--pg-category-color); opacity: 0.7; font-size: 1em;
+            }
+         .collapse-content li strong { color: var(--text-color-highlight); display: block; margin-bottom: 0.2rem; font-weight: 600; }
+         .collapse-content p { font-size: 0.9rem; margin-bottom: 0.6rem; line-height: 1.6; }
+         .collapse-content code {
+             font-size: 0.88rem;
+             color: var(--pg-primary-dark); /* Use PG blue for code */
+             background-color: var(--pg-primary-light);
+             padding: 0.15em 0.4em;
+             border-radius: 3px;
+             font-family: Consolas, Menlo, Monaco, 'Courier New', monospace;
+             word-wrap: break-word;
+            }
+        .collapse-content pre code { display: block; padding: 0.8em; white-space: pre-wrap; } /* Code blocks */
+
+        .row > * { margin-bottom: 2rem; } /* Restore bottom margin for multi-card rows */
+        footer { padding-top: 3rem; font-size: .85em; color: #6c757d; position: relative; z-index: 10; text-align: center; }
+
+        .details-toggle {
+            font-size: 0.8rem; margin-top: auto; align-self: flex-start;
+            padding: 0.3rem 0.6rem; color: var(--pg-category-color);
+            border: 1px solid var(--pg-category-color); background-color: transparent;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            border-radius: 3px;
+        }
+         .details-toggle:hover { background-color: var(--pg-category-color); color: white; }
+         .details-toggle .bi { transition: transform 0.2s ease-in-out; }
+         .details-toggle[aria-expanded="true"] .bi { transform: rotate(180deg); }
+
+        .term {
+            font-weight: 600;
+            color: var(--pg-primary-dark);
+            background-color: #e4edf5; /* Lighter blue background */
+            padding: 0.1em 0.4em;
+            border-radius: 3px;
+            border: 1px solid var(--pg-primary-light);
+            font-size: 0.95em;
+            }
+
+        /* Special styling for Quirk cards */
+        .info-card.type-quirk { border-left-color: var(--pg-color-quirks); }
+        .info-card.type-quirk h5 .bi { color: var(--pg-color-quirks); }
+        .info-card.type-quirk .details-toggle { color: var(--pg-color-quirks); border-color: var(--pg-color-quirks); }
+        .info-card.type-quirk .details-toggle:hover { background-color: var(--pg-color-quirks); color: white; }
+        .info-card.type-quirk .collapse-content li::before { color: var(--pg-color-quirks); }
+
+        /* Special styling for Performance cards */
+         .info-card.type-perf { border-left-color: var(--pg-color-performance); }
+        .info-card.type-perf h5 .bi { color: var(--pg-color-performance); }
+        .info-card.type-perf .details-toggle { color: var(--pg-color-performance); border-color: var(--pg-color-performance); }
+        .info-card.type-perf .details-toggle:hover { background-color: var(--pg-color-performance); color: white; }
+        .info-card.type-perf .collapse-content li::before { color: var(--pg-color-performance); }
+
+
+        /* Category Color Assignments */
+        .cat-concept { --pg-category-color: var(--pg-color-concept); }
+        .cat-datatype { --pg-category-color: var(--pg-color-datatype); }
+        .cat-indexing { --pg-category-color: var(--pg-color-indexing); }
+        .cat-sql { --pg-category-color: var(--pg-color-sql); }
+        .cat-concurrency { --pg-category-color: var(--pg-color-concurrency); }
+        .cat-performance { --pg-category-color: var(--pg-color-performance); }
+        .cat-extensions { --pg-category-color: var(--pg-color-extensions); }
+        .cat-replication { --pg-category-color: var(--pg-color-replication); }
+        .cat-backup { --pg-category-color: var(--pg-color-backup); }
+        .cat-security { --pg-category-color: var(--pg-color-security); }
+        .cat-tools { --pg-category-color: var(--pg-color-tools); }
+        .cat-quirks { --pg-category-color: var(--pg-color-quirks); }
+
+        /* Ensure specific types inherit section color if not overridden */
+        .type-process, .type-memory, .type-storage, .type-wal, .type-mvcc, .type-txid, .type-terminology { --pg-category-color: var(--pg-color-concept); }
+        .type-jsonb, .type-array, .type-range, .type-enum, .type-misc-types { --pg-category-color: var(--pg-color-datatype); }
+        .type-btree, .type-hash, .type-gist, .type-gin, .type-brin, .type-index-features { --pg-category-color: var(--pg-color-indexing); }
+        .type-cte, .type-window, .type-lateral, .type-distinct-on, .type-upsert, .type-dml { --pg-category-color: var(--pg-color-sql); }
+        .type-isolation, .type-locking { --pg-category-color: var(--pg-color-concurrency); }
+        .type-vacuum, .type-analyze, .type-explain, .type-stats, .type-config { --pg-category-color: var(--pg-color-performance); }
+        .type-pl, .type-extensions, .type-fdw { --pg-category-color: var(--pg-color-extensions); }
+        .type-streaming-rep, .type-logical-rep, .type-ha-tools { --pg-category-color: var(--pg-color-replication); }
+        .type-pgdump, .type-physical-backup, .type-pitr { --pg-category-color: var(--pg-color-backup); }
+        .type-auth, .type-permissions, .type-ssl { --pg-category-color: var(--pg-color-security); }
+        .type-psql, .type-gui { --pg-category-color: var(--pg-color-tools); }
+        .type-case, .type-public, .type-searchpath, .type-pooling, .type-role { --pg-category-color: var(--pg-color-quirks); }
+
+        /* Override specific types for emphasis */
+        .type-quirk { --pg-category-color: var(--pg-color-quirks) !important; } /* Ensure quirk color overrides */
+        .type-perf { --pg-category-color: var(--pg-color-performance) !important; } /* Ensure perf color overrides */
+
+
+    </style>
+</head>
+<body>
+<header class="page-header">
+    <!-- Icon representing PostgreSQL - could use a custom SVG/image if preferred -->
+     <h1><i class="bi bi-database-gear"></i> PostgreSQL Power User Cheatsheet</h1>
+    <p class="lead">A practical guide for Developers and DBAs working with PostgreSQL.</p>
+</header>
+<div class="container" id="main-container">
+
+    <!-- 1. ARCHITECTURE & CORE CONCEPTS -->
+    <div class="schema-container cat-concept" data-section-id="section-concepts">
+        <h2 class="section-title" id="title-concepts">Architecture & Core Concepts</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card type-process" id="card-process">
+                    <div class="card-body"><h5><i class="bi bi-cpu"></i> Process Model</h5>
+                    <div class="card-content-wrapper"><p class="summary">Multi-process architecture. A central listener (<span class="term">postmaster</span>/`postgres`) forks a new backend process for each client connection.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProcess" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseProcess">
+                        <h6>Details</h6>
+                        <ul>
+                            <li><strong>Master Process (`postgres`):</strong> Listens for connections, manages shared memory, starts background utility processes (e.g., checkpointer, WAL writer, autovacuum launcher).</li>
+                            <li><strong>Backend Process (`postgres`):</strong> One per connection. Handles parsing, planning, execution, communication with the client. Isolates crashes to a single connection.</li>
+                            <li><strong>Pros:</strong> Robustness, stability (crash in one backend doesn't take down DB).</li>
+                            <li><strong>Cons/Quirk:</strong> Higher connection overhead (memory/CPU per process). Requires external <span class="term">connection poolers</span> (e.g., PgBouncer, Pgpool-II) for applications with many short-lived connections (like typical web apps) to avoid resource exhaustion.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-memory" id="card-memory">
+                    <div class="card-body"><h5><i class="bi bi-memory"></i> Memory Areas</h5>
+                    <div class="card-content-wrapper"><p class="summary">Key memory settings include <span class="term">shared_buffers</span> (main cache), <span class="term">work_mem</span> (per-operation sort/hash), and <span class="term">maintenance_work_mem</span> (VACUUM, indexes).</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMemory" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseMemory">
+                         <h6>Shared Memory (Server-wide)</h6>
+                         <ul>
+                            <li><strong>`shared_buffers`</strong>: PostgreSQL's primary data cache. Stores frequently accessed table/index blocks. Typically set to ~25% of system RAM (up to a point, depends on workload/OS).</li>
+                             <li><strong>WAL Buffers</strong>: Buffers Write-Ahead Log records before writing to disk. Usually auto-tuned (`-1`), small relative to `shared_buffers`.</li>
+                         </ul>
+                         <h6>Per-Backend/Operation Memory</h6>
+                         <ul>
+                             <li><strong>`work_mem`</strong>: Memory used by *each* sort operation (ORDER BY, DISTINCT), hash join, hash aggregation. Multiple operations within one query can each use `work_mem`. Set carefully to avoid OOM errors; too low causes disk spills.</li>
+                             <li><strong>`maintenance_work_mem`</strong>: Memory used for maintenance tasks like `VACUUM`, `CREATE INDEX`, `ALTER TABLE ADD FOREIGN KEY`. Can be set much higher than `work_mem` as fewer such operations run concurrently.</li>
+                             <li><strong>`temp_buffers`</strong>: Caches temporary tables.</li>
+                         </ul>
+                          <h6>Other</h6>
+                         <ul>
+                             <li><strong>Commit Log (CLOG) Buffers</strong>: Caches transaction status.</li>
+                             <li><strong>OS Cache</strong>: PostgreSQL relies heavily on the operating system's file cache. `effective_cache_size` tells the planner how much memory is likely available in OS + PG cache.</li>
+                         </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card type-storage" id="card-storage">
+                    <div class="card-body"><h5><i class="bi bi-hdd"></i> Storage</h5>
+                    <div class="card-content-wrapper"><p class="summary">Data stored in files based on OIDs. <span class="term">Tablespaces</span> map logical names to disk locations. Large values use <span class="term">TOAST</span>.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStorage" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseStorage">
+                        <h6>File Layout</h6>
+                        <ul>
+                            <li>Data directory (`PGDATA`) contains global config, WAL, per-database directories.</li>
+                            <li>Each database has its own directory (named by its OID).</li>
+                            <li>Each table and index (<span class="term">relation</span>) is stored in one or more files (named by its filenode OID), typically segmented into 1GB files (`relname.1`, `relname.2`...).</li>
+                        </ul>
+                        <h6>Tablespaces</h6>
+                        <ul>
+                            <li>Allow defining locations on the filesystem where database objects (tables, indexes, databases) can be stored.</li>
+                            <li>Useful for separating objects onto different disk types (e.g., fast SSDs for indexes, large HDDs for tables) or managing storage quotas.</li>
+                            <li><code>CREATE TABLESPACE fastspace LOCATION '/mnt/ssd_storage';</code></li>
+                            <li><code>CREATE TABLE ... TABLESPACE fastspace;</code></li>
+                        </ul>
+                         <h6>TOAST (The Oversized Attribute Storage Technique)</h6>
+                        <ul>
+                            <li>Handles storage of large column values that don't fit within a standard data block (~8KB).</li>
+                             <li>Automatically splits large values into chunks stored in a separate TOAST table associated with the main table.</li>
+                             <li>Can apply compression to TOASTed values.</li>
+                             <li>Transparent to the user but affects performance for very large fields. Contributes to bloat.</li>
+                             <li>Control via `ALTER TABLE ... SET STORAGE {PLAIN|EXTERNAL|EXTENDED|MAIN}`.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-wal" id="card-wal">
+                    <div class="card-body"><h5><i class="bi bi-journal-text"></i> Write-Ahead Logging (WAL)</h5>
+                    <div class="card-content-wrapper"><p class="summary">Ensures durability by logging changes *before* they are written to data files. Essential for recovery and replication.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWAL" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseWAL">
+                         <h6>Mechanism</h6>
+                         <ul>
+                             <li>All changes (INSERT, UPDATE, DELETE, DDL) are first written as log records to WAL buffers, then flushed to WAL segment files on disk (`pg_wal` directory).</li>
+                            <li>Only *after* the WAL record is durably stored on disk is the change allowed to be written to the actual table/index files (heap/index pages) in shared buffers, which are flushed later by the checkpointer or background writer.</li>
+                         </ul>
+                         <h6>Purpose</h6>
+                         <ul>
+                            <li><strong>Crash Recovery:</strong> On startup after a crash, Postgres replays WAL records since the last checkpoint to restore the database to a consistent state.</li>
+                            <li><strong>Durability Guarantee:</strong> A transaction commit is confirmed only after its WAL records are flushed to disk.</li>
+                            <li><strong>Replication:</strong> Standby servers continuously stream and apply WAL records from the primary.</li>
+                             <li><strong>Point-in-Time Recovery (PITR):</strong> Requires continuous archiving of WAL segment files.</li>
+                         </ul>
+                         <h6>Key Concepts</h6>
+                         <ul>
+                             <li><strong>WAL Segments:</strong> Files (default 16MB) containing WAL records. Sequentially numbered.</li>
+                            <li><strong>Checkpoints:</strong> Points in the WAL stream where all data file changes prior to the checkpoint are guaranteed to have been flushed to disk. Limits recovery time. Triggered by time or amount of WAL generated.</li>
+                            <li><strong>WAL Archiving:</strong> Process of copying completed WAL segment files to a safe location (`archive_command`). Essential for PITR and some replication setups.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-mvcc" id="card-mvcc">
+                     <div class="card-body"><h5><i class="bi bi-layers"></i> MVCC</h5>
+                     <div class="card-content-wrapper"><p class="summary">Multi-Version Concurrency Control. Updates create new row versions instead of overwriting. Readers don't block writers.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMVCC" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                      <div class="collapse collapse-content" id="collapseMVCC">
+                         <h6>How it Works</h6>
+                         <ul>
+                            <li>When a row is updated or deleted, Postgres marks the old version as "expired" by setting transaction metadata (`xmax`) and inserts a new version (for UPDATE) with its own transaction metadata (`xmin`).</li>
+                            <li>Each transaction gets a snapshot of the database when it starts (in `READ COMMITTED`) or at its first query (in `REPEATABLE READ`/`SERIALIZABLE`).</li>
+                            <li>A transaction can only "see" row versions that were committed *before* its snapshot began and are not expired *relative to its snapshot*.</li>
+                            <li>Expired row versions (<span class="term">dead tuples</span>) physically remain until cleaned up by `VACUUM`.</li>
+                         </ul>
+                         <h6>Benefits</h6>
+                         <ul>
+                             <li>High concurrency: Readers don't block writers, and writers don't block readers (for data access).</li>
+                             <li>Read consistency: Queries see a consistent snapshot of the data.</li>
+                         </ul>
+                          <h6>Consequences (Quirks)</h6>
+                          <ul>
+                             <li><strong>Bloat:</strong> Dead tuples accumulate, consuming disk space and potentially slowing down scans. Requires regular `VACUUM`.</li>
+                             <li><strong>UPDATEs are expensive:</strong> An UPDATE is internally like a DELETE + INSERT, requiring new tuple creation and index entries.</li>
+                             <li><strong>Transaction ID Wraparound:</strong> Requires freezing via `VACUUM` (see Quirks section).</li>
+                         </ul>
+                     </div>
+                 </div>
+             </div>
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card type-terminology" id="card-terminology">
+                    <div class="card-body"><h5><i class="bi bi-translate"></i> PG Terminology</h5>
+                    <div class="card-content-wrapper"><p class="summary">Key terms: <span class="term">Relation</span> (Table/Index), <span class="term">Schema</span> (Namespace), <span class="term">Role</span> (User/Group), <span class="term">Heap</span> (Table Data), <span class="term">Tuple</span> (Row).</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTerms" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseTerms">
+                        <ul>
+                            <li><strong>Relation:</strong> General term for any table-like object stored on disk. Most commonly refers to Tables and Indexes. Views are also sometimes called relations but are stored differently (as rules/queries).</li>
+                            <li><strong>Schema:</strong> A namespace within a database containing objects like tables, views, functions, etc. Allows organizing objects and preventing naming conflicts. Distinct from the concept of "table schema" (column definitions). Default is `public`.</li>
+                            <li><strong>Role:</strong> Unified concept encompassing both Users and Groups. A role can log in (if `LOGIN` privilege is granted), own objects, and be a member of other roles (inheritance). Use `CREATE ROLE`.</li>
+                            <li><strong>Heap:</strong> The main storage structure for a table's data (rows/tuples).</li>
+                            <li><strong>Tuple:</strong> A physical row version stored on disk within a heap block.</li>
+                            <li><strong>OID (Object Identifier):</strong> Internal unique number assigned to most database objects (databases, tables, rows - optional, schemas, etc.). Often used in system catalogs.</li>
+                            <li><strong>WAL:</strong> Write-Ahead Log.</li>
+                            <li><strong>MVCC:</strong> Multi-Version Concurrency Control.</li>
+                            <li><strong>TOAST:</strong> The Oversized Attribute Storage Technique.</li>
+                             <li><strong>Planner/Optimizer:</strong> Component that determines the most efficient way to execute a query.</li>
+                             <li><strong>Executor:</strong> Component that runs the plan generated by the planner.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- 2. DATA TYPES -->
+    <div class="schema-container cat-datatype" data-section-id="section-datatype">
+        <h2 class="section-title" id="title-datatype">Data Types (Postgres Strengths)</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card type-jsonb" id="card-jsonb">
+                    <div class="card-body"><h5><i class="bi bi-file-earmark-code"></i> JSON / JSONB</h5>
+                    <div class="card-content-wrapper"><p class="summary"><span class="term">JSONB</span> stores decomposed binary JSON. Supports GIN indexing for fast lookups using operators like `->>`, `@>`, `?`.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJsonb" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseJsonb">
+                        <h6>JSON vs JSONB</h6>
+                        <ul>
+                            <li><strong>`JSON`</strong>: Stores an exact textual copy. Preserves whitespace, key order, duplicate keys. Slower processing.</li>
+                            <li><strong>`JSONB`</strong>: Stores decomposed binary format. More efficient storage (usually), much faster processing. Removes duplicate keys, doesn't preserve whitespace/key order. **Generally preferred.**</li>
+                        </ul>
+                        <h6>Key Operators</h6>
+                        <ul>
+                            <li>`->`: Get JSON object field/array element (returns `json`/`jsonb`).</li>
+                            <li>`->>`: Get JSON object field/array element as `text`.</li>
+                            <li>`#>`: Get JSON object at specified path (returns `json`/`jsonb`).</li>
+                            <li>`#>>`: Get JSON object at specified path as `text`.</li>
+                            <li>`@>`: Contains (left contains right). `jsonb '{"a":1, "b":2}' @> '{"a":1}'` -> true.</li>
+                            <li>`<@`: Is contained by (left is contained by right).</li>
+                            <li>`?`: Key exists (string operand). `'{"a":1}'::jsonb ? 'a'` -> true.</li>
+                            <li>`?|`: Any key in array exists.</li>
+                            <li>`?&`: All keys in array exist.</li>
+                        </ul>
+                         <h6>Indexing (GIN)</h6>
+                         <ul>
+                            <li>`CREATE INDEX idx_gin ON mytable USING GIN (jsonb_column);` (Indexes all keys/values).</li>
+                            <li>`CREATE INDEX idx_gin_ops ON mytable USING GIN (jsonb_column jsonb_ops);` (Default opclass).</li>
+                            <li>`CREATE INDEX idx_gin_path_ops ON mytable USING GIN (jsonb_column jsonb_path_ops);` (Optimized for `@>` operator).</li>
+                            <li>Supports operators like `@>`, `?`, `?|`, `?&`. Crucial for performance!</li>
+                         </ul>
+                         <h6>Use Cases</h6>
+                         <p>Storing semi-structured data, document storage, flexible schemas, API payloads.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card type-array" id="card-array">
+                    <div class="card-body"><h5><i class="bi bi-list-ol"></i> Arrays</h5>
+                    <div class="card-content-wrapper"><p class="summary">Native array support for most data types (e.g., `integer[]`, `text[]`). Indexable with GIN using operators like `@>`, `&&`.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseArray" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseArray">
+                        <h6>Syntax</h6>
+                        <ul>
+                            <li>Declaration: `my_ints integer[]`, `my_tags text[]`.</li>
+                            <li>Literals: `ARRAY[1, 2, 3]`, `'{apple, banana, cherry}'::text[]`.</li>
+                            <li>Access: `my_array[1]` (1-based indexing!). `my_array[1:2]` (slice).</li>
+                        </ul>
+                         <h6>Key Operators</h6>
+                         <ul>
+                            <li>`=`: Array equality (element-by-element, order matters).</li>
+                            <li>`@>`: Contains (left contains right). `ARRAY[1,2,3] @> ARRAY[1,2]` -> true.</li>
+                            <li>`<@`: Is contained by.</li>
+                            <li>`&&`: Overlaps (have elements in common). `ARRAY[1,2,3] && ARRAY[3,4,5]` -> true.</li>
+                            <li>`ANY(array)` / `SOME(array)`: Check against array elements, e.g. `col = ANY(my_array)`.</li>
+                            <li>`ALL(array)`: Check all elements satisfy condition.</li>
+                         </ul>
+                         <h6>Indexing (GIN)</h6>
+                         <ul>
+                             <li>`CREATE INDEX idx_array_gin ON mytable USING GIN (array_column);`</li>
+                             <li>Supports `@>`, `<@`, `&&`, `=` (for some types). Essential for searching within arrays efficiently.</li>
+                         </ul>
+                         <h6>Functions</h6>
+                         <ul>
+                            <li>`array_append()`, `array_prepend()`, `array_cat()`, `array_dims()`, `cardinality()` (size), `unnest()` (expand array to rows).</li>
+                         </ul>
+                         <h6>Use Cases</h6>
+                         <p>Storing tags, simple lists of related IDs, multi-value attributes.</p>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-range" id="card-range">
+                    <div class="card-body"><h5><i class="bi bi-calendar-range"></i> Range Types</h5>
+                    <div class="card-content-wrapper"><p class="summary">Represent ranges (`int4range`, `tsrange`, etc.). Support GIST indexing and exclusion constraints to prevent overlaps.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRange" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseRange">
+                         <h6>Built-in Types</h6>
+                         <ul>
+                            <li>`int4range`, `int8range`, `numrange`, `tsrange` (timestamp without tz), `tstzrange` (timestamp with tz), `daterange`.</li>
+                            <li>Can create custom range types.</li>
+                         </ul>
+                          <h6>Syntax</h6>
+                         <ul>
+                            <li>Literals: `[)`, `(]`, `()`, `[]` denote inclusive/exclusive bounds.</li>
+                            <li>Examples: `'[2024-01-01, 2024-01-31)'::daterange`, `'[10, 20]'::int4range`. Empty ranges allowed. Unbounded ranges use omitted bound.</li>
+                         </ul>
+                          <h6>Key Operators</h6>
+                         <ul>
+                             <li>`@>`: Contains element or range. `daterange('2024-01-01', '2024-02-01') @> '2024-01-15'::date` -> true.</li>
+                             <li>`<@`: Is contained by.</li>
+                             <li>`&&`: Overlaps.</li>
+                             <li>`<<`: Strictly left of.</li>
+                             <li>`>>`: Strictly right of.</li>
+                             <li>`&<`: Extends to the right (no overlap).</li>
+                             <li>`&>`: Extends to the left (no overlap).</li>
+                             <li>`-|-` (adjacent): `tsrange('2024-01-01 10:00', '2024-01-01 11:00') -|- tsrange('2024-01-01 11:00', '2024-01-01 12:00')` -> true.</li>
+                         </ul>
+                          <h6>Indexing (GiST)</h6>
+                          <ul>
+                              <li>`CREATE INDEX idx_range_gist ON mytable USING GIST (range_column);`</li>
+                              <li>Supports range operators like `@>`, `&&`, `<@`, etc.</li>
+                          </ul>
+                          <h6>Exclusion Constraints</h6>
+                          <ul>
+                              <li>Prevent overlapping ranges within a table, often used for scheduling or booking systems.</li>
+                              <li><code>ALTER TABLE events ADD CONSTRAINT no_overlapping_times EXCLUDE USING GIST (room_id WITH =, event_times WITH &&);</code></li>
+                          </ul>
+                     </div>
+                 </div>
+             </div>
+              <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-enum" id="card-enum">
+                    <div class="card-body"><h5><i class="bi bi-signpost-split"></i> Enum Types</h5>
+                    <div class="card-content-wrapper"><p class="summary">User-defined enumerated types (`CREATE TYPE mood AS ENUM (...)`). Provides type safety and better semantics than check constraints.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEnum" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseEnum">
+                         <h6>Definition</h6>
+                         <ul>
+                            <li><code>CREATE TYPE primary_color AS ENUM ('red', 'green', 'blue');</code></li>
+                            <li><code>CREATE TABLE items (id serial PRIMARY KEY, color primary_color);</code></li>
+                         </ul>
+                         <h6>Benefits</h6>
+                         <ul>
+                             <li><strong>Type Safety:</strong> Ensures only defined values can be stored.</li>
+                             <li><strong>Readability:</strong> More descriptive than storing magic numbers or strings.</li>
+                             <li><strong>Storage Efficiency:</strong> Stored efficiently internally (typically 4 bytes).</li>
+                             <li><strong>Ordering:</strong> Enum values have an implicit sort order based on definition order.</li>
+                         </ul>
+                          <h6>Usage</h6>
+                         <ul>
+                             <li>Insert values like strings: `INSERT INTO items (color) VALUES ('red');`</li>
+                             <li>Compare directly: `WHERE color = 'red'`, `WHERE color > 'green'`.</li>
+                         </ul>
+                          <h6>Modification</h6>
+                         <ul>
+                             <li>Add values: `ALTER TYPE primary_color ADD VALUE 'yellow' AFTER 'blue';` (Cannot easily remove or reorder values).</li>
+                         </ul>
+                         <h6>Comparison to Check Constraints</h6>
+                         <p>Enums are generally preferred over `CHECK (color IN ('red', 'green', 'blue'))` because they are more type-safe, potentially faster, and easier to manage centrally.</p>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-misc-types" id="card-misc-types">
+                    <div class="card-body"><h5><i class="bi bi-box-seam"></i> Other Notable Types</h5>
+                    <div class="card-content-wrapper"><p class="summary">Includes native <span class="term">UUID</span>, Geometric types (PostGIS foundation), Network types (`inet`), and <span class="term">Hstore</span> (key/value).</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMiscTypes" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseMiscTypes">
+                        <ul>
+                            <li><strong>`UUID`</strong>: Stores Universally Unique Identifiers. Preferred over storing as `text` for efficiency and semantics. Generate using `gen_random_uuid()` (requires `pgcrypto` extension) or client-side.</li>
+                            <li><strong>Geometric Types (`point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle`)</strong>: Basic 2D geometric types. Indexed using GiST. Foundation for the powerful PostGIS extension.</li>
+                            <li><strong>Network Address Types (`cidr`, `inet`, `macaddr`, `macaddr8`)</strong>: Store and query IP addresses/networks and MAC addresses. Supports subnet containment operators (`>>`, `<<`). Indexable.</li>
+                             <li><strong>`Hstore` Extension (`CREATE EXTENSION hstore`)</strong>: Simple key-value store within a column. Keys/values are strings. Indexed using GIN or GiST. Often superseded by JSONB now, but still useful for simpler cases or legacy systems. Operators: `->`, `?`, `@>`.</li>
+                            <li><strong>`TIMESTAMP WITH TIME ZONE` (`timestamptz`) vs `TIMESTAMP WITHOUT TIME ZONE` (`timestamp`)</strong>:
+                                <ul><li>`timestamptz`: **Strongly recommended**. Stores UTC timestamp. Converts input to UTC based on session timezone, converts back to session timezone on output. Unambiguous point in time.</li>
+                                <li>`timestamp`: Stores literal date/time provided, ignoring timezone. Ambiguous. Avoid unless you have a very specific reason.</li></ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- 3. INDEXING POWER -->
+    <div class="schema-container cat-indexing" data-section-id="section-indexing">
+        <h2 class="section-title" id="title-indexing">Indexing Power</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card type-btree" id="card-btree">
+                    <div class="card-body"><h5><i class="bi bi-diagram-3"></i> B-Tree Index</h5>
+                    <div class="card-content-wrapper"><p class="summary">Default index type. Excellent for equality (`=`), range (`<`, `>`, `BETWEEN`), `IN`, `IS NULL`, and sorting.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBtree" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseBtree">
+                        <h6>Core Use Case</h6>
+                        <p>The workhorse index for most relational data. Stores indexed values in a sorted tree structure, allowing efficient lookups, range scans, and ordered retrieval.</p>
+                        <h6>Supported Operators</h6>
+                        <p>`=`, `<`, `<=`, `>`, `>=`, `BETWEEN`, `IN`, `IS NULL`, `IS NOT NULL`.</p>
+                        <h6>Sorting</h6>
+                        <p>Can satisfy `ORDER BY` clauses matching the index definition (including ASC/DESC, NULLS FIRST/LAST), potentially avoiding a separate sort step.</p>
+                        <h6>Examples</h6>
+                        <ul>
+                            <li>`CREATE INDEX idx_users_email ON users (email);` (For `WHERE email = '...'`)</li>
+                            <li>`CREATE INDEX idx_orders_created ON orders (created_at DESC);` (For `WHERE created_at > '...' ORDER BY created_at DESC`)</li>
+                        </ul>
+                        <h6>Considerations</h6>
+                        <p>Effective for high-cardinality columns. Can become large. Index maintenance (bloat) is a factor.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-gin" id="card-gin">
+                    <div class="card-body"><h5><i class="bi bi-diagram-2"></i> GIN Index</h5>
+                     <div class="card-content-wrapper"><p class="summary">Generalized Inverted Index. Optimized for composite types like <span class="term">JSONB</span>, <span class="term">Arrays</span>, <span class="term">Hstore</span>, Full-Text Search. Indexes elements *within* values.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGin" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseGin">
+                         <h6>Core Concept</h6>
+                         <p>Creates an index entry for each unique element (key, array item, lexeme) pointing to the rows (heap TIDs) containing that element. Ideal for "contains" or "exists" style queries.</p>
+                         <h6>Use Cases & Supported Operators</h6>
+                         <ul>
+                             <li><strong>Arrays:</strong> Supports `@>` (contains), `<@` (contained by), `&&` (overlaps), `=` (equality).</li>
+                             <li><strong>JSONB:</strong> Supports `@>`, `<@`, `?` (key exists), `?|` (any key exists), `?&` (all keys exist). Use `jsonb_ops` (default) or `jsonb_path_ops` (optimized for `@>`).</li>
+                             <li><strong>Hstore:</strong> Supports `@>`, `?`, `?|`, `?&`.</li>
+                             <li><strong>Full-Text Search (`tsvector`):</strong> Supports `@@` (match) operator.</li>
+                         </ul>
+                         <h6>Performance</h6>
+                         <ul>
+                             <li>Very fast lookups for containment/existence queries.</li>
+                             <li>Can be significantly slower to build/update than B-Tree or GiST, as inserting/updating one row might require updating many index entries if the value contains many unique elements.</li>
+                             <li>Index size can be large, but often smaller than GiST for the same data.</li>
+                         </ul>
+                         <h6>Example</h6>
+                         <p><code>CREATE INDEX idx_tags_gin ON articles USING GIN (tags);</code> (for `tags text[]`)<br/>
+                         <code>CREATE INDEX idx_metadata_gin ON products USING GIN (metadata jsonb_path_ops);</code> (for `metadata jsonb`)</p>
+                    </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-gist" id="card-gist">
+                    <div class="card-body"><h5><i class="bi bi-grid-3x3-gap"></i> GiST Index</h5>
+                     <div class="card-content-wrapper"><p class="summary">Generalized Search Tree. Framework index for complex types: Geometric, Full-Text Search, Ranges. Handles overlap/containment, nearest-neighbor.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGist" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseGist">
+                        <h6>Core Concept</h6>
+                         <p>A height-balanced tree structure like B-Tree, but generalized to handle complex data types and query operators beyond simple comparison. Uses "lossy" indexing in some cases, meaning the index might return some false positives that need rechecking against the heap.</p>
+                         <h6>Use Cases & Supported Operators</h6>
+                         <ul>
+                            <li><strong>Geometric Types (PostGIS):</strong> Supports spatial operators like intersection (`&&`), containment (`@`, `~`), distance (`<->` for KNN).</li>
+                            <li><strong>Range Types:</strong> Supports overlap (`&&`), containment (`@>`, `<@`), adjacency (`-|-`), etc.</li>
+                            <li><strong>Full-Text Search (`tsvector`):</strong> Supports `@@` (match) operator. Often faster updates but slower searches than GIN for FTS.</li>
+                             <li><strong>Other extensions (`hstore`, `pg_trgm` for fuzzy search):</strong> Can provide GiST support.</li>
+                         </ul>
+                         <h6>Performance</h6>
+                         <ul>
+                             <li>Generally faster to build/update than GIN.</li>
+                             <li>Search performance can be slower than GIN for types GIN handles well (like JSONB/Array containment).</li>
+                             <li>Handles KNN (K-Nearest Neighbor) searches efficiently (e.g., find points closest to X).</li>
+                         </ul>
+                          <h6>Example</h6>
+                         <p><code>CREATE INDEX idx_events_times_gist ON events USING GIST (event_times);</code> (for `event_times tstzrange`)<br/>
+                         <code>CREATE INDEX idx_locations_geom_gist ON locations USING GIST (geom);</code> (for PostGIS geometry column)</p>
+                    </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card type-brin" id="card-brin">
+                    <div class="card-body"><h5><i class="bi bi-bounding-box-circles"></i> BRIN Index</h5>
+                    <div class="card-content-wrapper"><p class="summary">Block Range Index. Very small index for huge tables where values correlate strongly with physical storage order (e.g., timestamps).</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBrin" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseBrin">
+                         <h6>Core Concept</h6>
+                         <p>Stores summary information (min/max values) for ranges of physical table blocks (`pages_per_range` setting). During a query, checks the summary to see if blocks *might* contain relevant values, skipping blocks where values are guaranteed to be outside the query range.</p>
+                          <h6>Ideal Scenario</h6>
+                          <ul>
+                             <li>Very large tables (many GBs/TBs).</li>
+                             <li>Column values have a strong linear correlation with their physical storage location. This often happens naturally for append-only tables with a timestamp or sequence column (e.g., log data, IoT measurements).</li>
+                          </ul>
+                         <h6>Benefits</h6>
+                         <ul>
+                             <li>Extremely small index size compared to B-Tree.</li>
+                             <li>Very fast to build and maintain.</li>
+                         </ul>
+                         <h6>Limitations</h6>
+                         <ul>
+                             <li>Only effective if the physical correlation exists. Randomly distributed data or frequently updated tables will not benefit.</li>
+                             <li>Less efficient than B-Tree for highly selective queries.</li>
+                             <li>Index results are "lossy" - it identifies candidate blocks, the query still needs to scan those blocks.</li>
+                         </ul>
+                          <h6>Example</h6>
+                         <p><code>CREATE INDEX idx_logs_ts_brin ON logs USING BRIN (log_timestamp);</code></p>
+                     </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-hash" id="card-hash">
+                    <div class="card-body"><h5><i class="bi bi-hash"></i> Hash Index</h5>
+                    <div class="card-content-wrapper"><p class="summary">Supports only equality (`=`) lookups. Less commonly used than B-Tree. Fully WAL-logged and usable since v10.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHash" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseHash">
+                         <h6>Core Concept</h6>
+                         <p>Stores a hash of the indexed value, mapping hashes to heap TIDs. Designed for fast equality checks.</p>
+                         <h6>Supported Operators</h6>
+                         <p>Only `=`.</p>
+                         <h6>Historical Context & Quirks</h6>
+                         <ul>
+                            <li>Before PostgreSQL v10, Hash indexes were not WAL-logged, meaning they had to be rebuilt after a crash and couldn't be replicated. This severely limited their use.</li>
+                            <li>Since v10, they are fully recoverable and replicable.</li>
+                         </ul>
+                         <h6>Use Cases (Limited)</h6>
+                         <ul>
+                            <li>Potentially smaller and slightly faster than B-Tree *only* for equality lookups on certain data patterns (e.g., long strings where only equality is needed).</li>
+                            <li>In most cases, B-Tree performs comparably or better even for equality and offers much more flexibility (range queries, sorting).</li>
+                            <li>B-Tree is usually the better default choice even if only equality is needed.</li>
+                         </ul>
+                          <h6>Example</h6>
+                         <p><code>CREATE INDEX idx_data_hash ON large_objects USING HASH (data_blob_hash);</code></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card type-index-features" id="card-index-features">
+                     <div class="card-body"><h5><i class="bi bi-stars"></i> Special Index Features</h5>
+                    <div class="card-content-wrapper"><p class="summary">Includes <span class="term">Partial</span>, <span class="term">Expression</span>, <span class="term">Covering (INCLUDE)</span>, and <span class="term">Concurrent</span> indexes for optimization.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdxFeatures" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseIdxFeatures">
+                        <ul>
+                            <li><strong>Partial Indexes:</strong> Index only a subset of rows defined by a `WHERE` clause.
+                                <ul><li>Reduces index size and maintenance overhead if queries frequently filter on the same condition.</li>
+                                <li>Example: `CREATE INDEX idx_orders_pending ON orders (order_id) WHERE status = 'pending';`</li></ul>
+                            </li>
+                             <li><strong>Expression Indexes (Functional Indexes):</strong> Index the result of a function or expression applied to one or more columns.
+                                <ul><li>Useful for queries filtering/sorting on functions (e.g., `lower()`, date extraction).</li>
+                                <li>Example: `CREATE INDEX idx_users_email_lower ON users (lower(email));` (for `WHERE lower(email) = '...'`)</li></ul>
+                            </li>
+                             <li><strong>Covering Indexes (INCLUDE clause):</strong> Store additional, non-key columns directly in the index leaf pages.
+                                <ul><li>Allows <span class="term">Index-Only Scans</span> where the query can be satisfied entirely from the index without visiting the table heap.</li>
+                                <li>Example: `CREATE INDEX idx_items_name ON items (name) INCLUDE (price, category);` (for `SELECT price FROM items WHERE name = '...'`)</li></ul>
+                            </li>
+                             <li><strong>Concurrent Index Builds:</strong> Create indexes without blocking writes (`INSERT`/`UPDATE`/`DELETE`) on the table.
+                                <ul><li>Takes longer and uses more resources than a standard `CREATE INDEX`. Requires multiple passes.</li>
+                                <li>Syntax: `CREATE INDEX CONCURRENTLY ...;`</li>
+                                <li>Essential for adding indexes to busy production tables with minimal downtime.</li>
+                                <li>Similar `REINDEX CONCURRENTLY` exists.</li></ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- 4. SQL & QUERYING -->
+    <div class="schema-container cat-sql" data-section-id="section-sql">
+        <h2 class="section-title" id="title-sql">SQL Features & Querying</h2>
+         <div class="row">
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card type-window" id="card-window">
+                    <div class="card-body"><h5><i class="bi bi-layout-three-columns"></i> Window Functions</h5>
+                     <div class="card-content-wrapper"><p class="summary">Perform calculations across sets of table rows related to the current row. Uses the `OVER()` clause (`PARTITION BY`, `ORDER BY`).</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWindow" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseWindow">
+                         <h6>Core Concept</h6>
+                         <p>Unlike aggregate functions which collapse rows, window functions return a value for *each* row based on a "window" of related rows.</p>
+                         <h6>Syntax</h6>
+                         <p><code>function_name() OVER ( [PARTITION BY expr_list] [ORDER BY expr_list] [frame_clause] )</code></p>
+                         <ul>
+                             <li><strong>`PARTITION BY`</strong>: Divides rows into partitions (groups). Window function is applied independently to each partition. (Optional)</li>
+                             <li><strong>`ORDER BY`</strong>: Defines the order of rows within each partition. Required for ranking and frame-dependent functions. (Optional for some functions)</li>
+                             <li><strong>`frame_clause`</strong>: Defines the subset of rows within the partition relative to the current row (e.g., `ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING`). (Optional)</li>
+                         </ul>
+                         <h6>Common Functions</h6>
+                         <ul>
+                             <li><strong>Ranking:</strong> `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()`, `NTILE(n)`.</li>
+                             <li><strong>Aggregate Windows:</strong> `SUM()`, `AVG()`, `COUNT()`, `MAX()`, `MIN()` applied over the window frame.</li>
+                             <li><strong>Value Fetching:</strong> `LAG()`, `LEAD()`, `FIRST_VALUE()`, `LAST_VALUE()`, `NTH_VALUE()`.</li>
+                         </ul>
+                         <h6>Example Use Cases</h6>
+                         <p>Calculating running totals, ranking results within categories, finding previous/next values, computing moving averages.</p>
+                         <p><code>SELECT order_id, order_date, amount, SUM(amount) OVER (ORDER BY order_date) as running_total FROM orders;</code></p>
+                         <p><code>SELECT product, category, sales, RANK() OVER (PARTITION BY category ORDER BY sales DESC) as category_rank FROM product_sales;</code></p>
+                    </div>
+                </div>
+            </div>
+              <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-cte" id="card-cte">
+                    <div class="card-body"><h5><i class="bi bi-file-earmark-ruled"></i> Common Table Expressions (CTEs)</h5>
+                     <div class="card-content-wrapper"><p class="summary">Define temporary, named result sets within a query using `WITH`. Improves readability. Supports `RECURSIVE` for hierarchies.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCte" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseCte">
+                        <h6>Basic CTE</h6>
+                         <p>Allows breaking down complex queries into logical, named steps.</p>
+                         <pre><code>WITH regional_sales AS (
+    SELECT region, SUM(amount) AS total_sales
+    FROM orders
+    GROUP BY region
+), top_regions AS (
+    SELECT region FROM regional_sales
+    WHERE total_sales > 10000
+)
+SELECT * FROM orders
+WHERE region IN (SELECT region FROM top_regions);</code></pre>
+                        <h6>Recursive CTEs</h6>
+                        <p>Used for querying hierarchical data (e.g., organizational charts, parts explosion, graph traversal).</p>
+                        <pre><code>WITH RECURSIVE subordinates AS (
+    -- Non-recursive term (anchor)
+    SELECT employee_id, name, manager_id, 1 as level
+    FROM employees
+    WHERE manager_id IS NULL
+UNION ALL
+    -- Recursive term
+    SELECT e.employee_id, e.name, e.manager_id, s.level + 1
+    FROM employees e
+    JOIN subordinates s ON e.manager_id = s.employee_id
+)
+SELECT * FROM subordinates;</code></pre>
+                         <h6>Materialization (Quirk)</h6>
+                         <ul>
+                            <li>By default, CTEs might be "inlined" by the planner.</li>
+                            <li>Use `WITH cte AS MATERIALIZED (...)` (Postgres 12+) to force the CTE result to be computed once and stored temporarily. Can help performance if the CTE is referenced multiple times, but can hurt if it's large and only used partially.</li>
+                         </ul>
+                          <h6>Data Modifying CTEs</h6>
+                         <p>You can have `INSERT`, `UPDATE`, or `DELETE` statements within a CTE, using their `RETURNING` clause to pass data to subsequent parts of the query.</p>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-distinct-on" id="card-distinct-on">
+                    <div class="card-body"><h5><i class="bi bi-filter-circle"></i> DISTINCT ON</h5>
+                     <div class="card-content-wrapper"><p class="summary">Postgres-specific extension. Selects the *first* row for each unique combination of expressions in the `DISTINCT ON (...)` clause.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDistinctOn" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseDistinctOn">
+                        <h6>Syntax</h6>
+                         <p><code>SELECT DISTINCT ON (expression [, ...]) select_list FROM ... ORDER BY expression [, ...], order_expr [, ...]</code></p>
+                         <h6>How it Works</h6>
+                         <ul>
+                            <li>The query result is ordered according to the *entire* `ORDER BY` clause.</li>
+                            <li>For each group of rows that are identical according to the `DISTINCT ON` expressions, only the *first* row according to the `ORDER BY` clause is kept.</li>
+                            <li>**Crucial:** The `ORDER BY` clause *must* start with the same expressions as `DISTINCT ON` to get predictable results. Additional `ORDER BY` expressions determine which row is chosen within each distinct group.</li>
+                         </ul>
+                         <h6>Use Case: "Latest/Greatest per Group"</h6>
+                         <p>Very common for finding the most recent entry for each item.</p>
+                         <pre><code>-- Get the latest event for each device_id
+SELECT DISTINCT ON (device_id)
+    device_id, event_timestamp, event_data
+FROM device_events
+ORDER BY device_id, event_timestamp DESC;</code></pre>
+                        <h6>Comparison to Alternatives</h6>
+                         <p>Often more concise and performant than using window functions (`ROW_NUMBER() OVER (...) ... WHERE rn = 1`) or correlated subqueries for the same "latest-per-group" task, especially if indexed appropriately.</p>
+                    </div>
+                 </div>
+             </div>
+              <div class="col-lg-4 col-md-6">
+                <div class="info-card type-upsert" id="card-upsert">
+                    <div class="card-body"><h5><i class="bi bi-node-plus"></i> INSERT ... ON CONFLICT (UPSERT)</h5>
+                    <div class="card-content-wrapper"><p class="summary">Atomic "UPSERT" operation. Handles unique constraint violations by either doing nothing (`DO NOTHING`) or updating the existing row (`DO UPDATE`).</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpsert" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseUpsert">
+                         <h6>Syntax</h6>
+                         <pre><code>INSERT INTO table_name (column_list)
+VALUES (value_list)
+ON CONFLICT (conflict_target) DO conflict_action;</code></pre>
+                         <ul>
+                             <li><strong>`conflict_target`</strong>: Specifies the constraint that triggers the conflict handling. Can be:
+                                 <ul>
+                                     <li>`(column_name [, ...])`: A list of columns with a unique constraint.</li>
+                                     <li>`ON CONSTRAINT constraint_name`: The name of a unique or exclusion constraint.</li>
+                                     <li>`WHERE predicate`: (Optional) Only handle conflict if predicate is true.</li>
+                                 </ul>
+                             </li>
+                             <li><strong>`conflict_action`</strong>: Can be:
+                                 <ul>
+                                     <li>`DO NOTHING`: Silently ignore the row if a conflict occurs.</li>
+                                     <li>`DO UPDATE SET col1 = value1 [, ...] [WHERE condition]`: Update the existing row that caused the conflict. Can reference the existing row using the special `EXCLUDED` table (`SET count = mytable.count + EXCLUDED.count`).</li>
+                                 </ul>
+                             </li>
+                         </ul>
+                          <h6>Benefits</h6>
+                         <ul>
+                            <li>Atomic operation, avoiding race conditions inherent in separate SELECT-then-INSERT/UPDATE logic.</li>
+                             <li>Simplifies application code for handling data synchronization or idempotent inserts.</li>
+                         </ul>
+                         <h6>Example</h6>
+                         <pre><code>-- Increment counter or insert new row
+INSERT INTO counters (key, value)
+VALUES ('page_views', 1)
+ON CONFLICT (key) DO UPDATE
+SET value = counters.value + EXCLUDED.value;</code></pre>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-dml" id="card-dml">
+                    <div class="card-body"><h5><i class="bi bi-pencil-square"></i> Advanced DML</h5>
+                     <div class="card-content-wrapper"><p class="summary">Supports `UPDATE ... FROM`, `DELETE ... USING` for joining in modifications. `RETURNING` clause gets back modified rows.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDml" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseDml">
+                         <h6>UPDATE FROM / DELETE USING</h6>
+                         <p>Allows joining other tables directly into `UPDATE` or `DELETE` statements to determine which rows to modify or filter based on related data.</p>
+                         <pre><code>-- Update order status based on payment status
+UPDATE orders o
+SET status = 'shipped'
+FROM payments p
+WHERE o.order_id = p.order_id AND p.status = 'paid';
+
+-- Delete users who haven't logged in recently
+DELETE FROM users u
+USING user_last_login l
+WHERE u.user_id = l.user_id AND l.last_login < NOW() - INTERVAL '1 year';</code></pre>
+                        <h6>RETURNING Clause</h6>
+                        <p>Appends a list of values from the rows modified by an `INSERT`, `UPDATE`, or `DELETE` statement to the command result.</p>
+                         <ul>
+                            <li>Useful for getting default values (like serial IDs) after an `INSERT`, or confirming exactly which rows were affected.</li>
+                            <li>Avoids a separate `SELECT` statement, improving efficiency and atomicity (within the same command).</li>
+                         </ul>
+                          <pre><code>-- Insert and get the generated ID
+INSERT INTO products (name, price) VALUES ('New Gadget', 99.99)
+RETURNING product_id;
+
+-- Update stock and return the updated product names
+UPDATE products SET stock = stock - 1 WHERE category = 'electronics'
+RETURNING name, stock;
+
+-- Delete old logs and return the IDs deleted
+DELETE FROM logs WHERE log_date < '2023-01-01'
+RETURNING log_id;</code></pre>
+                     </div>
+                 </div>
+             </div>
+              <div class="col-lg-4 col-md-6">
+                <div class="info-card type-lateral" id="card-lateral">
+                    <div class="card-body"><h5><i class="bi bi-link-45deg"></i> Lateral Joins</h5>
+                    <div class="card-content-wrapper"><p class="summary">`LATERAL` allows a subquery in the `FROM` clause to reference columns from preceding `FROM` items. Like a correlated `foreach` loop.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLateral" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseLateral">
+                        <h6>Core Concept</h6>
+                        <p>Normally, a subquery in the `FROM` clause executes independently. `LATERAL` makes it dependent, executing it *for each row* of the preceding table, allowing the subquery to use values from that row.</p>
+                         <h6>Syntax</h6>
+                         <pre><code>SELECT ...
+FROM table_a a, LATERAL (subquery using a.columns) sub
+WHERE ...
+
+-- Also common with JOIN syntax:
+SELECT ...
+FROM table_a a
+LEFT JOIN LATERAL (subquery using a.columns) sub ON true -- or other join condition
+WHERE ...</code></pre>
+                        <h6>Use Cases</h6>
+                        <ul>
+                            <li>Finding the top N related items per row (e.g., get top 3 posts for each user).</li>
+                            <li>Calling set-returning functions with arguments from the preceding table.</li>
+                             <li>Simplifying complex correlated subqueries previously written in `SELECT` list or `WHERE` clause.</li>
+                        </ul>
+                        <h6>Example: Get 2 most recent orders for each customer</h6>
+                        <pre><code>SELECT c.customer_id, c.name, o.order_id, o.order_date
+FROM customers c
+LEFT JOIN LATERAL (
+    SELECT order_id, order_date
+    FROM orders
+    WHERE customer_id = c.customer_id -- References outer table 'c'
+    ORDER BY order_date DESC
+    LIMIT 2
+) o ON true; -- Join condition often true as filtering is inside LATERAL</code></pre>
+                        <h6>Performance</h6>
+                        <p>Can be very efficient if the lateral subquery can use indexes based on the correlated columns. Replaces some procedural logic or complex window functions.</p>
+                    </div>
+                </div>
+            </div>
+         </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- 5. CONCURRENCY & LOCKING -->
+    <div class="schema-container cat-concurrency" data-section-id="section-concurrency">
+        <h2 class="section-title" id="title-concurrency">Concurrency & Locking</h2>
+         <div class="row">
+              <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-isolation" id="card-isolation">
+                    <div class="card-body"><h5><i class="bi bi-shield-lock"></i> Isolation Levels</h5>
+                     <div class="card-content-wrapper"><p class="summary">`READ COMMITTED` (default), `REPEATABLE READ`, `SERIALIZABLE`. Control transaction visibility. `RR` can cause serialization failures.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIsolation" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseIsolation">
+                         <h6>Levels & Guarantees</h6>
+                         <ul>
+                            <li><strong>`READ UNCOMMITTED`</strong> (Not implemented in PG, behaves like `READ COMMITTED`): Allows dirty reads.</li>
+                            <li><strong>`READ COMMITTED`</strong> (Default): Guarantees no dirty reads. Each statement sees a snapshot of data committed *before that statement began*. Can experience non-repeatable reads and phantom reads.</li>
+                            <li><strong>`REPEATABLE READ`</strong>: Guarantees no dirty reads or non-repeatable reads. Entire transaction sees a snapshot of data committed *before the transaction began*. Can experience phantom reads (though PG often prevents them via predicate locking). **Quirk:** May fail with a <span class="term">serialization failure</span> (error 40001) if it detects a potential anomaly that would violate serializability. Requires application retry logic.</li>
+                            <li><strong>`SERIALIZABLE`</strong>: Strongest level. Guarantees transactions behave as if they executed one after another sequentially. Prevents all anomalies (dirty, non-repeatable, phantom). **Quirk:** More likely to experience serialization failures than `REPEATABLE READ`. Requires application retry logic. High performance overhead due to extensive locking/tracking.</li>
+                         </ul>
+                          <h6>Choosing a Level</h6>
+                         <ul>
+                             <li>Stick with `READ COMMITTED` unless specific guarantees are needed.</li>
+                             <li>Use `REPEATABLE READ` or `SERIALIZABLE` for multi-statement transactions requiring a consistent view or complex read-modify-write operations where race conditions are possible. Be prepared to handle serialization failures by retrying the transaction.</li>
+                         </ul>
+                          <h6>Setting Level</h6>
+                         <p><code>SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;</code><br/>
+                         <code>START TRANSACTION ISOLATION LEVEL SERIALIZABLE;</code></p>
+                    </div>
+                 </div>
+             </div>
+              <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-locking" id="card-locking">
+                    <div class="card-body"><h5><i class="bi bi-lock"></i> Locking Mechanisms</h5>
+                     <div class="card-content-wrapper"><p class="summary">Implicit row-level locks via MVCC/DML. Explicit `LOCK TABLE`. Application-level <span class="term">Advisory Locks</span>.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLocking" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseLocking">
+                        <h6>Row-Level Locks (Implicit)</h6>
+                        <ul>
+                            <li>Managed automatically by MVCC and DML commands.</li>
+                            <li>`SELECT ... FOR UPDATE`/`FOR NO KEY UPDATE`/`FOR SHARE`/`FOR KEY SHARE`: Explicitly lock rows returned by a `SELECT` statement, preventing other transactions from modifying or locking them incompatibly until the current transaction ends. Used to prevent race conditions in read-modify-write cycles.</li>
+                        </ul>
+                         <h6>Table-Level Locks (Explicit)</h6>
+                         <ul>
+                            <li>`LOCK TABLE table_name [IN lock_mode]`: Explicitly lock an entire table.</li>
+                            <li>Modes (increasing strength): `ACCESS SHARE`, `ROW SHARE`, `ROW EXCLUSIVE`, `SHARE UPDATE EXCLUSIVE`, `SHARE`, `SHARE ROW EXCLUSIVE`, `EXCLUSIVE`, `ACCESS EXCLUSIVE`.</li>
+                            <li>Use with caution! Can severely impact concurrency. Needed for some DDL operations or specific application logic.</li>
+                         </ul>
+                          <h6>Advisory Locks</h6>
+                         <ul>
+                            <li>Application-defined locks managed by function calls (e.g., `pg_advisory_lock(key)`, `pg_advisory_xact_lock(key)`).</li>
+                            <li>Based on arbitrary numbers (e.g., derived from an application entity ID). Not tied to specific tables or rows.</li>
+                            <li>Useful for coordinating application-level processes or locking concepts not directly represented by a single table row.</li>
+                            <li>Transaction-scoped (`pg_advisory_xact_lock`) or session-scoped (`pg_advisory_lock`).</li>
+                         </ul>
+                          <h6>Deadlocks</h6>
+                         <ul>
+                            <li>Occur when two (or more) transactions wait for locks held by each other.</li>
+                             <li>Postgres automatically detects deadlocks and aborts one of the transactions (raising an error).</li>
+                             <li>Prevent by acquiring locks in a consistent, globally defined order.</li>
+                         </ul>
+                          <h6>Monitoring</h6>
+                         <p>Use the `pg_locks` view to inspect currently held locks.</p>
+                    </div>
+                 </div>
+             </div>
+         </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- 6. PERFORMANCE & MAINTENANCE -->
+    <div class="schema-container cat-performance" data-section-id="section-performance">
+        <h2 class="section-title" id="title-performance">Performance & Maintenance</h2>
+         <div class="row">
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card type-perf type-vacuum" id="card-vacuum">
+                     <div class="card-body"><h5><i class="bi bi-recycle"></i> VACUUM</h5>
+                     <div class="card-content-wrapper"><p class="summary">Essential maintenance! Reclaims space from dead rows (bloat), updates visibility map, prevents <span class="term">TXID Wraparound</span>. <span class="term">Autovacuum</span> is critical.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVacuum" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseVacuum">
+                        <h6>Why VACUUM is Needed (MVCC)</h6>
+                        <p>Because MVCC creates new row versions for UPDATEs/DELETEs, the old ("dead") versions remain physically until `VACUUM` runs. Without it, tables grow indefinitely (<span class="term">bloat</span>) and performance degrades.</p>
+                         <h6>What VACUUM Does</h6>
+                         <ul>
+                             <li><strong>Reclaims Space:</strong> Marks space occupied by dead tuples as reusable for future INSERTs/UPDATEs within the same table (standard `VACUUM` doesn't typically return space to the OS).</li>
+                             <li><strong>Updates Visibility Map (VM):</strong> Marks blocks containing only visible-to-all tuples, enabling Index-Only Scans.</li>
+                             <li><strong>Updates Statistics:</strong> Optionally runs `ANALYZE` (`VACUUM ANALYZE`).</li>
+                             <li><strong>Prevents TXID Wraparound:</strong> "Freezes" old tuple transaction IDs to prevent comparison issues when the TXID counter wraps around (every ~4 billion transactions). Critical for database operation.</li>
+                         </ul>
+                          <h6>VACUUM vs VACUUM FULL</h6>
+                         <ul>
+                             <li><strong>`VACUUM [tablename]`</strong>: Standard vacuum. Runs concurrently with reads/writes (minimal locking). Reclaims space within the table. **Run regularly.**</li>
+                             <li><strong>`VACUUM FULL [tablename]`</strong>: Rewrites the entire table to a new file, reclaiming maximum space (including returning to OS). Requires `ACCESS EXCLUSIVE` lock (blocks all access). Use sparingly, only when severe bloat needs aggressive reclaiming. Consider `pg_repack` extension as an online alternative.</li>
+                         </ul>
+                           <h6>Autovacuum</h6>
+                         <ul>
+                             <li>Background process that automatically runs `VACUUM` and `ANALYZE` on tables based on thresholds (number of dead tuples, inserts/updates/deletes).</li>
+                             <li>**Essential for health.** Default settings are often too conservative for busy databases. Requires tuning (`autovacuum_max_workers`, `autovacuum_vacuum_scale_factor`, `autovacuum_analyze_threshold`, etc.). Monitor its activity!</li>
+                         </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-perf type-analyze" id="card-analyze">
+                    <div class="card-body"><h5><i class="bi bi-graph-up"></i> ANALYZE</h5>
+                     <div class="card-content-wrapper"><p class="summary">Collects statistics about table data distribution (histograms, distinct values) used by the query planner to choose optimal execution plans.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnalyze" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseAnalyze">
+                        <h6>Why ANALYZE is Needed</h6>
+                        <p>The query planner needs accurate information about the data in tables to make good decisions (e.g., estimate how many rows a `WHERE` clause will return, decide between index scan vs sequential scan, choose join methods).</p>
+                        <h6>What ANALYZE Collects</h6>
+                        <ul>
+                            <li>Total number of rows.</li>
+                            <li>Number of distinct values per column.</li>
+                            <li>Most common values (MCVs) and their frequencies.</li>
+                            <li>Histograms representing data distribution for range comparisons.</li>
+                            <li>Correlation between physical row order and column values (for BRIN indexes).</li>
+                            <li>Stored in system catalog `pg_statistic`.</li>
+                        </ul>
+                        <h6>When to Run</h6>
+                        <ul>
+                            <li>After significant data changes (bulk loads, deletes, updates).</li>
+                            <li>After creating indexes on expressions.</li>
+                            <li>Regularly on all tables (Autovacuum usually handles this).</li>
+                            <li>Manually run `ANALYZE tablename;` or `ANALYZE VERBOSE tablename;` if query plans seem poor or after large data modifications before autovacuum kicks in.</li>
+                        </ul>
+                         <h6>Autovacuum & ANALYZE</h6>
+                         <p>Autovacuum typically triggers `ANALYZE` based on a percentage of rows changed (`autovacuum_analyze_scale_factor` + `autovacuum_analyze_threshold`). Tuning may be required.</p>
+                         <h6>Statistics Target</h6>
+                         <p>Control the detail level of statistics (number of histogram buckets, MCVs) using `ALTER TABLE ... ALTER COLUMN ... SET STATISTICS <number>;` (Default 100). Increase for columns with skewed data used in important `WHERE` clauses.</p>
+                    </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-perf type-explain" id="card-explain">
+                    <div class="card-body"><h5><i class="bi bi-search"></i> EXPLAIN</h5>
+                     <div class="card-content-wrapper"><p class="summary">Analyze query execution plans. `EXPLAIN ANALYZE` runs the query and shows actual times and row counts. Use `BUFFERS` for cache info.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExplain" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseExplain">
+                        <h6>Purpose</h6>
+                        <p>Understand how PostgreSQL intends to execute (or actually executed) a query. Essential for diagnosing performance issues and validating index usage.</p>
+                         <h6>Basic Usage</h6>
+                         <ul>
+                             <li><strong>`EXPLAIN SELECT ...`</strong>: Shows the planner's *estimated* execution plan, costs, and row counts without running the query. Safe to use anytime.</li>
+                             <li><strong>`EXPLAIN ANALYZE SELECT ...`</strong>: **Runs the query** and shows the actual execution plan, including actual times per node, actual row counts, loops, etc. Use cautiously on production for long-running or modifying queries.</li>
+                         </ul>
+                         <h6>Key Options</h6>
+                         <ul>
+                             <li><strong>`BUFFERS`</strong>: With `ANALYZE`, shows buffer usage (cache hits, blocks read from disk) per node. Crucial for identifying I/O bottlenecks. `EXPLAIN (ANALYZE, BUFFERS) ...`</li>
+                             <li><strong>`COSTS`</strong>: Enable/disable display of estimated costs (default true). `EXPLAIN (COSTS false) ...`</li>
+                             <li><strong>`TIMING`</strong>: Enable/disable display of actual timing per node with `ANALYZE` (default true). `EXPLAIN (ANALYZE, TIMING false) ...`</li>
+                             <li><strong>`VERBOSE`</strong>: Shows more details, like output column lists per node.</li>
+                             <li><strong>`FORMAT {TEXT|XML|JSON|YAML}`</strong>: Choose output format (default TEXT). JSON is useful for programmatic analysis.</li>
+                         </ul>
+                         <h6>Interpreting Output</h6>
+                         <ul>
+                             <li>Read plans from bottom-up (most indented is executed first).</li>
+                             <li>Look for high estimated costs vs. low actual rows (planner misestimation).</li>
+                             <li>Identify slow nodes (high actual time).</li>
+                             <li>Check for Sequential Scans on large tables where Index Scans were expected.</li>
+                             <li>Analyze buffer hits/reads to understand caching effectiveness.</li>
+                             <li>Compare estimated rows vs actual rows (indicates potentially outdated statistics).</li>
+                         </ul>
+                         <h6>Tools</h6>
+                         <p>Visualizers like `explain.depesz.com`, `explain.dalibo.com`, PEV (`pev.dalibo.com`) make complex plans easier to read.</p>
+                    </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card type-perf type-stats" id="card-stats">
+                    <div class="card-body"><h5><i class="bi bi-bar-chart-line"></i> Statistics Views</h5>
+                    <div class="card-content-wrapper"><p class="summary">Monitor activity: `pg_stat_activity` (connections), `pg_stat_statements` (query stats), `pg_stat_user_tables` (table usage), `pg_locks`.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStats" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseStats">
+                        <h6>Key Views for Monitoring</h6>
+                         <ul>
+                            <li><strong>`pg_stat_activity`</strong>: Shows information about currently active backend processes/connections.
+                                <ul><li>Columns: `pid`, `datname`, `usename`, `client_addr`, `backend_start`, `query_start`, `state` (active, idle, idle in transaction), `wait_event_type`/`wait_event`, `query`, `backend_type`.</li>
+                                <li>Essential for seeing long-running queries, idle transactions, waiting connections.</li></ul>
+                            </li>
+                             <li><strong>`pg_stat_statements`</strong> (`CREATE EXTENSION pg_stat_statements;`): Tracks execution statistics for all normalized queries executed. **Crucial for identifying expensive queries.**
+                                <ul><li>Requires setting `shared_preload_libraries = 'pg_stat_statements'` in `postgresql.conf` and a server restart.</li>
+                                <li>Columns: `queryid`, `query`, `calls`, `total_exec_time`, `mean_exec_time`, `rows`, `shared_blks_hit`/`read`/`dirtied`/`written`, `temp_blks_read`/`written`.</li>
+                                <li>Use `pg_stat_statements_reset()` to clear stats.</li></ul>
+                             </li>
+                             <li><strong>`pg_stat_user_tables` / `pg_stat_all_tables`</strong>: Shows table access statistics.
+                                <ul><li>Columns: `seq_scan`, `seq_tup_read`, `idx_scan`, `idx_tup_fetch`, `n_tup_ins`/`upd`/`del`/`hot_upd`, `n_live_tup`, `n_dead_tup`, `last_vacuum`/`autovacuum`, `last_analyze`/`autoanalyze`.</li>
+                                <li>Useful for monitoring table bloat (`n_dead_tup`), scan types, vacuum/analyze activity.</li></ul>
+                             </li>
+                              <li><strong>`pg_statio_user_tables` / `pg_statio_all_tables`</strong>: Shows table I/O statistics.
+                                <ul><li>Columns: `heap_blks_read`/`hit`, `idx_blks_read`/`hit`, `toast_blks_read`/`hit`.</li>
+                                <li>Helps identify tables causing heavy I/O or poor caching.</li></ul>
+                             </li>
+                             <li><strong>`pg_locks`</strong>: Shows currently held locks. Useful for diagnosing locking contention and deadlocks.</li>
+                             <li><strong>`pg_stat_replication`</strong>: Monitor streaming replication status on the primary.</li>
+                             <li><strong>`pg_stat_wal_receiver`</strong>: Monitor streaming replication status on the standby.</li>
+                         </ul>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card type-perf type-config" id="card-config">
+                    <div class="card-body"><h5><i class="bi bi-sliders"></i> Configuration Tuning</h5>
+                     <div class="card-content-wrapper"><p class="summary">Key settings in `postgresql.conf`: memory (`shared_buffers`, `work_mem`), WAL (`max_wal_size`), Checkpoints, Autovacuum. Use `pgtune`.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfig" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseConfig">
+                        <p>Configuration is primarily done via `postgresql.conf` (requires reload or restart for many settings) and `pg_hba.conf` (authentication, requires reload). Use `ALTER SYSTEM SET ...` to modify `postgresql.conf` via SQL (writes to `postgresql.auto.conf`, overrides main file).</p>
+                         <h6>Key Parameter Groups</h6>
+                         <ul>
+                             <li><strong>Memory:** (See Memory card) `shared_buffers`, `work_mem`, `maintenance_work_mem`, `effective_cache_size`. Critical for performance.</li>
+                             <li><strong>WAL:** `wal_level` (`replica` is default, needed for replication/PITR), `max_wal_size` & `min_wal_size` (control WAL disk usage before checkpoint), `wal_buffers`, `commit_delay`, `commit_siblings`. Affects durability and write performance.</li>
+                             <li><strong>Checkpoints:** `checkpoint_timeout` (max time between checkpoints), `checkpoint_completion_target` (spread checkpoint I/O over time, e.g., 0.9). Controls recovery time vs. I/O spikes.</li>
+                             <li><strong>Autovacuum:** (See VACUUM card) `autovacuum`, `autovacuum_max_workers`, `autovacuum_naptime`, `autovacuum_vacuum_threshold`, `autovacuum_vacuum_scale_factor`, `autovacuum_analyze_threshold`, `autovacuum_analyze_scale_factor`, `log_autovacuum_min_duration`. **Requires careful tuning for busy systems.**</li>
+                             <li><strong>Planner:** `random_page_cost`, `seq_page_cost`, `effective_cache_size`, `enable_*` flags (e.g., `enable_bitmapscan`). Influences query plan choices.</li>
+                             <li><strong>Connections:** `max_connections` (set high enough for clients + pooler), `superuser_reserved_connections`.</li>
+                             <li><strong>Logging:** `log_destination`, `logging_collector`, `log_directory`, `log_filename`, `log_statement`, `log_min_duration_statement`, `log_checkpoints`, `log_lock_waits`, `log_temp_files`, `log_autovacuum_min_duration`. Essential for troubleshooting.</li>
+                         </ul>
+                         <h6>Tools & Approach</h6>
+                         <ul>
+                             <li>Start with defaults or recommendations from `pgtune` (online tool or script) based on system resources.</li>
+                             <li>Monitor performance (using stats views, OS tools) and adjust parameters iteratively based on workload.</li>
+                             <li>Understand the impact of each parameter before changing it. Read the documentation!</li>
+                             <li>Use `SHOW parameter_name;` or query `pg_settings` view to see current values.</li>
+                             <li>Use `SELECT pg_reload_conf();` to apply changes that don't require a restart.</li>
+                         </ul>
+                    </div>
+                 </div>
+            </div>
+         </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- 7. EXTENSIBILITY -->
+    <div class="schema-container cat-extensions" data-section-id="section-extensions">
+        <h2 class="section-title" id="title-extensions">Extensibility (Postgres Superpower)</h2>
+         <div class="row">
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-pl" id="card-pl">
+                    <div class="card-body"><h5><i class="bi bi-filetype-sql"></i> Stored Procedures/Functions</h5>
+                     <div class="card-content-wrapper"><p class="summary">Write server-side logic in various languages. Default is `PL/pgSQL`. Others include `PL/Python`, `PL/Perl`, `PL/v8`.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePL" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapsePL">
+                        <h6>Purpose</h6>
+                        <p>Encapsulate business logic, perform complex operations atomically within the database, reduce network round trips.</p>
+                        <h6>Languages</h6>
+                        <ul>
+                            <li><strong>`PL/pgSQL`</strong>: Default, procedural language similar to Oracle's PL/SQL. Block-structured, variables, control flow (IF, LOOP), exception handling. Widely used and robust.</li>
+                            <li><strong>`PL/Python` (`plpython3u`)</strong>: Write functions in Python. Access to Python libraries. Untrusted (`u`) means no filesystem access restrictions by default (use with care). Useful for data analysis, complex string manipulation, external API calls (via libraries).</li>
+                            <li><strong>`PL/Perl` (`plperl`)</strong>: Write functions in Perl.</li>
+                            <li><strong>`PL/v8` (`plv8`)</strong>: Write functions in JavaScript (using the V8 engine). Useful for JSON processing, web-related logic.</li>
+                             <li><strong>`SQL`</strong>: Simple functions written purely in SQL. Can be inlined by the planner.</li>
+                             <li><strong>`C`</strong>: Highest performance, allows low-level access, but more complex development and deployment.</li>
+                        </ul>
+                         <h6>Creating Functions</h6>
+                         <pre><code>CREATE OR REPLACE FUNCTION get_user_count()
+RETURNS integer AS $$
+DECLARE
+    user_count integer;
+BEGIN
+    SELECT count(*) INTO user_count FROM users;
+    RETURN user_count;
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+                        <h6>Procedures (Postgres 11+)</h6>
+                         <p>Use `CREATE PROCEDURE ... LANGUAGE ... AS $$ ... $$;`. Unlike functions, procedures do not return a value directly and can commit/rollback transactions within their body (using specific commands depending on the language).</p>
+                         <h6>Triggers</h6>
+                         <p>Functions can be called by triggers (`CREATE TRIGGER ... EXECUTE FUNCTION my_trigger_func();`) to execute automatically on DML events (BEFORE/AFTER INSERT/UPDATE/DELETE).</p>
+                    </div>
+                 </div>
+            </div>
+              <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-extensions" id="card-extensions">
+                    <div class="card-body"><h5><i class="bi bi-plug"></i> Extensions</h5>
+                     <div class="card-content-wrapper"><p class="summary">Package new types, functions, operators via `CREATE EXTENSION`. Huge ecosystem (PostGIS, TimescaleDB, Citus, pg_stat_statements).</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExtensions" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseExtensions">
+                        <h6>Concept</h6>
+                        <p>Extensions bundle related SQL objects (types, functions, operators, index methods, etc.) into a single package that can be easily installed (`CREATE EXTENSION`) and removed (`DROP EXTENSION`) from a database.</p>
+                        <h6>Managing Extensions</h6>
+                        <ul>
+                            <li>`CREATE EXTENSION extension_name [SCHEMA schema_name];`: Installs the extension. Requires extension files to be present on the server.</li>
+                            <li>`\dx` (in psql): List installed extensions.</li>
+                            <li>`ALTER EXTENSION extension_name UPDATE [TO 'new_version'];`: Upgrades an extension.</li>
+                            <li>`DROP EXTENSION extension_name;`: Removes the extension and its objects.</li>
+                        </ul>
+                         <h6>Notable Extensions (Examples)</h6>
+                         <ul>
+                             <li><strong>PostGIS:</strong> Adds comprehensive support for geographic objects and spatial queries. Industry standard for geospatial data.</li>
+                             <li><strong>TimescaleDB:</strong> Turns PostgreSQL into a powerful time-series database with automatic partitioning (hypertables), specialized functions, and compression.</li>
+                             <li><strong>Citus:</strong> Distributes PostgreSQL horizontally for sharding and parallel query processing.</li>
+                             <li><strong>`pg_stat_statements`</strong>: Tracks query execution statistics (essential for performance tuning).</li>
+                             <li><strong>`pgcrypto`</strong>: Provides cryptographic functions (hashing, encryption).</li>
+                             <li><strong>`uuid-ossp`</strong> / <strong>`pgcrypto`</strong>: Functions to generate UUIDs.</li>
+                              <li><strong>`hstore`</strong>: Key-value data type.</li>
+                              <li><strong>`pg_trgm`</strong>: Trigram matching for fuzzy string search.</li>
+                              <li><strong>`pg_cron`</strong>: In-database job scheduler (like cron).</li>
+                              <li><strong>`pg_repack`</strong>: Online table reorganization (alternative to `VACUUM FULL`).</li>
+                         </ul>
+                          <h6>Finding Extensions</h6>
+                         <p>PostgreSQL Extension Network (PGXN), GitHub, vendor websites.</p>
+                    </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-fdw" id="card-fdw">
+                    <div class="card-body"><h5><i class="bi bi-database-down"></i> Foreign Data Wrappers (FDWs)</h5>
+                     <div class="card-content-wrapper"><p class="summary">Access external data sources as if they were local tables using `CREATE FOREIGN TABLE`. Connect to other PG dbs, MySQL, files, etc.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFdw" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseFdw">
+                         <h6>Concept</h6>
+                         <p>FDWs provide a standard SQL interface to query data residing outside the current PostgreSQL database, potentially even on different database systems or flat files.</p>
+                         <h6>Setup Steps</h6>
+                         <ol>
+                             <li><strong>Install FDW Extension:</strong> `CREATE EXTENSION postgres_fdw;` (for connecting to other PG dbs) or `oracle_fdw`, `mysql_fdw`, `file_fdw`, etc.</li>
+                             <li><strong>Create Server:</strong> `CREATE SERVER remote_pg_server FOREIGN DATA WRAPPER postgres_fdw OPTIONS (host 'other_host', dbname 'other_db', port '5432');`</li>
+                             <li><strong>Create User Mapping:</strong> `CREATE USER MAPPING FOR current_user SERVER remote_pg_server OPTIONS (user 'remote_user', password 'remote_pass');` (maps local user to remote credentials)</li>
+                             <li><strong>Create Foreign Table:</strong> Define the structure of the remote table locally.
+                                 <pre><code>CREATE FOREIGN TABLE remote_users (
+    id integer OPTIONS (column_name 'user_id'), -- Map column name if needed
+    name text,
+    email text
+) SERVER remote_pg_server OPTIONS (schema_name 'public', table_name 'users');</code></pre>
+                                (Or use `IMPORT FOREIGN SCHEMA ...` to import definitions automatically).
+                             </li>
+                         </ol>
+                          <h6>Usage</h6>
+                         <p>Query the foreign table (`SELECT * FROM remote_users;`) just like a local table. Postgres translates the query and pushes down operations (filtering, joins if supported by the FDW) to the remote source where possible.</p>
+                         <h6>Benefits</h6>
+                         <ul>
+                             <li>Unified view of distributed data.</li>
+                             <li>Leverage PostgreSQL's SQL and features to query diverse sources.</li>
+                             <li>Can simplify data integration tasks.</li>
+                         </ul>
+                          <h6>Considerations</h6>
+                         <p>Performance depends heavily on the specific FDW, network latency, and how much processing can be pushed down to the remote server. Not all FDWs support write operations.</p>
+                    </div>
+                 </div>
+            </div>
+         </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- 8. REPLICATION & HA -->
+    <div class="schema-container cat-replication" data-section-id="section-replication">
+        <h2 class="section-title" id="title-replication">Replication & High Availability</h2>
+        <div class="row">
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card type-streaming-rep" id="card-streaming-rep">
+                    <div class="card-body"><h5><i class="bi bi-broadcast"></i> Streaming Replication</h5>
+                    <div class="card-content-wrapper"><p class="summary">Built-in physical (binary) replication. Creates read-only standbys (<span class="term">Hot Standby</span>). Async or Sync commit. Uses <span class="term">Slots</span>.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStreamingRep" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseStreamingRep">
+                        <h6>Mechanism</h6>
+                        <ul>
+                            <li>Standby server connects to the primary and streams WAL records as they are generated.</li>
+                            <li>Standby continuously replays these WAL records to keep its data files nearly identical to the primary's.</li>
+                        </ul>
+                         <h6>Hot Standby (Read Replicas)</h6>
+                         <ul>
+                            <li>If `hot_standby = on` (default) on the standby, it can serve read-only queries while continuously applying WALs.</li>
+                             <li>Read queries on the standby see a slightly delayed view of the data. Can configure `max_standby_streaming_delay` / `max_standby_archive_delay` to cancel queries conflicting with WAL application.</li>
+                         </ul>
+                         <h6>Synchronous vs Asynchronous</h6>
+                         <ul>
+                             <li><strong>Asynchronous (Default):</strong> Primary commits transaction once WAL is written locally. Fastest, but potential for small data loss on primary crash if WAL hasn't reached standby.</li>
+                             <li><strong>Synchronous:</strong> Primary waits for confirmation from one or more synchronous standbys (`synchronous_standby_names`) that they have received (and potentially written/applied) the WAL before confirming commit to client. Slower commits, but guarantees zero data loss if synchronous standby takes over.</li>
+                         </ul>
+                          <h6>Replication Slots</h6>
+                         <ul>
+                             <li>`CREATE_REPLICATION_SLOT` / `DROP_REPLICATION_SLOT`.</li>
+                             <li>Ensures the primary retains WAL segments needed by a specific standby, even if the standby disconnects temporarily. Prevents premature WAL deletion that would break replication. **Essential for robust replication.**</li>
+                         </ul>
+                          <h6>Use Cases</h6>
+                         <p>Read scaling, High Availability (HA) failover, near real-time data warehousing feed.</p>
+                    </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card type-logical-rep" id="card-logical-rep">
+                    <div class="card-body"><h5><i class="bi bi-file-diff"></i> Logical Replication</h5>
+                    <div class="card-content-wrapper"><p class="summary">Replicates logical data changes (row changes). Allows cross-version, selective replication via Publisher/Subscriber model.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLogicalRep" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseLogicalRep">
+                        <h6>Mechanism</h6>
+                        <ul>
+                            <li>Decodes WAL records into a logical representation of data changes (INSERT/UPDATE/DELETE row values).</li>
+                            <li>Transmits these logical changes to subscribers.</li>
+                             <li>Requires `wal_level = logical` on the publisher.</li>
+                        </ul>
+                         <h6>Publisher/Subscriber Model</h6>
+                         <ul>
+                             <li><strong>Publisher:</strong> The source database. Define a `PUBLICATION` specifying which tables (or all tables) to publish changes for. `CREATE PUBLICATION mypub FOR TABLE users, orders;`</li>
+                             <li><strong>Subscriber:</strong> The target database. Define a `SUBSCRIPTION` connecting to the publisher and mapping to the publication. `CREATE SUBSCRIPTION mysub CONNECTION '...' PUBLICATION mypub;`</li>
+                              <li>Target tables must exist on the subscriber and have compatible schemas (usually identical).</li>
+                         </ul>
+                         <h6>Advantages over Streaming Replication</h6>
+                         <ul>
+                             <li><strong>Selective Replication:</strong> Replicate only specific tables or filter rows (using publication options).</li>
+                             <li><strong>Cross-Version Replication:</strong> Replicate between different major PostgreSQL versions.</li>
+                              <li><strong>Consolidate Changes:</strong> Multiple publishers can replicate to a single subscriber.</li>
+                              <li><strong>Format Flexibility:</strong> Changes are logical, potentially allowing replication to non-PostgreSQL systems via custom consumers.</li>
+                         </ul>
+                          <h6>Limitations</h6>
+                         <ul>
+                             <li>Does not replicate DDL changes (schema changes must be applied manually on both sides).</li>
+                             <li>Does not replicate sequence changes or large objects directly.</li>
+                             <li>Can have higher performance overhead than streaming replication.</li>
+                             <li>Initial data synchronization often requires separate step (e.g., `pg_dump` or `COPY WITH (SNAPSHOT ...)` in subscription options).</li>
+                         </ul>
+                          <h6>Use Cases</h6>
+                         <p>Selective data aggregation, feeding data warehouses, replicating between major versions during upgrades, distributing workload subset.</p>
+                    </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-ha-tools" id="card-ha-tools">
+                    <div class="card-body"><h5><i class="bi bi-shield-shaded"></i> HA / Failover Tools</h5>
+                     <div class="card-content-wrapper"><p class="summary">External tools often used to manage replication topology, monitor health, and automate failover (e.g., Patroni, repmgr).</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHaTools" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseHaTools">
+                         <p>While PostgreSQL provides the core replication mechanisms, automating the detection of primary failure and promotion of a standby requires external tooling.</p>
+                         <h6>Common Tools</h6>
+                         <ul>
+                            <li><strong>Patroni:</strong> Popular Python-based template for building HA clusters. Uses a Distributed Configuration Store (DCS) like etcd, Consul, or Zookeeper for leader election and cluster state management. Manages PostgreSQL configuration and handles automated failover. Highly flexible and widely used.</li>
+                            <li><strong>repmgr:</strong> Open-source tool suite focused specifically on managing PostgreSQL replication and failover. Provides monitoring, node management, and failover capabilities. Simpler than Patroni in some aspects, less reliant on external DCS.</li>
+                             <li><strong>Pgpool-II:</strong> Acts as a middleware proxy providing connection pooling, load balancing for read replicas, and automated failover capabilities (though often considered complex to configure correctly for HA). Can also parallelize queries.</li>
+                              <li><strong>Cloud Provider Solutions:</strong> Managed services like AWS RDS, Google Cloud SQL, Azure Database for PostgreSQL often have built-in HA features that handle failover automatically behind the scenes.</li>
+                         </ul>
+                          <h6>Key HA Concepts Managed by Tools</h6>
+                         <ul>
+                             <li><strong>Health Monitoring:</strong> Regularly checking the status of primary and standby nodes.</li>
+                             <li><strong>Failure Detection:</strong> Identifying when the primary server is unresponsive.</li>
+                             <li><strong>Leader Election/Standby Promotion:</strong> Choosing the best standby to promote to the new primary.</li>
+                             <li><strong>Topology Updates:</strong> Reconfiguring remaining standbys to follow the newly promoted primary.</li>
+                             <li><strong>Client Redirection:</strong> Ensuring applications connect to the new primary (often via DNS update, virtual IP, or proxy layer like PgBouncer/HAProxy configured by the HA tool).</li>
+                              <li><strong>Split-Brain Prevention:</strong> Mechanisms to ensure only one node acts as the primary at any time.</li>
+                         </ul>
+                     </div>
+                 </div>
+             </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- 9. BACKUP & RECOVERY -->
+    <div class="schema-container cat-backup" data-section-id="section-backup">
+        <h2 class="section-title" id="title-backup">Backup & Recovery</h2>
+         <div class="row">
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-pgdump" id="card-pgdump">
+                     <div class="card-body"><h5><i class="bi bi-file-earmark-zip"></i> Logical Backups (`pg_dump`)</h5>
+                     <div class="card-content-wrapper"><p class="summary">Creates logical backups (SQL commands). Flexible, portable across versions/architectures. Slower restore for large DBs.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePgdump" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapsePgdump">
+                         <h6>Tool & Purpose</h6>
+                         <p><code>pg_dump</code> utility creates a script file containing SQL commands (`CREATE TABLE`, `COPY` data, `CREATE INDEX`, etc.) needed to recreate the database.</p>
+                         <h6>Key Features & Options</h6>
+                         <ul>
+                            <li><strong>Formats:</strong> Plain text (`.sql`), Custom (`.dump`, compressed, requires `pg_restore`), Directory (parallel dump/restore), Tar. Custom/Directory formats are generally preferred for flexibility and parallel restore.</li>
+                            <li><strong>Consistency:</strong> Takes a consistent snapshot using `REPEATABLE READ` or by acquiring brief locks.</li>
+                             <li><strong>Granularity:</strong> Can dump entire DB, specific schemas (`-n schema`), specific tables (`-t table`). Can dump data-only (`-a`), schema-only (`-s`).</li>
+                             <li><strong>Portability:</strong> Backups are generally portable across different machine architectures and PostgreSQL major versions (within reason).</li>
+                             <li><strong>Restoration:</strong> Plain text restored via `psql < dump.sql`. Custom/Directory/Tar formats restored using `pg_restore`.</li>
+                         </ul>
+                          <h6>Pros</h6>
+                          <ul>
+                             <li>Very flexible for migrating data, restoring specific objects, upgrading major versions.</li>
+                             <li>Human-readable format (plain text).</li>
+                          </ul>
+                           <h6>Cons</h6>
+                          <ul>
+                             <li>Can be slow to restore large databases because it replays all SQL commands and rebuilds indexes from scratch.</li>
+                             <li>Not suitable for Point-in-Time Recovery (PITR).</li>
+                          </ul>
+                           <h6>Example</h6>
+                           <p><code>pg_dump -U postgres -Fc -f my_database.dump my_database</code> (Custom format)<br/>
+                           <code>pg_restore -U postgres -d target_database my_database.dump</code></p>
+                           <p><code>pg_dumpall</code> dumps all databases plus global objects (roles, tablespaces).</p>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card type-physical-backup" id="card-physical-backup">
+                    <div class="card-body"><h5><i class="bi bi-hdd-stack"></i> Physical Backups (`pg_basebackup`)</h5>
+                    <div class="card-content-wrapper"><p class="summary">Creates a binary copy of the database cluster files. Faster restore than `pg_dump`. Foundation for PITR.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePhysical" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapsePhysical">
+                         <h6>Tool & Purpose</h6>
+                         <p><code>pg_basebackup</code> connects to a running server (like a standby) and copies the entire data directory (`PGDATA`) file by file.</p>
+                          <h6>Key Features & Options</h6>
+                         <ul>
+                            <li><strong>Binary Copy:</strong> Creates a filesystem-level copy of the database files.</li>
+                            <li><strong>Consistency:</strong> Ensures a consistent snapshot by coordinating with the server via replication protocol.</li>
+                            <li><strong>WAL Inclusion:</strong> Can optionally include required WAL files in the backup (`-X stream` or `-X fetch`) for a self-contained recoverable backup.</li>
+                            <li><strong>Format:</strong> Plain (copy of `PGDATA`), Tar (`-Ft`).</li>
+                         </ul>
+                          <h6>Pros</h6>
+                         <ul>
+                            <li>Much faster restoration for large databases compared to `pg_dump`, as no SQL needs re-execution or index rebuilding (just WAL replay).</li>
+                             <li>The necessary starting point for Point-in-Time Recovery (PITR).</li>
+                         </ul>
+                          <h6>Cons</h6>
+                         <ul>
+                            <li>Less flexible: Restores the entire database cluster. Not easy to restore single tables.</li>
+                            <li>Backup size is the full size of the data directory.</li>
+                            <li>Generally not portable across major PostgreSQL versions or different machine architectures (endianness, block size).</li>
+                         </ul>
+                         <h6>Example</h6>
+                         <p><code>pg_basebackup -U replicator -h primary_host -D /path/to/backup/dir -Ft -X stream -P</code> (Tar format, stream WALs, show progress)</p>
+                     </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card type-pitr" id="card-pitr">
+                    <div class="card-body"><h5><i class="bi bi-clock-history"></i> Point-in-Time Recovery (PITR)</h5>
+                    <div class="card-content-wrapper"><p class="summary">Restore a database to any specific moment using a physical base backup and continuous <span class="term">WAL Archiving</span>.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePITR" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapsePITR">
+                         <h6>Concept</h6>
+                         <p>Combines a physical base backup with archived WAL segment files to replay database changes up to a specific target point (timestamp, transaction ID, named restore point).</p>
+                         <h6>Requirements</h6>
+                         <ol>
+                            <li><strong>Physical Base Backup:</strong> Taken using `pg_basebackup` or similar method.</li>
+                            <li><strong>Continuous WAL Archiving:</strong> The primary server must be configured (`wal_level = replica` or higher, `archive_mode = on`, `archive_command = '...'`) to continuously copy completed WAL segments to a separate, safe archive location.</li>
+                         </ol>
+                         <h6>Recovery Process</h6>
+                         <ol>
+                             <li>Restore the chosen physical base backup to a new data directory.</li>
+                             <li>Create a `recovery.signal` file (Postgres 12+) or `recovery.conf` file (older versions) in the restored data directory.</li>
+                             <li>Configure `restore_command` in `postgresql.conf` (or `recovery.conf`) to tell Postgres how to fetch WAL files from the archive location (e.g., `restore_command = 'cp /path/to/archive/%f %p'`).</li>
+                             <li>Specify the recovery target using parameters like `recovery_target_time`, `recovery_target_xid`, `recovery_target_name`, or `recovery_target = 'immediate'` (recover to end of WALs). Use `recovery_target_action = 'promote'` (PG12+) or `standby_mode = 'off'` (older) to bring the server up after reaching the target.</li>
+                             <li>Start PostgreSQL on the restored directory. It will enter recovery mode, replay WALs from the archive until the target is reached, then become operational.</li>
+                         </ol>
+                          <h6>Benefits</h6>
+                          <ul>
+                             <li>Recover from data corruption, accidental deletes/updates by restoring to a point *before* the incident occurred.</li>
+                             <li>Provides fine-grained disaster recovery capability.</li>
+                          </ul>
+                           <h6>Tools</h6>
+                           <p>Tools like `pgBackRest` or `Barman` significantly simplify managing base backups, WAL archiving, and the PITR process, adding features like parallel backup/restore, incremental backups, retention policies, and validation.</p>
+                     </div>
+                 </div>
+            </div>
+         </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- 10. SECURITY -->
+    <div class="schema-container cat-security" data-section-id="section-security">
+        <h2 class="section-title" id="title-security">Security</h2>
+        <div class="row">
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card type-auth" id="card-auth">
+                    <div class="card-body"><h5><i class="bi bi-key"></i> Authentication (`pg_hba.conf`)</h5>
+                    <div class="card-content-wrapper"><p class="summary">Host-Based Authentication controls *who* can connect from *where* using *which* method (e.g., `scram-sha-256`, `md5`, `peer`, `ldap`).</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAuth" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseAuth">
+                        <h6>File Location</h6>
+                        <p>Located in the data directory (`PGDATA`). Requires a server reload (`pg_ctl reload` or `SELECT pg_reload_conf();`) to apply changes.</p>
+                        <h6>Format</h6>
+                        <p>Each line defines a connection rule:</p>
+                        <p><code>type database user address method [options]</code></p>
+                        <ul>
+                            <li><strong>`type`</strong>: Connection type (`local` for Unix sockets, `host` for TCP/IP, `hostssl`, `hostnossl`).</li>
+                            <li><strong>`database`</strong>: Database name (`all`, specific name, comma-separated list, `@file`).</li>
+                            <li><strong>`user`</strong>: Role name (`all`, specific name, comma-separated list, `@file`).</li>
+                            <li><strong>`address`</strong>: Client IP address range (CIDR notation like `192.168.1.0/24`, `samehost`, `samenet`, `all`). Required for `host*` types.</li>
+                            <li><strong>`method`</strong>: Authentication method:
+                                <ul>
+                                    <li>`trust`: Allow connection unconditionally (dangerous!).</li>
+                                    <li>`reject`: Deny connection unconditionally.</li>
+                                    <li>`scram-sha-256`: Salted Challenge Response Authentication (preferred password method).</li>
+                                    <li>`md5`: Older challenge-response password method (less secure than SCRAM).</li>
+                                    <li>`password`: Send plain text password (avoid unless connection is SSL/TLS secured).</li>
+                                    <li>`peer`: For `local` connections, authenticate if OS username matches database role name.</li>
+                                    <li>`ident`: For TCP/IP, query client's ident server (rarely used).</li>
+                                    <li>`ldap`, `gss`, `sspi`, `pam`, `cert`: Integrate with external auth systems.</li>
+                                </ul>
+                            </li>
+                            <li><strong>`options`</strong>: Method-specific options (e.g., for LDAP, PAM).</li>
+                        </ul>
+                        <h6>Processing Order</h6>
+                        <p>Rules are processed sequentially. The *first* matching rule for the connection type, database, user, and source address is used.</p>
+                        <h6>Best Practices</h6>
+                        <p>Be specific. Avoid `all all 0.0.0.0/0 trust`. Use `scram-sha-256` for passwords. Use `hostssl` to enforce SSL/TLS for remote TCP/IP connections.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-permissions" id="card-permissions">
+                    <div class="card-body"><h5><i class="bi bi-person-check"></i> Roles & Permissions</h5>
+                    <div class="card-content-wrapper"><p class="summary">Unified <span class="term">Role</span> concept. Use `GRANT`/`REVOKE` for privileges. Set `DEFAULT PRIVILEGES`. Row-Level Security (RLS).</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePermissions" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapsePermissions">
+                        <h6>Roles</h6>
+                        <ul>
+                            <li>Combine users and groups: `CREATE ROLE name [WITH options];`</li>
+                             <li>Options: `LOGIN`/`NOLOGIN`, `SUPERUSER`/`NOSUPERUSER`, `CREATEDB`/`NOCREATEDB`, `CREATEROLE`/`NOCREATEROLE`, `INHERIT`/`NOINHERIT`, `REPLICATION`/`NOREPLICATION`, `BYPASSRLS`/`NOBYPASSRLS`, `CONNECTION LIMIT n`, `PASSWORD 'pass'`, `VALID UNTIL '...`, `IN ROLE role1, ...`, `ROLE role1, ...`, `ADMIN role1, ...`.</li>
+                            <li>Use `ALTER ROLE ...` to modify, `DROP ROLE ...` to remove.</li>
+                        </ul>
+                         <h6>Privileges (`GRANT`/`REVOKE`)</h6>
+                         <ul>
+                            <li>Control access to database objects.</li>
+                            <li>Syntax: `GRANT {privilege [, ...]|ALL} ON {object_type|ALL TABLES IN SCHEMA ...} object_name TO {role_name|PUBLIC};`</li>
+                            <li>Object Types: `TABLE`, `SEQUENCE`, `DATABASE`, `DOMAIN`, `FOREIGN DATA WRAPPER`, `FOREIGN SERVER`, `FUNCTION`, `LANGUAGE`, `SCHEMA`, `TABLESPACE`, `TYPE`.</li>
+                            <li>Privileges: `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`, `TRIGGER`, `CREATE`, `CONNECT`, `TEMPORARY`, `EXECUTE`, `USAGE`.</li>
+                             <li>`PUBLIC` pseudo-role grants to all roles. Use sparingly.</li>
+                             <li>Use `REVOKE` to remove privileges.</li>
+                         </ul>
+                         <h6>Default Privileges</h6>
+                         <ul>
+                            <li>`ALTER DEFAULT PRIVILEGES [FOR ROLE creator] [IN SCHEMA schema] GRANT ... ON TABLES TO target_role;`</li>
+                            <li>Automatically apply specified privileges to objects created *in the future* by the specified `creator` role (or current role if omitted) within the specified schema (or current db if omitted).</li>
+                            <li>Essential for ensuring application roles automatically get permissions on new tables created by migration tools/roles.</li>
+                         </ul>
+                         <h6>Row-Level Security (RLS)</h6>
+                         <ul>
+                             <li>Define policies (`CREATE POLICY ...`) that restrict which *rows* a user can view or modify within a table, based on user characteristics or data values.</li>
+                             <li>Policies are applied *after* standard SQL permissions.</li>
+                             <li>Requires `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;`.</li>
+                             <li>Roles need `BYPASSRLS` attribute to ignore policies (use with extreme care).</li>
+                         </ul>
+                    </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-ssl" id="card-ssl">
+                    <div class="card-body"><h5><i class="bi bi-shield-check"></i> SSL/TLS Encryption</h5>
+                    <div class="card-content-wrapper"><p class="summary">Encrypt client-server communication. Configure server (`ssl=on`, certs) and enforce via `pg_hba.conf` (`hostssl`).</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSSL" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseSSL">
+                         <h6>Purpose</h6>
+                         <p>Protect data in transit between clients and the database server from eavesdropping and tampering, especially over untrusted networks.</p>
+                         <h6>Server Configuration (`postgresql.conf`)</h6>
+                         <ul>
+                            <li>`ssl = on`: Enable SSL/TLS support.</li>
+                            <li>`ssl_cert_file = 'server.crt'`: Path to the server's certificate file.</li>
+                            <li>`ssl_key_file = 'server.key'`: Path to the server's private key file. Permissions must be restrictive (e.g., `0600`).</li>
+                            <li>`ssl_ca_file = 'root.crt'`: (Optional) Path to trusted Certificate Authority certs for verifying client certificates.</li>
+                            <li>`ssl_ciphers = 'HIGH:!aNULL'`: (Optional) Configure allowed cipher suites.</li>
+                         </ul>
+                         <h6>Enforcing SSL/TLS (`pg_hba.conf`)</h6>
+                         <ul>
+                            <li>Use connection type `hostssl` instead of `host` for specific rules. This forces clients matching that rule to use an SSL connection.</li>
+                            <li>Example: `hostssl all myuser 192.168.1.0/24 scram-sha-256` (Requires SSL for `myuser` from that subnet).</li>
+                            <li>Using `host` allows both SSL and non-SSL connections if `ssl=on` is set.</li>
+                         </ul>
+                         <h6>Client Configuration</h6>
+                         <ul>
+                            <li>Clients specify connection parameters to control SSL usage.</li>
+                             <li>Connection String/Libpq: `sslmode` parameter (`disable`, `allow`, `prefer`, `require`, `verify-ca`, `verify-full`).
+                                <ul><li>`require`: Enforce SSL, don't verify CA.</li>
+                                <li>`verify-ca`: Enforce SSL, verify server cert against trusted CA (`sslrootcert` parameter).</li>
+                                <li>`verify-full`: Enforce SSL, verify CA, and verify server hostname matches certificate CN/SAN. **Most secure.**</li></ul>
+                             </li>
+                             <li>Other parameters: `sslcert`, `sslkey`, `sslrootcert`.</li>
+                         </ul>
+                          <h6>Client Certificate Authentication</h6>
+                          <p>Can configure server to require clients to present a valid certificate signed by a trusted CA (`clientcert=verify-ca` or `verify-full` in `pg_hba.conf`).</p>
+                    </div>
+                 </div>
+             </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- 11. ESSENTIAL TOOLS -->
+    <div class="schema-container cat-tools" data-section-id="section-tools">
+        <h2 class="section-title" id="title-tools">Essential Tools</h2>
+        <div class="row">
+            <div class="col-lg-6 col-md-6">
+                 <div class="info-card type-psql" id="card-psql">
+                    <div class="card-body"><h5><i class="bi bi-terminal"></i> psql Command-Line</h5>
+                    <div class="card-content-wrapper"><p class="summary">The indispensable interactive terminal. Master its meta-commands (`\?`, `\d`, `\l`, `\timing`, `\e`, `\copy`, etc.) for efficiency.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePsql" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapsePsql">
+                        <h6>Connecting</h6>
+                        <p><code>psql -h host -p port -U user -d dbname</code></p>
+                        <h6>Key Meta-Commands (prefixed with `\`)</h6>
+                        <ul>
+                           <li><strong>Help & Info:</strong>
+                              <ul>
+                                 <li>`\?`: Help on `\` commands.</li>
+                                 <li>`\h [SQL Command]`: Help on specific SQL commands (e.g., `\h SELECT`).</li>
+                                 <li>`\l` or `\l+`: List databases (with details).</li>
+                                 <li>`\c dbname [user]`: Connect to a different database/user.</li>
+                                 <li>`\conninfo`: Display current connection info.</li>
+                                 <li>`\encoding [enc]`: Show/set client encoding.</li>
+                                 <li>`\password [user]`: Change user password securely.</li>
+                                 <li>`\q`: Quit psql.</li>
+                              </ul>
+                           </li>
+                            <li><strong>Object Inspection (`\d` family):</strong>
+                              <ul>
+                                 <li>`\d[S+] [pattern]`: List tables, views, sequences, indexes (+ means more detail, S includes system objects).</li>
+                                 <li>`\dt[S+] [pattern]`: List tables.</li>
+                                 <li>`\di[S+] [pattern]`: List indexes.</li>
+                                 <li>`\ds[S+] [pattern]`: List sequences.</li>
+                                 <li>`\dv[S+] [pattern]`: List views.</li>
+                                 <li>`\dm[S+] [pattern]`: List materialized views.</li>
+                                 <li>`\df[S+] [pattern]`: List functions.</li>
+                                 <li>`\dT[S+] [pattern]`: List data types.</li>
+                                 <li>`\dn[S+] [pattern]`: List schemas.</li>
+                                 <li>`\du[S+] [pattern]` or `\dg[S+] [pattern]`: List roles.</li>
+                                 <li>`\dp [pattern]`: List table/view/sequence access privileges.</li>
+                                 <li>`\ddp [pattern]`: List default privileges.</li>
+                                 <li>`\dx[+] [pattern]`: List extensions.</li>
+                              </ul>
+                           </li>
+                            <li><strong>Query Execution & Formatting:</strong>
+                              <ul>
+                                 <li>`\timing [on|off]`: Toggle display of query execution time.</li>
+                                 <li>`\x [on|off|auto]`: Toggle expanded display format (useful for wide rows).</li>
+                                 <li>`\H`: Toggle HTML output format.</li>
+                                 <li>`\watch [sec]`: Execute current query buffer repeatedly.</li>
+                                 <li>`\g`: Execute query buffer.</li>
+                                 <li>`\s [file]`: Show history or save to file.</li>
+                                 <li>`\i file`: Execute commands from file.</li>
+                                 <li>`\e [file]`: Edit current query buffer (or file) in external editor (`$EDITOR`).</li>
+                                 <li>`\ef [funcname]`: Edit function definition in external editor.</li>
+                                 <li>`\prompt name var`: Prompt user for variable.</li>
+                                 <li>`\set name value`: Set internal psql variable.</li>
+                                 <li>`\unset name`: Unset variable.</li>
+                              </ul>
+                           </li>
+                            <li><strong>Data Import/Export:</strong>
+                               <ul>
+                                  <li>`\copy table FROM 'file' [options]`: Client-side copy (psql reads file).</li>
+                                  <li>`\copy table TO 'file' [options]`: Client-side copy (psql writes file).</li>
+                                   <li>(Use SQL `COPY` for server-side file access).</li>
+                               </ul>
+                            </li>
+                        </ul>
+                        <h6>Customization</h6>
+                        <p>`.psqlrc` file in home directory for custom settings, aliases (`\set`), prompts.</p>
+                    </div>
+                 </div>
+            </div>
+            <div class="col-lg-6 col-md-6">
+                 <div class="info-card type-gui" id="card-gui">
+                     <div class="card-body"><h5><i class="bi bi-window-desktop"></i> GUI Tools</h5>
+                     <div class="card-content-wrapper"><p class="summary">Visual administration and querying tools like `pgAdmin` (open source), DBeaver (universal), DataGrip (commercial).</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGui" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseGui">
+                         <h6>Common Options</h6>
+                         <ul>
+                             <li><strong>pgAdmin:</strong>
+                                 <ul><li>Official open-source graphical administration tool for PostgreSQL.</li>
+                                 <li>Features: Server status monitoring, object browser, SQL query tool with syntax highlighting & explain, data editor, backup/restore UI, user management, schema diff.</li>
+                                 <li>Runs as a web application (pgAdmin 4) or older desktop app (pgAdmin 3 - legacy).</li>
+                                 <li>Can be complex, sometimes perceived as slow or resource-heavy.</li></ul>
+                             </li>
+                             <li><strong>DBeaver:</strong>
+                                 <ul><li>Free, open-source universal database tool (supports many DBs including Postgres).</li>
+                                 <li>Features: Connection management, SQL editor with auto-complete & formatting, visual query builder, data viewer/editor, ER diagrams, data transfer/migration tools.</li>
+                                 <li>Popular choice due to versatility and performance. Community & Enterprise editions.</li></ul>
+                             </li>
+                              <li><strong>DataGrip (JetBrains):</strong>
+                                 <ul><li>Commercial IDE for databases from JetBrains (makers of IntelliJ, PyCharm).</li>
+                                 <li>Features: Advanced SQL editor (introspection, refactoring, code completion), schema navigation, data editor, import/export, VCS integration.</li>
+                                  <li>Powerful, particularly strong editor features. Part of the JetBrains ecosystem. Requires license.</li></ul>
+                             </li>
+                              <li><strong>Other Tools:</strong>
+                                 <ul><li>psql (already covered - powerful CLI)</li>
+                                 <li>Navicat for PostgreSQL (Commercial)</li>
+                                 <li>Postico (macOS native, Commercial)</li>
+                                 <li>TablePlus (macOS/Windows/Linux native, Commercial/Free limited)</li>
+                                 <li>SQL Developer (Oracle tool, supports Postgres via extension)</li></ul>
+                             </li>
+                         </ul>
+                         <h6>Choosing a Tool</h6>
+                         <p>Depends on preference, budget, operating system, and required features. `psql` is essential for scripting and server access. GUIs are helpful for visual exploration, administration tasks, and complex query development.</p>
+                    </div>
+                 </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- 12. QUIRKS & TERMINOLOGY RECAP -->
+    <div class="schema-container cat-quirks" data-section-id="section-quirks">
+        <h2 class="section-title" id="title-quirks">Key Quirks & Terminology Recap</h2>
+         <div class="row">
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-quirk type-case" id="card-quirk-case">
+                     <div class="card-body"><h5><i class="bi bi-type-h1"></i> Identifier Case Sensitivity</h5>
+                     <div class="card-content-wrapper"><p class="summary">Unquoted identifiers are folded to <span class="term">lowercase</span>. Use double quotes (`"MyTable"`) to preserve case. Critical migration gotcha!</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuirkCase" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseQuirkCase">
+                        <h6>The Rule</h6>
+                        <ul>
+                            <li>If you create a table like `CREATE TABLE MyUsers (...)`, PostgreSQL stores it as `myusers`. Subsequent queries like `SELECT * FROM MyUsers;` or `SELECT * FROM myusers;` will both work because the unquoted identifier in the query is also folded to lowercase.</li>
+                            <li>If you create a table using double quotes `CREATE TABLE "MyUsers" (...)`, PostgreSQL stores the name exactly as `MyUsers` (preserving case).</li>
+                            <li>To query this case-sensitive table, you *must* use double quotes: `SELECT * FROM "MyUsers";`. Querying `SELECT * FROM MyUsers;` or `SELECT * FROM myusers;` will fail (unless a lowercase table `myusers` also happens to exist).</li>
+                        </ul>
+                         <h6>Migration Impact</h6>
+                         <p>Databases like SQL Server or MySQL (on Windows/macOS by default) are often case-insensitive or preserve case differently. Migrating schemas and queries requires careful attention to quoting or consistent use of lowercase identifiers to avoid errors.</p>
+                         <h6>Best Practice</h6>
+                         <p>Avoid quoted identifiers unless absolutely necessary. Use lowercase names with underscores (`my_table`, `user_id`) consistently for maximum portability and minimum confusion.</p>
+                    </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-quirk type-vacuum" id="card-quirk-vacuum">
+                    <div class="card-body"><h5><i class="bi bi-recycle"></i> VACUUM Necessity</h5>
+                     <div class="card-content-wrapper"><p class="summary">Due to MVCC, dead tuples accumulate (<span class="term">bloat</span>). Regular `VACUUM` (usually via <span class="term">Autovacuum</span>) is mandatory for performance and TXID wraparound prevention.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuirkVacuum" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseQuirkVacuum">
+                        <h6>Recap</h6>
+                         <p>MVCC doesn't physically delete or update rows in place. Old row versions remain until cleaned up.</p>
+                         <h6>Consequences of Neglect</h6>
+                         <ul>
+                             <li><strong>Bloat:</strong> Tables and indexes grow larger than necessary, wasting disk space.</li>
+                             <li><strong>Performance Degradation:</strong> Sequential scans read more dead tuples; index scans might become less efficient; Index-Only Scans might fail if the Visibility Map isn't updated.</li>
+                             <li><strong>TXID Wraparound Failure:</strong> If `VACUUM` doesn't run often enough to "freeze" old transaction IDs on very busy systems, the database may eventually be forced to shut down to prevent data corruption when the TXID counter wraps. This is catastrophic.</li>
+                         </ul>
+                          <h6>Action Required</h6>
+                         <ul>
+                            <li>Ensure Autovacuum is enabled (`autovacuum = on`).</li>
+                            <li>**Monitor Autovacuum:** Check logs (`log_autovacuum_min_duration`), `pg_stat_user_tables` (last vacuum times, dead tuples).</li>
+                            <li>**Tune Autovacuum:** Adjust settings (`*_scale_factor`, `*_threshold`, `*_cost_delay`, `*_cost_limit`, `max_workers`) based on table size, update frequency, and system resources. Defaults are often insufficient for active databases.</li>
+                            <li>Occasionally monitor for excessive bloat using tools or queries (`pgstattuple` extension) and consider manual `VACUUM` or `VACUUM FULL` / `pg_repack` if necessary.</li>
+                         </ul>
+                    </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-quirk type-pooling" id="card-quirk-pooling">
+                     <div class="card-body"><h5><i class="bi bi-server"></i> Connection Pooling</h5>
+                     <div class="card-content-wrapper"><p class="summary">Postgres's process-per-connection model makes external poolers (PgBouncer, Pgpool-II) highly recommended for apps with many connections.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuirkPooling" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseQuirkPooling">
+                         <h6>The Issue</h6>
+                         <p>Each connection to PostgreSQL forks a new OS process (`postgres` backend), consuming significant RAM and CPU resources for process management. Creating and tearing down connections is also relatively expensive.</p>
+                         <p>Applications (especially web apps) that open many short-lived connections directly to the database can quickly exhaust server resources and lead to poor performance.</p>
+                         <h6>The Solution: External Connection Poolers</h6>
+                         <p>Middleware that maintains a pool of persistent connections to the PostgreSQL server. Application connects to the pooler instead of directly to Postgres.</p>
+                          <ul>
+                             <li><strong>PgBouncer:</strong> Lightweight, single-purpose connection pooler. Very popular, stable, low overhead. Offers different pooling modes:
+                                 <ul><li><em>Session Pooling:</em> Client keeps connection until disconnect (least effective pooling).</li>
+                                 <li><em>Transaction Pooling:</em> Connection returned to pool after each transaction. Requires client not to use session-based features (e.g., SET commands, advisory locks) across transactions. **Commonly used.**</li>
+                                 <li><em>Statement Pooling:</em> Connection returned after each statement (most aggressive, most restrictions).</li></ul>
+                             </li>
+                             <li><strong>Pgpool-II:</strong> More feature-rich middleware. Provides connection pooling, load balancing across replicas, replication management, and automated failover (though complex). Higher overhead than PgBouncer.</li>
+                         </ul>
+                          <h6>Benefits of Pooling</h6>
+                         <ul>
+                             <li>Reduces connection overhead on the PostgreSQL server.</li>
+                             <li>Allows supporting thousands of application clients with only tens or hundreds of actual database connections.</li>
+                             <li>Improves performance by reusing existing connections.</li>
+                         </ul>
+                          <h6>Recommendation</h6>
+                          <p>For most applications making frequent, short-lived connections, using PgBouncer in transaction pooling mode is highly recommended.</p>
+                    </div>
+                 </div>
+             </div>
+              <div class="col-lg-4 col-md-6">
+                <div class="info-card type-quirk type-public" id="card-quirk-public">
+                     <div class="card-body"><h5><i class="bi bi-eye"></i> `public` Schema</h5>
+                    <div class="card-content-wrapper"><p class="summary">Default schema. All roles have `CREATE` and `USAGE` grants initially. Best practice: `REVOKE` create, use dedicated schemas.</p>
+                     <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuirkPublic" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                    <div class="collapse collapse-content" id="collapseQuirkPublic">
+                         <h6>Default Behavior</h6>
+                         <ul>
+                             <li>Every new database contains a schema named `public`.</li>
+                             <li>By default, the special `PUBLIC` pseudo-role (meaning all roles) is granted `CREATE` (permission to create objects like tables) and `USAGE` (permission to access objects) privileges on the `public` schema.</li>
+                             <li>If no schema is specified when creating an object (e.g., `CREATE TABLE mytable (...)`), it gets created in the first schema listed in the user's `search_path` where they have `CREATE` permission, which is typically `public`.</li>
+                         </ul>
+                         <h6>Problems</h6>
+                         <ul>
+                             <li>Can lead to a cluttered namespace with objects from different applications or users mixed together.</li>
+                             <li>Security Risk: Any user can potentially create objects in `public`, potentially leading to naming conflicts or unexpected behavior (e.g., function hijacking if `search_path` is manipulated).</li>
+                         </ul>
+                          <h6>Recommended Practice</h6>
+                         <ol>
+                             <li>**Revoke Default Privileges:** As a superuser, immediately after database creation:
+                                 <pre><code>REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+-- Optionally revoke USAGE if desired, but often needed
+-- REVOKE USAGE ON SCHEMA public FROM PUBLIC;</code></pre>
+                             </li>
+                              <li>**Create Dedicated Schemas:** Use schemas to organize objects logically (e.g., `CREATE SCHEMA app_schema;`, `CREATE SCHEMA reporting;`).</li>
+                              <li>**Grant Permissions Explicitly:** Grant necessary `USAGE` and object-specific privileges (SELECT, INSERT, etc.) on dedicated schemas/tables to specific application roles.</li>
+                              <li>**Set `search_path`:** Configure the `search_path` appropriately for application roles (e.g., `ALTER ROLE app_user SET search_path = app_schema, public;`) so they don't need to schema-qualify table names frequently, but still prioritize the correct schema.</li>
+                         </ol>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card type-quirk type-searchpath" id="card-quirk-searchpath">
+                    <div class="card-body"><h5><i class="bi bi-signpost"></i> `search_path`</h5>
+                    <div class="card-content-wrapper"><p class="summary">Determines the order schemas are searched for unqualified objects. Impacts name resolution and security.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuirkSearchPath" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseQuirkSearchPath">
+                        <h6>Functionality</h6>
+                        <p>When you reference an object (table, function, type, etc.) without explicitly qualifying it with a schema name (e.g., `SELECT * FROM users` instead of `SELECT * FROM app_schema.users`), PostgreSQL searches the schemas listed in the `search_path` setting in order, using the first matching object found.</p>
+                        <h6>Default Value</h6>
+                        <p>Typically defaults to `"$user", public`. This means it first looks for a schema with the same name as the current user, then looks in the `public` schema.</p>
+                         <h6>Setting the Path</h6>
+                         <ul>
+                            <li>Session level: `SET search_path TO schema1, schema2, public;`</li>
+                            <li>User level: `ALTER ROLE myuser SET search_path = schema1, public;`</li>
+                            <li>Database level: `ALTER DATABASE mydb SET search_path = schema1, public;`</li>
+                            <li>Server level (`postgresql.conf`): Sets the default for new sessions.</li>
+                         </ul>
+                         <h6>Security Implications</h6>
+                         <ul>
+                             <li>If a user can create objects in a schema listed *earlier* in the `search_path` than the intended schema (especially `public` if default permissions aren't revoked), they might be able to create objects (like functions) that hijack calls intended for objects in later schemas.</li>
+                             <li>Example: If `search_path = public, app_schema`, and a user creates a function `public.do_something()`, a call to `do_something()` might execute the malicious public version instead of `app_schema.do_something()`.</li>
+                         </ul>
+                          <h6>Best Practice</h6>
+                          <ul>
+                             <li>Always be aware of the current `search_path` (`SHOW search_path;`).</li>
+                             <li>Consider setting a specific, restricted `search_path` for application roles that only includes the necessary application schema(s) and potentially `public` *last* if needed for extensions.</li>
+                             <li>Qualify object names with schemas (`app_schema.users`) in security-sensitive contexts or when ambiguity is possible, especially within function definitions (`SECURITY DEFINER` functions).</li>
+                             <li>Follow best practices for the `public` schema (revoke default create privileges).</li>
+                          </ul>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card type-quirk type-role" id="card-quirk-role">
+                    <div class="card-body"><h5><i class="bi bi-people"></i> Unified Role Concept</h5>
+                    <div class="card-content-wrapper"><p class="summary">PostgreSQL uses <span class="term">Role</span> for both users and groups. Roles can inherit privileges from other roles they are members of.</p>
+                    <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuirkRole" aria-expanded="false">Details <i class="bi bi-chevron-down"></i></button></div></div>
+                     <div class="collapse collapse-content" id="collapseQuirkRole">
+                         <h6>Unified Model</h6>
+                         <p>Unlike some databases with distinct concepts for "User" (can log in) and "Group" (container for privileges), PostgreSQL uses a single `ROLE` construct.</p>
+                         <ul>
+                            <li>A role that can log in has the `LOGIN` attribute (`CREATE ROLE myuser WITH LOGIN PASSWORD '...';` is equivalent to `CREATE USER ...`).</li>
+                            <li>A role intended as a group typically has `NOLOGIN` (`CREATE ROLE readonly_group WITH NOLOGIN;`).</li>
+                         </ul>
+                          <h6>Membership and Inheritance</h6>
+                         <ul>
+                            <li>Roles can be members of other roles: `GRANT group_role TO user_role;`.</li>
+                            <li>By default (`INHERIT` attribute), a role automatically inherits all privileges granted directly to the roles it is a member of.</li>
+                            <li>Example: If `readonly_group` is granted `SELECT` on `mytable`, and `myuser` is a member of `readonly_group` (`GRANT readonly_group TO myuser;`), then `myuser` can also `SELECT` from `mytable`.</li>
+                         </ul>
+                          <h6>Benefits</h6>
+                         <ul>
+                             <li>Flexible privilege management through group roles. Grant permissions to the group role once, then manage user access by adding/removing them from the group.</li>
+                             <li>Allows complex hierarchical privilege structures if needed.</li>
+                         </ul>
+                          <h6>Managing Membership</h6>
+                         <ul>
+                            <li>`GRANT group_role TO user_role;`</li>
+                            <li>`REVOKE group_role FROM user_role;`</li>
+                         </ul>
+                         <h6>Consideration</h6>
+                         <p>While powerful, understand the inheritance model (`INHERIT` vs `NOINHERIT`) and use group roles strategically to simplify permission management rather than granting everything directly to login roles.</p>
+                    </div>
+                 </div>
+             </div>
+         </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+</div> <!-- /container -->
+
+<footer class="container text-center">
+    <!-- Update with your name/year -->
+    <p>© 2024 Your Name Here</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Final Script incorporating fixes for hover and collapse toggle
+document.addEventListener('DOMContentLoaded', () => {
+
+    const mainContainer = document.getElementById('main-container');
+    const cards = document.querySelectorAll('.info-card');
+    let currentHoverState = { card: null }; // Track active card
+
+    // --- Clear Hover State ---
+    function clearHoverState(forceClear = false) {
+        const isMouseStillOverCard = currentHoverState.card && currentHoverState.card.matches(':hover');
+        const isMouseStillOverSection = currentHoverState.card && currentHoverState.card.closest('.schema-container')?.matches(':hover');
+
+        // Clear only if forced, or if mouse left the currently highlighted card AND its section
+        // Or if simply moving between cards within the same section (to allow new highlight)
+        if (forceClear || (!isMouseStillOverCard && !isMouseStillOverSection)) {
+            mainContainer.classList.remove('is-dimmed');
+            if(currentHoverState.card) {
+                 // Remove highlight from card
+                 currentHoverState.card.classList.remove('is-highlighted');
+                 // Remove highlight from section container
+                 const oldSchemaContainer = currentHoverState.card.closest('.schema-container');
+                 if (oldSchemaContainer) {
+                     oldSchemaContainer.classList.remove('is-highlighted-section');
+                      // Ensure title opacity is reset if needed (it wasn't dimmed in this version, but good practice)
+                      const oldTitle = oldSchemaContainer.querySelector('.section-title');
+                      if(oldTitle) oldTitle.style.opacity = '';
+                 }
+            }
+            currentHoverState = { card: null };
+        }
+    }
+
+    // --- Apply Hover State ---
+    function applyHoverState(card) {
+        if (!card || card === currentHoverState.card) return; // No change or already handled
+
+        clearHoverState(true); // Force clear previous state before applying new one
+
+        const schemaContainer = card.closest('.schema-container');
+
+        // Set new state
+        currentHoverState.card = card;
+        mainContainer.classList.add('is-dimmed'); // Dim background elements
+        card.classList.add('is-highlighted');     // Highlight the card itself
+
+        if (schemaContainer) {
+            schemaContainer.classList.add('is-highlighted-section'); // Highlight section too (optional)
+             // Ensure title is fully visible if section highlighting dims it
+            const title = schemaContainer.querySelector('.section-title');
+            if (title) title.style.opacity = '1';
+        }
+    }
+
+    // --- Event Listeners using Event Delegation on main container ---
+    mainContainer.addEventListener('mouseover', (event) => {
+        const targetCard = event.target.closest('.info-card');
+        if (targetCard) { // && targetCard !== currentHoverState.card) { // Check if it's a new card
+             applyHoverState(targetCard);
+        }
+    });
+
+    mainContainer.addEventListener('mouseout', (event) => {
+        // Check if the mouse is leaving a card and not entering another card immediately
+         if (event.target.closest('.info-card') && !event.relatedTarget?.closest('.info-card')) {
+             // Delay slightly to see if we land on another card quickly
+             setTimeout(() => {
+                 // Check *again* if we are currently over *any* card after the delay
+                 const isStillOverACard = mainContainer.querySelector('.info-card:hover');
+                 if (!isStillOverACard) {
+                     clearHoverState(false); // Use non-forced clear first
+                 }
+             }, 50); // Short delay
+         } else if (!mainContainer.contains(event.relatedTarget)) {
+             // If mouse leaves the main container entirely, force clear
+             clearHoverState(true);
+         }
+    });
+
+
+    // --- Toggle Chevron Icons on Collapse Buttons ---
+    const collapseToggles = document.querySelectorAll('.details-toggle');
+    collapseToggles.forEach(button => {
+        const targetId = button.getAttribute('data-bs-target');
+        const targetCollapse = document.querySelector(targetId);
+        const icon = button.querySelector('.bi');
+
+        if (targetCollapse && icon) {
+            // Set initial icon state based on whether the collapse element starts shown
+             if (targetCollapse.classList.contains('show')) {
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-up');
+             } else {
+                icon.classList.remove('bi-chevron-up');
+                icon.classList.add('bi-chevron-down');
+            }
+
+            // Listen to Bootstrap collapse events to toggle icon
+            targetCollapse.addEventListener('show.bs.collapse', () => {
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-up');
+            });
+            targetCollapse.addEventListener('hide.bs.collapse', () => {
+                icon.classList.remove('bi-chevron-up');
+                icon.classList.add('bi-chevron-down');
+            });
+        }
+    });
+
+});
+</script>
+</body>
+</html>
