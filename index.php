@@ -158,7 +158,7 @@ try {
     <meta property="og:description" content="A visually rich gallery of useful cheatsheets covering various topics like AI Safety, Bitcoin, Leadership, and more.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="<?php echo htmlspecialchars($baseUrl); ?>">
-    <meta property="og:image" content="<?php echo htmlspecialchars($baseUrl); ?>images/og-gallery-default.png"> <!-- Suggest creating a specific OG image for the gallery -->
+    <meta property="og:image" content="<?php echo htmlspecialchars($baseUrl); ?>images/cheatsheets-og.png"> <!-- Suggest creating a specific OG image for the gallery -->
     <meta property="og:image:alt" content="David Veksler Cheatsheets Gallery">
     <meta property="og:site_name" content="David Veksler's Cheatsheets">
     <meta property="og:locale" content="en_US">
@@ -168,7 +168,7 @@ try {
     <meta name="twitter:title" content="Browse Cheatsheets - DavidVeksler.com">
     <meta name="twitter:description" content="Explore a collection of handy cheatsheets on tech, philosophy, and more in a visual gallery.">
     <meta name="twitter:url" content="<?php echo htmlspecialchars($baseUrl); ?>">
-    <meta name="twitter:image" content="<?php echo htmlspecialchars($baseUrl); ?>images/og-gallery-default.png"> <!-- Use the same default image -->
+    <meta name="twitter:image" content="<?php echo htmlspecialchars($baseUrl); ?>images/cheatsheets-og.png"> <!-- Use the same default image -->
     <meta name="twitter:image:alt" content="David Veksler Cheatsheets Gallery">
 
     <!-- Bootstrap CSS -->
