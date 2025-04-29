@@ -18,20 +18,29 @@ $excludedItems = [
 ];
 
 $cheatsheetDir = '.'; // Current directory
-$baseUrl = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // Base URL path for links
+// More robust base URL calculation
+$scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'];
+$scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+// Ensure base URL ends with a slash
+$baseUrl = rtrim($scheme . '://' . $host . $scriptDir, '/') . '/';
+
 
 // --- Helper Function: Extract Metadata ---
-function extractMetadata(string $filename): array {
+function extractMetadata(string $filepath): array {
+    global $baseUrl; // Access the base URL for resolving relative paths
+
+    $filename = basename($filepath);
     $metadata = [
-        'title' => pathinfo($filename, PATHINFO_FILENAME), // Default title from filename
-        'description' => 'Click to view this cheatsheet.', // Default description
-        'image' => null, // Default image (none)
-        'url' => $filename,
+        'title' => pathinfo($filename, PATHINFO_FILENAME), // Default title
+        'description' => 'Explore this cheatsheet to learn more.', // Default description
+        'image' => null, // Default image
+        'url' => $baseUrl . $filename, // Construct full URL
         'error' => null
     ];
 
     // Suppress warnings for potentially malformed HTML and file access issues
-    $content = @file_get_contents($filename);
+    $content = @file_get_contents($filepath);
     if ($content === false) {
         $metadata['error'] = "Could not read file: " . $filename;
         return $metadata;
@@ -64,32 +73,34 @@ function extractMetadata(string $filename): array {
     // Extract Open Graph Image
     $imgNode = $xpath->query('//meta[@property="og:image"]/@content')->item(0);
     if ($imgNode) {
-         // Check if the image URL is absolute or relative
         $imageUrl = trim($imgNode->nodeValue);
-        if (!preg_match('/^https?:\/\//i', $imageUrl) && !str_starts_with($imageUrl, '/')) {
-            // If relative and not starting with /, prepend base URL path
-             global $baseUrl;
-             // Construct absolute path based on the script's location
-             $absoluteImagePath = realpath(dirname(__FILE__)) . '/' . $imageUrl;
-             // Check if the relative image file actually exists
-             if (file_exists($absoluteImagePath)) {
-                 $metadata['image'] = $baseUrl . ltrim($imageUrl, '/');
+         // Check if the image URL is absolute or relative
+        if (!preg_match('/^https?:\/\//i', $imageUrl)) {
+             // Handle root-relative (starts with /) or file-relative paths
+             if (str_starts_with($imageUrl, '/')) {
+                 // Root relative - combine scheme, host, and path
+                 $metadata['image'] = $scheme . '://' . $host . $imageUrl;
              } else {
-                 // If relative image doesn't exist locally, maybe it's hosted elsewhere or invalid
-                 // Keep it null or log an error
-                 error_log("Relative image path specified in " . $filename . " not found: " . $imageUrl);
+                  // Relative path - combine base URL path and image URL
+                 // Check if the relative image file actually exists locally first
+                 $absoluteImagePath = realpath(dirname(__FILE__)) . '/' . $imageUrl;
+                 if (file_exists($absoluteImagePath)) {
+                    $metadata['image'] = $baseUrl . $imageUrl;
+                 } else {
+                     error_log("Relative image path specified in " . $filename . " not found: " . $imageUrl);
+                     // Keep image as null if local file doesn't exist
+                 }
              }
         } else {
-            // Use absolute URL or root-relative URL as is
+             // It's an absolute URL, use as is
             $metadata['image'] = $imageUrl;
         }
     }
 
-     // Limit description length for display
+     // Limit description length for display consistency
     if (strlen($metadata['description']) > 150) {
-        $metadata['description'] = substr($metadata['description'], 0, 147) . '...';
+        $metadata['description'] = mb_substr($metadata['description'], 0, 147) . '...'; // Use mb_substr for multi-byte safety
     }
-
 
     return $metadata;
 }
@@ -105,14 +116,15 @@ try {
     }
 
     foreach ($files as $file) {
-        // Skip excluded items and directories
-        if (in_array($file, $excludedItems, true) || is_dir($cheatsheetDir . '/' . $file)) {
+        $filePath = $cheatsheetDir . '/' . $file;
+        // Skip excluded items and non-files/non-readable files
+        if (in_array($file, $excludedItems, true) || !is_file($filePath) || !is_readable($filePath)) {
             continue;
         }
 
         // Only process .html files
         if (str_ends_with(strtolower($file), '.html')) {
-            $meta = extractMetadata($cheatsheetDir . '/' . $file);
+            $meta = extractMetadata($filePath);
             if ($meta['error']) {
                 $errors[] = $meta['error'];
             } else {
@@ -120,6 +132,9 @@ try {
             }
         }
     }
+    // Optional: Sort cheatsheets alphabetically by title
+    // usort($cheatsheets, fn($a, $b) => strcmp(strtolower($a['title']), strtolower($b['title'])));
+
 } catch (Exception $e) {
     $errors[] = "An error occurred: " . $e->getMessage();
 }
@@ -133,17 +148,17 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- === SEO Metadata for the Gallery Page === -->
     <title>Browse Cheatsheets - DavidVeksler.com</title>
-    <meta name="description" content="A gallery of useful cheatsheets covering topics like AI Safety, Bitcoin, Leadership, Programming, Philosophy, and more, created by David Veksler.">
-    <meta name="keywords" content="cheatsheets, reference, guide, programming, tech, philosophy, ai safety, bitcoin, leadership, david veksler">
+    <meta name="description" content="A visually rich gallery of useful cheatsheets covering topics like AI Safety, Bitcoin, Leadership, Programming, Philosophy, and more, created by David Veksler.">
+    <meta name="keywords" content="cheatsheets, reference, guide, programming, tech, philosophy, ai safety, bitcoin, leadership, david veksler, gallery, visual browser">
     <meta name="author" content="David Veksler">
-    <link rel="canonical" href="https://cheatsheets.davidveksler.com/"> <!-- Assuming this index.php is the root -->
+    <link rel="canonical" href="<?php echo htmlspecialchars($baseUrl); ?>"> <!-- Canonical URL for the gallery root -->
 
     <!-- Open Graph / Facebook / LinkedIn -->
     <meta property="og:title" content="Browse Cheatsheets - DavidVeksler.com">
-    <meta property="og:description" content="A gallery of useful cheatsheets covering various topics like AI Safety, Bitcoin, Leadership, and more.">
+    <meta property="og:description" content="A visually rich gallery of useful cheatsheets covering various topics like AI Safety, Bitcoin, Leadership, and more.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://cheatsheets.davidveksler.com/">
-    <meta property="og:image" content="https://cheatsheets.davidveksler.com/images/og-image-default.png"> <!-- Suggest creating a default OG image for the gallery page -->
+    <meta property="og:url" content="<?php echo htmlspecialchars($baseUrl); ?>">
+    <meta property="og:image" content="<?php echo htmlspecialchars($baseUrl); ?>images/og-gallery-default.png"> <!-- Suggest creating a specific OG image for the gallery -->
     <meta property="og:image:alt" content="David Veksler Cheatsheets Gallery">
     <meta property="og:site_name" content="David Veksler's Cheatsheets">
     <meta property="og:locale" content="en_US">
@@ -151,94 +166,137 @@ try {
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Browse Cheatsheets - DavidVeksler.com">
-    <meta name="twitter:description" content="Explore a collection of handy cheatsheets on tech, philosophy, and more.">
-    <meta name="twitter:url" content="https://cheatsheets.davidveksler.com/">
-    <meta name="twitter:image" content="https://cheatsheets.davidveksler.com/images/og-image-default.png"> <!-- Use the same default image -->
+    <meta name="twitter:description" content="Explore a collection of handy cheatsheets on tech, philosophy, and more in a visual gallery.">
+    <meta name="twitter:url" content="<?php echo htmlspecialchars($baseUrl); ?>">
+    <meta name="twitter:image" content="<?php echo htmlspecialchars($baseUrl); ?>images/og-gallery-default.png"> <!-- Use the same default image -->
     <meta name="twitter:image:alt" content="David Veksler Cheatsheets Gallery">
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
+        :root {
+             --card-lift-height: -8px;
+             --card-shadow-intensity: rgba(0, 0, 0, .18);
+        }
         body {
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            background-color: #f8f9fa; /* Slightly off-white background */
         }
         .main-content {
             flex: 1;
         }
+        .navbar {
+            /* Subtle gradient */
+             background-image: linear-gradient(to bottom, #343a40, #212529);
+        }
         .card {
-            transition: transform .2s ease-in-out, box-shadow .2s ease-in-out;
-            border: none; /* Cleaner look, rely on shadow */
+            transition: transform .25s ease-in-out, box-shadow .25s ease-in-out;
+            border: none; /* Cleaner look */
+            border-radius: .375rem; /* Bootstrap's default rounded corners */
+            overflow: hidden; /* Ensure content respects border-radius */
+            background-color: #fff; /* Ensure card background is white */
         }
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+            transform: translateY(var(--card-lift-height));
+            box-shadow: 0 1rem 2rem var(--card-shadow-intensity);
         }
-        .card-img-top {
-            aspect-ratio: 16 / 9; /* Maintain aspect ratio for images */
-            object-fit: cover; /* Cover the area, might crop */
-            border-bottom: 1px solid #eee;
+        .card-img-top, .iframe-preview-container {
+            aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+            object-fit: cover; /* Cover the area for images */
+            background-color: #e9ecef; /* Background for placeholder/iframe loading */
+            border-bottom: 1px solid #dee2e6; /* Subtle separator */
+        }
+        .iframe-preview-container {
+            position: relative;
+            overflow: hidden; /* Hide iframe scrollbars if they appear briefly */
+        }
+        .iframe-preview-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background-color: #fff; /* Background while loading */
         }
         .card-title a {
             text-decoration: none;
             color: inherit;
+            font-weight: 600; /* Slightly bolder title */
         }
         .card-title a:hover {
+            color: #0d6efd; /* Bootstrap primary */
             text-decoration: underline;
-            color: #0d6efd; /* Bootstrap primary color */
         }
         .card-body {
             display: flex;
             flex-direction: column;
+            padding: 1.25rem; /* Standard Bootstrap card padding */
         }
         .card-text {
-             flex-grow: 1; /* Allow description to take available space */
-             margin-bottom: 1rem; /* Ensure spacing before footer */
+             flex-grow: 1;
+             margin-bottom: 1.25rem;
+             color: #495057; /* Slightly softer text color */
+             font-size: 0.9rem;
         }
         .card-footer {
-            background-color: #f8f9fa; /* Light background for footer */
-            border-top: none; /* Remove default top border */
+            background-color: transparent; /* Make footer blend with card body */
+            border-top: 1px solid #eee; /* Separator line */
+            padding: 0.75rem 1.25rem;
         }
-        .placeholder-image {
-            aspect-ratio: 16 / 9;
-            background-color: #e9ecef;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6c757d;
-            font-size: 0.9rem;
-             border-bottom: 1px solid #eee;
+        .footer {
+             background-color: #e9ecef; /* Footer distinct from main content */
+             color: #6c757d;
+        }
+        .display-5 {
+            font-weight: 300;
         }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
         <div class="container">
-            <a class="navbar-brand" href="<?php echo htmlspecialchars($baseUrl); ?>">DavidVeksler.com Cheatsheets</a>
-            <!-- Add navbar toggler if needed -->
+            <a class="navbar-brand" href="<?php echo htmlspecialchars($baseUrl); ?>">
+                 <i class="bi bi-journal-richtext me-2"></i>DavidVeksler.com Cheatsheets
+            </a>
+            <!-- Add navbar toggler if needed for smaller screens -->
+             <!-- <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                 Add nav items here if needed
+            </div> -->
         </div>
     </nav>
 
     <main class="main-content container mt-4 mb-5">
-        <h1 class="mb-4 display-5 border-bottom pb-2">Browse Cheatsheets</h1>
+        <header class="text-center mb-5">
+            <h1 class="display-5">Browse Cheatsheets</h1>
+            <p class="lead text-muted">A collection of guides and references.</p>
+        </header>
+
 
         <?php if (!empty($errors)): ?>
-            <div class="alert alert-warning" role="alert">
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
                 <h4 class="alert-heading">Notice</h4>
-                <p>There were some issues loading cheatsheet details:</p>
+                <p>There were some issues loading details for all cheatsheets:</p>
                 <ul>
                     <?php foreach ($errors as $error): ?>
                         <li><?php echo htmlspecialchars($error); ?></li>
                     <?php endforeach; ?>
                 </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
 
         <?php if (empty($cheatsheets) && empty($errors)): ?>
-            <div class="alert alert-info" role="alert">
-                No cheatsheets found in this directory.
+            <div class="alert alert-info text-center" role="alert">
+                <i class="bi bi-info-circle me-2"></i>No cheatsheets found in this directory.
             </div>
         <?php elseif (!empty($cheatsheets)): ?>
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
@@ -246,13 +304,23 @@ try {
                     <div class="col d-flex align-items-stretch">
                         <div class="card h-100 shadow-sm">
                             <?php if (!empty($sheet['image'])): ?>
-                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener">
+                                <!-- Display OG Image if available -->
+                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" aria-label="Preview image for <?php echo htmlspecialchars($sheet['title']); ?>">
                                     <img src="<?php echo htmlspecialchars($sheet['image']); ?>" class="card-img-top" alt="Preview for <?php echo htmlspecialchars($sheet['title']); ?>" loading="lazy">
                                 </a>
                             <?php else: ?>
-                                <!-- Placeholder if no image -->
-                                <div class="placeholder-image">
-                                    <span>No Image Preview</span>
+                                <!-- Fallback: Display iframe preview -->
+                                <div class="iframe-preview-container">
+                                    <iframe src="<?php echo htmlspecialchars($sheet['url']); ?>"
+                                            title="Preview of <?php echo htmlspecialchars($sheet['title']); ?>"
+                                            loading="lazy"
+                                            frameborder="0"
+                                            scrolling="no"
+                                            referrerpolicy="no-referrer"
+                                            >
+                                            <!-- Optional: Add sandbox attribute if needed, but it might break functionality -->
+                                            <!-- sandbox="allow-scripts allow-same-origin" -->
+                                    </iframe>
                                 </div>
                             <?php endif; ?>
                             <div class="card-body">
@@ -266,8 +334,8 @@ try {
                                 </p>
                             </div>
                             <div class="card-footer text-center">
-                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
-                                    View Cheatsheet
+                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="btn btn-sm btn-primary">
+                                    View Cheatsheet <i class="bi bi-box-arrow-up-right ms-1"></i>
                                 </a>
                             </div>
                         </div>
@@ -277,9 +345,11 @@ try {
         <?php endif; ?>
     </main>
 
-    <footer class="py-4 bg-light text-center border-top">
-        <div class="container">
-            <span class="text-muted">Cheatsheets by David Veksler &copy; <?php echo date("Y"); ?></span>
+    <footer class="footer py-4 mt-auto border-top">
+        <div class="container text-center">
+            <span class="text-muted">Cheatsheets by David Veksler © <?php echo date("Y"); ?></span>
+             <!-- Optional: Add links -->
+             <!-- <small class="d-block mt-2"><a href="#">About</a> | <a href="#">Contact</a></small> -->
         </div>
     </footer>
 
