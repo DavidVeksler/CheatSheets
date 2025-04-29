@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Wallet Cheatsheet - Self-Custody, Security & Operations</title>
+
+    <!-- SEO Meta Description -->
+    <meta name="description" content="Comprehensive Bitcoin wallet cheatsheet covering fundamentals, types (hot/cold, hardware/software), operations, security practices (seed phrase handling), advanced concepts (multisig, nodes), and hardware comparisons (Trezor, Coldcard, Ledger etc.) for beginner to advanced users.">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://cheatsheets.davidveksler.com/bitcoin.html"> <!-- Verified -->
+
+    <!-- Social Media Metadata -->
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Bitcoin Wallet Cheatsheet - Self-Custody, Security & Operations">
+    <meta property="og:description" content="Interactive guide to Bitcoin wallets: fundamentals, types, security best practices, advanced operations (multisig, nodes), and hardware comparisons (Trezor, Coldcard, Ledger).">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://cheatsheets.davidveksler.com/bitcoin.html">
+    <meta property="og:image" content="https://cheatsheets.davidveksler.com/images/bitcoin-og.png"> <!-- Placeholder - Create an appropriate image -->
+    <meta property="og:image:alt" content="Diagram illustrating Bitcoin wallet concepts like hot vs cold storage, hardware wallets, and seed phrases.">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Bitcoin Wallet Cheatsheet - Self-Custody, Security & Operations">
+    <meta name="twitter:description" content="Interactive guide to Bitcoin wallets: fundamentals, types, security best practices, advanced operations (multisig, nodes), and hardware comparisons (Trezor, Coldcard, Ledger).">
+    <meta name="twitter:image" content="https://cheatsheets.davidveksler.com/images/bitcoin-og.png"> <!-- Placeholder - Create an appropriate image -->
+    <meta name="twitter:image:alt" content="Diagram illustrating Bitcoin wallet concepts like hot vs cold storage, hardware wallets, and seed phrases.">
+
+    <!-- Favicon links (optional but recommended) -->
+    <!-- <link rel="icon" href="/favicon.ico" sizes="any"> -->
+    <!-- <link rel="icon" href="/favicon.svg" type="image/svg+xml"> -->
+    <!-- <link rel="apple-touch-icon" href="/apple-touch-icon.png"> -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --bs-body-bg: #f0f4f8; /* Lighter blue-gray background */
+            --bs-primary: #f7931a; /* Bitcoin Orange */
+            --bs-primary-dark: #e8830a; /* Darker Orange */
+            --bs-primary-light: #fde6ce; /* Lighter Orange */
+            --card-border-color: #cbd5e1; /* Slate 300 */
+            --card-shadow-color: rgba(100, 116, 139, 0.1); /* Slate shadow */
+            --text-color-main: #1e293b; /* Slate 800 */
+            --text-color-secondary: #475569; /* Slate 600 */
+            --text-color-highlight: var(--bs-primary-dark);
+            --blueprint-grid-color: rgba(148, 163, 184, 0.15); /* Slate 400 with alpha */
+            --schema-bg-color: rgba(255, 255, 255, 0.65);
+            --schema-border-color: #e2e8f0; /* Slate 200 */
+            --critical-color: #dc2626; /* Red 600 */
+            --rule-border-color: var(--critical-color);
+
+            /* --- Bitcoin Category Colors --- */
+            --btc-color-concept: #475569;      /* Slate 600 (Grayish) */
+            --btc-color-hot: #ef4444;          /* Red 500 */
+            --btc-color-cold: #2563eb;         /* Blue 600 */
+            --btc-color-operations: #16a34a;   /* Green 600 */
+            --btc-color-security: #c026d3;     /* Fuchsia 600 */
+            --btc-color-advanced: #7c3aed;     /* Violet 600 */
+            --btc-color-comparison: #0ea5e9;   /* Sky 500 */
+            --btc-color-pitfalls: #f97316;     /* Orange 500 */
+            --btc-color-glossary: #64748b;     /* Slate 500 */
+            --btc-color-resources: #059669;    /* Emerald 600 */
+
+            /* Default category color */
+            --category-color: var(--btc-color-concept);
+        }
+
+        @keyframes blueprintGridAnimation {
+            0% { background-position: 0 0, 0 0; }
+            100% { background-position: 50px 50px, -50px -50px; }
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            background-image:
+                linear-gradient(to right, var(--blueprint-grid-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--blueprint-grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: blueprintGridAnimation 75s linear infinite;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+            padding-bottom: 3rem;
+            font-size: 16px;
+            color: var(--text-color-main);
+            box-sizing: border-box;
+        }
+         *, *::before, *::after { box-sizing: inherit; }
+
+        .page-header {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7); /* Lighter yellow/orange gradient */
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            border-bottom: 2px solid var(--bs-primary-light);
+            margin-bottom: 3rem;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(247, 147, 26, 0.1);
+        }
+        .page-header h1 {
+            color: var(--bs-primary-dark);
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            font-size: 2.8rem;
+        }
+         .page-header h1 .bi { font-size: 0.9em; vertical-align: -0.05em; margin-right: 0.3em;}
+        .page-header .lead { color: #78350f; /* Amber 800 */ font-size: 1.15rem; max-width: 800px; margin: auto; }
+
+        .schema-container {
+            background-color: var(--schema-bg-color);
+            border: 1px solid var(--schema-border-color);
+            border-radius: 8px;
+            padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 5px 15px rgba(100, 116, 139, 0.07);
+            backdrop-filter: blur(3px);
+            position: relative;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .section-title {
+            color: var(--category-color);
+            margin: -2.8rem 0 1.5rem 0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            font-size: 1.05rem;
+            border-bottom: none;
+            padding: 0.4rem 1rem;
+            background-color: var(--bs-body-bg);
+            display: inline-block;
+            position: relative;
+            left: 1rem;
+            z-index: 15;
+            border: 1px solid var(--schema-border-color);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        /* --- Card Styling --- */
+        .info-card {
+            background: #fff;
+            border: 1px solid var(--card-border-color);
+            border-radius: 4px; /* Slightly softer */
+            box-shadow: 0 2px 5px var(--card-shadow-color);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.3s ease, opacity 0.3s ease;
+            position: relative;
+            z-index: 5;
+            opacity: 1;
+        }
+
+        .info-card:hover {
+             box-shadow: 0 5px 12px rgba(100, 116, 139, .15);
+             z-index: 20;
+         }
+
+        .info-card .card-body { padding: 0; flex-grow: 1; display: flex; flex-direction: column; }
+        .info-card h5 {
+            color: #fff; background-color: var(--category-color);
+            font-size: 1rem; text-align: center; margin: 0; padding: 0.6rem 0.5rem;
+            font-weight: 600; display: flex; justify-content: center; align-items: center;
+            gap: .5rem;
+            border-bottom: 1px solid var(--card-border-color);
+            border-radius: 3px 3px 0 0; /* Match card radius */
+        }
+         .info-card h5 .bi { font-size: 1.1em; color: #fff; opacity: 0.9; }
+         .card-content-wrapper { padding: 1rem; flex-grow: 1; display: flex; flex-direction: column; }
+        .info-card p.summary { font-size: .9rem; color: var(--text-color-secondary); margin-bottom: .8rem; flex-grow: 1; }
+
+        /* Attribute List Styling (inside collapse) */
+        .collapse-content { font-size: 0.9rem; border-top: 1px solid #e2e8f0; padding: 1rem; margin: 1rem -1rem -1rem -1rem; background-color:#f8fafc; border-radius: 0 0 3px 3px;} /* Added padding and slight background */
+        .collapse-content h6 { font-weight: 700; color: var(--text-color-highlight); margin-top: 0.8rem; margin-bottom: 0.3rem; font-size: 0.95rem; }
+        .collapse-content ul { padding-left: 0.5rem; margin-bottom: 0.8rem; list-style: none; }
+        .collapse-content li { margin-bottom: 0.6rem; padding-bottom: 0.6rem; font-size: 0.88rem; line-height: 1.5; border-bottom: 1px dotted #d1d5db; position: relative; padding-left: 1.5rem; }
+        .collapse-content li:last-child { border-bottom: none; margin-bottom: 0; }
+         /* Use specific icons or keep generic */
+         .collapse-content li::before { content: "\f285"; /* Example: check */ font-family: "bootstrap-icons"; position: absolute; left: 0; top: 2px; color: var(--category-color); opacity: 0.7; font-size: 0.9em; }
+         .collapse-content li strong { color: var(--text-color-highlight); display: block; margin-bottom: 0.2rem; font-weight: 600; }
+         .collapse-content p { font-size: 0.9rem; margin-bottom: 0.6rem; line-height: 1.55; }
+         .collapse-content code { font-size: 0.85rem; color: #b91c1c; /* Red 700 */ background-color: #f1f5f9; /* Slate 100 */ padding: 0.1em 0.4em; border-radius: 3px; }
+         .collapse-content dl dt { font-weight: bold; margin-top: 0.7em; color: var(--text-color-main); }
+         .collapse-content dl dd { margin-left: 1.5em; margin-bottom: 0.5em; color: var(--text-color-secondary); }
+
+        .row > * { margin-bottom: 2rem; } /* Restore bottom margin for multi-card rows */
+        footer { padding-top: 3rem; font-size: .85em; color: var(--text-color-secondary); position: relative; z-index: 10; text-align: center; }
+
+        .details-toggle {
+            font-size: 0.8rem; margin-top: auto; align-self: flex-start;
+            padding: 0.3rem 0.6rem; color: var(--category-color);
+            border: 1px solid var(--category-color); background-color: transparent;
+            border-radius: 3px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            display: inline-flex; align-items: center; gap: 0.3em;
+        }
+         .details-toggle:hover { background-color: var(--category-color); color: white; }
+         .details-toggle .bi { transition: transform 0.2s ease-in-out; }
+         .details-toggle[aria-expanded="true"] .bi { transform: rotate(180deg); }
+
+        .term { font-weight: 600; color: var(--bs-primary-dark); background-color: var(--bs-primary-light); padding: 0.1em 0.3em; border-radius: 3px;}
+        .critical { color: var(--critical-color); font-weight: bold; }
+        .rule {
+            color: var(--critical-color);
+            font-weight: bold;
+            display: block;
+            margin: 0.8em 0;
+            border-left: 4px solid var(--rule-border-color);
+            padding: 0.5em 0.8em;
+            background-color: #fee2e2; /* Red 100 */
+            border-radius: 0 4px 4px 0;
+        }
+        .pros { color: #15803d; /* Green 700 */ font-weight: bold; }
+        .cons { color: #b91c1c; /* Red 700 */ font-weight: bold; }
+
+        a { color: var(--bs-primary); text-decoration: none; }
+        a:hover { color: var(--bs-primary-dark); text-decoration: underline; }
+        .collapse-content a { color: #c2410c; /* Orange 700 */ }
+        .collapse-content a:hover { color: #9a3412; /* Orange 800 */ }
+
+        /* --- Color Coding Class Assignments --- */
+        .cat-concept { --category-color: var(--btc-color-concept); }
+        .cat-hot { --category-color: var(--btc-color-hot); }
+        .cat-cold { --category-color: var(--btc-color-cold); }
+        .cat-operations { --category-color: var(--btc-color-operations); }
+        .cat-security { --category-color: var(--btc-color-security); }
+        .cat-advanced { --category-color: var(--btc-color-advanced); }
+        .cat-comparison { --category-color: var(--btc-color-comparison); }
+        .cat-pitfalls { --category-color: var(--btc-color-pitfalls); }
+        .cat-glossary { --category-color: var(--btc-color-glossary); }
+        .cat-resources { --category-color: var(--btc-color-resources); }
+
+        /* Specific Card Types inherit from category by default or override */
+        .btc-type-concept { --category-color: var(--btc-color-concept); }
+        .btc-type-software { --category-color: var(--btc-color-hot); } /* Inherit from hot */
+        .btc-type-web { --category-color: var(--btc-color-hot); opacity: 0.8;} /* Dim web slightly */
+        .btc-type-hardware { --category-color: var(--btc-color-cold); } /* Inherit from cold */
+        .btc-type-paper { --category-color: var(--btc-color-cold); opacity: 0.8;} /* Dim paper slightly */
+        .btc-type-airgap { --category-color: var(--btc-color-cold); }
+        .btc-type-operation { --category-color: var(--btc-color-operations); }
+        .btc-type-security { --category-color: var(--btc-color-security); }
+        .btc-type-advanced { --category-color: var(--btc-color-advanced); }
+        .btc-type-comparison { --category-color: var(--btc-color-comparison); }
+        .btc-type-pitfall { --category-color: var(--btc-color-pitfalls); }
+        .btc-type-glossary { --category-color: var(--btc-color-glossary); }
+        .btc-type-resource { --category-color: var(--btc-color-resources); }
+
+    </style>
+</head>
+<body>
+<header class="page-header">
+    <h1 class="display-5"><i class="bi bi-wallet2"></i> Bitcoin Wallet Cheatsheet</h1>
+    <p class="lead">A comprehensive guide to Bitcoin self-custody, wallet types, security practices, and advanced concepts for beginner to advanced users.</p>
+</header>
+<div class="container" id="main-container">
+
+    <!-- ========================== -->
+    <!-- SECTION I: Introduction    -->
+    <!-- ========================== -->
+    <div class="schema-container cat-concept" data-section-id="section-intro">
+        <h2 class="section-title" id="section-intro">I. Introduction</h2>
+        <div class="row">
+            <div class="col-12">
+                 <div class="info-card btc-type-concept" id="card-intro">
+                     <div class="card-body">
+                        <h5 class="text-center"><i class="bi bi-info-circle"></i> Purpose, Scope & Disclaimer</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Quick reference for understanding, choosing, using, and securing Bitcoin wallets, emphasizing self-custody. Covers fundamentals, types, operations, security, advanced topics, comparisons, and pitfalls.</p>
+                             <button class="btn btn-sm details-toggle mx-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIntro" aria-expanded="false" aria-controls="collapseIntro">
+                                More Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                    <div class="collapse collapse-content" id="collapseIntro">
+                        <h6>Why Self-Custody Matters</h6>
+                        <ul>
+                            <li>Core Principle: Reinforces the mantra <strong class="critical">"Not your keys, not your coins."</strong> Control your private keys, control your Bitcoin. Third parties (exchanges) introduce counterparty risk.</li>
+                            <li>Benefits: Financial sovereignty, censorship resistance.</li>
+                            <li>Responsibility: Requires diligence in securing keys/seed phrase.</li>
+                        </ul>
+                        <h6>Disclaimer</h6>
+                        <p>Educational purposes only, not financial or security advice. Technology evolves. <strong class="critical">Always Do Your Own Research (DYOR)</strong>.</p>
+                        <ul>
+                            <li><strong>Key Link:</strong> <a href="https://bitcoin.org/en/getting-started" target="_blank" rel="noopener noreferrer">Bitcoin.org - Getting Started</a></li>
+                        </ul>
+                    </div>
+                 </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- ================================= -->
+    <!-- SECTION II: Wallet Fundamentals   -->
+    <!-- ================================= -->
+    <div class="schema-container cat-concept" data-section-id="section-fundamentals">
+        <h2 class="section-title" id="section-fundamentals">II. Bitcoin Wallet Fundamentals</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-concept" id="card-what-is-wallet">
+                     <div class="card-body">
+                         <h5><i class="bi bi-box-seam"></i> What is a Wallet?</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">An <span class="term">interface</span> (software/hardware) managing <span class="term">private/public keys</span>. Allows viewing balance, generating addresses, and signing transactions. Doesn't *store* coins, just keys.</p>
+                             <!-- No collapse needed for this simple concept -->
+                         </div>
+                     </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-concept" id="card-keys">
+                     <div class="card-body">
+                         <h5><i class="bi bi-key-fill"></i> Public vs. Private Keys</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><span class="term">Private Key:</span> Secret code to authorize spending (<strong class="critical">Keep Secret!</strong>). <span class="term">Public Key:</span> Derives addresses, shareable. Relationship is one-way.</p>
+                             <!-- No collapse needed for this simple concept -->
+                         </div>
+                     </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-concept" id="card-addresses">
+                     <div class="card-body">
+                         <h5><i class="bi bi-geo-alt"></i> Bitcoin Addresses</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Identifiers for receiving BTC. Formats: Legacy (<code>1...</code>), Nested SegWit (<code>3...</code>), <span class="term">Native SegWit</span> (<code>bc1q...</code> - preferred), <span class="term">Taproot</span> (<code>bc1p...</code> - newest).</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAddresses" aria-expanded="false" aria-controls="collapseAddresses">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                      <div class="collapse collapse-content" id="collapseAddresses">
+                        <h6>Address Types & Best Practices</h6>
+                        <ul>
+                            <li><strong>Legacy (P2PKH):</strong> Starts with <code>1</code>. Highest fees, lowest efficiency. Widely compatible.</li>
+                            <li><strong>Nested SegWit (P2SH-P2WPKH):</strong> Starts with <code>3</code>. Wrapper for SegWit, lower fees than Legacy. Good compatibility bridge.</li>
+                            <li><strong>Native SegWit (Bech32 / P2WPKH):</strong> Starts with <code>bc1q</code>. <strong class="term">Lowest fees</strong>, best error detection. Standard for most modern wallets.</li>
+                            <li><strong>Taproot (Bech32m / P2TR):</strong> Starts with <code>bc1p</code>. Most recent. Enables advanced scripting/privacy features. Growing adoption.</li>
+                            <li><strong>Best Practice:</strong> Use a <strong class="term">new address for each transaction</strong> received to enhance privacy. Most wallets handle this automatically. Avoid address reuse.</li>
+                        </ul>
+                      </div>
+                 </div>
+            </div>
+            <div class="col-lg-6 col-md-6">
+                 <div class="info-card btc-type-concept" id="card-seed-phrase">
+                     <div class="card-body">
+                         <h5><i class="bi bi-journal-text"></i> Seed Phrase (BIP-39)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">12/24 word <span class="term">mnemonic</span> representing the <span class="term">master private key</span>. <strong class="critical">The ONLY backup for your funds!</strong> Defined by <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki" target="_blank" rel="noopener noreferrer">BIP-39</a>.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeed" aria-expanded="false" aria-controls="collapseSeed">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                      <div class="collapse collapse-content" id="collapseSeed">
+                        <h6>Importance & Derivation</h6>
+                        <ul>
+                            <li><strong class="critical">CRITICAL Importance:</strong> If your device fails, this is the *only* way to recover access to your Bitcoin on a new wallet.</li>
+                            <li><strong>Generation:</strong> Should be securely generated *by the wallet software/hardware* itself, ideally offline for cold storage.</li>
+                            <li><strong>Derivation:</strong> Uses standards like <span class="term"><a href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki" target="_blank" rel="noopener noreferrer">BIP-32</a></span> (HD Wallets) and path standards (<span class="term"><a href="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki" target="_blank" rel="noopener noreferrer">BIP-44</a></span>, <span class="term"><a href="https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki" target="_blank" rel="noopener noreferrer">BIP-84</a></span>, <span class="term"><a href="https://github.com/bitcoin/bips/blob/master/bip-0086.mediawiki" target="_blank" rel="noopener noreferrer">BIP-86</a></span>) to generate a nearly infinite tree of keys and addresses from this single seed phrase (+ optional passphrase).</li>
+                             <li><strong>Tool (Caution!):</strong> <a href="https://iancoleman.io/bip39/" target="_blank" rel="noopener noreferrer">Ian Coleman BIP39 Tool</a> (<strong class="critical">Use Offline ONLY!</strong> Never enter your real seed online).</li>
+                        </ul>
+                      </div>
+                 </div>
+            </div>
+             <div class="col-lg-6 col-md-6">
+                 <div class="info-card btc-type-concept" id="card-transactions">
+                     <div class="card-body">
+                         <h5><i class="bi bi-diagram-2"></i> How Transactions Work</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Spend <span class="term">UTXOs</span> (unspent inputs) to create new ones (outputs). Pay miners a <span class="term">fee (sat/vB)</span> for confirmation. Transactions wait in the <span class="term">Mempool</span>.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTx" aria-expanded="false" aria-controls="collapseTx">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                      <div class="collapse collapse-content" id="collapseTx">
+                          <h6>Transaction Lifecycle</h6>
+                          <ul>
+                            <li><strong class="term">UTXOs (Unspent Transaction Outputs):</strong> Individual "chunks" of bitcoin you own. Your balance is the sum of your UTXOs.</li>
+                            <li><strong class="term">Inputs & Outputs:</strong> Sending involves selecting UTXOs (inputs), creating new UTXOs for the recipient (output) and potentially change back to yourself (output). Input UTXOs become spent.</li>
+                            <li><strong class="term">Transaction Fees (sat/vB):</strong> Paid to miners based on transaction *size* in bytes, not value. Higher fee rate = higher priority. Critical during network congestion.</li>
+                            <li><strong class="term">Mempool:</strong> A "waiting room" for unconfirmed transactions broadcast to the network. Miners select transactions, usually prioritizing higher fee rates.</li>
+                            <li><strong class="term">Confirmations:</strong> Inclusion in a valid block added to the blockchain. 6+ confirmations often considered highly secure.</li>
+                            <li><strong>Key Link:</strong> <a href="https://mempool.space/" target="_blank" rel="noopener noreferrer">mempool.space</a> (Visualize mempool, fees, blocks, transactions)</li>
+                        </ul>
+                      </div>
+                 </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- ================================ -->
+    <!-- SECTION III: Types of Wallets    -->
+    <!-- ================================ -->
+    <div class="schema-container cat-hot" data-section-id="section-hot-wallets">
+        <h2 class="section-title" id="section-hot-wallets"><i class="bi bi-wifi"></i> III.A Hot Wallets (Online)</h2>
+        <div class="row">
+             <div class="col-lg-6 col-md-6">
+                 <div class="info-card btc-type-software" id="card-software">
+                     <div class="card-body">
+                         <h5><i class="bi bi-display"></i> Software Wallets (Apps)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Applications on computers/phones. Keys exposed to online threats. Good for frequent, smaller amounts. <strong class="critical">Distinguish Custodial vs. Non-Custodial.</strong></p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSoftware" aria-expanded="false" aria-controls="collapseSoftware">
+                                Details & Examples <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                      <div class="collapse collapse-content" id="collapseSoftware">
+                         <h6>Custodial vs. Non-Custodial</h6>
+                         <ul>
+                            <li><strong class="term pros">Non-Custodial:</strong> You hold the seed/keys. Full control & responsibility. <strong class="term">True self-custody.</strong></li>
+                            <li><strong class="term cons">Custodial:</strong> Third party holds keys (e.g., exchange wallet). Trust required. <strong class="term">Not self-custody.</strong></li>
+                         </ul>
+                         <h6>Examples (Non-Custodial):</h6>
+                         <ul>
+                            <li>Desktop: <a href="https://electrum.org/" target="_blank" rel="noopener noreferrer">Electrum</a>, <a href="https://sparrowwallet.com/" target="_blank" rel="noopener noreferrer">Sparrow Wallet</a>, <a href="https://specter.solutions/" target="_blank" rel="noopener noreferrer">Specter Desktop</a></li>
+                            <li>Mobile: <a href="https://bluewallet.io/" target="_blank" rel="noopener noreferrer">BlueWallet</a>, <a href="https://muun.com/" target="_blank" rel="noopener noreferrer">Muun Wallet</a>, <a href="https://samouraiwallet.com/" target="_blank" rel="noopener noreferrer">Samourai Wallet</a> (*note legal issues*), Electrum Mobile</li>
+                         </ul>
+                         <h6>Pros & Cons</h6>
+                         <ul>
+                            <li><strong class="pros">Pros:</strong> Convenient, often free, quick transactions.</li>
+                            <li><strong class="cons">Cons:</strong> Keys vulnerable to device compromise (malware, phishing, theft). Not for significant long-term holdings.</li>
+                        </ul>
+                      </div>
+                 </div>
+            </div>
+             <div class="col-lg-6 col-md-6">
+                 <div class="info-card btc-type-web" id="card-web">
+                     <div class="card-body">
+                         <h5><i class="bi bi-globe"></i> Web Wallets</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Accessed via web browser. Often custodial. <strong class="cons">Generally discouraged for significant value</strong> due to browser/website/phishing risks.</p>
+                             <!-- No collapse needed -->
+                         </div>
+                     </div>
+                 </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <div class="schema-container cat-cold" data-section-id="section-cold-wallets">
+         <h2 class="section-title" id="section-cold-wallets"><i class="bi bi-snow"></i> III.B Cold Wallets (Offline)</h2>
+        <div class="row">
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-hardware" id="card-hardware">
+                     <div class="card-body">
+                         <h5><i class="bi bi-hdd"></i> Hardware Wallets</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Purpose-built physical devices securing keys offline. Signatures done on-device. <strong class="pros">Highest security against online threats.</strong></p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHardware" aria-expanded="false" aria-controls="collapseHardware">
+                                Details & Examples <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseHardware">
+                        <h6>Pros & Cons</h6>
+                        <ul>
+                            <li><strong class="pros">Pros:</strong> Best protection from malware/hacking, strong physical security features (PIN, tamper-evidence), recovery via seed.</li>
+                            <li><strong class="cons">Cons:</strong> Cost, requires physical device for signing, potential physical loss/theft (mitigated by seed backup).</li>
+                        </ul>
+                        <h6>Examples & Links:</h6>
+                         <ul>
+                             <li><a href="https://trezor.io/" target="_blank" rel="noopener noreferrer">Trezor</a> (Model T, Safe 3)</li>
+                             <li><a href="https://coldcard.com/" target="_blank" rel="noopener noreferrer">Coldcard</a> (Mk4, Q1)</li>
+                             <li><a href="https://www.ledger.com/" target="_blank" rel="noopener noreferrer">Ledger</a> (Nano S Plus, Nano X, Stax)</li>
+                             <li><a href="https://bitbox.swiss/" target="_blank" rel="noopener noreferrer">BitBox02</a> (Bitcoin-only Edition)</li>
+                             <li><a href="https://seedsigner.com/" target="_blank" rel="noopener noreferrer">Seedsigner</a> (DIY)</li>
+                             <li><a href="https://blockstream.com/jade/" target="_blank" rel="noopener noreferrer">Blockstream Jade</a></li>
+                             <li><a href="https://foundationdevices.com/" target="_blank" rel="noopener noreferrer">Foundation Passport</a></li>
+                         </ul>
+                         <p>(See Section VII for detailed comparison)</p>
+                      </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-paper" id="card-paper">
+                     <div class="card-body">
+                         <h5><i class="bi bi-file-earmark-text"></i> Paper Wallets</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Printing private/public keys on paper. <strong class="cons">Generally obsolete and unsafe</strong> due to spending complexity and physical risks.</p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePaper" aria-expanded="false" aria-controls="collapsePaper">
+                                Risks <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                      <div class="collapse collapse-content" id="collapsePaper">
+                         <h6>Risks</h6>
+                         <ul>
+                             <li>Difficult/unsafe partial spending (often requires sweeping entire balance, exposing keys).</li>
+                             <li>Vulnerable to physical damage (fire, water, fading).</li>
+                             <li>Requires extremely secure offline generation process.</li>
+                             <li>Easily lost, stolen, or accidentally discovered.</li>
+                             <li>Compared to hardware wallets, offers poor usability and less robust security for practical use.</li>
+                         </ul>
+                      </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-airgap" id="card-airgap">
+                     <div class="card-body">
+                         <h5><i class="bi bi-hdd-network-fill"></i> Air-Gapped Setups</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Using an offline device (PC, Pi, specific HW wallets) that never connects to internet. Transactions via SD/QR (<span class="term">PSBTs</span>). <strong class="pros">Extremely high online security.</strong></p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAirgap" aria-expanded="false" aria-controls="collapseAirgap">
+                                Pros & Cons <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseAirgap">
+                         <h6>Pros & Cons</h6>
+                          <ul>
+                             <li><strong class="pros">Pros:</strong> Maximum protection against online threats (malware, network attacks).</li>
+                             <li><strong class="cons">Cons:</strong> Requires technical setup/knowledge, more steps per transaction (transferring PSBTs), relies on secure handling of transfer media (SD card).</li>
+                         </ul>
+                         <h6>Examples:</h6>
+                         <p>Coldcard, Seedsigner used in air-gapped mode; dedicated offline computer running Electrum/Sparrow with watch-only wallet online.</p>
+                     </div>
+                 </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- ============================== -->
+    <!-- SECTION IV: Core Operations    -->
+    <!-- ============================== -->
+    <div class="schema-container cat-operations" data-section-id="section-operations">
+        <h2 class="section-title" id="section-operations">IV. Core Wallet Operations</h2>
+        <div class="row">
+             <div class="col-lg-6 col-md-6">
+                 <div class="info-card btc-type-operation" id="card-op-setup">
+                     <div class="card-body">
+                         <h5><i class="bi bi-box-arrow-in-down"></i> Wallet Creation & Setup</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Generate seed phrase securely *on device*. <strong class="critical">Backup seed ACCURATELY & securely (offline, steel recommended)</strong>. Set strong PIN/password. <strong class="critical">VERIFY backup!</strong></p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOpSetup" aria-expanded="false" aria-controls="collapseOpSetup">
+                                Detailed Steps <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseOpSetup">
+                         <h6>Steps:</h6>
+                         <ol>
+                             <li>Install Software / Initialize Hardware: Follow official instructions. Verify HW firmware if applicable.</li>
+                             <li>Generate Seed Phrase: Let wallet generate securely. Avoid pre-generated seeds.</li>
+                             <li><strong class="critical">Backup Seed Phrase:</strong> Write down words accurately, in order (#1-12/24). Double check. Store securely offline immediately. Consider steel backups (<a href="https://cryptosteel.com/" target="_blank" rel="noopener noreferrer">Cryptosteel</a>, <a href="https://seedplate.com/" target="_blank" rel="noopener noreferrer">SeedPlate</a>).</li>
+                             <li><strong class="critical">Verify Backup:</strong> Crucial! Re-enter words during setup or use device "check backup" feature *before* funding wallet significantly.</li>
+                             <li>Set PIN/Password: Strong, unique code for device/software access.</li>
+                             <li>Optional: Add BIP-39 Passphrase (See Advanced VI.A).</li>
+                         </ol>
+                     </div>
+                 </div>
+            </div>
+             <div class="col-lg-6 col-md-6">
+                 <div class="info-card btc-type-operation" id="card-op-receive">
+                     <div class="card-body">
+                         <h5><i class="bi bi-box-arrow-in-down-left"></i> Receiving Bitcoin</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Generate fresh address. <strong class="critical">Verify address on hardware wallet screen</strong> to prevent clipboard hijacking. Share address/QR with sender.</p>
+                             <!-- No collapse needed -->
+                         </div>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-6 col-md-6">
+                 <div class="info-card btc-type-operation" id="card-op-send">
+                     <div class="card-body">
+                         <h5><i class="bi bi-box-arrow-up-right"></i> Sending Bitcoin</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Enter recipient address (<strong class="critical">double/triple check!</strong>). Enter amount. Set fee (<span class="term">sat/vB</span>). Review details. <strong class="critical">Confirm address/amount on hardware wallet screen.</strong></p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOpSend" aria-expanded="false" aria-controls="collapseOpSend">
+                                Detailed Steps <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseOpSend">
+                         <h6>Steps:</h6>
+                         <ol>
+                             <li>Enter Recipient Address: Paste/scan. <strong class="critical">Check first/last characters carefully</strong> against intended address.</li>
+                             <li>Enter Amount.</li>
+                             <li>Set Transaction Fee (sat/vB): Check network conditions (<a href="https://mempool.space/" target="_blank" rel="noopener noreferrer">mempool.space</a>). Balance urgency and cost.</li>
+                             <li>Review Transaction Details: Check address, amount, fee on software screen.</li>
+                             <li><strong class="critical">Confirm on Hardware Wallet:</strong> Verify address & amount again on HW trusted screen before physically confirming signature.</li>
+                             <li>Broadcast Transaction.</li>
+                         </ol>
+                     </div>
+                 </div>
+            </div>
+             <div class="col-lg-6 col-md-6">
+                 <div class="info-card btc-type-operation" id="card-op-check">
+                     <div class="card-body">
+                         <h5><i class="bi bi-search"></i> Checking Balance & History</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Use wallet interface. Optionally use public block explorer (like <a href="https://mempool.space/" target="_blank" rel="noopener noreferrer">mempool.space</a>) with *addresses* (not keys!) - note privacy implications.</p>
+                              <!-- No collapse needed -->
+                         </div>
+                     </div>
+                 </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- ================================== -->
+    <!-- SECTION V: Security & Custody      -->
+    <!-- ================================== -->
+    <div class="schema-container cat-security" data-section-id="section-security">
+        <h2 class="section-title" id="section-security">V. Security & Custody</h2>
+        <div class="row">
+            <div class="col-lg-6 col-md-12">
+                 <div class="info-card btc-type-security" id="card-sec-seed">
+                     <div class="card-body">
+                         <h5><i class="bi bi-shield-lock-fill"></i> Seed Phrase Security (CRITICAL)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Treat your seed phrase like the ultimate key to your vault. Protect it physically and digitally above all else.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecSeed" aria-expanded="false" aria-controls="collapseSecSeed">
+                                Golden Rules <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseSecSeed">
+                         <strong class="rule">RULE #1: NEVER EVER type, photograph, scan, or digitally input your seed phrase into ANY online or potentially compromised device (computer, phone, password manager, cloud storage, email, etc.).</strong>
+                         <strong class="rule">RULE #2: NEVER speak your seed phrase aloud where it could be recorded or overheard.</strong>
+                         <strong class="rule">RULE #3: NEVER give your seed phrase to ANYONE claiming to be support staff or offering help. Legitimate support NEVER needs your seed.</strong>
+                         <h6>Storage Best Practices:</h6>
+                         <ul>
+                             <li>Use durable materials (paper minimum, <strong class="term">steel recommended</strong> for fire/water resistance).</li>
+                             <li>Protect from physical threats (fire, flood, corrosion, theft).</li>
+                             <li>Store in secure, private locations (safe, hidden). Consider obscurity.</li>
+                             <li>Redundancy: Consider multiple secure locations or Shamir Backup (Advanced VI.G). Balance security vs. accessibility.</li>
+                             <li>Verification: Ensure backup accuracy. <strong class="term">Test your recovery plan periodically.</strong></li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-6 col-md-12">
+                 <div class="info-card btc-type-security" id="card-sec-device">
+                     <div class="card-body">
+                         <h5><i class="bi bi-hdd-fill"></i> Device Security (Hardware Wallets)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Secure the physical device and its operation. Buy direct, use strong PIN, verify transactions on screen.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecDevice" aria-expanded="false" aria-controls="collapseSecDevice">
+                                Best Practices <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseSecDevice">
+                         <h6>Best Practices:</h6>
+                         <ul>
+                             <li><strong>Sourcing:</strong> Buy <strong class="term">directly from manufacturer</strong> or authorized reseller. Avoid third-party marketplaces.</li>
+                             <li><strong>Tamper Evidence:</strong> Inspect packaging/device upon arrival.</li>
+                             <li><strong>PIN:</strong> Use a strong, unique PIN (more than 4 digits recommended).</li>
+                             <li><strong>Passphrase:</strong> Understand usage and backup implications (Advanced VI.A).</li>
+                             <li><strong>Firmware Updates:</strong> Keep updated, but verify notifications (check official site), have seed backup ready, consider brief wait unless critical vulnerability.</li>
+                             <li><strong class="critical">Trusted Display:</strong> Always verify addresses and transaction amounts on the device's screen before confirming. Key defense against PC malware.</li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+             <div class="col-lg-6 col-md-12">
+                 <div class="info-card btc-type-security" id="card-sec-sw-network">
+                     <div class="card-body">
+                         <h5><i class="bi bi-pc-display"></i> Software & Network Security</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Maintain good digital hygiene: Use reputable software, keep OS updated, be wary of phishing, avoid public Wi-Fi for sensitive ops.</p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecSw" aria-expanded="false" aria-controls="collapseSecSw">
+                                Key Points <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                      <div class="collapse collapse-content" id="collapseSecSw">
+                         <h6>Key Points:</h6>
+                         <ul>
+                             <li><strong>Wallet Software:</strong> Download from official sources only. Verify signatures if possible. Prefer well-maintained, reputable, ideally open-source wallets.</li>
+                             <li><strong>OS Security:</strong> Keep computer/phone OS and security software updated.</li>
+                             <li><strong>Phishing Awareness:</strong> Be extremely skeptical of unsolicited requests/links related to your wallet or funds. Verify via official channels.</li>
+                             <li><strong>Network:</strong> Avoid sensitive operations (seed entry/recovery) on untrusted networks.</li>
+                             <li><strong>Clipboard Malware:</strong> <strong class="critical">Always double-check pasted addresses.</strong> Verify on HW screen if possible.</li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-6 col-md-12">
+                 <div class="info-card btc-type-security" id="card-sec-physical">
+                     <div class="card-body">
+                         <h5><i class="bi bi-lock-fill"></i> Physical Security</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Protect hardware wallet from theft/tampering ("Evil Maid"). Protect seed backups from theft, damage, discovery.</p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecPhys" aria-expanded="false" aria-controls="collapseSecPhys">
+                                Considerations <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                      <div class="collapse collapse-content" id="collapseSecPhys">
+                         <h6>Considerations:</h6>
+                          <ul>
+                             <li><strong>Hardware Wallet Device:</strong> Don't leave unattended in insecure places. PIN protects against casual theft. Be aware of sophisticated physical attacks if device is stolen (SE helps).</li>
+                             <li><strong>Seed Phrase Backups:</strong> Treat like physical bearer assets (cash, gold). Think about who might find them, how to protect against fire/flood/theft.</li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+             <div class="col-lg-6 col-md-12">
+                 <div class="info-card btc-type-security" id="card-sec-backup">
+                     <div class="card-body">
+                         <h5><i class="bi bi-cloud-download"></i> Backup & Recovery</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><strong class="term">Seed phrase is the primary backup</strong>, not the device. Have a clear, <strong class="term">tested</strong> recovery plan. Consider estate planning.</p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecBackup" aria-expanded="false" aria-controls="collapseSecBackup">
+                                Planning Steps <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                      <div class="collapse collapse-content" id="collapseSecBackup">
+                         <h6>Planning Steps:</h6>
+                         <ul>
+                            <li><strong>Know the Process:</strong> Understand how to use your seed phrase to restore your wallet on a compatible device/software.</li>
+                            <li><strong>Practice Recovery:</strong> Consider simulating recovery on a testnet wallet or with a small amount to ensure your backup works and you understand the steps *before* an emergency.</li>
+                            <li><strong>Estate Planning:</strong> Crucial for ensuring assets aren't lost upon incapacitation/death. Options include:
+                                <ul>
+                                    <li>Clear instructions stored securely with trusted executor/lawyer.</li>
+                                    <li>Multisignature setups involving trusted parties (family, lawyer, service).</li>
+                                    <li>Specialized inheritance services (research carefully).</li>
+                                    <li>Examples: <a href="https://keys.casa/bitcoin-inheritance-planning" target="_blank" rel="noopener noreferrer">Casa Inheritance</a>, <a href="https://unchained.com/inheritance/" target="_blank" rel="noopener noreferrer">Unchained Capital Inheritance Protocol</a></li>
+                                </ul>
+                            </li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- ==================================== -->
+    <!-- SECTION VI: Advanced Operations      -->
+    <!-- ==================================== -->
+    <div class="schema-container cat-advanced" data-section-id="section-advanced">
+        <h2 class="section-title" id="section-advanced">VI. Advanced Operations & Concepts</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-advanced" id="card-adv-passphrase">
+                     <div class="card-body">
+                         <h5><i class="bi bi-mask"></i> BIP-39 Passphrase ("25th Word")</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Optional secret word/phrase added to seed creates separate hidden wallets. Enhances security/deniability. <strong class="critical">Forgetting = PERMANENT loss!</strong></p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvPassphrase" aria-expanded="false" aria-controls="collapseAdvPassphrase">
+                                Details & Risks <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseAdvPassphrase">
+                         <h6>Mechanism & Use Cases</h6>
+                         <ul>
+                            <li>Adds a user-defined secret to the seed for key derivation. `Seed + Passphrase = Different Wallet`.</li>
+                            <li>Use Cases: Plausible deniability (small amount in main wallet, large in passphrase wallet); adds security factor beyond physical seed backup.</li>
+                         </ul>
+                         <h6>CRITICAL Risks</h6>
+                         <ul>
+                             <li><strong class="critical">Forgetting the exact passphrase (case/space sensitive) means PERMANENT loss</strong> of funds in that wallet. No recovery possible.</li>
+                             <li>Must be backed up securely and separately, or perfectly memorized (risky).</li>
+                             <li>Typing errors lead to different/empty wallets.</li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-advanced" id="card-adv-multisig">
+                     <div class="card-body">
+                         <h5><i class="bi bi-people-fill"></i> Multisignature (Multisig)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Requires M-of-N keys (e.g., 2-of-3) to sign. Enhances security, enables shared custody, robust backups.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvMultisig" aria-expanded="false" aria-controls="collapseAdvMultisig">
+                                Setup & Use Cases <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseAdvMultisig">
+                         <h6>Setup & Use Cases</h6>
+                         <ul>
+                            <li>Requires coordinator software (Sparrow, Specter, Electrum, Nunchuk, Unchained, Casa) to manage public keys and create/sign transactions (<span class="term">PSBTs</span>).</li>
+                            <li>Use Cases: Eliminates single points of failure (needs multiple device/location compromises); joint accounts; corporate treasury; inheritance planning.</li>
+                             <li>Resource: <a href="https://sparrowwallet.com/docs/multisig-wallet.html" target="_blank" rel="noopener noreferrer">Sparrow Wallet Multisig Guide</a></li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-advanced" id="card-adv-node">
+                     <div class="card-body">
+                         <h5><i class="bi bi-hdd-network"></i> Connect to Full Node</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Connect wallet to your own <a href="https://bitcoincore.org/" target="_blank" rel="noopener noreferrer">Bitcoin Core</a> node for maximum <span class="term">privacy</span> and <span class="term">trust minimization</span>.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvNode" aria-expanded="false" aria-controls="collapseAdvNode">
+                                Why & How <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseAdvNode">
+                         <h6>Why & How</h6>
+                         <ul>
+                             <li><strong>Why:</strong> Avoid leaking addresses/transaction history to third-party servers; independently verify Bitcoin rules.</li>
+                             <li><strong>How:</strong> Run Bitcoin Core node (or node packages like Umbrel, Start9). Connect compatible wallets (Sparrow, Specter, Electrum+Server) to node's IP.</li>
+                             <li>Resource: <a href="https://bitcoin.org/en/full-node#choose-your-node" target="_blank" rel="noopener noreferrer">Node implementation options</a></li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-advanced" id="card-adv-coincontrol">
+                     <div class="card-body">
+                         <h5><i class="bi bi-coin"></i> Coin Control (UTXO Mgmt)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Manually select which <span class="term">UTXOs</span> to spend. Enhances privacy, helps manage fees, allows labeling.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvCoinControl" aria-expanded="false" aria-controls="collapseAdvCoinControl">
+                                Benefits & Wallets <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                      <div class="collapse collapse-content" id="collapseAdvCoinControl">
+                         <h6>Benefits & Wallets</h6>
+                          <ul>
+                             <li><strong>Benefits:</strong> Avoid linking unrelated UTXOs (privacy); strategically select UTXOs for fee optimization; label UTXOs by source.</li>
+                             <li><strong>Wallets:</strong> Electrum, Sparrow, Specter typically offer good coin control features.</li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-advanced" id="card-adv-psbt">
+                     <div class="card-body">
+                         <h5><i class="bi bi-file-earmark-binary"></i> PSBTs (BIP-174)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Partially Signed Bitcoin Transaction format. Standard for <span class="term">air-gapped signing</span> and <span class="term">multisig coordination</span>.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvPsbt" aria-expanded="false" aria-controls="collapseAdvPsbt">
+                                Use Cases & Link <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseAdvPsbt">
+                         <h6>Use Cases & Link</h6>
+                         <ul>
+                            <li><strong>Use Cases:</strong> Transfer unsigned transactions to offline signers (Coldcard, Seedsigner) via SD/QR; pass transactions between multiple signers in a multisig setup.</li>
+                            <li>Key Link: <a href="https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki" target="_blank" rel="noopener noreferrer">BIP-174 Specification</a></li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-advanced" id="card-adv-fee-bump">
+                     <div class="card-body">
+                         <h5><i class="bi bi-graph-up-arrow"></i> RBF & CPFP (Fee Bumping)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><span class="term">RBF (BIP-125):</span> Replace your stuck transaction with higher fee. <span class="term">CPFP:</span> Spend unconfirmed *incoming* UTXO with high fee.</p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvFeeBump" aria-expanded="false" aria-controls="collapseAdvFeeBump">
+                                Purpose & Link <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseAdvFeeBump">
+                         <h6>Purpose & Link</h6>
+                          <ul>
+                             <li><strong>Purpose:</strong> Techniques to increase the effective fee rate of transactions stuck in the mempool due to low fees.</li>
+                             <li><strong>RBF Note:</strong> Requires initial transaction to signal RBF support (wallet feature).</li>
+                             <li>Key Link: <a href="https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki" target="_blank" rel="noopener noreferrer">BIP-125 Specification (RBF)</a></li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-advanced" id="card-adv-shamir">
+                     <div class="card-body">
+                         <h5><i class="bi bi-share-fill"></i> Shamir Backup (SLIP-39)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Splits seed into M-of-N shares (e.g., 3-of-5). Increases redundancy/security vs. single backup point.</p>
+                              <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvShamir" aria-expanded="false" aria-controls="collapseAdvShamir">
+                                Pros, Cons & Link <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                      <div class="collapse collapse-content" id="collapseAdvShamir">
+                          <h6>Pros, Cons & Link</h6>
+                          <ul>
+                            <li><strong class="pros">Pros:</strong> Lose some shares without losing access; attacker needs multiple shares.</li>
+                            <li><strong class="cons">Cons:</strong> More complex setup/recovery; less widely supported than BIP-39 (Trezor T, specific tools).</li>
+                             <li>Key Link: <a href="https://github.com/satoshilabs/slips/blob/master/slip-0039.md" target="_blank" rel="noopener noreferrer">SLIP-39 Specification</a></li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-advanced" id="card-adv-testnet">
+                     <div class="card-body">
+                         <h5><i class="bi bi-joystick"></i> Testnet</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Parallel Bitcoin network with valueless coins. Safely test features, practice recovery, learn without risking real funds.</p>
+                              <!-- No collapse needed -->
+                         </div>
+                     </div>
+                 </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- ========================================= -->
+    <!-- SECTION VII: Hardware Wallet Comparison   -->
+    <!-- ========================================= -->
+    <div class="schema-container cat-comparison" data-section-id="section-comparison">
+        <h2 class="section-title" id="section-comparison">VII. Hardware Wallet Comparison</h2>
+        <div class="row">
+             <div class="col-12">
+                 <div class="info-card btc-type-comparison" id="card-compare-factors">
+                     <div class="card-body">
+                         <h5 class="text-center"><i class="bi bi-bar-chart-line"></i> Key Comparison Factors</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary text-center">Evaluate HW wallets based on: Security Model (SE vs MCU), Source Code (Open/Closed), Bitcoin Focus, Air-Gap capability, UI/UX, Advanced Features, Price, Reputation.</p>
+                              <button class="btn btn-sm details-toggle mx-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCompareFactors" aria-expanded="false" aria-controls="collapseCompareFactors">
+                                Factor Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                      <div class="collapse collapse-content" id="collapseCompareFactors">
+                         <h6>Factor Details:</h6>
+                         <ul>
+                             <li><strong>Security Model:</strong> Secure Element (dedicated chip, often closed) vs. Generic MCU (standard chip, allows open HW/FW, relies on software security).</li>
+                             <li><strong>Source Code:</strong> Open (auditable, transparent) vs. Closed (trust manufacturer). Applies to Firmware and sometimes Hardware design.</li>
+                             <li><strong>Bitcoin Focus:</strong> Reduces attack surface vs. Multi-Coin convenience.</li>
+                             <li><strong>Air-Gap:</strong> True air-gap (microSD, QR, NFC) vs. USB/Bluetooth connection required.</li>
+                             <li><strong>User Interface:</strong> Ease of use, screen type/size, buttons vs. touch.</li>
+                             <li><strong>Advanced Features:</strong> Support for Passphrases, Multisig (PSBT), Coin Control, Shamir, etc.</li>
+                             <li><strong>Price Point.</strong></li>
+                             <li><strong>Reputation:</strong> Manufacturer history, community trust, security incident handling.</li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+
+            <!-- Specific Wallet Cards -->
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card btc-type-comparison comparison-item" id="card-compare-trezor">
+                     <div class="card-body">
+                         <h5><i class="bi bi-unlock"></i> Trezor (T/Safe 3)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><strong class="pros">Pros:</strong> Open source history (T HW/FW, Safe 3 FW), user-friendly Suite, good passphrase/SLIP-39 (T) support, Safe 3 adds SE. <strong class="cons">Cons:</strong> Model T=MCU, Safe 3 SE=closed, not air-gapped.</p>
+                             <p><a href="https://trezor.io/" target="_blank" rel="noopener noreferrer">trezor.io</a></p>
+                         </div>
+                     </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card btc-type-comparison comparison-item" id="card-compare-coldcard">
+                     <div class="card-body">
+                         <h5><i class="bi bi-calculator"></i> Coldcard (Mk4/Q1)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><strong class="pros">Pros:</strong> Bitcoin-only, high security focus, true air-gap (SD/NFC/USB), excellent PSBT/multisig, open source FW, strong physical security. <strong class="cons">Cons:</strong> Steeper learning curve, needs coordinator SW, basic UI, Mk4=MCU.</p>
+                              <p><a href="https://coldcard.com/" target="_blank" rel="noopener noreferrer">coldcard.com</a></p>
+                         </div>
+                     </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card btc-type-comparison comparison-item" id="card-compare-ledger">
+                     <div class="card-body">
+                         <h5><i class="bi bi-usb-symbol"></i> Ledger (Nano/Stax)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><strong class="pros">Pros:</strong> Uses SE, wide coin support, popular, beginner-friendly Ledger Live. <strong class="cons">Cons:</strong> Closed source FW/SE, "Recover" controversy, past data breach, relies on Ledger Live.</p>
+                              <p><a href="https://www.ledger.com/" target="_blank" rel="noopener noreferrer">ledger.com</a></p>
+                         </div>
+                     </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card btc-type-comparison comparison-item" id="card-compare-bitbox">
+                     <div class="card-body">
+                         <h5><i class="bi bi-box"></i> BitBox02 (BTC-Only)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><strong class="pros">Pros:</strong> Good security/usability (SE + open FW elements), minimalist, BTC-only option, good passphrase/multisig via app. <strong class="cons">Cons:</strong> Requires BitBoxApp, less air-gap flexibility.</p>
+                              <p><a href="https://bitbox.swiss/" target="_blank" rel="noopener noreferrer">bitbox.swiss</a></p>
+                         </div>
+                     </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card btc-type-comparison comparison-item" id="card-compare-seedsigner">
+                     <div class="card-body">
+                         <h5><i class="bi bi-qr-code"></i> Seedsigner (DIY)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><strong class="pros">Pros:</strong> Low cost, DIY/educational, fully air-gapped (QR), stateless, fully open source HW/SW. <strong class="cons">Cons:</strong> Requires assembly/setup, usability varies, slower QR process.</p>
+                              <p><a href="https://seedsigner.com/" target="_blank" rel="noopener noreferrer">seedsigner.com</a></p>
+                         </div>
+                     </div>
+                </div>
+            </div>
+            <!-- Add Jade & Passport similarly -->
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card btc-type-comparison comparison-item" id="card-compare-jade">
+                     <div class="card-body">
+                         <h5><i class="bi bi-camera"></i> Blockstream Jade</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><strong class="pros">Pros:</strong> Affordable, Bitcoin-focused, optional stateless/blind oracle, QR air-gap, open source HW/FW. <strong class="cons">Cons:</strong> Oracle requires trust (optional), basic UI.</p>
+                             <p><a href="https://blockstream.com/jade/" target="_blank" rel="noopener noreferrer">blockstream.com/jade/</a></p>
+                         </div>
+                     </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card btc-type-comparison comparison-item" id="card-compare-passport">
+                     <div class="card-body">
+                         <h5><i class="bi bi-passport"></i> Foundation Passport</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><strong class="pros">Pros:</strong> Premium design, Bitcoin-focused, air-gapped (QR/microSD), security features, open source FW. <strong class="cons">Cons:</strong> Higher price, relies on app/coordinator.</p>
+                             <p><a href="https://foundationdevices.com/" target="_blank" rel="noopener noreferrer">foundationdevices.com</a></p>
+                         </div>
+                     </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+         <div class="row">
+            <div class="col-12">
+                <div class="info-card btc-type-comparison" id="card-compare-choice">
+                     <div class="card-body">
+                         <h5 class="text-center"><i class="bi bi-check2-square"></i> Which is Right for You?</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary text-center">Consider technical comfort, budget, altcoin needs, air-gap preference, open vs. closed source importance, required advanced features, and trust. No single "best" wallet exists; understand the trade-offs for your specific needs.</p>
+                         </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- /.schema-container -->
+
+
+    <!-- =============================================== -->
+    <!-- SECTION VIII: Common Issues & How People Lose   -->
+    <!-- =============================================== -->
+    <div class="schema-container cat-pitfalls" data-section-id="section-pitfalls">
+        <h2 class="section-title" id="section-pitfalls">VIII. Common Issues & How People Lose Bitcoin</h2>
+        <div class="row">
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-pitfall" id="card-pitfall-seed">
+                     <div class="card-body">
+                         <h5><i class="bi bi-trash"></i> Seed Phrase Loss/Errors</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><strong class="cons">Most common failure point!</strong> Physical loss, incorrect backup (words/order), backing up wrong seed, forgetting/losing passphrase.</p>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-pitfall" id="card-pitfall-phishing">
+                     <div class="card-body">
+                         <h5><i class="bi bi-person-badge"></i> Phishing / Social Engineering</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary"><strong class="cons">Instant theft!</strong> Entering seed into fake sites/apps, tricked by fake "support" asking for seed.</p>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-pitfall" id="card-pitfall-device">
+                     <div class="card-body">
+                         <h5><i class="bi bi-pc-horizontal"></i> Device/Software Issues</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Forgetting PIN (needs seed recovery), accidental wipe without *tested* backup, rare software bugs.</p>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-pitfall" id="card-pitfall-malware">
+                     <div class="card-body">
+                         <h5><i class="bi bi-bug"></i> Malware</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Clipboard hijacking (check HW screen!), keyloggers (risk for SW wallets), fake wallet apps.</p>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-pitfall" id="card-pitfall-physical">
+                     <div class="card-body">
+                         <h5><i class="bi bi-person-bounding-box"></i> Physical Access / Theft</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Seed backup found/stolen, unsecured HW stolen (PIN/passphrase are defenses), coercion, insider theft.</p>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-pitfall" id="card-pitfall-supply">
+                     <div class="card-body">
+                         <h5><i class="bi bi-box-seam"></i> Supply Chain / Bad Wallets</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Tampered device (rare for reputable vendors), using incompetent/malicious wallets.</p>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                 <div class="info-card btc-type-pitfall" id="card-pitfall-estate">
+                     <div class="card-body">
+                         <h5><i class="bi bi-person-x"></i> Lack of Estate Planning</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">Funds become inaccessible upon owner's death/incapacitation.</p>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- ======================= -->
+    <!-- SECTION IX: Glossary    -->
+    <!-- ======================= -->
+    <div class="schema-container cat-glossary" data-section-id="section-glossary">
+        <h2 class="section-title" id="section-glossary">IX. Glossary</h2>
+         <div class="row">
+            <div class="col-12">
+                 <div class="info-card btc-type-glossary" id="card-glossary">
+                     <div class="card-body">
+                        <h5 class="text-center"><i class="bi bi-book-half"></i> Key Terms</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary text-center">Definitions for essential Bitcoin wallet terminology.</p>
+                             <button class="btn btn-sm details-toggle mx-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGlossary" aria-expanded="false" aria-controls="collapseGlossary">
+                                View Glossary <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                    <div class="collapse collapse-content" id="collapseGlossary">
+                        <dl>
+                            <dt>Address</dt><dd>Identifier used to receive Bitcoin (e.g., starts with 1, 3, bc1q, bc1p).</dd>
+                            <dt>Air Gap</dt><dd>Keeping a device (signer) physically isolated from network connections.</dd>
+                            <dt>BIP-32</dt><dd>Standard for Hierarchical Deterministic (HD) wallets, deriving keys from a master seed.</dd>
+                            <dt>BIP-39</dt><dd>Standard for mnemonic seed phrases (12/24 words) representing the master seed.</dd>
+                            <dt>BIP-44/84/86</dt><dd>Standards defining derivation paths for different address types (Legacy, SegWit, Taproot).</dd>
+                            <dt>BIP-125</dt><dd>Replace-By-Fee (RBF) standard.</dd>
+                            <dt>BIP-174</dt><dd>Partially Signed Bitcoin Transaction (PSBT) format standard.</dd>
+                            <dt>Bitcoin Core</dt><dd>The primary, reference implementation of the Bitcoin full node software.</dd>
+                            <dt>Block Explorer</dt><dd>Website to view blockchain data (transactions, addresses, blocks).</dd>
+                            <dt>Blockchain</dt><dd>The distributed, public ledger recording all Bitcoin transactions.</dd>
+                            <dt>Cold Storage</dt><dd>Storing private keys offline.</dd>
+                            <dt>Coin Control</dt><dd>Manually selecting specific UTXOs for spending.</dd>
+                            <dt>Confirmation</dt><dd>Inclusion of a transaction in a block on the blockchain.</dd>
+                            <dt>CPFP</dt><dd>Child-Pays-For-Parent. Spending an unconfirmed input with a high fee to accelerate parent confirmation.</dd>
+                            <dt>Custodial</dt><dd>A third party holds your private keys (e.g., an exchange).</dd>
+                            <dt>Derivation Path</dt><dd>Instructions for deriving specific keys/addresses from the master seed (e.g., m/84'/0'/0'/0/0).</dd>
+                            <dt>Electrum</dt><dd>Popular, feature-rich software wallet.</dd>
+                            <dt>Fee Rate (sat/vB)</dt><dd>Transaction fee measured in satoshis per virtual byte.</dd>
+                            <dt>Full Node</dt><dd>Software that independently validates all Bitcoin transactions and blocks.</dd>
+                            <dt>Hardware Wallet</dt><dd>Physical device securing private keys offline.</dd>
+                            <dt>HD Wallet</dt><dd>Hierarchical Deterministic wallet, derives keys from a single seed (BIP-32).</dd>
+                            <dt>Hot Wallet</dt><dd>Wallet where keys are stored on an internet-connected device.</dd>
+                            <dt>Keys</dt><dd>Private Key (secret, for signing) and Public Key (sharable, for receiving).</dd>
+                            <dt>Ledger</dt><dd>Popular hardware wallet manufacturer.</dd>
+                            <dt>Lightning Network</dt><dd>Layer-2 protocol for fast, cheap Bitcoin transactions (uses different wallet types/concepts).</dd>
+                            <dt>Mempool</dt><dd>Pool of unconfirmed transactions waiting for miners.</dd>
+                            <dt>Multisignature (Multisig)</dt><dd>Requires multiple keys (M-of-N) to authorize a transaction.</dd>
+                            <dt>Non-Custodial</dt><dd>You control your own private keys/seed phrase.</dd>
+                            <dt>Passphrase (BIP-39)</dt><dd>Optional secret word/phrase added to seed, creating a hidden wallet ("25th word").</dd>
+                            <dt>Private Key</dt><dd>The secret data allowing spending of Bitcoin.</dd>
+                            <dt>PSBT</dt><dd>Partially Signed Bitcoin Transaction format.</dd>
+                            <dt>Public Key</dt><dd>Cryptographic key derived from private key, used to generate addresses.</dd>
+                            <dt>QR Code</dt><dd>Square barcode often used to represent addresses or transaction data.</dd>
+                            <dt>RBF</dt><dd>Replace-By-Fee. Bumping the fee of an unconfirmed transaction.</dd>
+                            <dt>Satoshis (Sats)</dt><dd>Smallest unit of Bitcoin (1 BTC = 100,000,000 sats).</dd>
+                            <dt>Secure Element (SE)</dt><dd>Tamper-resistant chip designed to securely store cryptographic keys.</dd>
+                            <dt>Seed Phrase</dt><dd>12/24 word mnemonic backup for the master private key (BIP-39).</dd>
+                            <dt>Shamir Backup (SLIP-39)</dt><dd>Splits seed into multiple shares, requiring a threshold for recovery.</dd>
+                            <dt>Signature</dt><dd>Cryptographic proof generated using a private key to authorize a transaction.</dd>
+                            <dt>Software Wallet</dt><dd>Wallet application running on a computer or phone.</dd>
+                            <dt>Sparrow Wallet</dt><dd>Desktop software wallet focused on security and privacy.</dd>
+                            <dt>Specter Desktop</dt><dd>Desktop software wallet focused on multisig and hardware wallet interaction.</dd>
+                            <dt>Taproot</dt><dd>Recent Bitcoin protocol upgrade enhancing privacy and scripting capabilities (P2TR addresses).</dd>
+                            <dt>Testnet</dt><dd>Parallel Bitcoin network for testing with valueless coins.</dd>
+                            <dt>Trezor</dt><dd>Pioneering hardware wallet manufacturer.</dd>
+                            <dt>UTXO</dt><dd>Unspent Transaction Output. An individual "chunk" of bitcoin.</dd>
+                            <dt>Watch-Only Wallet</dt><dd>Wallet loaded with public keys/addresses to monitor balance/transactions, but cannot spend.</dd>
+                        </dl>
+                    </div>
+                 </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- ========================== -->
+    <!-- SECTION X: Further Resources -->
+    <!-- ========================== -->
+    <div class="schema-container cat-resources" data-section-id="section-resources">
+        <h2 class="section-title" id="section-resources">X. Further Resources</h2>
+         <div class="row">
+            <div class="col-12">
+                 <div class="info-card btc-type-resource" id="card-resources">
+                     <div class="card-body">
+                         <h5 class="text-center"><i class="bi bi-link-45deg"></i> Links & Education</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary text-center">Links to wallets, block explorers, educational sites, and the author's resources.</p>
+                              <button class="btn btn-sm details-toggle mx-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseResources" aria-expanded="false" aria-controls="collapseResources">
+                                View Links <i class="bi bi-chevron-down"></i>
+                            </button>
+                         </div>
+                     </div>
+                     <div class="collapse collapse-content" id="collapseResources">
+                        <h6>A. Wallet Software:</h6>
+                        <ul>
+                            <li><a href="https://electrum.org/" target="_blank" rel="noopener noreferrer">Electrum</a></li>
+                            <li><a href="https://sparrowwallet.com/" target="_blank" rel="noopener noreferrer">Sparrow Wallet</a></li>
+                            <li><a href="https://specter.solutions/" target="_blank" rel="noopener noreferrer">Specter Desktop</a></li>
+                            <li><a href="https://bluewallet.io/" target="_blank" rel="noopener noreferrer">BlueWallet</a></li>
+                            <li><a href="https://nunchuk.io/" target="_blank" rel="noopener noreferrer">Nunchuk</a> (Multisig focus)</li>
+                        </ul>
+                        <h6>B. Hardware Wallets:</h6>
+                        <ul>
+                            <li><a href="https://trezor.io/" target="_blank" rel="noopener noreferrer">Trezor</a></li>
+                            <li><a href="https://coldcard.com/" target="_blank" rel="noopener noreferrer">Coldcard</a></li>
+                            <li><a href="https://www.ledger.com/" target="_blank" rel="noopener noreferrer">Ledger</a></li>
+                            <li><a href="https://bitbox.swiss/" target="_blank" rel="noopener noreferrer">BitBox</a></li>
+                            <li><a href="https://seedsigner.com/" target="_blank" rel="noopener noreferrer">Seedsigner</a></li>
+                            <li><a href="https://blockstream.com/jade/" target="_blank" rel="noopener noreferrer">Blockstream Jade</a></li>
+                            <li><a href="https://foundationdevices.com/" target="_blank" rel="noopener noreferrer">Foundation Devices</a></li>
+                        </ul>
+                        <h6>C. Block Explorers:</h6>
+                        <ul>
+                            <li><a href="https://mempool.space/" target="_blank" rel="noopener noreferrer">mempool.space</a></li>
+                            <li><a href="https://blockstream.info/" target="_blank" rel="noopener noreferrer">Blockstream.info</a></li>
+                        </ul>
+                        <h6>D. Education & Information:</h6>
+                        <ul>
+                            <li><a href="https://bitcoin.org/en/" target="_blank" rel="noopener noreferrer">Bitcoin.org</a></li>
+                            <li><a href="https://bitcoin.page/" target="_blank" rel="noopener noreferrer">bitcoin.page</a></li>
+                            <li><a href="https://www.lopp.net/bitcoin-information.html" target="_blank" rel="noopener noreferrer">Lopp.net Bitcoin Resources</a></li>
+                            <li><a href="https://en.bitcoin.it/wiki/Main_Page" target="_blank" rel="noopener noreferrer">Bitcoin Wiki</a></li>
+                            <li><a href="https://bitcoinops.org/" target="_blank" rel="noopener noreferrer">Bitcoin Optech</a> (Technical)</li>
+                            <li><a href="https://bitcointv.com/" target="_blank" rel="noopener noreferrer">Bitcoin TV</a> (Video)</li>
+                        </ul>
+                        <h6>E. Author's Resources:</h6>
+                        <ul>
+                            <li><a href="https://walletrecovery.info/articles/" target="_blank" rel="noopener noreferrer">WalletRecovery.info Articles</a></li>
+                            <li><a href="https://davidveksler.substack.com/archive" target="_blank" rel="noopener noreferrer">David Veksler Substack Archive</a></li>
+                            <li><a href="https://cheatsheets.davidveksler.com" target="_blank" rel="noopener noreferrer">More Cheatsheets</a></li>
+                        </ul>
+                     </div>
+                 </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+</div> <!-- /container -->
+
+<footer class="container text-center">
+    <p id="footer-year"></p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Simple script for dynamic year and potentially future interactions
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Update footer year dynamically ---
+    const footerYearEl = document.getElementById('footer-year');
+    if (footerYearEl) {
+        footerYearEl.textContent = `© ${new Date().getFullYear()} David Veksler`;
+    }
+
+    // --- Toggle Chevron Icons on Collapse Buttons ---
+    const collapseElements = document.querySelectorAll('.collapse');
+    collapseElements.forEach(collapseEl => {
+        // Find the button targeting this collapse element
+        const button = document.querySelector(`.details-toggle[data-bs-target="#${collapseEl.id}"]`);
+        const icon = button ? button.querySelector('.bi') : null;
+
+        if (button && icon) {
+            const updateIcon = (isShown) => {
+                if (isShown) {
+                    icon.classList.remove('bi-chevron-down');
+                    icon.classList.add('bi-chevron-up');
+                } else {
+                    icon.classList.remove('bi-chevron-up');
+                    icon.classList.add('bi-chevron-down');
+                }
+            };
+
+            // Set initial state based on whether the collapse element starts shown
+            updateIcon(collapseEl.classList.contains('show'));
+
+            // Use Bootstrap events for reliability
+            collapseEl.addEventListener('show.bs.collapse', () => {
+                updateIcon(true);
+            });
+
+            collapseEl.addEventListener('hide.bs.collapse', () => {
+                updateIcon(false);
+            });
+        }
+    });
+
+    // --- Placeholder for LeaderLine/Highlighting Logic ---
+    // The hover/dimming/line drawing logic from the DB example would go here
+    // if complex interactivity is desired later. For now, this basic structure
+    // focuses on content presentation and Bootstrap collapse functionality.
+});
+</script>
+<!-- Cloudflare Beacon -->
+<!-- <script defer src="https://static.cloudflareinsights.com/beacon.min.js/..." data-cf-beacon='{"token": "YOUR_TOKEN"}'></script> -->
+</body>
+</html>
