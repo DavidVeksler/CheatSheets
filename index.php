@@ -170,8 +170,6 @@ try {
     <meta name="twitter:url" content="<?php echo htmlspecialchars($baseUrl); ?>">
     <meta name="twitter:image" content="<?php echo htmlspecialchars($baseUrl); ?>images/cheatsheets-og-portfolio.png"> <!-- Use the same portfolio OG image -->
     <meta name="twitter:image:alt" content="David Veksler Cheatsheet Portfolio Showcase">
-    <!-- Optional: Add Twitter site handle if you have one -->
-    <!-- <meta name="twitter:site" content="@YourTwitterHandle"> -->
     <meta name="twitter:creator" content="@DavidVeksler"> <!-- Add if you have a relevant handle -->
 
 
@@ -184,13 +182,15 @@ try {
         :root {
              --card-lift-height: -7px;
              --card-shadow-intensity: rgba(0, 0, 0, .15);
-             --cta-bg-color: #e9ecef; /* Light background for CTA */
+        }
+        html {
+            scroll-behavior: smooth; /* Enable smooth scrolling for anchor links */
         }
         body {
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            background-color: #f8f9fa; /* Slightly off-white background */
+            background-color: #f8f9fa;
         }
         .main-content {
             flex: 1;
@@ -200,7 +200,7 @@ try {
         }
         .card {
             transition: transform .25s ease-in-out, box-shadow .25s ease-in-out;
-            border: 1px solid #dee2e6; /* Subtle border */
+            border: 1px solid #dee2e6;
             border-radius: .375rem;
             overflow: hidden;
             background-color: #fff;
@@ -212,33 +212,29 @@ try {
         .card-img-top, .iframe-preview-container {
             aspect-ratio: 16 / 9;
             object-fit: cover;
-            background-color: #e9ecef; /* Placeholder background */
+            background-color: #e9ecef;
             border-bottom: 1px solid #dee2e6;
-            display: flex; /* For centering placeholder icon */
+            display: flex;
             align-items: center;
             justify-content: center;
-            color: #adb5bd; /* Placeholder icon color */
+            color: #adb5bd;
         }
          .card-img-top::before, .iframe-preview-container::before {
-             /* Simple placeholder icon */
              font-family: 'bootstrap-icons';
-             content: "\F48B"; /* Bootstrap icon: image-alt */
+             content: "\F48B"; /* bi-image-alt */
              font-size: 2.5rem;
-             display: block; /* Needed if parent is flex */
+             display: block;
         }
-         /* Hide placeholder icon when actual image loads */
          .card-img-top[src]:not([src=""])::before,
          .iframe-preview-container iframe[src]:not([src=""])::before {
              display: none;
         }
-         /* Hide placeholder icon when iframe loads */
          .iframe-preview-container iframe::before {
-             display: block; /* Assume iframe might not load, show icon */
+             display: block;
          }
          .iframe-preview-container iframe.loaded::before {
-              display: none; /* Hide icon once iframe content is likely loaded */
+              display: none;
          }
-
 
         .iframe-preview-container {
             position: relative;
@@ -251,12 +247,12 @@ try {
             width: 100%;
             height: 100%;
             border: 0;
-            background-color: #fff; /* Background while loading */
-            opacity: 0; /* Start hidden */
-            transition: opacity 0.5s ease-in-out; /* Fade in */
+            background-color: #fff;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
         }
         .iframe-preview-container iframe.loaded {
-             opacity: 1; /* Show when loaded */
+             opacity: 1;
         }
         .card-title a {
             text-decoration: none;
@@ -277,41 +273,39 @@ try {
              margin-bottom: 1.25rem;
              color: #495057;
              font-size: 0.9rem;
-             min-height: 60px; /* Ensure some minimum height even for short descriptions */
+             min-height: 60px;
         }
         .card-footer {
-            background-color: #f8f9fa; /* Slightly different bg */
+            background-color: #f8f9fa;
             border-top: 1px solid #dee2e6;
             padding: 0.75rem 1.25rem;
         }
         .footer {
              background-color: #e9ecef;
              color: #6c757d;
-             border-top: 1px solid #ced4da; /* Slightly darker border */
+             border-top: 1px solid #ced4da;
         }
-        .display-5.fw-bold { /* More emphasis on main title */
+        .display-5.fw-bold {
             color: #343a40;
         }
-        .cta-section {
-            background-color: var(--cta-bg-color);
-            transition: background-color 0.3s ease;
-        }
-        /* Optional: Subtle hover effect for CTA */
-        /* .cta-section:hover {
-             background-color: #dee2e6;
-        } */
         #filterInput:focus {
             border-color: #86b7fe;
             box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
         }
-        /* Style for filtered out items */
-         .filtered-out {
-             transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-             opacity: 0;
-             transform: scale(0.95);
-             /* We don't use display:none immediately for the transition */
-             /* Instead, the parent .col gets display:none after transition (handled by JS potentially) */
-             /* Or just use display:none on the parent .col directly */
+        /* Subtle link style for scrolling to CTA */
+        .cta-scroll-link {
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+        .cta-scroll-link:hover {
+            text-decoration: underline;
+        }
+        /* More subtle CTA Section */
+        .cta-section-bottom {
+            border-top: 1px solid #dee2e6;
+            padding-top: 2rem;
+            padding-bottom: 1rem;
+            margin-top: 3rem;
         }
     </style>
 </head>
@@ -327,20 +321,11 @@ try {
 
     <main class="main-content container mt-4 mb-5">
         <header class="text-center mb-5">
-            <h1 class="display-5 fw-bold">Showcase: Cheatsheet Design</h1>
-            <p class="lead text-muted mb-4">Demonstrating expertise in crafting clear, concise, and interactive reference guides.</p>
-
-            <!-- === Call to Action Section === -->
-            <div class="cta-section bg-light p-4 rounded border shadow-sm mb-5 mx-auto" style="max-width: 750px;">
-                 <h2 class="h3 fw-light mb-3"><i class="bi bi-stars text-primary me-2"></i>Need a Custom Cheatsheet?</h2>
-                 <p class="mb-3 lead fs-6">Leverage my skills to create a professional, tailored cheatsheet for your specific topic, tool, or process. Ideal for documentation, training materials, marketing content, or personal productivity.</p>
-                 <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
-                     <i class="bi bi-linkedin me-2"></i>Discuss Your Project on LinkedIn
-                 </a>
-                 <small class="d-block text-muted mt-2">Let's build something useful together!</small>
-             </div>
-
-            <h2 class="fw-normal h3 mb-4 border-top pt-4">Explore Portfolio Examples</h2>
+            <h1 class="display-5 fw-bold">Cheatsheet Design Showcase</h1>
+            <p class="lead text-muted">Explore examples of clear, concise, and interactive reference guides.</p>
+            <a href="#custom-cheatsheets" class="cta-scroll-link link-secondary">
+                <i class="bi bi-tools me-1"></i>Need a custom cheatsheet?
+            </a>
         </header>
 
         <!-- === Filter Input === -->
@@ -378,13 +363,13 @@ try {
         <div id="cheatsheetGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             <?php if (!empty($cheatsheets)): ?>
                 <?php foreach ($cheatsheets as $sheet): ?>
-                    <div class="col d-flex align-items-stretch portfolio-item"> {/* Added portfolio-item class for easier selection */}
+                    <div class="col d-flex align-items-stretch portfolio-item">
                         <div class="card h-100 shadow-sm">
                             <?php if (!empty($sheet['image'])): ?>
                                 <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" aria-label="Preview image for <?php echo htmlspecialchars($sheet['title']); ?>">
-                                    <img src="<?php echo htmlspecialchars($sheet['image']); ?>" class="card-img-top" alt="Preview for <?php echo htmlspecialchars($sheet['title']); ?>" loading="lazy" onerror="this.style.display='none'; this.parentElement.nextElementSibling.style.display='block';"> {/* Basic image error handling */}
+                                    <img src="<?php echo htmlspecialchars($sheet['image']); ?>" class="card-img-top" alt="Preview for <?php echo htmlspecialchars($sheet['title']); ?>" loading="lazy" onerror="this.style.display='none'; this.parentElement.nextElementSibling.style.display='block';">
                                 </a>
-                                <div class="iframe-preview-container" style="display: none;"> {/* Hide iframe container initially if image exists */}
+                                <div class="iframe-preview-container" style="display: none;">
                                     <iframe src="<?php echo htmlspecialchars($sheet['url']); ?>"
                                             title="Preview of <?php echo htmlspecialchars($sheet['title']); ?>"
                                             loading="lazy"
@@ -435,6 +420,15 @@ try {
             <i class="bi bi-emoji-frown me-2"></i>No cheatsheets match your filter criteria. Try broadening your search.
         </div>
 
+         <!-- === Call to Action Section (Moved to Bottom) === -->
+         <section id="custom-cheatsheets" class="cta-section-bottom text-center">
+              <h3 class="h4 fw-normal mb-3">Need a Custom Cheatsheet?</h3>
+              <p class="text-muted mb-3 mx-auto" style="max-width: 600px;">I can help design professional, tailored cheatsheets for your specific needs – documentation, training, marketing, and more.</p>
+              <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-linkedin me-1"></i> Discuss Your Project on LinkedIn
+              </a>
+          </section>
+
     </main>
 
     <!-- Updated Footer -->
@@ -463,12 +457,11 @@ try {
         document.addEventListener('DOMContentLoaded', function() {
             const filterInput = document.getElementById('filterInput');
             const grid = document.getElementById('cheatsheetGrid');
-            const items = grid.querySelectorAll('.portfolio-item'); // Select the .col element
+            const items = grid.querySelectorAll('.portfolio-item');
             const noResultsMessage = document.getElementById('noResults');
 
             if (!filterInput || !grid || items.length === 0) {
-                // Don't run script if essential elements are missing
-                if(filterInput) filterInput.disabled = true; // Disable input if grid is empty
+                if(filterInput) filterInput.disabled = true;
                 return;
             }
 
@@ -477,7 +470,7 @@ try {
                 let itemsVisible = 0;
 
                 items.forEach(item => {
-                    const card = item.querySelector('.card'); // Find card within the item (.col)
+                    const card = item.querySelector('.card');
                     if (!card) return;
 
                     const titleElement = card.querySelector('.card-title a');
@@ -487,7 +480,6 @@ try {
                     const description = descriptionElement ? descriptionElement.textContent.toLowerCase() : '';
                     const isVisible = filterText === '' || title.includes(filterText) || description.includes(filterText);
 
-                    // Use Bootstrap's d-none for hiding/showing the parent column
                     if (isVisible) {
                         item.classList.remove('d-none');
                         itemsVisible++;
@@ -496,20 +488,12 @@ try {
                     }
                 });
 
-                // Show or hide the 'no results' message
                 if (itemsVisible === 0 && filterText !== '') {
                     noResultsMessage.classList.remove('d-none');
                 } else {
                     noResultsMessage.classList.add('d-none');
                 }
             });
-
-            // Add loaded class to iframes on load for fade-in effect (already in HTML onload)
-            // document.querySelectorAll('.iframe-preview-container iframe').forEach(iframe => {
-            //     iframe.addEventListener('load', () => {
-            //         iframe.classList.add('loaded');
-            //     });
-            // });
         });
     </script>
 
