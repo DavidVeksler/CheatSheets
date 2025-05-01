@@ -28,7 +28,7 @@ $baseUrl = rtrim($scheme . '://' . $host . $scriptDir, '/') . '/';
 
 // --- Helper Function: Extract Metadata ---
 function extractMetadata(string $filepath): array {
-    global $baseUrl; // Access the base URL for resolving relative paths
+    global $baseUrl, $scheme, $host; // Access global vars needed
 
     $filename = basename($filepath);
     $metadata = [
@@ -82,12 +82,11 @@ function extractMetadata(string $filepath): array {
                  $metadata['image'] = $scheme . '://' . $host . $imageUrl;
              } else {
                   // Relative path - combine base URL path and image URL
-                 // Check if the relative image file actually exists locally first
                  $absoluteImagePath = realpath(dirname(__FILE__)) . '/' . $imageUrl;
                  if (file_exists($absoluteImagePath)) {
                     $metadata['image'] = $baseUrl . $imageUrl;
                  } else {
-                     error_log("Relative image path specified in " . $filename . " not found: " . $imageUrl);
+                     error_log("Relative image path specified in " . $filename . " not found: " . $imageUrl . " (Base URL: " . $baseUrl . ")");
                      // Keep image as null if local file doesn't exist
                  }
              }
@@ -98,8 +97,8 @@ function extractMetadata(string $filepath): array {
     }
 
      // Limit description length for display consistency
-    if (strlen($metadata['description']) > 150) {
-        $metadata['description'] = mb_substr($metadata['description'], 0, 147) . '...'; // Use mb_substr for multi-byte safety
+    if (mb_strlen($metadata['description']) > 150) { // Use mb_strlen for multi-byte safety
+        $metadata['description'] = mb_substr($metadata['description'], 0, 147) . '...'; // Use mb_substr
     }
 
     return $metadata;
@@ -132,8 +131,8 @@ try {
             }
         }
     }
-    // Optional: Sort cheatsheets alphabetically by title
-    // usort($cheatsheets, fn($a, $b) => strcmp(strtolower($a['title']), strtolower($b['title'])));
+    // Optional: Sort cheatsheets alphabetically by title for consistent initial order
+    usort($cheatsheets, fn($a, $b) => strcasecmp($a['title'], $b['title']));
 
 } catch (Exception $e) {
     $errors[] = "An error occurred: " . $e->getMessage();
@@ -146,30 +145,35 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- === SEO Metadata for the Gallery Page === -->
-    <title>Browse Cheatsheets - DavidVeksler.com</title>
-    <meta name="description" content="A visually rich gallery of useful cheatsheets covering topics like AI Safety, Bitcoin, Leadership, Programming, Philosophy, and more, created by David Veksler.">
-    <meta name="keywords" content="cheatsheets, reference, guide, programming, tech, philosophy, ai safety, bitcoin, leadership, david veksler, gallery, visual browser">
-    <meta name="author" content="David Veksler">
-    <link rel="canonical" href="<?php echo htmlspecialchars($baseUrl); ?>"> <!-- Canonical URL for the gallery root -->
 
-    <!-- Open Graph / Facebook / LinkedIn -->
-    <meta property="og:title" content="Browse Cheatsheets - DavidVeksler.com">
-    <meta property="og:description" content="A visually rich gallery of useful cheatsheets covering various topics like AI Safety, Bitcoin, Leadership, and more.">
+    <!-- === Refined SEO & Portfolio Metadata === -->
+    <title>David Veksler's Cheatsheet Portfolio | Custom Cheatsheet Design Services</title>
+    <meta name="description" content="Explore a portfolio of expertly crafted cheatsheets by David Veksler covering tech, philosophy, AI safety, and more. Hire David to create custom, visually engaging reference guides tailored to your needs.">
+    <meta name="keywords" content="cheatsheets, portfolio, custom cheatsheets, information design, technical writing, data visualization, reference guide, programming, tech, philosophy, ai safety, bitcoin, leadership, david veksler, hire, freelance, consultant">
+    <meta name="author" content="David Veksler">
+    <link rel="canonical" href="<?php echo htmlspecialchars($baseUrl); ?>">
+
+    <!-- === Open Graph / Facebook / LinkedIn === -->
+    <meta property="og:title" content="David Veksler's Cheatsheet Portfolio | Custom Design Services">
+    <meta property="og:description" content="Showcasing expertise in creating clear, visually appealing, and interactive cheatsheets. Hire David Veksler for custom reference guide design.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="<?php echo htmlspecialchars($baseUrl); ?>">
-    <meta property="og:image" content="<?php echo htmlspecialchars($baseUrl); ?>images/cheatsheets-og.png"> <!-- Suggest creating a specific OG image for the gallery -->
-    <meta property="og:image:alt" content="David Veksler Cheatsheets Gallery">
+    <meta property="og:image" content="<?php echo htmlspecialchars($baseUrl); ?>images/cheatsheets-og-portfolio.png"> <!-- Suggest creating a specific OG image for the portfolio page -->
+    <meta property="og:image:alt" content="David Veksler Cheatsheet Portfolio Showcase">
     <meta property="og:site_name" content="David Veksler's Cheatsheets">
     <meta property="og:locale" content="en_US">
 
-    <!-- Twitter Card -->
+    <!-- === Twitter Card === -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Browse Cheatsheets - DavidVeksler.com">
-    <meta name="twitter:description" content="Explore a collection of handy cheatsheets on tech, philosophy, and more in a visual gallery.">
+    <meta name="twitter:title" content="David Veksler's Cheatsheet Portfolio | Custom Design Services">
+    <meta name="twitter:description" content="Showcasing expertise in creating clear, interactive cheatsheets. Hire David Veksler for custom reference guide design.">
     <meta name="twitter:url" content="<?php echo htmlspecialchars($baseUrl); ?>">
-    <meta name="twitter:image" content="<?php echo htmlspecialchars($baseUrl); ?>images/cheatsheets-og.png"> <!-- Use the same default image -->
-    <meta name="twitter:image:alt" content="David Veksler Cheatsheets Gallery">
+    <meta name="twitter:image" content="<?php echo htmlspecialchars($baseUrl); ?>images/cheatsheets-og-portfolio.png"> <!-- Use the same portfolio OG image -->
+    <meta name="twitter:image:alt" content="David Veksler Cheatsheet Portfolio Showcase">
+    <!-- Optional: Add Twitter site handle if you have one -->
+    <!-- <meta name="twitter:site" content="@YourTwitterHandle"> -->
+    <meta name="twitter:creator" content="@DavidVeksler"> <!-- Add if you have a relevant handle -->
+
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -178,8 +182,9 @@ try {
 
     <style>
         :root {
-             --card-lift-height: -8px;
-             --card-shadow-intensity: rgba(0, 0, 0, .18);
+             --card-lift-height: -7px;
+             --card-shadow-intensity: rgba(0, 0, 0, .15);
+             --cta-bg-color: #e9ecef; /* Light background for CTA */
         }
         body {
             display: flex;
@@ -191,29 +196,53 @@ try {
             flex: 1;
         }
         .navbar {
-            /* Subtle gradient */
              background-image: linear-gradient(to bottom, #343a40, #212529);
         }
         .card {
             transition: transform .25s ease-in-out, box-shadow .25s ease-in-out;
-            border: none; /* Cleaner look */
-            border-radius: .375rem; /* Bootstrap's default rounded corners */
-            overflow: hidden; /* Ensure content respects border-radius */
-            background-color: #fff; /* Ensure card background is white */
+            border: 1px solid #dee2e6; /* Subtle border */
+            border-radius: .375rem;
+            overflow: hidden;
+            background-color: #fff;
         }
         .card:hover {
             transform: translateY(var(--card-lift-height));
-            box-shadow: 0 1rem 2rem var(--card-shadow-intensity);
+            box-shadow: 0 0.8rem 1.6rem var(--card-shadow-intensity);
         }
         .card-img-top, .iframe-preview-container {
-            aspect-ratio: 16 / 9; /* Maintain aspect ratio */
-            object-fit: cover; /* Cover the area for images */
-            background-color: #e9ecef; /* Background for placeholder/iframe loading */
-            border-bottom: 1px solid #dee2e6; /* Subtle separator */
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            background-color: #e9ecef; /* Placeholder background */
+            border-bottom: 1px solid #dee2e6;
+            display: flex; /* For centering placeholder icon */
+            align-items: center;
+            justify-content: center;
+            color: #adb5bd; /* Placeholder icon color */
         }
+         .card-img-top::before, .iframe-preview-container::before {
+             /* Simple placeholder icon */
+             font-family: 'bootstrap-icons';
+             content: "\F48B"; /* Bootstrap icon: image-alt */
+             font-size: 2.5rem;
+             display: block; /* Needed if parent is flex */
+        }
+         /* Hide placeholder icon when actual image loads */
+         .card-img-top[src]:not([src=""])::before,
+         .iframe-preview-container iframe[src]:not([src=""])::before {
+             display: none;
+        }
+         /* Hide placeholder icon when iframe loads */
+         .iframe-preview-container iframe::before {
+             display: block; /* Assume iframe might not load, show icon */
+         }
+         .iframe-preview-container iframe.loaded::before {
+              display: none; /* Hide icon once iframe content is likely loaded */
+         }
+
+
         .iframe-preview-container {
             position: relative;
-            overflow: hidden; /* Hide iframe scrollbars if they appear briefly */
+            overflow: hidden;
         }
         .iframe-preview-container iframe {
             position: absolute;
@@ -223,64 +252,108 @@ try {
             height: 100%;
             border: 0;
             background-color: #fff; /* Background while loading */
+            opacity: 0; /* Start hidden */
+            transition: opacity 0.5s ease-in-out; /* Fade in */
+        }
+        .iframe-preview-container iframe.loaded {
+             opacity: 1; /* Show when loaded */
         }
         .card-title a {
             text-decoration: none;
             color: inherit;
-            font-weight: 600; /* Slightly bolder title */
+            font-weight: 600;
         }
         .card-title a:hover {
-            color: #0d6efd; /* Bootstrap primary */
+            color: #0d6efd;
             text-decoration: underline;
         }
         .card-body {
             display: flex;
             flex-direction: column;
-            padding: 1.25rem; /* Standard Bootstrap card padding */
+            padding: 1.25rem;
         }
         .card-text {
              flex-grow: 1;
              margin-bottom: 1.25rem;
-             color: #495057; /* Slightly softer text color */
+             color: #495057;
              font-size: 0.9rem;
+             min-height: 60px; /* Ensure some minimum height even for short descriptions */
         }
         .card-footer {
-            background-color: transparent; /* Make footer blend with card body */
-            border-top: 1px solid #eee; /* Separator line */
+            background-color: #f8f9fa; /* Slightly different bg */
+            border-top: 1px solid #dee2e6;
             padding: 0.75rem 1.25rem;
         }
         .footer {
-             background-color: #e9ecef; /* Footer distinct from main content */
+             background-color: #e9ecef;
              color: #6c757d;
+             border-top: 1px solid #ced4da; /* Slightly darker border */
         }
-        .display-5 {
-            font-weight: 300;
+        .display-5.fw-bold { /* More emphasis on main title */
+            color: #343a40;
+        }
+        .cta-section {
+            background-color: var(--cta-bg-color);
+            transition: background-color 0.3s ease;
+        }
+        /* Optional: Subtle hover effect for CTA */
+        /* .cta-section:hover {
+             background-color: #dee2e6;
+        } */
+        #filterInput:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        /* Style for filtered out items */
+         .filtered-out {
+             transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+             opacity: 0;
+             transform: scale(0.95);
+             /* We don't use display:none immediately for the transition */
+             /* Instead, the parent .col gets display:none after transition (handled by JS potentially) */
+             /* Or just use display:none on the parent .col directly */
         }
     </style>
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="<?php echo htmlspecialchars($baseUrl); ?>">
-                 <i class="bi bi-journal-richtext me-2"></i>DavidVeksler.com Cheatsheets
+                 <i class="bi bi-journal-richtext me-2"></i>David Veksler's Cheatsheet Portfolio
             </a>
-            <!-- Add navbar toggler if needed for smaller screens -->
-             <!-- <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                 Add nav items here if needed
-            </div> -->
+            <!-- Navbar toggler if needed -->
         </div>
     </nav>
 
     <main class="main-content container mt-4 mb-5">
         <header class="text-center mb-5">
-            <h1 class="display-5">Browse Cheatsheets</h1>
-            <p class="lead text-muted">A collection of guides and references.</p>
+            <h1 class="display-5 fw-bold">Showcase: Cheatsheet Design</h1>
+            <p class="lead text-muted mb-4">Demonstrating expertise in crafting clear, concise, and interactive reference guides.</p>
+
+            <!-- === Call to Action Section === -->
+            <div class="cta-section bg-light p-4 rounded border shadow-sm mb-5 mx-auto" style="max-width: 750px;">
+                 <h2 class="h3 fw-light mb-3"><i class="bi bi-stars text-primary me-2"></i>Need a Custom Cheatsheet?</h2>
+                 <p class="mb-3 lead fs-6">Leverage my skills to create a professional, tailored cheatsheet for your specific topic, tool, or process. Ideal for documentation, training materials, marketing content, or personal productivity.</p>
+                 <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
+                     <i class="bi bi-linkedin me-2"></i>Discuss Your Project on LinkedIn
+                 </a>
+                 <small class="d-block text-muted mt-2">Let's build something useful together!</small>
+             </div>
+
+            <h2 class="fw-normal h3 mb-4 border-top pt-4">Explore Portfolio Examples</h2>
         </header>
 
+        <!-- === Filter Input === -->
+        <div class="row mb-4 justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="input-group input-group-lg shadow-sm">
+                    <span class="input-group-text bg-white border-end-0" id="filter-addon"><i class="bi bi-search text-primary"></i></span>
+                    <input type="search" id="filterInput" class="form-control border-start-0" placeholder="Filter cheatsheets by title or topic..." aria-label="Filter cheatsheets" aria-describedby="filter-addon">
+                </div>
+            </div>
+        </div>
 
+        <!-- Error Display -->
         <?php if (!empty($errors)): ?>
             <div class="alert alert-warning alert-dismissible fade show" role="alert">
                 <h4 class="alert-heading">Notice</h4>
@@ -294,20 +367,34 @@ try {
             </div>
         <?php endif; ?>
 
+        <!-- No Cheatsheets Message -->
         <?php if (empty($cheatsheets) && empty($errors)): ?>
             <div class="alert alert-info text-center" role="alert">
-                <i class="bi bi-info-circle me-2"></i>No cheatsheets found in this directory.
+                <i class="bi bi-info-circle me-2"></i>No cheatsheet examples found in this directory.
             </div>
-        <?php elseif (!empty($cheatsheets)): ?>
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <?php endif; ?>
+
+        <!-- Cheatsheet Grid -->
+        <div id="cheatsheetGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <?php if (!empty($cheatsheets)): ?>
                 <?php foreach ($cheatsheets as $sheet): ?>
-                    <div class="col d-flex align-items-stretch">
+                    <div class="col d-flex align-items-stretch portfolio-item"> {/* Added portfolio-item class for easier selection */}
                         <div class="card h-100 shadow-sm">
                             <?php if (!empty($sheet['image'])): ?>
-                                <!-- Display OG Image if available -->
                                 <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" aria-label="Preview image for <?php echo htmlspecialchars($sheet['title']); ?>">
-                                    <img src="<?php echo htmlspecialchars($sheet['image']); ?>" class="card-img-top" alt="Preview for <?php echo htmlspecialchars($sheet['title']); ?>" loading="lazy">
+                                    <img src="<?php echo htmlspecialchars($sheet['image']); ?>" class="card-img-top" alt="Preview for <?php echo htmlspecialchars($sheet['title']); ?>" loading="lazy" onerror="this.style.display='none'; this.parentElement.nextElementSibling.style.display='block';"> {/* Basic image error handling */}
                                 </a>
+                                <div class="iframe-preview-container" style="display: none;"> {/* Hide iframe container initially if image exists */}
+                                    <iframe src="<?php echo htmlspecialchars($sheet['url']); ?>"
+                                            title="Preview of <?php echo htmlspecialchars($sheet['title']); ?>"
+                                            loading="lazy"
+                                            frameborder="0"
+                                            scrolling="no"
+                                            referrerpolicy="no-referrer"
+                                            onload="this.classList.add('loaded');"
+                                            >
+                                    </iframe>
+                                </div>
                             <?php else: ?>
                                 <!-- Fallback: Display iframe preview -->
                                 <div class="iframe-preview-container">
@@ -317,9 +404,8 @@ try {
                                             frameborder="0"
                                             scrolling="no"
                                             referrerpolicy="no-referrer"
+                                            onload="this.classList.add('loaded');"
                                             >
-                                            <!-- Optional: Add sandbox attribute if needed, but it might break functionality -->
-                                            <!-- sandbox="allow-scripts allow-same-origin" -->
                                     </iframe>
                                 </div>
                             <?php endif; ?>
@@ -334,34 +420,98 @@ try {
                                 </p>
                             </div>
                             <div class="card-footer text-center">
-                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="btn btn-sm btn-primary">
+                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
                                     View Cheatsheet <i class="bi bi-box-arrow-up-right ms-1"></i>
                                 </a>
                             </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
+
+         <!-- No Results Message for Filtering -->
+        <div id="noResults" class="alert alert-warning text-center mt-4 d-none" role="alert">
+            <i class="bi bi-emoji-frown me-2"></i>No cheatsheets match your filter criteria. Try broadening your search.
+        </div>
+
     </main>
 
- <footer class="footer pb-3 mt-auto border-top">
-    <div class="container text-center">
-        <p class="mb-2">
-            <span class="text-muted">Cheatsheets by David Veksler © <?php echo date("Y"); ?></span>
-        </p>
-        <div>
-          <a href="https://www.linkedin.com/in/davidveksler/" title="David Veksler on LinkedIn" target="_blank" rel="noopener noreferrer" class="mx-2 link-secondary">
-            <i class="bi bi-linkedin"></i> LinkedIn
-          </a>
-          <a href="https://cheatsheets.davidveksler.com/" title="Browse All Cheatsheets" class="mx-2 link-secondary">
-            <i class="bi bi-collection"></i> All Cheatsheets
-          </a>
+    <!-- Updated Footer -->
+    <footer class="footer py-4 mt-auto border-top bg-light">
+        <div class="container text-center">
+            <p class="mb-2 text-muted">
+                Cheatsheet Portfolio & Design by David Veksler © <?php echo date("Y"); ?>
+            </p>
+            <div>
+              <a href="https://www.linkedin.com/in/davidveksler/" title="David Veksler on LinkedIn" target="_blank" rel="noopener noreferrer" class="mx-2 link-secondary">
+                <i class="bi bi-linkedin"></i> LinkedIn Profile
+              </a>
+              <span class="text-muted mx-1">|</span>
+              <a href="<?php echo htmlspecialchars($baseUrl); ?>" title="Browse All Cheatsheets" class="mx-2 link-secondary">
+                <i class="bi bi-collection"></i> View All Examples
+              </a>
+            </div>
         </div>
-    </div>
-</footer>
+    </footer>
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <!-- Custom JS for Filtering -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterInput = document.getElementById('filterInput');
+            const grid = document.getElementById('cheatsheetGrid');
+            const items = grid.querySelectorAll('.portfolio-item'); // Select the .col element
+            const noResultsMessage = document.getElementById('noResults');
+
+            if (!filterInput || !grid || items.length === 0) {
+                // Don't run script if essential elements are missing
+                if(filterInput) filterInput.disabled = true; // Disable input if grid is empty
+                return;
+            }
+
+            filterInput.addEventListener('input', function() {
+                const filterText = filterInput.value.toLowerCase().trim();
+                let itemsVisible = 0;
+
+                items.forEach(item => {
+                    const card = item.querySelector('.card'); // Find card within the item (.col)
+                    if (!card) return;
+
+                    const titleElement = card.querySelector('.card-title a');
+                    const descriptionElement = card.querySelector('.card-text');
+
+                    const title = titleElement ? titleElement.textContent.toLowerCase() : '';
+                    const description = descriptionElement ? descriptionElement.textContent.toLowerCase() : '';
+                    const isVisible = filterText === '' || title.includes(filterText) || description.includes(filterText);
+
+                    // Use Bootstrap's d-none for hiding/showing the parent column
+                    if (isVisible) {
+                        item.classList.remove('d-none');
+                        itemsVisible++;
+                    } else {
+                        item.classList.add('d-none');
+                    }
+                });
+
+                // Show or hide the 'no results' message
+                if (itemsVisible === 0 && filterText !== '') {
+                    noResultsMessage.classList.remove('d-none');
+                } else {
+                    noResultsMessage.classList.add('d-none');
+                }
+            });
+
+            // Add loaded class to iframes on load for fade-in effect (already in HTML onload)
+            // document.querySelectorAll('.iframe-preview-container iframe').forEach(iframe => {
+            //     iframe.addEventListener('load', () => {
+            //         iframe.classList.add('loaded');
+            //     });
+            // });
+        });
+    </script>
+
 </body>
 </html>
