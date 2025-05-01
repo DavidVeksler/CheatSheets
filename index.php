@@ -345,13 +345,21 @@ try {
         <?php endif; ?>
     </main>
 
-    <footer class="footer py-4 mt-auto border-top">
-        <div class="container text-center">
+ <footer class="footer pb-3 mt-auto border-top">
+    <div class="container text-center">
+        <p class="mb-2">
             <span class="text-muted">Cheatsheets by David Veksler © <?php echo date("Y"); ?></span>
-             <!-- Optional: Add links -->
-             <!-- <small class="d-block mt-2"><a href="#">About</a> | <a href="#">Contact</a></small> -->
+        </p>
+        <div>
+          <a href="https://www.linkedin.com/in/davidveksler/" title="David Veksler on LinkedIn" target="_blank" rel="noopener noreferrer" class="mx-2 link-secondary">
+            <i class="bi bi-linkedin"></i> LinkedIn
+          </a>
+          <a href="https://cheatsheets.davidveksler.com/" title="Browse All Cheatsheets" class="mx-2 link-secondary">
+            <i class="bi bi-collection"></i> All Cheatsheets
+          </a>
         </div>
-    </footer>
+    </div>
+</footer>
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
