@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitcoin Whitepaper Explained: Technical Blueprint & Evolution</title> <!-- Title Updated -->
+    <meta
+      name="description"
+      content="A technically enhanced blueprint guide to Satoshi Nakamoto's Bitcoin whitepaper, including protocol evolution (SegWit, Taproot), consensus changes, and modern context." <!-- Description Updated -->
+    />
+    <link
+      rel="canonical"
+      href="YOUR_URL_HERE/bitcoin-whitepaper-blueprint-evolution.html" <!-- ** IMPORTANT: Replace with actual URL if hosted ** -->
+    />
+
+    <!-- Social Media Metadata (Update if needed) -->
+    <meta
+      property="og:title"
+      content="Bitcoin Whitepaper Explained: Technical Blueprint & Evolution"
+    />
+    <meta
+      property="og:description"
+      content="A technically enhanced guide to the Bitcoin whitepaper, covering the original design, algorithms, formulas, and key protocol changes since 2008."
+    />
+    <meta property="og:type" content="article" />
+    <meta
+      property="og:url"
+      content="YOUR_URL_HERE/bitcoin-whitepaper-blueprint-evolution.html" <!-- ** IMPORTANT: Replace with actual URL if hosted ** -->
+    />
+    <!-- Add OG image URL if you have one -->
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Fira+Code:wght@400;600&family=Roboto+Condensed:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* --- CSS Styles: Blueprint Theme (Same as previous example) --- */
+       @keyframes subtlePulse { 0% { transform: scale(1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } 50% { transform: scale(1.01); box-shadow: 0 4px 10px rgba(0,0,0,0.3); } 100% { transform: scale(1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } }
+      :root {
+        --bp-bg-main: #0F172A; --bp-bg-container: #1E293B; --bp-bg-card: #334155; --bp-bg-card-content: #475569;
+        --bp-text-primary: #E2E8F0; --bp-text-secondary: #94A3B8; --bp-text-heading: #F8FAFC; --bp-border-color: #475569;
+        --bp-accent-primary: #60A5FA; --bp-accent-primary-dark: #3B82F6; --bp-highlight: #FBBF24; --bp-critical-color: #F7931A;
+        --bp-rule-border-color: var(--bp-critical-color); --bp-rule-bg-color: rgba(247, 147, 26, 0.1);
+        --bg-main: var(--bp-bg-main); --bg-container: var(--bp-bg-container); --bg-card: var(--bp-bg-card); --bg-card-content: var(--bp-bg-card-content);
+        --text-primary: var(--bp-text-primary); --text-secondary: var(--bp-text-secondary); --text-heading: var(--bp-text-heading); --border-color: var(--bp-border-color);
+        --accent-primary: var(--bp-accent-primary); --accent-primary-dark: var(--bp-accent-primary-dark); --critical-color: var(--bp-critical-color);
+        --rule-border-color: var(--bp-rule-border-color); --rule-bg-color: var(--bp-rule-bg-color); --btc-orange: var(--bp-critical-color);
+        --cat-color-intro: var(--bp-highlight); --cat-color-problem: var(--bp-critical-color); --cat-color-solution: var(--bp-accent-primary);
+        --cat-color-mechanism: var(--bp-accent-primary-dark); --cat-color-technical: #A5B4FC; --cat-color-security: #F472B6; --cat-color-summary: #94A3B8;
+        --cat-color-resources: var(--bp-accent-primary);
+        /* New Category Color for Evolution */
+        --cat-color-evolution: #34D399; /* Emerald/Green */
+
+        --category-color: var(--cat-color-summary); color-scheme: dark;
+      }
+      body { background-color: var(--bg-main); background-image: linear-gradient(rgba(96, 165, 250, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(96, 165, 250, 0.08) 1px, transparent 1px); background-size: 30px 30px; color: var(--text-primary); font-family: "Inter", sans-serif; padding-bottom: 3rem; font-size: 15px; box-sizing: border-box; line-height: 1.65; }
+      *, *::before, *::after { box-sizing: inherit; }
+      .page-header { background: linear-gradient(rgba(30, 41, 59, 0.8), rgba(30, 41, 59, 0.95)), var(--bg-container); padding: 2.5rem 1.5rem; text-align: center; border-bottom: 2px solid var(--accent-primary-dark); margin-bottom: 3rem; position: relative; z-index: 10; box-shadow: 0 3px 10px rgba(0,0,0,0.3), inset 0 0 8px rgba(0,0,0,0.2); }
+      .page-header::before, .page-header::after { content: ''; position: absolute; width: 15px; height: 15px; border-color: var(--accent-primary); border-style: solid; opacity: 0.8; transition: all 0.3s ease; }
+      .page-header::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; } .page-header::after { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+      .page-header:hover::before { top: 8px; left: 8px; width: 18px; height: 18px; } .page-header:hover::after { bottom: 8px; right: 8px; width: 18px; height: 18px; }
+      .page-header h1 { color: var(--text-heading); font-family: 'Roboto Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; margin-bottom: 0.5rem; font-size: 2.4rem; text-shadow: none; }
+      .page-header h1 .bi { color: var(--bp-highlight); vertical-align: -0.05em; margin-right: 0.3em; font-size: 0.95em; }
+      .page-header .lead { color: var(--text-secondary); font-size: 1.1rem; max-width: 750px; margin: 0.5rem auto 0 auto; text-shadow: none; }
+      .page-header a.btn { border-color: var(--bp-highlight); color: var(--bp-highlight); } .page-header a.btn:hover { background-color: var(--bp-highlight); color: var(--bg-main); border-color: var(--bp-highlight); }
+      .schema-container { padding: 0 1rem 0.5rem 1rem; margin-bottom: 3rem; position: relative; }
+      .section-title { color: var(--category-color); margin: 0 0 1.5rem 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); padding: 0.4rem 0; display: block; position: relative; z-index: 15; font-family: 'Roboto Condensed', sans-serif; text-shadow: none; }
+      .section-title .bi { margin-right: 0.5em; font-size: 1.1em; vertical-align: -0.1em;}
+      .cat-intro > .section-title { --category-color: var(--cat-color-intro); } .cat-problem > .section-title { --category-color: var(--cat-color-problem); } .cat-solution > .section-title { --category-color: var(--cat-color-solution); } .cat-mechanism > .section-title { --category-color: var(--cat-color-mechanism); } .cat-technical > .section-title { --category-color: var(--cat-color-technical); } .cat-security > .section-title { --category-color: var(--cat-color-security); } .cat-summary > .section-title { --category-color: var(--cat-color-summary); } .cat-resources > .section-title { --category-color: var(--cat-color-resources); }
+      .cat-evolution > .section-title { --category-color: var(--cat-color-evolution); } /* Style for new section */
+
+      .info-card { background-color: var(--bg-card); border: 1px solid var(--bp-border-color); border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2), inset 0 1px 2px rgba(0,0,0,0.1); height: 100%; display: flex; flex-direction: column; transition: border-color 0.3s ease, transform 0.2s ease; position: relative; z-index: 5; overflow: hidden; --category-color: var(--cat-color-summary); }
+      .info-card.wp-type-intro { --category-color: var(--cat-color-intro); border-left: 3px solid var(--category-color); } .info-card.wp-type-problem { --category-color: var(--cat-color-problem); border-left: 3px solid var(--category-color); } .info-card.wp-type-solution { --category-color: var(--cat-color-solution); border-left: 3px solid var(--category-color); } .info-card.wp-type-mechanism { --category-color: var(--cat-color-mechanism); border-left: 3px solid var(--category-color); } .info-card.wp-type-technical { --category-color: var(--cat-color-technical); border-left: 3px solid var(--category-color); } .info-card.wp-type-security { --category-color: var(--cat-color-security); border-left: 3px solid var(--category-color); } .info-card.wp-type-summary { --category-color: var(--cat-color-summary); border-left: 3px solid var(--category-color); } .info-card.wp-type-resource { --category-color: var(--cat-color-resources); border-left: 3px solid var(--category-color); }
+      .info-card.wp-type-evolution { --category-color: var(--cat-color-evolution); border-left: 3px solid var(--category-color); } /* Style for new section cards */
+
+      .info-card:hover { border-color: var(--category-color); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 2px rgba(0,0,0,0.1); }
+      .info-card .card-body { padding: 0; flex-grow: 1; display: flex; flex-direction: column; }
+      .info-card h5 { color: var(--text-heading); background-color: color-mix(in srgb, var(--bg-card) 70%, black 30%); font-size: 0.8rem; text-align: left; margin: 0; padding: 0.6rem 1rem; font-weight: 700; display: flex; justify-content: flex-start; align-items: center; gap: 0.6rem; font-family: 'Roboto Condensed', sans-serif; border-bottom: 1px solid var(--bp-border-color); border-radius: 3px 3px 0 0; text-transform: uppercase; letter-spacing: 0.8px; text-shadow: none; }
+      .info-card h5 .bi { font-size: 1.1em; color: var(--category-color); opacity: 0.9; }
+      .card-content-wrapper { padding: 1rem 1.1rem; flex-grow: 1; display: flex; flex-direction: column; }
+      .info-card p.summary { font-size: 0.88rem; color: var(--text-primary); margin-bottom: 1rem; flex-grow: 1; line-height: 1.6; }
+      .collapse-content { font-size: 0.85rem; border-top: 1px dashed var(--bp-border-color); padding: 1rem 1.2rem; margin: 0; background-color: var(--bp-bg-card-content); border-radius: 0 0 3px 3px; color: var(--bp-text-primary); }
+      .collapse-content h6 { font-weight: 700; color: var(--bp-accent-primary); margin: 0.8rem 0 0.4rem 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Roboto Condensed', sans-serif; }
+      .collapse-content ul { padding-left: 0; margin-bottom: 1rem; list-style-type: none; }
+      .collapse-content li { margin-bottom: 0.5rem; font-size: 0.85rem; line-height: 1.6; padding-left: 1.4em; position: relative; }
+      .collapse-content li::before { content: '-'; display: block; position: absolute; left: 0.3em; top: 0.1em; font-weight: bold; color: var(--bp-accent-primary); font-size: 1.2em; }
+      .collapse-content code { font-size: 0.8rem; color: var(--bp-highlight); background-color: var(--bp-bg-main); padding: 0.2em 0.4em; border-radius: 3px; font-family: "Fira Code", monospace; border: 1px solid var(--bp-border-color); }
+      .collapse-content pre { display: block; padding: 0.8em; margin: 0.8em 0; background-color: var(--bp-bg-main); border: 1px solid var(--bp-border-color); border-radius: 3px; overflow-x: auto; line-height: 1.5; font-size: 0.8rem;}
+      .collapse-content dl dt { font-weight: 700; margin-top: 0.6em; color: var(--bp-text-heading); font-family: 'Roboto Condensed', sans-serif; }
+      .collapse-content dl dd { margin-left: 1.2em; margin-bottom: 0.4em; color: var(--bp-text-secondary); }
+      .row > * { margin-bottom: 1.8rem; }
+      footer { padding: 2rem 1rem 1rem 1rem; font-size: 0.75rem; color: var(--bp-text-secondary); text-align: center; border-top: 1px solid var(--bp-border-color); margin-top: 2rem; }
+      .details-toggle { font-size: 0.65rem; margin-top: auto; align-self: flex-start; padding: 0.3rem 0.7rem; color: var(--bp-accent-primary); border: 1px solid var(--bp-accent-primary); background-color: transparent; border-radius: 3px; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.4em; text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; font-family: 'Roboto Condensed', sans-serif; }
+      .details-toggle:hover { background-color: var(--bp-accent-primary); color: var(--bg-main); border-color: var(--bp-accent-primary); transform: scale(1.03); }
+      .details-toggle .bi { transition: transform 0.2s ease-in-out; font-size: 1.1em;}
+      .details-toggle[aria-expanded="true"] .bi { transform: rotate(180deg); }
+      .term { font-weight: 600; color: var(--bp-text-heading); background-color: color-mix(in srgb, var(--bp-accent-primary) 15%, transparent); border-bottom: 1px solid var(--bp-accent-primary); padding: 0.05em 0.2em; border-radius: 2px; font-family: "Fira Code", monospace; font-size: 0.9em; }
+      .critical { color: var(--bp-critical-color); font-weight: 600; border-bottom: 1px dotted var(--bp-critical-color); }
+      .rule { color: var(--bp-text-primary); font-weight: 500; display: block; margin: 0.8em 0; border: 1px solid var(--rule-border-color); border-left-width: 4px; padding: 0.7em 1em; background-color: var(--rule-bg-color); border-radius: 3px; font-size: 0.85rem; box-shadow: none; }
+      .pros::before { content: "[+] "; color: var(--bp-accent-primary); font-weight: bold; }
+      .cons::before { content: "[-] "; color: var(--bp-critical-color); font-weight: bold; }
+      .pros, .cons { display: block; margin-left: 0; padding-left: 0; }
+      a { color: var(--bp-accent-primary); text-decoration: none; transition: color 0.2s ease, border-bottom 0.2s ease; border-bottom: 1px solid transparent; }
+      a:hover { color: var(--bp-text-heading); text-decoration: none; border-bottom: 1px solid var(--bp-accent-primary); }
+      .collapse-content a { color: var(--bp-accent-primary); } .collapse-content a:hover { color: var(--bp-text-heading); }
+      .row + .row { border-top: 1px dashed var(--bp-border-color); margin-top: 1.8rem; padding-top: 1.8rem; }
+      .abstract-text { font-style: normal; color: var(--bp-text-secondary); border-left: 2px solid var(--bp-highlight); padding-left: 1rem; margin: 1rem 0; font-size: 0.9rem; }
+      /* --- End CSS --- */
+    </style>
+  </head>
+  <body>
+    <header class="page-header">
+      <h1 class="display-5">
+        <i class="bi bi-vector-pen"></i> Bitcoin Whitepaper :: Technical Blueprint & Evolution
+      </h1>
+      <p class="lead">
+        Deconstructing Satoshi Nakamoto's original design and exploring key protocol developments since 2008.
+      </p>
+        <a href="https://bitcoin.org/bitcoin.pdf" target="_blank" rel="noopener noreferrer" class="btn btn-outline-warning btn-sm mt-3">
+            <i class="bi bi-box-arrow-up-right"></i> View Original Specification (PDF)
+        </a>
+    </header>
+
+    <div class="container" id="main-container">
+
+      <!-- SECTION 0: Abstract & Intro (Keep as is) -->
+        <!-- ... content from previous version ... -->
+
+      <!-- SECTION I: Core Technical Components (Keep as is, ensure ECDSA note is present) -->
+        <!-- ... content from previous version ... -->
+
+      <!-- SECTION II: Economic & Consensus Rules (Keep as is) -->
+        <!-- ... content from previous version ... -->
+
+      <!-- SECTION III: Optimizations & Usage Patterns (Keep as is, ensure address note is present) -->
+        <!-- ... content from previous version ... -->
+
+      <!-- SECTION IV: Security Calculations (Keep as is) -->
+        <!-- ... content from previous version ... -->
+
+
+      <!-- ==================================== -->
+      <!-- SECTION V: Protocol Evolution & Modern Context (NEW SECTION) -->
+      <!-- ==================================== -->
+      <div class="schema-container cat-evolution" data-section-id="section-evolution"> <!-- Added cat-evolution -->
+        <h2 class="section-title" id="section-evolution">
+          <i class="bi bi-git"></i> // V. Protocol Evolution & Modern Context
+        </h2>
+        <div class="row">
+            <!-- Major Upgrades -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-evolution" id="card-upgrades">
+               <div class="card-body">
+                 <h5><i class="bi bi-graph-up-arrow"></i> Major Protocol Upgrades (Soft Forks)</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Bitcoin evolves via backwards-compatible <span class="term">Soft Forks</span>, adding features without forcing all nodes to upgrade immediately. Key upgrades expanded scripting and efficiency.
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpgrades" aria-expanded="false" aria-controls="collapseUpgrades">
+                      Key Soft Forks <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapseUpgrades">
+                 <h6>Significant Soft Forks Since Whitepaper:</h6>
+                 <ul>
+                   <li><strong>P2SH (Pay-to-Script-Hash, BIP 16):</strong> Enabled sending funds to the hash of a script, simplifying complex transactions like multisig by hiding complexity from the sender.</li>
+                   <li><strong>SegWit (Segregated Witness, BIPs 141-144):</strong> Separated signature data ("witness") from transaction data, fixing transaction malleability, increasing effective block space (via block weight), and enabling Layer 2 solutions like Lightning. Introduced new address types (P2WPKH, P2WSH).</li>
+                   <li><strong>Taproot (BIPs 340-342):</strong> Introduced Schnorr signatures (<span class="term">BIP 340</span>) for efficiency and improved privacy, MAST (<span class="term">BIP 114 via Tapscript</span>) for complex scripts appearing as simple keys, and Tapscript (<span class="term">BIP 342</span>) for future script upgrades. Introduced P2TR addresses.</li>
+                 </ul>
+               </div>
+             </div>
+          </div>
+           <!-- Consensus Rule Changes -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-evolution" id="card-consensus-changes">
+               <div class="card-body">
+                 <h5><i class="bi bi-check-all"></i> Other Consensus Rule Changes</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Consensus rules have evolved beyond the whitepaper, notably regarding block capacity and script capabilities (timelocks).
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConsensusChanges" aria-expanded="false" aria-controls="collapseConsensusChanges">
+                      Key Changes <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapseConsensusChanges">
+                 <h6>Notable Consensus Rule Evolutions:</h6>
+                 <ul>
+                    <li><strong>Block Size Limit / Block Weight:</strong> An implicit limit existed initially, later formalized at 1MB. SegWit introduced <span class="term">block weight</span> (max 4M weight units), allowing larger blocks if they contain significant witness data, effectively increasing capacity.</li>
+                    <li><strong>Timelocks (CLTV/CSV):</strong> Opcodes like `OP_CHECKLOCKTIMEVERIFY` (<span class="term">BIP 65</span>) and `OP_CHECKSEQUENCEVERIFY` (<span class="term">BIP 112</span>) were added, enabling transactions that can only be spent after a certain time or block height, crucial for payment channels (Lightning).</li>
+                    <li><strong>Signature Algorithm Evolution:</strong> Moved from just ECDSA to include more efficient <span class="term">Schnorr signatures</span> with Taproot.</li>
+                 </ul>
+               </div>
+             </div>
+          </div>
+           <!-- Change Mechanisms -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-evolution" id="card-change-mech">
+               <div class="card-body">
+                 <h5><i class="bi bi-bezier2"></i> Change Mechanisms (BIPs & Forks)</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Protocol changes are proposed via <span class="term">BIPs</span> (Bitcoin Improvement Proposals) and typically activated via <span class="term">Soft Forks</span> (backwards-compatible). Contentious <span class="term">Hard Forks</span> (non-backwards-compatible) are generally avoided by the Bitcoin community.
+                   </p>
+                 </div>
+               </div>
+             </div>
+          </div>
+          <!-- Layer 2 Scaling -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-evolution" id="card-layer2">
+               <div class="card-body">
+                 <h5><i class="bi bi-lightning-charge-fill"></i> Layer 2 Scaling (Lightning Network)</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     To handle transaction volume beyond the base layer capacity, <span class="term">Layer 2</span> solutions like the <span class="term">Lightning Network</span> have emerged. Built *on top* of Bitcoin, they enable near-instant, low-fee payments via off-chain channels, settling final balances on the main chain.
+                   </p>
+                 </div>
+               </div>
+             </div>
+          </div>
+          <!-- Mining Hardware -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-evolution" id="card-mining-hw">
+               <div class="card-body">
+                 <h5><i class="bi bi-memory"></i> Mining Hardware Evolution</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Mining hardware rapidly specialized beyond the whitepaper's "CPU" assumption: CPU -> GPU -> FPGA -> <span class="term">ASIC</span> (Application-Specific Integrated Circuit). ASICs dominate mining today, significantly increasing network hashrate but also raising barriers to entry.
+                   </p>
+                 </div>
+               </div>
+             </div>
+          </div>
+           <!-- Privacy Context -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-evolution" id="card-privacy-context">
+               <div class="card-body">
+                 <h5><i class="bi bi-person-bounding-box"></i> Privacy Context: Pseudonymity Reality</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     While keys are anonymous, linking addresses via multi-input TXs, address reuse, and external data (KYC) limits privacy. <span class="term">Chain analysis</span> techniques track fund flows. Bitcoin provides <span class="term">pseudonymity</span>, not guaranteed anonymity. Techniques like CoinJoin exist but aren't protocol-native.
+                   </p>
+                 </div>
+               </div>
+             </div>
+          </div>
+        </div><!-- /.row -->
+      </div><!-- /.schema-container -->
+
+
+      <!-- ======================= -->
+      <!-- SECTION VI: Conclusion, Gaps & Resources (Updated Section Number) -->
+      <!-- ======================= -->
+       <div class="schema-container cat-summary" data-section-id="section-conclusion"> <!-- Section Number Updated -->
+        <h2 class="section-title" id="section-conclusion">
+          <i class="bi bi-check2-square"></i> // VI. Conclusion, Implementation Gaps & Resources
+        </h2>
+        <div class="row">
+          <!-- Conclusion (Keep as is) -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-summary" id="card-conclusion">
+               <div class="card-body">
+                 <h5><i class="bi bi-flag"></i> Spec §12: Conclusion</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Satoshi proposed a trustless P2P electronic cash system using digital signatures for ownership and PoW consensus via the longest chain to prevent double-spending. Relies on simple rules, node honesty (incentivized), and majority CPU power.
+                   </p>
+                 </div>
+               </div>
+             </div>
+          </div>
+            <!-- Implementation Gaps (Keep as is) -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-problem" id="card-gaps">
+               <div class="card-body">
+                 <h5><i class="bi bi-puzzle"></i> Implementation Gaps in Whitepaper</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Whitepaper provides concepts. <strong class="critical">Implementation requires details NOT specified:</strong> P2P protocol, Script details, Full Consensus Rules (block weight, etc.), Serialization, Fork Activation.
+                   </p>
+                     <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGaps" aria-expanded="false" aria-controls="collapseGaps">
+                      Key Missing Specs <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+               <div class="collapse collapse-content" id="collapseGaps">
+                    <h6>Areas Requiring External Specification / Implementation Choices:</h6>
+                    <ul>
+                        <li><strong class="cons">P2P Network Protocol</strong></li>
+                        <li><strong class="cons">Scripting System Details & Opcodes</strong></li>
+                        <li><strong class="cons">Full Consensus Rules (Block Weight, Maturity, etc.)</strong></li>
+                        <li><strong class="cons">Data Serialization Formats</strong></li>
+                        <li><strong class="cons">ECDSA Curve (secp256k1)</strong></li>
+                        <li><strong class="term">Resources:</strong> <a href="https://developer.bitcoin.org/devguide/" target="_blank" rel="noopener noreferrer">Dev Guide</a>, <a href="https://en.bitcoin.it/wiki/Main_Page" target="_blank" rel="noopener noreferrer">Wiki</a>, <a href="https://github.com/bitcoin/bips" target="_blank" rel="noopener noreferrer">BIPs Repository</a>.</li>
+                    </ul>
+               </div>
+             </div>
+          </div>
+           <!-- Glossary (Keep as is) -->
+           <div class="col-lg-6 col-md-12">
+            <div class="info-card wp-type-summary" id="card-glossary-wp">
+              <div class="card-body">
+                <h5><i class="bi bi-book"></i> Whitepaper Key Terms</h5>
+                 <div class="card-content-wrapper">
+                    <p class="summary">Quick definitions of core concepts from the paper.</p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGlossaryWp" aria-expanded="false" aria-controls="collapseGlossaryWp">
+                      View Glossary <i class="bi bi-chevron-down"></i>
+                    </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseGlossaryWp">
+                 <!-- Glossary content remains the same -->
+                  <dl><dt>Block</dt><dd>Timestamped collection of TXs secured by PoW.</dd><dt>Blockchain</dt><dd>Chain of blocks; public ledger.</dd><dt>Difficulty</dt><dd>Measure of how hard it is to find PoW hash.</dd><dt>Digital Signature</dt><dd>Proof of ownership via private key (ECDSA).</dd><dt>Double-Spending</dt><dd>Spending same money twice.</dd><dt>Hash</dt><dd>Cryptographic fingerprint (SHA256, RIPEMD160).</dd><dt>Incentive</dt><dd>Block reward + TX fees.</dd><dt>Longest Chain</dt><dd>Chain with most PoW; consensus history.</dd><dt>Merkle Tree</dt><dd>Hash tree summarizing TXs in a block.</dd><dt>Nonce</dt><dd>Value varied in header to find PoW.</dd><dt>Proof-of-Work (PoW)</dt><dd>Consensus mechanism requiring CPU effort.</dd><dt>SPV</dt><dd>Simplified Payment Verification.</dd><dt>Target</dt><dd>Threshold hash value must be below for PoW.</dd><dt>UTXO</dt><dd>Unspent Transaction Output (spendable coin).</dd></dl>
+              </div>
+            </div>
+          </div>
+          <!-- Resources (Updated Links maybe) -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-resource" id="card-resources-wp">
+               <div class="card-body">
+                 <h5><i class="bi bi-link-45deg"></i> Foundational Resources</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Links to the original paper and essential developer resources.
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseResourcesWp" aria-expanded="false" aria-controls="collapseResourcesWp">
+                      View Links <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapseResourcesWp">
+                 <h6>Essential Links:</h6>
+                 <ul>
+                    <li><i class="bi bi-file-pdf-fill"></i> Original Whitepaper: <a href="https://bitcoin.org/bitcoin.pdf" target="_blank" rel="noopener noreferrer">bitcoin.pdf</a></li>
+                    <li><i class="bi bi-code-slash"></i> Bitcoin Dev Guide: <a href="https://developer.bitcoin.org/devguide/" target="_blank" rel="noopener noreferrer">developer.bitcoin.org</a></li>
+                    <li><i class="bi bi-book-fill"></i> Bitcoin Wiki: <a href="https://en.bitcoin.it/wiki/Main_Page" target="_blank" rel="noopener noreferrer">en.bitcoin.it/wiki</a></li>
+                    <li><i class="bi bi-github"></i> Bitcoin Core Source: <a href="https://github.com/bitcoin/bitcoin" target="_blank" rel="noopener noreferrer">github.com/bitcoin/bitcoin</a></li>
+                    <li><i class="bi bi-card-list"></i> BIPs Repository: <a href="https://github.com/bitcoin/bips" target="_blank" rel="noopener noreferrer">github.com/bitcoin/bips</a></li>
+                 </ul>
+                 <h6>Cited Precursors/Concepts:</h6>
+                 <!-- Keep precursor links -->
+                  <ul><li>Hashcash Paper</li><li>B-money Paper</li><li>Timestamping (Haber/Stornetta Refs [3,4])</li><li>Merkle Trees (Merkle Ref [7])</li></ul>
+               </div>
+             </div>
+          </div>
+        </div><!-- /.row -->
+      </div><!-- /.schema-container -->
+
+
+    </div> <!-- /container -->
+
+    <footer class="container text-center">
+        <p id="footer-text">Bitcoin Whitepaper: Technical Blueprint & Evolution | Styles inspired by David Veksler's Cheatsheets</p>
+    </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // JS for collapse toggle icons (from template)
+      document.addEventListener("DOMContentLoaded", () => {
+        const collapseElements = document.querySelectorAll(".collapse");
+        collapseElements.forEach((collapseEl) => {
+          const button = document.querySelector(
+            `.details-toggle[data-bs-target="#${collapseEl.id}"]`
+          );
+          const icon = button ? button.querySelector(".bi") : null;
+          if (button && icon) {
+            const updateIcon = (isShown) => {
+              icon.classList.toggle("bi-chevron-up", isShown);
+              icon.classList.toggle("bi-chevron-down", !isShown);
+            };
+            updateIcon(collapseEl.classList.contains("show"));
+            collapseEl.addEventListener("show.bs.collapse", () => updateIcon(true));
+            collapseEl.addEventListener("hide.bs.collapse", () => updateIcon(false));
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
