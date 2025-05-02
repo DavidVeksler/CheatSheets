@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Updated Metadata -->
+    <title>Bitcoin Whitepaper Explained: A Peer-to-Peer Electronic Cash System</title>
+    <meta
+      name="description"
+      content="An interactive guide explaining Satoshi Nakamoto's original Bitcoin whitepaper. Understand the core concepts: peer-to-peer network, proof-of-work, blockchain, transaction lifecycle, incentives, and security."
+    />
+    <!-- Canonical URL (Update if hosted elsewhere) -->
+    <link
+      rel="canonical"
+      href="YOUR_URL_HERE/bitcoin-whitepaper-explained.html" <!-- ** IMPORTANT: Replace with actual URL if hosted ** -->
+    />
+
+    <!-- Social Media Metadata -->
+    <meta
+      property="og:title"
+      content="Bitcoin Whitepaper Explained: A Peer-to-Peer Electronic Cash System"
+    />
+    <meta
+      property="og:description"
+      content="An interactive guide explaining Satoshi Nakamoto's original Bitcoin whitepaper. Understand core concepts like the peer-to-peer network, proof-of-work, and the blockchain."
+    />
+    <meta property="og:type" content="article" />
+    <meta
+      property="og:url"
+      content="YOUR_URL_HERE/bitcoin-whitepaper-explained.html" <!-- ** IMPORTANT: Replace with actual URL if hosted ** -->
+    />
+    <meta
+      property="og:image"
+      content="YOUR_IMAGE_URL_HERE/bitcoin-whitepaper-og.png" <!-- ** Optional: Add an OG image URL ** -->
+    />
+    <meta
+      property="og:image:alt"
+      content="Diagram illustrating Bitcoin whitepaper concepts."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Bitcoin Whitepaper Explained: A Peer-to-Peer Electronic Cash System"
+    />
+    <meta
+      name="twitter:description"
+      content="An interactive guide explaining Satoshi Nakamoto's original Bitcoin whitepaper."
+    />
+    <meta
+      name="twitter:image"
+      content="YOUR_IMAGE_URL_HERE/bitcoin-whitepaper-og.png" <!-- ** Optional: Add an OG image URL ** -->
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Diagram illustrating Bitcoin whitepaper concepts."
+    />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Fira+Code:wght@400;600&family=Orbitron:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* --- CSS Styles from bitcoin-wallet.html template --- */
+      /* (Using the provided template CSS almost verbatim for styling consistency) */
+      @keyframes subtleDataStream { 0% { background-position: 0 0; } 100% { background-position: 0 60px; } }
+      @keyframes pulseGlowIntense { 0% { box-shadow: 0 0 8px 1px var(--category-color-glow), 0 4px 10px rgba(0,0,0,0.4), inset 0 0 5px rgba(0,0,0,0.2); } 50% { box-shadow: 0 0 20px 5px var(--category-color-glow), 0 6px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.3); } 100% { box-shadow: 0 0 8px 1px var(--category-color-glow), 0 4px 10px rgba(0,0,0,0.4), inset 0 0 5px rgba(0,0,0,0.2); } }
+      @keyframes flowLineGradient { 0% { background-position: -100% 0; } 100% { background-position: 100% 0; } }
+
+      :root {
+        --bg-main: #0a0c10; --bg-container: #11151c; --bg-card: #1c2128; --bg-card-content: #22272e;
+        --text-primary: #d1d5db; --text-secondary: #9ca3af; --text-heading: #f0f6fc;
+        --border-color: #373e47; --accent-primary: #6cb6ff; --accent-primary-dark: #58a6ff;
+        --accent-primary-glow: rgba(108, 182, 255, 0.6); --critical-color: #ff7b72;
+        --rule-border-color: var(--critical-color); --rule-bg-color: rgba(255, 123, 114, 0.15);
+        --btc-orange: #f7931a; --btc-orange-glow: rgba(247, 147, 26, 0.7); --btc-orange-subtle-glow: rgba(247, 147, 26, 0.4);
+
+        /* Whitepaper Category Colors (Simplified/Reused) */
+        --btc-color-intro: var(--btc-orange); --btc-glow-intro: var(--btc-orange-glow);
+        --btc-color-problem: var(--critical-color); --btc-glow-problem: rgba(255, 123, 114, 0.7); /* Use critical for problem */
+        --btc-color-solution: #56d364; --btc-glow-solution: rgba(86, 211, 100, 0.6); /* Green for solution */
+        --btc-color-mechanism: var(--accent-primary); --btc-glow-mechanism: var(--accent-primary-glow); /* Blue for core mechanics */
+        --btc-color-technical: #c39ac5; --btc-glow-technical: rgba(195, 154, 197, 0.6); /* Purple for technical details */
+        --btc-color-security: #f778ba; --btc-glow-security: rgba(247, 120, 186, 0.6); /* Pink for security/math */
+        --btc-color-summary: var(--btc-color-concept); --btc-glow-summary: var(--btc-glow-concept); /* Gray for conclusion/glossary */
+        --btc-color-concept: #9ca3af; --btc-glow-concept: rgba(156, 163, 175, 0.5);
+        --btc-color-resources: #56d364; --btc-glow-resources: rgba(86, 211, 100, 0.6);
+
+        --category-color: var(--btc-color-concept); /* Default */
+        --category-color-glow: var(--btc-glow-concept);
+        color-scheme: dark;
+      }
+
+      body {
+        background-color: var(--bg-main); background-image: linear-gradient(0deg, rgba(13,17,23,0) 0%, rgba(88,166,255,0.03) 50%, rgba(13,17,23,0) 100%), linear-gradient(90deg, rgba(48,54,61,0.1) 1px, transparent 1px), linear-gradient(0deg, rgba(48,54,61,0.1) 1px, transparent 1px); background-size: 100% 60px, 40px 40px, 40px 40px; animation: subtleDataStream 4s linear infinite;
+        color: var(--text-primary); font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-bottom: 3rem; font-size: 15px; box-sizing: border-box; line-height: 1.7;
+      }
+      *, *::before, *::after { box-sizing: inherit; }
+
+      /* --- Whitepaper Header Styling (Adapted) --- */
+      .page-header {
+        background: linear-gradient(135deg, rgba(247, 147, 26, 0.08) 0%, transparent 30%), linear-gradient(225deg, rgba(247, 147, 26, 0.05) 0%, transparent 30%), linear-gradient(45deg, rgba(48, 54, 61, 0.1) 0%, transparent 50%), var(--bg-container);
+        backdrop-filter: blur(2px); padding: 3rem 1.5rem; text-align: center; border-bottom: 1px solid var(--border-color); margin-bottom: 3rem; position: relative; z-index: 10; box-shadow: 0 5px 25px rgba(0,0,0,0.4), inset 0 0 15px rgba(0,0,0,0.3); overflow: hidden;
+      }
+      .page-header::before, .page-header::after { content: ''; position: absolute; width: 20px; height: 20px; border-color: var(--btc-orange); border-style: solid; opacity: 0.7; filter: drop-shadow(0 0 4px var(--btc-orange-glow)); transition: all 0.3s ease; }
+      .page-header::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; border-top-left-radius: 5px; }
+      .page-header::after { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; border-bottom-right-radius: 5px; }
+      .page-header:hover::before, .page-header:hover::after { width: 25px; height: 25px; opacity: 1; filter: drop-shadow(0 0 8px var(--btc-orange-glow)); }
+
+      .page-header h1 { color: var(--text-heading); font-weight: 300; letter-spacing: 1.5px; margin-bottom: 0.7rem; font-size: 2.6rem; /* Slightly smaller */ text-shadow: 0 0 15px var(--btc-orange-glow), 0 0 5px var(--btc-orange-subtle-glow); }
+      .page-header h1 .bi.bi-file-earmark-text-fill { /* Icon changed */ font-size: 0.9em; vertical-align: -0.08em; margin-right: 0.4em; color: var(--btc-orange); filter: drop-shadow(0 0 8px var(--btc-orange-glow)); }
+      .page-header .lead { color: var(--text-secondary); font-size: 1.1rem; max-width: 800px; margin: 0.5rem auto 0 auto; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+      /* --- End Whitepaper Header Styling --- */
+
+      .schema-container { padding: 0 1rem 0.5rem 1rem; margin-bottom: 3rem; position: relative; }
+      .section-title { color: var(--category-color); margin: 0 0 2rem 0; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; font-size: 1rem; border-bottom: 1px solid var(--border-color); padding: 0.5rem 0; display: block; position: relative; z-index: 15; text-shadow: 0 0 8px var(--category-color-glow); }
+
+      /* Apply category colors vars for Whitepaper Sections */
+      .cat-intro > .section-title { --category-color: var(--btc-color-intro); --category-color-glow: var(--btc-glow-intro); }
+      .cat-problem > .section-title { --category-color: var(--btc-color-problem); --category-color-glow: var(--btc-glow-problem); }
+      .cat-solution > .section-title { --category-color: var(--btc-color-solution); --category-color-glow: var(--btc-glow-solution); }
+      .cat-mechanism > .section-title { --category-color: var(--btc-color-mechanism); --category-color-glow: var(--btc-glow-mechanism); }
+      .cat-technical > .section-title { --category-color: var(--btc-color-technical); --category-color-glow: var(--btc-glow-technical); }
+      .cat-security > .section-title { --category-color: var(--btc-color-security); --category-color-glow: var(--btc-glow-security); }
+      .cat-summary > .section-title { --category-color: var(--btc-color-summary); --category-color-glow: var(--btc-glow-summary); }
+      .cat-resources > .section-title { --category-color: var(--btc-color-resources); --category-color-glow: var(--btc-glow-resources); }
+
+
+      /* --- Card Styling ("Nodes" v2) --- */
+      .info-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 0 8px rgba(0,0,0,0.2); height: 100%; display: flex; flex-direction: column; transition: all 0.3s ease; position: relative; z-index: 5; overflow: hidden; --category-color: inherit; --category-color-glow: inherit; }
+
+      /* Apply category color vars to cards for Whitepaper */
+      .info-card.wp-type-intro { --category-color: var(--btc-color-intro); --category-color-glow: var(--btc-glow-intro); }
+      .info-card.wp-type-problem { --category-color: var(--btc-color-problem); --category-color-glow: var(--btc-glow-problem); }
+      .info-card.wp-type-solution { --category-color: var(--btc-color-solution); --category-color-glow: var(--btc-glow-solution); }
+      .info-card.wp-type-mechanism { --category-color: var(--btc-color-mechanism); --category-color-glow: var(--btc-glow-mechanism); }
+      .info-card.wp-type-technical { --category-color: var(--btc-color-technical); --category-color-glow: var(--btc-glow-technical); }
+      .info-card.wp-type-security { --category-color: var(--btc-color-security); --category-color-glow: var(--btc-glow-security); }
+      .info-card.wp-type-summary { --category-color: var(--btc-color-summary); --category-color-glow: var(--btc-glow-summary); }
+      .info-card.wp-type-resource { --category-color: var(--btc-color-resources); --category-color-glow: var(--btc-glow-resources); }
+
+      /* Card Corner Effect */
+      .info-card::before { content: ''; position: absolute; top: -1px; left: -1px; width: 15px; height: 15px; border-top: 2px solid var(--category-color); border-left: 2px solid var(--category-color); border-radius: 6px 0 0 0; opacity: 0.6; transition: all 0.3s ease; filter: drop-shadow(0 0 3px var(--category-color-glow)); }
+      .info-card:hover::before { opacity: 1; width: 25px; height: 25px; filter: drop-shadow(0 0 6px var(--category-color-glow)); }
+      .info-card:hover { transform: translateY(-4px) scale(1.01); z-index: 20; animation: pulseGlowIntense 1.8s infinite ease-in-out; }
+
+      .info-card .card-body { padding: 0; flex-grow: 1; display: flex; flex-direction: column; }
+      .info-card h5 { color: var(--text-heading); background: linear-gradient(135deg, var(--category-color) 0%, color-mix(in srgb, var(--category-color) 80%, black 20%) 100%); font-size: 0.85rem; text-align: center; margin: 0; padding: 0.7rem 0.5rem; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 0.6rem; font-family: "Orbitron", "Fira Code", monospace; border-bottom: 1px solid var(--border-color); border-radius: 5px 5px 0 0; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 5px rgba(0,0,0,0.6); }
+      .info-card h5 .bi { font-size: 1.2em; color: var(--text-heading); opacity: 1; filter: drop-shadow(0 0 3px rgba(0,0,0,0.6)); }
+      .card-content-wrapper { padding: 1.1rem; flex-grow: 1; display: flex; flex-direction: column; }
+      .info-card p.summary { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1rem; flex-grow: 1; line-height: 1.6; }
+
+      /* Collapse Content Styling */
+      .collapse-content { font-size: 0.88rem; border-top: 1px dashed var(--border-color); padding: 1.2rem; margin: 0; background-color: var(--bg-card-content); border-radius: 0 0 5px 5px; color: var(--text-primary); }
+      .collapse-content h6 { font-weight: 600; color: var(--accent-primary); margin: 1rem 0 0.5rem 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; }
+      .collapse-content ul { padding-left: 0; margin-bottom: 1rem; list-style-type: none; }
+      .collapse-content li { margin-bottom: 0.6rem; font-size: 0.88rem; line-height: 1.7; padding-left: 1.5em; position: relative; }
+      .collapse-content li::before { content: ''; display: block; position: absolute; left: 0.2em; top: 0.5em; width: 6px; height: 6px; background-color: var(--category-color); border-radius: 50%; box-shadow: 0 0 5px 1px var(--category-color-glow); }
+      .info-card .collapse-content li::before { background-color: var(--category-color); box-shadow: 0 0 5px 1px var(--category-color-glow); }
+
+      .collapse-content code { font-size: 0.8rem; color: #ffcc99; background-color: #30363d; padding: 0.2em 0.5em; border-radius: 4px; font-family: "Fira Code", "Courier New", monospace; border: 1px solid #444; }
+      .collapse-content pre { display: block; padding: 1em; margin: 1em 0; background-color: #0d1117; border: 1px solid var(--border-color); border-radius: 4px; overflow-x: auto; line-height: 1.5;} /* Added pre styling */
+      .collapse-content dl dt { font-weight: bold; margin-top: 0.7em; color: var(--text-heading); }
+      .collapse-content dl dd { margin-left: 1.5em; margin-bottom: 0.5em; color: var(--text-secondary); }
+
+      .row > * { margin-bottom: 2rem; }
+      footer { padding: 3rem 1rem 1rem 1rem; font-size: 0.8rem; color: var(--text-secondary); text-align: center; }
+
+      /* Details Toggle Button */
+      .details-toggle { font-size: 0.7rem; margin-top: auto; align-self: flex-start; padding: 0.4rem 0.8rem; color: var(--accent-primary); border: 1px solid var(--accent-primary); background-color: transparent; border-radius: 4px; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.4em; text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; box-shadow: 0 0 5px 0px var(--accent-primary-glow); }
+      .details-toggle:hover { background-color: var(--accent-primary); color: var(--bg-main); border-color: var(--accent-primary); transform: scale(1.05); box-shadow: 0 0 10px 2px var(--accent-primary-glow); }
+      .details-toggle .bi { transition: transform 0.2s ease-in-out; }
+      .details-toggle[aria-expanded="true"] .bi { transform: rotate(180deg); }
+
+      /* Terms & Links */
+      .term { font-weight: 600; color: var(--accent-primary); background-color: transparent; border-bottom: 1px dotted var(--accent-primary); padding-bottom: 1px; border-radius: 0; font-family: "Fira Code", "Consolas", monospace; filter: drop-shadow(0 0 3px var(--accent-primary-glow)); }
+      .critical { color: var(--critical-color); font-weight: bold; text-shadow: 0 0 6px rgba(248, 81, 73, 0.6); }
+      .rule { color: #ffc1bd; font-weight: 500; display: block; margin: 1em 0; border: 1px solid var(--rule-border-color); border-left-width: 5px; padding: 0.8em 1.2em; background-color: var(--rule-bg-color); border-radius: 4px; font-size: 0.9rem; box-shadow: inset 3px 0 8px rgba(0,0,0,0.2), 0 0 8px var(--rule-bg-color); }
+      .pros::before { content: "[+] "; color: #56d364; font-weight: bold; filter: drop-shadow(0 0 3px var(--btc-glow-solution)); } /* Adjusted color */
+      .cons::before { content: "[-] "; color: #ff7b72; font-weight: bold; filter: drop-shadow(0 0 3px var(--btc-glow-problem)); } /* Adjusted color */
+      .pros, .cons { display: block; margin-left: 0; padding-left: 0; }
+
+      a { color: var(--accent-primary); text-decoration: none; transition: color 0.2s ease; }
+      a:hover { color: #9ecbff; text-decoration: underline; text-shadow: 0 0 5px var(--accent-primary-glow); }
+      .collapse-content a { color: #79c0ff; }
+      .collapse-content a:hover { color: #aedbff; }
+
+      /* Animated Flow Line Between Rows */
+      .row + .row::before { content: ''; position: absolute; left: 10%; right: 10%; top: -1rem; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-primary-glow), var(--accent-primary), var(--accent-primary-glow), transparent); background-size: 200% 1px; opacity: 0.4; animation: flowLineGradient 6s linear infinite; z-index: 1; border-radius: 1px; }
+
+      /* Specific style for abstract */
+      .abstract-text {
+          font-style: italic;
+          color: var(--text-secondary);
+          border-left: 3px solid var(--btc-orange);
+          padding-left: 1rem;
+          margin: 1rem 0;
+      }
+      /* --- End CSS --- */
+    </style>
+  </head>
+  <body>
+    <header class="page-header">
+      <!-- Updated Title -->
+      <h1 class="display-5">
+        <i class="bi bi-file-earmark-text-fill"></i> Bitcoin Whitepaper Explained
+      </h1>
+      <!-- Updated Lead Text -->
+      <p class="lead">
+        An interactive guide to Satoshi Nakamoto's seminal paper: "Bitcoin: A Peer-to-Peer Electronic Cash System". Unpacking the core ideas behind the digital currency revolution.
+      </p>
+        <a href="https://bitcoin.org/bitcoin.pdf" target="_blank" rel="noopener noreferrer" class="btn btn-outline-warning btn-sm mt-3">
+            <i class="bi bi-box-arrow-up-right"></i> Read the Original Whitepaper (PDF)
+        </a>
+    </header>
+
+    <div class="container" id="main-container">
+
+      <!-- ========================== -->
+      <!-- SECTION 0: Abstract & Intro -->
+      <!-- ========================== -->
+      <div class="schema-container cat-intro" data-section-id="section-intro">
+        <h2 class="section-title" id="section-intro">
+          <i class="bi bi-broadcast"></i> // 0. Introduction & The Problem
+        </h2>
+        <div class="row">
+          <!-- Abstract -->
+          <div class="col-md-12">
+             <div class="info-card wp-type-intro" id="card-abstract">
+               <div class="card-body">
+                 <h5><i class="bi bi-blockquote-left"></i> Abstract Summary</h5>
+                 <div class="card-content-wrapper">
+                    <p class="summary abstract-text">
+                      Satoshi proposes a purely peer-to-peer version of electronic cash, allowing online payments directly between parties without a financial institution. While digital signatures handle ownership, preventing double-spending requires a novel solution: a peer-to-peer network using Proof-of-Work to create a public, timestamped, immutable ledger (the blockchain). The longest chain represents the consensus history, secured by the majority of honest CPU power.
+                    </p>
+                  </div>
+                </div>
+              </div>
+          </div>
+          <!-- The Problem -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-problem" id="card-problem">
+               <div class="card-body">
+                 <h5><i class="bi bi-shield-x"></i> The Problem with Trusted Third Parties</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Traditional online commerce relies heavily on financial institutions as <span class="term">trusted third parties</span>. This model has inherent weaknesses: non-reversible transactions aren't truly possible, mediation adds costs limiting small transactions, trust requirements burden merchants, and fraud is unavoidable.
+                   </p>
+                   <button
+                     class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProblem" aria-expanded="false" aria-controls="collapseProblem">
+                     Weaknesses Explained <i class="bi bi-chevron-down"></i>
+                   </button>
+                 </div>
+               </div>
+               <div class="collapse collapse-content" id="collapseProblem">
+                 <h6>Why Traditional Systems Fall Short:</h6>
+                 <ul>
+                   <li><strong class="cons">Reversibility Costs:</strong> Financial institutions mediate disputes, making transactions reversible. This increases costs.</li>
+                   <li><strong class="cons">Transaction Size Limits:</strong> Mediation costs limit the feasibility of small, casual transactions.</li>
+                   <li><strong class="cons">Trust Burden:</strong> Merchants need to gather more customer info to protect against fraud, spreading the need for trust.</li>
+                   <li><strong class="cons">Lack of Finality:</strong> The possibility of reversal prevents truly non-reversible payments, unlike physical cash.</li>
+                   <li><strong class="cons">Central Point of Failure:</strong> The system depends on the reliability and policies of the third party.</li>
+                 </ul>
+               </div>
+             </div>
+          </div>
+           <!-- The Goal -->
+           <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-solution" id="card-goal">
+               <div class="card-body">
+                 <h5><i class="bi bi-bullseye"></i> The Proposed Solution: Peer-to-Peer Cash</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     What's needed is an electronic payment system based on <span class="term">cryptographic proof</span> instead of trust. This allows direct transactions (<span class="term">peer-to-peer</span>) without intermediaries, protecting sellers from fraud via computationally irreversible transactions and enabling escrow for buyer protection.
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGoal" aria-expanded="false" aria-controls="collapseGoal">
+                      Core Requirements <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapseGoal">
+                 <h6>System Requirements:</h6>
+                 <ul>
+                   <li><strong class="pros">Direct Payments:</strong> Allow any two willing parties to transact directly.</li>
+                   <li><strong class="pros">Trustless Operation:</strong> Rely on cryptographic proof, not trust in a third party.</li>
+                   <li><strong class="pros">Double-Spending Prevention:</strong> Must solve the problem of users spending the same digital cash multiple times.</li>
+                   <li><strong class="pros">Irreversibility:</strong> Transactions should be computationally impractical to reverse, protecting sellers.</li>
+                   <li><strong class="pros">Chronological Order:</strong> Provide proof of the order in which transactions occurred.</li>
+                   <li><strong class="pros">Security Condition:</strong> Remain secure as long as honest participants control the majority of computing power.</li>
+                 </ul>
+               </div>
+             </div>
+          </div>
+        </div><!-- /.row -->
+      </div><!-- /.schema-container -->
+
+
+      <!-- ================================================== -->
+      <!-- SECTION I: The Core Mechanism -->
+      <!-- ================================================== -->
+      <div class="schema-container cat-mechanism" data-section-id="section-mechanism">
+        <h2 class="section-title" id="section-mechanism">
+          <i class="bi bi-gear-wide-connected"></i> // I. The Core Mechanism
+        </h2>
+        <div class="row">
+          <!-- Transactions -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-mechanism" id="card-transactions">
+               <div class="card-body">
+                 <h5><i class="bi bi-diagram-3-fill"></i> Section 2: Transactions (Digital Signatures)</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     An electronic coin is defined as a <span class="term">chain of digital signatures</span>. Each owner transfers the coin by signing a hash of the previous transaction and the next owner's <span class="term">public key</span>, adding this to the coin. Payees verify the signature chain.
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTransactions" aria-expanded="false" aria-controls="collapseTransactions">
+                      How It Works & The Problem <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapseTransactions">
+                    <h6>Ownership Chain:</h6>
+                    <ul>
+                        <li>Ownership is transferred via digital signatures, providing strong control.</li>
+                        <li>A payee can verify the sequence of owners by checking the signatures.</li>
+                    </ul>
+                    <h6><strong class="critical">The Double-Spending Problem:</strong></h6>
+                    <ul>
+                        <li>Signatures alone don't prevent an owner from signing the *same coin* over to multiple people.</li>
+                        <li>A central mint could solve this, but that reintroduces the trusted third party.</li>
+                        <li>The P2P solution needs a way for everyone to agree on the *first* transaction for any given coin and ignore later attempts.</li>
+                        <li><strong class="term">Requirement:</strong> Publicly announced transactions and a consensus mechanism on transaction order.</li>
+                    </ul>
+                </div>
+             </div>
+          </div>
+          <!-- Timestamp Server -->
+           <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-mechanism" id="card-timestamp">
+               <div class="card-body">
+                 <h5><i class="bi bi-clock-history"></i> Section 3: Timestamp Server (Ordering)</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     To establish a public history without a trusted party, the paper proposes a <span class="term">timestamp server</span>. It works by hashing a block of items and widely publishing the hash (like in a newspaper), proving the data existed at that time.
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTimestamp" aria-expanded="false" aria-controls="collapseTimestamp">
+                      Chaining Timestamps <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+               <div class="collapse collapse-content" id="collapseTimestamp">
+                 <h6>Establishing Chronology:</h6>
+                 <ul>
+                   <li>The core idea is to create undeniable proof that certain data (transactions) existed at a specific point in time.</li>
+                   <li>Hashing a block of data creates a unique fingerprint.</li>
+                   <li>Publishing this hash makes it public knowledge.</li>
+                   <li><strong class="term">Chaining:</strong> Each new timestamp hash includes the hash of the *previous* timestamp within it. This forms a chain, where each subsequent timestamp reinforces the ones before it, making the history increasingly tamper-proof.</li>
+                   <li>This provides the foundation for ordering transactions publicly.</li>
+                 </ul>
+               </div>
+             </div>
+          </div>
+           <!-- Proof-of-Work -->
+           <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-mechanism" id="card-pow">
+               <div class="card-body">
+                 <h5><i class="bi bi-cpu-fill"></i> Section 4: Proof-of-Work (Securing the Chain)</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     To implement the timestamp server peer-to-peer without relying on external publication (like newspapers), <span class="term">Proof-of-Work (PoW)</span> is used (similar to Hashcash). Nodes expend CPU power to find a value (nonce) that makes a block's hash meet a certain difficulty target (e.g., start with zeros).
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePoW" aria-expanded="false" aria-controls="collapsePoW">
+                      How PoW Works & Its Roles <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapsePoW">
+                 <h6>Making Timestamps Costly:</h6>
+                 <ul>
+                   <li>Finding a valid PoW hash is computationally difficult but easy to verify.</li>
+                   <li>Once PoW is found for a block, changing the block requires redoing the work.</li>
+                   <li>Since blocks are chained (each block includes the previous block's hash), changing a past block requires redoing the work for *that block and all subsequent blocks*.</li>
+                 </ul>
+                 <h6>Solving Majority Decision:</h6>
+                 <ul>
+                   <li>PoW links voting power to CPU power (<span class="term">one-CPU-one-vote</span>), preventing easy Sybil attacks (creating many fake identities).</li>
+                   <li>The <strong class="term">longest chain</strong> (the one with the most accumulated PoW) represents the consensus view of history.</li>
+                   <li>Honest nodes, controlling majority CPU power, will build the longest chain faster than attackers.</li>
+                 </ul>
+                 <h6>Difficulty Adjustment:</h6>
+                 <ul>
+                   <li>PoW difficulty adjusts automatically based on how fast blocks are being found, targeting a consistent average block time (e.g., 10 minutes for Bitcoin) regardless of changes in total network hash power or hardware speed.</li>
+                 </ul>
+               </div>
+             </div>
+          </div>
+           <!-- Network -->
+           <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-mechanism" id="card-network">
+               <div class="card-body">
+                 <h5><i class="bi bi-broadcast-pin"></i> Section 5: Network (Putting It Together)</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     The peer-to-peer network operates through simple broadcast steps: Nodes collect new transactions, work on finding PoW for a block, broadcast valid blocks they find, accept blocks only if valid, and build upon the longest valid chain they see.
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNetwork" aria-expanded="false" aria-controls="collapseNetwork">
+                      Network Operation Steps <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapseNetwork">
+                 <h6>Steps to Run the Network:</h6>
+                 <ol>
+                   <li>New transactions are broadcast to all nodes.</li>
+                   <li>Each node collects new transactions into a candidate block.</li>
+                   <li>Each node works on finding the difficult PoW hash for its block.</li>
+                   <li>When a node finds a PoW, it broadcasts the completed block to all nodes.</li>
+                   <li>Nodes accept the block *only if* all transactions within it are valid (correct signatures, not double-spends).</li>
+                   <li>Nodes show acceptance by starting work on the *next* block, using the hash of the accepted block as the "previous hash" link.</li>
+                 </ol>
+                 <h6>Consensus & Forks:</h6>
+                 <ul>
+                   <li>Nodes always consider the chain with the most accumulated PoW (longest chain) as the correct one.</li>
+                   <li>If two nodes broadcast valid blocks simultaneously (a temporary fork), nodes build on the one they received first but keep the other branch in case it becomes longer later. The tie is broken when the next block is found, making one chain longer.</li>
+                   <li>Message delivery is best-effort; nodes can request missed blocks.</li>
+                 </ul>
+               </div>
+             </div>
+          </div>
+        </div><!-- /.row -->
+      </div><!-- /.schema-container -->
+
+      <!-- ============================== -->
+      <!-- SECTION II: Incentives & Economics -->
+      <!-- ============================== -->
+      <div class="schema-container cat-technical" data-section-id="section-incentives">
+        <h2 class="section-title" id="section-incentives">
+          <i class="bi bi-gem"></i> // II. Incentives & Economics
+        </h2>
+        <div class="row">
+          <!-- Incentive Mechanism -->
+          <div class="col-md-12">
+             <div class="info-card wp-type-technical" id="card-incentive">
+               <div class="card-body">
+                 <h5><i class="bi bi-cash-coin"></i> Section 6: Incentive (Why Participate?)</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Nodes are incentivized to support the network through two mechanisms: 1) The <span class="term">block reward</span>, a special transaction creating new coins awarded to the node that finds a block (how coins are initially distributed). 2) <span class="term">Transaction fees</span>, optional fees included by senders, also collected by the block finder.
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIncentive" aria-expanded="false" aria-controls="collapseIncentive">
+                      Details & Honesty <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapseIncentive">
+                 <h6>Driving Participation:</h6>
+                 <ul>
+                   <li><strong>Block Reward (Coinbase):</strong> The first transaction in each block creates new coins "out of thin air", owned by the miner/node who found the block's PoW. This distributes initial supply without a central issuer, analogous to gold mining.</li>
+                   <li><strong>Transaction Fees:</strong> If a transaction's output value is less than its input value, the difference is a fee collected by the miner who includes it in a block.</li>
+                   <li><strong>Transition:</strong> Once a predetermined coin supply is reached, the block reward can phase out, and the network can be sustained entirely by transaction fees, becoming non-inflationary.</li>
+                 </ul>
+                 <h6>Encouraging Honesty:</h6>
+                 <ul>
+                    <li>An attacker with significant CPU power faces a choice: defraud others (e.g., reverse their own payments) or use the power to generate new coins through honest mining.</li>
+                    <li>The paper argues it's often more profitable to follow the rules and earn rewards than to undermine the system and devalue one's own holdings.</li>
+                 </ul>
+               </div>
+             </div>
+          </div>
+        </div><!-- /.row -->
+      </div><!-- /.schema-container -->
+
+
+      <!-- ================================== -->
+      <!-- SECTION III: Technical Details -->
+      <!-- ================================== -->
+      <div class="schema-container cat-technical" data-section-id="section-details">
+        <h2 class="section-title" id="section-details">
+          <i class="bi bi-tools"></i> // III. Technical Details & Optimizations
+        </h2>
+        <div class="row">
+          <!-- Reclaiming Disk Space -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-technical" id="card-diskspace">
+               <div class="card-body">
+                 <h5><i class="bi bi-hdd-stack-fill"></i> Section 7: Reclaiming Disk Space (Merkle Trees)</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     To prevent the blockchain from becoming unmanageably large, old spent transactions can be discarded. This is done using a <span class="term">Merkle Tree</span> structure within each block. Only the tree's root hash is included in the block header, allowing transaction pruning without invalidating the block hash.
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDiskSpace" aria-expanded="false" aria-controls="collapseDiskSpace">
+                      Merkle Tree Pruning <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapseDiskSpace">
+                 <h6>Managing Storage Growth:</h6>
+                 <ul>
+                   <li>Storing every transaction forever is inefficient.</li>
+                   <li>Transactions within a block are hashed pairwise, then those hashes are hashed, and so on, until a single <span class="term">Merkle Root</span> hash remains.</li>
+                   <li>This Merkle Root is included in the block header that gets secured by PoW.</li>
+                   <li><strong class="term">Pruning:</strong> Once a transaction's outputs (UTXOs) are spent and buried under many subsequent blocks, the transaction data itself can be removed (pruned) from the Merkle tree.</li>
+                   <li>The block header and its hash remain unchanged, preserving the integrity of the chain while saving significant disk space.</li>
+                   <li>The paper estimated (in 2008) that even storing only block headers would require minimal space (around 4.2MB/year).</li>
+                 </ul>
+               </div>
+             </div>
+          </div>
+          <!-- SPV -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-technical" id="card-spv">
+               <div class="card-body">
+                 <h5><i class="bi bi-phone-check"></i> Section 8: Simplified Payment Verification (SPV)</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     It's possible to verify payments without running a full network node. An <span class="term">SPV</span> client downloads only block headers (the longest chain) and requests the <span class="term">Merkle branch</span> linking a specific transaction to its block. This proves the transaction exists and is accepted by the network.
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSPV" aria-expanded="false" aria-controls="collapseSPV">
+                      SPV Mechanism & Risks <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapseSPV">
+                 <h6>Verifying Without Full History:</h6>
+                 <ul>
+                   <li>A full node downloads and validates the entire blockchain. SPV clients are lightweight.</li>
+                   <li>An SPV client gets the chain of block headers from full nodes, trusting the longest chain (most PoW) is valid.</li>
+                   <li>To verify a specific payment, it gets the Merkle path (the series of hashes connecting the transaction to the Merkle root in the block header).</li>
+                   <li>This allows the SPV client to confirm the transaction is included in a block within the accepted chain.</li>
+                 </ul>
+                 <h6><strong class="critical">Security Considerations:</strong></h6>
+                 <ul>
+                   <li>SPV relies on the assumption that the longest chain is honest.</li>
+                   <li><strong class="cons">Vulnerability:</strong> An attacker overpowering the network (51% attack) could potentially feed a fake transaction history to an SPV client.</li>
+                   <li><strong class="term">Mitigation:</strong> SPV clients can listen for fraud alerts from full nodes detecting invalid blocks.</li>
+                   <li>Businesses needing high security should run their own full nodes.</li>
+                 </ul>
+               </div>
+             </div>
+          </div>
+        </div><!-- /.row -->
+      </div><!-- /.schema-container -->
+
+
+       <!-- ================================== -->
+      <!-- SECTION IV: Usage & Privacy -->
+      <!-- ================================== -->
+      <div class="schema-container cat-technical" data-section-id="section-usage">
+        <h2 class="section-title" id="section-usage">
+          <i class="bi bi-people-fill"></i> // IV. Usage & Privacy Aspects
+        </h2>
+        <div class="row">
+          <!-- Combining Value -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-technical" id="card-combine">
+               <div class="card-body">
+                 <h5><i class="bi bi-arrows-merge"></i> Section 9: Combining and Splitting Value</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Handling individual "cents" separately is unwieldy. Transactions allow value to be split and combined efficiently by containing multiple <span class="term">inputs</span> (UTXOs being spent) and <span class="term">outputs</span> (new UTXOs being created for the recipient and potentially change back to the sender).
+                   </p>
+                    <!-- Simple concept, less need for collapse -->
+                 </div>
+               </div>
+             </div>
+          </div>
+          <!-- Privacy -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-technical" id="card-privacy">
+               <div class="card-body">
+                 <h5><i class="bi bi-mask"></i> Section 10: Privacy</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     While all transactions are public, privacy is maintained by keeping public keys anonymous. The public sees funds moving between addresses but doesn't know the real-world identity behind those addresses. Using a new key pair for each transaction enhances this <span class="term">pseudonymity</span>.
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePrivacy" aria-expanded="false" aria-controls="collapsePrivacy">
+                      Privacy Model & Limits <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapsePrivacy">
+                    <h6>Achieving Pseudonymity:</h6>
+                    <ul>
+                        <li>Unlike traditional banking which limits access to data, Bitcoin makes transaction data public but decouples it from real-world identity.</li>
+                        <li>Public keys (and the addresses derived from them) do not inherently reveal the owner's identity.</li>
+                        <li><strong class="term">Privacy Best Practice:</strong> Generate and use a new address (derived from a new key pair) for every transaction received. This prevents easily linking multiple transactions to the same owner.</li>
+                    </ul>
+                    <h6><strong class="critical">Limitations:</strong></h6>
+                    <ul>
+                        <li><strong class="cons">Linking Inputs:</strong> Transactions that combine multiple inputs necessarily reveal that those inputs were controlled by the same owner.</li>
+                        <li><strong class="cons">Key Reuse:</strong> Reusing addresses makes it easy for observers to link payments together.</li>
+                        <li><strong class="cons">External Linking:</strong> If an address is ever linked to a real-world identity (e.g., through an exchange KYC process), analysis can potentially link other associated addresses.</li>
+                    </ul>
+                </div>
+             </div>
+          </div>
+        </div><!-- /.row -->
+      </div><!-- /.schema-container -->
+
+
+      <!-- ==================================== -->
+      <!-- SECTION V: Security Analysis -->
+      <!-- ==================================== -->
+      <div class="schema-container cat-security" data-section-id="section-security">
+        <h2 class="section-title" id="section-security">
+          <i class="bi bi-calculator-fill"></i> // V. Security Analysis & Calculations
+        </h2>
+        <div class="row">
+          <div class="col-md-12">
+             <div class="info-card wp-type-security" id="card-calculations">
+               <div class="card-body">
+                 <h5><i class="bi bi-shield-check"></i> Section 11: Calculations (Attacker Probability)</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     The paper analyzes the probability of an attacker creating an alternate, longer chain to reverse their own transaction (double-spend). Modeled as a <span class="term">Gambler's Ruin</span> problem, it shows the probability of an attacker catching up drops exponentially as the number of confirmations (<span class="term">z</span> blocks) on the honest chain increases, assuming honest nodes have majority hash power (<span class="term">p > q</span>).
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCalculations" aria-expanded="false" aria-controls="collapseCalculations">
+                      Probability Analysis <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapseCalculations">
+                 <h6>The Race Against Honesty:</h6>
+                 <ul>
+                   <li>Scenario: Attacker sends payment, then secretly tries to build a longer chain that spends the same money back to themselves.</li>
+                   <li>Modeled as a random walk: Honest block = +1 lead, Attacker block = -1 lead (gap reduces).</li>
+                   <li><span class="term">p</span> = probability honest node finds next block.</li>
+                   <li><span class="term">q</span> = probability attacker finds next block.</li>
+                   <li>Assumption: Honest majority (<span class="term">p > q</span>).</li>
+                   <li>The probability (<code class="term">q<sub>z</sub></code>) of an attacker catching up from <code class="term">z</code> blocks behind decreases exponentially with <code class="term">z</code>.</li>
+                 </ul>
+                 <h6>Waiting for Confirmations:</h6>
+                 <ul>
+                   <li>Recipients need to wait for sufficient confirmations (<code class="term">z</code>) to be confident a transaction won't be reversed.</li>
+                   <li>The paper calculates the probability an attacker could *still* succeed after <code class="term">z</code> confirmations, considering their potential progress using a Poisson distribution.</li>
+                   <li>Results show that even with significant hash power (e.g., q=0.3 or 30%), the probability of success becomes negligible after a reasonable number of confirmations (e.g., 6+).</li>
+                   <li><strong class="term">Conclusion:</strong> The PoW mechanism provides strong probabilistic security against double-spending, increasing rapidly with each confirmation.</li>
+                 </ul>
+                 <pre><code>// Probability attacker catches up from z blocks behind (if p > q)
+q_z = (q / p) ^ z
+
+// Probability attacker *still* succeeds after z confirmations
+// (Simplified representation of formula 7)
+P_success(z) = Sum[k=0 to z] (Poisson(lambda, k) * (q/p)^(z-k)) + ...
+// where lambda = z * q / p</code></pre>
+               </div>
+             </div>
+          </div>
+        </div><!-- /.row -->
+      </div><!-- /.schema-container -->
+
+
+      <!-- ======================= -->
+      <!-- SECTION VI: Conclusion & Resources -->
+      <!-- ======================= -->
+       <div class="schema-container cat-summary" data-section-id="section-conclusion">
+        <h2 class="section-title" id="section-conclusion">
+          <i class="bi bi-flag-fill"></i> // VI. Conclusion & Further Resources
+        </h2>
+        <div class="row">
+          <!-- Conclusion -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-summary" id="card-conclusion">
+               <div class="card-body">
+                 <h5><i class="bi bi-check-circle-fill"></i> Section 12: Conclusion</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Satoshi proposed a trustless electronic transaction system using digital signatures for ownership and a peer-to-peer PoW network to prevent double-spending via a public, immutable transaction history. The network's robustness lies in its simplicity and decentralized consensus mechanism where nodes vote with CPU power.
+                   </p>
+                 </div>
+               </div>
+             </div>
+          </div>
+          <!-- Resources -->
+          <div class="col-lg-6 col-md-12">
+             <div class="info-card wp-type-resource" id="card-resources-wp">
+               <div class="card-body">
+                 <h5><i class="bi bi-link-45deg"></i> Further Resources</h5>
+                 <div class="card-content-wrapper">
+                   <p class="summary">
+                     Explore the original paper and related foundational resources.
+                   </p>
+                    <button
+                      class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseResourcesWp" aria-expanded="false" aria-controls="collapseResourcesWp">
+                      Key Links <i class="bi bi-chevron-down"></i>
+                    </button>
+                 </div>
+               </div>
+                <div class="collapse collapse-content" id="collapseResourcesWp">
+                 <h6>Essential Reading & Exploration:</h6>
+                 <ul>
+                    <li>
+                        <i class="bi bi-file-pdf-fill"></i> <strong>Original Whitepaper:</strong>
+                        <a href="https://bitcoin.org/bitcoin.pdf" target="_blank" rel="noopener noreferrer">bitcoin.pdf</a>
+                    </li>
+                    <li>
+                        <i class="bi bi-info-circle-fill"></i> <strong>Bitcoin Project Homepage:</strong>
+                        <a href="https://bitcoin.org/en/" target="_blank" rel="noopener noreferrer">Bitcoin.org</a>
+                    </li>
+                    <li>
+                        <i class="bi bi-book-fill"></i> <strong>Bitcoin Wiki:</strong>
+                        <a href="https://en.bitcoin.it/wiki/Main_Page" target="_blank" rel="noopener noreferrer">en.bitcoin.it/wiki</a> (Community technical resource)
+                    </li>
+                     <li>
+                        <i class="bi bi-search"></i> <strong>Block Explorer Example:</strong>
+                        <a href="https://mempool.space/" target="_blank" rel="noopener noreferrer">mempool.space</a> (Explore live transactions & blocks)
+                    </li>
+                    <li>
+                        <i class="bi bi-cpu"></i> <strong>Hashcash Paper (PoW Inspiration):</strong>
+                        <a href="http://www.hashcash.org/papers/hashcash.pdf" target="_blank" rel="noopener noreferrer">hashcash.pdf</a> by Adam Back
+                    </li>
+                    <li>
+                        <i class="bi bi-diagram-2-fill"></i> <strong>B-money (Precursor Idea):</strong>
+                        <a href="http://www.weidai.com/bmoney.txt" target="_blank" rel="noopener noreferrer">bmoney.txt</a> by Wei Dai (Referenced in WP)
+                    </li>
+                 </ul>
+                 <h6>Whitepaper References (See original PDF for full list):</h6>
+                 <ul>
+                    <li>[1] W. Dai, "b-money"</li>
+                    <li>[2] H. Massias, X.S. Avila, J.-J. Quisquater, "Design of a secure timestamping service..."</li>
+                    <li>[3] S. Haber, W.S. Stornetta, "How to time-stamp a digital document"</li>
+                    <li>[4] D. Bayer, S. Haber, W.S. Stornetta, "Improving the efficiency and reliability of digital time-stamping"</li>
+                    <li>[6] A. Back, "Hashcash - a denial of service counter-measure"</li>
+                    <li>[7] R.C. Merkle, "Protocols for public key cryptosystems" (Merkle Trees)</li>
+                    <li>[8] W. Feller, "An introduction to probability theory..." (Gambler's Ruin)</li>
+                 </ul>
+               </div>
+             </div>
+          </div>
+        </div><!-- /.row -->
+      </div><!-- /.schema-container -->
+
+       <!-- ======================= -->
+      <!-- SECTION VII: Glossary -->
+      <!-- ======================= -->
+      <div class="schema-container cat-summary" data-section-id="section-glossary-wp">
+        <h2 class="section-title" id="section-glossary-wp">
+          <i class="bi bi-book-half"></i> // VII. Whitepaper Key Terms Glossary
+        </h2>
+        <div class="row">
+          <div class="col-12">
+            <div class="info-card wp-type-summary" id="card-glossary-wp">
+              <div class="card-body">
+                <h5 class="text-center"><i class="bi bi-translate"></i> Core Concepts Defined</h5>
+                 <div class="card-content-wrapper">
+                    <p class="summary text-center">Key terms as used in the context of the Bitcoin whitepaper.</p>
+                    <button
+                      class="btn btn-sm details-toggle mx-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGlossaryWp" aria-expanded="false" aria-controls="collapseGlossaryWp">
+                      View Glossary <i class="bi bi-chevron-down"></i>
+                    </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseGlossaryWp">
+                <dl>
+                  <dt>Address</dt><dd>Derived from a public key, used to receive payments.</dd>
+                  <dt>Block</dt><dd>A collection of transactions timestamped and secured with Proof-of-Work.</dd>
+                  <dt>Blockchain</dt><dd>The chain of blocks linked cryptographically, forming the public ledger.</dd>
+                  <dt>CPU Power</dt><dd>Computational effort; the basis for Proof-of-Work and network security.</dd>
+                  <dt>Digital Signature</dt><dd>Cryptographic method to prove ownership and authorize transactions using a private key.</dd>
+                  <dt>Double-Spending</dt><dd>The core problem of spending the same digital money more than once.</dd>
+                  <dt>Hash</dt><dd>A cryptographic function producing a fixed-size unique fingerprint of data.</dd>
+                  <dt>Hashcash</dt><dd>Adam Back's Proof-of-Work system, cited as inspiration.</dd>
+                  <dt>Honest Node</dt><dd>A network participant following the protocol rules, contributing to the longest valid chain.</dd>
+                  <dt>Incentive</dt><dd>The block reward and transaction fees motivating nodes to participate and secure the network.</dd>
+                  <dt>Longest Chain</dt><dd>The valid blockchain with the most accumulated Proof-of-Work, representing the consensus history.</dd>
+                  <dt>Merkle Tree/Root</dt><dd>A hash tree structure used to efficiently summarize transactions in a block and allow pruning.</dd>
+                  <dt>Miner</dt><dd>A node actively trying to find the Proof-of-Work solution for a block to add it to the chain and claim incentives.</dd>
+                  <dt>Network</dt><dd>The decentralized collection of peer-to-peer nodes running the Bitcoin protocol.</dd>
+                  <dt>Nonce</dt><dd>A "number used once" - the variable value nodes change in a block header to find a valid Proof-of-Work hash.</dd>
+                  <dt>Peer-to-Peer (P2P)</dt><dd>Direct interaction between participants without intermediaries.</dd>
+                  <dt>Private Key</dt><dd>The secret key used to create digital signatures and spend coins.</dd>
+                  <dt>Proof-of-Work (PoW)</dt><dd>The consensus mechanism requiring computational effort to propose new blocks, securing the chain.</dd>
+                  <dt>Public Key</dt><dd>The key derived from the private key, used to create receiving addresses; safe to share.</dd>
+                  <dt>SHA-256</dt><dd>The specific cryptographic hash function primarily used in Bitcoin's PoW and transaction hashing.</dd>
+                  <dt>SPV (Simplified Payment Verification)</dt><dd>A method for verifying transactions using only block headers, without storing the full blockchain.</dd>
+                  <dt>Timestamp Server</dt><dd>The conceptual distributed system using PoW to create a chronological, tamper-proof record of transactions.</dd>
+                  <dt>Transaction</dt><dd>A transfer of Bitcoin value, digitally signed by the owner.</dd>
+                  <dt>Trusted Third Party</dt><dd>An intermediary (like a bank) traditionally required for online payments, which Bitcoin aims to remove.</dd>
+                  <dt>UTXO (Unspent Transaction Output)</dt><dd>Implicitly defined in the paper (Section 9); the "chunks" of value created by transactions that can be spent as inputs in future transactions.</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div><!-- /.row -->
+      </div><!-- /.schema-container -->
+
+    </div> <!-- /container -->
+
+    <footer class="container text-center">
+        <p id="footer-text">Bitcoin Whitepaper Explained Guide | Inspired by content from David Veksler's Cheatsheets</p>
+        <!-- Optional: Add links back to source or author if desired -->
+    </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // JS for collapse toggle icons (from template)
+      document.addEventListener("DOMContentLoaded", () => {
+        const collapseElements = document.querySelectorAll(".collapse");
+        collapseElements.forEach((collapseEl) => {
+          const button = document.querySelector(
+            `.details-toggle[data-bs-target="#${collapseEl.id}"]`
+          );
+          const icon = button ? button.querySelector(".bi") : null;
+          if (button && icon) {
+            const updateIcon = (isShown) => {
+              icon.classList.toggle("bi-chevron-up", isShown);
+              icon.classList.toggle("bi-chevron-down", !isShown);
+            };
+            updateIcon(collapseEl.classList.contains("show"));
+            collapseEl.addEventListener("show.bs.collapse", () => updateIcon(true));
+            collapseEl.addEventListener("hide.bs.collapse", () => updateIcon(false));
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
