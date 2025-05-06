@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.NET Ecosystem Cheatsheet - Modern .NET Overview</title>
+
+    <!-- SEO Meta Description -->
+    <meta name="description" content="Interactive cheatsheet for the .NET ecosystem, focusing on modern .NET (Core) versions. Covers major components, libraries, frameworks (ASP.NET Core, MAUI, EF Core), and tooling for senior developers and architects.">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://cheatsheets.davidveksler.com/dotnet-cheatsheet.html">
+
+    <!-- Social Media Metadata -->
+    <meta property="og:title" content=".NET Ecosystem Cheatsheet - Modern Frameworks & Libraries">
+    <meta property="og:description" content="Visual guide to the .NET platform, ASP.NET Core, MAUI, EF Core, key libraries, and architectural concepts for modern .NET development.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="http://cheatsheets.davidveksler.com/dotnet-cheatsheet.html">
+    <!-- Make sure this image path is correct once hosted, e.g., http://cheatsheets.davidveksler.com/images/dotnet-cheatsheet.png -->
+    <meta property="og:image" content="http://cheatsheets.davidveksler.com/images/dotnet-cheatsheet.png">
+    <meta property="og:image:alt" content="Diagram showing the interconnected components of the .NET ecosystem including .NET SDK, ASP.NET Core, MAUI, and EF Core.">
+    <meta property="og:site_name" content="David Veksler Cheatsheets">
+
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content=".NET Ecosystem Cheatsheet - Modern Frameworks & Libraries">
+    <meta name="twitter:description" content="Visual guide to the .NET platform, ASP.NET Core, MAUI, EF Core, key libraries, and architectural concepts for modern .NET development.">
+    <!-- Make sure this image path is correct once hosted, e.g., http://cheatsheets.davidveksler.com/images/dotnet-cheatsheet.png -->
+    <meta name="twitter:image" content="http://cheatsheets.davidveksler.com/images/dotnet-cheatsheet.png">
+    <meta name="twitter:image:alt" content="Diagram showing the interconnected components of the .NET ecosystem.">
+    <!-- Optional: <meta name="twitter:site" content="@YourTwitterHandle"> -->
+    <!-- Optional: <meta name="twitter:creator" content="@YourTwitterHandleForCreator"> -->
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/leader-line-new@1.1.9/leader-line.min.js"></script>
+
+    <style>
+        :root {
+            --bs-body-bg: #f0f4f8; /* Lighter, slightly blueish background */
+            --bs-primary: #512BD4; /* .NET Purple */
+            --bs-primary-dark: #3E1AA9; /* Darker .NET Purple */
+            --bs-primary-light: #E0D8F5; /* Lighter .NET Purple */
+            --card-border-color: #adb5bd;
+            --card-shadow-color: rgba(0, 30, 80, .1);
+            --text-color-main: #212529;
+            --text-color-secondary: #495057;
+            --text-color-highlight: var(--bs-primary-dark);
+            --blueprint-grid-color: rgba(108, 117, 125, 0.1); /* Subtler grid */
+            --schema-bg-color: rgba(255, 255, 255, 0.7);
+            --schema-border-color: #A390E4; /* Lighter purple for schema borders */
+
+            /* --- .NET Category Colors --- */
+            --dotnet-color-platform: #512BD4;   /* Purple - .NET Foundational */
+            --dotnet-color-web: #0078D4;        /* Blue - ASP.NET Core */
+            --dotnet-color-crossplatform: #107C10; /* Green - MAUI, Desktop */
+            --dotnet-color-data: #D83B01;       /* Orange - EF Core, Data */
+            --dotnet-color-libraries: #7FBA00;   /* Light Green - Key Libraries */
+            --dotnet-color-tooling: #6c757d;    /* Gray - Tooling */
+            --dotnet-color-advanced: #F59E0B;    /* Amber - Advanced Concepts */
+            --dotnet-color-general: #4A4A4A;    /* Dark Gray - General/Architectural */
+
+
+            --db-category-color: var(--dotnet-color-platform); /* Default */
+        }
+
+        @keyframes blueprintGridAnimation {
+            0% { background-position: 0 0, 0 0; }
+            100% { background-position: 60px 60px, -60px -60px; }
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            background-image:
+                linear-gradient(to right, var(--blueprint-grid-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--blueprint-grid-color) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: blueprintGridAnimation 90s linear infinite;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 3rem;
+            font-size: 16px;
+            color: var(--text-color-main);
+            box-sizing: border-box;
+        }
+        *, *::before, *::after { box-sizing: inherit; }
+
+        .page-header {
+            background: linear-gradient(135deg, #e6e0f8, var(--bs-primary-light));
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            border-bottom: 2px solid var(--schema-border-color);
+            margin-bottom: 3rem;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(81, 43, 212, 0.1);
+        }
+        .page-header h1 {
+            color: var(--bs-primary-dark);
+            font-weight: 300; /* Lighter font weight for modern feel */
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            font-size: 2.8rem;
+        }
+        .page-header h1 .bi { font-size: 0.9em; vertical-align: -0.05em; margin-right: 0.3em;}
+        .page-header .lead { color: #343a40; font-size: 1.15rem; max-width: 800px; margin: auto; }
+
+        .schema-container {
+            background-color: var(--schema-bg-color);
+            border: 2px solid var(--schema-border-color);
+            border-radius: 8px;
+            padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 5px 15px rgba(81, 43, 212, 0.07);
+            backdrop-filter: blur(4px);
+            position: relative;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .section-title {
+            color: var(--db-category-color); /* Uses the section's category color */
+            margin: -2.8rem 0 1.5rem 0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            font-size: 1.1rem;
+            border-bottom: none;
+            padding: 0.4rem 1rem;
+            background-color: var(--bs-body-bg);
+            display: inline-block;
+            position: relative;
+            left: 1rem;
+            z-index: 15;
+            border: 2px solid var(--schema-border-color);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .info-card {
+            background: #fff;
+            border: 1px solid var(--card-border-color);
+            border-radius: 4px; /* Softer radius */
+            box-shadow: 0 3px 8px var(--card-shadow-color);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.3s ease, opacity 0.3s ease, transform 0.2s ease;
+            position: relative;
+            z-index: 5;
+            opacity: 1;
+        }
+
+        #main-container.is-dimmed .schema-container:not(.is-highlighted-section) .info-card {
+             opacity: 0.35; transform: scale(0.98);
+        }
+         #main-container.is-dimmed .schema-container:not(.is-highlighted-section) > .section-title {
+             opacity: 0.4;
+         }
+
+         .info-card.is-highlighted {
+            opacity: 1 !important;
+            transform: scale(1.02) !important;
+            box-shadow: 0 0 0 3px var(--db-category-color), 0 8px 16px rgba(0, 50, 130, .2) !important;
+            z-index: 25 !important;
+         }
+         .info-card:not(.is-highlighted):hover {
+             box-shadow: 0 5px 12px rgba(0, 60, 150, .18);
+             transform: translateY(-2px);
+             z-index: 20;
+         }
+
+        .info-card .card-body { padding: 0; flex-grow: 1; display: flex; flex-direction: column; }
+        .info-card h5 {
+            color: #fff; background-color: var(--db-category-color); /* Uses card's specific color */
+            font-size: 1rem; text-align: center; margin: 0; padding: 0.7rem 0.5rem; /* Slightly more padding */
+            font-weight: 600; display: flex; justify-content: center; align-items: center;
+            gap: .5rem; font-family: 'Segoe UI Semibold', Consolas, Menlo, Monaco, 'Courier New', monospace;
+            border-bottom: 1px solid var(--card-border-color);
+            border-radius: 3px 3px 0 0; /* Match card radius */
+        }
+         .info-card h5 .bi { font-size: 1.2em; color: #fff; opacity: 0.85; }
+         .card-content-wrapper { padding: 1rem; flex-grow: 1; display: flex; flex-direction: column; }
+        .info-card p.summary { font-size: .9rem; color: var(--text-color-secondary); margin-bottom: .8rem; flex-grow: 1; line-height: 1.6; }
+
+        .collapse-content { font-size: 0.9rem; border-top: 1px solid #e9ecef; padding-top: 1rem; margin-top: 1rem; color: var(--text-color-main); }
+        .collapse-content h6 { font-weight: 700; color: var(--text-color-highlight); margin-top: 0.8rem; margin-bottom: 0.3rem; font-size: 0.95rem; }
+        .collapse-content ul { padding-left: 0.5rem; margin-bottom: 0.8rem; list-style: none; }
+        .collapse-content li { margin-bottom: 0.6rem; padding-bottom: 0.6rem; font-size: 0.88rem; line-height: 1.5; border-bottom: 1px dotted #ced4da; position: relative; padding-left: 1.6rem; }
+        .collapse-content li:last-child { border-bottom: none; margin-bottom: 0; }
+         .collapse-content li::before {
+            content: "\f285"; /* Bootstrap icon: dot. You can choose another like \f63e (puzzle), \f1c9 (file-code) */
+            font-family: "bootstrap-icons"; position: absolute; left: 0; top: 2px;
+            color: var(--db-category-color); opacity: 0.7; font-size: 1em;
+         }
+         .collapse-content li strong { color: var(--text-color-highlight); display: block; margin-bottom: 0.2rem; font-weight: 600; }
+         .collapse-content p { font-size: 0.9rem; margin-bottom: 0.6rem; line-height: 1.55; }
+         .collapse-content code { font-size: 0.85rem; color: #c2185b; background-color: #f8f9fa; padding: 0.1em 0.4em; border-radius: 3px; }
+
+        .row > * { margin-bottom: 2rem; }
+        footer { padding-top: 3rem; font-size: .85em; color: #6c757d; position: relative; z-index: 10; text-align: center; }
+
+        .details-toggle {
+            font-size: 0.8rem; margin-top: auto; align-self: flex-start;
+            padding: 0.3rem 0.6rem; color: var(--db-category-color);
+            border: 1px solid var(--db-category-color); background-color: transparent;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            display: inline-flex; align-items: center; gap: 0.3em;
+            border-radius: 3px; /* Consistent border-radius */
+        }
+         .details-toggle:hover { background-color: var(--db-category-color); color: white; }
+         .details-toggle .bi { transition: transform 0.2s ease-in-out; }
+         .details-toggle[aria-expanded="true"] .bi { transform: rotate(180deg); }
+
+        .term { font-weight: 600; color: var(--bs-primary-dark); background-color: var(--bs-primary-light); padding: 0.1em 0.35em; border-radius: 3px;}
+        a { color: var(--bs-primary); text-decoration: none; }
+        a:hover { color: var(--bs-primary-dark); text-decoration: underline; }
+        .collapse-content a { color: #3B199F; } /* Slightly darker for contrast */
+         .collapse-content a:hover { color: #2A0F75; }
+
+        .leader-line { pointer-events: none; z-index: 20; transition: opacity 0.3s ease-in-out; }
+
+        /* --- .NET Category Color Styling --- */
+        .section-platform, .card-platform { --db-category-color: var(--dotnet-color-platform); }
+        .section-web, .card-web { --db-category-color: var(--dotnet-color-web); }
+        .section-crossplatform, .card-crossplatform { --db-category-color: var(--dotnet-color-crossplatform); }
+        .section-data, .card-data { --db-category-color: var(--dotnet-color-data); }
+        .section-libraries, .card-libraries { --db-category-color: var(--dotnet-color-libraries); }
+        .section-tooling, .card-tooling { --db-category-color: var(--dotnet-color-tooling); }
+        .section-advanced, .card-advanced { --db-category-color: var(--dotnet-color-advanced); }
+        .section-general, .card-general { --db-category-color: var(--dotnet-color-general); }
+
+    </style>
+</head>
+<body>
+<header class="page-header">
+    <h1><i class="bi bi-box-seam"></i> .NET Ecosystem Cheatsheet</h1>
+    <p class="lead">An interactive guide to modern .NET components, frameworks, and libraries for architects & senior developers.</p>
+</header>
+<div class="container" id="main-container">
+
+    <!-- I. .NET PLATFORM FOUNDATION -->
+    <div class="schema-container section-platform" data-section-id="section-platform-foundation">
+        <h2 class="section-title" id="section-platform-foundation">.NET Platform Foundation</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card card-platform" id="card-dotnet-sdk">
+                    <div class="card-body">
+                        <h5><i class="bi bi-tools"></i> .NET SDK</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">The <span class="term">Software Development Kit</span> providing tools to <span class="term">develop, build, test, and publish</span> .NET applications. Includes the .NET CLI, compilers, and runtime.</p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDotnetSdk" aria-expanded="false" aria-controls="collapseDotnetSdk">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseDotnetSdk">
+                        <h6>Purpose</h6>
+                        <p>A comprehensive suite of tools essential for the .NET development lifecycle.</p>
+                        <h6>Key Components</h6>
+                        <ul>
+                            <li><strong>.NET CLI (`dotnet`):</strong> Command-line interface for creating, restoring dependencies, building, running, testing, and publishing applications. <a href="https://learn.microsoft.com/en-us/dotnet/core/tools/" target="_blank" rel="noopener noreferrer">Docs</a></li>
+                            <li><strong>Compilers:</strong> Roslyn for C# and VB.NET, F# compiler. Translates source code to CIL.</li>
+                            <li><strong>Runtime & Libraries:</strong> Includes the .NET Runtime and Base Class Library (BCL) necessary to run apps.</li>
+                            <li><strong>Build System (MSBuild):</strong> Handles the build process based on project files (`.csproj`, `.fsproj`). <a href="https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild" target="_blank" rel="noopener noreferrer">MSBuild Docs</a></li>
+                        </ul>
+                        <h6>Use Cases</h6>
+                        <p>Essential for any .NET development, from simple console apps to complex web services and cross-platform applications.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card card-platform" id="card-dotnet-runtime">
+                    <div class="card-body">
+                         <h5><i class="bi bi-cpu"></i> .NET Runtime (CoreCLR)</h5>
+                         <div class="card-content-wrapper">
+                             <p class="summary">The execution environment for .NET applications. Manages <span class="term">memory (GC)</span>, <span class="term">JIT compilation</span>, type safety, and exception handling.</p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDotnetRuntime" aria-expanded="false" aria-controls="collapseDotnetRuntime">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseDotnetRuntime">
+                        <h6>Purpose</h6>
+                        <p>Provides the foundational services required to execute managed .NET code.</p>
+                        <h6>Core Components (CoreCLR)</h6>
+                        <ul>
+                            <li><strong>JIT (Just-In-Time) Compilation:</strong> Converts CIL bytecode into native machine code at runtime. <a href="https://learn.microsoft.com/en-us/dotnet/standard/managed-code" target="_blank" rel="noopener noreferrer">Managed Code</a></li>
+                            <li><strong>Garbage Collection (GC):</strong> Automatic memory management, reclaiming unused objects. <a href="https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/" target="_blank" rel="noopener noreferrer">GC Docs</a></li>
+                            <li><strong>Type System (CTS):</strong> Enforces type safety and defines how types are declared, used, and managed.</li>
+                            <li><strong>Exception Handling:</strong> Manages structured error handling.</li>
+                            <li><strong>Security:</strong> Provides mechanisms for code access security and verification.</li>
+                        </ul>
+                        <p>Briefly, <span class="term">Mono</span> is used for Xamarin/MAUI on iOS/Android, and <span class="term">NativeAOT</span> compiles .NET to native code ahead-of-time. <a href="https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/" target="_blank" rel="noopener noreferrer">NativeAOT Docs</a></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card card-platform" id="card-bcl">
+                    <div class="card-body">
+                         <h5><i class="bi bi-collection"></i> Base Class Library (BCL)</h5>
+                          <div class="card-content-wrapper">
+                             <p class="summary">A rich set of <span class="term">core libraries</span> providing fundamental functionalities like collections, I/O, networking, JSON handling, and threading. <a href="https://learn.microsoft.com/en-us/dotnet/standard/bcl/" target="_blank" rel="noopener noreferrer">BCL Overview</a></p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBcl" aria-expanded="false" aria-controls="collapseBcl">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseBcl">
+                       <h6>Purpose</h6>
+                       <p>Provides ready-to-use types and utilities for common programming tasks, forming the bedrock of .NET applications.</p>
+                       <h6>Key Namespaces/Features</h6>
+                       <ul>
+                           <li><strong>`System` Namespace:</strong> Core types (`string`, `int`, `DateTime`), I/O (`File`, `Stream`), collections (`List<T>`, `Dictionary<TKey,TValue>`), console operations. <a href="https://learn.microsoft.com/en-us/dotnet/api/system" target="_blank" rel="noopener noreferrer">System Namespace</a></li>
+                           <li><strong>`System.Linq` Namespace:</strong> Language Integrated Query for querying objects, XML, and databases. <a href="https://learn.microsoft.com/en-us/dotnet/csharp/linq/" target="_blank" rel="noopener noreferrer">LINQ Docs</a></li>
+                           <li><strong>`System.Text.Json` Namespace:</strong> High-performance JSON serialization and deserialization. <a href="https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/overview" target="_blank" rel="noopener noreferrer">System.Text.Json Docs</a></li>
+                           <li><strong>`System.Net.Http` Namespace:</strong> Modern HTTP client functionalities (`HttpClient`). <a href="https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient" target="_blank" rel="noopener noreferrer">HttpClient</a></li>
+                           <li><strong>`System.Threading.Tasks` Namespace:</strong> Asynchronous programming with `Task` and `Task<T>` (async/await). <a href="https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/" target="_blank" rel="noopener noreferrer">Async Programming</a></li>
+                       </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- Add CIL and Assemblies cards here following the same pattern -->
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card card-platform" id="card-cil">
+                    <div class="card-body">
+                        <h5><i class="bi bi-file-earmark-code"></i> CIL / MSIL</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary"><span class="term">Common Intermediate Language</span> (formerly MSIL). The platform-agnostic compiled output of .NET languages, executed by the CLR.</p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCil" aria-expanded="false" aria-controls="collapseCil">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                     <div class="collapse collapse-content" id="collapseCil">
+                         <h6>Purpose</h6>
+                         <p>Serves as an intermediate instruction set that can be JIT-compiled to native code on any platform supporting a .NET runtime. This enables language interoperability and platform independence. <a href="https://learn.microsoft.com/en-us/dotnet/standard/managed-execution-process#cil-and-jit-compilation" target="_blank" rel="noopener noreferrer">Managed Execution</a></p>
+                         <h6>Characteristics</h6>
+                         <ul>
+                             <li><strong>CPU-Agnostic:</strong> Not tied to a specific processor architecture.</li>
+                             <li><strong>Verifiable:</strong> Can be verified for type safety by the CLR.</li>
+                             <li><strong>Contains Metadata:</strong> Includes information about types, members, and references.</li>
+                         </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card card-platform" id="card-assemblies">
+                    <div class="card-body">
+                        <h5><i class="bi bi-archive"></i> Assemblies & Metadata</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Units of <span class="term">deployment and versioning</span> in .NET (DLLs or EXEs). Contain CIL code and self-describing <span class="term">metadata</span>.</p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAssemblies" aria-expanded="false" aria-controls="collapseAssemblies">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                     <div class="collapse collapse-content" id="collapseAssemblies">
+                         <h6>Purpose</h6>
+                         <p>Assemblies are the building blocks of .NET applications, packaging types and resources. Metadata allows the runtime to understand the types within an assembly without needing separate header files or an IDL. <a href="https://learn.microsoft.com/en-us/dotnet/standard/assembly/" target="_blank" rel="noopener noreferrer">Assemblies in .NET</a></p>
+                         <h6>Key Aspects</h6>
+                         <ul>
+                            <li><strong>Manifest:</strong> Contains assembly metadata (name, version, culture, referenced assemblies, security permissions).</li>
+                            <li><strong>Types:</strong> The CIL code for the types defined in the assembly.</li>
+                            <li><strong>Resources:</strong> Embedded resources like images or strings.</li>
+                            <li><strong>Scoping:</strong> Defines a boundary for type resolution and versioning.</li>
+                         </ul>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+    <!-- II. APPLICATION MODELS & FRAMEWORKS -->
+    <div class="schema-container section-web" data-section-id="section-app-models">
+        <h2 class="section-title" id="section-app-models">Application Models & Frameworks</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card card-web" id="card-aspnetcore">
+                    <div class="card-body">
+                        <h5><i class="bi bi-globe2"></i> ASP.NET Core</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Modern, cross-platform framework for building <span class="term">web apps, APIs, and microservices</span>. High-performance and modular. <a href="https://learn.microsoft.com/en-us/aspnet/core/" target="_blank" rel="noopener noreferrer">ASP.NET Core Docs</a></p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAspnetcore" aria-expanded="false" aria-controls="collapseAspnetcore">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseAspnetcore">
+                        <h6>Key Sub-Frameworks/Patterns</h6>
+                        <ul>
+                            <li><strong>Minimal APIs:</strong> Lightweight syntax for creating HTTP APIs. <a href="https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis" target="_blank" rel="noopener noreferrer">Minimal APIs</a></li>
+                            <li><strong>MVC (Model-View-Controller):</strong> Pattern for building web UIs and APIs. <a href="https://learn.microsoft.com/en-us/aspnet/core/mvc/overview" target="_blank" rel="noopener noreferrer">MVC</a></li>
+                            <li><strong>Razor Pages:</strong> Page-centric model for building web UIs. <a href="https://learn.microsoft.com/en-us/aspnet/core/razor-pages/" target="_blank" rel="noopener noreferrer">Razor Pages</a></li>
+                            <li><strong>Blazor:</strong> Build interactive client-side web UIs with C#. (Blazor Server, WebAssembly, Hybrid). <a href="https://learn.microsoft.com/en-us/aspnet/core/blazor/" target="_blank" rel="noopener noreferrer">Blazor</a></li>
+                            <li><strong>Web APIs:</strong> Robust framework for building RESTful HTTP services.</li>
+                        </ul>
+                        <h6>Core Features</h6>
+                        <p>Middleware pipeline, routing, dependency injection, configuration, logging, Kestrel web server.</p>
+                    </div>
+                </div>
+            </div>
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card card-crossplatform" id="card-maui">
+                    <div class="card-body">
+                        <h5><i class="bi bi-phone-vibrate"></i> .NET MAUI</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary"><span class="term">Multi-platform App UI</span>. Build native mobile and desktop apps from a single C# codebase for iOS, Android, Windows, and macOS. <a href="https://learn.microsoft.com/en-us/dotnet/maui/" target="_blank" rel="noopener noreferrer">.NET MAUI Docs</a></p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMaui" aria-expanded="false" aria-controls="collapseMaui">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                     <div class="collapse collapse-content" id="collapseMaui">
+                         <h6>Purpose</h6>
+                         <p>Evolve Xamarin.Forms to provide a single project structure and unified API for creating native UIs across multiple platforms.</p>
+                         <h6>Key Aspects</h6>
+                         <ul>
+                             <li><strong>Single Project:</strong> Manage code, resources, and platform-specific assets in one project.</li>
+                             <li><strong>Native UI:</strong> Renders native controls on each platform for authentic look and feel.</li>
+                             <li><strong>XAML and C#:</strong> Define UI using XAML markup or C# code-behind.</li>
+                             <li><strong>Access to Native APIs:</strong> Provides abstractions for common device features and allows direct platform API access.</li>
+                             <li><strong>Hot Reload:</strong> See XAML and C# code changes reflected live in running app.</li>
+                         </ul>
+                         <h6>Targets</h6>
+                         <p>iOS, Android, Windows (WinUI 3), macOS (via Mac Catalyst).</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Add more cards for WPF, WinForms, Console, Worker Services, Cloud Native here -->
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- III. KEY LIBRARIES & TECHNOLOGIES -->
+    <div class="schema-container section-data" data-section-id="section-key-libs">
+        <h2 class="section-title" id="section-key-libs">Key Libraries & Technologies</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card card-data" id="card-efcore">
+                    <div class="card-body">
+                        <h5><i class="bi bi-server"></i> Entity Framework Core</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Modern, cross-platform <span class="term">Object-Relational Mapper (ORM)</span>. Enables developers to work with databases using .NET objects. <a href="https://learn.microsoft.com/en-us/ef/core/" target="_blank" rel="noopener noreferrer">EF Core Docs</a></p>
+                            <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEfcore" aria-expanded="false" aria-controls="collapseEfcore">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseEfcore">
+                         <h6>Key Features</h6>
+                         <ul>
+                            <li><strong>LINQ to Entities:</strong> Query databases using Language Integrated Query.</li>
+                            <li><strong>Migrations:</strong> Manage database schema changes over time. <a href="https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/" target="_blank" rel="noopener noreferrer">Migrations</a></li>
+                            <li><strong>Database Providers:</strong> Supports SQL Server, SQLite, PostgreSQL, MySQL, Cosmos DB, and more. <a href="https://learn.microsoft.com/en-us/ef/core/providers/" target="_blank" rel="noopener noreferrer">Providers</a></li>
+                            <li><strong>Change Tracking:</strong> Automatically tracks changes to entities for updates.</li>
+                         </ul>
+                         <h6>Use Cases</h6>
+                         <p>Simplifies data access logic in applications requiring interaction with relational or document databases.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Add more cards for Dapper, Networking, Security, Configuration, Logging, DI, Testing, LINQ, Async here -->
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+
+    <!-- IV. TOOLING & ECOSYSTEM (Example, expand similarly) -->
+    <div class="schema-container section-tooling" data-section-id="section-tooling-eco">
+        <h2 class="section-title" id="section-tooling-eco">Tooling & Ecosystem</h2>
+        <div class="row">
+             <div class="col-lg-4 col-md-6">
+                <div class="info-card card-tooling" id="card-ides">
+                    <div class="card-body">
+                        <h5><i class="bi bi-laptop"></i> IDEs</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Integrated Development Environments for .NET development. <span class="term">Visual Studio</span>, <span class="term">VS Code</span>, and <span class="term">JetBrains Rider</span> are popular choices.</p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdes" aria-expanded="false" aria-controls="collapseIdes">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                     <div class="collapse collapse-content" id="collapseIdes">
+                         <h6>Popular IDEs</h6>
+                         <ul>
+                             <li><strong>Visual Studio:</strong> Full-featured IDE for Windows, also available for Mac. Extensive debugging, profiling, and project management tools. <a href="https://visualstudio.microsoft.com/" target="_blank" rel="noopener noreferrer">Visual Studio</a></li>
+                             <li><strong>Visual Studio Code (VS Code):</strong> Lightweight, extensible code editor with excellent .NET support via C# Dev Kit and other extensions. Cross-platform. <a href="https://code.visualstudio.com/" target="_blank" rel="noopener noreferrer">VS Code</a></li>
+                             <li><strong>JetBrains Rider:</strong> Cross-platform .NET IDE known for its powerful code analysis, refactoring tools, and performance. <a href="https://www.jetbrains.com/rider/" target="_blank" rel="noopener noreferrer">Rider</a></li>
+                         </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- Add .NET CLI, NuGet, Source Control, Build/CI/CD, Performance/Diagnostics cards -->
+        </div>
+    </div>
+
+    <!-- V. ADVANCED & ARCHITECTURAL CONCEPTS (Example, expand similarly) -->
+    <div class="schema-container section-advanced" data-section-id="section-advanced-concepts">
+        <h2 class="section-title" id="section-advanced-concepts">Advanced & Architectural Concepts</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card card-advanced" id="card-native-aot">
+                    <div class="card-body">
+                        <h5><i class="bi bi-lightning-charge-fill"></i> Native AOT</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary"><span class="term">Ahead-of-Time</span> compilation that compiles .NET code directly to native machine code for faster startup, smaller deployments, and reduced memory. <a href="https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/" target="_blank" rel="noopener noreferrer">Native AOT Docs</a></p>
+                             <button class="btn btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNativeAot" aria-expanded="false" aria-controls="collapseNativeAot">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                     <div class="collapse collapse-content" id="collapseNativeAot">
+                         <h6>Benefits</h6>
+                         <ul>
+                            <li><strong>Faster Startup Time:</strong> No JIT compilation needed at runtime.</li>
+                            <li><strong>Smaller Deployments:</strong> Can produce self-contained executables with only necessary code.</li>
+                            <li><strong>Reduced Memory Footprint:</strong> Less overhead compared to JIT-compiled applications.</li>
+                         </ul>
+                         <h6>Trade-offs & Considerations</h6>
+                         <ul>
+                            <li><strong>Longer Build Times:</strong> AOT compilation is more time-consuming.</li>
+                            <li><strong>Reflection Limitations:</strong> Dynamic features like reflection might require workarounds or be limited. <a href="https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/trimming/prepare-libraries-for-trimming" target="_blank" rel="noopener noreferrer">Trimming/Reflection</a></li>
+                            <li><strong>Platform Specificity:</strong> Output is native to the target platform.</li>
+                         </ul>
+                         <h6>Use Cases</h6>
+                         <p>Serverless functions, CLI tools, containerized applications, scenarios where startup performance and deployment size are critical.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Add Modularity, Interop, Source Generators, Observability, API Design cards -->
+        </div>
+    </div>
+
+    <!-- VI. KEY CONSIDERATIONS FOR ARCHITECTS (A single summary card or multiple) -->
+    <div class="schema-container section-general" data-section-id="section-arch-considerations">
+        <h2 class="section-title" id="section-arch-considerations">Key Considerations for Architects</h2>
+        <div class="row">
+            <div class="col-12">
+                 <div class="info-card card-general" id="card-arch-summary">
+                    <div class="card-body">
+                        <h5 class="text-center"><i class="bi bi-building-gear"></i> Architectural Decision Points</h5>
+                         <div class="card-content-wrapper">
+                            <p class="summary text-center">When designing .NET systems, architects must weigh <span class="term">scalability</span> (horizontal/vertical), <span class="term">resilience</span>, <span class="term">security</span>, <span class="term">maintainability</span>, <span class="term">deployment strategies</span> (containers, serverless, PaaS), and <span class="term">cost optimization</span>. Choosing the right application models and libraries is crucial for success.</p>
+                            <button class="btn btn-sm details-toggle mx-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseArchConsiderations" aria-expanded="false" aria-controls="collapseArchConsiderations">
+                                Explore Further <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse collapse-content" id="collapseArchConsiderations">
+                        <h6>Core Tenets</h6>
+                        <ul>
+                            <li><strong>Scalability:</strong> Design for growth. Will the system scale out (more instances) or scale up (more powerful instances)? How will data be partitioned or sharded if needed?</li>
+                            <li><strong>Resilience & Fault Tolerance:</strong> Implement patterns like retries, circuit breakers (e.g., using <a href="https://github.com/App-vNext/Polly" target="_blank" rel="noopener noreferrer">Polly</a>), and health checks. Design for failure.</li>
+                            <li><strong>Security by Design:</strong> Incorporate security throughout the development lifecycle (authentication, authorization, data protection, secure coding practices). <a href="https://learn.microsoft.com/en-us/aspnet/core/security/" target="_blank" rel="noopener noreferrer">ASP.NET Core Security</a></li>
+                            <li><strong>Maintainability & Testability:</strong> Write clean, modular code. Employ DI, unit tests, and integration tests. <a href="https://learn.microsoft.com/en-us/dotnet/core/testing/" target="_blank" rel="noopener noreferrer">.NET Testing</a></li>
+                            <li><strong>Deployment Strategies:</strong> Consider containers (Docker, Kubernetes), serverless (Azure Functions, AWS Lambda), Platform-as-a-Service (Azure App Service).</li>
+                            <li><strong>Cost Optimization:</strong> Monitor resource usage, choose appropriate cloud service tiers, and optimize for efficiency.</li>
+                            <li><strong>Observability:</strong> Implement robust logging, metrics, and tracing (e.g., using OpenTelemetry). <a href="https://learn.microsoft.com/en-us/dotnet/core/diagnostics/observability-with-otel" target="_blank" rel="noopener noreferrer">OpenTelemetry with .NET</a></li>
+                        </ul>
+                        <p>The choice of .NET frameworks and libraries should align with these architectural goals and the specific requirements of the project.</p>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+    </div> <!-- /.schema-container -->
+
+</div> <!-- /container -->
+
+<footer class="container text-center pb-3">
+    <p class="mb-2">© <span id="currentYear"></span> Your Name/Company Here</p>
+    <div>
+      <a href="https://learn.microsoft.com/en-us/dotnet/" title=".NET Documentation" target="_blank" rel="noopener noreferrer" class="mx-2 link-secondary">
+        <i class="bi bi-book"></i> .NET Docs
+      </a>
+      <!-- Add other relevant links -->
+    </div>
+
+    <div>
+    <a href="https://www.linkedin.com/in/davidveksler/" title="David Veksler on LinkedIn" target="_blank" rel="noopener noreferrer" class="mx-2 link-secondary">
+      <i class="bi bi-linkedin"></i> LinkedIn
+    </a>
+    <a href="https://cheatsheets.davidveksler.com/" title="Browse All Cheatsheets" class="mx-2 link-secondary">
+      <i class="bi bi-collection"></i> All Cheatsheets
+    </a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const mainContainer = document.getElementById('main-container');
+    let currentHoverState = { card: null, line: null };
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function getElementColor(element) {
+        if (!element) return '#6b7280';
+        const card = element.closest('.info-card') || element;
+        const section = element.closest('.schema-container');
+        let color = window.getComputedStyle(card).getPropertyValue('--db-category-color').trim();
+        if (!color || color === 'initial' || color === 'inherit') {
+            color = section ? window.getComputedStyle(section).getPropertyValue('--db-category-color').trim() : '#6b7280';
+        }
+        return color || '#6b7280';
+    }
+
+    function clearHoverState(forceClear = false) {
+        const isMouseStillOverCard = currentHoverState.card && currentHoverState.card.matches(':hover');
+        if (forceClear || !isMouseStillOverCard) {
+            if (currentHoverState.line) {
+                try { currentHoverState.line.remove(); } catch (e) { console.warn("Error removing line:", e); }
+                currentHoverState.line = null;
+            }
+            mainContainer.classList.remove('is-dimmed');
+            if (currentHoverState.card) {
+                 currentHoverState.card.classList.remove('is-highlighted');
+                 const oldSchemaContainer = currentHoverState.card.closest('.schema-container');
+                 if (oldSchemaContainer) {
+                     oldSchemaContainer.classList.remove('is-highlighted-section');
+                 }
+                 currentHoverState.card = null;
+            }
+        }
+    }
+
+    function applyHoverState(card) {
+        if (!card || card === currentHoverState.card) return;
+
+        clearHoverState(true); // Force clear previous state
+
+        const schemaContainer = card.closest('.schema-container');
+        const sectionHeader = schemaContainer ? schemaContainer.querySelector('.section-title') : null;
+
+        if (!sectionHeader || !card.id || !sectionHeader.id) {
+             console.warn("Missing ID on card or section header for line drawing:", card);
+             mainContainer.classList.add('is-dimmed');
+             card.classList.add('is-highlighted');
+             if (schemaContainer) schemaContainer.classList.add('is-highlighted-section');
+             currentHoverState.card = card;
+             return;
+        }
+
+        currentHoverState.card = card;
+        mainContainer.classList.add('is-dimmed');
+        card.classList.add('is-highlighted');
+        if (schemaContainer) schemaContainer.classList.add('is-highlighted-section');
+
+        try {
+            const startElement = document.getElementById(sectionHeader.id);
+            const endElement = document.getElementById(card.id);
+            if (!startElement || !endElement) {
+                 throw new Error(`LeaderLine: Could not find elements ${sectionHeader.id} or ${card.id}`);
+            }
+            if (typeof LeaderLine === 'undefined') {
+                 console.error("LeaderLine library not loaded."); return;
+            }
+            const cardColor = getElementColor(card);
+            const line = new LeaderLine(
+                startElement, endElement,
+                {
+                    color: cardColor, size: 2.5, path: 'fluid',
+                    startSocket: 'bottom', endSocket: 'top',
+                    startSocketGravity: [0, -25], endSocketGravity: [0, 25],
+                    dash: { animation: true, len: 7, gap: 3 },
+                }
+            );
+            currentHoverState.line = line;
+        } catch (e) {
+            console.error("LeaderLine error:", e);
+            clearHoverState(true);
+        }
+    }
+
+    mainContainer.addEventListener('mouseover', (event) => {
+        const targetCard = event.target.closest('.info-card');
+        if (targetCard && targetCard !== currentHoverState.card) {
+             applyHoverState(targetCard);
+        }
+    });
+
+    mainContainer.addEventListener('mouseout', (event) => {
+        const relatedTarget = event.relatedTarget;
+        const currentCard = currentHoverState.card;
+        if (currentCard && event.target === currentCard && !currentCard.contains(relatedTarget) && (!relatedTarget?.closest('.info-card') || !mainContainer.contains(relatedTarget))) {
+             setTimeout(() => {
+                if (!mainContainer.querySelector('.info-card:hover')) {
+                     clearHoverState(false);
+                 }
+             }, 60);
+         }
+    });
+
+    const positionLines = debounce(() => {
+         if (currentHoverState.line) {
+             try {
+                 if (currentHoverState.line && typeof currentHoverState.line.position === 'function') {
+                     currentHoverState.line.position();
+                 } else if (currentHoverState.line) {
+                     console.warn("Repositioning on invalid line state. Clearing.");
+                     clearHoverState(true);
+                 }
+             } catch (e) {
+                 console.warn("Reposition error:", e); clearHoverState(true);
+             }
+         }
+     }, 100);
+
+    window.addEventListener('resize', positionLines);
+    window.addEventListener('scroll', positionLines, { passive: true });
+
+    const collapseElements = document.querySelectorAll('.collapse');
+    collapseElements.forEach(collapseEl => {
+        const button = document.querySelector(`.details-toggle[data-bs-target="#${collapseEl.id}"]`);
+        const icon = button ? button.querySelector('.bi') : null;
+        if (button && icon) {
+            const updateIcon = () => {
+                if (collapseEl.classList.contains('show')) {
+                    icon.classList.remove('bi-chevron-down'); icon.classList.add('bi-chevron-up');
+                    button.setAttribute('aria-expanded', 'true');
+                } else {
+                    icon.classList.remove('bi-chevron-up'); icon.classList.add('bi-chevron-down');
+                    button.setAttribute('aria-expanded', 'false');
+                }
+            };
+            updateIcon(); // Initial state
+            collapseEl.addEventListener('show.bs.collapse', () => { updateIcon(); setTimeout(positionLines, 50); });
+            collapseEl.addEventListener('shown.bs.collapse', positionLines);
+            collapseEl.addEventListener('hide.bs.collapse', () => { updateIcon(); setTimeout(positionLines, 50); });
+            collapseEl.addEventListener('hidden.bs.collapse', positionLines);
+        }
+    });
+
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+});
+</script>
+</body>
+</html>
