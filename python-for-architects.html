@@ -1,0 +1,2514 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Python for Architects: Cheatsheet - Patterns, Frameworks & Systems</title>
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐍</text></svg>"
+    />
+
+    <!-- SEO Meta Description -->
+    <meta
+      name="description"
+      content="Interactive Python cheatsheet for architects and senior developers. Covers architectural patterns, key frameworks (Django, Flask, FastAPI), design patterns, data handling, concurrency, and deployment for building robust Python systems."
+    />
+
+    <!-- Canonical URL (Update this to your actual URL when deployed) -->
+    <link rel="canonical" href="http://cheatsheets.davidveksler.com/python-for-architects.html" />
+
+    <!-- Social Media Metadata -->
+    <meta property="og:title" content="Python for Architects: Cheatsheet - Patterns, Frameworks & Systems" />
+    <meta
+      property="og:description"
+      content="Visual guide to Python for system architecture: covering core concepts, architectural & design patterns, key frameworks, data, concurrency, security, and deployment strategies."
+    />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="http://cheatsheets.davidveksler.com/python-for-architects.html" />
+    <meta property="og:site_name" content="Architect Cheatsheets" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Python for Architects: Cheatsheet - Patterns, Frameworks & Systems" />
+    <meta
+      name="twitter:description"
+      content="Visual guide to Python for system architecture: covering core concepts, architectural & design patterns, key frameworks, data, concurrency, security, and deployment strategies."
+    />
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- LeaderLine script removed -->
+
+    <style>
+      :root {
+        --bs-body-bg: #f0f2f5;
+        --bs-primary: #3776ab;
+        --bs-primary-dark: #2b5b84;
+        --bs-primary-light: #e6eef7;
+        --bs-secondary: #ffd43b;
+        --card-border-color: #cfd8dc;
+        --card-shadow-color: rgba(55, 118, 171, 0.1);
+        --text-color-main: #263238;
+        --text-color-secondary: #546e7a;
+        --text-color-highlight: var(--bs-primary-dark);
+        --blueprint-grid-color: rgba(55, 118, 171, 0.07);
+        --schema-bg-color: rgba(255, 255, 255, 0.85); /* Slightly more opaque */
+        --schema-border-color: #b0bec5;
+
+        /* --- Python Category Colors --- */
+        --py-color-fundamentals: #3776ab;
+        --py-color-architecture: #009688;
+        --py-color-designpatterns: #4caf50;
+        --py-color-web: #ff9800;
+        --py-color-data: #9c27b0;
+        --py-color-concurrency: #f44336;
+        --py-color-tooling: #795548;
+        --py-color-security: #ff5722;
+        --py-color-advanced: #ffc107;
+        --py-color-general: #607d8b;
+
+        --py-category-color: var(--py-color-fundamentals); /* Default */
+      }
+
+      /* Removed blueprintGridAnimation */
+      body {
+        background-color: var(--bs-body-bg);
+        background-image: linear-gradient(to right, var(--blueprint-grid-color) 1px, transparent 1px),
+          linear-gradient(to bottom, var(--blueprint-grid-color) 1px, transparent 1px);
+        background-size: 70px 70px;
+        /* animation: blueprintGridAnimation 120s linear infinite; */ /* Animation removed */
+        font-family: "Roboto", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        padding-bottom: 3rem;
+        font-size: 16px;
+        color: var(--text-color-main);
+        box-sizing: border-box;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: inherit;
+      }
+
+      .page-header {
+        background: linear-gradient(135deg, var(--bs-primary-light), #cfd8dc);
+        padding: 2.5rem 1.5rem; /* Slightly reduced padding */
+        text-align: center;
+        border-bottom: 3px solid var(--bs-primary);
+        margin-bottom: 2.5rem; /* Slightly reduced margin */
+        position: relative;
+        z-index: 10;
+        box-shadow: 0 4px 15px rgba(55, 118, 171, 0.12); /* Softer shadow */
+      }
+      .page-header h1 {
+        color: var(--bs-primary-dark);
+        font-weight: 400;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.75rem;
+        font-size: 2.8rem; /* Slightly reduced size */
+      }
+      .page-header h1 .bi {
+        font-size: 0.9em;
+        vertical-align: -0.1em;
+        margin-right: 0.4em;
+        color: var(--bs-secondary);
+      }
+      .page-header .lead {
+        color: var(--text-color-secondary);
+        font-size: 1.15rem;
+        max-width: 800px;
+        margin: auto;
+      }
+
+      .schema-container {
+        background-color: var(--schema-bg-color);
+        border: 2px solid var(--schema-border-color);
+        border-radius: 8px; /* Softened radius */
+        padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 5px 12px rgba(55, 118, 171, 0.06); /* Softer shadow */
+        backdrop-filter: blur(3px); /* Reduced blur */
+        position: relative;
+        /* transition: opacity 0.3s ease-in-out; */ /* Opacity transition removed */
+      }
+
+      .section-title {
+        color: #fff;
+        background-color: var(--py-category-color);
+        margin: -2.8rem 0 1.5rem 0;
+        font-weight: 600; /* Slightly less bold */
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 1.1rem;
+        border-bottom: none;
+        padding: 0.5rem 1rem; /* Adjusted padding */
+        display: inline-block;
+        position: relative;
+        left: 1rem;
+        z-index: 15;
+        border: 2px solid var(--schema-border-color);
+        border-bottom: none;
+        border-radius: 6px 6px 0 0; /* Softened radius */
+        /* transition: opacity 0.3s ease-in-out; */ /* Opacity transition removed */
+        box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.04); /* Softer shadow */
+      }
+
+      .info-card {
+        background: #fff;
+        border: 1px solid var(--card-border-color);
+        border-radius: 6px;
+        box-shadow: 0 3px 8px var(--card-shadow-color); /* Base shadow */
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: box-shadow 0.2s ease, transform 0.2s ease; /* Simplified transition */
+        position: relative;
+        z-index: 5;
+        /* opacity: 1; */ /* Opacity not needed if not dimming */
+      }
+
+      /* Removed .is-dimmed and .is-highlighted-section styles related to fading */
+
+      .info-card:hover {
+        /* Simplified hover */
+        box-shadow: 0 5px 12px rgba(55, 118, 171, 0.18); /* Enhanced shadow on hover */
+        transform: translateY(-2px); /* Slight lift */
+        z-index: 20;
+      }
+      /* Removed .is-highlighted related to JS-driven complex highlight */
+
+      .info-card .card-body {
+        padding: 0;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .info-card h5 {
+        color: #fff;
+        background-color: var(--py-category-color);
+        font-size: 1.05rem;
+        text-align: center;
+        margin: 0;
+        padding: 0.8rem 0.6rem;
+        font-weight: 600; /* Slightly less bold */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.6rem;
+        font-family: "Roboto Condensed", "Segoe UI Semibold", Consolas, Menlo, Monaco, "Courier New", monospace;
+        border-bottom: 1px solid var(--card-border-color);
+        border-radius: 5px 5px 0 0;
+      }
+      .info-card h5 .bi {
+        font-size: 1.3em;
+        color: #fff;
+        opacity: 0.9;
+      }
+      .card-content-wrapper {
+        padding: 1.2rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .info-card p.summary {
+        font-size: 0.92rem;
+        color: var(--text-color-secondary);
+        margin-bottom: 1rem;
+        flex-grow: 1;
+        line-height: 1.65;
+      }
+
+      .collapse-content {
+        font-size: 0.9rem;
+        border-top: 1px solid #e0e0e0;
+        padding-top: 1.2rem;
+        margin-top: 1rem;
+        color: var(--text-color-main);
+      }
+      .collapse-content h6 {
+        font-weight: 700;
+        color: var(--text-color-highlight);
+        margin-top: 1rem;
+        margin-bottom: 0.4rem;
+        font-size: 0.98rem;
+      }
+      .collapse-content ul {
+        padding-left: 0.5rem;
+        margin-bottom: 1rem;
+        list-style: none;
+      }
+      .collapse-content li {
+        margin-bottom: 0.7rem;
+        padding-bottom: 0.7rem;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        border-bottom: 1px dashed #ced4da;
+        position: relative;
+        padding-left: 1.8rem;
+      }
+      .collapse-content li:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+      .collapse-content li::before {
+        content: "\F135";
+        font-family: "bootstrap-icons";
+        position: absolute;
+        left: 0;
+        top: 3px;
+        color: var(--py-category-color);
+        opacity: 0.8;
+        font-size: 1.1em;
+      }
+      .collapse-content li strong {
+        color: var(--text-color-highlight);
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+      }
+      .collapse-content p {
+        font-size: 0.92rem;
+        margin-bottom: 0.7rem;
+        line-height: 1.6;
+      }
+      .collapse-content code {
+        font-size: 0.88rem;
+        color: #c53929;
+        background-color: #fdf3f2;
+        padding: 0.15em 0.45em;
+        border-radius: 4px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+      }
+
+      .row > * {
+        margin-bottom: 2.5rem;
+      }
+      footer {
+        padding-top: 3rem;
+        font-size: 0.9em;
+        color: #6c757d;
+        position: relative;
+        z-index: 10;
+        text-align: center;
+      }
+
+      .details-toggle {
+        font-size: 0.85rem;
+        margin-top: auto;
+        align-self: flex-start;
+        padding: 0.35rem 0.7rem;
+        color: var(--py-category-color);
+        border: 1px solid var(--py-category-color);
+        background-color: transparent;
+        transition: background-color 0.2s ease, color 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4em;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+      .details-toggle:hover {
+        background-color: var(--py-category-color);
+        color: white;
+      }
+      .details-toggle .bi {
+        transition: transform 0.2s ease-in-out;
+      }
+      .details-toggle[aria-expanded="true"] .bi {
+        transform: rotate(180deg);
+      }
+
+      .term {
+        font-weight: 600;
+        color: var(--bs-primary-dark);
+        background-color: var(--bs-primary-light);
+        padding: 0.1em 0.4em;
+        border-radius: 4px;
+      }
+      a {
+        color: var(--bs-primary);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      a:hover {
+        color: var(--bs-primary-dark);
+        text-decoration: underline;
+      }
+      .collapse-content a {
+        color: var(--bs-primary);
+      }
+      .collapse-content a:hover {
+        color: var(--bs-primary-dark);
+      }
+
+      /* Removed .leader-line styles */
+
+      /* --- Python Category Color Styling --- */
+      .section-fundamentals,
+      .card-fundamentals {
+        --py-category-color: var(--py-color-fundamentals);
+      }
+      .section-architecture,
+      .card-architecture {
+        --py-category-color: var(--py-color-architecture);
+      }
+      .section-designpatterns,
+      .card-designpatterns {
+        --py-category-color: var(--py-color-designpatterns);
+      }
+      .section-web,
+      .card-web {
+        --py-category-color: var(--py-color-web);
+      }
+      .section-data,
+      .card-data {
+        --py-category-color: var(--py-color-data);
+      }
+      .section-concurrency,
+      .card-concurrency {
+        --py-category-color: var(--py-color-concurrency);
+      }
+      .section-tooling,
+      .card-tooling {
+        --py-category-color: var(--py-color-tooling);
+      }
+      .section-security,
+      .card-security {
+        --py-category-color: var(--py-color-security);
+      }
+      .section-advanced,
+      .card-advanced {
+        --py-category-color: var(--py-color-advanced);
+      }
+      .section-general,
+      .card-general {
+        --py-category-color: var(--py-color-general);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page-header">
+      <h1><i class="bi bi-diagram-3-fill"></i> Python for Architects Cheatsheet</h1>
+      <p class="lead">
+        An interactive guide to Python's architectural patterns, frameworks, design principles, and key libraries for
+        building robust and scalable systems.
+      </p>
+    </header>
+    <div class="container" id="main-container">
+      <!-- I. PYTHON FUNDAMENTALS FOR ARCHITECTS -->
+      <div class="schema-container section-fundamentals" data-section-id="section-python-fundamentals">
+        <h2 class="section-title" id="section-python-fundamentals-title">Python Fundamentals for Architects</h2>
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-fundamentals" id="card-why-python">
+              <div class="card-body">
+                <h5><i class="bi bi-question-diamond-fill"></i> Why Python?</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Strengths in <span class="term">rapid development</span>, readability, vast libraries, and
+                    versatility across <span class="term">web, data science, AI/ML, and automation</span>.
+                    <a href="https://www.python.org/doc/essays/blurb/" target="_blank" rel="noopener noreferrer"
+                      >Python's Philosophy</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseWhyPython"
+                    aria-expanded="false"
+                    aria-controls="collapseWhyPython"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseWhyPython">
+                <h6>Strengths</h6>
+                <ul>
+                  <li>
+                    <strong>Rapid Development:</strong> Concise syntax, dynamic typing allow for faster iteration.
+                  </li>
+                  <li>
+                    <strong>Readability (PEP 8):</strong> Emphasizes clean, readable code, reducing maintenance
+                    overhead.
+                    <a href="https://peps.python.org/pep-0008/" target="_blank" rel="noopener noreferrer">PEP 8</a>
+                  </li>
+                  <li>
+                    <strong>Extensive Libraries:</strong> Rich standard library and vast third-party packages (PyPI).
+                    <a href="https://pypi.org/" target="_blank" rel="noopener noreferrer">PyPI</a>
+                  </li>
+                  <li><strong>Large Community:</strong> Abundant resources, tutorials, and community support.</li>
+                  <li>
+                    <strong>Versatility:</strong> Suitable for web backends, APIs, data analysis, ML, scripting, IoT.
+                  </li>
+                </ul>
+                <h6>Weaknesses to Consider</h6>
+                <ul>
+                  <li>
+                    <strong>GIL Limitations:</strong> Global Interpreter Lock can hinder true parallelism for CPU-bound
+                    multi-threading. (See Concurrency section)
+                  </li>
+                  <li>
+                    <strong>Performance:</strong> Interpreted nature can be slower than C++/Java for raw computation,
+                    often mitigated by C extensions or JIT compilers like PyPy.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-fundamentals" id="card-key-language-features">
+              <div class="card-body">
+                <h5><i class="bi bi-bricks"></i> Key Language Features</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Core features like <span class="term">OOP</span>, modules, dynamic typing, and
+                    <span class="term">powerful data structures</span> crucial for system design.
+                    <a href="https://docs.python.org/3/tutorial/classes.html" target="_blank" rel="noopener noreferrer"
+                      >Python Classes</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseKeyLangFeatures"
+                    aria-expanded="false"
+                    aria-controls="collapseKeyLangFeatures"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseKeyLangFeatures">
+                <h6>Core Concepts</h6>
+                <ul>
+                  <li><strong>Object-Oriented Programming (OOP):</strong> Encapsulation, inheritance, polymorphism.</li>
+                  <li><strong>Modules & Packages:</strong> Organizing large codebases effectively.</li>
+                  <li>
+                    <strong>Dynamic Typing & Duck Typing:</strong> Flexibility ("If it walks like a duck and quacks like
+                    a duck...").
+                  </li>
+                  <li><strong>Exception Handling:</strong> Building resilient systems with `try-except-finally`.</li>
+                  <li><strong>Generators & Iterators:</strong> Memory-efficient processing of large data sequences.</li>
+                  <li><strong>Decorators:</strong> Modifying function/method behavior (e.g., logging, auth checks).</li>
+                  <li>
+                    <strong>Context Managers (`with` statement):</strong> Automatic resource management (files, locks,
+                    connections).
+                  </li>
+                  <li>
+                    <strong>Type Hinting (PEP 484):</strong> Optional static type checking for improved code quality and
+                    maintainability using tools like Mypy.
+                    <a href="https://peps.python.org/pep-0484/" target="_blank" rel="noopener noreferrer">PEP 484</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-fundamentals" id="card-stdlib-essentials">
+              <div class="card-body">
+                <h5><i class="bi bi-collection-fill"></i> Essential Standard Library</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Key modules like <span class="term">`os`</span>, <span class="term">`json`</span>,
+                    <span class="term">`datetime`</span>, <span class="term">`collections`</span>, and
+                    <span class="term">`asyncio`</span> for common tasks.
+                    <a href="https://docs.python.org/3/library/" target="_blank" rel="noopener noreferrer"
+                      >Standard Library Docs</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseStdLib"
+                    aria-expanded="false"
+                    aria-controls="collapseStdLib"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseStdLib">
+                <h6>Frequently Used Modules</h6>
+                <ul>
+                  <li><strong>`os`, `sys`:</strong> System interaction, environment variables, path manipulation.</li>
+                  <li><strong>`json`, `xml.etree.ElementTree`:</strong> Data interchange formats.</li>
+                  <li><strong>`datetime`, `time`:</strong> Date and time operations.</li>
+                  <li>
+                    <strong>`collections`:</strong> Advanced data structures (e.g., `deque`, `Counter`, `defaultdict`).
+                  </li>
+                  <li>
+                    <strong>`multiprocessing`, `threading`, `asyncio`, `concurrent.futures`:</strong> Concurrency and
+                    parallelism. (See Concurrency section)
+                  </li>
+                  <li><strong>`socket`:</strong> Low-level networking.</li>
+                  <li><strong>`logging`:</strong> Flexible event logging system.</li>
+                  <li><strong>`argparse`:</strong> Command-line argument parsing.</li>
+                  <li>
+                    <strong>`pathlib`:</strong> Object-oriented filesystem paths.
+                    <a href="https://docs.python.org/3/library/pathlib.html" target="_blank" rel="noopener noreferrer"
+                      >Pathlib</a
+                    >
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- II. ARCHITECTURAL PATTERNS -->
+      <div class="schema-container section-architecture" data-section-id="section-python-arch-patterns">
+        <h2 class="section-title" id="section-python-arch-patterns-title">Architectural Patterns in Python</h2>
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-architecture" id="card-monolithic">
+              <div class="card-body">
+                <h5><i class="bi bi-stack"></i> Monolithic Architecture</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Single, large codebase with tightly coupled components. Often built with frameworks like
+                    <span class="term">Django</span>.
+                    <a
+                      href="https://microservices.io/patterns/monolithic.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Monolith Pattern</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseMonolithic"
+                    aria-expanded="false"
+                    aria-controls="collapseMonolithic"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseMonolithic">
+                <h6>Characteristics</h6>
+                <p>All functionality resides in a single process or deployment unit.</p>
+                <h6>Python Implementation</h6>
+                <ul>
+                  <li>Often seen with full-stack frameworks like Django.</li>
+                  <li>Simpler initial development and deployment for smaller projects.</li>
+                </ul>
+                <h6>Pros</h6>
+                <ul>
+                  <li><strong>Simpler Development:</strong> Easier to get started and manage locally.</li>
+                  <li><strong>Straightforward Testing:</strong> End-to-end testing can be simpler.</li>
+                  <li>
+                    <strong>Performance:</strong> Inter-component communication is via in-process calls, which can be
+                    fast.
+                  </li>
+                </ul>
+                <h6>Cons</h6>
+                <ul>
+                  <li>
+                    <strong>Scalability Challenges:</strong> Entire application must be scaled, even if only one part is
+                    a bottleneck.
+                  </li>
+                  <li><strong>Deployment Complexity:</strong> Redeploying the entire application for small changes.</li>
+                  <li>
+                    <strong>Technology Stack Rigidity:</strong> Harder to adopt new technologies for parts of the
+                    system.
+                  </li>
+                  <li><strong>Maintainability Issues:</strong> Can become unwieldy as it grows.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-architecture" id="card-microservices">
+              <div class="card-body">
+                <h5><i class="bi bi-grid-1x2-fill"></i> Microservices Architecture</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Collection of small, independent services. Python with <span class="term">Flask/FastAPI</span> for
+                    services, <span class="term">gRPC/REST</span> for communication.
+                    <a href="https://microservices.io/" target="_blank" rel="noopener noreferrer">Microservices.io</a>
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseMicroservices"
+                    aria-expanded="false"
+                    aria-controls="collapseMicroservices"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseMicroservices">
+                <h6>Characteristics</h6>
+                <p>
+                  Application structured as a suite of small, independently deployable services, typically organized
+                  around business capabilities.
+                </p>
+                <h6>Python Implementation</h6>
+                <ul>
+                  <li>Lightweight frameworks like Flask or FastAPI are popular for building individual services.</li>
+                  <li>Communication via HTTP/REST, gRPC, or message queues (e.g., RabbitMQ, Kafka).</li>
+                  <li>Libraries: `requests`, `grpcio`, `pika`, `kafka-python`.</li>
+                </ul>
+                <h6>Pros</h6>
+                <ul>
+                  <li><strong>Independent Scalability:</strong> Scale services based on individual needs.</li>
+                  <li><strong>Technology Diversity:</strong> Each service can use the best technology for its task.</li>
+                  <li><strong>Fault Isolation:</strong> Failure in one service is less likely to affect others.</li>
+                  <li><strong>Independent Deployment:</strong> Services can be updated and deployed independently.</li>
+                  <li><strong>Team Autonomy:</strong> Smaller, focused teams can own services.</li>
+                </ul>
+                <h6>Cons</h6>
+                <ul>
+                  <li>
+                    <strong>Distributed System Complexity:</strong> Network latency, fault tolerance, eventual
+                    consistency.
+                  </li>
+                  <li><strong>Operational Overhead:</strong> More components to deploy, monitor, and manage.</li>
+                  <li><strong>Complex Testing:</strong> End-to-end testing requires multiple services.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-architecture" id="card-event-driven">
+              <div class="card-body">
+                <h5><i class="bi bi-broadcast-pin"></i> Event-Driven Architecture (EDA)</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Components communicate via asynchronous <span class="term">events</span>. Python with
+                    <span class="term">Kafka</span>, <span class="term">RabbitMQ</span>, or
+                    <span class="term">Celery</span>.
+                    <a
+                      href="https://martinfowler.com/articles/201701-event-driven.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >EDA by Fowler</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseEventDriven"
+                    aria-expanded="false"
+                    aria-controls="collapseEventDriven"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseEventDriven">
+                <h6>Characteristics</h6>
+                <p>
+                  System components react to the occurrence of events, promoting loose coupling and asynchronous
+                  operations.
+                </p>
+                <h6>Python Implementation</h6>
+                <ul>
+                  <li>Message brokers: Kafka, RabbitMQ, Redis Pub/Sub.</li>
+                  <li>Task queues: Celery, Dramatiq.</li>
+                  <li>Libraries: `pika`, `kafka-python`, `celery`.</li>
+                </ul>
+                <h6>Pros</h6>
+                <ul>
+                  <li><strong>Loose Coupling:</strong> Producers and consumers of events are decoupled.</li>
+                  <li>
+                    <strong>Scalability & Resilience:</strong> Services can scale independently; message brokers can
+                    buffer events.
+                  </li>
+                  <li><strong>Responsiveness:</strong> Asynchronous processing improves user experience.</li>
+                  <li><strong>Extensibility:</strong> New services can subscribe to existing event streams.</li>
+                </ul>
+                <h6>Cons</h6>
+                <ul>
+                  <li><strong>Complexity:</strong> Debugging and tracing events across services can be challenging.</li>
+                  <li>
+                    <strong>Eventual Consistency:</strong> Data consistency across services might not be immediate.
+                  </li>
+                  <li><strong>Message Broker Management:</strong> Requires setup and maintenance of the broker.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-architecture" id="card-serverless">
+              <div class="card-body">
+                <h5><i class="bi bi-cloud-fog2-fill"></i> Serverless Architecture (FaaS)</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Run code without managing servers using <span class="term">AWS Lambda</span>,
+                    <span class="term">Google Cloud Functions</span>, <span class="term">Azure Functions</span>.
+                    Frameworks like <span class="term">Serverless Framework</span>, <span class="term">Zappa</span>.
+                    <a href="https://aws.amazon.com/serverless/" target="_blank" rel="noopener noreferrer"
+                      >AWS Serverless</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseServerless"
+                    aria-expanded="false"
+                    aria-controls="collapseServerless"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseServerless">
+                <h6>Characteristics</h6>
+                <p>
+                  Backend logic runs in stateless compute containers that are event-triggered, ephemeral, and fully
+                  managed by a third party (cloud provider).
+                </p>
+                <h6>Python Implementation</h6>
+                <ul>
+                  <li>Write Python functions deployed to FaaS platforms.</li>
+                  <li>Frameworks: Serverless Framework, Chalice (AWS), Zappa (for WSGI apps).</li>
+                </ul>
+                <h6>Pros</h6>
+                <ul>
+                  <li><strong>Cost-Effective (Pay-Per-Use):</strong> Only pay for actual execution time.</li>
+                  <li><strong>Auto-Scaling:</strong> Platform handles scaling automatically.</li>
+                  <li><strong>Reduced Operational Burden:</strong> No server management.</li>
+                  <li><strong>Faster Time-to-Market:</strong> Focus on code, not infrastructure.</li>
+                </ul>
+                <h6>Cons</h6>
+                <ul>
+                  <li><strong>Vendor Lock-in:</strong> Tied to specific cloud provider services.</li>
+                  <li><strong>Cold Starts:</strong> Latency for the first invocation if the function is not "warm".</li>
+                  <li><strong>Statelessness Limitations:</strong> Functions should ideally be stateless.</li>
+                  <li>
+                    <strong>Debugging & Monitoring:</strong> Can be more complex in a distributed FaaS environment.
+                  </li>
+                  <li><strong>Execution Time Limits:</strong> Functions often have maximum execution durations.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-architecture" id="card-layered">
+              <div class="card-body">
+                <h5><i class="bi bi-layers-fill"></i> Layered Architecture (N-Tier)</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Separates concerns into <span class="term">Presentation</span>,
+                    <span class="term">Application/Business Logic</span>, and
+                    <span class="term">Data Access</span> layers. Common in web apps.
+                    <a
+                      href="https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/common-web-application-architectures#n-layer-architecture-pattern"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >N-Layer Pattern</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseLayered"
+                    aria-expanded="false"
+                    aria-controls="collapseLayered"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseLayered">
+                <h6>Key Layers</h6>
+                <ul>
+                  <li>
+                    <strong>Presentation Layer:</strong> Handles user interface and interaction (e.g., web templates,
+                    API endpoints).
+                  </li>
+                  <li>
+                    <strong>Application/Business Logic Layer:</strong> Contains core business rules and orchestrates
+                    tasks.
+                  </li>
+                  <li>
+                    <strong>Data Access Layer:</strong> Responsible for data persistence and retrieval (e.g., ORM,
+                    database interactions).
+                  </li>
+                  <li>
+                    <strong>(Optional) Infrastructure Layer:</strong> Cross-cutting concerns like logging, caching,
+                    external service integration.
+                  </li>
+                </ul>
+                <h6>Python Implementation</h6>
+                <p>
+                  Often implicitly or explicitly used in frameworks like Django (MVT is a variation). Python modules and
+                  packages can define layer boundaries.
+                </p>
+                <h6>Pros</h6>
+                <ul>
+                  <li><strong>Separation of Concerns:</strong> Improves maintainability and testability.</li>
+                  <li><strong>Reusability:</strong> Layers can be reused by different parts of the application.</li>
+                </ul>
+                <h6>Cons</h6>
+                <ul>
+                  <li><strong>Overhead:</strong> Can add complexity for simple applications.</li>
+                  <li><strong>Potential for Tight Coupling:</strong> If layer boundaries are not strictly enforced.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-architecture" id="card-mvt">
+              <div class="card-body">
+                <h5><i class="bi bi-layout-three-columns"></i> Model-View-Template (MVT)</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    A variation of MVC used by <span class="term">Django</span>. <span class="term">Model</span> (data),
+                    <span class="term">View</span> (logic selecting data),
+                    <span class="term">Template</span> (presentation).
+                    <a
+                      href="https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Introduction#django_architecture"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Django MVT</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseMVT"
+                    aria-expanded="false"
+                    aria-controls="collapseMVT"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseMVT">
+                <h6>Components</h6>
+                <ul>
+                  <li>
+                    <strong>Model:</strong> The data layer. Manages application data and interacts with the database
+                    (e.g., Django ORM Models).
+                  </li>
+                  <li>
+                    <strong>View:</strong> The request handler. Contains the business logic, interacts with models, and
+                    selects a template to render. (In Django, views are Python functions or classes).
+                  </li>
+                  <li>
+                    <strong>Template:</strong> The presentation layer. Defines how data is displayed to the user (e.g.,
+                    Django Template Language).
+                  </li>
+                </ul>
+                <p>
+                  Django itself acts as the "Controller" in this pattern, handling URL routing and dispatching requests
+                  to the appropriate view.
+                </p>
+                <h6>Benefits</h6>
+                <p>
+                  Clear separation of concerns tailored for web application development, promoting organized and
+                  maintainable code within the Django framework.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- III. KEY PYTHON FRAMEWORKS -->
+      <div class="schema-container section-web" data-section-id="section-python-frameworks">
+        <h2 class="section-title" id="section-python-frameworks-title">Key Python Frameworks</h2>
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-web" id="card-django">
+              <div class="card-body">
+                <h5><i class="bi bi-bounding-box-circles"></i> Django</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    High-level, "batteries-included" web framework for <span class="term">rapid development</span> of
+                    secure and maintainable websites.
+                    <a href="https://www.djangoproject.com/" target="_blank" rel="noopener noreferrer"
+                      >Django Project</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseDjango"
+                    aria-expanded="false"
+                    aria-controls="collapseDjango"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseDjango">
+                <h6>Core Features</h6>
+                <ul>
+                  <li><strong>ORM (Object-Relational Mapper):</strong> Powerful database abstraction.</li>
+                  <li><strong>Admin Interface:</strong> Auto-generated admin site for managing data.</li>
+                  <li><strong>Templating Engine:</strong> For dynamic HTML generation.</li>
+                  <li><strong>URL Routing:</strong> Clean and flexible URL design.</li>
+                  <li><strong>Forms Handling:</strong> Robust form creation and validation.</li>
+                  <li>
+                    <strong>Security Features:</strong> Built-in protection against common web vulnerabilities (XSS,
+                    CSRF, SQL injection).
+                  </li>
+                </ul>
+                <h6>Use Cases</h6>
+                <p>Complex database-driven web applications, CMS, social networks, e-commerce platforms.</p>
+                <h6>Architectural Style</h6>
+                <p>Follows the Model-View-Template (MVT) pattern.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-web" id="card-flask">
+              <div class="card-body">
+                <h5><i class="bi bi-lightning-charge"></i> Flask</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Micro-framework, <span class="term">lightweight and extensible</span>. Ideal for smaller
+                    applications, APIs, or as a component in larger systems.
+                    <a href="https://flask.palletsprojects.com/" target="_blank" rel="noopener noreferrer"
+                      >Flask Project</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseFlask"
+                    aria-expanded="false"
+                    aria-controls="collapseFlask"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseFlask">
+                <h6>Core Features</h6>
+                <ul>
+                  <li>
+                    <strong>Minimal Core:</strong> Provides routing, request handling, and a Werkzeug WSGI toolkit.
+                  </li>
+                  <li><strong>Jinja2 Templating:</strong> Integrated for dynamic content.</li>
+                  <li>
+                    <strong>Extensible:</strong> Large ecosystem of extensions for ORMs, forms, authentication, etc.
+                  </li>
+                  <li>
+                    <strong>Flexibility:</strong> Few opinions imposed, allowing developers to choose their tools.
+                  </li>
+                </ul>
+                <h6>Use Cases</h6>
+                <p>REST APIs, microservices, simple web applications, prototypes, integrating with other services.</p>
+                <h6>Architectural Style</h6>
+                <p>
+                  No enforced pattern, allows for MVC, MVT, or custom structures. Gives architects more freedom but
+                  requires more decisions.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-web" id="card-fastapi">
+              <div class="card-body">
+                <h5><i class="bi bi-speedometer2"></i> FastAPI</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Modern, high-performance web framework for building <span class="term">APIs</span> with Python 3.7+
+                    type hints. Based on <span class="term">Starlette</span> and <span class="term">Pydantic</span>.
+                    <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer"
+                      >FastAPI Project</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseFastAPI"
+                    aria-expanded="false"
+                    aria-controls="collapseFastAPI"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseFastAPI">
+                <h6>Core Features</h6>
+                <ul>
+                  <li>
+                    <strong>High Performance:</strong> On par with NodeJS and Go, thanks to Starlette (ASGI) and
+                    Pydantic.
+                  </li>
+                  <li>
+                    <strong>Type Hints & Data Validation:</strong> Automatic data validation, serialization, and
+                    documentation using Pydantic models.
+                  </li>
+                  <li>
+                    <strong>Automatic API Docs:</strong> Interactive API documentation (Swagger UI, ReDoc) generated
+                    from code.
+                  </li>
+                  <li><strong>Async Support:</strong> Built for asynchronous programming with `async` and `await`.</li>
+                  <li><strong>Dependency Injection:</strong> Simple and powerful DI system.</li>
+                  <li><strong>Standards-Based:</strong> OpenAPI and JSON Schema.</li>
+                </ul>
+                <h6>Use Cases</h6>
+                <p>
+                  Building robust and performant REST APIs, microservices, applications requiring data validation and
+                  serialization.
+                </p>
+                <h6>Architectural Style</h6>
+                <p>
+                  Primarily focused on API development, often used in microservice architectures. Supports ASGI for
+                  asynchronous request handling.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-data" id="card-pandas-numpy">
+              <div class="card-body">
+                <h5><i class="bi bi-calculator-fill"></i> Pandas & NumPy</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    <span class="term">NumPy</span> for numerical computing (arrays, matrices).
+                    <span class="term">Pandas</span> for data manipulation and analysis (DataFrames). Foundational for
+                    data science. <a href="https://numpy.org/" target="_blank" rel="noopener noreferrer">NumPy</a> /
+                    <a href="https://pandas.pydata.org/" target="_blank" rel="noopener noreferrer">Pandas</a>
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapsePandasNumpy"
+                    aria-expanded="false"
+                    aria-controls="collapsePandasNumpy"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapsePandasNumpy">
+                <h6>NumPy</h6>
+                <ul>
+                  <li>
+                    <strong>N-dimensional arrays (`ndarray`):</strong> Efficient storage and manipulation of numerical
+                    data.
+                  </li>
+                  <li><strong>Vectorized Operations:</strong> Fast element-wise operations and linear algebra.</li>
+                  <li><strong>Broadcasting:</strong> Performing operations on arrays of different shapes.</li>
+                </ul>
+                <h6>Pandas</h6>
+                <ul>
+                  <li>
+                    <strong>DataFrame & Series:</strong> Powerful, flexible data structures for tabular and time-series
+                    data.
+                  </li>
+                  <li>
+                    <strong>Data I/O:</strong> Reading and writing data from various formats (CSV, Excel, SQL, JSON).
+                  </li>
+                  <li>
+                    <strong>Data Cleaning & Preparation:</strong> Handling missing data, reshaping, merging, joining.
+                  </li>
+                  <li>
+                    <strong>Data Analysis & Exploration:</strong> Grouping, aggregation, filtering, time-series
+                    analysis.
+                  </li>
+                </ul>
+                <h6>Architectural Relevance</h6>
+                <p>
+                  Core components in data processing pipelines, ETL jobs, feature engineering for ML models, and
+                  analytical applications.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-data" id="card-scikit-learn">
+              <div class="card-body">
+                <h5><i class="bi bi-robot"></i> Scikit-learn</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Comprehensive library for <span class="term">machine learning</span>. Provides tools for
+                    classification, regression, clustering, dimensionality reduction, model selection, and
+                    preprocessing.
+                    <a href="https://scikit-learn.org/" target="_blank" rel="noopener noreferrer"
+                      >Scikit-learn Project</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseScikitLearn"
+                    aria-expanded="false"
+                    aria-controls="collapseScikitLearn"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseScikitLearn">
+                <h6>Key Features</h6>
+                <ul>
+                  <li>
+                    <strong>Wide Range of Algorithms:</strong> SVMs, random forests, gradient boosting, k-means, etc.
+                  </li>
+                  <li>
+                    <strong>Consistent API:</strong> Easy to use and switch between models (`fit`, `predict`,
+                    `transform`).
+                  </li>
+                  <li>
+                    <strong>Preprocessing Tools:</strong> Scaling, encoding categorical features, feature selection.
+                  </li>
+                  <li>
+                    <strong>Model Evaluation & Selection:</strong> Cross-validation, hyperparameter tuning
+                    (GridSearchCV, RandomizedSearchCV).
+                  </li>
+                  <li><strong>Pipelines:</strong> Chaining multiple processing steps and a final estimator.</li>
+                </ul>
+                <h6>Architectural Relevance</h6>
+                <p>
+                  Essential for building ML models within applications, batch prediction systems, and real-time
+                  inference services (often deployed with frameworks like Flask/FastAPI).
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-data" id="card-tensorflow-pytorch">
+              <div class="card-body">
+                <h5><i class="bi bi-cpu-fill"></i> TensorFlow & PyTorch</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Leading <span class="term">deep learning</span> frameworks for building and training neural
+                    networks.
+                    <a href="https://www.tensorflow.org/" target="_blank" rel="noopener noreferrer">TensorFlow</a> /
+                    <a href="https://pytorch.org/" target="_blank" rel="noopener noreferrer">PyTorch</a>
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseDLFrameworks"
+                    aria-expanded="false"
+                    aria-controls="collapseDLFrameworks"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseDLFrameworks">
+                <h6>Key Features (Common)</h6>
+                <ul>
+                  <li><strong>Tensor Operations:</strong> GPU-accelerated numerical computations.</li>
+                  <li><strong>Automatic Differentiation:</strong> For training neural networks via backpropagation.</li>
+                  <li>
+                    <strong>Neural Network Layers & Models:</strong> Pre-built components and tools for custom
+                    architectures.
+                  </li>
+                  <li><strong>Distributed Training:</strong> Scaling training across multiple GPUs and machines.</li>
+                  <li>
+                    <strong>Model Serving Libraries:</strong> (e.g., TensorFlow Serving, TorchServe) for deploying
+                    models in production.
+                  </li>
+                </ul>
+                <h6>Architectural Relevance</h6>
+                <p>
+                  Used for complex tasks like image recognition, natural language processing, and recommendation
+                  systems. Models are often trained offline and then deployed as part of a larger application or API for
+                  inference.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IV. DESIGN PATTERNS IN PYTHON -->
+      <div class="schema-container section-designpatterns" data-section-id="section-python-design-patterns">
+        <h2 class="section-title" id="section-python-design-patterns-title">Design Patterns in Python</h2>
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-designpatterns" id="card-creational-patterns">
+              <div class="card-body">
+                <h5><i class="bi bi-plus-square-dotted"></i> Creational Patterns</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Concerned with object creation mechanisms. Examples: <span class="term">Singleton</span>,
+                    <span class="term">Factory Method</span>, <span class="term">Builder</span>.
+                    <a
+                      href="https://refactoring.guru/design-patterns/creational-patterns"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Creational Patterns</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseCreationalPatterns"
+                    aria-expanded="false"
+                    aria-controls="collapseCreationalPatterns"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseCreationalPatterns">
+                <h6>Common Examples</h6>
+                <ul>
+                  <li>
+                    <strong>Singleton:</strong> Ensure a class has only one instance and provide a global point of
+                    access. (Often discouraged in Python; module-level variables can achieve similar results more
+                    simply).
+                  </li>
+                  <li>
+                    <strong>Factory Method:</strong> Define an interface for creating an object, but let subclasses
+                    decide which class to instantiate.
+                  </li>
+                  <li>
+                    <strong>Abstract Factory:</strong> Provide an interface for creating families of related objects
+                    without specifying their concrete classes.
+                  </li>
+                  <li>
+                    <strong>Builder:</strong> Separate the construction of a complex object from its representation,
+                    allowing the same construction process to create different representations.
+                  </li>
+                  <li><strong>Prototype:</strong> Create new objects by copying an existing object (prototype).</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-designpatterns" id="card-structural-patterns">
+              <div class="card-body">
+                <h5><i class="bi bi-diagram-2-fill"></i> Structural Patterns</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Concerned with how classes and objects are composed to form larger structures. Examples:
+                    <span class="term">Adapter</span>, <span class="term">Decorator</span>,
+                    <span class="term">Facade</span>.
+                    <a
+                      href="https://refactoring.guru/design-patterns/structural-patterns"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Structural Patterns</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseStructuralPatterns"
+                    aria-expanded="false"
+                    aria-controls="collapseStructuralPatterns"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseStructuralPatterns">
+                <h6>Common Examples</h6>
+                <ul>
+                  <li>
+                    <strong>Adapter:</strong> Convert the interface of a class into another interface clients expect.
+                  </li>
+                  <li>
+                    <strong>Decorator:</strong> Attach additional responsibilities to an object dynamically. (Python's
+                    `@` syntax is a form of syntactic sugar for decorators).
+                  </li>
+                  <li><strong>Facade:</strong> Provide a unified interface to a set of interfaces in a subsystem.</li>
+                  <li>
+                    <strong>Proxy:</strong> Provide a surrogate or placeholder for another object to control access to
+                    it.
+                  </li>
+                  <li>
+                    <strong>Composite:</strong> Compose objects into tree structures to represent part-whole
+                    hierarchies.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-designpatterns" id="card-behavioral-patterns">
+              <div class="card-body">
+                <h5><i class="bi bi-arrows-move"></i> Behavioral Patterns</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Concerned with algorithms and the assignment of responsibilities between objects. Examples:
+                    <span class="term">Observer</span>, <span class="term">Strategy</span>,
+                    <span class="term">Command</span>.
+                    <a
+                      href="https://refactoring.guru/design-patterns/behavioral-patterns"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Behavioral Patterns</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseBehavioralPatterns"
+                    aria-expanded="false"
+                    aria-controls="collapseBehavioralPatterns"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseBehavioralPatterns">
+                <h6>Common Examples</h6>
+                <ul>
+                  <li>
+                    <strong>Observer:</strong> Define a one-to-many dependency where observers are notified of state
+                    changes in a subject.
+                  </li>
+                  <li>
+                    <strong>Strategy:</strong> Define a family of algorithms, encapsulate each one, and make them
+                    interchangeable. (Python's first-class functions simplify this).
+                  </li>
+                  <li>
+                    <strong>Command:</strong> Encapsulate a request as an object, thereby letting you parameterize
+                    clients with different requests, queue or log requests, and support undoable operations.
+                  </li>
+                  <li>
+                    <strong>Template Method:</strong> Define the skeleton of an algorithm in an operation, deferring
+                    some steps to subclasses.
+                  </li>
+                  <li>
+                    <strong>State:</strong> Allow an object to alter its behavior when its internal state changes. The
+                    object will appear to change its class.
+                  </li>
+                  <li><strong>Chain of Responsibility:</strong> Pass requests along a chain of handlers.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- V. DATA HANDLING & PERSISTENCE -->
+      <div class="schema-container section-data" data-section-id="section-python-data-handling">
+        <h2 class="section-title" id="section-python-data-handling-title">Data Handling & Persistence</h2>
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-data" id="card-orms">
+              <div class="card-body">
+                <h5><i class="bi bi-stack-overflow"></i> ORMs (SQLAlchemy, Django ORM)</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    <span class="term">SQLAlchemy</span>: Powerful, flexible ORM. <span class="term">Django ORM</span>:
+                    Integrated into Django. For working with relational databases.
+                    <a href="https://www.sqlalchemy.org/" target="_blank" rel="noopener noreferrer">SQLAlchemy</a>
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseORMs"
+                    aria-expanded="false"
+                    aria-controls="collapseORMs"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseORMs">
+                <h6>SQLAlchemy</h6>
+                <ul>
+                  <li><strong>Core & ORM:</strong> Provides a SQL expression language (Core) and a full ORM.</li>
+                  <li><strong>Flexibility:</strong> Can be used with various web frameworks or standalone.</li>
+                  <li><strong>Database Support:</strong> PostgreSQL, MySQL, SQLite, Oracle, MS SQL Server.</li>
+                  <li><strong>Features:</strong> Connection pooling, migrations (with Alembic), complex queries.</li>
+                </ul>
+                <h6>Django ORM</h6>
+                <ul>
+                  <li><strong>Integrated:</strong> Tightly coupled with the Django framework.</li>
+                  <li><strong>Ease of Use:</strong> "Batteries-included" approach, simplifies common tasks.</li>
+                  <li><strong>Migrations:</strong> Built-in migration system.</li>
+                </ul>
+                <h6>Other ORMs</h6>
+                <p>Peewee (simple, lightweight), Pony ORM (uses Python generator expressions for queries).</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-data" id="card-nosql">
+              <div class="card-body">
+                <h5><i class="bi bi-file-earmark-zip-fill"></i> NoSQL Databases</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Interfacing with <span class="term">MongoDB</span> (PyMongo),
+                    <span class="term">Redis</span> (redis-py), <span class="term">Cassandra</span> (cassandra-driver),
+                    etc., for diverse data storage needs.
+                    <a href="https://pymongo.readthedocs.io/" target="_blank" rel="noopener noreferrer">PyMongo</a>,
+                    <a href="https://redis-py.readthedocs.io/" target="_blank" rel="noopener noreferrer">redis-py</a>
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseNoSQL"
+                    aria-expanded="false"
+                    aria-controls="collapseNoSQL"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseNoSQL">
+                <h6>Document Stores (e.g., MongoDB)</h6>
+                <ul>
+                  <li><strong>Driver:</strong> `pymongo`.</li>
+                  <li><strong>Use Cases:</strong> Flexible schema, content management, catalogs, user profiles.</li>
+                </ul>
+                <h6>Key-Value Stores (e.g., Redis, Memcached)</h6>
+                <ul>
+                  <li><strong>Drivers:</strong> `redis-py`, `pylibmc`.</li>
+                  <li>
+                    <strong>Use Cases:</strong> Caching, session management, real-time leaderboards, message queues.
+                  </li>
+                </ul>
+                <h6>Wide-Column Stores (e.g., Cassandra)</h6>
+                <ul>
+                  <li><strong>Driver:</strong> `cassandra-driver`.</li>
+                  <li><strong>Use Cases:</strong> High-availability, write-heavy workloads, time-series data.</li>
+                </ul>
+                <h6>Graph Databases (e.g., Neo4j)</h6>
+                <ul>
+                  <li><strong>Driver:</strong> `neo4j-driver`.</li>
+                  <li><strong>Use Cases:</strong> Social networks, recommendation engines, fraud detection.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-data" id="card-serialization">
+              <div class="card-body">
+                <h5><i class="bi bi-braces"></i> Data Serialization</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Handling formats like <span class="term">JSON</span> (`json` module),
+                    <span class="term">Protocol Buffers</span> (`protobuf`),
+                    <span class="term">Avro</span> (`fastavro`), XML for data interchange.
+                    <a href="https://docs.python.org/3/library/json.html" target="_blank" rel="noopener noreferrer"
+                      >JSON module</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseSerialization"
+                    aria-expanded="false"
+                    aria-controls="collapseSerialization"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseSerialization">
+                <h6>Common Formats & Libraries</h6>
+                <ul>
+                  <li>
+                    <strong>JSON (`json`):</strong> Ubiquitous for web APIs. Human-readable, text-based. <br /><em
+                      >Libraries:</em
+                    >
+                    Standard library `json`, `orjson` (faster).
+                  </li>
+                  <li>
+                    <strong>XML (`xml.etree.ElementTree`, `lxml`):</strong> Standard for enterprise systems,
+                    configuration. <br /><em>Libraries:</em> Standard library `xml.etree.ElementTree`, `lxml`
+                    (feature-rich, faster).
+                  </li>
+                  <li>
+                    <strong>Protocol Buffers (`protobuf`):</strong> Google's binary format. Efficient, schema-based,
+                    good for RPC. <br /><em>Library:</em> `protobuf`.
+                  </li>
+                  <li>
+                    <strong>Apache Avro (`fastavro`, `avro`):</strong> Binary format with schema evolution support.
+                    Common in Hadoop/Kafka ecosystems. <br /><em>Libraries:</em> `fastavro` (performant), `avro`.
+                  </li>
+                  <li>
+                    <strong>MessagePack (`msgpack`):</strong> Binary format, like JSON but faster and smaller. <br /><em
+                      >Library:</em
+                    >
+                    `msgpack`.
+                  </li>
+                  <li>
+                    <strong>Pickle (`pickle`):</strong> Python-specific binary serialization.
+                    <strong>Warning:</strong> Not secure against erroneous or maliciously constructed data. Only
+                    unpickle data you trust.
+                  </li>
+                </ul>
+                <p>
+                  Choosing a format depends on factors like performance, readability, schema evolution needs, and
+                  interoperability.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VI. CONCURRENCY AND PARALLELISM -->
+      <div class="schema-container section-concurrency" data-section-id="section-python-concurrency">
+        <h2 class="section-title" id="section-python-concurrency-title">Concurrency & Parallelism</h2>
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-concurrency" id="card-gil">
+              <div class="card-body">
+                <h5><i class="bi bi-lock-fill"></i> Global Interpreter Lock (GIL)</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    A mutex that protects access to Python objects, preventing multiple native threads from executing
+                    Python bytecodes at once in <span class="term">CPython</span>.
+                    <a
+                      href="https://wiki.python.org/moin/GlobalInterpreterLock"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >GIL Wiki</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseGIL"
+                    aria-expanded="false"
+                    aria-controls="collapseGIL"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseGIL">
+                <h6>Impact</h6>
+                <ul>
+                  <li>
+                    <strong>Limits CPU-bound Parallelism in Threads:</strong> Only one thread can hold the GIL and
+                    execute Python bytecode at any given time. This means Python threads are great for I/O-bound tasks
+                    (where threads wait for external operations) but not for CPU-bound tasks that require true parallel
+                    execution on multiple cores.
+                  </li>
+                  <li>
+                    <strong>No Impact on Multiprocessing:</strong> The `multiprocessing` module bypasses the GIL by
+                    using separate processes, each with its own Python interpreter and memory space.
+                  </li>
+                  <li>
+                    <strong>C Extensions:</strong> Well-written C extensions can release the GIL during computationally
+                    intensive tasks, allowing other Python threads to run.
+                  </li>
+                </ul>
+                <h6>Considerations for Architects</h6>
+                <p>
+                  Understand the GIL's implications when choosing concurrency models. For CPU-bound parallelism, prefer
+                  `multiprocessing` or external systems. For I/O-bound concurrency, `threading` or `asyncio` are
+                  effective.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-concurrency" id="card-threading-multiprocessing">
+              <div class="card-body">
+                <h5><i class="bi bi-intersect"></i> Threading & Multiprocessing</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    <span class="term">`threading`</span> for I/O-bound tasks.
+                    <span class="term">`multiprocessing`</span> for CPU-bound tasks to achieve true parallelism.
+                    <a href="https://docs.python.org/3/library/threading.html" target="_blank" rel="noopener noreferrer"
+                      >Threading</a
+                    >,
+                    <a
+                      href="https://docs.python.org/3/library/multiprocessing.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Multiprocessing</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseThreadingMulti"
+                    aria-expanded="false"
+                    aria-controls="collapseThreadingMulti"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseThreadingMulti">
+                <h6>`threading` Module</h6>
+                <ul>
+                  <li>
+                    <strong>Use Case:</strong> I/O-bound operations (e.g., network requests, file operations) where
+                    threads spend time waiting.
+                  </li>
+                  <li>
+                    <strong>Concurrency Model:</strong> Multiple threads within a single process, sharing memory. GIL
+                    limits parallel CPU execution.
+                  </li>
+                  <li>
+                    <strong>Overhead:</strong> Lower than multiprocessing as it doesn't involve creating new processes.
+                  </li>
+                </ul>
+                <h6>`multiprocessing` Module</h6>
+                <ul>
+                  <li>
+                    <strong>Use Case:</strong> CPU-bound operations (e.g., complex calculations, data processing) that
+                    can benefit from multiple CPU cores.
+                  </li>
+                  <li>
+                    <strong>Parallelism Model:</strong> Spawns multiple processes, each with its own interpreter and
+                    memory space, bypassing the GIL.
+                  </li>
+                  <li>
+                    <strong>Overhead:</strong> Higher due to process creation and inter-process communication (IPC) if
+                    data needs to be shared.
+                  </li>
+                  <li><strong>IPC Mechanisms:</strong> Pipes, Queues, shared memory.</li>
+                </ul>
+                <h6>`concurrent.futures`</h6>
+                <p>
+                  A high-level interface for asynchronously executing callables using thread pools
+                  (`ThreadPoolExecutor`) or process pools (`ProcessPoolExecutor`). Simplifies managing groups of threads
+                  or processes.
+                  <a
+                    href="https://docs.python.org/3/library/concurrent.futures.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >concurrent.futures</a
+                  >
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-concurrency" id="card-asyncio">
+              <div class="card-body">
+                <h5><i class="bi bi-hurricane"></i> Asyncio (async/await)</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Asynchronous programming with <span class="term">`async/await`</span> syntax for concurrent
+                    I/O-bound tasks using a single thread and an event loop.
+                    <a href="https://docs.python.org/3/library/asyncio.html" target="_blank" rel="noopener noreferrer"
+                      >Asyncio Docs</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseAsyncio"
+                    aria-expanded="false"
+                    aria-controls="collapseAsyncio"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseAsyncio">
+                <h6>Core Concepts</h6>
+                <ul>
+                  <li><strong>Event Loop:</strong> Manages and distributes the execution of different tasks.</li>
+                  <li><strong>Coroutines (`async def`):</strong> Special functions that can be paused and resumed.</li>
+                  <li>
+                    <strong>`await`:</strong> Pauses the execution of a coroutine until an awaitable object (e.g.,
+                    another coroutine, a Task) completes.
+                  </li>
+                  <li><strong>Tasks:</strong> Schedule and run coroutines concurrently in the event loop.</li>
+                  <li><strong>Futures:</strong> Represent the eventual result of an asynchronous operation.</li>
+                </ul>
+                <h6>Use Cases</h6>
+                <p>
+                  High-concurrency I/O-bound applications like web servers (e.g., FastAPI, Sanic, aiohttp), network
+                  clients, database interactions. Can handle thousands of connections with fewer resources than
+                  traditional threading.
+                </p>
+                <h6>Benefits</h6>
+                <ul>
+                  <li><strong>High Concurrency:</strong> Efficiently handles many simultaneous I/O operations.</li>
+                  <li>
+                    <strong>Lower Overhead:</strong> Compared to threads for very high numbers of concurrent tasks.
+                  </li>
+                  <li><strong>Explicit Concurrency:</strong> Code clearly indicates where yielding occurs.</li>
+                </ul>
+                <h6>Challenges</h6>
+                <p>
+                  Requires an ecosystem of asyncio-compatible libraries. Mixing synchronous and asynchronous code needs
+                  care.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VII. TOOLING, TESTING & DEVOPS -->
+      <div class="schema-container section-tooling" data-section-id="section-python-tooling">
+        <h2 class="section-title" id="section-python-tooling-title">Tooling, Testing & DevOps</h2>
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-tooling" id="card-testing-frameworks">
+              <div class="card-body">
+                <h5><i class="bi bi-check2-circle"></i> Testing Frameworks</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    <span class="term">PyTest</span> for rich features and less boilerplate.
+                    <span class="term">Unittest</span> (standard library) for xUnit style.
+                    <span class="term">unittest.mock</span> for mocking.
+                    <a href="https://docs.pytest.org/" target="_blank" rel="noopener noreferrer">PyTest</a>
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseTestingFrameworks"
+                    aria-expanded="false"
+                    aria-controls="collapseTestingFrameworks"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseTestingFrameworks">
+                <h6>PyTest</h6>
+                <ul>
+                  <li>
+                    <strong>Features:</strong> Fixtures, plain assert statements, powerful plugin ecosystem, detailed
+                    reporting.
+                  </li>
+                  <li><strong>Philosophy:</strong> Less boilerplate, more Pythonic tests.</li>
+                </ul>
+                <h6>Unittest</h6>
+                <ul>
+                  <li><strong>Features:</strong> Standard library, xUnit style (setUp, tearDown, test_methods).</li>
+                  <li><strong>Philosophy:</strong> Traditional, well-understood testing structure.</li>
+                </ul>
+                <h6>Mocking (`unittest.mock`)</h6>
+                <ul>
+                  <li>
+                    <strong>Purpose:</strong> Replace parts of your system with mock objects, making tests faster and
+                    more isolated.
+                  </li>
+                  <li><strong>Tools:</strong> `Mock`, `MagicMock`, `patch`.</li>
+                </ul>
+                <h6>Other Tools</h6>
+                <p>
+                  `coverage.py` for test coverage measurement. `tox` for automating testing in different environments.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-tooling" id="card-linters-formatters">
+              <div class="card-body">
+                <h5><i class="bi bi-palette-fill"></i> Linters & Formatters</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    <span class="term">Flake8</span>, <span class="term">Pylint</span> for linting.
+                    <span class="term">Black</span>, <span class="term">isort</span> for auto-formatting to enforce code
+                    style (e.g., PEP 8).
+                    <a href="https://black.readthedocs.io/" target="_blank" rel="noopener noreferrer">Black</a>
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseLintersFormatters"
+                    aria-expanded="false"
+                    aria-controls="collapseLintersFormatters"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseLintersFormatters">
+                <h6>Linters</h6>
+                <ul>
+                  <li>
+                    <strong>Flake8:</strong> Combines PyFlakes (error checking), PEP8/pycodestyle (style checking), and
+                    McCabe (complexity checking).
+                  </li>
+                  <li>
+                    <strong>Pylint:</strong> More extensive checks, including code smells and potential bugs. Highly
+                    configurable.
+                  </li>
+                  <li><strong>Mypy:</strong> Static type checker for type-hinted code.</li>
+                </ul>
+                <h6>Formatters</h6>
+                <ul>
+                  <li>
+                    <strong>Black:</strong> "The uncompromising Python code formatter." Enforces a strict, consistent
+                    style with minimal configuration.
+                  </li>
+                  <li>
+                    <strong>isort:</strong> Sorts imports alphabetically and automatically separates into sections.
+                  </li>
+                  <li>
+                    <strong>Autopep8:</strong> Automatically formats Python code to conform to the PEP 8 style guide.
+                  </li>
+                </ul>
+                <h6>Benefits</h6>
+                <p>
+                  Improve code quality, consistency, readability, and catch potential errors early. Essential for team
+                  collaboration.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-tooling" id="card-deployment-devops">
+              <div class="card-body">
+                <h5><i class="bi bi-rocket-launch-fill"></i> Deployment & DevOps</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    WSGI/ASGI servers (<span class="term">Gunicorn</span>, <span class="term">Uvicorn</span>),
+                    <span class="term">Docker</span>, Kubernetes, CI/CD (GitHub Actions, Jenkins), virtual environments.
+                    <a href="https://gunicorn.org/" target="_blank" rel="noopener noreferrer">Gunicorn</a>,
+                    <a href="https://www.uvicorn.org/" target="_blank" rel="noopener noreferrer">Uvicorn</a>
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseDeploymentDevOps"
+                    aria-expanded="false"
+                    aria-controls="collapseDeploymentDevOps"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseDeploymentDevOps">
+                <h6>Application Servers</h6>
+                <ul>
+                  <li>
+                    <strong>WSGI (Web Server Gateway Interface):</strong> Standard for synchronous Python web apps.
+                    <em>Servers:</em> Gunicorn, uWSGI.
+                  </li>
+                  <li>
+                    <strong>ASGI (Asynchronous Server Gateway Interface):</strong> Standard for asynchronous Python web
+                    apps. <em>Servers:</em> Uvicorn, Daphne, Hypercorn.
+                  </li>
+                </ul>
+                <h6>Containerization & Orchestration</h6>
+                <ul>
+                  <li>
+                    <strong>Docker:</strong> Package applications and dependencies into containers. (`Dockerfile`)
+                  </li>
+                  <li><strong>Docker Compose:</strong> Define and run multi-container Docker applications.</li>
+                  <li>
+                    <strong>Kubernetes (K8s):</strong> Automate deployment, scaling, and management of containerized
+                    applications.
+                  </li>
+                </ul>
+                <h6>CI/CD (Continuous Integration/Continuous Deployment)</h6>
+                <p>
+                  Automate build, test, and deployment pipelines. <em>Tools:</em> GitHub Actions, GitLab CI, Jenkins,
+                  CircleCI.
+                </p>
+                <h6>Environment Management</h6>
+                <ul>
+                  <li><strong>Virtual Environments (`venv`):</strong> Isolate project dependencies.</li>
+                  <li>
+                    <strong>Dependency Management:</strong> `pip` with `requirements.txt`, or tools like `Poetry` or
+                    `Pipenv`.
+                  </li>
+                </ul>
+                <h6>Infrastructure as Code (IaC)</h6>
+                <p>Manage infrastructure using code. <em>Tools:</em> Terraform, Ansible, Pulumi (can use Python).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIII. SECURITY CONSIDERATIONS -->
+      <div class="schema-container section-security" data-section-id="section-python-security">
+        <h2 class="section-title" id="section-python-security-title">Security Considerations</h2>
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-security" id="card-owasp-python">
+              <div class="card-body">
+                <h5><i class="bi bi-shield-shaded"></i> OWASP Top 10 in Python</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Addressing common web vulnerabilities: <span class="term">Injection</span>,
+                    <span class="term">XSS</span>, <span class="term">Insecure Deserialization</span>. Use ORMs,
+                    template auto-escaping.
+                    <a href="https://owasp.org/Top10/" target="_blank" rel="noopener noreferrer">OWASP Top 10</a>
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseOwaspPython"
+                    aria-expanded="false"
+                    aria-controls="collapseOwaspPython"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseOwaspPython">
+                <h6>Key Vulnerabilities & Python Mitigations</h6>
+                <ul>
+                  <li>
+                    <strong>Injection (e.g., SQL Injection):</strong> Use ORMs (SQLAlchemy, Django ORM) with
+                    parameterized queries. Avoid string formatting for SQL.
+                  </li>
+                  <li>
+                    <strong>Broken Authentication:</strong> Use strong password hashing (e.g., `bcrypt`, `argon2`).
+                    Secure session management (framework features). Implement MFA.
+                  </li>
+                  <li>
+                    <strong>Sensitive Data Exposure:</strong> Encrypt data at rest and in transit (HTTPS). Avoid storing
+                    sensitive data unnecessarily. Use secure APIs for cryptography.
+                  </li>
+                  <li>
+                    <strong>XML External Entities (XXE):</strong> Use safe XML parsers (e.g., `defusedxml` or configure
+                    `lxml` securely).
+                  </li>
+                  <li>
+                    <strong>Broken Access Control:</strong> Enforce authorization checks at each layer. Principle of
+                    least privilege.
+                  </li>
+                  <li>
+                    <strong>Security Misconfiguration:</strong> Keep software updated. Harden configurations (OS, web
+                    server, database). Disable debug modes in production.
+                  </li>
+                  <li>
+                    <strong>Cross-Site Scripting (XSS):</strong> Use template engines with auto-escaping (e.g., Jinja2,
+                    Django Templates). Sanitize user input where necessary. Set appropriate `Content-Security-Policy`
+                    headers.
+                  </li>
+                  <li>
+                    <strong>Insecure Deserialization:</strong> Avoid `pickle` with untrusted data. Use safer
+                    serialization formats like JSON for untrusted input. If `pickle` must be used, ensure data integrity
+                    and authenticity.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-security" id="card-auth-secrets">
+              <div class="card-body">
+                <h5><i class="bi bi-key-fill"></i> Auth & Secrets Management</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Authentication/Authorization (OAuth, JWT with <span class="term">PyJWT</span>).
+                    <span class="term">Secrets management</span> using environment variables, Vault, or cloud KMS.
+                    <a href="https://pyjwt.readthedocs.io/" target="_blank" rel="noopener noreferrer">PyJWT</a>
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseAuthSecrets"
+                    aria-expanded="false"
+                    aria-controls="collapseAuthSecrets"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseAuthSecrets">
+                <h6>Authentication & Authorization</h6>
+                <ul>
+                  <li>
+                    <strong>OAuth 2.0 / OpenID Connect (OIDC):</strong> For delegated authorization and federated
+                    identity. Libraries like `Authlib`, `python-oauth2`.
+                  </li>
+                  <li>
+                    <strong>JSON Web Tokens (JWT):</strong> For stateless authentication in APIs. Library: `PyJWT`.
+                    Ensure proper algorithm usage (e.g., RS256) and key management.
+                  </li>
+                  <li>
+                    <strong>Framework-Specific Auth:</strong> Django's built-in authentication system, Flask extensions
+                    (e.g., Flask-Login, Flask-Security).
+                  </li>
+                  <li>
+                    <strong>Role-Based Access Control (RBAC) / Attribute-Based Access Control (ABAC):</strong> Implement
+                    fine-grained authorization logic.
+                  </li>
+                </ul>
+                <h6>Secrets Management</h6>
+                <ul>
+                  <li>
+                    <strong>Environment Variables:</strong> Simple for local development, but ensure they are not
+                    committed to version control.
+                  </li>
+                  <li>
+                    <strong>`.env` Files:</strong> Store environment variables locally (use `python-dotenv`). Add `.env`
+                    to `.gitignore`.
+                  </li>
+                  <li><strong>HashiCorp Vault:</strong> Centralized secrets management solution.</li>
+                  <li>
+                    <strong>Cloud Provider KMS:</strong> AWS Secrets Manager, Google Cloud Secret Manager, Azure Key
+                    Vault.
+                  </li>
+                  <li>
+                    <strong>Application-Level Encryption:</strong> For sensitive configuration values if other methods
+                    are not feasible.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-security" id="card-dependency-security">
+              <div class="card-body">
+                <h5><i class="bi bi-shield-check"></i> Dependency & Code Security</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Tools like <span class="term">`pip-audit`</span> or <span class="term">`safety`</span> for checking
+                    known vulnerabilities in dependencies. Secure coding practices.
+                    <a href="https://pypi.org/project/pip-audit/" target="_blank" rel="noopener noreferrer"
+                      >pip-audit</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseDependencySecurity"
+                    aria-expanded="false"
+                    aria-controls="collapseDependencySecurity"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseDependencySecurity">
+                <h6>Dependency Security</h6>
+                <ul>
+                  <li>
+                    <strong>Vulnerability Scanning:</strong> Regularly scan dependencies for known vulnerabilities.
+                    <em>Tools:</em> `pip-audit`, `safety`, GitHub Dependabot, Snyk.
+                  </li>
+                  <li>
+                    <strong>Pin Dependencies:</strong> Use `requirements.txt` with specific versions (`==`) or hash
+                    checking (`--hash`) to ensure reproducible and verified builds. Poetry and Pipenv help manage lock
+                    files.
+                  </li>
+                  <li>
+                    <strong>Minimize Dependencies:</strong> Only include necessary packages to reduce attack surface.
+                  </li>
+                  <li>
+                    <strong>Private Package Repositories:</strong> Use services like PyPI Server, Artifactory, or Nexus
+                    for private packages.
+                  </li>
+                </ul>
+                <h6>Secure Coding Practices</h6>
+                <ul>
+                  <li>
+                    <strong>Input Validation:</strong> Validate all external input (user data, API requests, file
+                    uploads) for type, length, format, and range. Libraries like Pydantic (used by FastAPI) are
+                    excellent for this.
+                  </li>
+                  <li>
+                    <strong>Output Encoding:</strong> Encode output appropriately for its context to prevent XSS
+                    (handled by good templating engines).
+                  </li>
+                  <li>
+                    <strong>Principle of Least Privilege:</strong> Processes and users should only have the permissions
+                    necessary to perform their tasks.
+                  </li>
+                  <li><strong>Regular Code Reviews:</strong> Include security considerations in peer reviews.</li>
+                  <li>
+                    <strong>Static Application Security Testing (SAST):</strong> Tools like Bandit can analyze code for
+                    common security issues.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IX. ADVANCED TOPICS & PERFORMANCE -->
+      <div class="schema-container section-advanced" data-section-id="section-python-advanced">
+        <h2 class="section-title" id="section-python-advanced-title">Advanced Topics & Performance</h2>
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-advanced" id="card-profiling">
+              <div class="card-body">
+                <h5><i class="bi bi-speedometer"></i> Profiling & Optimization</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Identify performance bottlenecks using <span class="term">`cProfile`</span>,
+                    <span class="term">`line_profiler`</span>, <span class="term">`memory_profiler`</span>. Optimize
+                    critical sections.
+                    <a href="https://docs.python.org/3/library/profile.html" target="_blank" rel="noopener noreferrer"
+                      >Profiling Docs</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseProfiling"
+                    aria-expanded="false"
+                    aria-controls="collapseProfiling"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseProfiling">
+                <h6>Profiling Tools</h6>
+                <ul>
+                  <li>
+                    <strong>`cProfile` / `profile`:</strong> Built-in profilers for measuring execution time of
+                    functions.
+                  </li>
+                  <li><strong>`pstats`:</strong> Module for analyzing `cProfile` output.</li>
+                  <li>
+                    <strong>`line_profiler`:</strong> For line-by-line profiling of functions (shows time spent on each
+                    line).
+                  </li>
+                  <li><strong>`memory_profiler`:</strong> For line-by-line memory usage analysis.</li>
+                  <li>
+                    <strong>Visualization Tools:</strong> SnakeViz, KCachegrind (with `pyprof2calltree`) for visualizing
+                    profiler output.
+                  </li>
+                </ul>
+                <h6>Optimization Strategies</h6>
+                <ul>
+                  <li>
+                    <strong>Algorithmic Improvements:</strong> Choose more efficient algorithms and data structures.
+                  </li>
+                  <li>
+                    <strong>Caching:</strong> Memoization, caching results of expensive computations or I/O operations
+                    (e.g., using Redis, Memcached, or `functools.lru_cache`).
+                  </li>
+                  <li>
+                    <strong>Vectorization (NumPy/Pandas):</strong> Use array operations instead of explicit loops for
+                    numerical data.
+                  </li>
+                  <li><strong>Avoid Unnecessary Work:</strong> Lazy evaluation, optimize loops.</li>
+                  <li>
+                    <strong>Cython / Numba / Rust Extensions:</strong> Rewrite performance-critical sections in
+                    C/C++/Rust or use JIT compilers like Numba.
+                  </li>
+                  <li><strong>Database Optimization:</strong> Indexing, query optimization, connection pooling.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-advanced" id="card-caching">
+              <div class="card-body">
+                <h5><i class="bi bi-archive-fill"></i> Caching Strategies</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Improve performance and reduce load by caching data. In-memory (<span class="term"
+                      >`functools.lru_cache`</span
+                    >), distributed (<span class="term">Redis</span>, <span class="term">Memcached</span>), HTTP
+                    caching.
+                    <a
+                      href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >HTTP Caching</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseCaching"
+                    aria-expanded="false"
+                    aria-controls="collapseCaching"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseCaching">
+                <h6>Types of Caching</h6>
+                <ul>
+                  <li>
+                    <strong>In-Memory Cache:</strong> <em>Examples:</em> Python dictionaries, `functools.lru_cache`,
+                    libraries like `cachetools`. <em>Pros:</em> Very fast access. <em>Cons:</em> Limited to a single
+                    process, data lost on restart.
+                  </li>
+                  <li>
+                    <strong>Distributed Cache:</strong> <em>Examples:</em> Redis, Memcached. <em>Pros:</em> Shared
+                    across multiple processes/servers, persistent (Redis). <em>Cons:</em> Slower than in-memory, network
+                    latency.
+                  </li>
+                  <li>
+                    <strong>HTTP Caching:</strong> <em>Mechanisms:</em> `Cache-Control`, `ETag`, `Last-Modified`
+                    headers. Implemented by browsers, CDNs, reverse proxies. <em>Pros:</em> Reduces server load,
+                    improves client-side performance.
+                  </li>
+                  <li>
+                    <strong>CDN (Content Delivery Network):</strong> Caches static assets (images, CSS, JS) and
+                    sometimes dynamic content closer to users.
+                  </li>
+                </ul>
+                <h6>Cache Invalidation Strategies</h6>
+                <p>
+                  TTL (Time-To-Live), write-through, write-back, event-based invalidation. Choosing the right strategy
+                  is crucial to avoid stale data.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="info-card card-advanced" id="card-python-idioms">
+              <div class="card-body">
+                <h5><i class="bi bi-lightbulb-fill"></i> Pythonic Idioms & Best Practices</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary">
+                    Writing clean, readable, and efficient Python code. Follow <span class="term">PEP 8</span>,
+                    <span class="term">PEP 20 (Zen of Python)</span>. Favor composition, use context managers.
+                    <a href="https://peps.python.org/pep-0020/" target="_blank" rel="noopener noreferrer"
+                      >Zen of Python</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseIdioms"
+                    aria-expanded="false"
+                    aria-controls="collapseIdioms"
+                  >
+                    Details <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseIdioms">
+                <h6>Key Principles</h6>
+                <ul>
+                  <li>
+                    <strong>Readability Counts (PEP 8, PEP 20):</strong> Write code that is easy to understand and
+                    maintain.
+                  </li>
+                  <li><strong>Explicit is better than implicit.</strong></li>
+                  <li><strong>Simple is better than complex.</strong></li>
+                  <li>
+                    <strong>Comprehensions:</strong> Use list, dict, set comprehensions for concise and readable
+                    sequence/mapping creation.
+                  </li>
+                  <li>
+                    <strong>Generators:</strong> Use generator expressions and functions for memory-efficient iteration.
+                  </li>
+                  <li><strong>Context Managers (`with` statement):</strong> Ensure resources are properly managed.</li>
+                  <li>
+                    <strong>Duck Typing & EAFP:</strong> "Easier to Ask for Forgiveness than Permission" (try-except
+                    blocks) often preferred over LBYL ("Look Before You Leap" - if checks).
+                  </li>
+                  <li>
+                    <strong>Favor Composition over Inheritance:</strong> Leads to more flexible and maintainable
+                    designs.
+                  </li>
+                  <li>
+                    <strong>Avoid Mutable Default Arguments:</strong> Can lead to surprising behavior. Use `None` and
+                    initialize inside the function.
+                  </li>
+                  <li>
+                    <strong>Use `enumerate`</strong> for iterating with indices, and `zip` for parallel iteration.
+                  </li>
+                </ul>
+                <h6>Anti-Patterns to Avoid</h6>
+                <ul>
+                  <li>Over-reliance on global state.</li>
+                  <li>Large, monolithic functions/classes.</li>
+                  <li>Catching generic `Exception` without specific handling or re-raising.</li>
+                  <li>Not using virtual environments for projects.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- X. KEY CONSIDERATIONS FOR ARCHITECTS (General) -->
+      <div class="schema-container section-general" data-section-id="section-arch-considerations-general">
+        <h2 class="section-title" id="section-arch-considerations-general-title">
+          Key Considerations for Python Architects
+        </h2>
+        <div class="row">
+          <div class="col-12">
+            <div class="info-card card-general" id="card-arch-summary-python">
+              <div class="card-body">
+                <h5 class="text-center"><i class="bi bi-building-gear"></i> Architectural Decision Points</h5>
+                <div class="card-content-wrapper">
+                  <p class="summary text-center">
+                    Python architects must balance <span class="term">scalability</span>,
+                    <span class="term">resilience</span>, <span class="term">security</span>,
+                    <span class="term">maintainability</span>, <span class="term">performance</span>,
+                    <span class="term">deployment</span>, and <span class="term">cost</span>. Choosing appropriate
+                    patterns, frameworks, and libraries is vital.
+                    <a href="https://martinfowler.com/architecture/" target="_blank" rel="noopener noreferrer"
+                      >Martin Fowler on Architecture</a
+                    >
+                  </p>
+                  <button
+                    class="btn btn-sm details-toggle mx-auto"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseArchConsiderationsPython"
+                    aria-expanded="false"
+                    aria-controls="collapseArchConsiderationsPython"
+                  >
+                    Explore Further <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse collapse-content" id="collapseArchConsiderationsPython">
+                <h6>Core Tenets for Python Systems</h6>
+                <ul>
+                  <li>
+                    <strong>Scalability:</strong> <strong>Consider:</strong> Horizontal scaling (more instances) vs.
+                    Vertical scaling (larger instances). Stateless services are easier to scale horizontally. Use load
+                    balancers. <strong>Python:</strong> Async frameworks (FastAPI, aiohttp) for I/O-bound scaling.
+                    Multiprocessing for CPU-bound. Distributed task queues (Celery, RQ).
+                  </li>
+                  <li>
+                    <strong>Resilience & Fault Tolerance:</strong> <strong>Consider:</strong> Retries, circuit breakers,
+                    timeouts, idempotent operations, health checks. <strong>Python:</strong> Libraries like `tenacity`
+                    for retries, `pybreaker` for circuit breakers. Design for failure.
+                  </li>
+                  <li>
+                    <strong>Security by Design:</strong> <strong>Consider:</strong> OWASP Top 10, threat modeling,
+                    secure dependencies, data protection. <strong>Python:</strong> Utilize framework security features,
+                    validate all inputs, manage secrets securely. (See Security section).
+                  </li>
+                  <li>
+                    <strong>Maintainability & Testability:</strong> <strong>Consider:</strong> Clean code (PEP 8),
+                    modular design, SOLID principles, comprehensive testing (unit, integration, E2E).
+                    <strong>Python:</strong> Type hinting (Mypy), linters, formatters, good documentation (docstrings,
+                    Sphinx).
+                  </li>
+                  <li>
+                    <strong>Performance Optimization:</strong> <strong>Consider:</strong> Profiling, caching, efficient
+                    algorithms, database optimization. Understand GIL implications. <strong>Python:</strong> Choose
+                    appropriate concurrency models. Use performant libraries (e.g., NumPy for numerics, `orjson` for
+                    JSON). Consider Cython/Numba for critical sections if needed.
+                  </li>
+                  <li>
+                    <strong>Deployment & Operations:</strong> <strong>Consider:</strong> Containerization (Docker),
+                    orchestration (Kubernetes), CI/CD, logging, monitoring. <strong>Python:</strong> WSGI/ASGI servers,
+                    virtual environments, IaC tools.
+                  </li>
+                  <li>
+                    <strong>Observability:</strong> <strong>Consider:</strong> Structured logging, metrics, distributed
+                    tracing. <strong>Python:</strong> `logging` module, Prometheus clients (`prometheus_client`),
+                    OpenTelemetry integration.
+                  </li>
+                  <li>
+                    <strong>Cost Optimization:</strong> <strong>Consider:</strong> Resource utilization, choosing
+                    appropriate cloud services/tiers, serverless options. <strong>Python:</strong> Efficient code can
+                    reduce compute costs. Serverless Python for event-driven tasks.
+                  </li>
+                  <li>
+                    <strong>Interoperability:</strong> <strong>Consider:</strong> Interacting with other
+                    systems/languages (e.g., via REST APIs, gRPC, message queues, or C extensions).
+                    <strong>Python:</strong> `ctypes` or `CFFI` for C interop. Strong HTTP and networking libraries.
+                  </li>
+                </ul>
+                <p>
+                  The choice of Python frameworks, libraries, and architectural patterns should align with these
+                  non-functional requirements and the specific goals of the project.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="container text-center pb-3">
+      <p class="mb-2">© <span id="currentYear"></span> Python Architect Cheatsheet Contributor</p>
+      <div>
+        <a
+          href="https://docs.python.org/3/"
+          title="Python Documentation"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mx-2 link-secondary"
+        >
+          <i class="bi bi-book-fill"></i> Python Docs
+        </a>
+        <a
+          href="https://www.python.org/dev/peps/"
+          title="Python Enhancement Proposals"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mx-2 link-secondary"
+        >
+          <i class="bi bi-file-earmark-text-fill"></i> PEPs
+        </a>
+        <a
+          href="https://realpython.com/"
+          title="Real Python Tutorials"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mx-2 link-secondary"
+        >
+          <i class="bi bi-mortarboard-fill"></i> Real Python
+        </a>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // JavaScript for LeaderLines and dimming effects has been removed.
+        // The remaining JavaScript handles the collapse toggle icons and current year.
+
+        const collapseElements = document.querySelectorAll(".collapse");
+        collapseElements.forEach((collapseEl) => {
+          const button = document.querySelector(`.details-toggle[data-bs-target="#${collapseEl.id}"]`);
+          const icon = button ? button.querySelector(".bi") : null;
+          if (button && icon) {
+            const updateIconAndButton = (isShown) => {
+              if (isShown) {
+                icon.classList.remove("bi-chevron-down");
+                icon.classList.add("bi-chevron-up");
+                button.setAttribute("aria-expanded", "true");
+              } else {
+                icon.classList.remove("bi-chevron-up");
+                icon.classList.add("bi-chevron-down");
+                button.setAttribute("aria-expanded", "false");
+              }
+            };
+
+            updateIconAndButton(collapseEl.classList.contains("show"));
+
+            collapseEl.addEventListener("show.bs.collapse", () => {
+              updateIconAndButton(true);
+            });
+            // No need for positionLines on shown/hidden as lines are removed
+            // collapseEl.addEventListener('shown.bs.collapse', positionLines);
+            collapseEl.addEventListener("hide.bs.collapse", () => {
+              updateIconAndButton(false);
+            });
+            // collapseEl.addEventListener('hidden.bs.collapse', positionLines);
+          }
+        });
+
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
+      });
+    </script>
+  </body>
+</html>
