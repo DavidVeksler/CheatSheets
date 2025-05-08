@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>System Prompt Builder & Guide</title>
+    <link rel="canonical" href="http://cheatsheets.davidveksler.com/prompt-builder.html" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+      body {
+        padding-top: 20px;
+        background-color: #f8f9fa;
+      }
+      .container-main {
+        max-width: 960px; /* Slightly wider for guide content */
+      }
+      .form-check-input[type="checkbox"] {
+        cursor: pointer;
+      }
+      #generatedPromptContainer {
+        margin-top: 20px;
+        position: relative;
+      }
+      #copyPromptButton {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+      }
+      .advisor-panel {
+        background-color: #eef7ff;
+        border-left: 5px solid #0d6efd;
+        padding: 15px;
+        margin-bottom: 20px;
+        font-size: 0.9em;
+      }
+      .advisor-panel ul {
+        padding-left: 20px;
+        margin-bottom: 0;
+      }
+      .tab-content {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        padding: 20px;
+        background-color: #fff;
+      }
+      .nav-tabs .nav-link {
+        color: #0d6efd;
+      }
+      .nav-tabs .nav-link.active {
+        color: #495057;
+        background-color: #fff;
+        border-color: #dee2e6 #dee2e6 #fff;
+      }
+      .guide-section h4 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #0d6efd;
+      }
+      .guide-section h5 {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        color: #198754;
+      }
+      .guide-section p,
+      .guide-section li {
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+      .guide-section code {
+        background-color: #e9ecef;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-size: 0.9em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container container-main">
+      <div class="text-center mb-4">
+        <h1><i class="bi bi-journal-richtext"></i> System Prompt Builder & Engineering Guide</h1>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link active"
+            id="builder-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#builder-tab-pane"
+            type="button"
+            role="tab"
+            aria-controls="builder-tab-pane"
+            aria-selected="true"
+          >
+            <i class="bi bi-tools"></i> Prompt Builder
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="guide-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#guide-tab-pane"
+            type="button"
+            role="tab"
+            aria-controls="guide-tab-pane"
+            aria-selected="false"
+          >
+            <i class="bi bi-book-half"></i> Prompting Guide
+          </button>
+        </li>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content" id="myTabContent">
+        <!-- Builder Tab Pane -->
+        <div
+          class="tab-pane fade show active"
+          id="builder-tab-pane"
+          role="tabpanel"
+          aria-labelledby="builder-tab"
+          tabindex="0"
+        >
+          <p class="lead mt-2">Select an archetype or build your prompt from scratch.</p>
+          <div class="row mb-3 align-items-end">
+            <div class="col-md-6">
+              <label for="promptTemplate" class="form-label"><strong>Load a Template Archetype:</strong></label>
+              <select class="form-select" id="promptTemplate">
+                <option value="">-- Select a Template (or build custom) --</option>
+                <option value="technicalExplainer">Technical Explainer</option>
+                <option value="codeAssistant">Code Assistant</option>
+                <option value="creativeWriter">Creative Storyteller</option>
+                <option value="dataAnalyst">Data Analyst Assistant</option>
+                <option value="socraticTutor">Socratic Tutor</option>
+                <option value="reset">Start Fresh / Clear Form</option>
+              </select>
+            </div>
+            <div class="col-md-6 text-md-end">
+              <button class="btn btn-sm btn-outline-secondary me-2 mt-2 mt-md-0" id="exportConfig">
+                <i class="bi bi-download"></i> Export
+              </button>
+              <input type="file" id="importConfigFile" accept=".json" style="display: none" />
+              <button class="btn btn-sm btn-outline-secondary mt-2 mt-md-0" id="importConfigTrigger">
+                <i class="bi bi-upload"></i> Import
+              </button>
+            </div>
+          </div>
+
+          <div id="advisorPanel" class="advisor-panel d-none">
+            <h6><i class="bi bi-info-circle-fill"></i> Prompting Tips:</h6>
+            <ul id="advisorMessages"></ul>
+          </div>
+
+          <div class="accordion" id="promptBuilderAccordion">
+            <!-- Section 1: Core Identity & Goal -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button
+                  class="accordion-button"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseOne"
+                  aria-expanded="true"
+                >
+                  <input
+                    type="checkbox"
+                    class="form-check-input me-2 section-toggle"
+                    id="toggleCoreIdentity"
+                    checked
+                  />1. Core Identity & Goal
+                </button>
+              </h2>
+              <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#promptBuilderAccordion">
+                <div class="accordion-body">
+                  <div class="mb-3">
+                    <label for="aiRole" class="form-label"><strong>AI Role/Persona:</strong></label
+                    ><input
+                      type="text"
+                      class="form-control"
+                      id="aiRole"
+                      placeholder="e.g., You are an expert astrophysicist..."
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="aiGoal" class="form-label"><strong>Primary Goal:</strong></label
+                    ><input
+                      type="text"
+                      class="form-control"
+                      id="aiGoal"
+                      placeholder="e.g., Your primary goal is to explain complex concepts..."
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="aiAudience" class="form-label"><strong>Target Audience (Optional):</strong></label
+                    ><input
+                      type="text"
+                      class="form-control"
+                      id="aiAudience"
+                      placeholder="e.g., High school students."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Section 2: Key Tasks & Functions -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button
+                  class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseTwo"
+                >
+                  <input type="checkbox" class="form-check-input me-2 section-toggle" id="toggleKeyTasks" checked />2.
+                  Key Tasks & Functions
+                </button>
+              </h2>
+              <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#promptBuilderAccordion">
+                <div class="accordion-body">
+                  <label for="aiTasks" class="form-label"><strong>Specific Tasks:</strong></label
+                  ><textarea
+                    class="form-control"
+                    id="aiTasks"
+                    rows="3"
+                    placeholder="List tasks using action verbs..."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+            <!-- Section 3: Interaction Style & Tone -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button
+                  class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseThree"
+                >
+                  <input
+                    type="checkbox"
+                    class="form-check-input me-2 section-toggle"
+                    id="toggleInteractionStyle"
+                    checked
+                  />3. Interaction Style & Tone
+                </button>
+              </h2>
+              <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#promptBuilderAccordion">
+                <div class="accordion-body">
+                  <div class="mb-3">
+                    <label for="aiTone" class="form-label"><strong>Tone:</strong></label
+                    ><select class="form-select" id="aiTone">
+                      <option value="Neutral" selected>Neutral</option>
+                      <option value="Formal">Formal</option>
+                      <option value="Casual">Casual</option>
+                      <option value="Friendly">Friendly</option>
+                      <option value="Authoritative">Authoritative</option>
+                      <option value="Empathetic">Empathetic</option>
+                      <option value="Witty">Witty</option>
+                      <option value="Technical">Technical</option>
+                      <option value="Patient">Patient</option>
+                      <option value="Encouraging">Encouraging</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="aiCommunicationStyle" class="form-label"
+                      ><strong>Communication Style Details (Optional):</strong></label
+                    ><textarea
+                      class="form-control"
+                      id="aiCommunicationStyle"
+                      rows="2"
+                      placeholder="e.g., Ask clarifying questions..."
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Section 4: Content Standards & Expertise -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button
+                  class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseFour"
+                >
+                  <input
+                    type="checkbox"
+                    class="form-check-input me-2 section-toggle"
+                    id="toggleContentStandards"
+                    checked
+                  />4. Content Standards & Expertise
+                </button>
+              </h2>
+              <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#promptBuilderAccordion">
+                <div class="accordion-body">
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="emphasizeAccuracy" checked /><label
+                      class="form-check-label"
+                      for="emphasizeAccuracy"
+                      >Emphasize accuracy and evidence-based reasoning.</label
+                    >
+                  </div>
+                  <div class="mb-3">
+                    <label for="aiKnowledge" class="form-label"
+                      ><strong>Knowledge Base/Cutoff (Optional):</strong></label
+                    ><input
+                      type="text"
+                      class="form-control"
+                      id="aiKnowledge"
+                      placeholder="e.g., Your knowledge is current up to January 2024."
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="aiDepthDetail" class="form-label"><strong>Depth/Detail Level (Optional):</strong></label
+                    ><input
+                      type="text"
+                      class="form-control"
+                      id="aiDepthDetail"
+                      placeholder="e.g., Provide highly detailed answers."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Section 5: Output Requirements & Formatting -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button
+                  class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseFive"
+                >
+                  <input
+                    type="checkbox"
+                    class="form-check-input me-2 section-toggle"
+                    id="toggleOutputFormat"
+                    checked
+                  />5. Output Requirements & Formatting
+                </button>
+              </h2>
+              <div id="collapseFive" class="accordion-collapse collapse" data-bs-parent="#promptBuilderAccordion">
+                <div class="accordion-body">
+                  <div class="mb-3">
+                    <label for="aiOutputFormat" class="form-label"><strong>Format Instructions:</strong></label
+                    ><textarea
+                      class="form-control"
+                      id="aiOutputFormat"
+                      rows="3"
+                      placeholder="e.g., Respond in Markdown. Use JSON for lists..."
+                    ></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="aiLengthConstraints" class="form-label"
+                      ><strong>Length Constraints (Optional):</strong></label
+                    ><input
+                      type="text"
+                      class="form-control"
+                      id="aiLengthConstraints"
+                      placeholder="e.g., Keep summaries under 200 words."
+                    />
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="useHeadingsLists" checked /><label
+                      class="form-check-label"
+                      for="useHeadingsLists"
+                      >Use headings and lists for clarity.</label
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Section 6: Constraints & Safeguards -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button
+                  class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseSix"
+                >
+                  <input
+                    type="checkbox"
+                    class="form-check-input me-2 section-toggle"
+                    id="toggleConstraints"
+                    checked
+                  />6. Constraints & Safeguards
+                </button>
+              </h2>
+              <div id="collapseSix" class="accordion-collapse collapse" data-bs-parent="#promptBuilderAccordion">
+                <div class="accordion-body">
+                  <div class="mb-3">
+                    <label for="aiProhibitions" class="form-label"
+                      ><strong>Absolute Prohibitions (MUST NOT do):</strong></label
+                    ><textarea
+                      class="form-control"
+                      id="aiProhibitions"
+                      rows="3"
+                      placeholder="e.g., Do not provide medical advice..."
+                    ></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="aiAvoidances" class="form-label"
+                      ><strong>Scope Limitations / Topics to Avoid (Optional):</strong></label
+                    ><textarea
+                      class="form-control"
+                      id="aiAvoidances"
+                      rows="2"
+                      placeholder="e.g., Avoid discussing contemporary political figures."
+                    ></textarea>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="avoidBias" checked /><label
+                      class="form-check-label"
+                      for="avoidBias"
+                      >Strive for neutrality and avoid societal biases.</label
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Section 7: Reasoning & Process (Advanced) -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button
+                  class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseSeven"
+                >
+                  <input type="checkbox" class="form-check-input me-2 section-toggle" id="toggleReasoning" />7.
+                  Reasoning & Process
+                </button>
+              </h2>
+              <div id="collapseSeven" class="accordion-collapse collapse" data-bs-parent="#promptBuilderAccordion">
+                <div class="accordion-body">
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="useCoT" /><label
+                      class="form-check-label"
+                      for="useCoT"
+                      >Employ step-by-step reasoning (Chain-of-Thought).</label
+                    ><input
+                      type="text"
+                      class="form-control form-control-sm mt-1"
+                      id="cotPhrase"
+                      placeholder="Optional: Custom phrase e.g., 'Let's think step by step.'"
+                    />
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="useScratchpad" /><label
+                      class="form-check-label"
+                      for="useScratchpad"
+                      >Use an internal scratchpad/thinking process.</label
+                    ><input
+                      type="text"
+                      class="form-control form-control-sm mt-1"
+                      id="scratchpadTags"
+                      placeholder="Optional: e.g., Enclose thoughts in <thinking></thinking> tags."
+                    />
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="selfCritique" /><label
+                      class="form-check-label"
+                      for="selfCritique"
+                      >Perform self-critique and refinement.</label
+                    >
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="consultKnowledge" /><label
+                      class="form-check-label"
+                      for="consultKnowledge"
+                      >Consult external knowledge if necessary.</label
+                    ><input
+                      type="text"
+                      class="form-control form-control-sm mt-1"
+                      id="knowledgeSourceHint"
+                      placeholder="Optional: e.g., 'Refer to pre-loaded documents about X.'"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Section 8: Few-Shot Examples -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button
+                  class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseEight"
+                >
+                  <input type="checkbox" class="form-check-input me-2 section-toggle" id="toggleExamples" />8. Few-Shot
+                  Examples
+                </button>
+              </h2>
+              <div id="collapseEight" class="accordion-collapse collapse" data-bs-parent="#promptBuilderAccordion">
+                <div class="accordion-body">
+                  <div id="examplesContainer"></div>
+                  <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="addExampleButton">
+                    <i class="bi bi-plus-circle"></i> Add Example
+                  </button>
+                  <small class="form-text text-muted d-block">Provide 1-3 clear input/output pairs.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- End Accordion -->
+
+          <div class="d-grid gap-2 my-4">
+            <button type="button" class="btn btn-primary btn-lg" id="generatePromptButton">
+              <i class="bi bi-magic"></i> Generate System Prompt
+            </button>
+          </div>
+          <div id="generatedPromptContainer">
+            <h4>Generated System Prompt:</h4>
+            <button id="copyPromptButton" class="btn btn-sm btn-outline-secondary" title="Copy to Clipboard">
+              <i class="bi bi-clipboard"></i> Copy
+            </button>
+            <pre><code id="generatedPromptOutput" class="p-3 border bg-light d-block" style="min-height: 200px; white-space: pre-wrap; word-wrap: break-word;">Your generated prompt will appear here...</code></pre>
+          </div>
+        </div>
+        <!-- End Builder Tab Pane -->
+
+        <!-- Guide Tab Pane -->
+        <div class="tab-pane fade" id="guide-tab-pane" role="tabpanel" aria-labelledby="guide-tab" tabindex="0">
+          <h2 class="mt-2">Effective Prompt Engineering: A Cheatsheet</h2>
+          <p class="lead">
+            Master the art of crafting prompts that get the best results from Large Language Models (LLMs).
+          </p>
+
+          <div class="guide-section">
+            <h4>I. Foundational Principles (The Bedrock)</h4>
+            <h5>A. Clarity and Specificity</h5>
+            <p>Your prompt must be unambiguous. The AI should know exactly what you want. State the goal directly.</p>
+            <ul>
+              <li><strong>Be explicit:</strong> Don't assume the AI knows implicit context.</li>
+              <li>
+                <strong>Use action verbs:</strong> Clearly define the task (e.g., <code>Summarize</code>,
+                <code>Analyze</code>, <code>Generate</code>, <code>List</code>, <code>Translate</code>).
+              </li>
+              <li><strong>Avoid jargon</strong> unless you're sure the AI knows it or you define it in the prompt.</li>
+            </ul>
+
+            <h5>B. Provide Sufficient Context</h5>
+            <p>
+              LLMs don't have memory of past separate conversations (unless using specific session features). Give all
+              necessary background in the prompt.
+            </p>
+            <ul>
+              <li>Include relevant details, parameters, or constraints the AI needs to consider.</li>
+              <li>
+                If referring to something specific, provide it (e.g., "Summarize the following text: [text here]").
+              </li>
+            </ul>
+
+            <h5>C. Define the Desired Output Format</h5>
+            <p>Tell the AI how you want the response structured. This greatly improves usability.</p>
+            <ul>
+              <li>
+                Examples:
+                <ul>
+                  <li><code>Provide the answer as a JSON object with keys 'name' and 'capital'.</code></li>
+                  <li><code>List the steps as a numbered list.</code></li>
+                  <li>
+                    <code>Write a 500-word blog post with an introduction, three main points, and a conclusion.</code>
+                  </li>
+                  <li><code>Use Markdown for formatting.</code></li>
+                </ul>
+              </li>
+              <li>For complex tasks, specifying structured output (JSON, XML, YAML) is highly recommended.</li>
+            </ul>
+
+            <h5>D. Assign a Persona/Role</h5>
+            <p>Instructing the AI to adopt a specific persona helps tailor the tone, style, and expertise level.</p>
+            <ul>
+              <li>
+                Examples:
+                <ul>
+                  <li><code>You are a senior financial analyst.</code></li>
+                  <li><code>Act as a travel guide for Paris, focusing on historical sites.</code></li>
+                  <li><code>Respond as if you are a patient and encouraging high school science teacher.</code></li>
+                </ul>
+              </li>
+              <li>
+                Specify desired tone (e.g., <code>formal</code>, <code>casual</code>, <code>witty</code>,
+                <code>empathetic</code>) and target audience.
+              </li>
+            </ul>
+          </div>
+
+          <div class="guide-section">
+            <h4>II. Core Prompting Techniques</h4>
+            <h5>A. Zero-Shot Prompting</h5>
+            <p>
+              Asking the model to perform a task it hasn't been explicitly trained on with in-prompt examples for that
+              specific task. Relies on generalization.
+            </p>
+            <p>Example: <code>Translate the following English text to French: "Hello, how are you?"</code></p>
+
+            <h5>B. Few-Shot Prompting (In-Context Learning)</h5>
+            <p>
+              Providing a few examples (input/output pairs) within the prompt to demonstrate the desired behavior,
+              format, or style. Highly effective.
+            </p>
+            <p>
+              Structure: <br /><code>User: [Example Input 1]</code> <br /><code>AI: [Example Ideal Output 1]</code>
+              <br /><code>User: [Example Input 2]</code> <br /><code>AI: [Example Ideal Output 2]</code> <br /><code
+                >User: [Actual Input for AI to process]</code
+              >
+              <br /><code>AI:</code>
+            </p>
+            <ul>
+              <li>Usually 1-5 examples are sufficient. Too many can exceed context length or confuse the model.</li>
+              <li>Ensure examples are high quality and accurately reflect the desired output.</li>
+            </ul>
+
+            <h5>C. Chain-of-Thought (CoT) Prompting</h5>
+            <p>
+              Guiding the AI to "think step by step" by providing examples where the reasoning process is explicitly
+              laid out before the final answer. Significantly improves performance on tasks requiring reasoning (math,
+              logic puzzles, complex Q&A).
+            </p>
+            <p>Example of a CoT example pair in a few-shot prompt:</p>
+            <pre><code>User: Roger has 5 tennis balls. He buys 2 more cans of tennis balls. Each can has 3 tennis balls. How many tennis balls does he have now?
+AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, he bought 2 * 3 = 6 more balls. In total, he now has 5 + 6 = 11 balls. The final answer is 11.</code></pre>
+            <p>
+              You can also trigger CoT by adding phrases like <code>"Let's think step by step."</code> or
+              <code>"Break this down."</code> to your prompt. Some models respond well to instructions like
+              <code>"Show your work."</code>
+            </p>
+          </div>
+
+          <div class="guide-section">
+            <h4>III. Advanced & Evolving Strategies</h4>
+            <h5>A. Iterative Refinement & Experimentation</h5>
+            <p>
+              Prompt engineering is an empirical science. Start simple and build up. Test, analyze the output, and
+              refine your prompt. Small changes can have big impacts.
+            </p>
+            <ul>
+              <li>Keep a log of prompts and their results.</li>
+              <li>Try different phrasings, order of instructions, or levels of detail.</li>
+            </ul>
+
+            <h5>B. Structuring Prompts with Delimiters/Tags</h5>
+            <p>
+              Use clear separators (e.g., triple quotes <code>"""</code>, XML tags
+              <code><instruction>...</instruction></code
+              >, Markdown headings <code>## Input Data</code>) to distinguish instructions, context, examples, and input
+              data. This helps the AI parse the prompt effectively.
+            </p>
+            <p>Anthropic's Claude models, for instance, are specifically trained to pay attention to XML tags.</p>
+            <pre><code><role>You are a helpful assistant.</role>
+<user_query>
+What's the capital of France?
+</user_query>
+<instructions>Respond concisely.</instructions></code></pre>
+
+            <h5>C. Breaking Down Complex Tasks (Prompt Chaining)</h5>
+            <p>
+              Decompose very complex requests into smaller, manageable steps. The output of one prompt can become the
+              input or context for the next (prompt chaining).
+            </p>
+
+            <h5>D. Self-Refine Prompting</h5>
+            <p>
+              Instruct the model to generate an initial response, then critically evaluate its own response for
+              weaknesses (e.g., accuracy, completeness, clarity), and finally refine it before presenting the final
+              answer. This can be done in a multi-turn conversation or within a complex single prompt.
+            </p>
+            <p>
+              Example instruction:
+              <code
+                >"First, write a draft answer. Then, review your draft for any inaccuracies or areas that could be
+                explained more clearly. Finally, provide the revised and improved answer."</code
+              >
+            </p>
+
+            <h5>E. Using a "Scratchpad" / Internal Monologue</h5>
+            <p>
+              For complex reasoning, instruct the model to "think out loud" or use a scratchpad area (which you might
+              instruct it to exclude from the final output). Some models benefit from being told to put intermediate
+              thoughts in specific tags (e.g., <code><thinking>...</thinking></code
+              >).
+            </p>
+
+            <h5>F. Retrieval Augmented Generation (RAG)</h5>
+            <p>
+              Not strictly a prompting technique but related: RAG combines LLMs with external knowledge retrieval. The
+              prompt might instruct the AI to first retrieve relevant information from a specified knowledge base and
+              then use that information to generate its response. This is key for up-to-date or domain-specific
+              knowledge.
+            </p>
+
+            <h5>G. Understanding Context Window & Placement</h5>
+            <ul>
+              <li>Be mindful of the model's context window (max input length).</li>
+              <li>
+                Experiment with instruction placement. Some models are more sensitive to instructions at the beginning,
+                others at the end, especially with long contexts (e.g., Anthropic suggests important instructions can go
+                at the end for Claude).
+              </li>
+            </ul>
+          </div>
+
+          <div class="guide-section">
+            <h4>IV. Key Considerations</h4>
+            <h5>A. Ethical Considerations & Bias Mitigation</h5>
+            <p>
+              Design prompts to avoid generating harmful, biased, or inaccurate information. Be aware that LLMs can
+              reflect biases present in their training data.
+            </p>
+            <ul>
+              <li>Explicitly instruct against stereotypes or biased language if the topic is sensitive.</li>
+              <li>Ask for balanced perspectives.</li>
+            </ul>
+
+            <h5>B. Adapting to Model Updates</h5>
+            <p>
+              LLMs are constantly evolving. Strategies that work well today might need adjustment as models are updated.
+              Stay informed about best practices for the specific model you're using.
+            </p>
+          </div>
+          <p class="mt-4 text-center">
+            <small>This guide is a starting point. The best way to learn is by experimenting!</small>
+          </p>
+        </div>
+        <!-- End Guide Tab Pane -->
+      </div>
+      <!-- End Tab Content -->
+
+      <footer class="text-center mt-5 mb-3">
+        <small class="text-muted"
+          >Canonical URL:
+          <a href="http://cheatsheets.davidveksler.com/prompt-builder.html"
+            >cheatsheets.davidveksler.com/prompt-builder.html</a
+          ></small
+        >
+      </footer>
+    </div>
+    <!-- End Container -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // ALL PREVIOUS JAVASCRIPT FOR THE BUILDER GOES HERE
+      // (DOMElements, templates, loadTemplate, updateAdvisor, setFieldValue, getFieldValue, resetFormAndEnableAllSections, section toggle logic, example adding, generate prompt, copy, import/export)
+      // No new JS is strictly needed for the Bootstrap tabs themselves as they are driven by data attributes.
+      // However, ensure existing JS doesn't conflict and all element selectors are still valid.
+
+      const DOMElements = {
+        promptTemplate: document.getElementById("promptTemplate"),
+        aiRole: document.getElementById("aiRole"),
+        aiGoal: document.getElementById("aiGoal"),
+        aiAudience: document.getElementById("aiAudience"),
+        aiTasks: document.getElementById("aiTasks"),
+        aiTone: document.getElementById("aiTone"),
+        aiCommunicationStyle: document.getElementById("aiCommunicationStyle"),
+        emphasizeAccuracy: document.getElementById("emphasizeAccuracy"),
+        aiKnowledge: document.getElementById("aiKnowledge"),
+        aiDepthDetail: document.getElementById("aiDepthDetail"),
+        aiOutputFormat: document.getElementById("aiOutputFormat"),
+        aiLengthConstraints: document.getElementById("aiLengthConstraints"),
+        useHeadingsLists: document.getElementById("useHeadingsLists"),
+        aiProhibitions: document.getElementById("aiProhibitions"),
+        aiAvoidances: document.getElementById("aiAvoidances"),
+        avoidBias: document.getElementById("avoidBias"),
+        useCoT: document.getElementById("useCoT"),
+        cotPhrase: document.getElementById("cotPhrase"),
+        useScratchpad: document.getElementById("useScratchpad"),
+        scratchpadTags: document.getElementById("scratchpadTags"),
+        selfCritique: document.getElementById("selfCritique"),
+        consultKnowledge: document.getElementById("consultKnowledge"),
+        knowledgeSourceHint: document.getElementById("knowledgeSourceHint"),
+        toggleExamples: document.getElementById("toggleExamples"),
+        examplesContainer: document.getElementById("examplesContainer"),
+        addExampleButton: document.getElementById("addExampleButton"),
+        generatePromptButton: document.getElementById("generatePromptButton"),
+        generatedPromptOutput: document.getElementById("generatedPromptOutput"),
+        copyPromptButton: document.getElementById("copyPromptButton"),
+        advisorPanel: document.getElementById("advisorPanel"),
+        advisorMessages: document.getElementById("advisorMessages"),
+        exportConfigButton: document.getElementById("exportConfig"),
+        importConfigFile: document.getElementById("importConfigFile"),
+        importConfigTrigger: document.getElementById("importConfigTrigger"),
+      };
+
+      const ALL_FIELD_IDS = Object.keys(DOMElements).filter(
+        (key) =>
+          DOMElements[key] &&
+          (DOMElements[key].tagName === "INPUT" ||
+            DOMElements[key].tagName === "TEXTAREA" ||
+            DOMElements[key].tagName === "SELECT") &&
+          DOMElements[key].id !== "promptTemplate" &&
+          !DOMElements[key].classList.contains("section-toggle")
+      );
+
+      const templates = {
+        technicalExplainer: {
+          aiRole: "You are an expert technical explainer and educator, skilled in breaking down complex topics.",
+          aiGoal:
+            "Your primary goal is to explain intricate technical or scientific concepts in a clear, concise, and easily understandable manner for a non-expert audience or learners.",
+          aiAudience: "Non-experts, students, or individuals new to the subject.",
+          aiTasks:
+            "- Define key terminology using simple language.\n- Use illustrative analogies and real-world examples.\n- Break down complex processes into logical steps.\n- Answer follow-up questions patiently and thoroughly.",
+          aiTone: "Patient",
+          aiCommunicationStyle:
+            "Maintain a supportive and encouraging tone. Avoid jargon where possible; if unavoidable, explain it immediately. Structure explanations logically.",
+          emphasizeAccuracy: true,
+          aiDepthDetail:
+            "Provide sufficient detail for understanding without overwhelming the user. Focus on core concepts first.",
+          aiOutputFormat:
+            "Respond in well-structured paragraphs. Use bullet points or numbered lists for steps or key takeaways. Consider using Markdown for emphasis (bold, italics) where helpful.",
+          useHeadingsLists: true,
+          aiProhibitions:
+            "Do not provide overly simplistic answers that sacrifice critical nuance or accuracy. Do not invent information if unsure.",
+          useCoT: true,
+          cotPhrase: "Let's break this down step-by-step to ensure clarity.",
+          selfCritique: true,
+        },
+        codeAssistant: {
+          aiRole:
+            "You are an expert AI programming assistant, proficient across multiple programming languages and paradigms.",
+          aiGoal:
+            "Your primary goal is to help users write, debug, optimize, and understand code, and to provide guidance on software development best practices.",
+          aiTasks:
+            "- Write code snippets or functions based on user requirements.\n- Identify bugs in user-provided code and suggest corrections.\n- Explain code logic, algorithms, and design patterns.\n- Suggest optimizations for performance or readability.\n- Translate code snippets between languages (if applicable).\n- Offer advice on project structure and tooling.",
+          aiTone: "Technical",
+          aiCommunicationStyle:
+            "Be precise, clear, and direct. When providing code, explain its purpose, usage, and any important considerations (e.g., dependencies, potential edge cases).",
+          emphasizeAccuracy: true,
+          aiKnowledge: "Assume up-to-date knowledge of common programming languages, libraries, and frameworks.",
+          aiOutputFormat:
+            "All code MUST be in fenced code blocks with the language specified (e.g., ```python ... ```).\nProvide explanations and reasoning outside of code blocks, typically before or after the code.",
+          useHeadingsLists: true,
+          aiProhibitions:
+            "Do not execute arbitrary code. Do not provide opinions on programming language superiority without specific context. Do not store or share user's proprietary code unless explicitly part of a secure, agreed-upon workflow.",
+          useCoT: true,
+          cotPhrase: "Let's analyze the requirements and then structure the code.",
+        },
+        creativeWriter: {
+          aiRole: "You are a highly imaginative and versatile creative storyteller and writing partner.",
+          aiGoal:
+            "Your primary goal is to assist users in brainstorming, developing, and writing various forms of creative content, including stories, poems, scripts, and marketing copy.",
+          aiAudience: "Writers, marketers, hobbyists, or anyone seeking creative inspiration.",
+          aiTasks:
+            "- Generate story ideas, plot points, or character concepts based on prompts.\n- Write original narrative passages, descriptions, or dialogue in various styles and genres.\n- Compose poetry in different forms (e.g., sonnet, haiku, free verse).\n- Help develop marketing slogans, ad copy, or product descriptions.\n- Brainstorm alternative phrasings or creative angles.",
+          aiTone: "Witty",
+          aiCommunicationStyle:
+            "Embrace creativity and be flexible with user requests. Offer multiple options or suggestions when appropriate. Be playful and inspiring.",
+          emphasizeAccuracy: false,
+          aiDepthDetail: "Vary detail based on the request – from short snippets to more developed passages.",
+          aiOutputFormat:
+            "Format responses according to the creative genre (e.g., prose paragraphs, script format with character names, stanzas for poetry). Use rich vocabulary and imagery.",
+          aiProhibitions:
+            "Do not plagiarize existing copyrighted works. Do not generate offensive, hateful, or harmful creative content. Clearly distinguish AI-generated content if it's to be used directly.",
+        },
+        dataAnalyst: {
+          aiRole: "You are a meticulous and insightful Data Analyst Assistant.",
+          aiGoal:
+            "Your primary goal is to help users understand, interpret, and derive insights from data. You can assist with data cleaning, exploratory data analysis, visualization ideas, and statistical interpretations.",
+          aiTasks:
+            "- Suggest methods for cleaning and preparing datasets.\n- Propose relevant questions for exploratory data analysis (EDA).\n- Describe potential patterns or anomalies to look for in data.\n- Explain statistical concepts or test results in understandable terms.\n- Recommend appropriate chart types for visualizing different kinds of data.\n- Help formulate hypotheses based on initial data observations.",
+          aiTone: "Technical",
+          aiCommunicationStyle:
+            "Be precise and data-driven in your explanations. Clearly define any assumptions made. If providing interpretations, state confidence levels or potential alternative explanations.",
+          emphasizeAccuracy: true,
+          aiKnowledge:
+            "Assume familiarity with common statistical methods, data visualization principles, and data manipulation techniques.",
+          aiOutputFormat:
+            "Structure responses logically. Use bullet points for lists of suggestions or steps. When discussing data, be specific. If suggesting code (e.g., Python/R for analysis), use fenced code blocks.",
+          useHeadingsLists: true,
+          aiProhibitions:
+            "Do not perform actual data analysis on user-provided raw data if not explicitly designed and secured for it. Do not make definitive financial or business decisions based solely on preliminary interpretations. Emphasize that AI suggestions are for assistance and require human oversight and validation.",
+          useCoT: true,
+          cotPhrase: "Let's consider the data and the analytical steps required.",
+          selfCritique: true,
+        },
+        socraticTutor: {
+          aiRole: "You are a patient and insightful Socratic Tutor.",
+          aiGoal:
+            "Your primary goal is to guide users to deeper understanding and critical thinking by asking probing questions, rather than providing direct answers. Help users explore concepts, identify assumptions, and develop their own conclusions.",
+          aiAudience: "Students, learners, or anyone wishing to explore a topic in depth.",
+          aiTasks:
+            "- Respond to user statements or questions with further questions that encourage reflection.\n- Help users break down complex problems into smaller, more manageable parts.\n- Challenge assumptions respectfully.\n- Guide users to identify inconsistencies in their reasoning.\n- Encourage users to consider alternative perspectives.\n- Summarize and reflect back user's key points to ensure understanding.",
+          aiTone: "Encouraging",
+          aiCommunicationStyle:
+            "Primarily use questions. When providing information, frame it tentatively or as something to consider. Be patient and allow the user time to think. Avoid judgmental language.",
+          emphasizeAccuracy: true,
+          aiDepthDetail: "Adjust questioning depth based on user's responses and engagement.",
+          aiProhibitions:
+            "Do not give direct answers unless specifically asked after multiple attempts at Socratic guidance, and even then, try to lead them. Do not frustrate the user with excessive or unhelpful questioning. Do not express personal opinions.",
+        },
+      };
+
+      function setFieldValue(elementId, value) {
+        const element = DOMElements[elementId];
+        if (!element) return;
+
+        if (value === undefined) {
+          if (element.type === "checkbox") element.checked = false;
+          else if (element.tagName === "SELECT") element.value = element.options[0] ? element.options[0].value : "";
+          else element.value = "";
+        } else {
+          if (element.type === "checkbox") element.checked = Boolean(value);
+          else if (element.tagName === "SELECT") element.value = value;
+          else element.value = value;
+        }
+        element.dispatchEvent(new Event("input", { bubbles: true }));
+        element.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      function getFieldValue(elementId) {
+        const element = DOMElements[elementId];
+        if (!element) return null;
+        return element.type === "checkbox" ? element.checked : element.value;
+      }
+
+      function resetFormAndEnableAllSections() {
+        ALL_FIELD_IDS.forEach((id) => setFieldValue(id, undefined));
+        document.querySelectorAll(".section-toggle").forEach((toggle) => {
+          toggle.checked = true;
+          const sectionContent = toggle.closest(".accordion-item").querySelector(".accordion-collapse");
+          const inputs = sectionContent.querySelectorAll(
+            "input:not(.section-toggle):not([type=file]), textarea, select"
+          );
+          inputs.forEach((input) => (input.disabled = false));
+          if (toggle.id === "toggleExamples" && DOMElements.addExampleButton)
+            DOMElements.addExampleButton.disabled = false;
+        });
+        if (DOMElements.examplesContainer) DOMElements.examplesContainer.innerHTML = "";
+        updateAdvisor();
+      }
+
+      function loadTemplate(templateName) {
+        if (templateName === "" || templateName === "reset") {
+          resetFormAndEnableAllSections();
+          if (templateName === "reset" && DOMElements.promptTemplate) DOMElements.promptTemplate.value = "";
+          return;
+        }
+
+        const template = templates[templateName];
+        if (!template) return;
+
+        ALL_FIELD_IDS.forEach((id) => setFieldValue(id, undefined));
+        if (DOMElements.examplesContainer) DOMElements.examplesContainer.innerHTML = "";
+
+        for (const keyInTemplate in template) {
+          if (DOMElements[keyInTemplate]) {
+            setFieldValue(keyInTemplate, template[keyInTemplate]);
+          }
+        }
+
+        document.querySelectorAll(".section-toggle").forEach((toggle) => {
+          const sectionContent = toggle.closest(".accordion-item").querySelector(".accordion-collapse");
+          let sectionHasContentFromTemplate = false;
+          sectionContent
+            .querySelectorAll("input:not(.section-toggle):not([type=file]), textarea, select")
+            .forEach((inputEl) => {
+              if (template.hasOwnProperty(inputEl.id)) {
+                const val = template[inputEl.id];
+                if (inputEl.type === "checkbox") {
+                  if (val === true) sectionHasContentFromTemplate = true;
+                } else if (val !== undefined && val !== null && val !== "") {
+                  sectionHasContentFromTemplate = true;
+                }
+              }
+            });
+
+          toggle.checked = sectionHasContentFromTemplate;
+          const inputsToToggle = sectionContent.querySelectorAll(
+            "input:not(.section-toggle):not([type=file]), textarea, select"
+          );
+          inputsToToggle.forEach((input) => (input.disabled = !toggle.checked));
+
+          if (toggle.id === "toggleExamples" && DOMElements.addExampleButton) {
+            DOMElements.addExampleButton.disabled = !toggle.checked;
+            if (template.suggestFewShot && !toggle.checked) {
+              // Example: template might have a 'suggestFewShot: true' flag
+              toggle.checked = true;
+              inputsToToggle.forEach((input) => (input.disabled = false));
+              DOMElements.addExampleButton.disabled = false;
+            }
+          }
+        });
+        updateAdvisor();
+      }
+
+      function updateAdvisor() {
+        const messages = [];
+        if (!DOMElements.advisorPanel || !DOMElements.advisorMessages) return; // In case elements aren't found
+
+        DOMElements.advisorPanel.classList.add("d-none");
+        DOMElements.advisorMessages.innerHTML = "";
+
+        if (!getFieldValue("aiRole") && !getFieldValue("aiGoal"))
+          messages.push("<li>Define the AI's <strong>Role</strong> and <strong>Goal</strong>.</li>");
+        if (!getFieldValue("aiTasks") && (getFieldValue("aiRole") || getFieldValue("aiGoal")))
+          messages.push("<li>List specific <strong>Key Tasks</strong>.</li>");
+
+        if (messages.length > 0) {
+          DOMElements.advisorMessages.innerHTML = messages.join("");
+          DOMElements.advisorPanel.classList.remove("d-none");
+        }
+      }
+      if (DOMElements.promptTemplate)
+        DOMElements.promptTemplate.addEventListener("change", (e) => loadTemplate(e.target.value));
+
+      document.querySelectorAll(".section-toggle").forEach((toggle) => {
+        const accordionButton = toggle.closest(".accordion-item").querySelector(".accordion-button");
+        const contentArea = toggle.closest(".accordion-item").querySelector(".accordion-collapse");
+        const inputs = contentArea.querySelectorAll("input:not(.section-toggle):not([type=file]), textarea, select");
+
+        function setInputsDisabledState(isDisabled) {
+          inputs.forEach((input) => (input.disabled = isDisabled));
+          if (toggle.id === "toggleExamples" && DOMElements.addExampleButton) {
+            DOMElements.addExampleButton.disabled = isDisabled;
+            contentArea
+              .querySelectorAll(".example-pair input, .example-pair textarea, .example-pair button")
+              .forEach((el) => (el.disabled = isDisabled));
+          }
+        }
+        setInputsDisabledState(!toggle.checked);
+
+        toggle.addEventListener("change", function () {
+          setInputsDisabledState(!this.checked);
+          updateAdvisor();
+        });
+
+        if (accordionButton) {
+          accordionButton.addEventListener("click", function () {
+            setTimeout(() => {
+              setInputsDisabledState(!toggle.checked);
+            }, 0);
+          });
+        }
+      });
+
+      function addExamplePair(initialInput = "", initialOutput = "") {
+        if (!DOMElements.toggleExamples || !DOMElements.toggleExamples.checked) {
+          alert("Please enable the 'Few-Shot Examples' section first by checking its box.");
+          return;
+        }
+        const exampleId = Date.now();
+        const exampleDiv = document.createElement("div");
+        exampleDiv.classList.add("example-pair", "mb-3", "p-2", "border", "rounded");
+        exampleDiv.innerHTML = `<h6>Example Pair</h6><textarea class="form-control form-control-sm example-input" rows="2" placeholder="User: ...">${initialInput}</textarea><textarea class="form-control form-control-sm example-output mt-1" rows="3" placeholder="AI: ...">${initialOutput}</textarea><button type="button" class="btn btn-sm btn-outline-danger mt-1 remove-example" data-example-id="${exampleId}"><i class="bi bi-trash"></i> Remove</button>`;
+        DOMElements.examplesContainer.appendChild(exampleDiv);
+        exampleDiv.querySelector(".remove-example").addEventListener("click", function () {
+          this.parentElement.remove();
+        });
+      }
+      if (DOMElements.addExampleButton) DOMElements.addExampleButton.addEventListener("click", () => addExamplePair());
+
+      if (DOMElements.generatePromptButton)
+        DOMElements.generatePromptButton.addEventListener("click", function () {
+          let prompt = "";
+          document.querySelectorAll(".section-toggle").forEach((toggle) => {
+            if (!toggle.checked) return;
+
+            const sectionId = toggle.id.replace("toggle", "").toLowerCase();
+            let sectionContent = "";
+
+            if (sectionId === "coreidentity") {
+              if (getFieldValue("aiRole")) sectionContent += `You are: ${getFieldValue("aiRole")}\n`;
+              if (getFieldValue("aiGoal")) sectionContent += `Your primary goal is: ${getFieldValue("aiGoal")}\n`;
+              if (getFieldValue("aiAudience"))
+                sectionContent += `Tailor your responses for: ${getFieldValue("aiAudience")}.\n`;
+              if (sectionContent) prompt += `## Core Identity & Goal\n${sectionContent.trim()}\n\n`;
+            } else if (sectionId === "keytasks" && getFieldValue("aiTasks")) {
+              prompt += `## Key Tasks & Functions\n${getFieldValue("aiTasks").trim()}\n\n`;
+            } else if (sectionId === "interactionstyle") {
+              if (getFieldValue("aiTone") !== "Neutral")
+                sectionContent += `Your tone should be: ${getFieldValue("aiTone")}.\n`;
+              if (getFieldValue("aiCommunicationStyle")) sectionContent += `${getFieldValue("aiCommunicationStyle")}\n`;
+              if (sectionContent) prompt += `## Interaction Style & Tone\n${sectionContent.trim()}\n\n`;
+            } else if (sectionId === "contentstandards") {
+              if (getFieldValue("emphasizeAccuracy"))
+                sectionContent += "You must prioritize accuracy and rely on evidence-based reasoning.\n";
+              if (getFieldValue("aiKnowledge"))
+                sectionContent += `Your knowledge base: ${getFieldValue("aiKnowledge")}.\n`;
+              if (getFieldValue("aiDepthDetail"))
+                sectionContent += `Regarding depth and detail: ${getFieldValue("aiDepthDetail")}.\n`;
+              if (sectionContent) prompt += `## Content Standards & Expertise\n${sectionContent.trim()}\n\n`;
+            } else if (sectionId === "outputformat") {
+              if (getFieldValue("aiOutputFormat"))
+                sectionContent += `Output formatting instructions:\n${getFieldValue("aiOutputFormat")}\n`;
+              if (getFieldValue("aiLengthConstraints"))
+                sectionContent += `Adhere to these length constraints: ${getFieldValue("aiLengthConstraints")}.\n`;
+              if (getFieldValue("useHeadingsLists")) sectionContent += "Use headings, lists, etc., for clarity.\n";
+              if (sectionContent) prompt += `## Output Requirements & Formatting\n${sectionContent.trim()}\n\n`;
+            } else if (sectionId === "constraints") {
+              if (getFieldValue("aiProhibitions"))
+                sectionContent += `Absolute Prohibitions (You MUST NOT):\n${getFieldValue("aiProhibitions")}\n`;
+              if (getFieldValue("aiAvoidances"))
+                sectionContent += `Scope Limitations / Topics to Avoid:\n${getFieldValue("aiAvoidances")}\n`;
+              if (getFieldValue("avoidBias")) sectionContent += "Strive for neutrality and avoid societal biases.\n";
+              if (sectionContent) prompt += `## Constraints & Safeguards\n${sectionContent.trim()}\n\n`;
+            } else if (sectionId === "reasoning") {
+              if (getFieldValue("useCoT"))
+                sectionContent += `Employ step-by-step reasoning. ${
+                  getFieldValue("cotPhrase") ? getFieldValue("cotPhrase") + "\n" : "\n"
+                }`;
+              if (getFieldValue("useScratchpad"))
+                sectionContent += `Use an internal scratchpad. ${
+                  getFieldValue("scratchpadTags")
+                    ? "Enclose thoughts in " + getFieldValue("scratchpadTags") + ".\n"
+                    : "\n"
+                }`;
+              if (getFieldValue("selfCritique"))
+                sectionContent += "Perform self-critique and refinement before finalizing.\n";
+              if (getFieldValue("consultKnowledge"))
+                sectionContent += `Consult external knowledge if necessary. ${
+                  getFieldValue("knowledgeSourceHint") ? getFieldValue("knowledgeSourceHint") + "\n" : "\n"
+                }`;
+              if (sectionContent) prompt += `## Reasoning & Process\n${sectionContent.trim()}\n\n`;
+            } else if (sectionId === "examples") {
+              const examplePairs = DOMElements.examplesContainer.querySelectorAll(".example-pair");
+              if (examplePairs.length > 0) {
+                let examplesText = "Here are some examples of ideal interactions:\n\n";
+                examplePairs.forEach((pair, index) => {
+                  const userInput = pair.querySelector(".example-input").value.trim();
+                  const aiOutput = pair.querySelector(".example-output").value.trim();
+                  if (userInput && aiOutput) {
+                    examplesText += `--- Example ${
+                      index + 1
+                    } ---\nUser: ${userInput}\nAI: ${aiOutput}\n--- End Example ${index + 1} ---\n\n`;
+                  }
+                });
+                if (examplesText.length > "Here are some examples of ideal interactions:\n\n".length) {
+                  prompt += `## Few-Shot Examples\n${examplesText.trim()}\n\n`;
+                }
+              }
+            }
+          });
+          if (DOMElements.generatedPromptOutput)
+            DOMElements.generatedPromptOutput.textContent = prompt.trim()
+              ? prompt.trim()
+              : "Please fill in some sections or select a template to generate a prompt.";
+          updateAdvisor();
+        });
+
+      if (DOMElements.copyPromptButton)
+        DOMElements.copyPromptButton.addEventListener("click", function () {
+          const textToCopy = DOMElements.generatedPromptOutput.textContent;
+          if (navigator.clipboard && textToCopy && !textToCopy.startsWith("Your generated prompt will appear")) {
+            navigator.clipboard
+              .writeText(textToCopy)
+              .then(() => {
+                const originalText = DOMElements.copyPromptButton.innerHTML;
+                DOMElements.copyPromptButton.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+                setTimeout(() => {
+                  DOMElements.copyPromptButton.innerHTML = originalText;
+                }, 2000);
+              })
+              .catch((err) => console.error("Failed to copy: ", err));
+          } else {
+            alert("Nothing to copy yet. Generate a prompt first.");
+          }
+        });
+
+      if (DOMElements.exportConfigButton)
+        DOMElements.exportConfigButton.addEventListener("click", function () {
+          const config = {};
+          ALL_FIELD_IDS.forEach((id) => (config[id] = getFieldValue(id)));
+          document.querySelectorAll(".section-toggle").forEach((toggle) => (config[toggle.id] = toggle.checked));
+
+          config.examples = [];
+          if (DOMElements.examplesContainer) {
+            DOMElements.examplesContainer.querySelectorAll(".example-pair").forEach((pair) => {
+              config.examples.push({
+                input: pair.querySelector(".example-input").value,
+                output: pair.querySelector(".example-output").value,
+              });
+            });
+          }
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config, null, 2));
+          const dl = document.createElement("a");
+          dl.setAttribute("href", dataStr);
+          dl.setAttribute("download", "prompt-builder-config.json");
+          document.body.appendChild(dl);
+          dl.click();
+          dl.remove();
+        });
+
+      if (DOMElements.importConfigTrigger)
+        DOMElements.importConfigTrigger.addEventListener("click", () => DOMElements.importConfigFile.click());
+      if (DOMElements.importConfigFile)
+        DOMElements.importConfigFile.addEventListener("change", function (event) {
+          const file = event.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              try {
+                const config = JSON.parse(e.target.result);
+                ALL_FIELD_IDS.forEach((id) => {
+                  if (config.hasOwnProperty(id)) setFieldValue(id, config[id]);
+                });
+                document.querySelectorAll(".section-toggle").forEach((toggle) => {
+                  if (config.hasOwnProperty(toggle.id)) toggle.checked = config[toggle.id];
+                  const contentArea = toggle.closest(".accordion-item").querySelector(".accordion-collapse");
+                  const inputs = contentArea.querySelectorAll(
+                    "input:not(.section-toggle):not([type=file]), textarea, select"
+                  );
+                  inputs.forEach((input) => (input.disabled = !toggle.checked));
+                  if (toggle.id === "toggleExamples" && DOMElements.addExampleButton)
+                    DOMElements.addExampleButton.disabled = !toggle.checked;
+                });
+
+                if (DOMElements.examplesContainer) DOMElements.examplesContainer.innerHTML = "";
+                if (config.examples && Array.isArray(config.examples)) {
+                  config.examples.forEach((ex) => addExamplePair(ex.input, ex.output));
+                }
+
+                updateAdvisor();
+                alert("Configuration loaded successfully!");
+              } catch (err) {
+                console.error("Error parsing/loading config:", err);
+                alert("Error loading config.");
+              }
+            };
+            reader.readAsText(file);
+            DOMElements.importConfigFile.value = "";
+          }
+        });
+
+      updateAdvisor();
+    </script>
+  </body>
+</html>
