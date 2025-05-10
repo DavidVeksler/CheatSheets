@@ -1,3 +1,226 @@
+You're right to point that out! That "flipping" behavior of accordion sections when loading a template is a common UI glitch that can happen if the show and hide methods of the Bootstrap collapse component are called in rapid or conflicting succession.
+
+Looking at the original JavaScript you provided for the Prompt Builder:
+
+The Cause of the "Flip":
+
+When loadTemplate(templateName) is called:
+
+It first calls resetFormAndEnableAllSections().
+
+Inside resetFormAndEnableAllSections(), there's a loop that iterates through all .section-toggle checkboxes. For each, it sets toggle.checked = true and then unconditionally calls bsCollapse.show() on its corresponding accordion panel. So, at this point, all sections are told to expand.
+
+Immediately after resetFormAndEnableAllSections() finishes, the loadTemplate() function continues.
+
+It then applies the template values to the input fields.
+
+Crucially, it then loops through the .section-toggle checkboxes again. This time, it determines if a section sectionHasContentFromTemplate.
+
+If sectionHasContentFromTemplate is false, toggle.checked is set to false, and bsCollapse.hide() is called for that section.
+
+If sectionHasContentFromTemplate is true, toggle.checked is set to true, and bsCollapse.show() is called (this might be redundant if resetFormAndEnableAllSections just showed it, but it's the hide() call that matters more for the flip).
+
+The "flip" happens because a section might be told to show() by resetFormAndEnableAllSections(), and then milliseconds later, if the template doesn't have content for it, loadTemplate() tells it to hide(). This rapid show-then-hide is the visual flicker or flip.
+
+The Fix:
+
+We need to ensure that the decision to show or hide an accordion section is made and executed only once after its final state (based on template content) is determined.
+
+Here's how we can modify the JavaScript functions:
+
+Modify resetFormAndEnableAllSections(): It should reset the form fields and the checked state of toggles but not directly manipulate the accordion's visibility (i.e., don't call bsCollapse.show() in it). The calling function (loadTemplate or importConfig) will be responsible for the final visibility.
+
+Adjust loadTemplate() (and importConfig similarly):
+
+Call the modified resetFormAndEnableAllSections().
+
+Apply template/config values.
+
+Loop through sections: determine the final toggle.checked state based on content, update input disabled status, and then call bsCollapse.show() or bsCollapse.hide() accordingly.
+
+The special case for templateName === "reset" (i.e., "Start Fresh / Clear Form") should explicitly show all sections after resetting.
+
+Here are the relevant patched JavaScript functions from your original Prompt Builder:
+
+// (...) Other parts of your script
+
+      function resetFormAndEnableAllSections() {
+        ALL_FIELD_IDS.forEach((id) => setFieldValue(id, undefined));
+        document.querySelectorAll(".section-toggle").forEach((toggle) => {
+          toggle.checked = true; // Default to enabled for logic, but don't manage visibility here
+          const sectionContent = toggle.closest(".accordion-item").querySelector(".accordion-collapse");
+          const inputs = sectionContent.querySelectorAll(
+            "input:not(.section-toggle):not([type=file]), textarea, select"
+          );
+          inputs.forEach((input) => (input.disabled = false)); // Enable inputs by default after reset
+
+          if (toggle.id === "toggleExamples" && DOMElements.addExampleButton)
+            DOMElements.addExampleButton.disabled = false;
+        });
+        if (DOMElements.examplesContainer) DOMElements.examplesContainer.innerHTML = "";
+        if (DOMElements.promptTemplate) DOMElements.promptTemplate.value = ""; // Reset dropdown
+        // updateAdvisor will be called by the parent function (loadTemplate or importConfig)
+      }
+
+      function loadTemplate(templateName) {
+        if (templateName === "" || templateName === "reset") {
+          // For a full "reset" button click (e.g. "Start Fresh"), we truly reset and show all.
+          resetFormAndEnableAllSections(); // This sets toggles to checked and enables inputs
+          document.querySelectorAll(".section-toggle").forEach((toggle) => {
+            // toggle.checked is already true from the call above.
+            const sectionContent = toggle.closest(".accordion-item").querySelector(".accordion-collapse");
+            const collapseElement = document.getElementById(sectionContent.id);
+            const bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, {toggle: false});
+            bsCollapse.show(); // Explicitly show all accordion sections for a full reset
+          });
+          if (templateName === "reset" && DOMElements.promptTemplate) DOMElements.promptTemplate.value = "";
+          updateAdvisor(); // Call advisor after the state is fully set
+          return;
+        }
+
+        const template = templates[templateName];
+        if (!template) return;
+
+        // 1. Reset form fields and toggle states (toggles will be checked true by default)
+        resetFormAndEnableAllSections();
+
+        // 2. Apply template values to form fields
+        for (const keyInTemplate in template) {
+          if (DOMElements[keyInTemplate]) {
+            setFieldValue(keyInTemplate, template[keyInTemplate]);
+          }
+        }
+
+        // 3. Determine final state of toggles and accordion visibility based on template content
+        document.querySelectorAll(".section-toggle").forEach((toggle) => {
+          const sectionContent = toggle.closest(".accordion-item").querySelector(".accordion-collapse");
+          let sectionHasContentFromTemplate = false;
+
+          // Check if any input in this section has content from the template
+          sectionContent.querySelectorAll("input:not(.section-toggle):not([type=file]), textarea, select").forEach((inputEl) => {
+              if (template.hasOwnProperty(inputEl.id)) {
+                  const val = template[inputEl.id];
+                  if (inputEl.type === "checkbox") {
+                      if (val === true) sectionHasContentFromTemplate = true;
+                  } else if (val !== undefined && val !== null && val !== "") {
+                      sectionHasContentFromTemplate = true;
+                  }
+              }
+          });
+          
+          // Special handling for examples if template suggests them
+          if (toggle.id === "toggleExamples" && template.suggestFewShot === true) { 
+              sectionHasContentFromTemplate = true;
+          }
+
+          // Set the final .checked state for the toggle based on template content
+          toggle.checked = sectionHasContentFromTemplate;
+
+          // Disable/enable inputs within the section
+          const inputsToToggle = sectionContent.querySelectorAll("input:not(.section-toggle):not([type=file]), textarea, select");
+          inputsToToggle.forEach(input => input.disabled = !toggle.checked);
+          
+          if (toggle.id === "toggleExamples" && DOMElements.addExampleButton) {
+              DOMElements.addExampleButton.disabled = !toggle.checked;
+          }
+
+          // NOW, set accordion visibility based on the final toggle.checked state
+          const collapseElement = document.getElementById(sectionContent.id);
+          const bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, {toggle: false});
+          if (toggle.checked) {
+            bsCollapse.show();
+          } else {
+            bsCollapse.hide();
+          }
+        });
+        updateAdvisor(); // Call advisor after all states are final
+      }
+
+      // ... (other functions like addExamplePair, generatePromptButton, etc.)
+
+      // Apply similar fix to importConfig function
+      if (DOMElements.importConfigFile)
+        DOMElements.importConfigFile.addEventListener("change", function (event) {
+          const file = event.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              try {
+                const config = JSON.parse(e.target.result);
+                
+                // 1. Reset form fields and toggle states (toggles will be checked true by default)
+                resetFormAndEnableAllSections(); 
+
+                // 2. Apply config values to form fields
+                ALL_FIELD_IDS.forEach((id) => {
+                  if (config.hasOwnProperty(id)) setFieldValue(id, config[id]);
+                });
+
+                // 3. Determine final state of toggles and accordion visibility based on config
+                document.querySelectorAll(".section-toggle").forEach((toggle) => {
+                  // Set the .checked state from config, or it remains true from reset
+                  if (config.hasOwnProperty(toggle.id)) {
+                    toggle.checked = config[toggle.id];
+                  }
+                  // else, it defaults to true from resetFormAndEnableAllSections if not in config.
+                  // You might want to default to false if not present:
+                  // else { toggle.checked = false; }
+
+                  const sectionContent = toggle.closest(".accordion-item").querySelector(".accordion-collapse");
+                  const inputs = sectionContent.querySelectorAll(
+                    "input:not(.section-toggle):not([type=file]), textarea, select"
+                  );
+                  inputs.forEach((input) => (input.disabled = !toggle.checked));
+                  if (toggle.id === "toggleExamples" && DOMElements.addExampleButton)
+                    DOMElements.addExampleButton.disabled = !toggle.checked;
+
+                  // NOW, set accordion visibility based on the final toggle.checked state
+                  const collapseElement = document.getElementById(sectionContent.id);
+                  const bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, {toggle: false});
+                  if (toggle.checked) {
+                      bsCollapse.show();
+                  } else {
+                      bsCollapse.hide();
+                  }
+                });
+
+                if (DOMElements.examplesContainer) DOMElements.examplesContainer.innerHTML = ""; 
+                if (config.examples && Array.isArray(config.examples)) {
+                  config.examples.forEach((ex) => addExamplePair(ex.input, ex.output));
+                }
+                
+                updateAdvisor(); // Call advisor after all states are final
+                if (DOMElements.promptTemplate) DOMElements.promptTemplate.value = ""; 
+                alert("Configuration loaded successfully!");
+              } catch (err) {
+                console.error("Error parsing/loading config:", err);
+                alert("Error loading configuration file. Make sure it is a valid JSON export from this tool.");
+              }
+            };
+            reader.readAsText(file);
+            DOMElements.importConfigFile.value = ""; 
+          }
+        });
+
+      // (...) The rest of your script
+
+
+Summary of Changes:
+
+resetFormAndEnableAllSections: No longer calls bsCollapse.show(). It focuses purely on resetting input values and ensuring toggle checkboxes are checked (and corresponding inputs enabled) by default.
+
+loadTemplate:
+
+Handles the "reset" template option separately to explicitly show all sections.
+
+For other templates, it calls the modified resetFormAndEnableAllSections.
+
+After applying template data, it iterates through each section once to determine its final toggle.checked state and then calls bsCollapse.show() or bsCollapse.hide() accordingly.
+
+importConfig (event listener for file input): Similar logic applied as in loadTemplate to ensure accordion visibility is set once after config parsing.
+
+This approach should eliminate the rapid show/hide calls for the same element, thus fixing the "flipping" issue and providing a smoother UI experience when loading templates or configurations.
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -12,7 +235,7 @@
     />
     <meta
       name="keywords"
-      content="system prompt, prompt engineering, LLM, AI, prompt builder, prompt guide, generative AI, large language models, AI assistant, prompt templates, AI tools, meta prompting, prompt optimization"
+      content="system prompt, prompt engineering, LLM, AI, prompt builder, prompt guide, generative AI, large language models, AI assistant, prompt templates, AI tools, meta prompting, prompt optimization, code reviewer, fitness coach, legal document writer"
     />
     <meta name="author" content="David Vekslers Cheatsheets" />
     <link rel="canonical" href="http://cheatsheets.davidveksler.com/prompt-builder.html" />
@@ -63,7 +286,7 @@
         cursor: pointer;
       }
       #generatedPromptContainer {
-        margin-top: 20px;
+        margin-top: 30px; /* Increased margin a bit */
         position: relative;
       }
       #copyPromptButton {
@@ -241,7 +464,7 @@
           aria-labelledby="builder-tab"
           tabindex="0"
         >
-          <p class="lead mt-2">Select an archetype or build your prompt from scratch.</p>
+          <p class="lead mt-2">Select an archetype or build your prompt from scratch. The prompt will update below as you make changes.</p>
           <div class="row mb-3 align-items-end">
             <div class="col-md-6">
               <label for="promptTemplate" class="form-label"><strong>Load a Template Archetype:</strong></label>
@@ -249,12 +472,16 @@
                 <option value="">-- Select a Template (or build custom) --</option>
                 <option value="technicalExplainer">Technical Explainer</option>
                 <option value="codeAssistant">Code Assistant</option>
+                <option value="codeReviewer">Code Reviewer</option>
                 <option value="creativeWriter">Creative Storyteller</option>
                 <option value="dataAnalyst">Data Analyst Assistant</option>
+                <option value="fitnessNutritionCoach">Fitness/Nutrition Coach</option>
+                <option value="legalDocumentWriter">Legal Document Writer</option>
                 <option value="socraticTutor">Socratic Tutor</option>
                 <option value="customerSupportAgent">Customer Support Agent</option>
                 <option value="researchSynthesizer">Research Synthesizer</option>
                 <option value="brainstormingFacilitator">Brainstorming Facilitator</option>
+                <option value="creativeCheatsheetArchitect">Creative Cheatsheet Architect</option>
                 <option value="reset">Start Fresh / Clear Form</option>
               </select>
             </div>
@@ -336,13 +563,14 @@
                       <option value="Casual">Casual</option>
                       <option value="Friendly">Friendly</option>
                       <option value="Authoritative">Authoritative</option>
+                      <option value="Objective">Objective</option>
                       <option value="Empathetic">Empathetic</option>
                       <option value="Witty">Witty</option>
                       <option value="Technical">Technical</option>
                       <option value="Patient">Patient</option>
                       <option value="Encouraging">Encouraging</option>
                       <option value="Skeptical">Skeptical</option>
-                      <option value="Objective">Objective</option>
+                      <option value="Inspiring">Inspiring</option>
                     </select>
                   </div>
                   <div class="mb-3">
@@ -493,17 +721,20 @@
             </div>
           </div>
 
+          <!-- Removed Generate Button
           <div class="d-grid gap-2 my-4">
             <button type="button" class="btn btn-primary btn-lg" id="generatePromptButton">
               <i class="bi bi-magic"></i> Generate System Prompt
             </button>
           </div>
+          -->
+
           <div id="generatedPromptContainer">
             <h4>Generated System Prompt:</h4>
             <button id="copyPromptButton" class="btn btn-sm btn-outline-secondary" title="Copy to Clipboard">
               <i class="bi bi-clipboard"></i> Copy
             </button>
-            <pre><code id="generatedPromptOutput" class="p-3 border d-block" style="min-height: 200px; white-space: pre-wrap; word-wrap: break-word;">Your generated prompt will appear here...</code></pre>
+            <pre><code id="generatedPromptOutput" class="p-3 border d-block" style="min-height: 200px; white-space: pre-wrap; word-wrap: break-word;">Your generated prompt will appear here as you build it...</code></pre>
           </div>
         </div>
 
@@ -767,7 +998,7 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
         emphasizeAccuracy: document.getElementById("emphasizeAccuracy"),
         aiKnowledge: document.getElementById("aiKnowledge"),
         aiDepthDetail: document.getElementById("aiDepthDetail"),
-        promptStructureMethod: document.getElementById("promptStructureMethod"), // New
+        promptStructureMethod: document.getElementById("promptStructureMethod"),
         aiOutputFormat: document.getElementById("aiOutputFormat"),
         aiLengthConstraints: document.getElementById("aiLengthConstraints"),
         useHeadingsLists: document.getElementById("useHeadingsLists"),
@@ -778,17 +1009,17 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
         cotPhrase: document.getElementById("cotPhrase"),
         useScratchpad: document.getElementById("useScratchpad"),
         scratchpadTags: document.getElementById("scratchpadTags"),
-        preAnalysisStep: document.getElementById("preAnalysisStep"), // New
-        preAnalysisInstructions: document.getElementById("preAnalysisInstructions"), // New
+        preAnalysisStep: document.getElementById("preAnalysisStep"),
+        preAnalysisInstructions: document.getElementById("preAnalysisInstructions"),
         selfCritique: document.getElementById("selfCritique"),
         consultKnowledge: document.getElementById("consultKnowledge"),
         knowledgeSourceHint: document.getElementById("knowledgeSourceHint"),
-        allowToolUse: document.getElementById("allowToolUse"), // New
-        toolUseExamples: document.getElementById("toolUseExamples"), // New
+        allowToolUse: document.getElementById("allowToolUse"),
+        toolUseExamples: document.getElementById("toolUseExamples"),
         toggleExamples: document.getElementById("toggleExamples"),
         examplesContainer: document.getElementById("examplesContainer"),
         addExampleButton: document.getElementById("addExampleButton"),
-        generatePromptButton: document.getElementById("generatePromptButton"),
+        // generatePromptButton: document.getElementById("generatePromptButton"), // Removed
         generatedPromptOutput: document.getElementById("generatedPromptOutput"),
         copyPromptButton: document.getElementById("copyPromptButton"),
         advisorPanel: document.getElementById("advisorPanel"),
@@ -845,7 +1076,29 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
           preAnalysisStep: true,
           preAnalysisInstructions: "Before generating or debugging code, reiterate your understanding of the problem or the user's specific request. List any ambiguities you need clarified.",
           scratchpadTags: "<thinking_process></thinking_process>",
-          allowToolUse: false, // Potentially true if the model could verify code against a linter API, etc.
+          allowToolUse: false, 
+        },
+        codeReviewer: {
+            aiRole: "You are an expert AI Code Reviewer, proficient in common programming languages and software development best practices.",
+            aiPersonaDetails: "You are meticulous, objective, and provide constructive feedback. You focus on code quality, readability, performance, security, and adherence to standards.",
+            aiGoal: "Your primary goal is to analyze provided code snippets or conceptual pull requests, identify potential issues, suggest improvements, and explain the rationale behind your recommendations. You aim to help developers write better, more robust, and secure code.",
+            aiAudience: "Developers seeking feedback on their code.",
+            aiTasks: "- Identify bugs, logical errors, and potential runtime issues.\n- Assess code for adherence to style guides and best practices (e.g., DRY, SOLID principles).\n- Suggest improvements for clarity, readability, and maintainability.\n- Point out performance bottlenecks and suggest optimizations.\n- Check for common security vulnerabilities (e.g., OWASP Top 10 relevant aspects like XSS, SQL Injection vulnerabilities based on code patterns).\n- Verify if the code conceptually meets its stated requirements (if provided).\n- Offer alternative implementations with pros and cons.\n- Explain complex code segments or algorithms.",
+            aiTone: "Objective",
+            aiCommunicationStyle: "Provide specific, actionable feedback. Reference line numbers or specific code blocks if applicable (conceptually, as you are reviewing text). Be polite and constructive. Explain *why* a change is recommended. Offer examples of improved code where appropriate.",
+            emphasizeAccuracy: true,
+            aiKnowledge: "Assume knowledge of common programming languages (e.g., Python, JavaScript, Java, C#), frameworks, and development tools. If reviewing for a specific language/framework not explicitly stated by user, state your assumed language.",
+            aiDepthDetail: "Provide detailed and thorough reviews. Prioritize critical issues but also mention minor suggestions for improvement.",
+            aiOutputFormat: "Structure feedback clearly. Use Markdown for formatting (e.g., bullet points for issues, fenced code blocks for suggestions). Consider organizing feedback into sections like: **Critical Issues**, **Major Suggestions**, **Minor Nits/Style Points**.",
+            useHeadingsLists: true,
+            aiProhibitions: "Do not make subjective judgments without justification. Do not rewrite entire codebases unless explicitly instructed for a specific, small segment. Avoid overly pedantic or aggressive feedback. Do not execute or test the code.",
+            useCoT: true,
+            cotPhrase: "Let's analyze this code thoroughly. I will examine aspects such as functionality (based on description), readability, performance considerations, security implications, and adherence to best practices step-by-step.",
+            preAnalysisStep: true,
+            preAnalysisInstructions: "Before providing a review, please specify the programming language if not obvious. I will list the key areas I will focus on for the review based on the provided code and any context. If context (e.g. purpose of the code) is missing, I will make reasonable assumptions and state them.",
+            selfCritique: true,
+            allowToolUse: true, 
+            toolUseExamples: "You can conceptually simulate using tools like linters (e.g., ESLint for JS, Pylint for Python) or static analysis tools to inform your review and mention findings as if from such tools."
         },
         creativeWriter: {
           aiRole: "You are a highly imaginative and versatile creative storyteller and writing partner. You are an expert in various narrative structures, poetic forms, and persuasive writing techniques.",
@@ -853,9 +1106,9 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
           aiGoal: "Your primary goal is to assist users in brainstorming, developing, and writing various forms of creative content, including stories, poems, scripts, and marketing copy.",
           aiAudience: "Writers, marketers, hobbyists, or anyone seeking creative inspiration.",
           aiTasks: "- Generate story ideas, plot points, or character concepts based on prompts.\n- Write original narrative passages, descriptions, or dialogue in various styles and genres.\n- Compose poetry in different forms (e.g., sonnet, haiku, free verse).\n- Help develop marketing slogans, ad copy, or product descriptions.\n- Brainstorm alternative phrasings or creative angles.\n- Offer critiques or suggestions for improving user-provided creative text.\n- Adapt writing style based on specified genre, mood, or target audience.",
-          aiTone: "Witty",
+          aiTone: "Inspiring",
           aiCommunicationStyle: "Embrace creativity and be flexible with user requests. Offer multiple options or suggestions when appropriate. Be playful and inspiring. Feel free to ask clarifying questions to better understand the user's creative vision (e.g., 'What is the core emotion you want this scene to evoke?').",
-          emphasizeAccuracy: false, // Focus is on creativity
+          emphasizeAccuracy: false, 
           aiDepthDetail: "Vary detail based on the request – from short snippets to more developed passages.",
           aiOutputFormat: "Format responses according to the creative genre (e.g., prose paragraphs, script format with character names, stanzas for poetry). Use rich vocabulary and imagery.",
           aiProhibitions: "Do not plagiarize existing copyrighted works. Do not generate offensive, hateful, or harmful creative content. Clearly distinguish AI-generated content if it's to be used directly.",
@@ -879,6 +1132,45 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
           selfCritique: true,
           preAnalysisInstructions: "Before suggesting an analytical approach, list the key variables involved and the primary question being addressed."
         },
+        fitnessNutritionCoach: {
+            aiRole: "You are a knowledgeable and supportive AI Fitness and Nutrition Coach.",
+            aiPersonaDetails: "You are encouraging, practical, and base your advice on general evidence-based principles of health and wellness. You are not a medical professional.",
+            aiGoal: "Your primary goal is to provide general guidance on fitness routines, healthy eating habits, and lifestyle choices to help users achieve their wellness goals. You aim to motivate and educate users on sustainable health practices, always emphasizing safety and the need for professional consultation for personal medical or dietary advice.",
+            aiAudience: "Individuals seeking general fitness and nutrition information for non-medical purposes, who understand this is not personalized medical or dietetic advice.",
+            aiTasks: "- Suggest sample workout plans tailored to general goals (e.g., weight loss, muscle gain, general fitness, endurance) and common experience levels (beginner, intermediate).\n- Provide examples of healthy meal ideas or food choices based on general dietary patterns (e.g., balanced diet, high-protein focus, plant-based options).\n- Answer general questions about exercise principles, nutrition fundamentals, and healthy lifestyle habits.\n- Offer tips for motivation, consistency, and realistic goal setting.\n- Explain the general benefits of different types of exercise or categories of nutrients.\n- CRITICALLY IMPORTANT: Every response MUST begin or end with a prominent disclaimer stating you are an AI, not a medical/dietetic professional, and your advice is general, not a substitute for professional consultation.",
+            aiTone: "Encouraging",
+            aiCommunicationStyle: "Be positive, empathetic, and clear. Break down information into easily digestible points. Use motivational language. Always prioritize general safety guidelines and realistic expectations. Use cautious language when discussing potential outcomes.",
+            emphasizeAccuracy: true, 
+            aiKnowledge: "Knowledge of general exercise physiology, fundamental nutrition science, and common behavior change strategies related to health and wellness.",
+            aiDepthDetail: "Provide actionable advice that is not overly complex. Focus on foundational principles and general recommendations.",
+            aiOutputFormat: "Use clear language. Format workout plans or meal suggestions as lists or tables. Include the mandatory disclaimer prominently. For example:\n\n**IMPORTANT DISCLAIMER:** I am an AI assistant and not a certified medical professional, registered dietitian, or certified personal trainer. The information I provide is for general educational and informational purposes only, and does not constitute medical advice, dietary advice, or a personalized fitness plan. It is not a substitute for professional consultation, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition, dietary changes, or before starting any new exercise program. Do not disregard professional medical advice or delay in seeking it because of something you have read or received from me.",
+            useHeadingsLists: true,
+            aiProhibitions: "MUST NOT provide medical diagnoses or treatment plans. MUST NOT prescribe specific diets for medical conditions. MUST NOT give advice for specific medical conditions or injuries. MUST NOT guarantee specific results (e.g., 'you will lose 10 pounds in 2 weeks'). MUST ALWAYS include the full disclaimer. Avoid creating overly personalized plans that could be misconstrued as professional prescription.",
+            avoidBias: true,
+            useCoT: true,
+            cotPhrase: "Let's consider general approaches. First, I'll think about common goals and safe starting points. Then, I'll outline some general principles and examples. Finally, I'll ensure the necessary disclaimers are included.",
+            preAnalysisStep: true,
+            preAnalysisInstructions: "Before offering general suggestions, please state your general wellness goals (e.g., improve overall fitness, learn about healthier eating habits), any general types of activities you enjoy or dislike, and if you're looking for beginner-level information. I will then provide general guidance and examples. Remember, this is not personalized professional advice."
+        },
+        legalDocumentWriter: {
+            aiRole: "You are an AI assistant specializing in helping users draft *basic template language* for common informational purposes. You are NOT a lawyer and CANNOT provide legal advice.",
+            aiPersonaDetails: "You are precise, formal, and extremely cautious about the limitations of your role. Your output is for informational and template-generation purposes only.",
+            aiGoal: "Your primary goal is to assist users in generating *template* language for common document sections or simple structures, based on user-provided parameters and widely known common constructs. You MUST unequivocally and repeatedly emphasize that this is NOT legal advice, does not create an attorney-client relationship, and users MUST consult a qualified attorney in their jurisdiction for any legal matter.",
+            aiAudience: "Individuals seeking general template language for common situations, who clearly understand this is not a substitute for professional legal counsel and that generated text requires review and adaptation by a lawyer.",
+            aiTasks: "- Generate *sample template clauses* for contracts (e.g., general confidentiality, basic termination, example payment terms), clearly marked as templates.\n- Help outline common *template structures* for very simple documents (e.g., a basic Non-Disclosure Agreement outline, a simple letter of intent template structure), emphasizing these are general frameworks.\n- Fill in bracketed placeholders in a provided template based on user input (e.g., `[Your Company Name]`, `[Effective Date]`, `[Specific Detail Placeholder]`).\n- Explain the general purpose of common legal clauses in *very general, plain language*, avoiding legal interpretation.\n- CRITICALLY IMPORTANT: Every single response that contains any legal-esque text, clause, or document structure MUST begin AND end with a prominent, comprehensive disclaimer.",
+            aiTone: "Formal",
+            aiCommunicationStyle: "Use clear, unambiguous, and formal language. Be absolutely direct and repetitive about limitations. Structure document templates with clear headings and numerous placeholders like `[Consult_Attorney_For_This_Section]`, `[Insert_Specific_Jurisdictional_Requirement_Here]`, `[Your_Name]`, etc. Explicitly state that laws vary by jurisdiction.",
+            emphasizeAccuracy: true, 
+            aiKnowledge: "Familiarity with common structures and generalized clauses of standard non-complex document templates. Deep knowledge of when and how to disclaim.",
+            aiDepthDetail: "Provide only very basic, generalized template language. Avoid complexity or nuances that require legal expertise.",
+            aiOutputFormat: "Structure documents clearly. Use placeholders extensively. The following (or a very similar, comprehensive) disclaimer MUST appear at the BEGINNING and END of *every* response that provides any document text or clauses:\n\n**\nIMPORTANT LEGAL DISCLAIMER: I AM AN AI LANGUAGE MODEL AND NOT A QUALIFIED LEGAL PROFESSIONAL. THE INFORMATION AND DOCUMENT TEMPLATES I PROVIDE ARE FOR GENERAL INFORMATIONAL AND ILLUSTRATIVE PURPOSES ONLY. THEY DO NOT CONSTITUTE LEGAL ADVICE, ARE NOT A SUBSTITUTE FOR THE ADVICE OF A QUALIFIED ATTORNEY, AND NO ATTORNEY-CLIENT RELATIONSHIP IS FORMED. LAWS VARY SIGNIFICANTLY BY JURISDICTION AND ARE SUBJECT TO CHANGE AND COMPLEX INTERPRETATION. YOU MUST CONSULT WITH A QUALIFIED ATTORNEY LICENSED IN YOUR JURISDICTION FOR ADVICE ON YOUR SPECIFIC SITUATION AND BEFORE USING, RELYING ON, OR TAKING ANY ACTION BASED ON ANY INFORMATION OR TEMPLATE PROVIDED BY ME. I ASSUME NO RESPONSIBILITY FOR ANY ACTIONS TAKEN OR NOT TAKEN BASED ON THE INFORMATION I PROVIDE. ANY USE OF THESE TEMPLATES IS AT YOUR OWN SOLE RISK.\n**",
+            useHeadingsLists: true,
+            aiProhibitions: "MUST NOT provide legal advice of any kind. MUST NOT interpret laws or apply them to specific facts. MUST NOT claim to create legally binding or enforceable documents. MUST NOT represent itself as an attorney, law firm, or legal counsel. MUST ALWAYS include the full, prominent disclaimer at the beginning and end when providing any template text. MUST NOT give any assurances of legal validity or suitability for any purpose. Avoid generating templates for highly complex or specialized legal areas (e.g., wills, trusts, litigation documents, patent applications).",
+            useCoT: true,
+            cotPhrase: "To generate this template language, I will first identify the very basic sections and common placeholder clauses typically found in such a general document type. Then I will populate these sections with standard, generalized template language and extensive placeholders for user input and attorney review. I will ensure the critical disclaimers are extremely prominent and repeated.",
+            selfCritique: true, 
+            preAnalysisInstructions: "Before attempting to generate any template language, please specify the general type of document or clause you are thinking about (e.g., 'basic NDA outline', 'sample confidentiality clause'). I will then attempt to provide a very general template for informational purposes only. Remember, you ABSOLUTELY MUST consult a qualified attorney for any legal matter. This is not legal advice.",
+        },
         socraticTutor: {
           aiRole: "You are a patient and insightful Socratic Tutor.",
           aiPersonaDetails: "You are curious, encouraging, and believe in guiding learners to their own insights.",
@@ -887,7 +1179,7 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
           aiTasks: "- Respond to user statements or questions with further questions that encourage reflection.\n- Help users break down complex problems into smaller, more manageable parts.\n- Challenge assumptions respectfully.\n- Guide users to identify inconsistencies in their reasoning.\n- Encourage users to consider alternative perspectives.\n- Summarize and reflect back user's key points to ensure understanding.",
           aiTone: "Encouraging",
           aiCommunicationStyle: "Primarily use questions. When providing information, frame it tentatively or as something to consider. Be patient and allow the user time to think. Avoid judgmental language. If the user is stuck, offer a small hint or a simpler related question before resorting to more direct explanation. Periodically summarize what has been discussed to ensure alignment.",
-          emphasizeAccuracy: true, // Accuracy in guiding the thought process
+          emphasizeAccuracy: true, 
           aiDepthDetail: "Adjust questioning depth based on user's responses and engagement.",
           aiProhibitions: "Do not give direct answers unless specifically asked after multiple attempts at Socratic guidance, and even then, try to lead them. Do not frustrate the user with excessive or unhelpful questioning. Do not express personal opinions.",
           preAnalysisStep: true,
@@ -937,29 +1229,55 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
             aiTasks: "- Generate diverse ideas related to a user's topic or problem.\n- Ask provocative or 'what if' questions to stimulate new thinking.\n- Suggest unconventional approaches or connections (e.g., SCAMPER technique, random word association).\n- Help build upon and expand user-generated ideas (e.g., using 'Yes, and...' logic).\n- Introduce constraints or 'challenge cards' (e.g., 'How would you solve this with only $10?' or 'What if it had to be blue?') to spark different kinds of creativity.\n- Organize or categorize brainstormed ideas if requested, AFTER the primary generation phase.\n- Maintain a positive, non-judgmental, and encouraging atmosphere throughout the idea generation phase.",
             aiTone: "Encouraging",
             aiCommunicationStyle: "Be playful, curious, and open-minded. Use enthusiastic language. Offer many alternatives. Avoid criticizing initial ideas; focus on generation first, evaluation later (if requested by the user for a separate step).",
-            emphasizeAccuracy: false, // Focus is on idea quantity and novelty
+            emphasizeAccuracy: false, 
             aiOutputFormat: "Often best as lists of ideas, questions, or mind-map-like structures (described in text). Use varied phrasing. Offer a mix of concise and slightly more elaborated ideas. Number ideas for easy reference.",
             aiProhibitions: "Do not shut down ideas prematurely during the generation phase. Do not get stuck on a single line of thought for too long unless the user wants to deep-dive. Avoid negativity or critiques during brainstorming.",
             preAnalysisStep: true,
             preAnalysisInstructions: "To kick off the brainstorm, ask the user for the core problem/topic and if there are any initial thoughts or desired outcomes. Then, propose 2-3 different brainstorming techniques we could start with.",
+        },        
+        creativeCheatsheetArchitect: {
+          aiRole: "You are a master 'Cheatsheet Architect' and 'Interactive Experience Designer', specializing in transforming complex topics into visually stunning, engaging, and uniquely interactive cheatsheets.",
+          aiPersonaDetails: "You blend the insight of an information architect, the eye of a graphic designer, and the ingenuity of a creative front-end developer. You have a passion for making learning and information recall memorable and impactful through bold design and clever interactivity. You champion originality.",
+          aiGoal: "Your primary goal is to help the user conceptualize, design, and structure an extraordinary cheatsheet. This involves brainstorming unique visual themes, proposing compelling content organization, and suggesting innovative JS/CSS interactive elements that not only look amazing but also enhance understanding and usability for any given topic.",
+          aiAudience: "Content creators, subject-matter experts, educators, and anyone aspiring to produce top-tier, original, and highly effective cheatsheets that stand out and provide significant value.",
+          aiTasks: "- Brainstorm and define a core visual metaphor or theme that aligns with the cheatsheet's topic and enhances its message.\n- Propose unique and effective content structures (e.g., interactive diagrams, comparative flowcharts, thematic mind maps, narrative-driven layouts).\n- Suggest bold and creative uses of HTML, CSS, and JavaScript to create meaningful interactive elements (e.g., dynamic filtering, animated explanations, gamified learning components, personalized pathways, data visualizations that respond to user input).\n- Advise on information hierarchy, scannability, and user flow to ensure the cheatsheet is intuitive despite its creative design.\n- Guide the user in selecting or conceptualizing a distinctive visual style, including color palettes, typography, and imagery that resonate with the topic's essence.\n- Help outline key sections and the narrative/logical flow of information within the creative design.\n- Provide ideas to ensure the cheatsheet is not just different, but genuinely compelling and useful.\n- Encourage designs that are adaptable for various screen sizes (responsive design thinking).",
+          aiTone: "Inspiring",
+          aiCommunicationStyle: "Be highly collaborative and enthusiastic. Think aloud, offering visionary ideas. Ask probing questions to uncover the core essence of the user's topic and how design can amplify it (e.g., 'What's the one feeling this cheatsheet should evoke?' 'How can the layout itself guide the user through discovery?'). Encourage pushing creative boundaries. When suggesting JS/CSS, focus on the *effect* and *user benefit* first, then potential implementation ideas. Offer A/B conceptual ideas for key design choices.",
+          emphasizeAccuracy: true,
+          aiKnowledge: "Deep understanding of visual design principles, information architecture, UX for learning, modern web technologies (HTML, CSS, JS), creative coding possibilities, and a wide array of content structuring techniques. Familiarity with diverse award-winning digital experiences and cheatsheet styles.",
+          aiDepthDetail: "Offer a spectrum of ideas, from high-level visual concepts and thematic directions to specific, actionable suggestions for content modules, interactive features, and stylistic elements. Encourage a strong central concept before detailing micro-interactions.",
+          aiOutputFormat: "Structure your advice to be actionable and inspiring. Use descriptive language for visual and interactive concepts (like a creative brief). Suggest using Markdown for the raw content organization, but clearly delineate sections for 'Visual Concept & Theme,' 'Layout & Structure Ideas,' 'Key Interactive Features (with purpose),' and 'Stylistic Notes (Colors, Fonts, Imagery).' Provide concrete examples of how JS/CSS could achieve suggested interactive effects, focusing on the *what* and *why*.",
+          useHeadingsLists: true,
+          aiProhibitions: "Do not suggest generic, template-like, or purely text-driven cheatsheets. Avoid recommending interactive elements that are mere novelties without enhancing understanding or usability. Do not get bogged down in overly technical implementation details unless specifically asked; focus on the creative vision and user experience. Ensure suggestions are aimed at creating an *original* and *bold* piece.",
+          useCoT: true,
+          cotPhrase: "Let's design an iconic cheatsheet! First, what is the absolute soul of this topic? Second, what unique visual or interactive metaphor can embody that? Third, how will content and features weave into this core concept to create a 'wow' experience that's also incredibly effective?",
+          preAnalysisStep: true,
+          preAnalysisInstructions: "Before we craft the vision, please tell me: \n1. What's the core topic of your cheatsheet? \n2. Who is your primary audience, and what do they hope to achieve with it? \n3. What are 2-3 'killer features' or pieces of information it MUST convey? \n4. If this cheatsheet had a personality, what would it be (e.g., playful, authoritative, mysterious, minimalist, high-tech)? \n5. Are there any existing cheatsheets (on any topic) whose *style* or *interactivity* you admire or dislike?",
+          selfCritique: true,
+          allowToolUse: false,
+          toolUseExamples: ""  
         },
       };
+      
+      let debounceTimer;
+      function debouncedUpdateGeneratedPrompt() {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(updateGeneratedPrompt, 350); // 350ms delay
+      }
 
       function setFieldValue(elementId, value) {
         const element = DOMElements[elementId];
         if (!element) return;
 
-        if (value === undefined || value === null) { // Check for null too
+        if (value === undefined || value === null) { 
           if (element.type === "checkbox") element.checked = false;
           else if (element.tagName === "SELECT") element.value = element.options[0] ? element.options[0].value : "";
           else element.value = "";
         } else {
           if (element.type === "checkbox") element.checked = Boolean(value);
-          else element.value = value; // Works for select and text inputs/textareas
+          else element.value = value; 
         }
-        // Dispatch events to ensure any listeners (like advisor) are triggered
-        element.dispatchEvent(new Event("input", { bubbles: true }));
-        element.dispatchEvent(new Event("change", { bubbles: true }));
+        // Event dispatch is now handled by direct call to debouncedUpdateGeneratedPrompt in calling functions
       }
 
       function getFieldValue(elementId) {
@@ -967,27 +1285,110 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
         if (!element) return null;
         return element.type === "checkbox" ? element.checked : element.value;
       }
+      
+      function updateGeneratedPrompt() {
+          let prompt = "";
+          const structureMethod = getFieldValue("promptStructureMethod") || 'markdown';
+
+          function addSection(title, xmlTag, content) {
+            if (!content || content.trim() === "") return;
+            if (structureMethod === 'xml') {
+              prompt += `<${xmlTag}>\n${content.trim()}\n</${xmlTag}>\n\n`;
+            } else {
+              prompt += `## ${title}\n${content.trim()}\n\n`;
+            }
+          }
+          
+          document.querySelectorAll(".section-toggle").forEach((toggle) => {
+            if (!toggle.checked) return;
+
+            const sectionId = toggle.id.replace("toggle", "").toLowerCase();
+            let sectionContent = "";
+
+            if (sectionId === "coreidentity") {
+              if (getFieldValue("aiRole")) sectionContent += `You are: ${getFieldValue("aiRole")}\n`;
+              if (getFieldValue("aiPersonaDetails")) sectionContent += `Persona Details: ${getFieldValue("aiPersonaDetails")}\n`;
+              if (getFieldValue("aiGoal")) sectionContent += `Your primary goal is: ${getFieldValue("aiGoal")}\n`;
+              if (getFieldValue("aiAudience")) sectionContent += `Tailor your responses for: ${getFieldValue("aiAudience")}.\n`;
+              addSection("Core Identity & Goal", "core_identity_and_goal", sectionContent);
+            } else if (sectionId === "keytasks" && getFieldValue("aiTasks")) {
+              addSection("Key Tasks & Functions", "key_tasks_and_functions", getFieldValue("aiTasks"));
+            } else if (sectionId === "interactionstyle") {
+              if (getFieldValue("aiTone") !== "Neutral") sectionContent += `Your tone should be: ${getFieldValue("aiTone")}.\n`;
+              if (getFieldValue("aiCommunicationStyle")) sectionContent += `${getFieldValue("aiCommunicationStyle")}\n`;
+              addSection("Interaction Style & Tone", "interaction_style_and_tone", sectionContent);
+            } else if (sectionId === "contentstandards") {
+              if (getFieldValue("emphasizeAccuracy")) sectionContent += "You must prioritize accuracy and rely on evidence-based reasoning.\n";
+              if (getFieldValue("aiKnowledge")) sectionContent += `Your knowledge base: ${getFieldValue("aiKnowledge")}.\n`;
+              if (getFieldValue("aiDepthDetail")) sectionContent += `Regarding depth and detail: ${getFieldValue("aiDepthDetail")}.\n`;
+              addSection("Content Standards & Expertise", "content_standards_and_expertise", sectionContent);
+            } else if (sectionId === "outputformat") { 
+              if (getFieldValue("aiOutputFormat")) sectionContent += `AI Response Formatting Instructions:\n${getFieldValue("aiOutputFormat")}\n`;
+              if (getFieldValue("aiLengthConstraints")) sectionContent += `Adhere to these AI response length constraints: ${getFieldValue("aiLengthConstraints")}.\n`;
+              if (getFieldValue("useHeadingsLists")) sectionContent += "In your responses, use headings, lists, etc., for clarity.\n";
+              addSection("AI Response Output Requirements & Formatting", "ai_response_output_formatting", sectionContent);
+            } else if (sectionId === "constraints") {
+              if (getFieldValue("aiProhibitions")) sectionContent += `Absolute Prohibitions (You MUST NOT):\n${getFieldValue("aiProhibitions")}\n`;
+              if (getFieldValue("aiAvoidances")) sectionContent += `Scope Limitations / Topics to Avoid:\n${getFieldValue("aiAvoidances")}\n`;
+              if (getFieldValue("avoidBias")) sectionContent += "Strive for neutrality and avoid societal biases.\n";
+              addSection("Constraints & Safeguards", "constraints_and_safeguards", sectionContent);
+            } else if (sectionId === "reasoning") {
+              if (getFieldValue("useCoT")) sectionContent += `Employ step-by-step reasoning. ${getFieldValue("cotPhrase") ? getFieldValue("cotPhrase").trim() + "\n" : "Let's think step by step.\n"}`;
+              if (getFieldValue("useScratchpad")) sectionContent += `Use an internal scratchpad/thinking process. ${getFieldValue("scratchpadTags") ? "Enclose thoughts in " + getFieldValue("scratchpadTags").trim() + " and do not include these in the final response unless asked.\n" : "You can use a scratchpad area for your thoughts.\n"}`;
+              if (getFieldValue("preAnalysisStep")) sectionContent += `Perform a pre-analysis/planning step before answering. ${getFieldValue("preAnalysisInstructions") ? getFieldValue("preAnalysisInstructions").trim() + "\n" : "\n"}`;
+              if (getFieldValue("selfCritique")) sectionContent += "Perform self-critique and refinement before finalizing your response.\n";
+              if (getFieldValue("consultKnowledge")) sectionContent += `Consult external knowledge/tools if necessary and capable. ${getFieldValue("knowledgeSourceHint") ? getFieldValue("knowledgeSourceHint").trim() + "\n" : "\n"}`;
+              if (getFieldValue("allowToolUse")) sectionContent += `You may use specified external tools if you are capable. ${getFieldValue("toolUseExamples") ? "Examples of allowed tools: " + getFieldValue("toolUseExamples").trim() + "\n" : "\n"}`;
+              addSection("Reasoning & Process", "reasoning_and_process", sectionContent);
+            } else if (sectionId === "examples") {
+              const examplePairs = DOMElements.examplesContainer.querySelectorAll(".example-pair");
+              if (examplePairs.length > 0) {
+                let examplesText = "";
+                 if (structureMethod !== 'xml') examplesText += "Here are some examples of ideal interactions:\n\n";
+                examplePairs.forEach((pair, index) => {
+                  const userInput = pair.querySelector(".example-input").value.trim();
+                  const aiOutput = pair.querySelector(".example-output").value.trim();
+                  if (userInput && aiOutput) {
+                    if (structureMethod === 'xml') {
+                        examplesText += `<example_pair id="${index + 1}">\n  <user_input><![CDATA[${userInput}]]></user_input>\n  <ai_response><![CDATA[${aiOutput}]]></ai_response>\n</example_pair>\n`;
+                    } else {
+                        examplesText += `--- Example ${index + 1} ---\nUser: ${userInput}\nAI: ${aiOutput}\n--- End Example ${index + 1} ---\n\n`;
+                    }
+                  }
+                });
+                if (examplesText.trim() !== "") {
+                    addSection("Few-Shot Examples", "few_shot_examples", examplesText);
+                }
+              }
+            }
+          });
+          if (DOMElements.generatedPromptOutput)
+            DOMElements.generatedPromptOutput.textContent = prompt.trim()
+              ? prompt.trim()
+              : "Your generated prompt will appear here as you build it...";
+          updateAdvisor(); // Also update advisor when prompt changes
+      }
+
 
       function resetFormAndEnableAllSections() {
         ALL_FIELD_IDS.forEach((id) => setFieldValue(id, undefined));
         document.querySelectorAll(".section-toggle").forEach((toggle) => {
-          toggle.checked = true; // Default to enabled
+          toggle.checked = true; 
           const sectionContent = toggle.closest(".accordion-item").querySelector(".accordion-collapse");
           const inputs = sectionContent.querySelectorAll(
             "input:not(.section-toggle):not([type=file]), textarea, select"
           );
           inputs.forEach((input) => (input.disabled = false));
-          // Ensure accordion sections visually reflect checkbox state
           const collapseElement = document.getElementById(sectionContent.id);
           const bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, {toggle: false});
-          bsCollapse.show(); // Show all sections on reset
+          bsCollapse.show(); 
 
           if (toggle.id === "toggleExamples" && DOMElements.addExampleButton)
             DOMElements.addExampleButton.disabled = false;
         });
         if (DOMElements.examplesContainer) DOMElements.examplesContainer.innerHTML = "";
-        if (DOMElements.promptTemplate) DOMElements.promptTemplate.value = ""; // Reset dropdown
-        updateAdvisor();
+        if (DOMElements.promptTemplate) DOMElements.promptTemplate.value = ""; 
+        debouncedUpdateGeneratedPrompt();
       }
 
       function loadTemplate(templateName) {
@@ -1000,17 +1401,14 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
         const template = templates[templateName];
         if (!template) return;
 
-        // First, reset all fields to default (unchecked/empty) and enable all sections
         resetFormAndEnableAllSections(); 
 
-        // Then, apply template values
         for (const keyInTemplate in template) {
           if (DOMElements[keyInTemplate]) {
             setFieldValue(keyInTemplate, template[keyInTemplate]);
           }
         }
 
-        // Finally, disable sections that have no content from the template
         document.querySelectorAll(".section-toggle").forEach((toggle) => {
           const sectionContent = toggle.closest(".accordion-item").querySelector(".accordion-collapse");
           let sectionHasContentFromTemplate = false;
@@ -1026,11 +1424,9 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
               }
           });
           
-          // Special handling for examples if template suggests them but doesn't provide any
           if (toggle.id === "toggleExamples" && template.suggestFewShot === true) { 
               sectionHasContentFromTemplate = true;
           }
-
 
           toggle.checked = sectionHasContentFromTemplate;
           const inputsToToggle = sectionContent.querySelectorAll("input:not(.section-toggle):not([type=file]), textarea, select");
@@ -1040,7 +1436,6 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
               DOMElements.addExampleButton.disabled = !toggle.checked;
           }
 
-          // Ensure accordion visibility matches checkbox
           const collapseElement = document.getElementById(sectionContent.id);
           const bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, {toggle: false});
           if (toggle.checked) {
@@ -1049,7 +1444,7 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
             bsCollapse.hide();
           }
         });
-        updateAdvisor();
+        debouncedUpdateGeneratedPrompt();
       }
 
       function updateAdvisor() {
@@ -1091,20 +1486,16 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
               .forEach((el) => (el.disabled = isDisabled));
           }
         }
-        setInputsDisabledState(!toggle.checked); // Initial state based on checkbox
+        setInputsDisabledState(!toggle.checked); 
 
         toggle.addEventListener("change", function () {
           setInputsDisabledState(!this.checked);
-          // If checkbox enables a section, ensure it's shown
           const collapseElement = document.getElementById(contentArea.id);
           const bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, {toggle: false});
           if (this.checked) {
             bsCollapse.show();
-          } else {
-            // Optional: you might want to hide it if unchecked, or let user control via accordion button
-            // bsCollapse.hide(); 
           }
-          updateAdvisor();
+          debouncedUpdateGeneratedPrompt(); // Update prompt on section toggle
         });
       });
 
@@ -1117,97 +1508,29 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
         const exampleDiv = document.createElement("div");
         exampleDiv.classList.add("example-pair", "mb-3", "p-2", "border", "rounded", "bg-light");
         exampleDiv.innerHTML = `<h6 class="small text-muted">Example Pair</h6><textarea class="form-control form-control-sm example-input" rows="2" placeholder="User: ...">${initialInput}</textarea><textarea class="form-control form-control-sm example-output mt-1" rows="3" placeholder="AI: ...">${initialOutput}</textarea><button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-example" data-example-id="${exampleId}"><i class="bi bi-trash"></i> Remove</button>`;
+        
+        exampleDiv.querySelectorAll('.example-input, .example-output').forEach(el => {
+            el.addEventListener('input', debouncedUpdateGeneratedPrompt);
+        });
+
         DOMElements.examplesContainer.appendChild(exampleDiv);
         exampleDiv.querySelector(".remove-example").addEventListener("click", function () {
           this.parentElement.remove();
+          debouncedUpdateGeneratedPrompt(); 
         });
+        debouncedUpdateGeneratedPrompt(); 
       }
       if (DOMElements.addExampleButton) DOMElements.addExampleButton.addEventListener("click", () => addExamplePair());
 
-      if (DOMElements.generatePromptButton)
-        DOMElements.generatePromptButton.addEventListener("click", function () {
-          let prompt = "";
-          const structureMethod = getFieldValue("promptStructureMethod") || 'markdown';
-
-          function addSection(title, xmlTag, content) {
-            if (!content || content.trim() === "") return;
-            if (structureMethod === 'xml') {
-              prompt += `<${xmlTag}>\n${content.trim()}\n</${xmlTag}>\n\n`;
-            } else {
-              prompt += `## ${title}\n${content.trim()}\n\n`;
-            }
+      // Event listeners for all form fields to trigger live update
+      ALL_FIELD_IDS.forEach(id => {
+          const element = DOMElements[id];
+          if (element) {
+              const eventType = (element.tagName === 'SELECT' || element.type === 'checkbox') ? 'change' : 'input';
+              element.addEventListener(eventType, debouncedUpdateGeneratedPrompt);
           }
-          
-          document.querySelectorAll(".section-toggle").forEach((toggle) => {
-            if (!toggle.checked) return;
-
-            const sectionId = toggle.id.replace("toggle", "").toLowerCase();
-            let sectionContent = "";
-
-            if (sectionId === "coreidentity") {
-              if (getFieldValue("aiRole")) sectionContent += `You are: ${getFieldValue("aiRole")}\n`;
-              if (getFieldValue("aiPersonaDetails")) sectionContent += `Persona Details: ${getFieldValue("aiPersonaDetails")}\n`;
-              if (getFieldValue("aiGoal")) sectionContent += `Your primary goal is: ${getFieldValue("aiGoal")}\n`;
-              if (getFieldValue("aiAudience")) sectionContent += `Tailor your responses for: ${getFieldValue("aiAudience")}.\n`;
-              addSection("Core Identity & Goal", "core_identity_and_goal", sectionContent);
-            } else if (sectionId === "keytasks" && getFieldValue("aiTasks")) {
-              addSection("Key Tasks & Functions", "key_tasks_and_functions", getFieldValue("aiTasks"));
-            } else if (sectionId === "interactionstyle") {
-              if (getFieldValue("aiTone") !== "Neutral") sectionContent += `Your tone should be: ${getFieldValue("aiTone")}.\n`;
-              if (getFieldValue("aiCommunicationStyle")) sectionContent += `${getFieldValue("aiCommunicationStyle")}\n`;
-              addSection("Interaction Style & Tone", "interaction_style_and_tone", sectionContent);
-            } else if (sectionId === "contentstandards") {
-              if (getFieldValue("emphasizeAccuracy")) sectionContent += "You must prioritize accuracy and rely on evidence-based reasoning.\n";
-              if (getFieldValue("aiKnowledge")) sectionContent += `Your knowledge base: ${getFieldValue("aiKnowledge")}.\n`;
-              if (getFieldValue("aiDepthDetail")) sectionContent += `Regarding depth and detail: ${getFieldValue("aiDepthDetail")}.\n`;
-              addSection("Content Standards & Expertise", "content_standards_and_expertise", sectionContent);
-            } else if (sectionId === "outputformat") { // Note: promptStructureMethod is for the *overall* prompt, not the AI's response format here.
-              if (getFieldValue("aiOutputFormat")) sectionContent += `AI Response Formatting Instructions:\n${getFieldValue("aiOutputFormat")}\n`;
-              if (getFieldValue("aiLengthConstraints")) sectionContent += `Adhere to these AI response length constraints: ${getFieldValue("aiLengthConstraints")}.\n`;
-              if (getFieldValue("useHeadingsLists")) sectionContent += "In your responses, use headings, lists, etc., for clarity.\n";
-              addSection("AI Response Output Requirements & Formatting", "ai_response_output_formatting", sectionContent);
-            } else if (sectionId === "constraints") {
-              if (getFieldValue("aiProhibitions")) sectionContent += `Absolute Prohibitions (You MUST NOT):\n${getFieldValue("aiProhibitions")}\n`;
-              if (getFieldValue("aiAvoidances")) sectionContent += `Scope Limitations / Topics to Avoid:\n${getFieldValue("aiAvoidances")}\n`;
-              if (getFieldValue("avoidBias")) sectionContent += "Strive for neutrality and avoid societal biases.\n";
-              addSection("Constraints & Safeguards", "constraints_and_safeguards", sectionContent);
-            } else if (sectionId === "reasoning") {
-              if (getFieldValue("useCoT")) sectionContent += `Employ step-by-step reasoning. ${getFieldValue("cotPhrase") ? getFieldValue("cotPhrase").trim() + "\n" : "Let's think step by step.\n"}`;
-              if (getFieldValue("useScratchpad")) sectionContent += `Use an internal scratchpad/thinking process. ${getFieldValue("scratchpadTags") ? "Enclose thoughts in " + getFieldValue("scratchpadTags").trim() + " and do not include these in the final response unless asked.\n" : "You can use a scratchpad area for your thoughts.\n"}`;
-              if (getFieldValue("preAnalysisStep")) sectionContent += `Perform a pre-analysis/planning step before answering. ${getFieldValue("preAnalysisInstructions") ? getFieldValue("preAnalysisInstructions").trim() + "\n" : "\n"}`;
-              if (getFieldValue("selfCritique")) sectionContent += "Perform self-critique and refinement before finalizing your response.\n";
-              if (getFieldValue("consultKnowledge")) sectionContent += `Consult external knowledge/tools if necessary and capable. ${getFieldValue("knowledgeSourceHint") ? getFieldValue("knowledgeSourceHint").trim() + "\n" : "\n"}`;
-              if (getFieldValue("allowToolUse")) sectionContent += `You may use specified external tools if you are capable. ${getFieldValue("toolUseExamples") ? "Examples of allowed tools: " + getFieldValue("toolUseExamples").trim() + "\n" : "\n"}`;
-              addSection("Reasoning & Process", "reasoning_and_process", sectionContent);
-            } else if (sectionId === "examples") {
-              const examplePairs = DOMElements.examplesContainer.querySelectorAll(".example-pair");
-              if (examplePairs.length > 0) {
-                let examplesText = "";
-                 if (structureMethod !== 'xml') examplesText += "Here are some examples of ideal interactions:\n\n"; // XML wrapper handles this
-                examplePairs.forEach((pair, index) => {
-                  const userInput = pair.querySelector(".example-input").value.trim();
-                  const aiOutput = pair.querySelector(".example-output").value.trim();
-                  if (userInput && aiOutput) {
-                    if (structureMethod === 'xml') {
-                        examplesText += `<example_pair id="${index + 1}">\n  <user_input><![CDATA[${userInput}]]></user_input>\n  <ai_response><![CDATA[${aiOutput}]]></ai_response>\n</example_pair>\n`;
-                    } else {
-                        examplesText += `--- Example ${index + 1} ---\nUser: ${userInput}\nAI: ${aiOutput}\n--- End Example ${index + 1} ---\n\n`;
-                    }
-                  }
-                });
-                if (examplesText.trim() !== "") {
-                    addSection("Few-Shot Examples", "few_shot_examples", examplesText);
-                }
-              }
-            }
-          });
-          if (DOMElements.generatedPromptOutput)
-            DOMElements.generatedPromptOutput.textContent = prompt.trim()
-              ? prompt.trim()
-              : "Please fill in some sections or select a template to generate a prompt.";
-          updateAdvisor();
-        });
-
+      });
+      
       if (DOMElements.copyPromptButton)
         DOMElements.copyPromptButton.addEventListener("click", function () {
           const textToCopy = DOMElements.generatedPromptOutput.textContent;
@@ -1280,7 +1603,6 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
                   if (toggle.id === "toggleExamples" && DOMElements.addExampleButton)
                     DOMElements.addExampleButton.disabled = !toggle.checked;
 
-                  // Ensure accordion sections reflect checkbox state visually
                   const collapseElement = document.getElementById(sectionContent.id);
                   const bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, {toggle: false});
                   if (toggle.checked) {
@@ -1295,7 +1617,7 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
                   config.examples.forEach((ex) => addExamplePair(ex.input, ex.output));
                 }
                 
-                updateAdvisor();
+                debouncedUpdateGeneratedPrompt();
                 if (DOMElements.promptTemplate) DOMElements.promptTemplate.value = ""; 
                 alert("Configuration loaded successfully!");
               } catch (err) {
@@ -1307,7 +1629,9 @@ AI: Roger started with 5 balls. He bought 2 cans, and each can has 3 balls. So, 
             DOMElements.importConfigFile.value = ""; 
           }
         });
-      updateAdvisor();
+        
+      // Initial prompt generation on page load
+      debouncedUpdateGeneratedPrompt(); 
     </script>
   </body>
 </html>
