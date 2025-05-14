@@ -284,9 +284,63 @@ try {
 
         .card-title a { text-decoration: none; color: #1a508b; font-weight: 600; } /* Darker blue */
         .card-title a:hover { color: #003d73; text-decoration: underline; }
-        .card-body { flex-grow: 1; display: flex; flex-direction: column; padding: 1rem; }
-        .card-text { flex-grow: 1; margin-bottom: .8rem; color: #495057; font-size: 0.875rem; line-height:1.5; min-height: calc(0.875rem * 1.5 * 3); /* Approx 3 lines */ }
-        .card-footer { background-color:transparent; border-top: 1px solid #e9ecef; padding: 0.75rem 1rem; text-align:center; margin-top: auto; }
+
+        /* --- UPDATED CARD TEXT AND TITLE STYLES --- */
+        .card-title { /* Affects the <h5> element used for titles */
+            /* Original Bootstrap H5 styles: font-size: 1.25rem; margin-bottom: .5rem; (line-height approx 1.2) */
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2; /* Allow up to 2 lines for the title */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            /* If you want to enforce exact height for the title area:
+               height: calc(1.25rem * 1.2 * 2); /* Assumes Bootstrap's h5 font-size and typical line-height */
+            */
+        }
+
+        .card-body {
+            flex-grow: 1; /* This is critical for allowing card-body to take up space */
+            display: flex;
+            flex-direction: column;
+            padding: 1rem; /* Keep padding as is */
+        }
+
+        .card-text {
+            /* Original styles from your code:
+            flex-grow: 1;
+            margin-bottom: .8rem;
+            color: #495057;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            min-height: calc(0.875rem * 1.5 * 3); /* Approx 3 lines */
+            */
+            flex-grow: 1; /* Allows description to take available space in card-body */
+            margin-bottom: .8rem; /* Original margin */
+            color: #495057; /* Original color */
+            font-size: 0.875rem; /* Original font-size */
+            line-height: 1.5; /* Original line-height, important for min-height calculation */
+            min-height: calc(0.875rem * 1.5 * 3); /* Reserve space for 3 lines */
+
+            /* Add line clamping for description */
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3; /* Allow up to 3 lines for the description */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            /* Fallback max-height for browsers not supporting -webkit-line-clamp (rare)
+               max-height: calc(0.875rem * 1.5 * 3 + 0.1rem); /* +0.1rem for buffer */
+            */
+        }
+        /* --- END UPDATED CARD TEXT AND TITLE STYLES --- */
+
+
+        .card-footer {
+            background-color:transparent;
+            border-top: 1px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            text-align:center;
+            margin-top: auto; /* This is critical for pushing footer to bottom */
+        }
         .footer { background-color: #343a40; color: #adb5bd; border-top: 1px solid #495057; }
         .footer a { color: #f8f9fa; } .footer a:hover { color: #ced4da; }
         .page-hero { padding: 3rem 0; margin-bottom: 2rem; background-color: #e9ecef; border-bottom: 1px solid #dee2e6;}
@@ -298,8 +352,10 @@ try {
         .cta-scroll-link:hover { text-decoration: underline; }
         .cta-section { background-color: #ffffff; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; padding: 3rem 0; margin: 3rem 0;}
         .cta-section h3 {font-weight: 600; color: #212529;}
-        .portfolio-item .card { height: 100%; } /* Ensures cards in a row are same height */
-    </style>
+        .portfolio-item .card {
+            height: 100%; /* This is critical for making cards in a row the same height */
+        }
+    </style>    
 </head>
 <body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
