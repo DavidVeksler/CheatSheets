@@ -68,9 +68,9 @@
         --ai-color-mistral: #546e7a; /* Blue Grey */
         --ai-color-ai21: #d81b60; /* Pink/Magenta */
 
-        /* --- Aspect Type Colors --- */
+        /* --- Aspect Type Colors (Used for Card Left Border) --- */
         --ai-aspect-color-origin: #64b5f6;
-        --ai-aspect-color-philosophy: #64b5f6;
+        --ai-aspect-color-philosophy: #64b5f6; /* Kept same as origin for consistency if not overridden by specific type */
         --ai-aspect-color-leadership: #ba68c8;
         --ai-aspect-color-funding: #4db6ac;
         --ai-aspect-color-approach: #fff176;
@@ -183,7 +183,7 @@
       .info-card {
         background: var(--ai-card-bg);
         border: 1px solid var(--ai-card-border-color);
-        border-left: 5px solid var(--ai-aspect-color-current); /* Aspect color stripe, default overridden */
+        border-left: 5px solid var(--ai-aspect-color-current); /* Aspect color stripe */
         border-radius: 6px;
         box-shadow: 0 3px 8px var(--ai-card-shadow-color);
         height: 100%;
@@ -201,9 +201,10 @@
       #main-container.is-dimmed .schema-container:not(.is-highlighted-section) > .section-title {
         opacity: 0.4;
       }
+      /* Highlight uses lab's specific color, defined in .cat-COMPANY .info-card.is-highlighted */
       .info-card.is-highlighted {
         opacity: 1 !important;
-        box-shadow: 0 0 0 3px var(--ai-category-color), 0 8px 16px rgba(0, 0, 0, 0.25) !important;
+        box-shadow: 0 0 0 3px var(--ai-category-color), 0 8px 16px rgba(0, 0, 0, 0.25) !important; /* Fallback, overridden */
         z-index: 25 !important;
         transform: translateY(-4px) scale(1.02);
       }
@@ -236,7 +237,7 @@
       }
       .info-card h5 .bi {
         font-size: 1.4em;
-        color: var(--ai-aspect-color-current); /* Use aspect color for icon, will be overridden */
+        color: var(--ai-category-color); /* LAB'S PRIMARY COLOR FOR ICON */
         opacity: 0.9;
         flex-shrink: 0;
       }
@@ -296,7 +297,7 @@
         position: absolute;
         left: 0;
         top: 5px;
-        color: var(--ai-aspect-color-current); /* Use aspect color, overridden by card type */
+        color: var(--ai-category-color); /* LAB'S PRIMARY COLOR FOR BULLET */
         opacity: 0.8;
         font-size: 1.05em;
       }
@@ -390,15 +391,15 @@
         margin-top: auto;
         align-self: flex-start;
         padding: 0.35rem 0.7rem;
-        color: var(--ai-aspect-color-current); /* Use aspect color, overridden */
-        border: 1px solid var(--ai-aspect-color-current); /* Use aspect color, overridden */
+        color: var(--ai-category-color); /* LAB'S PRIMARY COLOR */
+        border: 1px solid var(--ai-category-color); /* LAB'S PRIMARY COLOR */
         background-color: transparent;
         transition: background-color 0.2s ease, color 0.2s ease;
         border-radius: 4px;
       }
       .details-toggle:hover {
-        background-color: var(--ai-aspect-color-current);
-        color: var(--ai-body-bg);
+        background-color: var(--ai-category-color); /* LAB'S PRIMARY COLOR */
+        color: #ffffff; /* White text for contrast on hover */
       }
       .details-toggle .bi {
         transition: transform 0.2s ease-in-out;
@@ -425,136 +426,58 @@
       }
 
       /* --- Company/Category Color Assignments --- */
-      .cat-openai {
-        --ai-category-color: var(--ai-color-openai);
-      }
-      .cat-deepmind {
-        --ai-category-color: var(--ai-color-deepmind);
-      }
-      .cat-anthropic {
-        --ai-category-color: var(--ai-color-anthropic);
-      }
-      .cat-meta {
-        --ai-category-color: var(--ai-color-meta);
-      }
-      .cat-cohere {
-        --ai-category-color: var(--ai-color-cohere);
-      }
-      .cat-mistral {
-        --ai-category-color: var(--ai-color-mistral);
-      }
-      .cat-ai21 {
-        --ai-category-color: var(--ai-color-ai21);
-      }
+      /* These classes on schema-container set --ai-category-color for their children */
+      .cat-openai { --ai-category-color: var(--ai-color-openai); }
+      .cat-deepmind { --ai-category-color: var(--ai-color-deepmind); }
+      .cat-anthropic { --ai-category-color: var(--ai-color-anthropic); }
+      .cat-meta { --ai-category-color: var(--ai-color-meta); }
+      .cat-cohere { --ai-category-color: var(--ai-color-cohere); }
+      .cat-mistral { --ai-category-color: var(--ai-color-mistral); }
+      .cat-ai21 { --ai-category-color: var(--ai-color-ai21); }
 
-      .cat-openai .section-title {
-        color: var(--ai-color-openai);
-      }
-      .cat-openai .info-card.is-highlighted {
-        box-shadow: 0 0 0 3px var(--ai-color-openai), 0 8px 16px rgba(0, 0, 0, 0.25) !important;
-      }
+      /* Specific styling for section titles and highlighted cards (using direct lab color for robustness) */
+      .cat-openai .section-title { color: var(--ai-color-openai); }
+      .cat-openai .info-card.is-highlighted { box-shadow: 0 0 0 3px var(--ai-color-openai), 0 8px 16px rgba(0, 0, 0, 0.25) !important; }
 
-      .cat-deepmind .section-title {
-        color: var(--ai-color-deepmind);
-      }
-      .cat-deepmind .info-card.is-highlighted {
-        box-shadow: 0 0 0 3px var(--ai-color-deepmind), 0 8px 16px rgba(0, 0, 0, 0.25) !important;
-      }
+      .cat-deepmind .section-title { color: var(--ai-color-deepmind); }
+      .cat-deepmind .info-card.is-highlighted { box-shadow: 0 0 0 3px var(--ai-color-deepmind), 0 8px 16px rgba(0, 0, 0, 0.25) !important; }
 
-      .cat-anthropic .section-title {
-        color: var(--ai-color-anthropic);
-      }
-      .cat-anthropic .info-card.is-highlighted {
-        box-shadow: 0 0 0 3px var(--ai-color-anthropic), 0 8px 16px rgba(0, 0, 0, 0.25) !important;
-      }
+      .cat-anthropic .section-title { color: var(--ai-color-anthropic); }
+      .cat-anthropic .info-card.is-highlighted { box-shadow: 0 0 0 3px var(--ai-color-anthropic), 0 8px 16px rgba(0, 0, 0, 0.25) !important; }
 
-      .cat-meta .section-title {
-        color: var(--ai-color-meta);
-      }
-      .cat-meta .info-card.is-highlighted {
-        box-shadow: 0 0 0 3px var(--ai-color-meta), 0 8px 16px rgba(0, 0, 0, 0.25) !important;
-      }
+      .cat-meta .section-title { color: var(--ai-color-meta); }
+      .cat-meta .info-card.is-highlighted { box-shadow: 0 0 0 3px var(--ai-color-meta), 0 8px 16px rgba(0, 0, 0, 0.25) !important; }
 
-      .cat-cohere .section-title {
-        color: var(--ai-color-cohere);
-      }
-      .cat-cohere .info-card.is-highlighted {
-        box-shadow: 0 0 0 3px var(--ai-color-cohere), 0 8px 16px rgba(0, 0, 0, 0.25) !important;
-      }
+      .cat-cohere .section-title { color: var(--ai-color-cohere); }
+      .cat-cohere .info-card.is-highlighted { box-shadow: 0 0 0 3px var(--ai-color-cohere), 0 8px 16px rgba(0, 0, 0, 0.25) !important; }
 
-      .cat-mistral .section-title {
-        color: var(--ai-color-mistral);
-      }
-      .cat-mistral .info-card.is-highlighted {
-        box-shadow: 0 0 0 3px var(--ai-color-mistral), 0 8px 16px rgba(0, 0, 0, 0.25) !important;
-      }
+      .cat-mistral .section-title { color: var(--ai-color-mistral); }
+      .cat-mistral .info-card.is-highlighted { box-shadow: 0 0 0 3px var(--ai-color-mistral), 0 8px 16px rgba(0, 0, 0, 0.25) !important; }
 
-      .cat-ai21 .section-title {
-        color: var(--ai-color-ai21);
-      }
-      .cat-ai21 .info-card.is-highlighted {
-        box-shadow: 0 0 0 3px var(--ai-color-ai21), 0 8px 16px rgba(0, 0, 0, 0.25) !important;
-      }
+      .cat-ai21 .section-title { color: var(--ai-color-ai21); }
+      .cat-ai21 .info-card.is-highlighted { box-shadow: 0 0 0 3px var(--ai-color-ai21), 0 8px 16px rgba(0, 0, 0, 0.25) !important; }
 
       /* --- Aspect Type Color Assignments for Card Elements --- */
-      .info-card.type-origin {
-        --ai-aspect-color-current: var(--ai-aspect-color-origin);
-      }
-      .info-card.type-philosophy {
-        --ai-aspect-color-current: var(--ai-aspect-color-philosophy);
-      }
-      .info-card.type-leadership {
-        --ai-aspect-color-current: var(--ai-aspect-color-leadership);
-      }
-      .info-card.type-funding {
-        --ai-aspect-color-current: var(--ai-aspect-color-funding);
-      }
-      .info-card.type-approach {
-        --ai-aspect-color-current: var(--ai-aspect-color-approach);
-      }
-      .info-card.type-models { /* For Models & Products */
-        --ai-aspect-color-current: var(--ai-aspect-color-models);
-      }
-      .info-card.type-safety {
-        --ai-aspect-color-current: var(--ai-aspect-color-safety);
-      }
-      .info-card.type-opensource {
-        --ai-aspect-color-current: var(--ai-aspect-color-opensource);
-      }
-      .info-card.type-agi {
-        --ai-aspect-color-current: var(--ai-aspect-color-agi);
-      }
-      .info-card.type-audience {
-        --ai-aspect-color-current: var(--ai-aspect-color-audience);
-      }
-      .info-card.type-differentiators {
-        --ai-aspect-color-current: var(--ai-aspect-color-differentiators);
-      }
-      .info-card.type-developments {
-        --ai-aspect-color-current: var(--ai-aspect-color-developments);
-      }
-      .info-card.type-info {
-        --ai-aspect-color-current: var(--ai-aspect-color-info);
-      }
+      /* These define --ai-aspect-color-current on the card itself, used for the left border */
+      .info-card.type-origin { --ai-aspect-color-current: var(--ai-aspect-color-origin); }
+      .info-card.type-philosophy { --ai-aspect-color-current: var(--ai-aspect-color-philosophy); }
+      .info-card.type-leadership { --ai-aspect-color-current: var(--ai-aspect-color-leadership); }
+      .info-card.type-funding { --ai-aspect-color-current: var(--ai-aspect-color-funding); }
+      .info-card.type-approach { --ai-aspect-color-current: var(--ai-aspect-color-approach); }
+      .info-card.type-models { --ai-aspect-color-current: var(--ai-aspect-color-models); }
+      .info-card.type-safety { --ai-aspect-color-current: var(--ai-aspect-color-safety); }
+      .info-card.type-opensource { --ai-aspect-color-current: var(--ai-aspect-color-opensource); }
+      .info-card.type-agi { --ai-aspect-color-current: var(--ai-aspect-color-agi); }
+      .info-card.type-audience { --ai-aspect-color-current: var(--ai-aspect-color-audience); }
+      .info-card.type-differentiators { --ai-aspect-color-current: var(--ai-aspect-color-differentiators); }
+      .info-card.type-developments { --ai-aspect-color-current: var(--ai-aspect-color-developments); }
+      .info-card.type-info { --ai-aspect-color-current: var(--ai-aspect-color-info); }
 
-      /* Apply the current aspect color to relevant card elements */
+      /* Apply the current aspect color to card's left border */
       .info-card {
         border-left-color: var(--ai-aspect-color-current);
       }
-      .info-card h5 .bi {
-        color: var(--ai-aspect-color-current);
-      }
-      .info-card .details-toggle {
-        color: var(--ai-aspect-color-current);
-        border-color: var(--ai-aspect-color-current);
-      }
-      .info-card .details-toggle:hover {
-        background-color: var(--ai-aspect-color-current);
-        color: var(--ai-body-bg); /* Ensure contrast on hover */
-      }
-      .info-card .collapse-content li::before {
-        color: var(--ai-aspect-color-current);
-      }
+      /* Note: Card title icon, toggle button, and list item bullets now use var(--ai-category-color) as defined above */
     </style>
   </head>
   <body>
@@ -573,7 +496,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-info" id="card-openai-keyinfo">
               <div class="card-body">
-                <h5><i class="bi bi-info-circle-fill"></i> Key Information</h5>
+                <h5><i class="bi bi-fingerprint"></i> Key Information</h5>
                 <div class="card-content-wrapper">
                   <ul class="key-info-list">
                     <li>
@@ -643,7 +566,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-philosophy" id="card-openai-philosophy">
               <div class="card-body">
-                <h5><i class="bi bi-lightbulb-fill"></i> Philosophy & Culture</h5>
+                <h5><i class="bi bi-diagram-3-fill"></i> Philosophy & Culture</h5>
                 <div class="card-content-wrapper">
                   <p class="summary">
                     OpenAI's philosophy centers on ambitious research towards AGI, coupled with a strong emphasis on safety, responsibility, and ensuring broad societal benefit. [1] They advocate for iterative deployment of increasingly powerful AI systems to foster societal adaptation and learning. Read their
@@ -918,7 +841,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-info" id="card-deepmind-keyinfo">
               <div class="card-body">
-                <h5><i class="bi bi-info-circle-fill"></i> Key Information</h5>
+                <h5><i class="bi bi-google"></i> Key Information</h5>
                 <div class="card-content-wrapper">
                   <ul class="key-info-list">
                     <li>
@@ -989,7 +912,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-philosophy" id="card-deepmind-philosophy">
               <div class="card-body">
-                <h5><i class="bi bi-lightbulb-fill"></i> Philosophy & Approach</h5>
+                <h5><i class="bi bi-search-heart"></i> Philosophy & Approach</h5>
                 <div class="card-content-wrapper">
                   <p class="summary">
                     Google DeepMind pursues a science-led approach to AGI, emphasizing fundamental research and responsible AI development. [35] They aim to apply AI to solve major scientific and societal challenges, guided by Google's AI Principles. Explore their
@@ -1255,7 +1178,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-info" id="card-anthropic-keyinfo">
               <div class="card-body">
-                <h5><i class="bi bi-info-circle-fill"></i> Key Information</h5>
+                <h5><i class="bi bi-shield-check"></i> Key Information</h5>
                 <div class="card-content-wrapper">
                   <ul class="key-info-list">
                     <li>
@@ -1323,7 +1246,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-philosophy" id="card-anthropic-philosophy">
               <div class="card-body">
-                <h5><i class="bi bi-shield-check"></i> Philosophy: Safety-First AI</h5>
+                <h5><i class="bi bi-life-preserver"></i> Philosophy: Safety-First AI</h5>
                 <div class="card-content-wrapper">
                   <p class="summary">
                     Anthropic is dedicated to building reliable, interpretable, and steerable AI systems. They have pioneered techniques like "Constitutional AI" and maintain a "Responsible Scaling Policy" to guide their development. See their
@@ -1591,7 +1514,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-info" id="card-meta-keyinfo">
               <div class="card-body">
-                <h5><i class="bi bi-info-circle-fill"></i> Key Information</h5>
+                <h5><i class="bi bi-meta"></i> Key Information</h5>
                 <div class="card-content-wrapper">
                   <ul class="key-info-list">
                     <li><strong>Roots:</strong> Facebook AI Research (FAIR) founded in 2013. [4]</li>
@@ -1931,7 +1854,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-info" id="card-cohere-keyinfo">
               <div class="card-body">
-                <h5><i class="bi bi-info-circle-fill"></i> Key Information</h5>
+                <h5><i class="bi bi-buildings"></i> Key Information</h5>
                 <div class="card-content-wrapper">
                   <ul class="key-info-list">
                     <li><strong>Founded:</strong> 2019, by Aidan Gomez, Nick Frosst, and Ivan Zhang.</li>
@@ -1992,7 +1915,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-philosophy" id="card-cohere-philosophy"> <!-- Merged Enterprise Focus -->
               <div class="card-body">
-                <h5><i class="bi bi-building"></i> Philosophy & Enterprise Focus</h5>
+                <h5><i class="bi bi-building-gear"></i> Philosophy & Enterprise Focus</h5>
                 <div class="card-content-wrapper">
                   <p class="summary">
                     Cohere aims to make advanced LLMs accessible, secure, and customizable for businesses. They emphasize data privacy (offering multi-cloud and on-premise deployment), practical Retrieval Augmented Generation (RAG) solutions, and model fine-tuning to meet specific enterprise needs. Explore their thoughts on their
@@ -2256,7 +2179,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-info" id="card-mistral-keyinfo">
               <div class="card-body">
-                <h5><i class="bi bi-info-circle-fill"></i> Key Information</h5>
+                <h5><i class="bi bi-speedometer2"></i> Key Information</h5>
                 <div class="card-content-wrapper">
                   <ul class="key-info-list">
                     <li>
@@ -2598,7 +2521,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-info" id="card-ai21-keyinfo">
               <div class="card-body">
-                <h5><i class="bi bi-info-circle-fill"></i> Key Information</h5>
+                <h5><i class="bi bi-pencil-ruler"></i> Key Information</h5>
                 <div class="card-content-wrapper">
                   <ul class="key-info-list">
                     <li><strong>Founded:</strong> 2017, by Prof. Yoav Shoham, Ori Goshen, and Prof. Amnon Shashua.</li>
@@ -2655,7 +2578,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="info-card type-philosophy" id="card-ai21-philosophy"> <!-- Merged AI for Reading & Writing -->
               <div class="card-body">
-                <h5><i class="bi bi-pencil-fill"></i> Philosophy: AI for Reading & Writing Augmentation</h5>
+                <h5><i class="bi bi-journal-richtext"></i> Philosophy: AI for Reading & Writing Augmentation</h5>
                 <div class="card-content-wrapper">
                   <p class="summary">
                     AI21 Labs focuses on developing AI that serves as a true partner in text-based work, enhancing human productivity and understanding. They emphasize proprietary LLMs alongside open-weight releases, task-specific models tailored for enterprise needs, and architectural innovation (e.g., their Jamba SSM-Transformer hybrid). Read more on their
