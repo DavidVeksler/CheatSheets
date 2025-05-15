@@ -286,33 +286,41 @@ try {
         .card-title a:hover { color: #003d73; text-decoration: underline; }
 
 
-/* --- UPDATED CARD TEXT AND TITLE STYLES --- */
-.card-title { /* Affects the <h5> element used for titles */
-    font-size: 1.25rem;  /* Standard Bootstrap H5 font-size */
-    font-weight: 600;    /* Match the <a> tag's weight for consistent metrics */
-    line-height: 1.3;    /* A slightly more generous line-height can sometimes help clamping.
-                           (1.25rem * 1.3 = 1.625rem per line) */
 
-    /* Explicit height for 2 lines: 2 * 1.625rem = 3.25rem */
+/* --- UPDATED CARD TEXT AND TITLE STYLES --- */
+.card-title { /* This is an <h5> */
+    font-size: 1.25rem;  /* Standard Bootstrap H5 font-size */
+    font-weight: 600;    /* Set on H5, will be inherited by <a> */
+    line-height: 1.3;    /* Consistent line height for calculation.
+                           1.25rem * 1.3 = 1.625rem per line. */
+
+    /* Explicit height for 2 lines on the H5 container. */
+    /* 2 lines * 1.625rem/line = 3.25rem */
     height: 3.25rem;
 
-    /* Line clamping properties */
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2; /* Target 2 lines */
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    margin-bottom: .5rem; /* Preserve Bootstrap's default h5 margin-bottom */
-    padding-top: 0;       /* Ensure no padding interferes with height */
-    padding-bottom: 0;
+    overflow: hidden; /* CRITICAL: H5 must clip its content if it overflows this height. */
+    margin-bottom: .5rem; /* Standard Bootstrap h5 margin. */
+    padding: 0; /* Ensure no padding on H5 itself interferes with height. */
+    position: relative; /* For positioning child if needed, though not used here. */
 }
 
 .card-title a {
     text-decoration: none;
     color: #1a508b;
-    /* font-weight: 600; /* Moved to .card-title itself */
-    /* The <a> tag will inherit font-size, line-height, and font-weight from .card-title */
+    /* Inherits font-size, font-weight, line-height from .card-title (h5) */
+
+    /* Apply line clamping directly to the <a> tag */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2; /* Target 2 lines */
+    overflow: hidden; /* Needed for -webkit-line-clamp to work effectively on the <a> */
+    text-overflow: ellipsis;
+
+    /* Make the <a> tag take up the full height of its parent h5.
+       This helps ensure the clamping mechanism has the correct box to work with. */
+    /* It might not be strictly necessary if the h5's overflow:hidden is enough,
+       but can help in some cases. */
+    /* max-height: 100%; /* Consider if needed if h5 overflow doesn't catch it. */
 }
 
 .card-body {
@@ -332,11 +340,14 @@ try {
 
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3; /* Allow up to 3 lines for the description */
+    -webkit-line-clamp: 3;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 /* --- END UPDATED CARD TEXT AND TITLE STYLES --- */
+
+
+
 
 
         .card-footer {
