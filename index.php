@@ -429,7 +429,7 @@ try {
                             <?php if (!empty($sheet['image'])): ?>
                                 <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="card-img-top-container" aria-label="Preview image for <?php echo htmlspecialchars($sheet['title']); ?>">
                                     <img src="<?php echo htmlspecialchars($sheet['image']); ?>" alt="Preview for <?php echo htmlspecialchars($sheet['title']); ?>" loading="lazy"
-                                         onerror="this.classList.add('error'); this.style.display='none'; this.closest('.card').querySelector('.iframe-preview-container').style.display='flex';">
+                                    onerror="this.classList.add('error'); this.closest('.card-img-top-container').style.display='none'; this.closest('.card').querySelector('.iframe-preview-container').style.display='flex';">
                                 </a>
                                 <div class="iframe-preview-container" style="display: none;"> <!-- Initially hidden if image exists and loads -->
                                     <iframe src="<?php echo htmlspecialchars($sheet['url']); ?>"
@@ -543,37 +543,62 @@ try {
              filterInput.placeholder = "No cheatsheets available to filter.";
         }
 
-        // Enhanced image error handling for images within card-img-top-container
+        // Enhanced image error and load handling
         document.querySelectorAll('.card-img-top-container img').forEach(img => {
-            img.addEventListener('error', function() {
-                this.classList.add('error'); // Mark as errored
-                this.style.display = 'none'; // Hide broken image
-                const card = this.closest('.card');
-                if (card) {
-                    const iframeContainer = card.querySelector('.iframe-preview-container');
-                    if (iframeContainer) {
-                        iframeContainer.style.display = 'flex'; // Show iframe container
-                    }
+            const imageAnchorContainer = img.closest('.card-img-top-container');
+            const card = img.closest('.card');
+            const iframePreviewContainer = card ? card.querySelector('.iframe-preview-container') : null;
+
+            function handleImageError() {
+                img.classList.add('error'); // Mark image as errored
+                if (imageAnchorContainer) {
+                    imageAnchorContainer.style.display = 'none'; // Hide the whole <a> container
                 }
-            });
-             // If image loads, but was previously hidden by error fallback, ensure it's shown
-            img.addEventListener('load', function() {
-                if (!this.classList.contains('error')) { // Only if it didn't error before
-                    this.style.display = 'block';
-                    const card = this.closest('.card');
-                     if (card) {
-                        const iframeContainer = card.querySelector('.iframe-preview-container');
-                        // If an image loads successfully, we might want to hide the iframe container if it was only a fallback
-                        // This depends on the desired logic: always show image if available, or primary iframe?
-                        // The current setup implies image is primary if present.
-                        // if (iframeContainer && this.src && this.src !== '') {
-                        //    iframeContainer.style.display = 'none';
-                        // }
-                    }
+                if (iframePreviewContainer) {
+                    iframePreviewContainer.style.display = 'flex'; // Show iframe container
                 }
-            });
+            }
+
+            function handleImageLoad() {
+                // Only proceed if the image hasn't errored and has valid dimensions
+                if (!img.classList.contains('error') && img.naturalWidth > 0 && img.naturalHeight > 0) {
+                    if (imageAnchorContainer) {
+                        // The image container (<a>) is a flex container for its ::before icon
+                        imageAnchorContainer.style.display = 'flex';
+                    }
+                    // The <img> tag itself will be display:block or as per CSS.
+
+                    if (iframePreviewContainer) {
+                        iframePreviewContainer.style.display = 'none'; // Hide iframe container as image loaded
+                    }
+                } else if (!img.classList.contains('error')) {
+                    // Image 'load' event fired but naturalWidth/Height is 0 or invalid.
+                    // This can happen for broken images that still fire 'load'. Treat as error.
+                    // console.warn('Image loaded with 0 dimensions, treating as error:', img.src);
+                    handleImageError(); // Manually trigger error handling
+                }
+            }
+
+            img.addEventListener('error', handleImageError);
+            img.addEventListener('load', handleImageLoad);
+
+            // Check for images that might be cached as broken or have src issues
+            // not firing 'error' immediately if 'complete' is true but dimensions are 0.
+            // This needs to be after event listeners are attached.
+            if (img.complete) {
+                if (typeof img.naturalWidth !== "undefined" && img.naturalWidth === 0 && img.src && img.src !== '') {
+                    // console.warn('Image already complete but with 0 width, triggering error:', img.src);
+                    // Use a micro-timeout to ensure it runs after initial rendering cycle and doesn't interfere
+                    // with other potential 'load' or 'error' events being queued for the same image.
+                    setTimeout(handleImageError, 0);
+                } else if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                    // If already complete and valid, ensure correct visibility state
+                     setTimeout(handleImageLoad, 0);
+                }
+            }
         });
     });
     </script>
+
 </body>
 </html>
