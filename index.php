@@ -12,7 +12,7 @@ $excludedItems = [
     'README.md',
     'PROMPT.txt', // Assuming this was part of your dev files
     // Add any other specific files or directories to exclude by name:
-    // 'old_gallery.html',    
+    // 'old_gallery.html',
 ];
 
 $cheatsheetDir = '.'; // Current directory where cheatsheet HTML files are located
@@ -152,7 +152,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
-    
+
     <!-- === SEO & Portfolio Metadata === -->
     <title>David Veksler's Cheatsheet Portfolio | Custom Cheatsheet Design Services</title>
     <meta name="description" content="Explore a portfolio of expertly crafted cheatsheets by David Veksler covering tech, philosophy, AI safety, and more. Hire David to create custom, visually engaging reference guides tailored to your needs.">
@@ -193,7 +193,7 @@ try {
         "url": "https://www.linkedin.com/in/davidveksler/"
       },
       "publisher": {
-        "@type": "Person", 
+        "@type": "Person",
         "name": "David Veksler",
         "url": "https://www.linkedin.com/in/davidveksler/"
       },
@@ -287,16 +287,20 @@ try {
 
         /* --- UPDATED CARD TEXT AND TITLE STYLES --- */
         .card-title { /* Affects the <h5> element used for titles */
-            /* Original Bootstrap H5 styles: font-size: 1.25rem; margin-bottom: .5rem; (line-height approx 1.2) */
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2; /* Allow up to 2 lines for the title */
-            overflow: hidden;
-            text-overflow: ellipsis;
-            /* If you want to enforce exact height for the title area:
-               height: calc(1.25rem * 1.2 * 2); /* Assumes Bootstrap's h5 font-size and typical line-height */
-            */
-        }
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2; /* Allow up to 2 lines for the title */
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    /* --- ADDED/MODIFIED FOR ROBUSTNESS --- */
+    line-height: 1.2; /* Explicitly set Bootstrap's default heading line-height */
+    /* Max height for 2 lines (2 lines * 1.2 line-height * 1.25rem font-size = 3rem) */
+    /* This will hard-clip if -webkit-line-clamp doesn't show ellipsis */
+    max-height: 3rem;
+    /* Ensure h5 default margin-bottom is accounted for or doesn't interfere.
+       Bootstrap h5 margin-bottom is .5rem, which is outside this element's height. */
+}
 
         .card-body {
             flex-grow: 1; /* This is critical for allowing card-body to take up space */
@@ -355,7 +359,7 @@ try {
         .portfolio-item .card {
             height: 100%; /* This is critical for making cards in a row the same height */
         }
-    </style>    
+    </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
@@ -510,11 +514,11 @@ try {
                     const descriptionElement = item.querySelector('.card-text');
                     const title = titleElement ? titleElement.textContent.toLowerCase() : '';
                     const description = descriptionElement ? descriptionElement.textContent.toLowerCase() : '';
-                    
+
                     const isVisible = filterText === '' || title.includes(filterText) || description.includes(filterText);
 
                     if (isVisible) {
-                        item.style.display = ''; 
+                        item.style.display = '';
                         itemsVisible++;
                     } else {
                         item.style.display = 'none';
@@ -523,7 +527,7 @@ try {
                 noResultsMessage.classList.toggle('d-none', itemsVisible > 0 || filterText === '');
             });
         } else if (filterInput) {
-             filterInput.disabled = true; 
+             filterInput.disabled = true;
              filterInput.placeholder = "No cheatsheets available to filter.";
         }
 
