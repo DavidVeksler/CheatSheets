@@ -177,7 +177,7 @@ try {
     <meta name="twitter:url" content="<?php echo htmlspecialchars($baseUrl); ?>">
     <meta name="twitter:image" content="<?php echo htmlspecialchars(rtrim($baseUrl, '/')); ?>/images/cheatsheets-og-portfolio.png">
     <meta name="twitter:image:alt" content="A collage showcasing various cheatsheets from David Veksler's portfolio.">
-    <!-- <meta name="twitter:creator" content="@YourTwitterHandle"> --> <!-- Uncomment if David Veksler has a relevant Twitter handle -->
+    <meta name="twitter:creator" content="@HeroicLife" />
 
     <!-- Schema.org Markup for CollectionPage -->
     <script type="application/ld+json">
