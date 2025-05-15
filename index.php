@@ -285,57 +285,58 @@ try {
         .card-title a { text-decoration: none; color: #1a508b; font-weight: 600; } /* Darker blue */
         .card-title a:hover { color: #003d73; text-decoration: underline; }
 
-        /* --- UPDATED CARD TEXT AND TITLE STYLES --- */
-        .card-title { /* Affects the <h5> element used for titles */
+
+/* --- UPDATED CARD TEXT AND TITLE STYLES --- */
+.card-title { /* Affects the <h5> element used for titles */
+    font-size: 1.25rem;  /* Standard Bootstrap H5 font-size */
+    font-weight: 600;    /* Match the <a> tag's weight for consistent metrics */
+    line-height: 1.3;    /* A slightly more generous line-height can sometimes help clamping.
+                           (1.25rem * 1.3 = 1.625rem per line) */
+
+    /* Explicit height for 2 lines: 2 * 1.625rem = 3.25rem */
+    height: 3.25rem;
+
+    /* Line clamping properties */
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2; /* Allow up to 2 lines for the title */
+    -webkit-line-clamp: 2; /* Target 2 lines */
     overflow: hidden;
     text-overflow: ellipsis;
 
-    /* --- ADDED/MODIFIED FOR ROBUSTNESS --- */
-    line-height: 1.2; /* Explicitly set Bootstrap's default heading line-height */
-    /* Max height for 2 lines (2 lines * 1.2 line-height * 1.25rem font-size = 3rem) */
-    /* This will hard-clip if -webkit-line-clamp doesn't show ellipsis */
-    max-height: 3rem;
-    /* Ensure h5 default margin-bottom is accounted for or doesn't interfere.
-       Bootstrap h5 margin-bottom is .5rem, which is outside this element's height. */
+    margin-bottom: .5rem; /* Preserve Bootstrap's default h5 margin-bottom */
+    padding-top: 0;       /* Ensure no padding interferes with height */
+    padding-bottom: 0;
 }
 
-        .card-body {
-            flex-grow: 1; /* This is critical for allowing card-body to take up space */
-            display: flex;
-            flex-direction: column;
-            padding: 1rem; /* Keep padding as is */
-        }
+.card-title a {
+    text-decoration: none;
+    color: #1a508b;
+    /* font-weight: 600; /* Moved to .card-title itself */
+    /* The <a> tag will inherit font-size, line-height, and font-weight from .card-title */
+}
 
-        .card-text {
-            /* Original styles from your code:
-            flex-grow: 1;
-            margin-bottom: .8rem;
-            color: #495057;
-            font-size: 0.875rem;
-            line-height: 1.5;
-            min-height: calc(0.875rem * 1.5 * 3); /* Approx 3 lines */
-            */
-            flex-grow: 1; /* Allows description to take available space in card-body */
-            margin-bottom: .8rem; /* Original margin */
-            color: #495057; /* Original color */
-            font-size: 0.875rem; /* Original font-size */
-            line-height: 1.5; /* Original line-height, important for min-height calculation */
-            min-height: calc(0.875rem * 1.5 * 3); /* Reserve space for 3 lines */
+.card-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+}
 
-            /* Add line clamping for description */
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 3; /* Allow up to 3 lines for the description */
-            overflow: hidden;
-            text-overflow: ellipsis;
-            /* Fallback max-height for browsers not supporting -webkit-line-clamp (rare)
-               max-height: calc(0.875rem * 1.5 * 3 + 0.1rem); /* +0.1rem for buffer */
-            */
-        }
-        /* --- END UPDATED CARD TEXT AND TITLE STYLES --- */
+.card-text {
+    flex-grow: 1;
+    margin-bottom: .8rem;
+    color: #495057;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    min-height: calc(0.875rem * 1.5 * 3); /* Reserve space for 3 lines */
+
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3; /* Allow up to 3 lines for the description */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* --- END UPDATED CARD TEXT AND TITLE STYLES --- */
 
 
         .card-footer {
