@@ -73,7 +73,7 @@
     }
     </script>
 
-    <style>
+      <style>
       :root {
         --bs-primary: #007bff; /* Vet Blue */
         --bs-primary-dark: #0056b3;
@@ -460,6 +460,234 @@
       .card-specialized .collapse-content li::before { color: var(--vet-color-specialized); }
       .card-antech .collapse-content li::before { color: var(--vet-color-antech); }
 
+      /* ============== PRINT STYLES ============== */
+      @media print {
+        body {
+          background-color: #fff !important;
+          background-image: none !important;
+          color: #000 !important;
+          font-size: 10pt;
+          padding-bottom: 0 !important;
+          margin: 1cm; /* Standard print margin */
+          -webkit-print-color-adjust: exact; /* Encourage browsers to print background colors */
+          print-color-adjust: exact;
+        }
+
+        *, *::before, *::after {
+          box-shadow: none !important;
+          text-shadow: none !important;
+          /* Keep background-color for elements where it's thematically important & print-color-adjust is active */
+          border-color: #ccc !important; /* Lighten borders for print */
+        }
+
+        /* Hide non-essential interactive elements */
+        .sticky-top-controls,
+        .category-nav,
+        .details-toggle,
+        #no-results-message,
+        footer .mb-2 { /* Hides the div containing LinkedIn and "All Examples" links */
+          display: none !important;
+        }
+
+        /* Ensure collapsible content is always visible and expanded */
+        .collapse,
+        .collapse.show,
+        .collapse:not(.show) {
+          display: block !important;
+          visibility: visible !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+        
+        /* Ensure cards/sections hidden by search (on screen) are visible in print */
+        .info-card.hidden-by-search {
+          display: flex !important; /* Original display for info-card */
+        }
+        .schema-container.hidden-by-search {
+          display: block !important; /* Original display for schema-container */
+        }
+        .schema-container .section-title {
+           display: block !important; /* Ensure section titles always display as blocks */
+        }
+
+        /* Page Header styling */
+        .page-header {
+          background: none !important;
+          border-bottom: 2px solid #000 !important;
+          padding: 1rem 0 !important;
+          text-align: left;
+          margin-bottom: 1.5rem !important;
+        }
+        .page-header h1 {
+          font-size: 1.8rem !important;
+          color: #000 !important;
+        }
+        .page-header h1 .bi { /* Hide icon in main page title for print */
+          display: none;
+        }
+        .page-header .lead {
+          font-size: 1rem !important;
+          color: #333 !important;
+          max-width: none; /* Allow lead text to span full width */
+        }
+
+        /* Container and layout adjustments for print */
+        .container, #main-container {
+          max-width: 100% !important;
+          width: 100% !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+
+        /* Force Bootstrap columns to stack for single-column layout */
+        .row > * {
+          margin-bottom: 1rem !important; /* Reduced spacing */
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+        .col-lg-4, .col-lg-6, .col-lg-12, 
+        .col-md-6, .col-md-12 {
+          width: 100% !important;
+          flex: 0 0 100% !important;
+          max-width: 100% !important;
+        }
+
+        .schema-container {
+          border: 1px solid #aaa !important;
+          padding: 1rem !important;
+          margin-bottom: 1.5rem !important;
+        }
+
+        .section-title {
+          color: #fff !important; /* Text should be white if background prints */
+          /* background-color is var(--vet-category-color), relies on print-color-adjust */
+          margin: 0 0 1rem 0 !important;
+          padding: 0.4rem 0.8rem !important;
+          font-size: 1.2rem !important;
+          position: static !important; /* Reset positioning */
+          display: block !important;   /* Full width */
+          text-align: left;
+          border-radius: 0 !important;
+          border-bottom: 1px solid #000 !important; /* Clearer separator if bg doesn't print */
+        }
+
+        /* Card styling for print */
+        .info-card {
+          border: 1px solid #999 !important;
+          height: auto !important;
+          margin-bottom: 1rem !important;
+        }
+        .info-card h5 {
+          color: #fff !important; /* Text should be white if background prints */
+          /* background-color is var(--vet-category-color), relies on print-color-adjust */
+          font-size: 1.1rem !important;
+          padding: 0.5rem 0.8rem !important;
+          text-align: left;
+          border-bottom: 1px solid #999 !important;
+        }
+        .info-card h5 .bi { /* Hide icons in card titles */
+          display: none;
+        }
+        .card-content-wrapper {
+          padding: 0.8rem !important;
+        }
+        .info-card p.summary {
+          font-size: 0.9rem !important;
+          color: #222 !important;
+          margin-bottom: 0.8rem !important;
+        }
+        .collapse-content {
+          padding: 0.8rem !important;
+          border-top: 1px solid #ccc !important;
+          background-color: #f8f8f8 !important; /* Very light background for content area */
+        }
+        .collapse-content h6 {
+          font-size: 1rem !important;
+          color: #000 !important;
+          margin-top: 0.8rem !important;
+        }
+        .collapse-content ul {
+          padding-left: 0 !important;
+          margin-bottom: 0.8rem !important;
+        }
+        .collapse-content li {
+          font-size: 0.85rem !important;
+          padding-bottom: 0.5rem !important;
+          margin-bottom: 0.5rem !important;
+          border-bottom: 1px dotted #ddd !important;
+          padding-left: 1.5rem !important; /* Space for pseudo-element */
+        }
+        .collapse-content li::before { /* Ensure pseudo-elements (icons) print */
+           top: 2px;
+           font-size: 1em;
+           /* color is var(--vet-category-color), relies on print-color-adjust */
+        }
+        .collapse-content li strong {
+          color: #000 !important;
+        }
+
+        /* Terminology styling */
+        .term, .vet-term {
+          background-color: #e8e8e8 !important;
+          color: #000 !important;
+          padding: 0.1em 0.3em !important;
+          font-weight: normal !important;
+          border: 1px solid #ddd !important;
+          cursor: auto !important;
+        }
+
+        /* Highlighted text (from search) */
+        mark.highlight {
+          background-color: yellow !important; /* Standard highlight color */
+          color: #000 !important;
+          padding: 0 !important; /* Remove padding to not alter flow much */
+        }
+
+        /* Link styling for print */
+        a, a:visited {
+          color: #000 !important;
+          text-decoration: underline !important;
+          font-weight: normal !important; /* Avoid overly bold links */
+        }
+        /* Show full URLs for external links */
+        a[href^="http"]::after,
+        a[href^="https"]::after {
+          content: " (" attr(href) ")";
+          font-size: 0.8em;
+          font-weight: normal;
+          display: inline;
+          word-break: break-all; /* Prevent long URLs from overflowing */
+        }
+        /* Don't show href for internal anchor links */
+        a[href^="#"]::after {
+          content: "";
+        }
+
+        /* Footer styling for print */
+        footer {
+          padding-top: 1rem !important;
+          padding-bottom: 1rem !important;
+          text-align: left !important;
+          font-size: 0.8rem !important;
+          color: #444 !important;
+          border-top: 1px solid #ccc;
+          margin-top: 2rem;
+        }
+        footer p { margin-bottom: 0.5rem !important; }
+        footer div { margin-bottom: 0.3rem !important; }
+
+        /* Page break control to improve print layout */
+        h1, h2, h3, h4, h5, h6 {
+          page-break-after: avoid;
+        }
+        .schema-container,
+        .info-card {
+          page-break-inside: avoid;
+        }
+        ul, ol, p {
+           page-break-inside: avoid;
+        }
+      }
     </style>
   </head>
   <body>
