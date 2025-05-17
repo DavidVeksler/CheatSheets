@@ -57,6 +57,7 @@
             color: var(--color-text);
             line-height: 1.7;
             margin-left: 260px; /* Wider nav */
+            overflow-x: hidden; /* Prevent horizontal scrollbars from slide-in animations */
         }
 
         .left-nav {
@@ -107,10 +108,19 @@
         }
 
         .timeline-container { max-width: 950px; margin: 0 auto; padding: 30px 20px; position: relative; }
+        
+        /* Original ::before for structure, animated ::before for visual */
         .timeline-container::before {
             content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
-            width: 3px; background-color: var(--timeline-line-color); transform: translateX(-50%);
+            width: 3px; background-color: var(--timeline-line-color);
+            transform: translateX(-50%) scaleY(0); /* Initial state for animation */
+            transform-origin: top;
+            transition: transform 1.8s cubic-bezier(0.25, 0.1, 0.25, 1) 0.5s; /* Delay start */
         }
+        .timeline-container.is-visible::before { /* Animation target state */
+            transform: translateX(-50%) scaleY(1);
+        }
+
 
         .standard-section { margin-bottom: 50px; padding-top: 70px; } /* padding-top to offset for potential fixed header */
         .standard-title-wrapper { display: flex; align-items: center; justify-content: center; margin-bottom: 25px; }
@@ -274,6 +284,83 @@
             .standard-title {font-size: 2.0em;}
             .timeline-content h3 {font-size: 1.25em;}
         }
+
+        /* --- ANIMATION STYLES --- */
+        .animate-on-scroll {
+            opacity: 0;
+            transition-property: opacity, transform;
+            transition-duration: 0.6s; /* Default duration */
+            transition-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000); /* Standard EaseOutQuint */
+        }
+
+        .animate-on-scroll.is-visible {
+            opacity: 1;
+            transform: none !important; /* Ensure override any specific transforms */
+        }
+
+        /* Specific animation types (initial states) */
+        .anim-fade-in {
+            /* Opacity handled by .animate-on-scroll */
+        }
+
+        .anim-slide-in-up { /* Slides from bottom up */
+            transform: translateY(40px);
+        }
+        .anim-slide-in-up-slight { /* Slides from bottom up, slightly */
+            transform: translateY(20px);
+        }
+        .anim-slide-in-up-main { /* Slides from top down */
+            transform: translateY(-30px);
+        }
+         .standard-title.anim-slide-in-up-main { /* Section titles slide from top down, less distance */
+             transform: translateY(-20px);
+         }
+
+
+        .anim-slide-in-left {
+            transform: translateX(-50px);
+        }
+
+        .anim-slide-in-right {
+            transform: translateX(50px);
+        }
+
+        .anim-pop-in {
+            transform: scale(0.3);
+        }
+        .timeline-icon.animate-on-scroll.anim-pop-in.is-visible { /* Specific easing for pop */
+             transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Ease Out Back for pop */
+        }
+
+        .anim-scale-up-fade-in { /* For images, initial scale */
+            transform: scale(0.9);
+            /* Opacity handled by .animate-on-scroll */
+        }
+        
+        /* Staggered animations for nav items (delay applied by JS via style property) */
+        .left-nav li.animate-on-scroll {
+            /* transition-delay: calc(var(--animation-order) * 100ms); */ /* JS applies delay directly */
+        }
+
+        /* Fine-tune transition durations for specific elements */
+        .main-header h1.animate-on-scroll,
+        .main-header .sub-title.animate-on-scroll {
+            transition-duration: 0.8s;
+        }
+        .standard-title.animate-on-scroll {
+            transition-duration: 0.7s;
+        }
+        .timeline-content-wrapper.animate-on-scroll { /* Timeline cards */
+            transition-duration: 0.6s;
+        }
+        .timeline-icon.animate-on-scroll {
+            transition-duration: 0.5s; /* Icon pop duration */
+        }
+        .timeline-content img.animate-on-scroll { /* Images within timeline cards */
+            transition-duration: 0.6s;
+            transition-timing-function: ease-out; /* Simpler ease for images */
+        }
+
     </style>
 </head>
 <body>
@@ -572,6 +659,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // --- SMOOTH SCROLL & ACTIVE NAV LINK LOGIC (EXISTING) ---
         const navLinks = document.querySelectorAll('.left-nav a[href^="#"]');
         const sections = document.querySelectorAll('.standard-section');
         const leftNav = document.querySelector('.left-nav');
@@ -614,7 +702,6 @@
                     link.classList.add('active');
                     activeLinkFound = true;
                     if (window.innerWidth <= 1024 && navHeight > 0) {
-                         // Check if the active link is visible, if not, scroll it into view
                         const linkRect = link.getBoundingClientRect();
                         const navRect = leftNav.getBoundingClientRect();
                         if (linkRect.left < navRect.left || linkRect.right > navRect.right || linkRect.top < navRect.top || linkRect.bottom > navRect.bottom ) {
@@ -630,16 +717,120 @@
             }
         }
         
-        setActiveLink();
+        setActiveLink(); // Initial call
         window.addEventListener('scroll', setActiveLink);
         window.addEventListener('resize', function() {
-            setActiveLink();
+            setActiveLink(); // Update on resize
         });
 
         var collapseElementList = [].slice.call(document.querySelectorAll('.collapse'))
         var collapseList = collapseElementList.map(function (collapseEl) {
           return new bootstrap.Collapse(collapseEl, { toggle: false })
         });
+
+        // --- NEW ANIMATION LOGIC ---
+        const animatedElementsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    // Optional: Unobserve after animation if you don't want it to replay
+                    // animatedElementsObserver.unobserve(entry.target);
+                }
+                // To replay animations when scrolling up (optional):
+                // else {
+                //     entry.target.classList.remove('is-visible');
+                // }
+            });
+        }, {
+            threshold: 0.1 // Trigger when 10% of the element is visible
+        });
+
+        // Assign animation classes and observe elements
+        
+        // Timeline Container (for the line animation)
+        const timelineContainer = document.querySelector('.timeline-container');
+        if (timelineContainer) {
+            // No specific animation class needed on the container itself for JS,
+            // CSS :before rule will use .is-visible on parent.
+            // But we still need to observe it.
+            timelineContainer.classList.add('animate-on-scroll'); // Add if you want container to fade too
+            animatedElementsObserver.observe(timelineContainer);
+        }
+
+        // Main Header
+        const mainHeaderH1 = document.querySelector('.main-header h1');
+        const mainHeaderSubTitle = document.querySelector('.main-header .sub-title');
+        if (mainHeaderH1) mainHeaderH1.classList.add('animate-on-scroll', 'anim-fade-in', 'anim-slide-in-up-main');
+        if (mainHeaderSubTitle) {
+            mainHeaderSubTitle.classList.add('animate-on-scroll', 'anim-fade-in', 'anim-slide-in-up-main');
+            mainHeaderSubTitle.style.transitionDelay = '0.2s';
+        }
+        
+        // Left Navigation
+        const leftNavHeader = document.querySelector('.left-nav-header');
+        if (leftNavHeader && window.innerWidth > 1024) { // Desktop only
+            leftNavHeader.classList.add('animate-on-scroll', 'anim-fade-in');
+            leftNavHeader.style.transitionDelay = '0.4s'; // Delay after some nav items
+        }
+        const navItems = document.querySelectorAll('.left-nav li');
+        navItems.forEach((item, index) => {
+            item.classList.add('animate-on-scroll', 'anim-slide-in-left');
+            item.style.transitionDelay = `${index * 0.07}s`; // Stagger nav items
+        });
+
+        // Section Titles
+        const sectionTitles = document.querySelectorAll('.standard-title');
+        sectionTitles.forEach(title => {
+            title.classList.add('animate-on-scroll', 'anim-fade-in', 'anim-slide-in-up-main');
+        });
+
+        // Timeline Items
+        const timelineItems = document.querySelectorAll('.timeline-item');
+        timelineItems.forEach(item => {
+            const contentWrapper = item.querySelector('.timeline-content-wrapper');
+            const icon = item.querySelector('.timeline-icon');
+            
+            if (contentWrapper) {
+                contentWrapper.classList.add('animate-on-scroll');
+                if (item.matches(':nth-child(odd)')) { // Odd items (left side)
+                    contentWrapper.classList.add('anim-slide-in-left');
+                } else { // Even items (right side)
+                    contentWrapper.classList.add('anim-slide-in-right');
+                }
+
+                const imagesInContent = contentWrapper.querySelectorAll('.timeline-content img');
+                imagesInContent.forEach(img => {
+                    img.classList.add('animate-on-scroll', 'anim-scale-up-fade-in');
+                    img.style.transitionDelay = '0.35s'; // Delay image after card
+                });
+            }
+            if (icon) {
+                icon.classList.add('animate-on-scroll', 'anim-pop-in');
+                icon.style.transitionDelay = '0.2s'; // Delay icon slightly after card content starts
+            }
+        });
+        
+        // Footer
+        const footer = document.querySelector('.footer-note');
+        if (footer) {
+            footer.classList.add('animate-on-scroll', 'anim-fade-in', 'anim-slide-in-up-slight');
+        }
+
+        // Observe all elements marked for animation
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
+            animatedElementsObserver.observe(el);
+        });
+
+        // Trigger animations for elements already in viewport on load
+        setTimeout(() => {
+            document.querySelectorAll('.animate-on-scroll:not(.is-visible)').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom >= 0 && rect.left < window.innerWidth && rect.right >=0) {
+                     el.classList.add('is-visible');
+                }
+            });
+        }, 50); // Short delay for initial setup
+
     });
     </script>
 </body>
