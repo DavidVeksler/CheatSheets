@@ -171,7 +171,7 @@ def main():
             if tags_added:
                 try:
                     with open(f_path, 'w', encoding='utf-8') as file:
-                        file.write(soup.prettify(formatter="html5")) 
+                        file.write(str(soup)) 
                     print(f"  SUCCESS: Updated {os.path.basename(f_path)}. Added/Modified: {', '.join(tags_added)}.")
                 except Exception as e:
                     print(f"  ERROR: Could not write changes to {f_path}: {e}")
