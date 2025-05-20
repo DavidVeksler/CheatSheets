@@ -74,50 +74,52 @@ def add_missing_tags(soup, title, generated_url, tags_status):
 
     if not html_tag:
         print("Error: No <html> tag found. Cannot process file.")
-        return [] # No changes made
+        return []
 
     if not head:
         head = soup.new_tag('head')
-        # Try to insert <head> at the beginning of <html>, before <body> if it exists
-        body_tag = soup.find('body')
-        if body_tag:
-            body_tag.insert_before(head)
-        elif html_tag.contents: # html has other children
-             html_tag.insert(0, head)
-        else: # html is empty
+        # Try to insert head at the beginning of html tag's children
+        if html_tag.contents:
+            html_tag.insert(0, head)
+        else:
             html_tag.append(head)
         print("Info: Created <head> tag.")
         
     tags_added = []
+    last_added_element = None
 
     for tag_def in SEO_TAGS_CONFIG:
-        # We only add if the tag is 'missing'.
-        # If it's 'present_incorrect', we are not modifying it based on "only add it if the tag is missing".
         if tags_status.get(tag_def['type']) == 'missing':
             if tag_def['type'] == 'meta_description' and (not title or not title.strip()):
-                print(f"Warning: Title is missing or empty. Skipping meta description tag.")
+                print(f"Warning: Title is missing or empty for {tag_def['type']}. Skipping.")
                 continue
 
             new_tag = soup.new_tag(tag_def['tag_name'], attrs=tag_def['attrs'])
             
             content_to_set = ""
-            if tag_def['type'] == 'canonical' or tag_def['type'] == 'og_url' or tag_def['type'] == 'twitter_url':
+            if tag_def['type'] in ['canonical', 'og_url', 'twitter_url']:
                 content_to_set = generated_url
             elif tag_def['type'] == 'meta_description':
-                content_to_set = title.strip() # title is already stripped if found
+                content_to_set = title.strip() 
             elif tag_def['type'] == 'twitter_creator':
                 content_to_set = tag_def['expected_content']
             
             new_tag[tag_def['content_attr']] = content_to_set
+            
             head.append(new_tag)
-            # Adding a newline after each new tag.
-            # Using str(soup) for output handles this well enough for most cases.
-            # Explicitly adding newlines can sometimes lead to unwanted text nodes if not careful.
-            # Let's rely on str(soup)'s formatting.
-            # head.append(soup.new_string('\n')) # Removed for cleaner and more robust modification
+            last_added_element = new_tag
+            # Add a newline text node after the tag
+            head.append(soup.new_string('\n')) 
+            
             tags_added.append(tag_def['type'])
-            # Print statement moved to main for better flow
-            # print(f"Action: Prepared to add {tag_def['type']} tag.")
+            print(f"Action: Prepared to add {tag_def['type']} tag.")
+
+    # This is an attempt to ensure the last added element is properly followed by a newline 
+    # before the </head> tag, if newlines are not handled well by default by str() or prettify().
+    # However, simply appending a newline after each tag should generally suffice.
+    # If there were existing elements in head, this might not place the newline optimally
+    # relative to pre-existing last element and the new block of tags.
+    # For now, appending newline after each tag is the primary strategy.
 
     return tags_added
 
@@ -169,7 +171,7 @@ def main():
             if tags_added:
                 try:
                     with open(f_path, 'w', encoding='utf-8') as file:
-                        file.write(str(soup)) 
+                        file.write(soup.prettify(formatter="html5")) 
                     print(f"  SUCCESS: Updated {os.path.basename(f_path)}. Added/Modified: {', '.join(tags_added)}.")
                 except Exception as e:
                     print(f"  ERROR: Could not write changes to {f_path}: {e}")
