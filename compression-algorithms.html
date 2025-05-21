@@ -1338,13 +1338,15 @@
     </main>
 
     <footer class="container text-center">
-        <p class="mb-1">
-            Data Compression Cheatsheet &copy; <span id="currentYear"></span>.
-            Content is for informational purposes.
-        </p>
-        <p class="mb-2" style="font-size: 0.85em;">
-            Last Updated: <span id="lastUpdatedDate"></span>
-        </p>
+        <div>
+            <a href="https://www.linkedin.com/in/davidveksler/" title="David Veksler on LinkedIn" target="_blank" rel="noopener noreferrer" class="mx-2 link-secondary">
+              <i class="bi bi-linkedin"></i> LinkedIn
+            </a>
+            <a href="https://cheatsheets.davidveksler.com/" title="Browse All Cheatsheets by David Veksler" class="mx-2 link-secondary">
+              <i class="bi bi-collection"></i> All Cheatsheets
+            </a>
+          </div>
+       
         <div>
             <a href="https://en.wikipedia.org/wiki/Data_compression" target="_blank" rel="noopener noreferrer" class="mx-2" data-bs-toggle="tooltip" title="Learn more about Data Compression on Wikipedia">
                 <i class="bi bi-wikipedia"></i> Wikipedia: Data Compression
@@ -1354,7 +1356,7 @@
             </a>
         </div>
     </footer>
-
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
@@ -1375,14 +1377,10 @@
             const collapseElements = document.querySelectorAll(".collapse");
             collapseElements.forEach((collapseEl) => {
                 const button = document.querySelector(`.details-toggle[data-bs-target="#${collapseEl.id}"]`);
-                const icon = button ? button.querySelector(".bi-chevron-down") : null; // Only select bi-chevron-down
+                const icon = button ? button.querySelector(".bi-chevron-down") : null;
                 if (button && icon) {
                     const updateIcon = (isShown) => {
-                        if (isShown) {
-                            icon.style.transform = "rotate(180deg)";
-                        } else {
-                            icon.style.transform = "rotate(0deg)";
-                        }
+                        icon.style.transform = isShown ? "rotate(180deg)" : "rotate(0deg)";
                     };
                     updateIcon(collapseEl.classList.contains("show"));
                     collapseEl.addEventListener("show.bs.collapse", () => updateIcon(true));
@@ -1398,7 +1396,7 @@
             const noResultsDiv = document.getElementById('no-results');
 
             const categories = [
-                { id: 'all', name: 'All Categories', color: '#0D6EFD' }, // Using primary for 'All'
+                { id: 'all', name: 'All Categories', color: '#0D6EFD' },
                 { id: 'table', name: 'Quick Table', color: 'var(--color-table)' },
                 { id: 'foundations', name: 'Foundations', color: 'var(--color-foundations)' },
                 { id: 'lossless', name: 'Lossless', color: 'var(--color-lossless)' },
@@ -1414,8 +1412,7 @@
                 if (category.id === 'all') {
                     button.classList.add('btn-primary', 'active');
                 } else {
-                    button.classList.add('btn-outline-secondary'); // Start as outline
-                    // Use JS to set CSS variables for dynamic theming based on category color
+                    button.classList.add('btn-outline-secondary');
                     button.style.setProperty('--bs-btn-color', category.color);
                     button.style.setProperty('--bs-btn-border-color', category.color);
                     button.style.setProperty('--bs-btn-hover-color', '#fff');
@@ -1424,22 +1421,18 @@
                     button.style.setProperty('--bs-btn-active-color', '#fff');
                     button.style.setProperty('--bs-btn-active-bg', category.color);
                     button.style.setProperty('--bs-btn-active-border-color', category.color);
-                    // For focus shadow, convert hex to RGB for the rgba() value
+                    
                     let r = 0, g = 0, b = 0;
-                    if (category.color.startsWith('#')) {
-                        r = parseInt(category.color.slice(1, 3), 16);
-                        g = parseInt(category.color.slice(3, 5), 16);
-                        b = parseInt(category.color.slice(5, 7), 16);
-                    } else if (category.color.startsWith('var(--color-')) { // Handle CSS variables
-                        const varName = category.color.slice(4, -1); // Extract var name
-                        const actualColor = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-                        if (actualColor.startsWith('#')) {
-                            r = parseInt(actualColor.slice(1, 3), 16);
-                            g = parseInt(actualColor.slice(3, 5), 16);
-                            b = parseInt(actualColor.slice(5, 7), 16);
-                        }
+                    const colorValue = category.color.startsWith('var(') ?
+                        getComputedStyle(document.documentElement).getPropertyValue(category.color.slice(4, -1)).trim() :
+                        category.color;
+
+                    if (colorValue.startsWith('#')) {
+                        r = parseInt(colorValue.slice(1, 3), 16);
+                        g = parseInt(colorValue.slice(3, 5), 16);
+                        b = parseInt(colorValue.slice(5, 7), 16);
                     }
-                     button.style.setProperty('--bs-btn-focus-shadow-rgb', `${r},${g},${b}`);
+                    button.style.setProperty('--bs-btn-focus-shadow-rgb', `${r},${g},${b}`);
                 }
                 button.textContent = category.name;
                 button.dataset.filterCategory = category.id;
@@ -1484,7 +1477,7 @@
                         } else {
                             sectionContainer.classList.add('hidden');
                         }
-                    } else { // For sections like Quick Reference Table
+                    } else { 
                         const sectionTextContent = sectionContainer.textContent.toLowerCase();
                         const matchesSearch = searchTerm === '' || sectionTextContent.includes(searchTerm);
                         const matchesFilter = currentFilter === 'all' || sectionCategory === currentFilter;
@@ -1503,52 +1496,58 @@
             searchBox.addEventListener('input', applyFilters);
 
             categoryFiltersContainer.addEventListener('click', (event) => {
-                if (event.target.classList.contains('filter-btn')) {
-                    categoryFiltersContainer.querySelectorAll('.filter-btn').forEach(btn => {
-                        btn.classList.remove('active', 'btn-primary');
-                        btn.classList.add('btn-outline-secondary');
-                        // Reset custom styles for non-active outline buttons to default outline-secondary or their category outline
-                         const cat = categories.find(c => c.id === btn.dataset.filterCategory);
-                        if (cat && cat.id !== 'all') {
-                            btn.style.setProperty('--bs-btn-color', cat.color);
-                            btn.style.setProperty('--bs-btn-border-color', cat.color);
-                            btn.style.setProperty('--bs-btn-hover-color', '#fff');
-                            btn.style.setProperty('--bs-btn-hover-bg', cat.color);
-                             btn.style.setProperty('--bs-btn-hover-border-color', cat.color);
-                            btn.style.setProperty('--bs-btn-active-color', '#fff');
-                            btn.style.setProperty('--bs-btn-active-bg', cat.color);
-                            btn.style.setProperty('--bs-btn-active-border-color', cat.color);
-                        } else if (cat && cat.id === 'all') { // Reset "All" button if it's not the one being clicked
-                            btn.style.removeProperty('--bs-btn-bg');
-                            btn.style.removeProperty('--bs-btn-border-color');
-                            btn.style.removeProperty('--bs-btn-color');
-                            btn.classList.add('btn-outline-primary'); // Ensure it reverts to a generic outline
-                            btn.classList.remove('btn-primary');
-                        }
-                    });
+                const clickedBtn = event.target.closest('.filter-btn');
+                if (!clickedBtn) return;
 
-                    // Style the clicked button as active
-                    const clickedCategory = event.target.dataset.filterCategory;
-                    if (clickedCategory === 'all') {
-                        event.target.classList.add('active', 'btn-primary');
-                        event.target.classList.remove('btn-outline-secondary');
-                         event.target.style.removeProperty('--bs-btn-bg'); // Let BS primary take over
-                        event.target.style.removeProperty('--bs-btn-border-color');
-                        event.target.style.removeProperty('--bs-btn-color');
-                    } else {
-                        event.target.classList.add('active');
-                        event.target.classList.remove('btn-outline-secondary');
-                        const activeCat = categories.find(c => c.id === clickedCategory);
-                        if(activeCat) {
-                            event.target.style.setProperty('--bs-btn-bg', activeCat.color);
-                            event.target.style.setProperty('--bs-btn-border-color', activeCat.color);
-                            event.target.style.setProperty('--bs-btn-color', '#fff');
-                        }
+                const clickedCatId = clickedBtn.dataset.filterCategory;
+
+                // Reset all buttons to their inactive state
+                categoryFiltersContainer.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    const catId = btn.dataset.filterCategory;
+                    const cat = categories.find(c => c.id === catId);
+
+                    if (catId === 'all') {
+                        btn.classList.remove('btn-primary'); // If it was solid active
+                        btn.classList.add('btn-outline-primary'); // Make it outline
+                        // Clear any specific color styles that might have been set
+                        btn.style.removeProperty('--bs-btn-bg');
+                        btn.style.removeProperty('--bs-btn-border-color');
+                        btn.style.removeProperty('--bs-btn-color');
+                    } else if (cat) { // For other categories
+                        btn.classList.remove('btn-primary'); // Just in case
+                        btn.classList.add('btn-outline-secondary'); // Ensure it's outline
+
+                        // Set text and border to category color for outline style
+                        btn.style.setProperty('--bs-btn-color', cat.color);
+                        btn.style.setProperty('--bs-btn-border-color', cat.color);
+                        // CRITICAL: Ensure background is transparent for outline style
+                        btn.style.removeProperty('--bs-btn-bg');
                     }
+                });
 
-                    currentFilter = clickedCategory;
-                    applyFilters();
+                // Style the clicked button as active
+                clickedBtn.classList.add('active');
+                const activeCat = categories.find(c => c.id === clickedCatId);
+
+                if (clickedCatId === 'all') {
+                    clickedBtn.classList.remove('btn-outline-primary'); // If it was outline inactive
+                    clickedBtn.classList.add('btn-primary'); // Make it solid primary
+                    // Bootstrap's btn-primary handles its own colors, clear any conflicting inline styles
+                    clickedBtn.style.removeProperty('--bs-btn-bg');
+                    clickedBtn.style.removeProperty('--bs-btn-border-color');
+                    clickedBtn.style.removeProperty('--bs-btn-color');
+                } else if (activeCat) { // For other categories becoming active
+                    clickedBtn.classList.remove('btn-outline-secondary'); // If it was outline inactive
+
+                    // Set background to category color, text to white for solid active style
+                    clickedBtn.style.setProperty('--bs-btn-bg', activeCat.color);
+                    clickedBtn.style.setProperty('--bs-btn-border-color', activeCat.color);
+                    clickedBtn.style.setProperty('--bs-btn-color', '#fff');
                 }
+
+                currentFilter = clickedCatId;
+                applyFilters();
             });
             applyFilters(); // Initial load
         });
