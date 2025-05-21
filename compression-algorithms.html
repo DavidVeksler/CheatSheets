@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Compression Algorithms Cheatsheet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        header h1 {
+            margin-bottom: 0.2rem;
+        }
+        nav#main-nav {
+            background: #444;
+            color: #fff;
+            padding: 0.5rem;
+            text-align: center;
+        }
+        nav#main-nav ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        nav#main-nav ul li {
+            display: inline;
+            margin-right: 15px;
+        }
+        nav#main-nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        nav#main-nav a:hover {
+            text-decoration: underline;
+        }
+        main {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        article, section {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        article:last-child, section:last-child {
+            border-bottom: none;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #444;
+        }
+        h4 {
+            color: #555;
+            margin-top: 1.5em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        ul, ol {
+            margin-left: 20px;
+        }
+        code {
+            background-color: #eef;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        }
+        details {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+            color: #007bff;
+        }
+        summary:hover {
+            text-decoration: underline;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #333;
+            color: #fff;
+            margin-top: 30px;
+        }
+        footer a {
+            color: #4CAF50;
+        }
+        .placeholder-diagram {
+            display: block;
+            text-align: center;
+            padding: 20px;
+            border: 1px dashed #ccc;
+            background-color: #fafafa;
+            margin: 10px 0;
+            font-style: italic;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Data Compression Algorithms Cheatsheet</h1>
+        <p>Your Quick Guide to Understanding and Choosing Compression Algorithms</p>
+    </header>
+
+    <nav id="main-nav">
+        <ul>
+            <li><a href="#quick-ref">Quick Reference</a></li>
+            <li><a href="#theory">I. Foundational Theory</a></li>
+            <li><a href="#lossless-algorithms">II. Lossless Algorithms</a></li>
+            <li><a href="#lossy-algorithms">III. Lossy Algorithms</a></li>
+            <li><a href="#practical-considerations">IV. Practical Considerations</a></li>
+            <li><a href="#standards-bodies">V. Standards Bodies</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="quick-ref">
+            <h2>Quick Reference Table: Common Compression Algorithms</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>Type</th>
+                        <th>Primary Use Case</th>
+                        <th>Typical Ratio</th>
+                        <th>Speed (C/D)</th>
+                        <th>Key Characteristic</th>
+                        <th>Common Extensions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>RLE</strong></td>
+                        <td>Lossless</td>
+                        <td>Simple graphics, faxes</td>
+                        <td>Low-Med</td>
+                        <td>Fast/Fast</td>
+                        <td>Simple, good for repeated data</td>
+                        <td>(used within BMP, TIFF)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Huffman</strong></td>
+                        <td>Lossless</td>
+                        <td>Text, component in others</td>
+                        <td>Med</td>
+                        <td>Med/Med</td>
+                        <td>Optimal per-symbol coding</td>
+                        <td>(used in JPEG, Deflate)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LZ77/LZ78</strong></td>
+                        <td>Lossless</td>
+                        <td>General purpose, text</td>
+                        <td>Med-High</td>
+                        <td>Med/Med</td>
+                        <td>Dictionary-based, adaptive</td>
+                        <td>(basis for ZIP, GZIP)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LZW</strong></td>
+                        <td>Lossless</td>
+                        <td>GIF images, <code>compress</code></td>
+                        <td>Med</td>
+                        <td>Med/Med</td>
+                        <td>Dictionary-based, formerly patented</td>
+                        <td><code>.gif</code></td>
+                    </tr>
+                     <tr>
+                        <td><strong>bzip2</strong></td>
+                        <td>Lossless</td>
+                        <td>General file compression</td>
+                        <td>High</td>
+                        <td>Slow/Slow</td>
+                        <td>BWT, good ratio but slow</td>
+                        <td><code>.bz2</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>LZMA / LZMA2</strong></td>
+                        <td>Lossless</td>
+                        <td>Archives (7z, xz)</td>
+                        <td>Very High</td>
+                        <td>Slow/Med</td>
+                        <td>Excellent ratio, high memory</td>
+                        <td><code>.7z</code>, <code>.xz</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deflate</strong></td>
+                        <td>Lossless</td>
+                        <td>General (ZIP, GZIP, PNG)</td>
+                        <td>Med-High</td>
+                        <td>Med/Fast</td>
+                        <td>LZ77 + Huffman, good balance</td>
+                        <td><code>.zip</code>, <code>.gz</code>, <code>.png</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Arithmetic</strong></td>
+                        <td>Lossless</td>
+                        <td>Component in others</td>
+                        <td>Med-High</td>
+                        <td>Slow/Med</td>
+                        <td>Near-optimal, complex</td>
+                        <td>(used in JPEG2000)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Brotli</strong></td>
+                        <td>Lossless</td>
+                        <td>Web content (text, fonts)</td>
+                        <td>High-V.High</td>
+                        <td>Slow/Fast</td>
+                        <td>Excellent for text, static dictionary</td>
+                        <td><code>.br</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Zstandard (Zstd)</strong></td>
+                        <td>Lossless</td>
+                        <td>General, databases, real-time</td>
+                        <td>High-V.High</td>
+                        <td>V.Fast/V.Fast</td>
+                        <td>Fast, flexible levels, modern</td>
+                        <td><code>.zst</code></td>
+                    </tr>
+                     <tr>
+                        <td><strong>FLAC</strong></td>
+                        <td>Lossless</td>
+                        <td>Audio archival</td>
+                        <td>Med (audio)</td>
+                        <td>Med/Fast</td>
+                        <td>Lossless audio, widely supported</td>
+                        <td><code>.flac</code>, <code>.fla</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>JPEG</strong></td>
+                        <td>Lossy</td>
+                        <td>Photographic images</td>
+                        <td>High</td>
+                        <td>Med/Fast</td>
+                        <td>Widely supported, good for photos</td>
+                        <td><code>.jpg</code>, <code>.jpeg</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>WebP</strong></td>
+                        <td>Lossy/Lossless</td>
+                        <td>Web images (photos, graphics)</td>
+                        <td>High (lossy)</td>
+                        <td>Med/Fast</td>
+                        <td>Versatile, animation, transparency</td>
+                        <td><code>.webp</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>AVIF</strong></td>
+                        <td>Lossy/Lossless</td>
+                        <td>Web images (next-gen)</td>
+                        <td>Very High</td>
+                        <td>Slow/Med</td>
+                        <td>Excellent ratio/quality, HDR</td>
+                        <td><code>.avif</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>JPEG 2000</strong></td>
+                        <td>Lossy/Lossless</td>
+                        <td>Medical/archival images</td>
+                        <td>V.High</td>
+                        <td>Slow/Med</td>
+                        <td>Better quality than JPEG, scalable</td>
+                        <td><code>.jp2</code>, <code>.j2k</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>H.264/AVC</strong></td>
+                        <td>Lossy</td>
+                        <td>Video (Blu-ray, streaming)</td>
+                        <td>V.High</td>
+                        <td>Med/Fast</td>
+                        <td>Excellent quality/ratio, wide hardware support</td>
+                        <td><code>.mp4</code>, <code>.mkv</code>, <code>.mov</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>H.265/HEVC</strong></td>
+                        <td>Lossy</td>
+                        <td>Video (4K/UHD, streaming)</td>
+                        <td>V.High</td>
+                        <td>Slow/Fast</td>
+                        <td>~2x efficiency of H.264</td>
+                        <td><code>.mp4</code>, <code>.mkv</code></td>
+                    </tr>
+                     <tr>
+                        <td><strong>VP9</strong></td>
+                        <td>Lossy</td>
+                        <td>Video (web streaming, YouTube)</td>
+                        <td>V.High</td>
+                        <td>Med/Fast</td>
+                        <td>Royalty-free, H.265 competitor</td>
+                        <td><code>.webm</code>, <code>.mp4</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>AV1</strong></td>
+                        <td>Lossy</td>
+                        <td>Video (web streaming)</td>
+                        <td>V.High</td>
+                        <td>V.Slow/Med</td>
+                        <td>Royalty-free, excellent compression</td>
+                        <td><code>.mkv</code>, <code>.mp4</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>MP3</strong></td>
+                        <td>Lossy</td>
+                        <td>Audio (music)</td>
+                        <td>High</td>
+                        <td>Fast/V.Fast</td>
+                        <td>Ubiquitous, good quality for music</td>
+                        <td><code>.mp3</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>AAC</strong></td>
+                        <td>Lossy</td>
+                        <td>Audio (streaming, Apple)</td>
+                        <td>V.High</td>
+                        <td>Fast/Fast</td>
+                        <td>Better than MP3 at same bitrate</td>
+                        <td><code>.aac</code>, <code>.m4a</code>, <code>.mp4</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Opus</strong></td>
+                        <td>Lossy</td>
+                        <td>Audio (VoIP, streaming, web)</td>
+                        <td>V.High</td>
+                        <td>Fast/Fast</td>
+                        <td>Royalty-free, versatile (speech/music), low latency</td>
+                        <td><code>.opus</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p><em><strong>Note:</strong> Ratio & Speed are relative and can vary based on data, settings, and implementation.</em></p>
+        </section>
+
+        <article id="theory">
+            <h2>I. Foundational Theory: The "Why" and "How"</h2>
+
+            <section id="theory-core">
+                <h3>A. Core Concepts</h3>
+                <ul>
+                    <li><strong>What is Data Compression?</strong> The process of reducing the size of data (number of bits) to store or transmit it more efficiently.</li>
+                    <li><strong>Why Compress?</strong>
+                        <ul>
+                            <li><strong>Storage Savings:</strong> Store more data in the same space.</li>
+                            <li><strong>Faster Data Transmission:</strong> Reduce time and bandwidth needed to transfer data.</li>
+                            <li><strong>Reduced Costs:</strong> Lower expenses for storage and bandwidth.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Information Theory Basics:</strong>
+                        <ul>
+                            <li><strong>Entropy:</strong> A measure of the inherent randomness or uncertainty in data. It represents the theoretical lower bound for compression. Data with lower entropy (more predictable) can be compressed more.</li>
+                            <li><strong>Redundancy:</strong> Information that is repeated or predictable and can be removed or represented more efficiently. Types of redundancy include:
+                                <ul>
+                                    <li><strong>Spatial:</strong> Correlation between neighboring data points (e.g., pixels in an image).</li>
+                                    <li><strong>Temporal:</strong> Correlation between successive data points in time (e.g., frames in a video).</li>
+                                    <li><strong>Statistical/Symbol:</strong> Some symbols or patterns occur more frequently than others (e.g., the letter 'e' in English text).</li>
+                                    <li><strong>Perceptual:</strong> Information that human senses do not easily perceive or that is less important (exploited by lossy compression).</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+
+            <section id="theory-limits">
+                <h3>B. Limits of Compression</h3>
+                 <ul>
+                    <li><strong>Incompressibility:</strong> Random data (or data that appears random, like already well-compressed or encrypted data) cannot be significantly compressed further by lossless methods. Applying a lossless compressor to such data may even slightly increase its size due to overhead.</li>
+                    <li><strong>Rate-Distortion Theory (for Lossy Compression):</strong> This theory provides a mathematical framework for the trade-off between compression rate (bits used) and distortion (loss of fidelity). It defines the minimum achievable rate for a given level of distortion, and vice-versa. This is fundamental to understanding the performance limits of lossy codecs.</li>
+                </ul>
+            </section>
+
+            <section id="theory-classification">
+                <h3>C. Fundamental Classifications</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Lossless Compression</th>
+                            <th>Lossy Compression</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Data Reconstruction</strong></td>
+                            <td>Perfect: Original data can be fully restored.</td>
+                            <td>Imperfect: Approximates original data; some information is lost.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Information Loss</strong></td>
+                            <td>None.</td>
+                            <td>Yes, irreversible.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Typical Ratio</strong></td>
+                            <td>Moderate (e.g., 2:1 to 4:1).</td>
+                            <td>High to Very High (e.g., 10:1 to 100:1 or more).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Primary Use</strong></td>
+                            <td>Text, code, executables, medical data, archives (integrity crucial).</td>
+                            <td>Multimedia (images, audio, video) where some loss is acceptable.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Examples</strong></td>
+                            <td><code>ZIP</code>, <code>PNG</code>, <code>FLAC</code>.</td>
+                            <td><code>JPEG</code>, <code>MP3</code>, <code>H.264</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>Near-Lossless Compression:</h4>
+                <p>A specialized category where the decompressed data is not identical to the original, but the differences are strictly bounded to be very small and often imperceptible or within acceptable error margins for specific applications (e.g., some scientific data, medical imaging).</p>
+            </section>
+
+            <section id="theory-metrics">
+                <h3>D. Key Evaluation Metrics</h3>
+                <ul>
+                    <li><strong>Compression Ratio:</strong> <code>Original Size / Compressed Size</code>. (Higher is better).</li>
+                    <li><strong>Space Savings:</strong> <code>(1 - (Compressed Size / Original Size)) * 100%</code>.</li>
+                    <li><strong>Compression Speed:</strong> Rate at which data is compressed (e.g., MB/s).</li>
+                    <li><strong>Decompression Speed:</strong> Rate at which data is decompressed (e.g., MB/s).</li>
+                    <li><strong>Computational Cost/Resources:</strong> CPU usage, memory footprint for compression/decompression.</li>
+                    <li><strong>Fidelity/Quality (Lossy):</strong> How close the decompressed data is to the original.
+                        <ul>
+                            <li><em>Objective:</em> PSNR (Peak Signal-to-Noise Ratio), SSIM (Structural Similarity Index).</li>
+                            <li><em>Subjective:</em> Perceived quality by humans.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Asymmetry:</strong> The difference in computational cost between compression and decompression. Some algorithms are highly asymmetric (e.g., slow to compress, very fast to decompress – desirable for content distribution).</li>
+                    <li><strong>Robustness to Errors:</strong> How well a compressed stream can recover from bit errors during transmission or storage. Some formats include error resilience features.</li>
+                </ul>
+            </section>
+
+            <section id="theory-principles">
+                <h3>E. Basic Principles/Underlying Techniques</h3>
+                <ul>
+                    <li><strong>Dictionary-Based:</strong> Replaces repeated data sequences with references to entries in a dictionary (dynamically built or predefined). (e.g., LZ77, LZW).
+                        <div class="placeholder-diagram">Diagram Idea: Simple visual of a text string with a repeated phrase, showing the phrase being replaced by a short code referencing a dictionary entry.</div>
+                    </li>
+                    <li><strong>Statistical Modeling:</strong> Assigns shorter codes to more frequent symbols/patterns and longer codes to less frequent ones. (e.g., Huffman Coding, Arithmetic Coding).
+                        <div class="placeholder-diagram">Diagram Idea: Small Huffman tree for a few characters like A, B, C, D with different frequencies.</div>
+                    </li>
+                    <li><strong>Transform Coding:</strong> Converts data from its spatial/temporal domain to a frequency domain where energy is often more compacted into fewer coefficients, which can then be quantized and entropy coded. (e.g., DCT in JPEG, Wavelets in JPEG 2000).
+                        <div class="placeholder-diagram">Diagram Idea: Conceptual 8x8 pixel block transforming into an 8x8 DCT coefficient block with energy concentrated in top-left.</div>
+                    </li>
+                    <li><strong>Run-Length Encoding (RLE):</strong> Replaces sequences (runs) of identical symbols with a count of the symbol and the symbol itself. (e.g., <code>AAAAA</code> -> <code>5A</code>).</li>
+                    <li><strong>Predictive Coding:</strong> Predicts the next value in a data stream based on previous values and encodes the difference (error) between the predicted and actual value. (e.g., DPCM in audio, motion prediction in video).</li>
+                    <li><strong>Context Modeling:</strong> A technique (often used with statistical coders) where the probability of a symbol is estimated based on the preceding symbols (the "context"). This allows the coder to adapt to local statistical variations in the data, improving compression. (e.g., used in PPM, Brotli, Zstd entropy stage, PAQ).</li>
+                    <li><strong>Burrows-Wheeler Transform (BWT):</strong> A reversible data transform that groups similar characters together in the input string. While not a compressor itself, it preprocesses data to make it more amenable to subsequent compression stages (like Move-to-Front transform and RLE/statistical coding). Used in <code>bzip2</code>.</li>
+                    <li><strong>Delta Coding (Differential Coding):</strong> A more general form of predictive coding. Stores the difference between consecutive data elements rather than the elements themselves. Very effective if data values change slowly or predictably.</li>
+                </ul>
+            </section>
+        </article>
+
+        <article id="lossless-algorithms">
+            <h2>II. Lossless Compression Algorithms</h2>
+            <p><em>Data can be perfectly reconstructed from the compressed version.</em></p>
+
+            <details>
+                <summary>Run-Length Encoding (RLE)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Replaces consecutive sequences (runs) of identical data values with a single data value and a count.</li>
+                    <li><strong>Use Cases:</strong> Simple graphic images (icons, line drawings), fax transmissions, bitmap (<code>.BMP</code>) images, TIFF files. Effective for data with many repetitions.</li>
+                    <li><strong>Strengths:</strong> Very simple to implement, computationally inexpensive, fast.</li>
+                    <li><strong>Weaknesses:</strong> Inefficient for data without long runs; can even increase file size in such cases.</li>
+                    <li><strong>File Extensions/Protocols:</strong> Used within BMP, TIFF, PDF. A <code>.rle</code> extension exists but is little-used.</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>Huffman Coding</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Assigns variable-length codes to input characters based on their frequencies; more frequent characters get shorter codes. Uses prefix codes (no code is a prefix of another).</li>
+                    <li><strong>Use Cases:</strong> Component in other algorithms (Deflate, JPEG, MP3, PNG). Transmitting text and fax.</li>
+                    <li><strong>Strengths:</strong> Optimal per-symbol coding efficiency, lossless, relatively simple to implement.</li>
+                    <li><strong>Weaknesses:</strong> Requires frequency of characters to be known beforehand (or two passes over data). Less effective if character frequencies are evenly distributed.</li>
+                    <li><strong>File Extensions/Protocols:</strong> Used within PKZIP, GZIP, JPEG, PNG, MP3.</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>Lempel-Ziv 77 (LZ77) & Lempel-Ziv 78 (LZ78)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Dictionary-based algorithms. LZ77 uses a sliding window to find repeated sequences in previously seen data and replaces them with (offset, length) pointers. LZ78 explicitly builds a dictionary of phrases encountered and outputs dictionary codes.</li>
+                    <li><strong>Use Cases:</strong> General-purpose text and data compression. Form the basis for many popular archivers (e.g., ZIP, GZIP via Deflate).</li>
+                    <li><strong>Strengths:</strong> Adaptive (builds dictionary on-the-fly), good compression ratios, no prior knowledge of symbol probabilities needed.</li>
+                    <li><strong>Weaknesses:</strong> LZ78 can be simpler but sometimes less effective than LZ77. Decompression might be slower if not optimized.</li>
+                    <li><strong>File Extensions/Protocols:</strong> Foundational for formats like <code>.zip</code>, <code>.gz</code> (via Deflate). Some direct uses with <code>.lz</code>, <code>.lzh</code>.</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>Lempel-Ziv-Welch (LZW)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> An improvement on LZ78; builds a string translation table (dictionary) from the input data. When a sequence is encountered that is already in the dictionary, its code is output. New sequences (current sequence + next character) are added to the dictionary.</li>
+                    <li><strong>Use Cases:</strong> GIF image format, <code>compress</code> utility in Unix, TIFF, PDF files.</li>
+                    <li><strong>Strengths:</strong> Simple to implement, fast decompression, good for repetitive data. Does not require prior information about the input data stream.</li>
+                    <li><strong>Weaknesses:</strong> Patent issues historically (now expired). Can be less efficient than modern LZ variants for some data types. Files without repetitive information can become larger.</li>
+                    <li><strong>File Extensions/Protocols:</strong> <code>.gif</code>, used in TIFF, PDF.</li>
+                </ul>
+            </details>
+            <details>
+                <summary>bzip2</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Uses the Burrows-Wheeler Transform (BWT) to group similar characters, followed by a Move-to-Front transform and Huffman coding.</li>
+                    <li><strong>Use Cases:</strong> General file compression, common in Unix/Linux for distributing source code and data.</li>
+                    <li><strong>Strengths:</strong> Generally achieves better compression ratios than Deflate (gzip) for many data types.</li>
+                    <li><strong>Weaknesses:</strong> Significantly slower compression and decompression speeds compared to Deflate, Brotli, and Zstd. Not memory efficient for compression.</li>
+                    <li><strong>File Extensions/Protocols:</strong> <code>.bz2</code></li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>LZMA / LZMA2 (Lempel-Ziv-Markov chain Algorithm)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Uses an LZ77-variant dictionary coder with a very large dictionary size and a Markov chain-based range encoder (similar to arithmetic coding) for bit-level probability modeling. LZMA2 improves LZMA for multi-threading and better handling of incompressible data.</li>
+                    <li><strong>Use Cases:</strong> Default for 7-Zip (<code>.7z</code>) archives, XZ Utils (<code>.xz</code>). Used for software distribution, large archives.</li>
+                    <li><strong>Strengths:</strong> Very high compression ratios, often among the best for lossless general-purpose compression.</li>
+                    <li><strong>Weaknesses:</strong> Can be slow for compression, especially at higher settings. Decompression is faster but still not as fast as Zstd or Deflate. Can require significant memory.</li>
+                    <li><strong>File Extensions/Protocols:</strong> <code>.7z</code>, <code>.xz</code></li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>Deflate (LZ77 + Huffman)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Combines LZ77 to find and replace duplicate strings with (distance, length) pairs, followed by Huffman coding to compress the literals and the LZ77 output.</li>
+                    <li><strong>Use Cases:</strong> ZIP and GZIP file formats, PNG image files, HTTP compression.</li>
+                    <li><strong>Strengths:</strong> Good balance of compression ratio and speed, widely adopted and supported, lossless.</li>
+                    <li><strong>Weaknesses:</strong> Can be slower in compression and achieve lower ratios than newer algorithms like Zstandard or Brotli.</li>
+                    <li><strong>File Extensions/Protocols:</strong> <code>.zip</code>, <code>.gz</code>, <code>.png</code> (internally).</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>Arithmetic Coding</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Encodes the entire message into a single fractional number between 0 and 1. Achieves closer to theoretical entropy limits by assigning shorter effective codes to more probable sequences.</li>
+                    <li><strong>Use Cases:</strong> Often used as a component in other compression standards like JPEG 2000, H.264/AVC, and some variants of bzip2.</li>
+                    <li><strong>Strengths:</strong> Higher compression efficiency than Huffman coding, especially for skewed probabilities or small alphabets.</li>
+                    <li><strong>Weaknesses:</strong> More computationally complex than Huffman coding. Historically had patent concerns. Sensitive to errors (a single bit error can corrupt the entire remaining message).</li>
+                    <li><strong>File Extensions/Protocols:</strong> Used internally in formats like JPEG2000.</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>Brotli (LZ77 + Huffman + 2nd order Context Modeling + Static Dictionary)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Modern algorithm developed by Google. Uses a combination of a variant of LZ77, Huffman coding, 2nd order context modeling to select Huffman tables, and a pre-defined static dictionary of common substrings.</li>
+                    <li><strong>Use Cases:</strong> Primarily for web content (HTTP compression, WOFF2 fonts). Excels on text data.</li>
+                    <li><strong>Strengths:</strong> Excellent compression ratios, especially for text, often better than Gzip/Deflate. Fast decompression.</li>
+                    <li><strong>Weaknesses:</strong> Compression speed can be slower than Gzip, though it offers various quality levels to balance speed and ratio.</li>
+                    <li><strong>File Extensions/Protocols:</strong> <code>.br</code> (for files), <code>br</code> content encoding for HTTP.</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>Zstandard (Zstd) (LZ77 variant + Finite State Entropy / ANS)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Developed by Facebook. Modern algorithm using an LZ77-variant (block-sorting compressor) and a fast entropy coding stage (Finite State Entropy - FSE, an Asymmetric Numeral System variant). Offers many compression levels.</li>
+                    <li><strong>Use Cases:</strong> General-purpose compression, databases (e.g., RocksDB, MySQL), file systems (e.g., ZFS, Btrfs), network traffic, real-time compression. Archival (e.g. <code>.tar.zst</code>).</li>
+                    <li><strong>Strengths:</strong> Very fast compression and decompression speeds across a wide range of ratios. Highly flexible with many levels, good ratios comparable to Deflate but much faster. Supports dictionary compression for small files.</li>
+                    <li><strong>Weaknesses:</strong> Newer, so adoption, while rapidly growing, might not be as universal as Deflate yet.</li>
+                    <li><strong>File Extensions/Protocols:</strong> <code>.zst</code>, <code>zstd</code> content encoding for HTTP.</li>
+                </ul>
+            </details>
+            <details>
+                <summary>Prediction by Partial Matching (PPM)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> An adaptive statistical data compression technique based on context modeling and arithmetic coding. It uses several preceding symbols (the context) to predict the next symbol and its probability.</li>
+                    <li><strong>Use Cases:</strong> Text compression, general-purpose data. Known for achieving high compression ratios, especially on text.</li>
+                    <li><strong>Strengths:</strong> High compression ratios, adaptive.</li>
+                    <li><strong>Weaknesses:</strong> Computationally expensive (both CPU and memory), especially for higher orders of context. Can be slow.</li>
+                    <li><strong>File Extensions/Protocols:</strong> Not typically associated with a common standalone extension, but a core technique in some high-ratio archivers.</li>
+                </ul>
+            </details>
+
+
+            <h4>Lossless Audio Codecs</h4>
+            <details>
+                <summary>FLAC (Free Lossless Audio Codec)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Uses linear prediction to model the audio signal, then encodes the residual error using Golomb-Rice coding.</li>
+                    <li><strong>Use Cases:</strong> Archival of music, high-fidelity audio playback.</li>
+                    <li><strong>Strengths:</strong> Good compression for audio (typically 30-60% reduction), royalty-free, widely supported.</li>
+                    <li><strong>File Extensions:</strong> <code>.flac</code>, <code>.fla</code></li>
+                </ul>
+            </details>
+            <details>
+                <summary>ALAC (Apple Lossless Audio Codec)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Also uses linear prediction, but with different parameters and entropy coding.</li>
+                    <li><strong>Use Cases:</strong> Used within Apple's ecosystem (iTunes, iOS).</li>
+                    <li><strong>Strengths:</strong> Similar compression to FLAC, good integration in Apple products.</li>
+                    <li><strong>File Extensions:</strong> <code>.m4a</code> (when containing ALAC)</li>
+                </ul>
+            </details>
+        </article>
+
+        <article id="lossy-algorithms">
+            <h2>III. Lossy Compression Algorithms</h2>
+            <p><em>Achieve higher compression by discarding some information; original data cannot be perfectly reconstructed.</em></p>
+
+            <details>
+                <summary>JPEG (Joint Photographic Experts Group)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Divides image into 8x8 pixel blocks, applies Discrete Cosine Transform (DCT) to each block, quantizes DCT coefficients (discards less important high-frequency data), and then uses Huffman or Arithmetic coding for entropy encoding.</li>
+                    <li><strong>Use Cases:</strong> Still images, especially photographs. Very common on the web.</li>
+                    <li><strong>Strengths:</strong> Widely supported, good compression for photographic images at acceptable quality levels, adjustable compression level.</li>
+                    <li><strong>Weaknesses:</strong> Lossy, can introduce "blocking" artifacts at high compression ratios, not ideal for images with sharp lines or text. Each compression-decompression cycle degrades quality.</li>
+                    <li><strong>Configurable Parameters:</strong> Quality setting (typically 1-100), chroma subsampling.</li>
+                    <li><strong>File Extensions:</strong> <code>.jpg</code>, <code>.jpeg</code>, <code>.jfif</code>, <code>.jif</code>, <code>.jpe</code>.</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>JPEG 2000</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Uses a wavelet transform instead of DCT, applied to the entire image or large tiles. Offers progressive decoding (resolution or quality).</li>
+                    <li><strong>Use Cases:</strong> Medical imaging (DICOM), digital cinema (DCP), archival of high-quality images, satellite imagery.</li>
+                    <li><strong>Strengths:</strong> Better compression efficiency and image quality than original JPEG, especially at low bitrates. Supports both lossless and lossy compression. Region of Interest (ROI) coding, scalability (resolution, quality).</li>
+                    <li><strong>Weaknesses:</strong> More computationally complex than JPEG. Limited native browser and general software support compared to JPEG. Can be slower.</li>
+                    <li><strong>Configurable Parameters:</strong> Compression ratio/bitrate, quality layers, resolution levels, lossless/lossy.</li>
+                    <li><strong>File Extensions:</strong> <code>.jp2</code>, <code>.j2k</code>, <code>.jpx</code>, <code>.jpm</code>, <code>.mj2</code> (Motion JPEG 2000).</li>
+                </ul>
+            </details>
+
+            <h4>MPEG (Moving Picture Experts Group) - Family Overview</h4>
+            <p>A suite of standards for audio and video compression. Key members below:</p>
+
+            <details>
+                <summary>MPEG-2 (specifically Part 2 Video, H.262)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Block-based hybrid video coding using DCT, motion compensation (inter-frame prediction), and Huffman or variable-length coding.</li>
+                    <li><strong>Use Cases:</strong> DVDs, standard-definition digital television broadcasting (DVB, ATSC), Blu-ray (for SD content).</li>
+                    <li><strong>Strengths:</strong> Widely deployed standard, good quality for SD video, established hardware support.</li>
+                    <li><strong>Weaknesses:</strong> Less efficient than newer standards like H.264/AVC for HD and higher resolutions.</li>
+                    <li><strong>Configurable Parameters:</strong> Bitrate, Group of Pictures (GOP) structure, profiles and levels.</li>
+                    <li><strong>File Extensions:</strong> <code>.mpg</code>, <code>.mpeg</code>, <code>.ts</code>, <code>.vob</code>, <code>.m2v</code>.</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>H.264/AVC (Advanced Video Coding, MPEG-4 Part 10)</summary>
+                 <ul>
+                    <li><strong>Core Idea:</strong> Evolves MPEG-2 concepts with more advanced features: smaller block sizes for DCT (4x4 integer DCT), more flexible motion compensation (multiple reference frames, variable block sizes), in-loop deblocking filter, Context-Adaptive Binary Arithmetic Coding (CABAC) or CAVLC entropy coding.</li>
+                    <li><strong>Use Cases:</strong> Blu-ray Discs, streaming video (YouTube, Netflix, Vimeo), video conferencing, digital TV (HD broadcasts), mobile video.</li>
+                    <li><strong>Strengths:</strong> Significantly better compression efficiency (about 50% bitrate reduction for same quality) compared to MPEG-2. Wide hardware and software support. Good quality at various bitrates.</li>
+                    <li><strong>Weaknesses:</strong> More computationally complex than MPEG-2. Licensing through patent pools.</li>
+                    <li><strong>Configurable Parameters:</strong> Bitrate, profiles (e.g., Baseline, Main, High), levels, GOP settings, quantization parameters (QP).</li>
+                    <li><strong>File Extensions:</strong> Commonly <code>.mp4</code>, <code>.mkv</code>, <code>.mov</code>, <code>.ts</code>, <code>.flv</code>, <code>.avi</code>.</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>H.265/HEVC (High Efficiency Video Coding)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Successor to H.264/AVC. Uses larger and more flexible coding units (Coding Tree Units - CTUs up to 64x64), improved prediction modes (intra and inter), Sample Adaptive Offset (SAO) filtering, and more parallel processing capabilities.</li>
+                    <li><strong>Use Cases:</strong> 4K/8K Ultra HD Blu-ray, streaming of UHD content, modern digital TV broadcasts.</li>
+                    <li><strong>Strengths:</strong> Roughly doubles the compression efficiency of H.264/AVC (i.e., about 50% bitrate reduction for similar quality). Supports higher resolutions and frame rates.</li>
+                    <li><strong>Weaknesses:</strong> Significantly more computationally intensive for encoding and decoding than H.264. Complex patent licensing situation (though improving).</li>
+                    <li><strong>Configurable Parameters:</strong> Bitrate, profiles (e.g., Main, Main10), tiers, levels, QP.</li>
+                    <li><strong>File Extensions:</strong> Commonly <code>.mp4</code>, <code>.mkv</code>, <code>.ts</code>.</li>
+                </ul>
+            </details>
+             <details>
+                <summary>VP9 (Mention)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Open and royalty-free video coding format developed by Google, successor to VP8. A primary competitor to H.265/HEVC before AV1.</li>
+                    <li><strong>Use Cases:</strong> Widely used by YouTube for streaming, WebRTC.</li>
+                    <li><strong>Strengths:</strong> Good compression efficiency, comparable to early H.265 implementations. Royalty-free. Strong browser support.</li>
+                    <li><strong>Weaknesses:</strong> Largely being superseded by AV1 for future development and top-tier efficiency.</li>
+                    <li><strong>File Extensions:</strong> Often in <code>.webm</code>, <code>.mp4</code>.</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>AV1 (AOMedia Video 1)</summary>
+                 <ul>
+                    <li><strong>Core Idea:</strong> Developed by the Alliance for Open Media (AOMedia). Royalty-free. Uses advanced techniques like larger superblocks (up to 128x128), sophisticated intra and inter prediction, constrained directional enhancement filter (CDEF), loop restoration filter, and symbol coding based on Daala an adaptation of arithmetic coding.</li>
+                    <li><strong>Use Cases:</strong> Increasingly used for web streaming (YouTube, Netflix, Twitch), real-time communications (WebRTC).</li>
+                    <li><strong>Strengths:</strong> Offers better compression efficiency than H.265/HEVC (reportedly 20-30% improvement). Royalty-free, open source. Designed for internet video.</li>
+                    <li><strong>Weaknesses:</strong> Very computationally intensive to encode (though improving rapidly with new encoders like SVT-AV1). Decoding can also be demanding, requiring modern hardware for high resolutions.</li>
+                    <li><strong>Configurable Parameters:</strong> Bitrate, quality settings (CRF - Constant Rate Factor), speed presets.</li>
+                    <li><strong>File Extensions:</strong> Commonly <code>.mkv</code>, <code>.webm</code>, <code>.mp4</code> (with ISOBMFF container).</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>WebP</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Developed by Google. For lossy mode, it uses intra-frame prediction based on VP8 video codec techniques (block prediction, DCT/ADST, quantization, entropy coding). Also supports a lossless mode that uses different techniques (e.g., spatial prediction, color space transform, LZ77-like backend). Supports animation and transparency.</li>
+                    <li><strong>Use Cases:</strong> Web images, aiming to replace JPEG, PNG, and GIF.</li>
+                    <li><strong>Strengths:</strong> Better compression than JPEG (for lossy) and PNG (for lossless) at similar quality. Supports animation and alpha transparency. Widely supported in modern browsers.</li>
+                    <li><strong>Weaknesses:</strong> Lossy quality can sometimes be debated vs. highly optimized JPEGs or newer AVIF.</li>
+                    <li><strong>Configurable Parameters:</strong> Quality setting (lossy), effort setting (lossless).</li>
+                    <li><strong>File Extensions:</strong> <code>.webp</code></li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>AVIF (AV1 Image File Format)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> An image format that uses AV1 video intra-frame coding techniques (e.g., advanced prediction modes, transforms, loop filters) to compress still images. Stores image sequences in HEIF container.</li>
+                    <li><strong>Use Cases:</strong> Web images, aiming for significant quality improvements over JPEG and WebP at similar file sizes.</li>
+                    <li><strong>Strengths:</strong> Significantly better compression efficiency than JPEG and often WebP. Supports HDR, wide color gamut, lossless, transparency, and animations. Royalty-free.</li>
+                    <li><strong>Weaknesses:</strong> Newer, so software and browser support is still growing (though rapidly). Can be computationally more demanding than JPEG/WebP.</li>
+                    <li><strong>Configurable Parameters:</strong> Quality setting (quantizer), speed/effort.</li>
+                    <li><strong>File Extensions:</strong> <code>.avif</code></li>
+                </ul>
+            </details>
+
+
+            <details>
+                <summary>MP3 (MPEG-1 Audio Layer III)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Uses psychoacoustic models to discard parts of the audio signal that are less perceptible to human hearing. Applies Modified Discrete Cosine Transform (MDCT), quantizes frequency coefficients, and uses Huffman coding.</li>
+                    <li><strong>Use Cases:</strong> Digital audio, music files, podcast distribution. Historically dominant for portable music.</li>
+                    <li><strong>Strengths:</strong> Ubiquitous support across devices and software. Good quality at moderate to high bitrates (e.g., 192-320 kbps). Small file sizes.</li>
+                    <li><strong>Weaknesses:</strong> Lossy. Less efficient than newer audio codecs like AAC or Opus, especially at lower bitrates where artifacts can be noticeable.</li>
+                    <li><strong>Configurable Parameters:</strong> Bitrate (Constant - CBR, or Variable - VBR), sample rate, stereo/mono.</li>
+                    <li><strong>File Extensions:</strong> <code>.mp3</code>.</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>AAC (Advanced Audio Coding)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Successor to MP3, part of MPEG-2 and MPEG-4 standards. Uses improved psychoacoustic models, MDCT with better windowing functions, and more efficient coding techniques (e.g., Temporal Noise Shaping - TNS, Perceptual Noise Substitution - PNS).</li>
+                    <li><strong>Use Cases:</strong> Default audio format for Apple iTunes/Music, YouTube, Nintendo DSi/3DS, PlayStation. Common in <code>.mp4</code> videos, digital radio (DAB+), streaming services.</li>
+                    <li><strong>Strengths:</strong> Generally better audio quality than MP3 at the same bitrate, especially at lower bitrates. Supports more channels and higher sample rates.</li>
+                    <li><strong>Weaknesses:</strong> Lossy. Several variants and profiles (e.g., AAC-LC, HE-AAC, HE-AACv2) can sometimes cause compatibility issues if not handled correctly.</li>
+                    <li><strong>Configurable Parameters:</strong> Bitrate (CBR/VBR), profiles (LC, HE, HEv2), sample rate.</li>
+                    <li><strong>File Extensions:</strong> <code>.aac</code>, <code>.m4a</code>, <code>.m4b</code>, <code>.m4p</code>, <code>.mp4</code>.</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>Opus</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Royalty-free, highly versatile audio codec developed by Xiph.Org and standardized by IETF. Combines speech-oriented SILK (LPC-based) and music/general audio-oriented CELT (MDCT-based) algorithms, switching or combining them dynamically.</li>
+                    <li><strong>Use Cases:</strong> Voice over IP (VoIP), video conferencing (WebRTC default), game chat, internet streaming, audiobooks.</li>
+                    <li><strong>Strengths:</strong> Excellent quality across a wide range of bitrates (from low-bitrate speech to high-fidelity stereo music). Very low latency, making it ideal for real-time communication. Royalty-free and open source. Adaptive.</li>
+                    <li><strong>Weaknesses:</strong> Less ubiquitous for stored music files compared to MP3 or AAC, though support is growing.</li>
+                    <li><strong>Configurable Parameters:</strong> Bitrate (CBR/VBR), application type (VoIP, Audio, Restricted Low-Delay), frame duration, complexity.</li>
+                    <li><strong>File Extensions:</strong> <code>.opus</code> (often within <code>.ogg</code> or <code>.webm</code> containers).</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary>Vorbis (Ogg Vorbis)</summary>
+                <ul>
+                    <li><strong>Core Idea:</strong> Open-source, patent-free, lossy audio format. Uses Modified Discrete Cosine Transform (MDCT), vector quantization for floor and residue, and a codebook-based entropy encoding.</li>
+                    <li><strong>Use Cases:</strong> Popular in open-source software, indie games, some streaming services (historically by Spotify).</li>
+                    <li><strong>Strengths:</strong> Good audio quality, especially at mid to high bitrates. Royalty-free and open.</li>
+                    <li><strong>Weaknesses:</strong> Generally considered less efficient than Opus or modern AAC variants at very low bitrates. Hardware support less widespread than MP3/AAC. Development has largely shifted towards Opus.</li>
+                    <li><strong>Configurable Parameters:</strong> Quality setting (q -1.0 to 10.0), average/min/max bitrate.</li>
+                    <li><strong>File Extensions:</strong> <code>.ogg</code>, <code>.oga</code>.</li>
+                </ul>
+            </details>
+
+            <section id="lossy-psychophysical">
+                <h4>Psychovisual and Psychoacoustic Principles in Lossy Codecs</h4>
+                <ul>
+                    <li><strong>Psychoacoustics (Audio):</strong> Lossy audio codecs (MP3, AAC, Opus, Vorbis) exploit auditory masking.
+                        <ul>
+                            <li><strong>Frequency Masking:</strong> Louder sounds can make quieter sounds at nearby frequencies inaudible.</li>
+                            <li><strong>Temporal Masking:</strong> A loud sound can mask a quieter sound immediately before (pre-masking) or after (post-masking) it.</li>
+                            <li>These codecs discard or heavily quantize information in masked regions, which are less likely to be perceived by human ears.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Psychovisuals (Image/Video):</strong> Lossy image and video codecs (JPEG, H.264, AV1) exploit characteristics of the human visual system (HVS).
+                        <ul>
+                            <li><strong>Luminance vs. Chrominance Sensitivity:</strong> Humans are more sensitive to changes in brightness (luminance) than color (chrominance). Chroma subsampling (e.g., 4:2:0) reduces color information.</li>
+                            <li><strong>Frequency Sensitivity:</strong> Humans are less sensitive to high-frequency visual information (fine details) than low-frequency information (overall shapes). Transform coding (DCT, wavelets) allows selective quantization, discarding more high-frequency detail.</li>
+                            <li><strong>Contrast Masking:</strong> Visual patterns or textures can mask noise or artifacts within those regions.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+        </article>
+
+        <article id="practical-considerations">
+            <h2>IV. Practical Considerations & Application: The "How-To"</h2>
+
+            <section id="practical-choosing">
+                <h3>A. Choosing the Right Algorithm</h3>
+                <h4>Key Questions to Ask:</h4>
+                <ol>
+                    <li><strong>What type of data is it?</strong> (Text, image, audio, video, binary executable, mixed)</li>
+                    <li><strong>Is any information loss acceptable?</strong> (Critical: Lossless vs. Lossy decision)
+                        <ul>
+                            <li><em>If Lossless:</em> Executables, source code, medical records, financial data, archival masters.</li>
+                            <li><em>If Lossy is OK:</em> Most images for web, streaming audio/video, previews.</li>
+                        </ul>
+                    </li>
+                    <li><strong>What is the primary goal?</strong>
+                        <ul>
+                            <li>Maximum compression ratio (e.g., for archival, limited storage)?</li>
+                            <li>Fastest compression speed (e.g., for real-time capture)?</li>
+                            <li>Fastest decompression speed (e.g., for quick user access, web delivery)?</li>
+                            <li>Best quality (for lossy, at a given bitrate)?</li>
+                            <li>Low computational/power cost (e.g., for mobile/embedded devices)?</li>
+                        </ul>
+                    </li>
+                    <li><strong>What are the resource constraints?</strong> (CPU, RAM for encoding/decoding)</li>
+                    <li><strong>What is the target platform/ecosystem?</strong> (Algorithm support, libraries, hardware acceleration)</li>
+                    <li><strong>Are there licensing/royalty concerns?</strong> (e.g., H.264/H.265 vs. AV1/Opus)</li>
+                    <li><strong>Energy Consumption / Battery Life:</strong> Especially relevant for mobile and IoT devices.</li>
+                    <li><strong>Standards Compliance & Interoperability:</strong> For data exchange, adherence to widely adopted standards is crucial.</li>
+                </ol>
+
+                <h4>General Guidelines (Examples):</h4>
+                <ul>
+                    <li><strong>Text/Code:</strong> Zstd (good balance), Brotli (excellent for web text), Gzip (universal).</li>
+                    <li><strong>General Archival:</strong> Zstd (high levels), 7-Zip (LZMA/LZMA2), XZ (LZMA2), bzip2.</li>
+                    <li><strong>Photographic Images (Web):</strong> JPEG (balance), WebP (good alternative), AVIF (emerging, higher quality/ratio).</li>
+                    <li><strong>Graphic Images (Web):</strong> PNG (lossless), WebP (lossless/lossy), SVG (vector).</li>
+                    <li><strong>Streaming Video:</strong> H.264 (wide support), H.265 (better ratio for 4K+), AV1 (royalty-free, best ratio, growing support), VP9.</li>
+                    <li><strong>Streaming Audio:</strong> Opus (versatile, low-latency), AAC (widely supported, good quality).</li>
+                    <li><strong>Real-time Communication:</strong> Opus (audio), H.264/VP9/AV1 (video, depending on client support & latency needs).</li>
+                </ul>
+                <div class="placeholder-diagram">Diagram Idea: A simplified decision tree flowchart: Data Type -> Lossless/Lossy -> Key Priority (Speed/Ratio/Quality) -> Suggested Algorithms.</div>
+            </section>
+
+            <section id="practical-tools">
+                <h3>B. Common Tools, Libraries & Software</h3>
+                <h4>Command-Line Archivers:</h4>
+                <ul>
+                    <li><code>gzip</code> / <code>gunzip</code>: Implements Deflate (common on Unix-like systems).</li>
+                    <li><code>zip</code> / <code>unzip</code>: Handles <code>.zip</code> archives (commonly Deflate).</li>
+                    <li><code>7-Zip</code> (<code>7z</code> command): Supports many formats including its own 7z (LZMA/LZMA2), ZIP, Gzip, Bzip2, TAR, Zstd, Brotli.</li>
+                    <li><code>tar</code>: Not a compression tool itself, but often used to bundle files, then compressed with <code>gzip</code> (<code>.tar.gz</code>), <code>bzip2</code> (<code>.tar.bz2</code>), <code>xz</code> (<code>.tar.xz</code>), <code>zstd</code> (<code>.tar.zst</code>).</li>
+                    <li><code>bzip2</code> / <code>bunzip2</code>: Implements bzip2 algorithm.</li>
+                    <li><code>xz</code> / <code>unxz</code>: Implements LZMA2 algorithm.</li>
+                    <li><code>brotli</code>: Brotli command-line tool.</li>
+                    <li><code>zstd</code>: Zstandard command-line tool.</li>
+                </ul>
+                <h4>Libraries for Developers:</h4>
+                <ul>
+                    <li><strong>zlib:</strong> (C library for Deflate; bindings in Python, Java, etc.) - Foundational for Gzip, PNG.</li>
+                    <li><strong>libjpeg-turbo / libjpeg:</strong> (C library for JPEG)</li>
+                    <li><strong>libpng:</strong> (C library for PNG, uses zlib)</li>
+                    <li><strong>FFmpeg:</strong> (Powerful C library and command-line tool for audio/video transcoding, supports numerous codecs including H.264, H.265, AV1, MP3, AAC, Opus, Vorbis).</li>
+                    <li><strong>libbrotli:</strong> (C library for Brotli)</li>
+                    <li><strong>libzstd:</strong> (C library for Zstandard)</li>
+                    <li><strong>liblzma:</strong> (C library for XZ/LZMA2)</li>
+                    <li><strong>libbz2:</strong> (C library for bzip2)</li>
+                    <li><strong>libopus:</strong> (C library for Opus)</li>
+                    <li><strong>libvpx:</strong> (Google's C library for VP8/VP9 video codecs)</li>
+                    <li><strong>libaom / SVT-AV1:</strong> (Reference and production C libraries for AV1)</li>
+                    <li><strong>Programming Language Built-ins/Standard Libraries:</strong>
+                        <ul>
+                            <li>Python: <code>zlib</code>, <code>gzip</code>, <code>bz2</code>, <code>lzma</code>. Third-party: <code>python-zstandard</code>, <code>brotli</code>.</li>
+                            <li>Java: <code>java.util.zip</code> (Deflate, GZIP). Third-party for others.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h4>Applications:</h4>
+                <ul>
+                    <li>Image Editors (GIMP, Photoshop): Support JPEG, PNG, GIF, TIFF, WebP, AVIF etc.</li>
+                    <li>Video Editors (DaVinci Resolve, Premiere Pro): Support various professional and consumer video codecs.</li>
+                    <li>Audio Editors (Audacity, Audition): Support WAV, MP3, AAC, Ogg Vorbis, FLAC, Opus.</li>
+                    <li>Game Engines (e.g., Unity, Unreal Engine): Support various texture compression formats (ASTC, BCn/S3TC, ETC) and audio codecs.</li>
+                </ul>
+            </section>
+
+            <section id="practical-domains">
+                <h3>C. Application Domains with Unique Needs</h3>
+                <ul>
+                    <li><strong>Databases:</strong> Often use specialized techniques like dictionary encoding, bit-packing, delta encoding, RLE, and general-purpose algorithms (LZ4, Zstd) for columnar or row-based data to reduce storage and improve query I/O.</li>
+                    <li><strong>Network Traffic:</strong> HTTP compression (Gzip, Brotli, Zstd) for web assets. Real-time protocols (RTP) for VoIP/video conferencing use codecs like Opus, G.7xx, H.264, AV1.</li>
+                    <li><strong>Medical Imaging (e.g., DICOM standard):</strong> Often requires lossless (e.g., JPEG-LS, RLE, lossless JPEG 2000) or "visually lossless" lossy compression (JPEG 2000) to preserve diagnostic integrity.</li>
+                    <li><strong>Genomic Data (e.g., FASTQ, BAM/CRAM):</strong> Specialized compressors (e.g., CRAM using LZMA/Arithmetic, Spring) are designed for highly repetitive sequence data.</li>
+                    <li><strong>Log Files & Text Data:</strong> Algorithms like Zstd and Brotli excel due to their speed and high ratios on repetitive text.</li>
+                    <li><strong>Archival & Backups:</strong> Emphasis on high compression ratios and data integrity. Algorithms like Zstd (high levels), LZMA/LZMA2 (used in 7z, xz), and Bzip2 are common.</li>
+                    <li><strong>Scientific Data (e.g., HDF5, NetCDF):</strong> Often use chunking and support pluggable compression filters (like Deflate, Zstd, specialized lossless/lossy methods for floating-point data) to balance access speed and storage.</li>
+                </ul>
+            </section>
+
+            <section id="practical-trends">
+                <h3>D. Emerging Trends / Newer Algorithms</h3>
+                 <ul>
+                    <li><strong>AI/Neural Network-Based Compression:</strong> Active research area for images, video, and audio. Shows potential for very high compression ratios by learning data representations. Often computationally very expensive for training and sometimes for inference. Examples: (Research stage) VVC includes some AI-driven tools, some proprietary AI image/video enhancers/compressors.</li>
+                    <li><strong>Perceptual Video Coding (e.g., VVC - Versatile Video Coding):</strong> The latest MPEG standard, aiming for ~30-50% improvement over HEVC. Incorporates more advanced techniques, some AI-influenced.</li>
+                    <li><strong>Specialized Hardware Acceleration:</strong> Increasing availability of hardware encoders/decoders for newer codecs (AV1, VVC) in CPUs, GPUs, and dedicated ASICs, crucial for their practical adoption.</li>
+                    <li><strong>Continued Focus on Speed AND Ratio:</strong> Algorithms like Zstd demonstrate that high speed and good ratios are not always mutually exclusive.</li>
+                    <li><strong>Focus on Semantic Compression:</strong> Compressing based on the <em>meaning</em> or content of the data rather than just statistical redundancy, especially in AI-driven compression (e.g., transmitting a description of an image rather than pixels).</li>
+                    <li><strong>Compression for Privacy:</strong> Techniques that aim to compress data while also providing some level of privacy, e.g., through homomorphic encryption friendly compression or by obfuscating sensitive parts during compression. (More niche/research but a growing consideration).</li>
+                </ul>
+            </section>
+
+            <section id="practical-processing">
+                <h3>E. Pre-processing and Post-processing in Compression</h3>
+                <ul>
+                    <li><strong>Pre-processing:</strong> Steps taken before compression to make data more compressible.
+                        <ul>
+                            <li><em>Examples:</em> Normalization, removing noise (for lossy), data transformation (like BWT), reordering data fields, color space transformation.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Post-processing:</strong> Steps taken after decompression to enhance quality or reverse pre-processing steps.
+                        <ul>
+                            <li><em>Examples:</em> Deblocking filters (common in video codecs like H.264/AV1), deringing filters, error concealment, inverse color space transformation.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+        </article>
+
+        <article id="standards-bodies">
+            <h2>V. Standards Bodies (Brief Mention)</h2>
+            <ul>
+                <li><strong>MPEG (Moving Picture Experts Group):</strong> Develops standards for audio and video (e.g., JPEG, MPEG-2, H.264, H.265, VVC, MP3, AAC). Part of ISO/IEC.</li>
+                <li><strong>ITU-T (International Telecommunication Union - Telecommunication Standardization Sector):</strong> Develops video coding standards, often jointly with MPEG (e.g., H.26x series).</li>
+                <li><strong>IETF (Internet Engineering Task Force):</strong> Develops standards for internet protocols, including codecs for real-time communication (e.g., Opus, AV1 (via AOMedia)).</li>
+                <li><strong>AOMedia (Alliance for Open Media):</strong> Consortium developing royalty-free video codecs like AV1.</li>
+                <li><strong>ISO (International Organization for Standardization) & IEC (International Electrotechnical Commission):</strong> General standards bodies, often publishing MPEG work.</li>
+                <li><strong>W3C (World Wide Web Consortium):</strong> Standardizes web technologies, including formats like WebP, PNG, and font compression (WOFF/WOFF2 using Brotli/Zopfli).</li>
+            </ul>
+        </article>
+    </main>
+
+    <footer>
+        <p>Data Compression Cheatsheet. Content is for informational purposes.
+            <script>document.write("Last updated: " + new Date().toLocaleDateString());</script>
+        </p>
+        <a href="#main-nav">Back to Top</a>
+    </footer>
+</body>
+</html>
