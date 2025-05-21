@@ -1,5 +1,5 @@
 import os
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, Tag # Ensure Tag is imported if used, though it's not explicitly in this snippet
 
 # SEO_TAGS_CONFIG remains the same
 SEO_TAGS_CONFIG = [
@@ -30,11 +30,17 @@ def generate_url(html_file_path):
 def check_seo_tags(soup, title, generated_url):
     head = soup.find('head')
     if not head:
-        return {tag_def['type']: 'missing' for tag_def in SEO_TAGS_CONFIG}
+        # Create a results dictionary with all tags marked as missing if no head tag exists
+        results_if_no_head = {}
+        for tag_def in SEO_TAGS_CONFIG:
+            results_if_no_head[tag_def['type']] = 'missing'
+        return results_if_no_head
+
 
     results = {}
     for tag_def in SEO_TAGS_CONFIG:
         status = 'missing' # Default to missing
+        # Ensure find_all is called on a valid Tag object (head)
         candidate_tags = head.find_all(tag_def['tag_name'], attrs=tag_def['attrs'])
         
         for tag_candidate in candidate_tags:
@@ -43,28 +49,22 @@ def check_seo_tags(soup, title, generated_url):
             if tag_def['type'] == 'canonical' or tag_def['type'] == 'og_url' or tag_def['type'] == 'twitter_url':
                 expected_value = generated_url
             elif tag_def['type'] == 'meta_description':
-                # For meta description, if it exists and has *any* content, we consider it 'present_correct'
-                # as per issue "only add it if the tag is missing". We won't update existing descriptions.
-                if content_value: # Check if content attribute exists and is not empty
+                if content_value: 
                     status = 'present_correct' 
-                else: # Tag exists but content is empty
-                    status = 'present_incorrect' # Or 'missing' if we want to treat empty as missing
+                else: 
+                    status = 'present_incorrect'
                 break 
             elif tag_def['type'] == 'twitter_creator':
                 expected_value = tag_def['expected_content']
             
-            if status == 'present_correct': # Already determined for meta_description
+            if status == 'present_correct': 
                 break
 
             if content_value == expected_value:
                 status = 'present_correct'
                 break
             else:
-                # Tag with same identifying attributes exists but content/href is wrong
                 status = 'present_incorrect' 
-                # Important: if multiple such tags exist (e.g. two <link rel="canonical">), 
-                # finding one 'present_correct' is enough. If all are 'present_incorrect',
-                # the last one's status will be kept. This is acceptable as we only add if 'missing'.
         results[tag_def['type']] = status
     return results
 
@@ -74,19 +74,33 @@ def add_missing_tags(soup, title, generated_url, tags_status):
 
     if not html_tag:
         print("Error: No <html> tag found. Cannot process file.")
-        return []
+        # It's good practice to return an empty list or handle this error appropriately
+        return [], soup 
 
     if not head:
         head = soup.new_tag('head')
-        # Try to insert head at the beginning of html tag's children
-        if html_tag.contents:
-            html_tag.insert(0, head)
-        else:
-            html_tag.append(head)
+        # Insert head at the beginning of html tag's children
+        # Correctly handle if html_tag has no children or only NavigableString
+        first_child = html_tag.find(True, recursive=False) # Find first actual tag child
+        if first_child:
+            first_child.insert_before(head)
+        else: # No children or only string content
+            html_tag.insert(0, head) # Insert at the beginning
+
+        # Add a newline after the new head tag for formatting if it's the first element
+        if head.previous_sibling is None:
+             html_tag.insert(1, soup.new_string('\n'))
+        else: # Insert newline after head
+            head.insert_after(soup.new_string('\n'))
         print("Info: Created <head> tag.")
         
     tags_added = []
-    last_added_element = None
+
+    # Find the last element in head to append after, or append to head directly
+    # This helps in placing newlines more predictably.
+    # We'll append all new tags, then newlines after them if needed.
+    
+    elements_to_add_to_head = []
 
     for tag_def in SEO_TAGS_CONFIG:
         if tags_status.get(tag_def['type']) == 'missing':
@@ -106,41 +120,59 @@ def add_missing_tags(soup, title, generated_url, tags_status):
             
             new_tag[tag_def['content_attr']] = content_to_set
             
-            head.append(new_tag)
-            last_added_element = new_tag
-            # Add a newline text node after the tag
-            head.append(soup.new_string('\n')) 
-            
+            elements_to_add_to_head.append(new_tag)
             tags_added.append(tag_def['type'])
             print(f"Action: Prepared to add {tag_def['type']} tag.")
 
-    # This is an attempt to ensure the last added element is properly followed by a newline 
-    # before the </head> tag, if newlines are not handled well by default by str() or prettify().
-    # However, simply appending a newline after each tag should generally suffice.
-    # If there were existing elements in head, this might not place the newline optimally
-    # relative to pre-existing last element and the new block of tags.
-    # For now, appending newline after each tag is the primary strategy.
+    # Append all new tags and their trailing newlines to the head
+    for el in elements_to_add_to_head:
+        head.append(el)
+        head.append(soup.new_string('\n')) # Add a newline text node after the tag
 
-    return tags_added
+    return tags_added, soup
+
 
 def main():
+    # Determine the best available parser
+    DEFAULT_PARSER = "html.parser" # Fallback parser
+    PREFERRED_PARSERS = ["lxml", "html5lib"] # In order of preference
+    
+    active_parser = DEFAULT_PARSER
+    for parser_name in PREFERRED_PARSERS:
+        try:
+            BeautifulSoup("<html></html>", parser_name) # Test if parser is available
+            active_parser = parser_name
+            print(f"Info: Using '{active_parser}' parser.")
+            break
+        except Exception: # bs4.FeatureNotFound if parser not installed/functional
+            pass # Try next parser
+    
+    if active_parser == DEFAULT_PARSER:
+        print(f"Warning: Neither 'lxml' nor 'html5lib' parsers were found. "
+              f"Falling back to Python's built-in '{DEFAULT_PARSER}'. "
+              f"This parser may struggle with malformed HTML, potentially leading to "
+              f"incorrect processing or output. For best results, consider installing 'lxml' "
+              f"(e.g., 'pip install lxml') or 'html5lib' (e.g., 'pip install html5lib').")
+
+
     html_files = find_html_files()
     if not html_files:
         print("No HTML files found in the current directory.")
         return
 
-    print("Processing HTML files for SEO metadata updates:")
+    print(f"\nProcessing HTML files for SEO metadata updates (using {active_parser} parser):")
     for f_path in html_files:
         print(f"--- Processing: {os.path.basename(f_path)} ---")
         try:
             with open(f_path, 'r', encoding='utf-8', errors='replace') as file:
                 content = file.read()
-            soup = BeautifulSoup(content, "html.parser")
+            # Use the determined active_parser
+            soup = BeautifulSoup(content, active_parser)
         except FileNotFoundError:
             print(f"Error: File not found - {f_path}")
             continue
-        except Exception as e:
-            print(f"Error: Could not read or parse file {f_path}: {e}")
+        except Exception as e: # Catch other exceptions like bs4.FeatureNotFound if test failed
+            print(f"Error: Could not read or parse file {f_path} with {active_parser}: {e}")
             continue
 
         title = extract_title_from_soup(soup)
@@ -152,9 +184,8 @@ def main():
         tags_status = check_seo_tags(soup, title if title else "", generated_url)
         
         status_summary = []
-        needs_addition_check = False # Renamed from needs_update for clarity
+        needs_addition_check = False
         for tag_type, status_val in tags_status.items():
-            # Format status for printing
             formatted_status = status_val.replace('_', ' ').capitalize()
             status_summary.append(f"{tag_type.replace('_', ' ').title()}: {formatted_status}")
             
@@ -167,12 +198,15 @@ def main():
         print(f"  Current SEO Status: {'; '.join(status_summary)}")
 
         if needs_addition_check:
-            tags_added = add_missing_tags(soup, title if title else "", generated_url, tags_status)
+            tags_added, soup = add_missing_tags(soup, title if title else "", generated_url, tags_status) # soup can be reassigned
             if tags_added:
                 try:
+                    # Use prettify with a specific HTML formatter for cleaner and more standard output
+                    # This ensures HTML void elements are handled correctly (e.g., <meta ...> not <meta ...></meta>)
+                    output_html = soup.prettify(formatter="html")
                     with open(f_path, 'w', encoding='utf-8') as file:
-                        file.write(str(soup)) 
-                    print(f"  SUCCESS: Updated {os.path.basename(f_path)}. Added/Modified: {', '.join(tags_added)}.")
+                        file.write(output_html) 
+                    print(f"  SUCCESS: Updated {os.path.basename(f_path)}. Added: {', '.join(tags_added)}.")
                 except Exception as e:
                     print(f"  ERROR: Could not write changes to {f_path}: {e}")
             else:
