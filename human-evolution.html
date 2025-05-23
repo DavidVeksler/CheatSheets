@@ -3,22 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Human Evolution: Journey Through Time (Concise)</title>
+    <title>Human Evolution: Journey Through Time</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
       :root {
+        /* Evolved Color Palette */
+        --primary-accent-start: #00AFFF;
+        --primary-accent-end: #0078D4;
+        --primary-accent-gradient: linear-gradient(135deg, var(--primary-accent-start), var(--primary-accent-end));
+        --primary-accent-static: #0095E0;
+
+        --danger-accent: #FF4757;
+        --danger-accent-rgb: 255,71,87; /* For rgba glow */
+        --warning-accent: #FFA500;
+        --warning-accent-rgb: 255,165,0; /* For rgba background tint */
+
+        --dark-bg: #0F1014;
+        --dark-bg-rgb: 15,16,20;
+        --medium-bg: #1A1C23;
+        --medium-bg-rgb: 26,28,35;
+        --light-bg: #2C2F3B;
+        --lighter-bg: #3D414F;
+
+        --text-color: #E0E0E5;
+        --text-muted-color: #90909A;
+        --text-heading-color: #FFFFFF;
+
+        --timeline-period-color: #FFC107;
+
+        /* Typography */
+        --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-weight-light: 300;
+        --font-weight-regular: 400;
+        --font-weight-medium: 500;
+        --font-weight-bold: 600;
+
+        /* UI Dimensions & Effects */
         --sidebar-width: 380px;
-        --header-height: 60px;
-        --primary-accent: #0d6efd;
-        --danger-accent: #dc3545;
-        --dark-bg: #161618;
-        --medium-bg: #212124;
-        --light-bg: #303033;
-        --text-color: #f0f0f0;
-        --text-muted-color: #d0d0d0;
-        --timeline-period-color: #6cb2f7;
+        --header-height: 65px;
+        --border-radius-standard: 10px;
+        --border-radius-pill: 50px;
+        --transition-speed: 0.25s;
+        --transition-timing: ease-out;
+        --modern-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.15);
+        --card-element-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        --focus-ring-color: rgba(0, 160, 255, 0.7); /* Primary accent with alpha */
       }
 
       * {
@@ -26,33 +58,47 @@
       }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family: var(--font-primary);
         margin: 0;
         overflow: hidden;
         background: var(--dark-bg);
+        /* Optional subtle noise texture for richness:
+           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+        */
         color: var(--text-color);
         display: flex;
         flex-direction: column;
         height: 100vh;
+        letter-spacing: 0.01em;
       }
 
       header.app-header {
         height: var(--header-height);
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        background: var(--dark-bg);
+        border-bottom: 2px solid var(--primary-accent-static);
         color: white;
         display: flex;
         align-items: center;
         padding: 0 1.5rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         flex-shrink: 0;
       }
 
       header.app-header h1 {
-        font-size: 1.4rem;
-        font-weight: 300;
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-light);
         margin: 0;
         letter-spacing: 0.5px;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        color: var(--text-heading-color);
       }
+      header.app-header h1 i {
+        color: var(--primary-accent-static);
+        margin-right: 0.75rem;
+        transition: transform var(--transition-speed) var(--transition-timing);
+        vertical-align: middle;
+      }
+
 
       #main-content {
         display: flex;
@@ -65,24 +111,22 @@
         background: var(--medium-bg);
         border-right: 1px solid var(--light-bg);
         overflow-y: auto;
-        padding: 0.75rem;
+        padding: 1rem;
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 1rem;
       }
 
       @media (max-width: 992px) {
         #main-content {
           flex-direction: column;
         }
-
         #controls-sidebar {
           width: 100%;
           max-height: 45vh;
           border-right: none;
           border-bottom: 1px solid var(--light-bg);
         }
-
         #map-container {
           flex-grow: 1;
           height: auto;
@@ -92,7 +136,7 @@
       #map-container {
         flex: 1;
         position: relative;
-        background: #0a0a0a;
+        background: #0a0a0a; /* Original, could be var(--dark-bg) too */
       }
 
       #map {
@@ -103,267 +147,376 @@
       .control-card {
         background-color: var(--medium-bg);
         border: 1px solid var(--light-bg);
-        border-radius: 5px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+        border-radius: var(--border-radius-standard);
+        box-shadow: var(--modern-shadow);
+        transition: transform var(--transition-speed) var(--transition-timing), box-shadow var(--transition-speed) var(--transition-timing);
+      }
+      .control-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.35), 0 2px 5px rgba(0,0,0,0.2), 0 0 0 1px var(--lighter-bg);
       }
 
       .control-card .card-header {
-        font-size: 0.85rem;
-        font-weight: 500;
-        background-color: var(--light-bg);
+        font-size: 0.9rem;
+        font-weight: var(--font-weight-medium);
+        background-color: transparent;
         color: var(--text-muted-color);
         border-bottom: 1px solid var(--light-bg);
-        padding: 0.4rem 0.6rem;
+        padding: 0.6rem 1rem;
         display: flex;
         align-items: center;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
       }
-
       .control-card .card-header i {
         margin-right: 0.4rem;
         font-size: 0.9em;
+        transition: transform var(--transition-speed) var(--transition-timing);
+        vertical-align: middle;
       }
 
       .control-card .card-body {
-        padding: 0.6rem;
+        padding: 0.8rem 1rem;
+      }
+      .control-card .card-header + .card-body {
+        padding-top: 1rem;
       }
 
+      p, .form-check-label, .legend-item span {
+        line-height: 1.65;
+        font-size: 0.85rem;
+      }
+      /* Specific narrative text element to ensure it takes base body styling */
+      #narrative-panel .card-body p#narrative-text-element {
+          line-height: 1.65;
+          font-size: 0.85rem;
+          color: var(--text-color) !important;
+      }
+
+
       #current-period-display {
-        font-size: 1.15rem;
-        font-weight: bold;
+        font-size: 1.25rem;
+        font-weight: var(--font-weight-bold);
         margin-top: 0.1rem;
-        margin-bottom: 0.05rem;
+        margin-bottom: 0.25rem;
         text-align: center;
         color: var(--timeline-period-color);
       }
 
       #timeline-value-display {
-        font-weight: normal;
-        font-size: 0.7rem;
+        font-weight: var(--font-weight-regular);
+        font-size: 0.8rem;
         color: var(--text-muted-color);
         display: block;
         text-align: center;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
       }
 
       #timeline-scrubber {
         -webkit-appearance: none;
         appearance: none;
         width: 100%;
-        height: 6px;
-        border-radius: 3px;
-        background: #505050;
+        height: 8px;
+        border-radius: 4px;
+        background: var(--light-bg);
         outline: none;
-        margin: 0.5rem 0;
+        margin: 0.75rem 0;
+        transition: background-color var(--transition-speed) var(--transition-timing);
       }
-
       #timeline-scrubber::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
-        background: var(--primary-accent);
+        background: var(--primary-accent-static);
+        border: 2px solid var(--dark-bg);
         cursor: pointer;
-        box-shadow: 0 0 4px rgba(var(--primary-accent), 0.6);
+        box-shadow: 0 0 8px var(--focus-ring-color);
+        transition: transform 0.1s ease-out, background-color var(--transition-speed) var(--transition-timing);
       }
-
+      #timeline-scrubber::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+      }
       #timeline-scrubber::-moz-range-thumb {
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
-        background: var(--primary-accent);
+        background: var(--primary-accent-static);
         cursor: pointer;
-        border: none;
-        box-shadow: 0 0 4px rgba(var(--primary-accent), 0.6);
+        border: 2px solid var(--dark-bg);
+        box-shadow: 0 0 8px var(--focus-ring-color);
+        transition: transform 0.1s ease-out, background-color var(--transition-speed) var(--transition-timing);
+      }
+      #timeline-scrubber::-moz-range-thumb:hover {
+        transform: scale(1.15);
       }
 
       .timeline-buttons .btn,
-      .timeline-buttons .btn-group {
-        margin-top: 0.25rem;
-      }
-
-      .timeline-buttons .btn {
-        padding: 0.25rem 0.6rem;
+      .quick-filter-buttons .btn {
+        border-radius: var(--border-radius-pill);
+        padding: 0.35rem 0.85rem;
         font-size: 0.8rem;
+        font-weight: var(--font-weight-medium);
+        transition: background var(--transition-speed) var(--transition-timing),
+                    color var(--transition-speed) var(--transition-timing),
+                    border-color var(--transition-speed) var(--transition-timing),
+                    filter var(--transition-speed) var(--transition-timing),
+                    box-shadow var(--transition-speed) var(--transition-timing);
+        border: 1px solid var(--light-bg);
+        margin-top: 0.25rem; /* Retain original */
+      }
+      .timeline-buttons .btn i,
+      #reset-button i {
+        margin-right: 0.35rem;
+        transition: transform var(--transition-speed) var(--transition-timing);
+        vertical-align: middle;
+      }
+      .timeline-buttons .btn:hover i, /* Only scale icon if button itself is hovered */
+      #reset-button:hover i {
+          transform: scale(1.1);
+      }
+      .timeline-buttons .btn-group { margin-top: 0.25rem; } /* Retain original */
+
+
+      /* Primary styled buttons (Play, active speed, active quick filters) */
+      #play-pause-button,
+      .timeline-buttons .speed-btn.active,
+      .quick-filter-buttons .btn.active {
+          background: var(--primary-accent-gradient);
+          border-color: transparent;
+          color: var(--text-heading-color);
+          box-shadow: var(--card-element-shadow);
+      }
+      #play-pause-button:hover,
+      .timeline-buttons .speed-btn.active:hover,
+      .quick-filter-buttons .btn.active:hover {
+          filter: brightness(110%);
+          box-shadow: 0 4px 12px var(--focus-ring-color);
       }
 
-      .timeline-buttons .btn i {
-        margin-right: 0.25rem;
+      /* Outline styled buttons (inactive speed, inactive quick filters) */
+      .btn-outline-light {
+          color: var(--text-muted-color);
+          border-color: var(--light-bg);
+          background-color: transparent;
       }
+      .btn-outline-light:hover,
+      .btn-outline-light.active { /* .active might be added by bootstrap too */
+          color: var(--text-heading-color); /* Text color for active/hover state */
+          background-color: var(--primary-accent-static); /* Use static accent for hover of outline */
+          border-color: var(--primary-accent-static);
+      }
+       /* Ensure active quick filter buttons specifically use the gradient */
+      .quick-filter-buttons .btn.active,
+      .timeline-buttons .speed-btn.active {
+          background: var(--primary-accent-gradient); /* Override general .active if needed */
+          border-color: transparent;
+          color: var(--text-heading-color);
+      }
+      .quick-filter-buttons .btn.active:hover,
+      .timeline-buttons .speed-btn.active:hover {
+        filter: brightness(110%);
+        box-shadow: 0 4px 12px var(--focus-ring-color);
+      }
+
 
       #reset-button {
-        background-color: var(--danger-accent);
-        border-color: var(--danger-accent);
-        color: white;
+          background-color: var(--danger-accent);
+          border-color: var(--danger-accent);
+          color: white;
+          box-shadow: var(--card-element-shadow);
       }
-
       #reset-button:hover {
-        filter: brightness(90%);
-      }
-
-      .quick-filter-buttons .btn {
-        margin-right: 0.25rem;
-        font-size: 0.75rem;
-        padding: 0.2rem 0.45rem;
-      }
-
-      .btn-outline-light {
-        color: var(--text-muted-color);
-        border-color: var(--light-bg);
-      }
-
-      .btn-outline-light:hover,
-      .btn-outline-light.active {
-        color: var(--dark-bg);
-        background-color: var(--primary-accent);
-        border-color: var(--primary-accent);
-        font-weight: 500;
+          filter: brightness(110%);
+          box-shadow: 0 4px 12px rgba(var(--danger-accent-rgb), 0.5);
       }
 
       #species-filter-list {
         max-height: 180px;
         overflow-y: auto;
         border: 1px solid var(--light-bg);
-        border-radius: 4px;
-        padding: 0.25rem;
+        border-radius: var(--border-radius-standard);
+        padding: 0.5rem;
         margin-top: 0.5rem;
+        background-color: var(--dark-bg);
       }
-
       #species-filter-list .form-check {
-        padding: 0.2rem 0.4rem;
+        padding: 0.4rem 0.6rem;
         border-bottom: 1px solid var(--light-bg);
         display: flex;
         align-items: center;
+        transition: background-color var(--transition-speed) var(--transition-timing);
+        border-radius: 4px;
       }
-
+      #species-filter-list .form-check:hover {
+        background-color: var(--lighter-bg);
+      }
       #species-filter-list .form-check:last-child {
         border-bottom: none;
       }
-
       #species-filter-list .form-check-label {
-        font-size: 0.8rem;
+        font-size: 0.8rem; /* Overridden by general p styling, but kept for specificity if needed */
         cursor: pointer;
-        margin-left: 0.4rem;
+        margin-left: 0.5rem;
         color: var(--text-color);
       }
 
       #species-filter-list .form-check-input {
-        cursor: pointer;
-        margin-top: 0;
-        width: 0.9em;
-        height: 0.9em;
+        appearance: none;
+        -webkit-appearance: none;
         background-color: var(--medium-bg);
         border: 1px solid var(--light-bg);
+        border-radius: 4px;
+        width: 1.1em;
+        height: 1.1em;
+        position: relative;
+        cursor: pointer;
+        transition: background var(--transition-speed) var(--transition-timing), border-color var(--transition-speed) var(--transition-timing);
+        margin-top: 0.15em;
+        flex-shrink: 0;
       }
-
       #species-filter-list .form-check-input:checked {
-        background-color: var(--primary-accent);
-        border-color: var(--primary-accent);
+        background: var(--primary-accent-gradient);
+        border-color: transparent;
+      }
+      #species-filter-list .form-check-input:checked::before {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.8em;
+        color: white;
+        font-weight: bold;
       }
 
       .species-color-indicator {
-        width: 10px;
-        height: 10px;
+        width: 12px;
+        height: 12px;
         display: inline-block;
-        margin-left: 0.3rem;
-        border-radius: 2px;
+        margin-left: 0.5rem;
+        border-radius: 3px;
         border: 1px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
       }
 
       #narrative-panel .card-body {
-        font-size: 0.8rem;
-        line-height: 1.5;
-        color: var(--text-color); /* This will be inherited by default */
+        /* font-size: 0.8rem; Original, now handled by p#narrative-text-element */
+        /* line-height: 1.5; Original */
+        color: var(--text-color);
         overflow-y: auto;
       }
-
-      #narrative-panel .card-body strong { /* Style for <strong> tags if used in narrative */
+      #narrative-panel .card-body strong {
         color: var(--timeline-period-color);
+        font-weight: var(--font-weight-medium);
       }
-
-       /* Ensure p#narrative-text-element specifically uses the desired color */
-      #narrative-text-element {
-        color: var(--text-color) !important; /* Override other specificities if needed */
+       #narrative-text-element { /* Ensured by specific p rule above */
+        color: var(--text-color) !important;
       }
-
 
       .data-limitation-note {
-        color: #ffc107;
-        font-size: 0.75rem;
-        margin-top: 0.5rem;
-        border-top: 1px dashed var(--light-bg);
-        padding-top: 0.5rem;
+        color: var(--warning-accent);
+        font-size: 0.78rem;
+        border-top: 1px dashed var(--light-bg); /* Original had this, now it's a bg box */
+        padding-top: 0.6rem;
+        margin-top: 0.75rem;
+        background-color: rgba(var(--warning-accent-rgb), 0.05);
+        padding: 0.5rem;
+        border-radius: 4px;
       }
-
       .data-limitation-note i {
-        margin-right: 0.25rem;
+        margin-right: 0.35rem;
+        color: var(--warning-accent);
+        transition: transform var(--transition-speed) var(--transition-timing);
+        vertical-align: middle;
       }
 
       .legend {
         position: absolute;
         bottom: 10px;
         right: 10px;
-        padding: 0.5rem 0.75rem;
-        background: rgba(30, 30, 32, 0.92);
-        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
-        border-radius: 4px;
+        padding: 0.75rem 1rem;
+        background: rgba(var(--medium-bg-rgb), 0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: var(--modern-shadow);
+        border-radius: var(--border-radius-standard);
         z-index: 1000;
-        max-height: 180px;
+        max-height: 200px;
         overflow-y: auto;
         border: 1px solid var(--light-bg);
         color: var(--text-color);
       }
-
       .legend h5 {
         margin-top: 0;
-        margin-bottom: 5px;
-        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: var(--font-weight-medium);
+        color: var(--text-heading-color);
         border-bottom: 1px solid var(--light-bg);
-        padding-bottom: 3px;
+        padding-bottom: 0.4rem;
       }
-
       .legend h5 i {
         font-size: 0.85em;
         margin-right: 0.25rem;
+        transition: transform var(--transition-speed) var(--transition-timing);
+        vertical-align: middle;
       }
-
       .legend-item {
         display: flex;
         align-items: center;
-        margin-bottom: 2px;
-        font-size: 0.7rem;
+        margin-bottom: 0.3rem;
+        /* font-size: 0.78rem; Handled by general p/span rule */
+        padding: 0.1rem 0;
       }
-
       .legend-color-box {
-        width: 10px;
-        height: 10px;
+        width: 12px;
+        height: 12px;
         margin-right: 5px;
-        border: 1px solid #777;
-        opacity: 0.8;
+        border: none;
+        opacity: 1;
         flex-shrink: 0;
-        border-radius: 2px;
+        border-radius: 3px;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
       }
 
       .loading-overlay {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.9);
-        display: flex; /* Keep flex for centering spinner */
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(var(--dark-bg-rgb), 0.95);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-size: 1.2rem;
+        /* color: white; Handled by p */
+        /* font-size: 1.2rem; Handled by p */
         z-index: 9999;
         flex-direction: column;
       }
-
       .loading-overlay .spinner-border {
-        width: 2.5rem;
-        height: 2.5rem;
-        margin-bottom: 0.75rem;
+        display: none;
+      }
+      .loading-overlay::before {
+        content: "";
+        display: block;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 4px solid var(--light-bg);
+        border-top-color: var(--primary-accent-static);
+        animation: customSpinner 0.8s linear infinite;
+        margin-bottom: 1.5rem;
+      }
+      @keyframes customSpinner { to { transform: rotate(360deg); } }
+      .loading-overlay p {
+        margin-top: 0;
+        margin-bottom: 0;
+        font-size: 1.1rem;
+        font-weight: var(--font-weight-light);
+        letter-spacing: 0.05em;
+        color: var(--text-color);
       }
 
       .climate-toggle-container {
@@ -372,34 +525,34 @@
         right: 10px;
         background: var(--medium-bg);
         padding: 0.4rem 0.6rem;
-        border-radius: 5px;
+        border-radius: var(--border-radius-standard); /* Updated radius */
         z-index: 1000;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        box-shadow: var(--modern-shadow); /* Updated shadow */
         border: 1px solid var(--light-bg);
       }
-
       .climate-toggle-container .form-check-label {
-        font-size: 0.75rem;
+        font-size: 0.75rem; /* Original */
         color: var(--text-muted-color);
       }
-
       .climate-toggle-container .form-check-input {
-        border-color: var(--primary-accent);
+        border-color: var(--primary-accent-static); /* Use static for consistency */
+        background-color: var(--medium-bg); /* Ensure it's not transparent */
+      }
+      .climate-toggle-container .form-check-input:checked {
+        background-color: var(--primary-accent-static);
+        border-color: var(--primary-accent-static);
       }
 
-      .climate-toggle-container .form-check-input:checked {
-        background-color: var(--primary-accent);
-        border-color: var(--primary-accent);
-      }
 
       .leaflet-control-zoom-in,
       .leaflet-control-zoom-out {
         background-color: var(--medium-bg) !important;
         color: var(--text-color) !important;
         border: 1px solid var(--light-bg) !important;
-        border-radius: 4px !important;
+        border-radius: var(--border-radius-standard) !important; /* Softer radius */
+        box-shadow: var(--card-element-shadow) !important; /* Subtle shadow */
+        transition: background-color var(--transition-speed) var(--transition-timing) !important;
       }
-
       .leaflet-control-zoom-in:hover,
       .leaflet-control-zoom-out:hover {
         background-color: var(--light-bg) !important;
@@ -409,31 +562,69 @@
       .leaflet-popup-tip {
         background: var(--medium-bg);
         color: var(--text-color);
-        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.4);
+        box-shadow: var(--modern-shadow);
         border: 1px solid var(--light-bg);
+        border-radius: var(--border-radius-standard);
       }
-
+      .leaflet-popup-content-wrapper { padding: 1px; } /* Leaflet default behavior */
+      .leaflet-popup-content { /* Inner content area */
+        padding: 0.8rem 1rem;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        margin: 0 !important; /* Override Leaflet's p margin */
+      }
       .leaflet-popup-content h5 {
         margin-top: 0;
-        margin-bottom: 8px;
-        font-size: 1.05em;
+        margin-bottom: 0.6rem;
+        font-size: 1.1em;
+        font-weight: var(--font-weight-medium);
+        color: var(--primary-accent-static);
         border-bottom: 1px solid var(--light-bg);
-        padding-bottom: 5px;
+        padding-bottom: 0.4rem;
       }
-
       .leaflet-container a.leaflet-popup-close-button {
         color: var(--text-muted-color);
+        padding: 8px 8px 0 0;
+        transition: color var(--transition-speed) var(--transition-timing);
       }
+      .leaflet-container a.leaflet-popup-close-button:hover {
+        color: var(--danger-accent);
+      }
+
+      /* Focus States */
+      *:focus-visible {
+        outline: 2px solid var(--focus-ring-color);
+        outline-offset: 2px;
+        /* box-shadow: 0 0 0 3px rgba(var(--focus-ring-color-rgb), 0.5); Requires focus-ring-color-rgb */
+      }
+      #species-filter-list .form-check-input:focus-visible {
+        box-shadow: 0 0 0 2px var(--dark-bg), 0 0 0 4px var(--focus-ring-color);
+      }
+       /* Ensure tooltips are styled for the new theme if they appear */
+      .tooltip-inner {
+        background-color: var(--primary-accent-static);
+        color: var(--text-heading-color);
+        border-radius: 4px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+      }
+      .tooltip .tooltip-arrow::before {
+        border-top-color: var(--primary-accent-static) !important; /* Example for top tooltip */
+        border-bottom-color: var(--primary-accent-static) !important; /* Example for bottom tooltip */
+        border-left-color: var(--primary-accent-static) !important;
+        border-right-color: var(--primary-accent-static) !important;
+      }
+
     </style>
   </head>
 
   <body>
     <div id="loading-screen" class="loading-overlay">
-      <div class="spinner-border text-light" role="status"></div>
+      <!-- Spinner is now CSS-only via ::before on loading-overlay -->
       <p class="mt-2 mb-0">Loading Evolution Data...</p>
     </div>
     <header class="app-header">
-      <h1><i class="bi bi-globe-americas"></i> Human Evolution: A Journey Through Time</h1>
+      <h1><i class="bi bi-globe-americas"></i> Human Evolution: Journey Through Time</h1>
     </header>
     <div id="main-content">
       <aside id="controls-sidebar">
@@ -445,7 +636,7 @@
               <span id="timeline-value-display"></span>
               <input
                 type="range"
-                class="form-range"
+                class="form-range" /* Bootstrap class, custom styles will override */
                 id="timeline-scrubber"
                 min="0"
                 value="0"
@@ -456,7 +647,7 @@
               <div class="d-flex justify-content-between align-items-center mt-2 timeline-buttons">
                 <button
                   id="play-pause-button"
-                  class="btn btn-primary btn-sm"
+                  class="btn btn-sm" /* Removed btn-primary, style handled by ID */
                   disabled
                   data-bs-toggle="tooltip"
                   title="Play or Pause animation"
@@ -475,7 +666,7 @@
                 </div>
                 <button
                   id="reset-button"
-                  class="btn btn-danger btn-sm"
+                  class="btn btn-sm" /* Removed btn-danger, style handled by ID */
                   disabled
                   data-bs-toggle="tooltip"
                   title="Reset timeline to start"
@@ -517,7 +708,6 @@
           <div id="narrative-panel" class="control-card card flex-grow-1 mb-0">
             <div class="card-header"><i class="bi bi-book-half"></i> Period Overview</div>
             <div class="card-body">
-              <!-- MODIFICATION: Removed class="text-muted" -->
               <p id="narrative-text-element">Select a time period to see an overview.</p>
               <p class="data-limitation-note">
                 <i class="bi bi-exclamation-triangle-fill"></i> Note: Geographic map display depends on data in the
@@ -554,7 +744,7 @@
     <script>
         // --- State & Config ---
         let timePeriodsData = [];
-        let fetchedIceSheetGeoJson = null; // MODIFICATION: For fetched ice sheet data
+        let fetchedIceSheetGeoJson = null;
         const map = L.map('map', { worldCopyJump: true, zoomControl: false }).setView([20, 40], 2);
         L.control.zoom({ position: 'topleft' }).addTo(map);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -613,16 +803,11 @@
             }
         }
     
-        // MODIFICATION: Removed large hardcoded iceSheetGeoJson object
-    
-        // --- Core Functions ---
-        // MODIFICATION: Renamed and updated to fetch both JSON files
         async function fetchAllRequiredData() {
             try {
-                // Ensure loading screen is visible if it wasn't already (e.g. if it was hidden by an error previously)
                 if (domElements.loadingScreen) {
-                     domElements.loadingScreen.style.display = 'flex'; // Ensure it's 'flex' as per CSS
-                     domElements.loadingScreen.innerHTML = `<div class="spinner-border text-light" role="status"></div><p class="mt-2 mb-0">Loading Evolution Data...</p>`; // Reset content
+                     domElements.loadingScreen.style.display = 'flex'; 
+                     domElements.loadingScreen.querySelector('p').textContent = 'Loading Evolution Data...';
                 }
 
                 const [evolutionResponse, iceSheetResponse] = await Promise.all([
@@ -638,12 +823,12 @@
                 }
 
                 timePeriodsData = await evolutionResponse.json();
-                fetchedIceSheetGeoJson = await iceSheetResponse.json(); // Assign to the new global variable
+                fetchedIceSheetGeoJson = await iceSheetResponse.json(); 
 
                 if (!Array.isArray(timePeriodsData) || timePeriodsData.length === 0) {
                     throw new Error("Fetched evolution data is not a valid array or is empty.");
                 }
-                if (typeof fetchedIceSheetGeoJson !== 'object' || fetchedIceSheetGeoJson === null) { // Basic check for object
+                if (typeof fetchedIceSheetGeoJson !== 'object' || fetchedIceSheetGeoJson === null) {
                     throw new Error("Fetched ice sheet data is not a valid object.");
                 }
 
@@ -652,16 +837,8 @@
                 console.error("Could not fetch initial data:", error);
                 if (domElements.currentPeriodDisplay) domElements.currentPeriodDisplay.innerHTML = "<strong class='text-danger'>Error loading data.</strong>";
                 if (domElements.loadingScreen) {
-                     domElements.loadingScreen.style.display = 'flex'; // Keep it visible for the error
-                     domElements.loadingScreen.innerHTML = `<div class='p-3 text-center'><i class='bi bi-exclamation-triangle-fill text-danger h1'></i><p>Failed to load required data.<br><small>${error.message}</small></p></div>`;
-                }
-                 // Optionally, try to show controls sidebar even if data load fails, so user isn't stuck on loading screen
-                if (domElements.controlsContentDiv && domElements.loadingScreen && domElements.loadingScreen.style.display === 'none') {
-                    // If loading screen was already hidden by initializeApplication attempt that failed later.
-                } else if (domElements.controlsContentDiv) {
-                    // If loading screen is still up, hide it to show the error on a partially loaded page
-                    // This might be tricky if initializeApplication depends heavily on the data.
-                    // For now, the error is shown IN the loading screen.
+                     domElements.loadingScreen.style.display = 'flex'; 
+                     domElements.loadingScreen.innerHTML = `<div class='p-3 text-center'><i class='bi bi-exclamation-triangle-fill text-danger h1'></i><p class="text-light">Failed to load required data.<br><small>${error.message}</small></p></div>`;
                 }
             }
         }
@@ -689,8 +866,10 @@
             populateAllSpeciesList();
             populateSpeciesFilter();
             currentPeriodIndex = 0;
+            updateSpeedButtonsActiveState(); // Includes ensuring 1x is active
+            updateQuickFilterActiveState('filter-all'); // Set 'All' as active by default
             updateUIForCurrentPeriod();
-            updateSpeedButtonsActiveState();
+
 
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -728,6 +907,7 @@
                 input.addEventListener('change', (event) => {
                     selectedSpecies[event.target.value] = event.target.checked;
                     updateUIForCurrentPeriod(); 
+                    updateQuickFilterActiveState(null); // Clear All/None/Homo if individual changes
                 });
                 const colorIndicator = document.createElement('span');
                 colorIndicator.className = 'species-color-indicator';
@@ -735,11 +915,11 @@
     
                 const label = document.createElement('label');
                 label.className = 'form-check-label'; label.htmlFor = input.id;
-                label.style.color = 'var(--text-color)'; 
+                // label.style.color = 'var(--text-color)'; // Set by global CSS
                 label.textContent = s.name;
     
                 itemDiv.appendChild(input);
-                itemDiv.appendChild(colorIndicator);
+                itemDiv.appendChild(colorIndicator); // Swapped order with label for better alignment with custom checkbox
                 itemDiv.appendChild(label);
                 domElements.speciesFilterList.appendChild(itemDiv);
             });
@@ -752,7 +932,7 @@
                 if(domElements.currentPeriodDisplay) domElements.currentPeriodDisplay.textContent = `Timeline End`;
                 if(domElements.timelineValueDisplay) domElements.timelineValueDisplay.textContent = "(Drag scrubber or Reset)";
                 if(domElements.narrativeTextElement) {
-                    domElements.narrativeTextElement.style.color = 'var(--text-color)'; // Ensure color
+                    domElements.narrativeTextElement.style.color = 'var(--text-color)';
                     domElements.narrativeTextElement.textContent = "End of timeline data.";
                 }
                 if(domElements.legendItemsContainer) domElements.legendItemsContainer.innerHTML = '<small class="text-muted">No active period.</small>';
@@ -765,7 +945,7 @@
             if (domElements.timelineScrubber) domElements.timelineScrubber.value = currentPeriodIndex;
             
             if(domElements.narrativeTextElement) {
-                domElements.narrativeTextElement.style.color = 'var(--text-color)'; // Ensure color
+                domElements.narrativeTextElement.style.color = 'var(--text-color)';
                 domElements.narrativeTextElement.innerHTML = period.narrative || "No narrative available for this period.";
             }
     
@@ -783,7 +963,13 @@
                     if (s.estimatedRangeGeoJson && Object.keys(s.estimatedRangeGeoJson).length > 0) {
                         try {
                             L.geoJSON(s.estimatedRangeGeoJson, {
-                                style: { fillColor: s.color || '#888888', weight: 1, opacity: 1, color: '#ccc', fillOpacity: 0.4 }
+                                style: { // AWESOME EDITION STYLE
+                                    fillColor: s.color || '#888888',
+                                    weight: 1.5, 
+                                    opacity: 1,
+                                    color: 'rgba(255,255,255,0.3)', 
+                                    fillOpacity: 0.55,
+                                }
                             }).bindPopup(popupContent).addTo(speciesGeoJsonLayerGroup);
                         } catch (e) { console.warn("Error drawing range for", s.name, e); }
                     }
@@ -793,7 +979,13 @@
                             if (path && Object.keys(path).length > 0) {
                                try {
                                     L.geoJSON(path, {
-                                        style: { color: s.migrationColor || s.color || '#888888', weight: 2.5, opacity: 0.65, dashArray: '5, 5' }
+                                        style: { // AWESOME EDITION STYLE
+                                            color: s.migrationColor || s.color || '#888888',
+                                            weight: 3, 
+                                            opacity: 0.75,
+                                            dashArray: '8, 6', 
+                                            lineCap: 'round' 
+                                        }
                                     }).bindPopup(popupContent).addTo(speciesGeoJsonLayerGroup);
                                 } catch (e) { console.warn("Error drawing migration for", s.name, e); }
                             }
@@ -817,7 +1009,7 @@
                 const colorBox = document.createElement('span');
                 colorBox.className = 'legend-color-box'; colorBox.style.backgroundColor = s.color || '#cccccc';
                 const nameSpan = document.createElement('span'); nameSpan.textContent = s.name;
-                nameSpan.style.color = 'var(--text-color)';
+                // nameSpan.style.color = 'var(--text-color)'; // Set by global CSS
                 itemDiv.appendChild(colorBox); itemDiv.appendChild(nameSpan);
                 domElements.legendItemsContainer.appendChild(itemDiv);
             });
@@ -853,19 +1045,22 @@
     
         function updateClimateOverlay(periodTimeRange) {
             iceSheetLayerGroup.clearLayers();
-            // MODIFICATION: Check if fetchedIceSheetGeoJson is loaded
             if (domElements.climateToggle && domElements.climateToggle.checked && periodTimeRange && fetchedIceSheetGeoJson) {
                 const { start, end } = parseYearFromRange(periodTimeRange);
                 const lgmStart = -26500; 
                 const lgmEnd = -19000;  
     
                 if (start && end && Math.max(start, lgmStart) <= Math.min(end, lgmEnd)) {
-                    // MODIFICATION: Use fetchedIceSheetGeoJson
                     Object.values(fetchedIceSheetGeoJson).forEach(sheet => {
-                        if (sheet && sheet.type && sheet.coordinates) { // Basic GeoJSON structure check
+                        if (sheet && sheet.type && sheet.coordinates) { 
                            try {
                                 L.geoJSON(sheet, {
-                                    style: { color: '#ADC8E6', fillColor: '#ADD8E6', fillOpacity: 0.3, weight: 1 }
+                                    style: { // AWESOME EDITION STYLE
+                                        color: 'rgba(173, 216, 230, 0.5)', 
+                                        fillColor: '#A2D1E6', 
+                                        fillOpacity: 0.35,
+                                        weight: 1
+                                    }
                                 }).addTo(iceSheetLayerGroup);
                             } catch (e) {
                                 console.warn("Error drawing ice sheet GeoJSON feature:", e, sheet);
@@ -876,7 +1071,7 @@
                     });
                 }
             }
-            if (domElements.climateToggle) { // Ensure domElements.climateToggle is not null
+            if (domElements.climateToggle) { 
                 if (!map.hasLayer(iceSheetLayerGroup) && domElements.climateToggle.checked && iceSheetLayerGroup.getLayers().length > 0) {
                     map.addLayer(iceSheetLayerGroup);
                 } else if (map.hasLayer(iceSheetLayerGroup) && (!domElements.climateToggle.checked || iceSheetLayerGroup.getLayers().length === 0)) {
@@ -945,18 +1140,34 @@
                     cb.checked = true;
                 });
             }
+            updateQuickFilterActiveState('filter-all'); // Reset to 'All'
             updateUIForCurrentPeriod();
         }
     
         function updateSpeedButtonsActiveState() {
             document.querySelectorAll('.speed-btn').forEach(btn => {
-                btn.classList.remove('active', 'btn-primary');
-                btn.classList.add('btn-outline-light');
+                btn.classList.remove('active');
+                btn.classList.add('btn-outline-light'); // Ensure outline is re-applied
                 if (parseInt(btn.dataset.speed) === playbackSpeed) {
-                    btn.classList.add('active', 'btn-primary');
-                    btn.classList.remove('btn-outline-light');
+                    btn.classList.add('active');
+                    btn.classList.remove('btn-outline-light'); // Remove outline for active state
                 }
             });
+        }
+
+        // Function to update active state for quick filter buttons
+        function updateQuickFilterActiveState(activeButtonId) {
+            document.querySelectorAll('.quick-filter-buttons .btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('btn-outline-light'); // Ensure outline is re-applied
+            });
+            if (activeButtonId) {
+                const activeButton = document.getElementById(activeButtonId);
+                if (activeButton) {
+                    activeButton.classList.add('active');
+                    activeButton.classList.remove('btn-outline-light'); // Remove outline for active state
+                }
+            }
         }
     
         // --- Event Listeners ---
@@ -984,12 +1195,14 @@
                 allSpeciesList.forEach(s => selectedSpecies[s.name] = true);
                 document.querySelectorAll('#species-filter-list input[type="checkbox"]').forEach(cb => cb.checked = true);
                 updateUIForCurrentPeriod();
+                updateQuickFilterActiveState('filter-all');
             });
             const filterNoneBtn = document.getElementById('filter-none');
             if(filterNoneBtn) filterNoneBtn.addEventListener('click', () => {
                 allSpeciesList.forEach(s => selectedSpecies[s.name] = false);
                 document.querySelectorAll('#species-filter-list input[type="checkbox"]').forEach(cb => cb.checked = false);
                 updateUIForCurrentPeriod();
+                updateQuickFilterActiveState('filter-none');
             });
             const filterHomoBtn = document.getElementById('filter-homo');
             if(filterHomoBtn) filterHomoBtn.addEventListener('click', () => {
@@ -1000,11 +1213,12 @@
                     if(cb) cb.checked = isHomo;
                 });
                 updateUIForCurrentPeriod();
+                updateQuickFilterActiveState('filter-homo');
             });
 
             if(domElements.climateToggle) { 
                 domElements.climateToggle.addEventListener('change', () => {
-                    if (timePeriodsData.length > 0 && fetchedIceSheetGeoJson) { // Ensure data is loaded
+                    if (timePeriodsData.length > 0 && fetchedIceSheetGeoJson) { 
                          updateUIForCurrentPeriod(); 
                     }
                 });
@@ -1015,9 +1229,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             populateDomElements(); 
             addEventListeners();   
-            fetchAllRequiredData(); // MODIFICATION: Call new fetch function
+            fetchAllRequiredData();
         });
         </script>
-
   </body>
 </html>
