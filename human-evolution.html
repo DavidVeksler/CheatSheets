@@ -136,7 +136,7 @@
         color: var(--timeline-period-color);
       }
 
-      #timeline-value-display { /* MODIFIED ID HERE */
+      #timeline-value-display {
         font-weight: normal;
         font-size: 0.7rem;
         color: var(--text-muted-color);
@@ -273,13 +273,19 @@
       #narrative-panel .card-body {
         font-size: 0.8rem;
         line-height: 1.5;
-        color: var(--text-color);
+        color: var(--text-color); /* This will be inherited by default */
         overflow-y: auto;
       }
 
-      #narrative-panel .card-body strong {
+      #narrative-panel .card-body strong { /* Style for <strong> tags if used in narrative */
         color: var(--timeline-period-color);
       }
+
+       /* Ensure p#narrative-text-element specifically uses the desired color */
+      #narrative-text-element {
+        color: var(--text-color) !important; /* Override other specificities if needed */
+      }
+
 
       .data-limitation-note {
         color: #ffc107;
@@ -345,7 +351,7 @@
         right: 0;
         bottom: 0;
         background: rgba(0, 0, 0, 0.9);
-        display: flex;
+        display: flex; /* Keep flex for centering spinner */
         align-items: center;
         justify-content: center;
         color: white;
@@ -436,7 +442,7 @@
             <div class="card-header"><i class="bi bi-clock-history"></i> Timeline Control</div>
             <div class="card-body">
               <div id="current-period-display">Data not loaded.</div>
-              <span id="timeline-value-display"></span> <!-- MODIFIED ID HERE -->
+              <span id="timeline-value-display"></span>
               <input
                 type="range"
                 class="form-range"
@@ -511,7 +517,8 @@
           <div id="narrative-panel" class="control-card card flex-grow-1 mb-0">
             <div class="card-header"><i class="bi bi-book-half"></i> Period Overview</div>
             <div class="card-body">
-              <p id="narrative-text-element" class="text-muted">Select a time period to see an overview.</p> <!-- MODIFIED ID HERE -->
+              <!-- MODIFICATION: Removed class="text-muted" -->
+              <p id="narrative-text-element">Select a time period to see an overview.</p>
               <p class="data-limitation-note">
                 <i class="bi bi-exclamation-triangle-fill"></i> Note: Geographic map display depends on data in the
                 fetched dataset. Active species are listed in the legend.
@@ -547,15 +554,16 @@
     <script>
         // --- State & Config ---
         let timePeriodsData = [];
+        let fetchedIceSheetGeoJson = null; // MODIFICATION: For fetched ice sheet data
         const map = L.map('map', { worldCopyJump: true, zoomControl: false }).setView([20, 40], 2);
-        L.control.zoom({ position: 'topleft' }).addTo(map); // Added zoom control to topleft
+        L.control.zoom({ position: 'topleft' }).addTo(map);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd', maxZoom: 19
         }).addTo(map);
     
         let iceSheetLayerGroup = L.layerGroup();
-        let speciesGeoJsonLayerGroup = L.layerGroup().addTo(map); // Layer for species ranges/migrations
+        let speciesGeoJsonLayerGroup = L.layerGroup().addTo(map);
     
         let currentPeriodIndex = 0;
         let selectedSpecies = {};
@@ -563,10 +571,9 @@
         let isPlaying = false;
         let animationFrameId;
         let lastFrameTime = 0;
-        let playbackSpeed = 1; // 1x, 2x, 5x
-        const baseAnimationInterval = 3500; // Milliseconds for 1x speed to change period
+        let playbackSpeed = 1; 
+        const baseAnimationInterval = 3500; 
     
-        // --- DOM Elements Cache ---
         const domElements = {
             timelineScrubber: null,
             currentPeriodDisplay: null,
@@ -574,8 +581,8 @@
             speciesFilterList: null,
             legendItemsContainer: null,
             playPauseButton: null,
-            playPauseIcon: null, // Will be derived from playPauseButton
-            playPauseText: null, // Will be derived from playPauseButton
+            playPauseIcon: null, 
+            playPauseText: null, 
             resetButton: null,
             narrativeTextElement: null,
             loadingScreen: null,
@@ -584,187 +591,120 @@
         };
     
         function populateDomElements() {
-        // Map JS keys to actual HTML IDs if they differ significantly from kebab-case conversion
-        const idMap = {
-            controlsContentDiv: 'controls-content', // Explicit mapping
-            climateToggle: 'climate-toggle-switch' // Explicit mapping for the switch input
-            // Add other explicit mappings here if needed
-        };
-
-        for (const key in domElements) {
-            if (key === 'playPauseIcon' || key === 'playPauseText') continue;
-
-            // Use mapped ID if available, otherwise convert camelCase to kebab-case
-            const elementId = idMap[key] || key.replace(/([A-Z])/g, '-$1').toLowerCase();
-            domElements[key] = document.getElementById(elementId);
-
-            if (!domElements[key]) {
-                console.warn(`DOM element with ID '${elementId}' (for key '${key}') not found.`);
+            const idMap = {
+                controlsContentDiv: 'controls-content',
+                climateToggle: 'climate-toggle-switch'
+            };
+            for (const key in domElements) {
+                if (key === 'playPauseIcon' || key === 'playPauseText') continue;
+                const elementId = idMap[key] || key.replace(/([A-Z])/g, '-$1').toLowerCase();
+                domElements[key] = document.getElementById(elementId);
+                if (!domElements[key]) {
+                    console.warn(`DOM element with ID '${elementId}' (for key '${key}') not found.`);
+                }
+            }
+            if (domElements.playPauseButton) {
+                domElements.playPauseIcon = domElements.playPauseButton.querySelector('i');
+                domElements.playPauseText = domElements.playPauseButton.querySelector('span');
+                if (!domElements.playPauseIcon) console.warn("Play/Pause button icon (<i>) not found.");
+                if (!domElements.playPauseText) console.warn("Play/Pause button text (<span>) not found.");
+            } else {
+                console.error("playPauseButton element not found, cannot derive icon and text elements.");
             }
         }
-
-        if (domElements.playPauseButton) {
-            domElements.playPauseIcon = domElements.playPauseButton.querySelector('i');
-            domElements.playPauseText = domElements.playPauseButton.querySelector('span');
-            if (!domElements.playPauseIcon) console.warn("Play/Pause button icon (<i>) not found.");
-            if (!domElements.playPauseText) console.warn("Play/Pause button text (<span>) not found.");
-        } else {
-            console.error("playPauseButton element not found, cannot derive icon and text elements.");
-        }
-    }
-
     
-    
-        const iceSheetGeoJson = {
-    lgm_laurentide: {
-        "type": "Polygon",
-        "coordinates": [[
-            [-125, 48], [-120, 45], [-115, 42], [-110, 40], [-100, 38], [-95, 37.5], [-90, 38], [-85, 39], [-80, 40], [-75, 40.5], [-70, 41], [-65, 42], [-60, 43], // Southern Edge (West to East)
-            [-55, 48], [-50, 55], [-50, 60], [-55, 65], [-60, 70], [-70, 75], [-80, 78], [-90, 80], [-100, 80], [-110, 78], [-120, 75], [-130, 70], [-135, 65], [-130, 60], [-125, 55], // Northern/Western Edge
-            [-125, 48]
-        ]]
-    },
-    lgm_cordilleran: {
-        "type": "Polygon",
-        "coordinates": [[
-            [-140, 62], [-135, 58], [-130, 55], [-125, 50], [-120, 47], // Eastern Edge (South to North, approximate)
-            [-122, 45], [-125, 46], [-130, 48], [-135, 52], [-140, 55], [-145, 58], [-142, 60], // Western Edge (South to North, approximate Pacific coast)
-            [-140, 62]
-        ]]
-    },
-    lgm_fennoscandian: {
-        "type": "Polygon",
-        "coordinates": [[
-            [-10, 50], [0, 48], [10, 48], [20, 50], [30, 52], [40, 53], [50, 55], [60, 58], // Southern Edge (West to East, into Russia)
-            [70, 60], [75, 65], [70, 70], [60, 72], [50, 75], [40, 78], [30, 75], [20, 72], [10, 70], [0, 65], [-5, 60], [-10, 55], // Northern Edge (East to West)
-            [-10, 50]
-        ]]
-    },
-    lgm_barents_kara: { // Often considered with Fennoscandian but had distinct centers
-        "type": "Polygon",
-        "coordinates": [[
-            [30, 68], [40, 65], [50, 62], [60, 60], [70, 60], [80, 62], [90, 65], // Southern edge over land
-            [95, 70], [90, 75], [80, 80], [70, 82], [60, 82], [50, 80], [40, 78], [30, 75], // Northern extent in Arctic Ocean
-            [30, 68]
-        ]]
-    },
-    lgm_greenland: {
-        "type": "Polygon",
-        "coordinates": [[
-            [-75, 80], [-60, 83], [-40, 85], [-20, 83], [-15, 75], [-20, 70], [-25, 65], [-30, 60], [-40, 58], [-50, 57], [-60, 58], [-70, 60], [-78, 65], [-80, 70], [-78, 75],
-            [-75, 80]
-        ]]
-    },
-    lgm_iceland: {
-        "type": "Polygon",
-        "coordinates": [[
-            [-25, 63], [-20, 62.5], [-15, 63], [-13, 64], [-14, 66], [-18, 67], [-22, 67], [-26, 66], [-25, 64],
-            [-25, 63]
-        ]]
-    },
-    lgm_alpine: { // European Alpine Ice Cap
-        "type": "Polygon",
-        "coordinates": [[
-            [5, 45.5], [7, 45], [9, 44.5], [11, 44.5], [13, 45], [15, 45.5], // Southern extent
-            [16, 46.5], [15, 47.5], [13, 48], [11, 48.5], [9, 48.5], [7, 48], [5.5, 47.5], // Northern extent
-            [5, 45.5]
-        ]]
-    },
-    lgm_patagonian: {
-        "type": "Polygon",
-        "coordinates": [[
-            [-75, -38], [-72, -37], [-69, -38], [-68, -40], [-67, -45], [-66, -50], [-65, -54], // Eastern extent
-            [-68, -56], [-72, -55], [-75, -52], [-76, -48], [-77, -45], [-76, -42], // Western extent (Pacific side)
-            [-75, -38]
-        ]]
-    },
-    lgm_antarctic_west: { // West Antarctic Ice Sheet - grounded further out
-         "type": "Polygon",
-         "coordinates": [[
-            [-60, -70], [-50, -72], [-40, -75], [-50, -78], [-70, -80], [-90, -82], [-110, -80], [-130, -78], [-150, -75], [-170, -72], // Ross Sea / Ronne-Filchner grounding line approximations
-            [-170, -70], [-150, -68], [-130, -66], [-110, -65], [-90, -64], [-70, -65], [-60, -68], // Seaward edge
-            [-60, -70]
-         ]]
-    },
-    lgm_antarctic_east: { // East Antarctic Ice Sheet - generally similar but with some coastal expansion
-         "type": "Polygon",
-         "coordinates": [[
-            [20, -65], [40, -64], [60, -64], [80, -65], [100, -66], [120, -66], [140, -65], [160, -64], [170, -65], // Coastal edge
-            [170, -75], [160, -80], [140, -85], [120, -88], [100, -88], [80, -85], [60, -80], [40, -75], [20, -70], // Inland (approximating current bulk with some expansion)
-            [20, -65]
-         ]]
-    }
-    // Note: More localized ice caps in areas like the Tibetan Plateau, New Zealand Alps, British-Irish Ice Sheet (sometimes shown separate from Fennoscandian) could be added for even greater detail.
-    // The British-Irish Ice Sheet is complex; part could be merged with Fennoscandian thinking or drawn separately:
-    ,
-    lgm_british_irish: {
-        "type": "Polygon",
-        "coordinates": [[
-            [-12, 50], [-8, 49], [-5, 49.5], [0, 50], [2, 52], [0, 55], [-2, 58], [-5, 60], [-8, 61], [-10, 60], [-13, 58], [-14, 55], [-12, 52],
-            [-12, 50]
-        ]]
-    }
-};
+        // MODIFICATION: Removed large hardcoded iceSheetGeoJson object
     
         // --- Core Functions ---
-        async function fetchEvolutionData() {
-        try {
-            const response = await fetch('https://cheatsheets.davidveksler.com/evolution_data.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        // MODIFICATION: Renamed and updated to fetch both JSON files
+        async function fetchAllRequiredData() {
+            try {
+                // Ensure loading screen is visible if it wasn't already (e.g. if it was hidden by an error previously)
+                if (domElements.loadingScreen) {
+                     domElements.loadingScreen.style.display = 'flex'; // Ensure it's 'flex' as per CSS
+                     domElements.loadingScreen.innerHTML = `<div class="spinner-border text-light" role="status"></div><p class="mt-2 mb-0">Loading Evolution Data...</p>`; // Reset content
+                }
+
+                const [evolutionResponse, iceSheetResponse] = await Promise.all([
+                    fetch('https://cheatsheets.davidveksler.com/evolution_data.json'),
+                    fetch('https://cheatsheets.davidveksler.com/iceSheetGeoJson.json')
+                ]);
+
+                if (!evolutionResponse.ok) {
+                    throw new Error(`HTTP error! status: ${evolutionResponse.status} for evolution data`);
+                }
+                if (!iceSheetResponse.ok) {
+                    throw new Error(`HTTP error! status: ${iceSheetResponse.status} for ice sheet data`);
+                }
+
+                timePeriodsData = await evolutionResponse.json();
+                fetchedIceSheetGeoJson = await iceSheetResponse.json(); // Assign to the new global variable
+
+                if (!Array.isArray(timePeriodsData) || timePeriodsData.length === 0) {
+                    throw new Error("Fetched evolution data is not a valid array or is empty.");
+                }
+                if (typeof fetchedIceSheetGeoJson !== 'object' || fetchedIceSheetGeoJson === null) { // Basic check for object
+                    throw new Error("Fetched ice sheet data is not a valid object.");
+                }
+
+                initializeApplication();
+            } catch (error) {
+                console.error("Could not fetch initial data:", error);
+                if (domElements.currentPeriodDisplay) domElements.currentPeriodDisplay.innerHTML = "<strong class='text-danger'>Error loading data.</strong>";
+                if (domElements.loadingScreen) {
+                     domElements.loadingScreen.style.display = 'flex'; // Keep it visible for the error
+                     domElements.loadingScreen.innerHTML = `<div class='p-3 text-center'><i class='bi bi-exclamation-triangle-fill text-danger h1'></i><p>Failed to load required data.<br><small>${error.message}</small></p></div>`;
+                }
+                 // Optionally, try to show controls sidebar even if data load fails, so user isn't stuck on loading screen
+                if (domElements.controlsContentDiv && domElements.loadingScreen && domElements.loadingScreen.style.display === 'none') {
+                    // If loading screen was already hidden by initializeApplication attempt that failed later.
+                } else if (domElements.controlsContentDiv) {
+                    // If loading screen is still up, hide it to show the error on a partially loaded page
+                    // This might be tricky if initializeApplication depends heavily on the data.
+                    // For now, the error is shown IN the loading screen.
+                }
             }
-            timePeriodsData = await response.json();
-            if (!Array.isArray(timePeriodsData) || timePeriodsData.length === 0) {
-                 throw new Error("Fetched data is not a valid array or is empty.");
-            }
-            initializeApplication();
-        } catch (error) {
-            console.error("Could not fetch evolution data:", error);
-            // Ensure domElements are populated before trying to access them here
-            if (domElements.currentPeriodDisplay) domElements.currentPeriodDisplay.innerHTML = "<strong class='text-danger'>Error loading data.</strong>";
-            if (domElements.loadingScreen) domElements.loadingScreen.innerHTML = `<div class='p-3 text-center'><i class='bi bi-exclamation-triangle-fill text-danger h1'></i><p>Failed to load evolution data from source.<br><small>${error.message}</small></p></div>`;
         }
-    }
     
-    function initializeApplication() {
-        if (!domElements.loadingScreen || !domElements.controlsContentDiv) {
-            console.error("Core UI elements (loadingScreen or controlsContentDiv) not found. Cannot initialize application properly.");
-            // Display a more prominent error to the user if these are missing
-            document.body.innerHTML = `<div class='p-5 text-center text-danger'><h1>Application Error</h1><p>Essential UI components are missing. Please check the HTML structure and element IDs.</p></div>`;
-            return;
-        }
-
-        domElements.loadingScreen.style.display = 'none';
-        domElements.controlsContentDiv.classList.remove('d-none');
-
-        Object.values(domElements).forEach(el => {
-            if (el && typeof el.disabled === 'boolean') {
-                el.disabled = false;
+    
+        function initializeApplication() {
+            if (!domElements.loadingScreen || !domElements.controlsContentDiv) {
+                console.error("Core UI elements (loadingScreen or controlsContentDiv) not found. Cannot initialize application properly.");
+                document.body.innerHTML = `<div class='p-5 text-center text-danger'><h1>Application Error</h1><p>Essential UI components are missing. Please check the HTML structure and element IDs.</p></div>`;
+                return;
             }
-        });
-        if (domElements.timelineScrubber) {
-             domElements.timelineScrubber.max = timePeriodsData.length - 1;
+
+            domElements.loadingScreen.style.display = 'none';
+            domElements.controlsContentDiv.classList.remove('d-none');
+
+            Object.values(domElements).forEach(el => {
+                if (el && typeof el.disabled === 'boolean') {
+                    el.disabled = false;
+                }
+            });
+            if (domElements.timelineScrubber) {
+                domElements.timelineScrubber.max = timePeriodsData.length - 1;
+            }
+
+            populateAllSpeciesList();
+            populateSpeciesFilter();
+            currentPeriodIndex = 0;
+            updateUIForCurrentPeriod();
+            updateSpeedButtonsActiveState();
+
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
         }
-
-        populateAllSpeciesList();
-        populateSpeciesFilter();
-        currentPeriodIndex = 0;
-        updateUIForCurrentPeriod();
-        updateSpeedButtonsActiveState();
-
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    }
     
         function populateAllSpeciesList() {
             const speciesSet = new Map();
             timePeriodsData.forEach(period => {
                 if (period.species && Array.isArray(period.species)) {
                     period.species.forEach(s => {
-                        if (s && s.name && !speciesSet.has(s.name)) { // Basic validation
-                            speciesSet.set(s.name, { color: s.color || '#cccccc' }); // Default color if missing
+                        if (s && s.name && !speciesSet.has(s.name)) { 
+                            speciesSet.set(s.name, { color: s.color || '#cccccc' }); 
                         }
                     });
                 }
@@ -779,7 +719,7 @@
                 domElements.speciesFilterList.innerHTML = '<p class="text-muted p-2 small">No species found in data.</p>'; return;
             }
             allSpeciesList.forEach(s => {
-                selectedSpecies[s.name] = true; // Select all by default
+                selectedSpecies[s.name] = true; 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'form-check';
                 const input = document.createElement('input');
@@ -787,7 +727,7 @@
                 input.id = `filter-${s.name.replace(/\W/g, '_')}`; input.value = s.name; input.checked = true;
                 input.addEventListener('change', (event) => {
                     selectedSpecies[event.target.value] = event.target.checked;
-                    updateUIForCurrentPeriod(); // Re-render legend and map features
+                    updateUIForCurrentPeriod(); 
                 });
                 const colorIndicator = document.createElement('span');
                 colorIndicator.className = 'species-color-indicator';
@@ -795,7 +735,7 @@
     
                 const label = document.createElement('label');
                 label.className = 'form-check-label'; label.htmlFor = input.id;
-                label.style.color = 'var(--text-color)'; // Use light text color for the label itself
+                label.style.color = 'var(--text-color)'; 
                 label.textContent = s.name;
     
                 itemDiv.appendChild(input);
@@ -812,7 +752,7 @@
                 if(domElements.currentPeriodDisplay) domElements.currentPeriodDisplay.textContent = `Timeline End`;
                 if(domElements.timelineValueDisplay) domElements.timelineValueDisplay.textContent = "(Drag scrubber or Reset)";
                 if(domElements.narrativeTextElement) {
-                    domElements.narrativeTextElement.style.color = 'var(--text-color)';
+                    domElements.narrativeTextElement.style.color = 'var(--text-color)'; // Ensure color
                     domElements.narrativeTextElement.textContent = "End of timeline data.";
                 }
                 if(domElements.legendItemsContainer) domElements.legendItemsContainer.innerHTML = '<small class="text-muted">No active period.</small>';
@@ -824,9 +764,9 @@
             if(domElements.timelineValueDisplay) domElements.timelineValueDisplay.textContent = period.timeRange || `Period ${currentPeriodIndex + 1}`;
             if (domElements.timelineScrubber) domElements.timelineScrubber.value = currentPeriodIndex;
             
-            if(domElements.narrativeTextElement) { // MODIFIED NARRATIVE UPDATE
-                domElements.narrativeTextElement.style.color = 'var(--text-color)';
-                domElements.narrativeTextElement.innerHTML = period.narrative || "No narrative available for this period."; // Use innerHTML if narrative can contain HTML
+            if(domElements.narrativeTextElement) {
+                domElements.narrativeTextElement.style.color = 'var(--text-color)'; // Ensure color
+                domElements.narrativeTextElement.innerHTML = period.narrative || "No narrative available for this period.";
             }
     
             let speciesInCurrentPeriod = period.species || [];
@@ -866,6 +806,7 @@
         }
     
         function updateLegend(visibleSpecies) {
+            if (!domElements.legendItemsContainer) return;
             domElements.legendItemsContainer.innerHTML = '';
             if (visibleSpecies.length === 0) {
                 domElements.legendItemsContainer.innerHTML = '<small class="text-muted">No species selected or in period.</small>'; return;
@@ -912,23 +853,35 @@
     
         function updateClimateOverlay(periodTimeRange) {
             iceSheetLayerGroup.clearLayers();
-            if (domElements.climateToggle.checked && periodTimeRange) {
+            // MODIFICATION: Check if fetchedIceSheetGeoJson is loaded
+            if (domElements.climateToggle && domElements.climateToggle.checked && periodTimeRange && fetchedIceSheetGeoJson) {
                 const { start, end } = parseYearFromRange(periodTimeRange);
                 const lgmStart = -26500; 
                 const lgmEnd = -19000;  
     
                 if (start && end && Math.max(start, lgmStart) <= Math.min(end, lgmEnd)) {
-                    Object.values(iceSheetGeoJson).forEach(sheet => {
-                        L.geoJSON(sheet, {
-                            style: { color: '#ADC8E6', fillColor: '#ADD8E6', fillOpacity: 0.3, weight: 1 }
-                        }).addTo(iceSheetLayerGroup);
+                    // MODIFICATION: Use fetchedIceSheetGeoJson
+                    Object.values(fetchedIceSheetGeoJson).forEach(sheet => {
+                        if (sheet && sheet.type && sheet.coordinates) { // Basic GeoJSON structure check
+                           try {
+                                L.geoJSON(sheet, {
+                                    style: { color: '#ADC8E6', fillColor: '#ADD8E6', fillOpacity: 0.3, weight: 1 }
+                                }).addTo(iceSheetLayerGroup);
+                            } catch (e) {
+                                console.warn("Error drawing ice sheet GeoJSON feature:", e, sheet);
+                            }
+                        } else {
+                            console.warn("Invalid GeoJSON feature structure in ice sheet data:", sheet);
+                        }
                     });
                 }
             }
-            if (!map.hasLayer(iceSheetLayerGroup) && domElements.climateToggle.checked && iceSheetLayerGroup.getLayers().length > 0) {
-                map.addLayer(iceSheetLayerGroup);
-            } else if (map.hasLayer(iceSheetLayerGroup) && (!domElements.climateToggle.checked || iceSheetLayerGroup.getLayers().length === 0)) {
-                map.removeLayer(iceSheetLayerGroup);
+            if (domElements.climateToggle) { // Ensure domElements.climateToggle is not null
+                if (!map.hasLayer(iceSheetLayerGroup) && domElements.climateToggle.checked && iceSheetLayerGroup.getLayers().length > 0) {
+                    map.addLayer(iceSheetLayerGroup);
+                } else if (map.hasLayer(iceSheetLayerGroup) && (!domElements.climateToggle.checked || iceSheetLayerGroup.getLayers().length === 0)) {
+                    map.removeLayer(iceSheetLayerGroup);
+                }
             }
         }
     
@@ -1051,7 +1004,7 @@
 
             if(domElements.climateToggle) { 
                 domElements.climateToggle.addEventListener('change', () => {
-                    if (timePeriodsData.length > 0) { 
+                    if (timePeriodsData.length > 0 && fetchedIceSheetGeoJson) { // Ensure data is loaded
                          updateUIForCurrentPeriod(); 
                     }
                 });
@@ -1062,7 +1015,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             populateDomElements(); 
             addEventListeners();   
-            fetchEvolutionData();  
+            fetchAllRequiredData(); // MODIFICATION: Call new fetch function
         });
         </script>
 
