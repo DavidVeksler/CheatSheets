@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Fortress: HNW Self-Custody Security Protocol | Complete Guide</title>
+    <meta name="description" content="Comprehensive security protocol for high net worth Bitcoin holders. Protect against $5 wrench attacks, disasters, and loss. Based on real-world threat models.">
+    <meta name="keywords" content="bitcoin security, self custody, hnw crypto, $5 wrench attack, bitcoin inheritance, hardware wallet security, opsec, physical security">
+    <link rel="canonical" href="https://cheatsheets.davidveksler.com/bitcoin-hnw-security.html">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='0' y='14' font-size='14'>🔐</text></svg>">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Bitcoin Fortress: HNW Self-Custody Security Protocol">
+    <meta property="og:description" content="Comprehensive security protocol for high net worth Bitcoin holders. Real-world threat mitigation.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://cheatsheets.davidveksler.com/bitcoin-hnw-security.html">
+    <meta property="og:image" content="https://cheatsheets.davidveksler.com/images/bitcoin-security-placeholder.png">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Bitcoin Fortress: HNW Security Protocol">
+    <meta name="twitter:description" content="Protect your Bitcoin from real-world threats">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary-color: #f7931a;
+            --secondary-color: #1a1a1a;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --success-color: #28a745;
+            --info-color: #17a2b8;
+            --dark-bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border-color: #333;
+            --highlight-color: #f7931a;
+        }
+        
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border-bottom: 3px solid var(--primary-color);
+            padding: 3rem 0;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .lead {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .last-updated {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+        
+        .threat-level {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        
+        .threat-critical { background-color: var(--danger-color); }
+        .threat-high { background-color: #dc6545; }
+        .threat-medium { background-color: var(--warning-color); color: #000; }
+        .threat-low { background-color: var(--info-color); }
+        
+        .section-container {
+            margin-bottom: 3rem;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .security-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .security-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px rgba(247, 147, 26, 0.2);
+        }
+        
+        .security-card h5 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .security-term {
+            color: var(--highlight-color);
+            font-weight: 600;
+        }
+        
+        .rule-box {
+            background-color: rgba(247, 147, 26, 0.1);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        
+        .rule-box.critical {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-left-color: var(--danger-color);
+        }
+        
+        .summary {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .details-toggle {
+            background-color: var(--primary-color);
+            color: #000;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .details-toggle:hover {
+            background-color: #f7a31a;
+            transform: translateY(-2px);
+        }
+        
+        .collapse-content {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .collapse-content ul {
+            margin-left: 1rem;
+        }
+        
+        .collapse-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .protection-matrix {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .matrix-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .threat-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .code-block {
+            background-color: #0a0a0a;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            overflow-x: auto;
+        }
+        
+        .warning-banner {
+            background-color: rgba(255, 193, 7, 0.1);
+            border: 2px solid var(--warning-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        .warning-banner h4 {
+            color: var(--warning-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        footer {
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            margin-top: 4rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        @media print {
+            body { background: white; color: black; }
+            .page-header { background: none; border-bottom: 2px solid black; }
+            .security-card { border: 1px solid black; box-shadow: none; }
+            .details-toggle { display: none; }
+            .collapse { display: block !important; }
+            .threat-level { border: 1px solid black; }
+        }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <div class="container">
+            <h1><i class="bi bi-shield-lock-fill"></i> Bitcoin Fortress: HNW Security Protocol</h1>
+            <p class="lead">The complete security framework for high net worth Bitcoin holders. Protecting against real-world threats: $5 wrench attacks, disasters, loss, and inheritance failures.</p>
+            <div class="last-updated">Last Updated: January 2025 | Target: $1M+ Bitcoin Holdings</div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="warning-banner">
+            <h4><i class="bi bi-exclamation-triangle-fill"></i> Critical Reality Check</h4>
+            <p class="mb-0">Your Bitcoin is worthless if you're dead, kidnapped, or lose access. This guide prioritizes <strong>survival and access</strong> over theoretical perfection.</p>
+        </div>
+        
+        <!-- Threat Matrix Overview -->
+        <section class="protection-matrix">
+            <div class="matrix-header">
+                <h3>Threat Priority Matrix</h3>
+                <p>Ranked by probability × impact for HNW individuals</p>
+            </div>
+            <div class="row">
+                <div class="col-md-3 col-6 text-center mb-3">
+                    <div class="threat-indicator" style="background-color: var(--danger-color);"></div>
+                    <strong>Critical:</strong> Self-inflicted loss
+                </div>
+                <div class="col-md-3 col-6 text-center mb-3">
+                    <div class="threat-indicator" style="background-color: #dc6545;"></div>
+                    <strong>High:</strong> Physical coercion
+                </div>
+                <div class="col-md-3 col-6 text-center mb-3">
+                    <div class="threat-indicator" style="background-color: var(--warning-color);"></div>
+                    <strong>Medium:</strong> Natural disasters
+                </div>
+                <div class="col-md-3 col-6 text-center mb-3">
+                    <div class="threat-indicator" style="background-color: var(--info-color);"></div>
+                    <strong>Low:</strong> Cyber attacks
+                </div>
+            </div>
+        </section>
+        
+        <!-- OPSEC & Privacy -->
+        <section class="section-container" data-section-id="opsec">
+            <h2 class="section-title"><i class="bi bi-eye-slash-fill"></i> Operational Security (OPSEC)</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="security-card">
+                        <h5>
+                            <span><i class="bi bi-silence"></i> The First Rule of Bitcoin Club</span>
+                            <span class="threat-level threat-critical">CRITICAL</span>
+                        </h5>
+                        <p class="summary">Nobody should know you own Bitcoin. Period. Most attacks start with <span class="security-term">information leakage</span>.</p>
+                        <button class="btn details-toggle" data-bs-toggle="collapse" data-bs-target="#opsec-silence">
+                            <i class="bi bi-chevron-down"></i> Details
+                        </button>
+                        <div class="collapse collapse-content" id="opsec-silence">
+                            <div class="rule-box critical">
+                                <strong>Never reveal holdings:</strong> Not even "I own some crypto" at parties
+                            </div>
+                            <h6>Implementation:</h6>
+                            <ul>
+                                <li>Create separate "crypto" vs "normie" social media accounts</li>
+                                <li>Use pseudonyms for all crypto-related activities</li>
+                                <li>Never post wallet screenshots or transaction IDs</li>
+                                <li>Decline all podcast/media appearances about your "crypto journey"</li>
+                                <li>Tell family you "lost it all in the crash" if pressed</li>
+                            </ul>
+                            <h6>Real Attack Vector:</h6>
+                            <p>Jameson Lopp documented 100+ physical Bitcoin attacks. 95% started with public knowledge of holdings.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="security-card">
+                        <h5>
+                            <span><i class="bi bi-house-slash"></i> Address Privacy</span>
+                            <span class="threat-level threat-high">HIGH</span>
+                        </h5>
+                        <p class="summary">Your home address linked to Bitcoin ownership = <span class="security-term">targeted robbery risk</span>.</p>
+                        <button class="btn details-toggle" data-bs-toggle="collapse" data-bs-target="#opsec-address">
+                            <i class="bi bi-chevron-down"></i> Details
+                        </button>
+                        <div class="collapse collapse-content" id="opsec-address">
+                            <h6>Protection Layers:</h6>
+                            <ul>
+                                <li>Use LLC + registered agent for property ownership</li>
+                                <li>P.O. Box or mail forwarding for all crypto-related mail</li>
+                                <li>Never use home address on exchange KYC (use office/PO Box)</li>
+                                <li>Remove address from public records (use services like DeleteMe)</li>
+                                <li>Different billing/shipping addresses for hardware wallets</li>
+                            </ul>
+                            <h6>Pro Tip:</h6>
+                            <p>Establish residency in privacy-friendly states (Wyoming, Delaware) for LLC formation.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Physical Security -->
+        <section class="section-container" data-section-id="physical">
+            <h2 class="section-title"><i class="bi bi-shield-fill"></i> Physical Security</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="security-card">
+                        <h5>
+                            <span><i class="bi bi-camera-video"></i> Home Fortress Protocol</span>
+                            <span class="threat-level threat-high">HIGH</span>
+                        </h5>
+                        <p class="summary">Layered physical security deters and delays <span class="security-term">$5 wrench attacks</span>.</p>
+                        <button class="btn details-toggle" data-bs-toggle="collapse" data-bs-target="#physical-home">
+                            <i class="bi bi-chevron-down"></i> Details
+                        </button>
+                        <div class="collapse collapse-content" id="physical-home">
+                            <h6>Minimum Setup ($5K-15K):</h6>
+                            <ul>
+                                <li><strong>Perimeter:</strong> 8ft fence, motion lights, "Beware of Dog" signs</li>
+                                <li><strong>Cameras:</strong> 4K PoE system with 30-day NVR + cloud backup</li>
+                                <li><strong>Doors:</strong> Grade 1 deadbolts, reinforced frames, security film on windows</li>
+                                <li><strong>Alarm:</strong> Professional monitoring with cellular backup</li>
+                                <li><strong>Safe Room:</strong> Reinforced master bedroom, separate alarm zone</li>
+                            </ul>
+                            <h6>Advanced ($15K+):</h6>
+                            <ul>
+                                <li>Ballistic panels in walls</li>
+                                <li>Panic buttons in every room</li>
+                                <li>License plate recognition cameras</li>
+                                <li>Security consultant assessment</li>
+                            </ul>
+                            <div class="rule-box">
+                                <strong>Reality:</strong> Goal is 5-10 minute delay for police response, not Fort Knox
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="security-card">
+                        <h5>
+                            <span><i class="bi bi-person-arms-up"></i> Personal Defense</span>
+                            <span class="threat-level threat-medium">MEDIUM</span>
+                        </h5>
+                        <p class="summary">When security layers fail, <span class="security-term">compliance + misdirection</span> saves lives.</p>
+                        <button class="btn details-toggle" data-bs-toggle="collapse" data-bs-target="#physical-defense">
+                            <i class="bi bi-chevron-down"></i> Details
+                        </button>
+                        <div class="collapse collapse-content" id="physical-defense">
+                            <h6>Under Duress Protocol:</h6>
+                            <ol>
+                                <li><strong>Comply immediately</strong> - Your life > Bitcoin</li>
+                                <li><strong>Decoy wallet ready</strong> - Hardware wallet with ~$10K</li>
+                                <li><strong>Duress passphrase</strong> - Reveals decoy, not main funds</li>
+                                <li><strong>Time-locked setup</strong> - "I can't access for 48 hours"</li>
+                                <li><strong>Geographic distribution</strong> - "Other keys are in safety deposit box"</li>
+                            </ol>
+                            <h6>Preparation:</h6>
+                            <ul>
+                                <li>Krav Maga / tactical training (situational awareness > fighting)</li>
+                                <li>Concealed carry (if legal and trained)</li>
+                                <li>Medical training (Stop the Bleed course)</li>
+                                <li>Practice duress scenarios with family</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Technical Security -->
+        <section class="section-container" data-section-id="technical">
+            <h2 class="section-title"><i class="bi bi-cpu"></i> Technical Security Architecture</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="security-card">
+                        <h5>
+                            <span><i class="bi bi-safe"></i> Multi-Signature Setup</span>
+                            <span class="threat-level threat-critical">CRITICAL</span>
+                        </h5>
+                        <p class="summary">Single points of failure = single points of <span class="security-term">catastrophic loss</span>.</p>
+                        <button class="btn details-toggle" data-bs-toggle="collapse" data-bs-target="#tech-multisig">
+                            <i class="bi bi-chevron-down"></i> Details
+                        </button>
+                        <div class="collapse collapse-content" id="tech-multisig">
+                            <h6>Recommended: 2-of-3 Multisig</h6>
+                            <ul>
+                                <li><strong>Key 1:</strong> Hardware wallet at home (quick access)</li>
+                                <li><strong>Key 2:</strong> Hardware wallet in bank safety deposit box</li>
+                                <li><strong>Key 3:</strong> Offline backup with attorney/trust company</li>
+                            </ul>
+                            <h6>Setup Requirements:</h6>
+                            <ul>
+                                <li>Use different hardware wallet manufacturers (Coldcard + Ledger + Trezor)</li>
+                                <li>Generate keys on air-gapped devices</li>
+                                <li>Test recovery process quarterly</li>
+                                <li>Document process for inheritors</li>
+                            </ul>
+                            <div class="code-block">
+                                # Example: Creating multisig with Sparrow Wallet
+                                1. File → New Wallet → Multi Signature
+                                2. Set 2-of-3 threshold
+                                3. Add each hardware wallet xpub
+                                4. Backup wallet configuration separately
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="security-card">
+                        <h5>
+                            <span><i class="bi bi-key"></i> Seed Backup Strategy</span>
+                            <span class="threat-level threat-critical">CRITICAL</span>
+                        </h5>
+                        <p class="summary">Paper burns. Memory fades. <span class="security-term">Steel endures</span>.</p>
+                        <button class="btn details-toggle" data-bs-toggle="collapse" data-bs-target="#tech-backup">
+                            <i class="bi bi-chevron-down"></i> Details
+                        </button>
+                        <div class="collapse collapse-content" id="tech-backup">
+                            <h6>Backup Medium Comparison:</h6>
+                            <ul>
+                                <li><strong>Paper:</strong> ❌ Fire, water, degradation</li>
+                                <li><strong>Steel plates:</strong> ✅ 1200°C resistance (recommended)</li>
+                                <li><strong>Cryptosteel:</strong> ✅ Modular, fireproof</li>
+                                <li><strong>Stamped titanium:</strong> ✅ Ultimate durability</li>
+                            </ul>
+                            <h6>Distribution Strategy:</h6>
+                            <ul>
+                                <li>Never store complete seed in one location</li>
+                                <li>Use Shamir Secret Sharing (3-of-5 splits)</li>
+                                <li>Geographic distribution (different cities/states)</li>
+                                <li>One copy with trusted attorney under seal</li>
+                            </ul>
+                            <div class="rule-box">
+                                <strong>Test restore annually</strong> - 25% of "lost" Bitcoin is actually bad backups
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Inheritance Planning -->
+        <section class="section-container" data-section-id="inheritance">
+            <h2 class="section-title"><i class="bi bi-people-fill"></i> Inheritance & Succession</h2>
+            
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="security-card">
+                        <h5>
+                            <span><i class="bi bi-file-earmark-text"></i> Dead Man's Switch Protocol</span>
+                            <span class="threat-level threat-critical">CRITICAL</span>
+                        </h5>
+                        <p class="summary">Your Bitcoin dies with you unless you plan. <span class="security-term">Technical + legal + practical</span> = successful transfer.</p>
+                        <button class="btn details-toggle" data-bs-toggle="collapse" data-bs-target="#inheritance-plan">
+                            <i class="bi bi-chevron-down"></i> Details
+                        </button>
+                        <div class="collapse collapse-content" id="inheritance-plan">
+                            <h6>Three-Layer Inheritance System:</h6>
+                            <ol>
+                                <li><strong>Legal Layer:</strong>
+                                    <ul>
+                                        <li>Revocable trust holding LLC that "owns" Bitcoin</li>
+                                        <li>Clear successor trustees named</li>
+                                        <li>Instructions for digital asset handling</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Technical Layer:</strong>
+                                    <ul>
+                                        <li>Sealed envelope with attorney: wallet type, derivation paths</li>
+                                        <li>Time-locked transaction as backup (nLockTime)</li>
+                                        <li>Unchained Capital or Casa inheritance service</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Practical Layer:</strong>
+                                    <ul>
+                                        <li>Annual "Bitcoin fire drill" with spouse</li>
+                                        <li>Video walkthrough stored with lawyer</li>
+                                        <li>Trusted Bitcoin-literate executor</li>
+                                        <li>Clear instructions: "Call [Expert] at [Number] immediately"</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                            <div class="rule-box critical">
+                                <strong>Warning:</strong> "I'll teach them someday" = your heirs get nothing
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Disaster Preparedness -->
+        <section class="section-container" data-section-id="disaster">
+            <h2 class="section-title"><i class="bi bi-tornado"></i> Disaster Preparedness</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="security-card">
+                        <h5>
+                            <span><i class="bi bi-globe-americas"></i> Geographic Redundancy</span>
+                            <span class="threat-level threat-medium">MEDIUM</span>
+                        </h5>
+                        <p class="summary">Natural disasters are localized. Your Bitcoin <span class="security-term">must not be</span>.</p>
+                        <button class="btn details-toggle" data-bs-toggle="collapse" data-bs-target="#disaster-geo">
+                            <i class="bi bi-chevron-down"></i> Details
+                        </button>
+                        <div class="collapse collapse-content" id="disaster-geo">
+                            <h6>Distribution Strategy:</h6>
+                            <ul>
+                                <li>Minimum 100 miles between backup locations</li>
+                                <li>Different disaster profiles (not all in earthquake zones)</li>
+                                <li>International safety deposit box (Switzerland/Singapore)</li>
+                                <li>Cloud-encrypted backup (as last resort only)</li>
+                            </ul>
+                            <h6>Access During Crisis:</h6>
+                            <ul>
+                                <li>Memorize 1 location's access method</li>
+                                <li>Emergency fund in multiple jurisdictions</li>
+                                <li>Satellite phone for communication</li>
+                                <li>Bug-out bag with hardware wallet</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="security-card">
+                        <h5>
+                            <span><i class="bi bi-brain"></i> Memory Wallet</span>
+                            <span class="threat-level threat-low">LOW</span>
+                        </h5>
+                        <p class="summary">Last resort: Your mind as the <span class="security-term">ultimate cold storage</span>.</p>
+                        <button class="btn details-toggle" data-bs-toggle="collapse" data-bs-target="#disaster-memory">
+                            <i class="bi bi-chevron-down"></i> Details
+                        </button>
+                        <div class="collapse collapse-content" id="disaster-memory">
+                            <h6>Implementation:</h6>
+                            <ul>
+                                <li>Memorize 12-word seed (not 24 - too risky)</li>
+                                <li>Use memory palace technique</li>
+                                <li>Small amount only (~$50K emergency fund)</li>
+                                <li>Practice weekly recitation</li>
+                                <li>Never your primary storage method</li>
+                            </ul>
+                            <div class="rule-box">
+                                <strong>Warning:</strong> Head trauma, age, stress = forgotten Bitcoin
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Action Checklist -->
+        <section class="section-container" data-section-id="checklist">
+            <h2 class="section-title"><i class="bi bi-check2-square"></i> Implementation Checklist</h2>
+            
+            <div class="security-card">
+                <h5><i class="bi bi-list-check"></i> Priority Action Items</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Week 1: Foundation</h6>
+                        <ul>
+                            <li>[ ] Implement strict OPSEC rules with family</li>
+                            <li>[ ] Order 3 different hardware wallets</li>
+                            <li>[ ] Setup PO Box for crypto mail</li>
+                            <li>[ ] Install basic home security</li>
+                        </ul>
+                        <h6>Month 1: Core Security</h6>
+                        <ul>
+                            <li>[ ] Configure 2-of-3 multisig</li>
+                            <li>[ ] Create steel seed backups</li>
+                            <li>[ ] Distribute keys geographically</li>
+                            <li>[ ] Setup decoy wallet</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Month 2-3: Advanced</h6>
+                        <ul>
+                            <li>[ ] Legal structure (LLC + Trust)</li>
+                            <li>[ ] Inheritance documentation</li>
+                            <li>[ ] Attorney briefing + sealed instructions</li>
+                            <li>[ ] Practice emergency procedures</li>
+                        </ul>
+                        <h6>Ongoing: Maintenance</h6>
+                        <ul>
+                            <li>[ ] Quarterly recovery drills</li>
+                            <li>[ ] Annual security audit</li>
+                            <li>[ ] Update documentation</li>
+                            <li>[ ] Rotate hot wallet keys</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 David Veksler | <a href="https://walletrecovery.info" target="_blank">WalletRecovery.info</a> | <a href="https://davidveksler.substack.com" target="_blank">Substack</a></p>
+            <p>Remember: Perfect security = perfect inaccessibility. Find your balance.</p>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Save checklist state
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            const id = checkbox.id || Math.random().toString(36).substr(2, 9);
+            checkbox.id = id;
+            
+            // Load saved state
+            if (localStorage.getItem(`btc-security-${id}`) === 'true') {
+                checkbox.checked = true;
+            }
+            
+            // Save state on change
+            checkbox.addEventListener('change', function() {
+                localStorage.setItem(`btc-security-${id}`, this.checked);
+            });
+        });
+        
+        // Track section views
+        document.querySelectorAll('.details-toggle').forEach(button => {
+            button.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                if (icon.classList.contains('bi-chevron-down')) {
+                    icon.classList.replace('bi-chevron-down', 'bi-chevron-up');
+                } else {
+                    icon.classList.replace('bi-chevron-up', 'bi-chevron-down');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
