@@ -11,6 +11,7 @@ $excludedItems = [
     'LICENSE',
     'README.md',
     'PROMPT.txt', // Assuming this was part of your dev files
+    'etz-chaim-tree-of-life.html',
     // Add any other specific files or directories to exclude by name:
     // 'old_gallery.html',
 ];
