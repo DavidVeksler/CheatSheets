@@ -1,14 +1,15 @@
 <!DOCTYPE html>
+
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Human Evolution: Journey Through Time (Concise) - AWESOME Edition v4 (Fossil Markers)</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Human Evolution: Journey Through Time (Concise) - AWESOME Edition v4 (Fossil Markers)</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<style>
       :root {
         /* Evolved Color Palette */
         --primary-accent-start: #00AFFF;
@@ -706,143 +707,95 @@
       }
 
     </style>
-  </head>
-
-  <body>
-    <div id="loading-screen" class="loading-overlay">
-      <p class="mt-2 mb-0">Loading Evolution Data...</p>
-    </div>
-    <header class="app-header">
-      <h1><i class="bi bi-globe-americas"></i> Human Evolution: Journey Through Time</h1>
-    </header>
-    <div id="main-content">
-      <aside id="controls-sidebar">
-        <div id="controls-content" class="d-none h-100 d-flex flex-column">
-          <div class="control-card card">
-            <div class="card-header"><i class="bi bi-clock-history"></i> Timeline Control</div>
-            <div class="card-body">
-              <div id="current-period-display">Data not loaded.</div>
-              <span id="timeline-value-display"></span>
-              <input
-                type="range"
-                class="form-range"
-                id="timeline-scrubber"
-                min="0"
-                value="0"
-                disabled
-                data-bs-toggle="tooltip"
-                title="Drag to select a time period"
-              />
-              <div class="d-flex justify-content-between align-items-center mt-2 timeline-buttons">
-                <button
-                  id="play-pause-button"
-                  class="btn btn-sm"
-                  disabled
-                  data-bs-toggle="tooltip"
-                  data-bs-placement="top" 
-                  title="Play or Pause animation"
-                >
-                  <i class="bi bi-play-fill"></i> <span>Play</span>
+<meta content="images/human-evolution.png" property="og:image"/><meta content="images/human-evolution.png" name="twitter:image"/></head>
+<body>
+<div class="loading-overlay" id="loading-screen">
+<p class="mt-2 mb-0">Loading Evolution Data...</p>
+</div>
+<header class="app-header">
+<h1><i class="bi bi-globe-americas"></i> Human Evolution: Journey Through Time</h1>
+</header>
+<div id="main-content">
+<aside id="controls-sidebar">
+<div class="d-none h-100 d-flex flex-column" id="controls-content">
+<div class="control-card card">
+<div class="card-header"><i class="bi bi-clock-history"></i> Timeline Control</div>
+<div class="card-body">
+<div id="current-period-display">Data not loaded.</div>
+<span id="timeline-value-display"></span>
+<input class="form-range" data-bs-toggle="tooltip" disabled="" id="timeline-scrubber" min="0" title="Drag to select a time period" type="range" value="0"/>
+<div class="d-flex justify-content-between align-items-center mt-2 timeline-buttons">
+<button class="btn btn-sm" data-bs-placement="top" data-bs-toggle="tooltip" disabled="" id="play-pause-button" title="Play or Pause animation">
+<i class="bi bi-play-fill"></i> <span>Play</span>
+</button>
+<div class="btn-group btn-group-sm" data-bs-toggle="tooltip" role="group" title="Adjust animation speed">
+<button class="btn btn-outline-light speed-btn" data-speed="1" type="button">1x</button>
+<button class="btn btn-outline-light speed-btn" data-speed="2" type="button">2x</button>
+<button class="btn btn-outline-light speed-btn" data-speed="5" type="button">5x</button>
+</div>
+<button class="btn btn-sm" data-bs-toggle="tooltip" disabled="" id="reset-button" title="Reset timeline to start">
+<i class="bi bi-arrow-clockwise"></i> Reset
                 </button>
-                <div
-                  class="btn-group btn-group-sm"
-                  role="group"
-                  data-bs-toggle="tooltip"
-                  title="Adjust animation speed"
-                >
-                  <button type="button" class="btn btn-outline-light speed-btn" data-speed="1">1x</button>
-                  <button type="button" class="btn btn-outline-light speed-btn" data-speed="2">2x</button>
-                  <button type="button" class="btn btn-outline-light speed-btn" data-speed="5">5x</button>
-                </div>
-                <button
-                  id="reset-button"
-                  class="btn btn-sm"
-                  disabled
-                  data-bs-toggle="tooltip"
-                  title="Reset timeline to start"
-                >
-                  <i class="bi bi-arrow-clockwise"></i> Reset
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="control-card card">
-              <div class="card-header"><i class="bi bi-collection-play"></i> Period Navigator</div>
-              <div class="card-body">
-                  <label for="period-filter-select" class="form-label visually-hidden">Select a Time Period</label>
-                  <select class="form-select" id="period-filter-select" data-bs-toggle="tooltip" title="Jump to a specific period">
-                      <option selected disabled value="">Select a period...</option>
-                  </select>
-              </div>
-          </div>
-
-          <div class="control-card card">
-            <div class="card-header"><i class="bi bi-people-fill"></i> Species Filter</div>
-            <div class="card-body">
-              <div class="btn-group btn-group-sm mb-2 quick-filter-buttons" role="group">
-                <button class="btn btn-outline-light" id="filter-all" data-bs-toggle="tooltip" title="Show all species">
+</div>
+</div>
+</div>
+<div class="control-card card">
+<div class="card-header"><i class="bi bi-collection-play"></i> Period Navigator</div>
+<div class="card-body">
+<label class="form-label visually-hidden" for="period-filter-select">Select a Time Period</label>
+<select class="form-select" data-bs-toggle="tooltip" id="period-filter-select" title="Jump to a specific period">
+<option disabled="" selected="" value="">Select a period...</option>
+</select>
+</div>
+</div>
+<div class="control-card card">
+<div class="card-header"><i class="bi bi-people-fill"></i> Species Filter</div>
+<div class="card-body">
+<div class="btn-group btn-group-sm mb-2 quick-filter-buttons" role="group">
+<button class="btn btn-outline-light" data-bs-toggle="tooltip" id="filter-all" title="Show all species">
                   All
                 </button>
-                <button
-                  class="btn btn-outline-light"
-                  id="filter-none"
-                  data-bs-toggle="tooltip"
-                  title="Hide all species"
-                >
+<button class="btn btn-outline-light" data-bs-toggle="tooltip" id="filter-none" title="Hide all species">
                   None
                 </button>
-                <button
-                  class="btn btn-outline-light"
-                  id="filter-homo"
-                  data-bs-toggle="tooltip"
-                  title="Show only Homo genus"
-                >
+<button class="btn btn-outline-light" data-bs-toggle="tooltip" id="filter-homo" title="Show only Homo genus">
                   Homo
                 </button>
-              </div>
-              <div id="species-filter-list">
-                <p class="text-muted p-2 small">No species data loaded.</p>
-              </div>
-            </div>
-          </div>
-          <div id="narrative-panel" class="control-card card flex-grow-1 mb-0">
-            <div class="card-header"><i class="bi bi-book-half"></i> Period Overview</div>
-            <div class="card-body">
-              <p id="narrative-text-element">Select a time period to see an overview.</p>
-              <p class="data-limitation-note">
-                <i class="bi bi-exclamation-triangle-fill"></i> Note: Geographic map display depends on data in the
+</div>
+<div id="species-filter-list">
+<p class="text-muted p-2 small">No species data loaded.</p>
+</div>
+</div>
+</div>
+<div class="control-card card flex-grow-1 mb-0" id="narrative-panel">
+<div class="card-header"><i class="bi bi-book-half"></i> Period Overview</div>
+<div class="card-body">
+<p id="narrative-text-element">Select a time period to see an overview.</p>
+<p class="data-limitation-note">
+<i class="bi bi-exclamation-triangle-fill"></i> Note: Geographic map display depends on data in the
                 fetched dataset. Active species are listed in the legend.
               </p>
-            </div>
-          </div>
-        </div>
-      </aside>
-      <main id="map-container">
-        <div id="map"></div>
-        <div class="climate-toggle-container">
-          <div class="form-check form-switch">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              role="switch"
-              id="climate-toggle-switch"
-              data-bs-toggle="tooltip"
-              title="Toggle Last Glacial Maximum ice sheets"
-            />
-            <label class="form-check-label" for="climate-toggle-switch">Ice Sheets</label>
-          </div>
-        </div>
-        <div id="legend" class="legend">
-          <h5><i class="bi bi-palette"></i> Legend</h5>
-          <div id="legend-items-container"><small class="text-muted">Data not loaded.</small></div>
-        </div>
-      </main>
-    </div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-   
-    <script>
+</div>
+</div>
+</div>
+</aside>
+<main id="map-container">
+<div id="map"></div>
+<div class="climate-toggle-container">
+<div class="form-check form-switch">
+<input class="form-check-input" data-bs-toggle="tooltip" id="climate-toggle-switch" role="switch" title="Toggle Last Glacial Maximum ice sheets" type="checkbox"/>
+<label class="form-check-label" for="climate-toggle-switch">Ice Sheets</label>
+</div>
+</div>
+<div class="legend" id="legend">
+<h5><i class="bi bi-palette"></i> Legend</h5>
+<div id="legend-items-container"><small class="text-muted">Data not loaded.</small></div>
+</div>
+</main>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
         // --- State & Config ---
         let timePeriodsData = [];
         let fetchedIceSheetGeoJson = null;
@@ -1350,5 +1303,5 @@
             populateDomElements(); addEventListeners(); fetchAllRequiredData();
         });
         </script>
-  </body>
+</body>
 </html>
