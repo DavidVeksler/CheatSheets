@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Art of War - Dual View Reader</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: radial-gradient(circle at 20% 50%, rgba(76, 44, 26, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(139, 90, 43, 0.2) 0%, transparent 50%),
+          radial-gradient(circle at 40% 80%, rgba(61, 37, 26, 0.3) 0%, transparent 50%),
+          linear-gradient(135deg, #2c1810 0%, #4a2c1a 50%, #3d251a 100%);
+        font-family: "Georgia", serif; /* Base font from inspiration */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        color: #3a2b20; /* Default text color, will be overridden */
+        padding: 20px;
+        overflow: hidden;
+      }
+
+      .header-title {
+        font-weight: 700;
+        font-size: 2.2em;
+        margin-bottom: 5px;
+        color: #e6c080; /* Lighter color for dark bg */
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+        text-align: center;
+      }
+
+      .subtitle {
+        font-size: 1.1em;
+        margin-bottom: 20px;
+        color: #d4a574; /* Lighter color */
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        text-align: center;
+      }
+
+      .reader-frame {
+        width: 90vw;
+        max-width: 1000px;
+        height: 70vh;
+        max-height: 600px; /* Increased max-height for new strip style */
+        /* background-color: #6f4e37; Old background */
+        border: 3px solid #654021; /* Darker, richer border */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.3);
+        position: relative;
+        border-radius: 8px;
+        perspective: 1500px;
+        overflow: hidden;
+        /* Add a subtle inner texture or darker background for the frame itself */
+        background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
+          url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23503020' fill-opacity='0.1'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+          #4a2c1a;
+      }
+
+      .view-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        padding: 20px;
+        box-sizing: border-box;
+        transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.7s ease-in-out;
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+        overflow: hidden;
+      }
+
+      /* --- Base Strip Styling (Common for Chinese and English) --- */
+      .bamboo-slip,
+      .english-strip {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+          /* Subtle highlight */ linear-gradient(45deg, #d4a574 0%, #c19653 25%, #d4a574 50%, #b8954d 75%, #d4a574 100%);
+        position: relative;
+        transform-style: preserve-3d;
+        transition: all 0.4s ease;
+        cursor: default; /* Changed from pointer as they are not clickable yet */
+        border-radius: 3px; /* Slightly less rounding */
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), /* Inner highlight */ inset 0 0 10px rgba(0, 0, 0, 0.1),
+          /* Inner shadow for depth */ 0 3px 8px rgba(0, 0, 0, 0.3), /* Outer shadow */ 0 1px 2px rgba(0, 0, 0, 0.2);
+        color: #2c1810; /* Dark brown text for readability */
+        font-weight: 600;
+        overflow: hidden; /* Ensure pseudo elements don't bleed out awkwardly */
+        animation: fadeInUp 0.6s ease-out forwards;
+      }
+      .bamboo-slip:nth-child(even),
+      .english-strip:nth-child(even) {
+        animation-delay: 0.05s;
+      }
+      .bamboo-slip:nth-child(3n),
+      .english-strip:nth-child(3n) {
+        animation-delay: 0.1s;
+      }
+
+      .bamboo-slip::before,
+      .english-strip::before {
+        /* Grain effect */
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 2px; /* Match parent's rounding slightly tighter */
+        pointer-events: none;
+      }
+      .bamboo-slip::after,
+      .english-strip::after {
+        /* Center line/crease */
+        content: "";
+        position: absolute;
+        background: linear-gradient(
+          rgba(101, 67, 33, 0.1) 20%,
+          rgba(101, 67, 33, 0.05) 50%,
+          rgba(101, 67, 33, 0.1) 80%
+        );
+        pointer-events: none;
+      }
+
+      .bamboo-slip:hover,
+      .english-strip:hover {
+        transform: scale(1.02) translateZ(8px); /* Subtle hover */
+        z-index: 5; /* Ensure hovered strip is above others */
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 15px rgba(0, 0, 0, 0.12),
+          0 6px 15px rgba(0, 0, 0, 0.35), 0 2px 5px rgba(0, 0, 0, 0.25);
+      }
+
+      /* --- Chinese View (Vertical Slips) --- */
+      #chinese-view-container {
+        transform: rotateY(0deg);
+        opacity: 1;
+        z-index: 2;
+        overflow-x: auto;
+        overflow-y: hidden;
+        display: flex;
+        white-space: nowrap;
+        padding: 25px 15px; /* Padding around the slips */
+      }
+      #chinese-view-container.hidden-view {
+        transform: rotateY(-90deg) translateX(-50%);
+        opacity: 0;
+        z-index: 1;
+      }
+
+      #chinese-view-container::-webkit-scrollbar {
+        height: 12px;
+      }
+      #chinese-view-container::-webkit-scrollbar-track {
+        background: rgba(140, 109, 82, 0.5);
+        border-radius: 6px;
+      }
+      #chinese-view-container::-webkit-scrollbar-thumb {
+        background-color: rgba(92, 58, 33, 0.7);
+        border-radius: 6px;
+        border: 2px solid rgba(140, 109, 82, 0.5);
+      }
+
+      .bamboo-slip {
+        flex: 0 0 auto;
+        width: 55px; /* Slightly wider for aesthetics */
+        height: calc(100% - 10px); /* Accommodate padding within container */
+        margin: 0 2px; /* Tighter margin */
+        writing-mode: vertical-rl;
+        text-orientation: upright; /* From inspiration for Chinese */
+        font-family: "Noto Serif SC", serif;
+        font-size: 14px; /* Adjusted from inspiration */
+        line-height: 1.5;
+        padding: 35px 6px; /* Top/bottom padding for threads, L/R for text */
+        letter-spacing: 1px; /* From inspiration */
+      }
+      .bamboo-slip::before {
+        /* Vertical Grain */
+        background: repeating-linear-gradient(
+          90deg,
+          transparent 0px,
+          rgba(139, 85, 47, 0.08) 1px,
+          transparent 1px,
+          transparent 10px
+        );
+      }
+      .bamboo-slip::after {
+        /* Vertical Center Line */
+        top: 8%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1px;
+        height: 84%; /* Slightly inset */
+      }
+      .bamboo-slip.chapter-title-slip {
+        width: 70px; /* Wider for title */
+        font-size: 16px;
+        font-weight: bold;
+        background: linear-gradient(45deg, #e6c080 0%, #d4a574 25%, #e6c080 50%, #c9a366 75%, #e6c080 100%);
+        color: #8b2635; /* Inspired title color */
+        letter-spacing: 2px;
+        align-items: center;
+        justify-content: center;
+        display: flex; /* For text centering */
+      }
+
+      /* Binding threads for Chinese view (on container) */
+      #chinese-view-container.active-view::before,
+      #chinese-view-container.active-view::after {
+        content: "";
+        position: absolute;
+        left: 10px;
+        right: 10px; /* Inset slightly */
+        height: 4px; /* Thicker */
+        background: linear-gradient(to bottom, #8b5a2b 0%, #654021 50%, #8b5a2b 100%);
+        border-radius: 2px;
+        z-index: 3; /* Above slips but below potential hover scale */
+        pointer-events: none;
+        box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+      }
+      #chinese-view-container.active-view::before {
+        top: 40px;
+      }
+      #chinese-view-container.active-view::after {
+        bottom: 40px;
+      }
+
+      /* --- English View (Horizontal Strips) --- */
+      #english-view-container {
+        transform: rotateY(90deg) translateX(50%);
+        opacity: 0;
+        z-index: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        /* background-color: #c7bcae;  Old bg */
+        font-family: Georgia, "Times New Roman", serif;
+        padding: 20px;
+        position: relative;
+      }
+      #english-view-container.active-view {
+        transform: rotateY(0deg) translateX(0%);
+        opacity: 1;
+        z-index: 2;
+      }
+
+      /* Decorative "binding threads" for the English view background */
+      #english-view-container.active-view::before,
+      #english-view-container.active-view::after {
+        content: "";
+        position: absolute;
+        left: 15%;
+        right: 15%; /* Positioned more centrally */
+        height: 4px; /* Thicker */
+        background: linear-gradient(to right, #8b5a2b 0%, #654021 50%, #8b5a2b 100%);
+        border-radius: 2px;
+        z-index: 0;
+        pointer-events: none;
+        box-shadow: 1px 0px 2px rgba(0, 0, 0, 0.5);
+      }
+      #english-view-container.active-view::before {
+        top: 20%;
+      }
+      #english-view-container.active-view::after {
+        bottom: 20%;
+      }
+
+      #english-view-container::-webkit-scrollbar {
+        width: 12px;
+      }
+      #english-view-container::-webkit-scrollbar-track {
+        background: rgba(184, 174, 159, 0.5);
+        border-radius: 6px;
+      }
+      #english-view-container::-webkit-scrollbar-thumb {
+        background-color: rgba(122, 93, 66, 0.7);
+        border-radius: 6px;
+        border: 2px solid rgba(184, 174, 159, 0.5);
+      }
+
+      .english-strip {
+        width: calc(100% - 10px); /* Responsive width */
+        min-height: 40px; /* Minimum height */
+        margin: 0 auto 5px auto; /* Centered, tighter margin */
+        padding: 10px 35px; /* L/R padding for threads, T/B for text */
+        font-size: 14px; /* From inspiration */
+        line-height: 1.4; /* Adjusted */
+        letter-spacing: 0.5px; /* From inspiration */
+        display: flex;
+        align-items: center; /* For vertical centering of text */
+      }
+
+      .english-strip::before {
+        /* Horizontal Grain */
+        background: repeating-linear-gradient(
+          0deg,
+          transparent 0px,
+          rgba(139, 85, 47, 0.06) 1px,
+          /* Softer grain */ transparent 1px,
+          transparent 12px
+        );
+      }
+      .english-strip::after {
+        /* Horizontal Center Line */
+        left: 8%;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 1px;
+        width: 84%; /* Slightly inset */
+      }
+      .english-strip.chapter-title {
+        min-height: 50px; /* Taller for title */
+        font-size: 16px;
+        font-weight: bold;
+        justify-content: center; /* Center title text */
+        background: linear-gradient(45deg, #e6c080 0%, #d4a574 25%, #e6c080 50%, #c9a366 75%, #e6c080 100%);
+        color: #8b2635; /* Inspired title color */
+      }
+
+      /* Toggle Button */
+      .toggle-button {
+        margin-top: 25px;
+        padding: 10px 20px; /* Adjusted from inspiration */
+        background: rgba(212, 165, 116, 0.85); /* Inspired */
+        border: 2px solid #8b5a2b; /* Inspired */
+        border-radius: 8px;
+        color: #2c1810;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        font-size: 15px;
+        text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2);
+      }
+      .toggle-button:hover {
+        background: rgba(230, 192, 128, 0.95);
+        transform: translateY(-1px);
+        border-color: #654021;
+        box-shadow: 0 3px 7px rgba(0, 0, 0, 0.35);
+      }
+      .toggle-button:disabled {
+        background: rgba(150, 130, 110, 0.7);
+        color: #705040;
+        border-color: #705040;
+        cursor: not-allowed;
+      }
+
+      .instructions {
+        margin-top: 15px;
+        font-size: 0.9em;
+        color: #d4a574;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.4);
+      }
+      .loading-message,
+      .error-message {
+        /* Combined for similar styling */
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(212, 165, 116, 0.9);
+        padding: 15px 25px;
+        border-radius: 10px;
+        color: #2c1810;
+        font-weight: bold;
+        border: 2px solid #8b5a2b;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        text-align: center;
+      }
+      .error-message {
+        background: rgba(139, 38, 53, 0.9); /* Error specific color */
+        color: #e6c080;
+        border: 2px solid #801f2a;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(15px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header-title" id="mainBookTitle">孫子兵法 / The Art of War</div>
+    <div class="subtitle" id="mainBookAuthor">Dual Language Reader Concept</div>
+
+    <div class="reader-frame">
+      <div id="chinese-view-container" class="view-container active-view">
+        <div class="loading-message">Loading Chinese Content...</div>
+      </div>
+
+      <div id="english-view-container" class="view-container hidden-view">
+        <div class="loading-message">Loading English Content...</div>
+      </div>
+    </div>
+
+    <button id="toggleViewButton" class="toggle-button" disabled>Switch Language</button>
+    <div class="instructions">Chinese view: Use mouse wheel or touchpad to scroll horizontally.</div>
+
+    <script>
+      const chineseViewContainer = document.getElementById("chinese-view-container");
+      const englishViewContainer = document.getElementById("english-view-container");
+      const toggleButton = document.getElementById("toggleViewButton");
+      const mainBookTitle = document.getElementById("mainBookTitle");
+      const mainBookAuthor = document.getElementById("mainBookAuthor");
+
+      let isChineseViewActive = true;
+      let chineseData = null;
+      let englishData = null;
+
+      const chineseJsonUrl = "https://cheatsheets.davidveksler.com/art-of-war-sun-tzu-chinese.json";
+      const englishJsonUrl = "https://cheatsheets.davidveksler.com/art-of-war-sun-tzu-english.json";
+
+      function populateChineseView(data) {
+        chineseViewContainer.innerHTML = "";
+        if (!data || !data.chapters) {
+          chineseViewContainer.innerHTML = '<div class="error-message">Error loading Chinese content.</div>';
+          return;
+        }
+
+        data.chapters.forEach((chapter) => {
+          const titleSlip = document.createElement("div");
+          titleSlip.classList.add("bamboo-slip", "chapter-title-slip");
+          let formattedTitle = chapter.title; // Keep as is for now, or apply more complex vertical formatting
+          if (formattedTitle.length > 5) {
+            // Simple attempt to break longer titles
+            formattedTitle = formattedTitle.split("").join("\n");
+          }
+          titleSlip.textContent = formattedTitle;
+          chineseViewContainer.appendChild(titleSlip);
+
+          chapter.paragraphs.forEach((para) => {
+            const slip = document.createElement("div");
+            slip.classList.add("bamboo-slip");
+            slip.textContent = para;
+            chineseViewContainer.appendChild(slip);
+          });
+        });
+      }
+
+      function populateEnglishView(data) {
+        englishViewContainer.innerHTML = "";
+        if (!data || !data.chapters) {
+          englishViewContainer.innerHTML = '<div class="error-message">Error loading English content.</div>';
+          return;
+        }
+
+        data.chapters.forEach((chapter) => {
+          const titleStrip = document.createElement("div");
+          titleStrip.classList.add("english-strip", "chapter-title");
+          titleStrip.textContent = `${chapter.title}`;
+          englishViewContainer.appendChild(titleStrip);
+
+          chapter.paragraphs.forEach((para) => {
+            const strip = document.createElement("div");
+            strip.classList.add("english-strip");
+            strip.textContent = para;
+            englishViewContainer.appendChild(strip);
+          });
+        });
+      }
+
+      async function loadContent() {
+        toggleButton.textContent = "Loading...";
+        try {
+          const [chineseResponse, englishResponse] = await Promise.all([fetch(chineseJsonUrl), fetch(englishJsonUrl)]);
+
+          if (!chineseResponse.ok) throw new Error(`Failed to fetch Chinese data (Status: ${chineseResponse.status})`);
+          if (!englishResponse.ok) throw new Error(`Failed to fetch English data (Status: ${englishResponse.status})`);
+
+          chineseData = await chineseResponse.json();
+          englishData = await englishResponse.json();
+
+          populateChineseView(chineseData);
+          populateEnglishView(englishData);
+
+          mainBookTitle.textContent = `${chineseData.title} / ${englishData.title}`;
+          mainBookAuthor.textContent = `By ${chineseData.author || englishData.author}`;
+
+          toggleButton.disabled = false;
+          toggleButton.textContent = "Switch to English";
+        } catch (error) {
+          console.error("Error loading content:", error);
+          const errorMessage = `<div class="error-message">Failed to load book content.<br><small>${error.message}</small></div>`;
+          chineseViewContainer.innerHTML = errorMessage;
+          englishViewContainer.innerHTML = errorMessage;
+          toggleButton.disabled = true;
+          toggleButton.textContent = "Load Failed";
+        }
+      }
+
+      if (chineseViewContainer) {
+        chineseViewContainer.addEventListener("wheel", (event) => {
+          if (isChineseViewActive && event.deltaY !== 0 && chineseViewContainer.classList.contains("active-view")) {
+            event.preventDefault();
+            chineseViewContainer.scrollLeft += event.deltaY * 2.5; // Slightly faster scroll
+          }
+        });
+      }
+
+      toggleButton.addEventListener("click", () => {
+        if (!chineseData || !englishData) return;
+
+        isChineseViewActive = !isChineseViewActive;
+        // Add a class to the frame for the overall rotation
+        document.querySelector(".reader-frame").classList.add("transitioning");
+
+        // The actual view swap happens after the rotation animation is expected to be part way
+        setTimeout(() => {
+          if (isChineseViewActive) {
+            chineseViewContainer.classList.remove("hidden-view");
+            chineseViewContainer.classList.add("active-view");
+            englishViewContainer.classList.remove("active-view");
+            englishViewContainer.classList.add("hidden-view");
+            toggleButton.textContent = "Switch to English";
+          } else {
+            englishViewContainer.classList.remove("hidden-view");
+            englishViewContainer.classList.add("active-view");
+            chineseViewContainer.classList.remove("active-view");
+            chineseViewContainer.classList.add("hidden-view");
+            toggleButton.textContent = "Switch to Chinese";
+          }
+          // Remove the transitioning class to allow rotation back
+          setTimeout(() => {
+            // Ensure it's removed after the new view is set
+            document.querySelector(".reader-frame").classList.remove("transitioning");
+          }, 50); // Small delay
+        }, 350); // Half of the view-container transition duration (0.7s / 2)
+      });
+
+      englishViewContainer.classList.add("hidden-view");
+      englishViewContainer.classList.remove("active-view");
+
+      document.addEventListener("DOMContentLoaded", loadContent);
+    </script>
+  </body>
+</html>
