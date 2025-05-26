@@ -18,50 +18,91 @@
           radial-gradient(circle at 80% 20%, rgba(139, 90, 43, 0.2) 0%, transparent 50%),
           radial-gradient(circle at 40% 80%, rgba(61, 37, 26, 0.3) 0%, transparent 50%),
           linear-gradient(135deg, #2c1810 0%, #4a2c1a 50%, #3d251a 100%);
-        font-family: "Georgia", serif; /* Base font from inspiration */
+        font-family: "Georgia", serif;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         min-height: 100vh;
-        color: #3a2b20; /* Default text color, will be overridden */
+        color: #3a2b20;
         padding: 20px;
-        overflow: hidden;
+        overflow-x: hidden; /* Prevent horizontal scrollbar during animation */
       }
 
       .header-title {
         font-weight: 700;
         font-size: 2.2em;
         margin-bottom: 5px;
-        color: #e6c080; /* Lighter color for dark bg */
+        color: #e6c080;
         text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
         text-align: center;
       }
 
       .subtitle {
         font-size: 1.1em;
-        margin-bottom: 20px;
-        color: #d4a574; /* Lighter color */
+        margin-bottom: 15px;
+        color: #d4a574;
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         text-align: center;
+      }
+
+      /* --- Chapter Menu Styling --- */
+      #chapter-menu-bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        padding: 5px;
+        max-width: 90vw;
+        width: 100%;
+        max-width: 1000px;
+        opacity: 0; /* For animation */
+      }
+
+      .chapter-menu-button {
+        padding: 6px 12px;
+        background: linear-gradient(135deg, #d4a574, #b8954d);
+        border: 2px solid #8b5a2b;
+        border-radius: 5px;
+        color: #2c1810;
+        font-family: "Georgia", serif;
+        font-size: 0.85em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.1);
+      }
+
+      .chapter-menu-button:hover {
+        background: linear-gradient(135deg, #e6c080, #c9a366);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        border-color: #654021;
+      }
+
+      .chapter-menu-button:active {
+        transform: translateY(0px);
+        background: linear-gradient(135deg, #b8954d, #d4a574);
       }
 
       .reader-frame {
         width: 90vw;
         max-width: 1000px;
         height: 70vh;
-        max-height: 600px; /* Increased max-height for new strip style */
-        /* background-color: #6f4e37; Old background */
-        border: 3px solid #654021; /* Darker, richer border */
+        max-height: 600px;
+        border: 3px solid #654021;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.3);
         position: relative;
         border-radius: 8px;
         perspective: 1500px;
         overflow: hidden;
-        /* Add a subtle inner texture or darker background for the frame itself */
         background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
           url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23503020' fill-opacity='0.1'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
           #4a2c1a;
+        transform-origin: center; 
+        opacity: 0; /* Initial state for animation */
       }
 
       .view-container {
@@ -75,50 +116,47 @@
         transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.7s ease-in-out;
         transform-style: preserve-3d;
         backface-visibility: hidden;
-        overflow: hidden;
+        overflow: hidden; /* Keep this to ensure content clipping */
       }
 
-      /* --- Base Strip Styling (Common for Chinese and English) --- */
       .bamboo-slip,
       .english-strip {
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
-          /* Subtle highlight */ linear-gradient(45deg, #d4a574 0%, #c19653 25%, #d4a574 50%, #b8954d 75%, #d4a574 100%);
+          linear-gradient(45deg, #d4a574 0%, #c19653 25%, #d4a574 50%, #b8954d 75%, #d4a574 100%);
         position: relative;
         transform-style: preserve-3d;
         transition: all 0.4s ease;
-        cursor: default; /* Changed from pointer as they are not clickable yet */
-        border-radius: 3px; /* Slightly less rounding */
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), /* Inner highlight */ inset 0 0 10px rgba(0, 0, 0, 0.1),
-          /* Inner shadow for depth */ 0 3px 8px rgba(0, 0, 0, 0.3), /* Outer shadow */ 0 1px 2px rgba(0, 0, 0, 0.2);
-        color: #2c1810; /* Dark brown text for readability */
+        cursor: default;
+        border-radius: 3px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 0 10px rgba(0, 0, 0, 0.1),
+          0 3px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+        color: #2c1810;
         font-weight: 600;
-        overflow: hidden; /* Ensure pseudo elements don't bleed out awkwardly */
-        animation: fadeInUp 0.6s ease-out forwards;
+        overflow: hidden;
+        /* animation: fadeInUp 0.6s ease-out forwards; -> This will be handled by JS for better timing with overall load */
       }
       .bamboo-slip:nth-child(even),
       .english-strip:nth-child(even) {
-        animation-delay: 0.05s;
+        /* animation-delay: 0.05s; */
       }
       .bamboo-slip:nth-child(3n),
       .english-strip:nth-child(3n) {
-        animation-delay: 0.1s;
+        /* animation-delay: 0.1s; */
       }
 
       .bamboo-slip::before,
       .english-strip::before {
-        /* Grain effect */
         content: "";
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        border-radius: 2px; /* Match parent's rounding slightly tighter */
+        border-radius: 2px;
         pointer-events: none;
       }
       .bamboo-slip::after,
       .english-strip::after {
-        /* Center line/crease */
         content: "";
         position: absolute;
         background: linear-gradient(
@@ -131,13 +169,12 @@
 
       .bamboo-slip:hover,
       .english-strip:hover {
-        transform: scale(1.02) translateZ(8px); /* Subtle hover */
-        z-index: 5; /* Ensure hovered strip is above others */
+        transform: scale(1.02) translateZ(8px);
+        z-index: 5;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 15px rgba(0, 0, 0, 0.12),
           0 6px 15px rgba(0, 0, 0, 0.35), 0 2px 5px rgba(0, 0, 0, 0.25);
       }
 
-      /* --- Chinese View (Vertical Slips) --- */
       #chinese-view-container {
         transform: rotateY(0deg);
         opacity: 1;
@@ -146,7 +183,7 @@
         overflow-y: hidden;
         display: flex;
         white-space: nowrap;
-        padding: 25px 15px; /* Padding around the slips */
+        padding: 25px 15px;
       }
       #chinese-view-container.hidden-view {
         transform: rotateY(-90deg) translateX(-50%);
@@ -154,232 +191,131 @@
         z-index: 1;
       }
 
-      #chinese-view-container::-webkit-scrollbar {
-        height: 12px;
-      }
-      #chinese-view-container::-webkit-scrollbar-track {
-        background: rgba(140, 109, 82, 0.5);
-        border-radius: 6px;
-      }
-      #chinese-view-container::-webkit-scrollbar-thumb {
-        background-color: rgba(92, 58, 33, 0.7);
-        border-radius: 6px;
-        border: 2px solid rgba(140, 109, 82, 0.5);
-      }
+      #chinese-view-container::-webkit-scrollbar { height: 12px; }
+      #chinese-view-container::-webkit-scrollbar-track { background: rgba(140, 109, 82, 0.5); border-radius: 6px; }
+      #chinese-view-container::-webkit-scrollbar-thumb { background-color: rgba(92, 58, 33, 0.7); border-radius: 6px; border: 2px solid rgba(140, 109, 82, 0.5); }
 
       .bamboo-slip {
-        flex: 0 0 auto;
-        width: 55px; /* Slightly wider for aesthetics */
-        height: calc(100% - 10px); /* Accommodate padding within container */
-        margin: 0 2px; /* Tighter margin */
-        writing-mode: vertical-rl;
-        text-orientation: upright; /* From inspiration for Chinese */
-        font-family: "Noto Serif SC", serif;
-        font-size: 14px; /* Adjusted from inspiration */
-        line-height: 1.5;
-        padding: 35px 6px; /* Top/bottom padding for threads, L/R for text */
-        letter-spacing: 1px; /* From inspiration */
+        flex: 0 0 auto; width: 55px; height: calc(100% - 10px); margin: 0 2px;
+        writing-mode: vertical-rl; text-orientation: upright; font-family: "Noto Serif SC", serif;
+        font-size: 14px; line-height: 1.5; padding: 35px 6px; letter-spacing: 1px;
       }
-      .bamboo-slip::before {
-        /* Vertical Grain */
-        background: repeating-linear-gradient(
-          90deg,
-          transparent 0px,
-          rgba(139, 85, 47, 0.08) 1px,
-          transparent 1px,
-          transparent 10px
-        );
-      }
-      .bamboo-slip::after {
-        /* Vertical Center Line */
-        top: 8%;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 1px;
-        height: 84%; /* Slightly inset */
-      }
+      .bamboo-slip::before { background: repeating-linear-gradient(90deg, transparent 0px, rgba(139, 85, 47, 0.08) 1px, transparent 1px, transparent 10px); }
+      .bamboo-slip::after { top: 8%; left: 50%; transform: translateX(-50%); width: 1px; height: 84%; }
       .bamboo-slip.chapter-title-slip {
-        width: 70px; /* Wider for title */
-        font-size: 16px;
-        font-weight: bold;
+        width: 70px; font-size: 16px; font-weight: bold;
         background: linear-gradient(45deg, #e6c080 0%, #d4a574 25%, #e6c080 50%, #c9a366 75%, #e6c080 100%);
-        color: #8b2635; /* Inspired title color */
-        letter-spacing: 2px;
-        align-items: center;
-        justify-content: center;
-        display: flex; /* For text centering */
+        color: #8b2635; letter-spacing: 2px; align-items: center; justify-content: center; display: flex;
       }
 
-      /* Binding threads for Chinese view (on container) */
-      #chinese-view-container.active-view::before,
-      #chinese-view-container.active-view::after {
-        content: "";
-        position: absolute;
-        left: 10px;
-        right: 10px; /* Inset slightly */
-        height: 4px; /* Thicker */
+      #chinese-view-container.active-view::before, #chinese-view-container.active-view::after {
+        content: ""; position: absolute; left: 10px; right: 10px; height: 4px;
         background: linear-gradient(to bottom, #8b5a2b 0%, #654021 50%, #8b5a2b 100%);
-        border-radius: 2px;
-        z-index: 3; /* Above slips but below potential hover scale */
-        pointer-events: none;
-        box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+        border-radius: 2px; z-index: 3; pointer-events: none; box-shadow: 0px 1px 2px rgba(0,0,0,0.5);
       }
-      #chinese-view-container.active-view::before {
-        top: 40px;
-      }
-      #chinese-view-container.active-view::after {
-        bottom: 40px;
-      }
+      #chinese-view-container.active-view::before { top: 40px; }
+      #chinese-view-container.active-view::after { bottom: 40px; }
 
-      /* --- English View (Horizontal Strips) --- */
       #english-view-container {
-        transform: rotateY(90deg) translateX(50%);
-        opacity: 0;
-        z-index: 1;
-        overflow-y: auto;
-        overflow-x: hidden;
-        /* background-color: #c7bcae;  Old bg */
-        font-family: Georgia, "Times New Roman", serif;
-        padding: 20px;
-        position: relative;
+        transform: rotateY(90deg) translateX(50%); opacity: 0; z-index: 1;
+        overflow-y: auto; overflow-x: hidden; font-family: Georgia, "Times New Roman", serif;
+        padding: 20px; position: relative;
       }
-      #english-view-container.active-view {
-        transform: rotateY(0deg) translateX(0%);
-        opacity: 1;
-        z-index: 2;
-      }
+      #english-view-container.active-view { transform: rotateY(0deg) translateX(0%); opacity: 1; z-index: 2; }
 
-      /* Decorative "binding threads" for the English view background */
-      #english-view-container.active-view::before,
-      #english-view-container.active-view::after {
-        content: "";
-        position: absolute;
-        left: 15%;
-        right: 15%; /* Positioned more centrally */
-        height: 4px; /* Thicker */
+      #english-view-container.active-view::before, #english-view-container.active-view::after {
+        content: ""; position: absolute; left: 15%; right: 15%; height: 4px;
         background: linear-gradient(to right, #8b5a2b 0%, #654021 50%, #8b5a2b 100%);
-        border-radius: 2px;
-        z-index: 0;
-        pointer-events: none;
-        box-shadow: 1px 0px 2px rgba(0, 0, 0, 0.5);
+        border-radius: 2px; z-index: 0; pointer-events: none; box-shadow: 1px 0px 2px rgba(0,0,0,0.5);
       }
-      #english-view-container.active-view::before {
-        top: 20%;
-      }
-      #english-view-container.active-view::after {
-        bottom: 20%;
-      }
+      #english-view-container.active-view::before { top: 20%; }
+      #english-view-container.active-view::after { bottom: 20%; }
 
-      #english-view-container::-webkit-scrollbar {
-        width: 12px;
-      }
-      #english-view-container::-webkit-scrollbar-track {
-        background: rgba(184, 174, 159, 0.5);
-        border-radius: 6px;
-      }
-      #english-view-container::-webkit-scrollbar-thumb {
-        background-color: rgba(122, 93, 66, 0.7);
-        border-radius: 6px;
-        border: 2px solid rgba(184, 174, 159, 0.5);
-      }
+      #english-view-container::-webkit-scrollbar { width: 12px; }
+      #english-view-container::-webkit-scrollbar-track { background: rgba(184, 174, 159, 0.5); border-radius: 6px; }
+      #english-view-container::-webkit-scrollbar-thumb { background-color: rgba(122, 93, 66, 0.7); border-radius: 6px; border: 2px solid rgba(184, 174, 159, 0.5); }
 
       .english-strip {
-        width: calc(100% - 10px); /* Responsive width */
-        min-height: 40px; /* Minimum height */
-        margin: 0 auto 5px auto; /* Centered, tighter margin */
-        padding: 10px 35px; /* L/R padding for threads, T/B for text */
-        font-size: 14px; /* From inspiration */
-        line-height: 1.4; /* Adjusted */
-        letter-spacing: 0.5px; /* From inspiration */
-        display: flex;
-        align-items: center; /* For vertical centering of text */
+        width: calc(100% - 10px); min-height: 40px; margin: 0 auto 5px auto;
+        padding: 10px 35px; font-size: 14px; line-height: 1.4; letter-spacing: 0.5px;
+        display: flex; align-items: center;
       }
-
-      .english-strip::before {
-        /* Horizontal Grain */
-        background: repeating-linear-gradient(
-          0deg,
-          transparent 0px,
-          rgba(139, 85, 47, 0.06) 1px,
-          /* Softer grain */ transparent 1px,
-          transparent 12px
-        );
-      }
-      .english-strip::after {
-        /* Horizontal Center Line */
-        left: 8%;
-        top: 50%;
-        transform: translateY(-50%);
-        height: 1px;
-        width: 84%; /* Slightly inset */
-      }
+      .english-strip::before { background: repeating-linear-gradient(0deg, transparent 0px, rgba(139, 85, 47, 0.06) 1px, transparent 1px, transparent 12px); }
+      .english-strip::after { left: 8%; top: 50%; transform: translateY(-50%); height: 1px; width: 84%; }
       .english-strip.chapter-title {
-        min-height: 50px; /* Taller for title */
-        font-size: 16px;
-        font-weight: bold;
-        justify-content: center; /* Center title text */
+        min-height: 50px; font-size: 16px; font-weight: bold; justify-content: center;
         background: linear-gradient(45deg, #e6c080 0%, #d4a574 25%, #e6c080 50%, #c9a366 75%, #e6c080 100%);
-        color: #8b2635; /* Inspired title color */
+        color: #8b2635;
       }
 
-      /* Toggle Button */
       .toggle-button {
-        margin-top: 25px;
-        padding: 10px 20px; /* Adjusted from inspiration */
-        background: rgba(212, 165, 116, 0.85); /* Inspired */
-        border: 2px solid #8b5a2b; /* Inspired */
-        border-radius: 8px;
-        color: #2c1810;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        font-size: 15px;
-        text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2);
+        margin-top: 25px; padding: 10px 20px; background: rgba(212, 165, 116, 0.85);
+        border: 2px solid #8b5a2b; border-radius: 8px; color: #2c1810; font-weight: bold;
+        cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        font-size: 15px; text-shadow: 0px 1px 0px rgba(255,255,255,0.2);
+        opacity: 0; /* For animation */
       }
       .toggle-button:hover {
-        background: rgba(230, 192, 128, 0.95);
-        transform: translateY(-1px);
-        border-color: #654021;
-        box-shadow: 0 3px 7px rgba(0, 0, 0, 0.35);
+        background: rgba(230, 192, 128, 0.95); transform: translateY(-1px);
+        border-color: #654021; box-shadow: 0 3px 7px rgba(0,0,0,0.35);
       }
       .toggle-button:disabled {
-        background: rgba(150, 130, 110, 0.7);
-        color: #705040;
-        border-color: #705040;
-        cursor: not-allowed;
+        background: rgba(150, 130, 110, 0.7); color: #705040;
+        border-color: #705040; cursor: not-allowed;
       }
 
       .instructions {
-        margin-top: 15px;
-        font-size: 0.9em;
-        color: #d4a574;
-        text-align: center;
-        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.4);
+        margin-top: 15px; font-size: 0.9em; color: #d4a574; text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,0.4);
+        opacity: 0; /* For animation */
       }
-      .loading-message,
-      .error-message {
-        /* Combined for similar styling */
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(212, 165, 116, 0.9);
-        padding: 15px 25px;
-        border-radius: 10px;
-        color: #2c1810;
-        font-weight: bold;
-        border: 2px solid #8b5a2b;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        text-align: center;
+      .loading-message, .error-message {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: rgba(212, 165, 116, 0.9); padding: 15px 25px; border-radius: 10px;
+        color: #2c1810; font-weight: bold; border: 2px solid #8b5a2b;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center;
       }
-      .error-message {
-        background: rgba(139, 38, 53, 0.9); /* Error specific color */
-        color: #e6c080;
-        border: 2px solid #801f2a;
+      .error-message { background: rgba(139, 38, 53, 0.9); color: #e6c080; border: 2px solid #801f2a; }
+
+      /* --- Animations --- */
+      @keyframes unrollEffect {
+        from {
+          transform: scaleX(0.05); /* Start very narrow, like the edge of a scroll */
+          opacity: 0;
+        }
+        70% {
+            opacity: 1; /* Become fully opaque before fully unrolled */
+        }
+        to {
+          transform: scaleX(1); /* Expand to full width */
+          opacity: 1;
+        }
       }
 
-      @keyframes fadeInUp {
+      .reader-frame.animate-unroll { /* Class to trigger animation */
+        animation: unrollEffect 1.2s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+        animation-delay: 0.3s; /* Short delay before starting */
+      }
+      
+      @keyframes delayedFadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      #chapter-menu-bar.animate-fade,
+      .toggle-button.animate-fade,
+      .instructions.animate-fade {
+        animation: delayedFadeIn 0.8s ease-out forwards;
+        animation-delay: 1.0s; /* Delay until reader frame is mostly unrolled */
+      }
+      
+      /* Slip/Strip fade in - now more controlled */
+      .slip-animate-in {
+          opacity: 0; /* Start hidden */
+          animation: fadeInUpIndividual 0.6s ease-out forwards;
+      }
+
+      @keyframes fadeInUpIndividual {
         from {
           opacity: 0;
           transform: translateY(15px) scale(0.98);
@@ -389,17 +325,39 @@
           transform: translateY(0) scale(1);
         }
       }
+      /* --- End Animations --- */
+
+      /* --- Footer Styling --- */
+      footer {
+        margin-top: 40px; /* Increased space */
+        padding: 15px 20px;
+        font-size: 0.9em; /* Slightly larger */
+        color: #c8ab83; 
+        text-align: center;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); /* Stronger shadow */
+        max-width: 700px; /* Constrain width */
+        line-height: 1.5;
+        opacity: 0; /* For animation */
+        border-top: 1px solid rgba(230, 192, 128, 0.2); /* Subtle separator */
+      }
+       footer.animate-fade {
+        animation: delayedFadeIn 0.8s ease-out forwards;
+        animation-delay: 1.5s; /* Fade in last */
+      }
     </style>
   </head>
   <body>
     <div class="header-title" id="mainBookTitle">孫子兵法 / The Art of War</div>
     <div class="subtitle" id="mainBookAuthor">Dual Language Reader Concept</div>
 
-    <div class="reader-frame">
+    <div id="chapter-menu-bar">
+      <!-- Chapter buttons will be injected here by JavaScript -->
+    </div>
+
+    <div class="reader-frame" id="readerFrame"> <!-- Added ID for easier selection -->
       <div id="chinese-view-container" class="view-container active-view">
         <div class="loading-message">Loading Chinese Content...</div>
       </div>
-
       <div id="english-view-container" class="view-container hidden-view">
         <div class="loading-message">Loading English Content...</div>
       </div>
@@ -408,12 +366,23 @@
     <button id="toggleViewButton" class="toggle-button" disabled>Switch Language</button>
     <div class="instructions">Chinese view: Use mouse wheel or touchpad to scroll horizontally.</div>
 
+    <footer>
+      This reader is inspired by the ancient Chinese writing medium of bamboo slips (簡牘, jiǎndú). 
+      These long, narrow strips of bamboo or wood, tied together with string, formed the primary "books" and documents before the widespread adoption of paper. 
+      The vertical orientation of text in the Chinese view and the segmented appearance of the content aim to evoke this historical form.
+    </footer>
+
     <script>
       const chineseViewContainer = document.getElementById("chinese-view-container");
       const englishViewContainer = document.getElementById("english-view-container");
       const toggleButton = document.getElementById("toggleViewButton");
       const mainBookTitle = document.getElementById("mainBookTitle");
       const mainBookAuthor = document.getElementById("mainBookAuthor");
+      const chapterMenuBar = document.getElementById("chapter-menu-bar");
+      const readerFrame = document.getElementById("readerFrame"); // Get reader frame
+      const instructionsText = document.querySelector(".instructions"); // Get instructions
+      const pageFooter = document.querySelector("footer"); // Get footer
+
 
       let isChineseViewActive = true;
       let chineseData = null;
@@ -422,6 +391,17 @@
       const chineseJsonUrl = "https://cheatsheets.davidveksler.com/art-of-war-sun-tzu-chinese.json";
       const englishJsonUrl = "https://cheatsheets.davidveksler.com/art-of-war-sun-tzu-english.json";
 
+      function applySlipAnimations(container) {
+        const slips = container.querySelectorAll('.bamboo-slip, .english-strip');
+        slips.forEach((slip, index) => {
+            slip.style.opacity = '0'; // Ensure it starts hidden before animation class
+            slip.classList.add('slip-animate-in');
+            // Stagger animation start slightly
+            slip.style.animationDelay = `${index * 0.03}s`; 
+        });
+      }
+
+
       function populateChineseView(data) {
         chineseViewContainer.innerHTML = "";
         if (!data || !data.chapters) {
@@ -429,12 +409,12 @@
           return;
         }
 
-        data.chapters.forEach((chapter) => {
+        data.chapters.forEach((chapter, index) => {
           const titleSlip = document.createElement("div");
           titleSlip.classList.add("bamboo-slip", "chapter-title-slip");
-          let formattedTitle = chapter.title; // Keep as is for now, or apply more complex vertical formatting
+          titleSlip.id = `ch-title-${index}`;
+          let formattedTitle = chapter.title;
           if (formattedTitle.length > 5) {
-            // Simple attempt to break longer titles
             formattedTitle = formattedTitle.split("").join("\n");
           }
           titleSlip.textContent = formattedTitle;
@@ -447,6 +427,7 @@
             chineseViewContainer.appendChild(slip);
           });
         });
+        if (isChineseViewActive) applySlipAnimations(chineseViewContainer);
       }
 
       function populateEnglishView(data) {
@@ -456,9 +437,10 @@
           return;
         }
 
-        data.chapters.forEach((chapter) => {
+        data.chapters.forEach((chapter, index) => {
           const titleStrip = document.createElement("div");
           titleStrip.classList.add("english-strip", "chapter-title");
+          titleStrip.id = `en-title-${index}`;
           titleStrip.textContent = `${chapter.title}`;
           englishViewContainer.appendChild(titleStrip);
 
@@ -469,10 +451,49 @@
             englishViewContainer.appendChild(strip);
           });
         });
+         if (!isChineseViewActive) applySlipAnimations(englishViewContainer);
+      }
+
+      function populateChapterMenu(chapters) {
+        if (!chapterMenuBar || !chapters) return;
+        chapterMenuBar.innerHTML = ""; 
+
+        chapters.forEach((chapter, index) => {
+          const button = document.createElement("button");
+          button.classList.add("chapter-menu-button");
+          button.textContent = chapter.title; 
+          button.dataset.chapterIndex = index;
+
+          button.addEventListener("click", () => {
+            navigateToChapter(index);
+          });
+          chapterMenuBar.appendChild(button);
+        });
+      }
+
+      function navigateToChapter(index) {
+        let targetElement;
+        const viewContainer = isChineseViewActive ? chineseViewContainer : englishViewContainer;
+        const targetId = isChineseViewActive ? `ch-title-${index}` : `en-title-${index}`;
+        targetElement = document.getElementById(targetId);
+        
+        if (targetElement && viewContainer) {
+             // Ensure the container is scrollable before trying to scroll within it
+            const scrollBehavior = { behavior: 'smooth', block: 'nearest' };
+            if (isChineseViewActive) {
+                scrollBehavior.inline = 'start';
+            } else {
+                 scrollBehavior.block = 'start'; // Or 'center' if preferred
+            }
+            targetElement.scrollIntoView(scrollBehavior);
+        }
       }
 
       async function loadContent() {
         toggleButton.textContent = "Loading...";
+        // Start reader frame unroll animation as soon as loadContent is called
+        if (readerFrame) readerFrame.classList.add("animate-unroll");
+
         try {
           const [chineseResponse, englishResponse] = await Promise.all([fetch(chineseJsonUrl), fetch(englishJsonUrl)]);
 
@@ -482,14 +503,26 @@
           chineseData = await chineseResponse.json();
           englishData = await englishResponse.json();
 
-          populateChineseView(chineseData);
+          populateChineseView(chineseData); // This will now also trigger slip animations for the default view
           populateEnglishView(englishData);
+          
+          if (englishData && englishData.chapters) {
+            populateChapterMenu(englishData.chapters);
+          }
 
           mainBookTitle.textContent = `${chineseData.title} / ${englishData.title}`;
-          mainBookAuthor.textContent = `By ${chineseData.author || englishData.author}`;
+          mainBookAuthor.textContent = `By ${chineseData.author || englishData.author || 'Sun Tzu'}`;
 
           toggleButton.disabled = false;
           toggleButton.textContent = "Switch to English";
+
+          // Trigger fade-in for other elements now that content is ready
+          if (chapterMenuBar) chapterMenuBar.classList.add("animate-fade");
+          if (toggleButton) toggleButton.classList.add("animate-fade");
+          if (instructionsText) instructionsText.classList.add("animate-fade");
+          if (pageFooter) pageFooter.classList.add("animate-fade");
+
+
         } catch (error) {
           console.error("Error loading content:", error);
           const errorMessage = `<div class="error-message">Failed to load book content.<br><small>${error.message}</small></div>`;
@@ -497,6 +530,12 @@
           englishViewContainer.innerHTML = errorMessage;
           toggleButton.disabled = true;
           toggleButton.textContent = "Load Failed";
+          if (chapterMenuBar) chapterMenuBar.innerHTML = ""; 
+          // Still trigger animations for static elements if needed, or hide them
+             if (chapterMenuBar) chapterMenuBar.classList.add("animate-fade");
+             if (toggleButton) toggleButton.classList.add("animate-fade");
+             if (instructionsText) instructionsText.classList.add("animate-fade");
+             if (pageFooter) pageFooter.classList.add("animate-fade");
         }
       }
 
@@ -504,7 +543,7 @@
         chineseViewContainer.addEventListener("wheel", (event) => {
           if (isChineseViewActive && event.deltaY !== 0 && chineseViewContainer.classList.contains("active-view")) {
             event.preventDefault();
-            chineseViewContainer.scrollLeft += event.deltaY * 2.5; // Slightly faster scroll
+            chineseViewContainer.scrollLeft += event.deltaY * 2.5;
           }
         });
       }
@@ -513,30 +552,32 @@
         if (!chineseData || !englishData) return;
 
         isChineseViewActive = !isChineseViewActive;
-        // Add a class to the frame for the overall rotation
         document.querySelector(".reader-frame").classList.add("transitioning");
 
-        // The actual view swap happens after the rotation animation is expected to be part way
         setTimeout(() => {
+          const previouslyActiveSlips = isChineseViewActive ? englishViewContainer.querySelectorAll('.bamboo-slip, .english-strip') : chineseViewContainer.querySelectorAll('.bamboo-slip, .english-strip');
+          previouslyActiveSlips.forEach(s => s.classList.remove('slip-animate-in'));
+
+
           if (isChineseViewActive) {
             chineseViewContainer.classList.remove("hidden-view");
             chineseViewContainer.classList.add("active-view");
             englishViewContainer.classList.remove("active-view");
             englishViewContainer.classList.add("hidden-view");
             toggleButton.textContent = "Switch to English";
+            applySlipAnimations(chineseViewContainer); 
           } else {
             englishViewContainer.classList.remove("hidden-view");
             englishViewContainer.classList.add("active-view");
             chineseViewContainer.classList.remove("active-view");
             chineseViewContainer.classList.add("hidden-view");
             toggleButton.textContent = "Switch to Chinese";
+            applySlipAnimations(englishViewContainer);
           }
-          // Remove the transitioning class to allow rotation back
           setTimeout(() => {
-            // Ensure it's removed after the new view is set
             document.querySelector(".reader-frame").classList.remove("transitioning");
-          }, 50); // Small delay
-        }, 350); // Half of the view-container transition duration (0.7s / 2)
+          }, 50);
+        }, 350);
       });
 
       englishViewContainer.classList.add("hidden-view");
