@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla Internal Technical Specification Framework</title>
+    <link href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>" rel="icon"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tesla-bg-primary: #121212; /* Darker grey, almost black */
+            --tesla-bg-secondary: #1c1c1e; /* Slightly lighter dark grey */
+            --tesla-text-primary: #f5f5f7; /* Off-white */
+            --tesla-text-secondary: #a1a1a6; /* Lighter grey for secondary text */
+            --tesla-border-color: #3a3a3c; /* Subtle border color */
+            --tesla-accent-primary: #007aff; /* Tesla blue, can be adjusted */
+            --tesla-accent-hover: #005ecb;
+            --tesla-font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+            --category-color-vehicles: #E82127; /* Tesla Red */
+            --category-color-energy: #3E6AE1; /* Blue */
+            --category-color-charging: #FAD738; /* Yellow/Gold */
+            --category-color-solar: #4CAF50; /* Green */
+            --category-color-software: #9C27B0; /* Purple */
+            --category-color-robotics: #FF9800; /* Orange */
+            --category-color-manufacturing: #795548; /* Brown */
+            --category-color-ai-infra: #00BCD4; /* Cyan */
+        }
+
+        html {
+            background-color: var(--tesla-bg-primary);
+        }
+
+        body {
+            background-color: transparent;
+            font-family: var(--tesla-font-family);
+            color: var(--tesla-text-primary);
+            font-size: 15px;
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        #tsparticles-background {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .page-header,
+        .container#main-container,
+        footer.container {
+            background-color: rgba(18, 18, 18, 0.85); /* Semi-transparent dark */
+            position: relative;
+            z-index: 0;
+            backdrop-filter: blur(5px); /* Optional: adds a frosted glass effect */
+        }
+
+        .page-header {
+            padding: 2rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--tesla-border-color);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .tesla-logo-container {
+            width: 150px; /* Adjusted size */
+            height: auto;
+            margin-right: 1.5rem;
+        }
+
+        .tesla-logo-container svg {
+            width: 100%;
+            height: auto;
+            fill: var(--tesla-text-primary);
+        }
+
+        .page-header-text h1 {
+            color: var(--tesla-text-primary);
+            font-weight: 600;
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.5px;
+        }
+        .page-header-text .lead {
+            color: var(--tesla-text-secondary);
+            font-size: 1.1rem;
+            max-width: 100%;
+            margin: 0;
+            font-weight: 300;
+        }
+
+        .section-title {
+            color: var(--tesla-text-primary);
+            background-color: transparent;
+            margin: 0 0 1.8rem 0;
+            font-weight: 600;
+            font-size: 1.75rem;
+            padding: 0;
+            display: block;
+            border-bottom: 1px solid var(--tesla-border-color);
+            padding-bottom: 0.8rem;
+            letter-spacing: -0.3px;
+        }
+
+        .info-card {
+            background: rgba(28, 28, 30, 0.9); /* Semi-transparent card */
+            border: 1px solid var(--tesla-border-color);
+            border-radius: 12px; /* More rounded corners */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .info-card:hover {
+            background-color: rgba(44, 44, 46, 0.95);
+            transform: translateY(-3px);
+        }
+
+        .info-card .card-body {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .info-card h5 {
+            color: var(--tesla-text-primary);
+            background-color: transparent;
+            font-size: 1.2rem;
+            text-align: left;
+            margin: 0;
+            padding: 1.2rem 1.5rem;
+            font-weight: 500;
+            border-bottom: 1px solid var(--tesla-border-color);
+            border-radius: 11px 11px 0 0; /* Match card rounding */
+        }
+        .info-card h5 .bi {
+            font-size: 1.3em;
+            opacity: 0.9;
+            margin-right: 0.8rem;
+            vertical-align: -0.15em;
+        }
+        .card-content-wrapper {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .info-card p.summary {
+            font-size: 0.95rem;
+            color: var(--tesla-text-secondary);
+            margin-bottom: 1.2rem;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .collapse-content {
+            font-size: 0.9rem;
+            border-top: 1px solid var(--tesla-border-color);
+            padding: 1.5rem;
+            background-color: rgba(20, 20, 22, 0.9); /* Slightly different dark for contrast */
+            border-radius: 0 0 11px 11px;
+            color: var(--tesla-text-secondary);
+        }
+        .collapse-content h6 {
+            font-weight: 500;
+            color: var(--tesla-text-primary);
+            margin-top: 1rem;
+            margin-bottom: 0.6rem;
+            font-size: 1rem;
+        }
+        .collapse-content ul {
+            padding-left: 0;
+            list-style: none;
+        }
+        .collapse-content li {
+            margin-bottom: 0.7rem;
+            padding-bottom: 0.7rem;
+            line-height: 1.55;
+            border-bottom: 1px solid #2f2f31; /* Lighter border for list items */
+            position: relative;
+            padding-left: 1.8rem;
+        }
+        .collapse-content li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .collapse-content li::before {
+            content: "\F282"; /* Bootstrap icon: dot */
+            font-family: "bootstrap-icons";
+            position: absolute;
+            left: 0;
+            top: 4px;
+            color: var(--tesla-accent-primary);
+            font-size: 1.1em;
+        }
+        .collapse-content li strong {
+            color: var(--tesla-text-primary);
+            font-weight: 500;
+        }
+        .term {
+            font-weight: 500;
+            color: var(--tesla-text-primary);
+            background-color: #38383a;
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        .details-toggle {
+            font-size: 0.9rem;
+            margin-top: auto;
+            align-self: flex-start;
+            padding: 0.5rem 1rem;
+            color: var(--tesla-text-secondary);
+            border: 1px solid var(--tesla-border-color);
+            background-color: transparent;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .details-toggle:hover,
+        .details-toggle:focus {
+            background-color: var(--tesla-accent-primary);
+            color: var(--tesla-text-primary);
+            border-color: var(--tesla-accent-primary);
+        }
+        .details-toggle .bi-plus-lg,
+        .details-toggle .bi-dash-lg {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        footer.container {
+            padding-top: 2.5rem;
+            padding-bottom: 2rem;
+            font-size: 0.9em;
+            color: var(--tesla-text-secondary);
+            text-align: center;
+            border-top: 1px solid var(--tesla-border-color);
+        }
+        footer a {
+            color: var(--tesla-text-secondary);
+            font-weight: 400;
+            text-decoration: none;
+        }
+        footer a:hover {
+            color: var(--tesla-text-primary);
+            text-decoration: underline;
+        }
+
+        /* Category-specific icon colors */
+        .card-vehicles h5 .bi { color: var(--category-color-vehicles); }
+        .card-energy h5 .bi { color: var(--category-color-energy); }
+        .card-charging h5 .bi { color: var(--category-color-charging); }
+        .card-solar h5 .bi { color: var(--category-color-solar); }
+        .card-software h5 .bi { color: var(--category-color-software); }
+        .card-robotics h5 .bi { color: var(--category-color-robotics); }
+        .card-manufacturing h5 .bi { color: var(--category-color-manufacturing); }
+        .card-ai-infra h5 .bi { color: var(--category-color-ai-infra); }
+
+        .row { display: flex; flex-wrap: wrap; }
+        .col-xl-4, .col-lg-6, .col-md-6 { /* Adjusted for better readability on large screens too */
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="tsparticles-background"></div>
+
+    <header class="page-header">
+        <div class="tesla-logo-container">
+            <svg viewBox="0 0 342 35" xmlns="http://www.w3.org/2000/svg"><path d="M0 .1a9.7 9.7 0 007 7h11l.5.1v27.6h6.8V7.3L26 7h11a9.8 9.8 0 007-7H0zm238.6 0h-6.8v34.8H263a9.7 9.7 0 006-6.8h-3.3a6.3 6.3 0 01-5.2 5.2h-14.8V0zm-34.3 0H186v34.8h34.7V0zm-34.3 0h-6.8v34.8h24.3a9.7 9.7 0 006.8-6.8h-3.3a6.3 6.3 0 01-5.2 5.2h-14.8V0zm-34.4 0H98.4v34.8h24.3a9.7 9.7 0 006.8-6.8h-3.3a6.3 6.3 0 01-5.2 5.2H105V0zm-34.3 0H46.9v34.8h24.3a9.7 9.7 0 006.8-6.8h-3.3a6.3 6.3 0 01-5.2 5.2H53.7V0zm-34.4 0H0v34.8h24.3a9.7 9.7 0 006.8-6.8h-3.3a6.3 6.3 0 01-5.2 5.2H6.8V0zm290.3 0h-6.8v34.8h24.3a9.7 9.7 0 006.8-6.8h-3.3a6.3 6.3 0 01-5.2 5.2h-14.8V0zM308.5 0h-6.8v34.8h34.8V0h-28z" fill="currentColor" fill-rule="evenodd"></path></svg>
+        </div>
+        <div class="page-header-text">
+            <h1>Internal Technical Specification Framework</h1>
+            <p class="lead">Blueprint for detailed documentation on all Tesla products.</p>
+        </div>
+    </header>
+
+    <div class="container" id="main-container">
+        <!-- I. ELECTRIC VEHICLES (Existing Content) -->
+        <div class="schema-container section-vehicles" data-section-id="section-vehicles">
+            <h2 class="section-title" id="section-vehicles-title">I. Electric Vehicles (EVs)</h2>
+            <div class="row">
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-vehicles" id="card-ev-general">
+                        <div class="card-body">
+                            <h5><i class="bi bi-car-front-fill"></i> General Aspects for ALL EVs</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Core technical specifications common to all Tesla electric vehicle platforms.</p>
+                                <button aria-controls="collapseEvGeneral" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseEvGeneral" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseEvGeneral">
+                            <h6>1. Overall Vehicle Architecture:</h6>
+                            <ul>
+                                <li><strong>Design Philosophy & Core Principles</strong></li>
+                                <li><strong>Platform Strategy</strong></li>
+                                <li><strong>Key Performance Indicators (KPIs)</strong></li>
+                                <li><strong>Vehicle Generations/Revisions</strong></li>
+                                <li><strong>Regulatory Compliance & Homologation</strong></li>
+                            </ul>
+                            <h6>2. Powertrain System:</h6>
+                            <ul>
+                                <li><strong>Battery Pack System:</strong> Cell Technology (Chemistry, Form Factor, Specs), Module Design, Pack Assembly (Configuration, Voltage, Capacity, Structural Integration, HV Interconnects, Enclosure, Serviceability), BMS (Architecture, Algorithms, Safety), Thermal Management System (TMS).</li>
+                                <li><strong>Drive Unit(s):</strong> Electric Motor(s) (Type, Configuration, Power, Torque, Cooling), Power Inverter(s) (Technology, Control, Cooling), Gearbox/Transmission.</li>
+                                <li><strong>On-Board Charger (OBC)</strong></li>
+                                <li><strong>DC-DC Converter (HV to LV)</strong></li>
+                            </ul>
+                             <h6>3. Chassis and Body:</h6>
+                            <ul>
+                                <li><strong>Body Structure:</strong> Materials, Joining Technologies, Crash Structures, Aerodynamics.</li>
+                                <li><strong>Suspension System:</strong> Type, Components, Active Control (if applicable).</li>
+                                <li><strong>Steering System:</strong> Type, EPS, Steer-by-Wire (if applicable).</li>
+                                <li><strong>Braking System:</strong> Regenerative, Friction, Actuation.</li>
+                                <li><strong>Wheels and Tires.</strong></li>
+                            </ul>
+                            <h6>4. Low-Voltage (LV) Electrical System</h6>
+                             <ul>
+                                <li><strong>LV Battery</strong></li>
+                                <li><strong>Power Distribution Architecture</strong></li>
+                                <li><strong>Body Control Module (BCM) / Vehicle Control Unit (VCU)</strong></li>
+                            </ul>
+                            <h6>5. Software, Electronics, and Autonomy</h6>
+                             <ul>
+                                <li><strong>Central Compute Architecture</strong></li>
+                                <li><strong>Operating System(s) & Software Stack</strong></li>
+                                <li><strong>Autopilot / Full Self-Driving (FSD) System:</strong> Sensor Suite (Cameras, Radar, Ultrasonics, LiDAR - if present, GNSS/IMU), Perception Subsystem, Planning & Control Subsystem, Hardware Revisions.</li>
+                                <li><strong>Infotainment System (IVI)</strong></li>
+                                <li><strong>Telematics Control Unit (TCU)</strong></li>
+                                <li><strong>Firmware Over-The-Air (FOTA) & Software Over-The-Air (SOTA) Updates</strong></li>
+                                <li><strong>Vehicle Network Architecture</strong></li>
+                            </ul>
+                            <h6>6. Interior Systems</h6>
+                             <ul>
+                                <li><strong>Seats, HVAC System, Interior Lighting, Dashboard & Controls, Airbag & Restraint Systems</strong></li>
+                            </ul>
+                            <h6>7. Exterior Systems</h6>
+                            <ul>
+                                <li><strong>Exterior Lighting, Wipers & Washers, Door Systems, Glass</strong></li>
+                            </ul>
+                            <h6>8. Safety & Security</h6>
+                             <ul>
+                                <li><strong>Active & Passive Safety Systems, High-Voltage Safety, Cybersecurity, Anti-theft System</strong></li>
+                            </ul>
+                            <h6>9. Manufacturing & Assembly</h6>
+                            <ul>
+                                <li><strong>Key Manufacturing Processes, Production Line Layout, Quality Control</strong></li>
+                            </ul>
+                            <h6>10. Serviceability & Diagnostics</h6>
+                            <ul>
+                                <li><strong>Diagnostic Ports, Remote Diagnostics, Service Tools, Modularity</strong></li>
+                            </ul>
+                            <h6>11. Key Differentiating Technologies</h6>
+                            <h6>12. Integration with other Tesla Products/Services</h6>
+                            <h6>13. Known Limitations, Design Trade-offs</h6>
+                            <h6>14. Revision History / Version Control</h6>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-vehicles" id="card-model3y">
+                        <div class="card-body">
+                            <h5><i class="bi bi-lightning-charge-fill"></i> Specific Product: Model 3/Y Platform</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Unique technical aspects and innovations specific to the Model 3 and Model Y platform.</p>
+                                <button aria-controls="collapseModel3Y" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseModel3Y" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseModel3Y">
+                            <h6>1. Structural Battery Pack (newer versions):</h6>
+                            <ul>
+                                <li><strong>Cell-to-Pack Technology</strong></li>
+                                <li><strong>Integration with vehicle chassis, load-bearing characteristics</strong></li>
+                                <li><strong>Manufacturing process (e.g., bonding)</strong></li>
+                            </ul>
+                            <h6>2. Octovalve / Integrated Thermal Management System:</h6>
+                            <ul>
+                                <li><strong>Components:</strong> 8-port valve, Heat pump, Chiller, Radiator, Coolant loops.</li>
+                                <li><strong>Modes of Operation</strong></li>
+                                <li><strong>Control Strategy & Algorithms</strong></li>
+                            </ul>
+                            <h6>3. Minimalist Interior Design & Single Central Screen</h6>
+                            <h6>4. Gigacasting (Rear and potentially Front Underbody)</h6>
+                            <h6>5. Heat Pump HVAC System (Standard on most versions)</h6>
+                            <h6>6. Camera-Only Vision System for Autopilot (Tesla Vision)</h6>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-vehicles" id="card-modelsx">
+                        <div class="card-body">
+                            <h5><i class="bi bi-gem"></i> Specific Product: Model S/X Platform</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Distinctive features and high-performance technologies of the Model S and Model X platform.</p>
+                                <button aria-controls="collapseModelSX" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseModelSX" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseModelSX">
+                            <h6>1. Smart Air Suspension System:</h6>
+                            <ul>
+                                <li><strong>Components & Control Logic</strong></li>
+                                <li><strong>Calibration Procedures</strong></li>
+                            </ul>
+                            <h6>2. Falcon Wing Doors (Model X):</h6>
+                            <ul>
+                                <li><strong>Mechanism, Sensors, Safety Logic, Sealing</strong></li>
+                            </ul>
+                            <h6>3. Automatic Front Doors (Model X)</h6>
+                            <h6>4. Adaptive Front Lighting System (Matrix LED variants)</h6>
+                            <h6>5. Three-Display Layout (Driver, Center, Rear - newer models)</h6>
+                            <h6>6. Yoke Steering Wheel (Optional/Standard)</h6>
+                            <h6>7. Powertrain Options (Plaid):</h6>
+                            <ul>
+                                <li><strong>Tri-Motor Configuration Details (Carbon-sleeved rotors)</strong></li>
+                                <li><strong>Torque Vectoring Algorithms</strong></li>
+                                <li><strong>Enhanced Thermal Management</strong></li>
+                            </ul>
+                             <h6>8. Active Noise Cancellation / Road Noise Reduction</h6>
+                        </div>
+                    </div>
+                </div>
+                <!-- Add Cybertruck, Semi, Roadster cards here following the same pattern -->
+                 <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-vehicles" id="card-cybertruck">
+                        <div class="card-body">
+                            <h5><i class="bi bi-truck-front"></i> Specific Product: Cybertruck</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Groundbreaking design and technology of the Cybertruck platform.</p>
+                                <button aria-controls="collapseCybertruck" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseCybertruck" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseCybertruck">
+                            <h6>1. Stainless Steel Exoskeleton (Ultra-Hard 30X Cold-Rolled):</h6>
+                            <ul><li><strong>Alloy Composition, Mechanical Properties, Forming Processes</strong></li></ul>
+                            <h6>2. 48V Low-Voltage Architecture:</h6>
+                            <ul><li><strong>Benefits, Key Components, Power distribution</strong></li></ul>
+                            <h6>3. Steer-by-Wire System & Rear-Wheel Steering</h6>
+                            <h6>4. Adaptive Air Suspension with Long Travel</h6>
+                            <h6>5. Integrated 120V/240V Bed and Cabin Outlets</h6>
+                            <h6>6. Armor Glass</h6>
+                            <h6>7. Integrated Bed Cover ("Vault")</h6>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-vehicles" id="card-semi">
+                        <div class="card-body">
+                            <h5><i class="bi bi-truck"></i> Specific Product: Tesla Semi</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Technical specifications for the Tesla Semi electric truck.</p>
+                                <button aria-controls="collapseSemi" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseSemi" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseSemi">
+                            <h6>1. High-Capacity Battery Pack for Class 8 Trucking</h6>
+                            <h6>2. Multi-Motor Powertrain & Megacharging System</h6>
+                            <h6>3. Aerodynamic Design & Central Seating Position</h6>
+                            <h6>4. Enhanced Autopilot/FSD for Highway Platooning</h6>
+                            <h6>5. Durability & Reliability for Commercial Use</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-vehicles" id="card-roadster">
+                        <div class="card-body">
+                            <h5><i class="bi bi-rocket-takeoff-fill"></i> Specific Product: Roadster (Gen 2)</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Anticipated specifications for the next-generation Tesla Roadster.</p>
+                                <button aria-controls="collapseRoadster" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseRoadster" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseRoadster">
+                            <h6>1. Extreme Performance Targets</h6>
+                            <h6>2. Battery System for High C-Rates & Energy Density</h6>
+                            <h6>3. Powertrain (Tri-Motor or as specified)</h6>
+                            <h6>4. Aerodynamics for High Speed & Downforce</h6>
+                            <h6>5. SpaceX Package (Cold Gas Thrusters - if pursued)</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- II. ENERGY STORAGE SOLUTIONS (Existing Content) -->
+        <div class="schema-container section-energy" data-section-id="section-energy">
+            <h2 class="section-title" id="section-energy-title">II. Energy Storage Solutions</h2>
+            <div class="row">
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-energy" id="card-energy-general">
+                        <div class="card-body">
+                            <h5><i class="bi bi-battery-charging"></i> General Aspects for ALL Energy Storage</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Fundamental technical characteristics for Tesla's stationary energy storage products.</p>
+                                <button aria-controls="collapseEnergyGeneral" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseEnergyGeneral" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseEnergyGeneral">
+                            <h6>1. Core Technology & Design Principles</h6>
+                            <h6>2. Battery System:</h6>
+                            <ul>
+                                <li><strong>Cell Technology (Chemistry, Form Factor)</strong></li>
+                                <li><strong>Module & Pack Design (Voltage, Capacity kWh/MWh, Enclosure)</strong></li>
+                                <li><strong>BMS (Algorithms for stationary cycling, Grid interaction logic)</strong></li>
+                                <li><strong>Thermal Management System</strong></li>
+                            </ul>
+                            <h6>3. Power Conversion System (PCS) / Inverter:</h6>
+                             <ul>
+                                <li><strong>Power Rating, AC Output, DC Input, Efficiency</strong></li>
+                                <li><strong>Grid Forming/Following, Control Algorithms, Protection</strong></li>
+                            </ul>
+                            <h6>4. Control & Monitoring System</h6>
+                            <h6>5. Mechanical & Structural Design</h6>
+                            <h6>6. Safety Systems & Regulatory Compliance</h6>
+                            <h6>7. Integration & Interoperability</h6>
+                            <h6>8. Performance Metrics & Benchmarks</h6>
+                            <h6>9. Firmware Update Mechanism</h6>
+                            <h6>10. Revision History / Version Control</h6>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-energy" id="card-powerwall">
+                        <div class="card-body">
+                            <h5><i class="bi bi-house-heart-fill"></i> Specific Product: Powerwall</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Technical specifications for Tesla's residential and small commercial battery system.</p>
+                                <button aria-controls="collapsePowerwall" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapsePowerwall" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapsePowerwall">
+                            <h6>1. Integrated Inverter & Battery Design</h6>
+                            <h6>2. Capacity Options (e.g., Powerwall 3, Powerwall+)</h6>
+                            <h6>3. Backup Gateway / Tesla Backup Switch:</h6>
+                            <ul>
+                                <li><strong>Automatic islanding and grid reconnection</strong></li>
+                                <li><strong>Load shedding capabilities</strong></li>
+                                <li><strong>Integration with main electrical panel</strong></li>
+                            </ul>
+                            <h6>4. User Interface (Tesla App for monitoring, control, mode selection)</h6>
+                            <h6>5. Solar Self-Consumption Optimization Algorithms</h6>
+                            <h6>6. Storm Watch Feature & Stacking Capability</h6>
+                            <h6>7. Installation Requirements & Process</h6>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-energy" id="card-megapack">
+                        <div class="card-body">
+                            <h5><i class="bi bi-building"></i> Specific Product: Megapack</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Details for Tesla's utility-scale and large commercial energy storage solution.</p>
+                                <button aria-controls="collapseMegapack" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseMegapack" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseMegapack">
+                            <h6>1. Containerized Solution / Modular Block Design</h6>
+                            <h6>2. High Power & Energy Density for Footprint</h6>
+                            <h6>3. Integrated Thermal Management (Liquid-cooled typically)</h6>
+                            <h6>4. Factory Assembled & Tested for rapid deployment</h6>
+                            <h6>5. Advanced Grid Services Capabilities</h6>
+                            <h6>6. Tesla Site Controller / Autobidder Platform Integration</h6>
+                            <h6>7. MV (Medium Voltage) Transformer & Switchgear Integration</h6>
+                            <h6>8. Scalability (MWh to GWh projects)</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- III. SOLAR PRODUCTS (Existing Content) -->
+        <div class="schema-container section-solar" data-section-id="section-solar">
+            <h2 class="section-title" id="section-solar-title">III. Solar Products</h2>
+            <div class="row">
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-solar" id="card-solar-general">
+                        <div class="card-body">
+                            <h5><i class="bi bi-sun-fill"></i> General Aspects for ALL Solar Products</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Common technical foundations for Tesla's solar generation technologies.</p>
+                                <button aria-controls="collapseSolarGeneral" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseSolarGeneral" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseSolarGeneral">
+                            <h6>1. Core Technology & Design Principles</h6>
+                            <h6>2. Photovoltaic (PV) Technology:</h6>
+                            <ul>
+                                <li><strong>Cell Type, Efficiency Rating, Power Output</strong></li>
+                                <li><strong>Temperature Coefficient, Degradation Rate / Warranty</strong></li>
+                            </ul>
+                            <h6>3. Mechanical Design & Mounting</h6>
+                             <ul>
+                                <li><strong>Dimensions & Weight, Frame/Shingle Material, Load Ratings</strong></li>
+                            </ul>
+                            <h6>4. Electrical Characteristics</h6>
+                            <ul>
+                                <li><strong>Voc, Isc, Vmp, Imp, String Configurations, Connectors</strong></li>
+                            </ul>
+                            <h6>5. Inverter Compatibility / Integrated Inverter</h6>
+                            <h6>6. Safety & Compliance (UL, IEC standards)</h6>
+                            <h6>7. Aesthetics & Integration with Building Design</h6>
+                            <h6>8. Monitoring & Performance Tracking (via Tesla App/Platform)</h6>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-solar" id="card-solarroof">
+                        <div class="card-body">
+                            <h5><i class="bi bi-bricks"></i> Specific Product: Solar Roof</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Technical specifications for Tesla's integrated solar shingle roofing system.</p>
+                                <button aria-controls="collapseSolarRoof" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseSolarRoof" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseSolarRoof">
+                            <h6>1. Solar Shingle Design:</h6>
+                            <ul>
+                                <li><strong>Active Solar Tiles & Non-Active (Dummy) Tiles</strong></li>
+                                <li><strong>Glass Technology & Durability</strong></li>
+                                <li><strong>Interlocking & Wiring Mechanism, Aesthetic options</strong></li>
+                            </ul>
+                            <h6>2. Integrated System Approach (Roofing material + Solar generation)</h6>
+                            <h6>3. Installation Process & Requirements (Specialized training)</h6>
+                            <h6>4. Thermal Performance as a Roofing Material</h6>
+                            <h6>5. Inverter & Energy Storage Integration (Often paired with Powerwall)</h6>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-solar" id="card-solarpanels">
+                        <div class="card-body">
+                            <h5><i class="bi bi-grid-1x2-fill"></i> Specific Product: Solar Panels</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Specifications for Tesla's traditional solar panel offerings and inverter technology.</p>
+                                <button aria-controls="collapseSolarPanels" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseSolarPanels" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseSolarPanels">
+                            <h6>1. Panel Specifications (Efficiency tiers, aesthetics)</h6>
+                            <h6>2. Supplier(s) if not Tesla-manufactured</h6>
+                            <h6>3. Racking & Mounting System specifics</h6>
+                            <h6>4. Tesla Solar Inverter:</h6>
+                            <ul>
+                                <li><strong>Power ratings (kW), MPPT channels and efficiency</strong></li>
+                                <li><strong>Communication and monitoring features, Safety features (e.g., rapid shutdown)</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- IV. CHARGING INFRASTRUCTURE (Existing Content) -->
+        <div class="schema-container section-charging" data-section-id="section-charging">
+            <h2 class="section-title" id="section-charging-title">IV. Charging Infrastructure</h2>
+            <div class="row">
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-charging" id="card-charging-general">
+                        <div class="card-body">
+                            <h5><i class="bi bi-ev-station-fill"></i> General Aspects for ALL Charging</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Core technical principles for Tesla's vehicle charging solutions.</p>
+                                <button aria-controls="collapseChargingGeneral" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseChargingGeneral" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseChargingGeneral">
+                            <h6>1. Core Functionality & Design Principles</h6>
+                            <h6>2. Charging Standard(s) Supported (NACS, CCS, CHAdeMO)</h6>
+                            <h6>3. Power Electronics Architecture:</h6>
+                                <ul><li><strong>AC/DC Conversion, DC/DC Conversion, Power Module Design</strong></li></ul>
+                            <h6>4. Control System:</h6>
+                                <ul><li><strong>CCU, Communication with EV, User Interface, Remote Management, Load Balancing</strong></li></ul>
+                            <h6>5. Mechanical Design (Enclosure, Cable Management, Connector, Cooling)</h6>
+                            <h6>6. Electrical System (Input Voltage, Grid Connection)</h6>
+                            <h6>7. Safety Systems & Compliance (UL, IEC)</h6>
+                            <h6>8. Network Connectivity & Backend Platform</h6>
+                            <h6>9. Installation & Site Requirements</h6>
+                            <h6>10. Revision History / Version Control</h6>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-charging" id="card-supercharger">
+                        <div class="card-body">
+                            <h5><i class="bi bi-fuel-pump-fill"></i> Specific Product: Supercharger</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Technical details of Tesla's DC fast charging network technology.</p>
+                                <button aria-controls="collapseSupercharger" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseSupercharger" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseSupercharger">
+                            <h6>1. Power Levels (e.g., V2: 150kW, V3: 250kW, V4: 350kW+)</h6>
+                            <h6>2. Liquid-Cooled Cable Technology (for V3 and above)</h6>
+                            <h6>3. Plug & Charge Authentication with Tesla Vehicles</h6>
+                            <h6>4. Integration with Vehicle Navigation for Preconditioning & Routing</h6>
+                            <h6>5. Cabinet Design (Power cabinets + Posts/Stalls)</h6>
+                            <h6>6. Solar & Storage Integration at Supercharger Sites (if applicable)</h6>
+                            <h6>7. Magic Dock (Integrated CCS Adapter for non-Tesla EVs - for some V3/V4)</h6>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-charging" id="card-wallconnector">
+                        <div class="card-body">
+                            <h5><i class="bi bi-plug-fill"></i> Specific Product: Wall Connector</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Specifications for Tesla's AC Level 2 home and destination charging solution.</p>
+                                <button aria-controls="collapseWallConnector" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseWallConnector" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseWallConnector">
+                            <h6>1. Power Levels (Configurable, up to 11.5kW / 48A typically)</h6>
+                            <h6>2. Input Voltage (208-240V Single Phase)</h6>
+                            <h6>3. Connectivity (Wi-Fi for firmware updates, load sharing)</h6>
+                            <h6>4. Power Sharing for Multiple Units</h6>
+                            <h6>5. Access Control Features (Tesla vehicle only, specific VINs, open)</h6>
+                            <h6>6. Cable Length Options & Mounting, Indoor/Outdoor Rated</h6>
+                        </div>
+                    </div>
+                </div>
+                <!-- Add Destination Charging and Megacharger cards -->
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-charging" id="card-destinationcharging">
+                        <div class="card-body">
+                            <h5><i class="bi bi-geo-alt-fill"></i> Specific Product: Destination Charging</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Network and technical aspects for partners leveraging Tesla AC chargers.</p>
+                                <button aria-controls="collapseDestinationCharging" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseDestinationCharging" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseDestinationCharging">
+                            <h6>1. Nature of Product: Network/Partnership Program</h6>
+                            <h6>2. Technical Aspects for Partners (Recommended chargers, Installation)</h6>
+                            <h6>3. User Experience (Visibility in navigation, Pricing)</h6>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-charging" id="card-megacharger">
+                        <div class="card-body">
+                            <h5><i class="bi bi-truck-flatbed"></i> Specific Product: Megacharger</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">High-power charging solution for Tesla Semi and heavy-duty vehicles.</p>
+                                <button aria-controls="collapseMegacharger" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseMegacharger" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseMegacharger">
+                            <h6>1. Target Power Levels (>1 MW)</h6>
+                            <h6>2. High Current Connector & Cable Design (Liquid Cooled)</h6>
+                            <h6>3. Communication Protocol with Semi</h6>
+                            <h6>4. Specific Safety Considerations for MW-level charging</h6>
+                            <h6>5. Grid Impact & Interconnection Requirements</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- V. SOFTWARE PLATFORMS & AI -->
+        <div class="schema-container section-software" data-section-id="section-software">
+            <h2 class="section-title" id="section-software-title">V. Software Platforms & AI</h2>
+            <div class="row">
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-software" id="card-software-general">
+                        <div class="card-body">
+                            <h5><i class="bi bi-code-slash"></i> General Aspects for ALL Software Platforms</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Cross-cutting technical principles for Tesla's software and AI platforms.</p>
+                                <button aria-controls="collapseSoftwareGeneral" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseSoftwareGeneral" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseSoftwareGeneral">
+                            <h6>1. Platform Architecture (Microservices, Monolithic, Hybrid)</h6>
+                            <h6>2. Core Technologies Used (Languages, Frameworks, Databases, Cloud Provider)</h6>
+                            <h6>3. Data Management:</h6>
+                                <ul><li><strong>Ingestion & Processing, Storage & Warehousing, Privacy & Security, Analytics & ML Training Infrastructure</strong></li></ul>
+                            <h6>4. AI/ML Model Development & Deployment:</h6>
+                                <ul><li><strong>Architectures, Training Datasets, Validation, Deployment (Edge/Cloud), Continuous Learning</strong></li></ul>
+                            <h6>5. API Design & Management, Scalability & Reliability, Cybersecurity Architecture</h6>
+                            <h6>6. Development Operations (DevOps) & CI/CD Pipelines</h6>
+                            <h6>7. User Interface (UI) / User Experience (UX) Platform</h6>
+                            <h6>8. Revision History / Version Control</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-software" id="card-fsd-stack">
+                        <div class="card-body">
+                            <h5><i class="bi bi-robot"></i> Specific Platform: Autopilot/FSD Software Stack</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Beyond in-vehicle aspects: data engine, training, and validation.</p>
+                                <button aria-controls="collapseFSDStack" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseFSDStack" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseFSDStack">
+                            <h6>1. Data Engine:</h6>
+                                <ul><li><strong>Shadow Mode Data Collection & Annotation, Simulation Environment, Automated Labeling</strong></li></ul>
+                            <h6>2. Neural Network Training Infrastructure (e.g., Dojo link)</h6>
+                            <h6>3. Map Generation & Localization Services</h6>
+                            <h6>4. Verification & Validation Suite for ADAS/AD functions</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-software" id="card-vehicle-os">
+                        <div class="card-body">
+                            <h5><i class="bi bi-pc-display-horizontal"></i> Specific Platform: Tesla Vehicle OS</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Core operating system services for Tesla vehicles.</p>
+                                <button aria-controls="collapseVehicleOS" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseVehicleOS" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseVehicleOS">
+                            <h6>1. Kernel, Drivers, Middleware</h6>
+                            <h6>2. Application Framework</h6>
+                            <h6>3. Secure Boot & Update Mechanisms</h6>
+                            <h6>4. Diagnostic Services Framework</h6>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-software" id="card-mobile-app">
+                        <div class="card-body">
+                            <h5><i class="bi bi-phone-fill"></i> Specific Platform: Tesla Mobile App</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Mobile application architecture and backend services.</p>
+                                <button aria-controls="collapseMobileApp" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseMobileApp" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseMobileApp">
+                            <h6>1. Mobile App Architecture (iOS, Android)</h6>
+                            <h6>2. Backend APIs for Vehicle Control, Charging, Service</h6>
+                            <h6>3. User Account Management & Authentication</h6>
+                            <h6>4. Push Notification Services</h6>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-software" id="card-energy-platform">
+                        <div class="card-body">
+                            <h5><i class="bi bi-graph-up-arrow"></i> Specific Platform: Energy Products Control</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Control and monitoring platform for energy products (Autobidder, etc.).</p>
+                                <button aria-controls="collapseEnergyPlatform" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseEnergyPlatform" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseEnergyPlatform">
+                            <h6>1. Real-time Grid Monitoring & Data Feeds</h6>
+                            <h6>2. Energy Trading Algorithms</h6>
+                            <h6>3. Asset Control & Dispatch Logic for Powerwall, Megapack</h6>
+                            <h6>4. Predictive Forecasting (Load, Generation, Price)</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VI. ROBOTICS (Optimus) -->
+        <div class="schema-container section-robotics" data-section-id="section-robotics">
+            <h2 class="section-title" id="section-robotics-title">VI. Robotics (Optimus)</h2>
+            <div class="row">
+                <div class="col-xl-4 col-lg-6 col-md-6"> <!-- Can be col-xl-12 if it's the only card -->
+                    <div class="info-card card-robotics" id="card-optimus-general">
+                        <div class="card-body">
+                            <h5><i class="bi bi-person-arms-up"></i> General Aspects for Optimus Humanoid Robot</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Technical specifications for the Tesla Optimus humanoid robot platform.</p>
+                                <button aria-controls="collapseOptimusGeneral" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseOptimusGeneral" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseOptimusGeneral">
+                            <h6>1. Design Philosophy & Intended Applications</h6>
+                            <h6>2. Mechanical Architecture:</h6>
+                                <ul><li><strong>Actuators (Type, Specs, DoF), Skeletal Structure & Materials, End Effectors/Hands, Overall Dimensions, Weight, Payload</strong></li></ul>
+                            <h6>3. Power System (Battery Pack, Power Distribution, Operating Time)</h6>
+                            <h6>4. Sensor Suite:</h6>
+                                <ul><li><strong>Vision System, Proprioceptive Sensors, Exteroceptive Sensors, Force/Torque Sensors, Tactile Sensors, Audio System</strong></li></ul>
+                            <h6>5. Compute & Control System:</h6>
+                                <ul><li><strong>Onboard Computer(s), Real-Time Control Loops, Higher-Level AI Processor, OS & Software Stack, Communication</strong></li></ul>
+                            <h6>6. AI & Software Capabilities:</h6>
+                                <ul><li><strong>Locomotion & Balancing, Navigation & Path Planning, Object Recognition & Manipulation, Human-Robot Interaction, Task Planning, Learning Algorithms, Integration with Tesla AI</strong></li></ul>
+                            <h6>7. Safety Systems</h6>
+                            <h6>8. Performance Metrics</h6>
+                            <h6>9. Firmware/Software Update Mechanisms</h6>
+                            <h6>10. Revision History / Version Control</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VII. ADVANCED MANUFACTURING SYSTEMS -->
+        <div class="schema-container section-manufacturing" data-section-id="section-manufacturing">
+            <h2 class="section-title" id="section-manufacturing-title">VII. Advanced Manufacturing Systems</h2>
+            <div class="row">
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-manufacturing" id="card-manufacturing-general">
+                        <div class="card-body">
+                            <h5><i class="bi bi-gear-wide-connected"></i> General Aspects for Tesla Manufacturing Systems</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Core principles and technologies in Tesla's advanced manufacturing processes.</p>
+                                <button aria-controls="collapseManufacturingGeneral" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseManufacturingGeneral" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseManufacturingGeneral">
+                            <h6>1. System Overview & Purpose</h6>
+                            <h6>2. Key Equipment & Machinery (Specs, Robotics, Tooling)</h6>
+                            <h6>3. Process Flow & Automation Level</h6>
+                            <h6>4. Control System Architecture (PLCs, Industrial PCs, MES Integration)</h6>
+                            <h6>5. Sensorization & Data Collection</h6>
+                            <h6>6. Material Handling & Logistics</h6>
+                            <h6>7. Safety Systems & Interlocks</h6>
+                            <h6>8. Performance Metrics (OEE, Cycle Time, Yield)</h6>
+                            <h6>9. Maintenance Requirements & Procedures</h6>
+                            <h6>10. Integration with Factory-Wide Systems</h6>
+                            <h6>11. Revision History / Version Control</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-manufacturing" id="card-gigacasting">
+                        <div class="card-body">
+                            <h5><i class="bi bi-subtract"></i> Specific System: Gigacasting Cell</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Technical details of Tesla's large-scale casting technology.</p>
+                                <button aria-controls="collapseGigacasting" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseGigacasting" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseGigacasting">
+                            <h6>1. Casting Machine (e.g., IDRA Giga Press - Tonnage, Shot size)</h6>
+                            <h6>2. Molten Metal Handling (Furnace, Dosing system)</h6>
+                            <h6>3. Die Design & Material (Cooling, Ejectors, Coatings)</h6>
+                            <h6>4. Part Extraction Robot & Gripper</h6>
+                            <h6>5. Trimming & Finishing Processes</h6>
+                            <h6>6. Quality Control Systems (X-ray, Dimensional scanning)</h6>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="info-card card-manufacturing" id="card-4680cell-line">
+                        <div class="card-body">
+                            <h5><i class="bi bi-battery-full"></i> Specific System: 4680 Cell Manufacturing Line</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Manufacturing process for Tesla's 4680 battery cells.</p>
+                                <button aria-controls="collapse4680CellLine" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapse4680CellLine" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapse4680CellLine">
+                            <h6>1. Electrode Manufacturing (Cathode/Anode): Mixing, Coating, Drying, Calendaring, Slitting</h6>
+                            <h6>2. Cell Assembly: Jelly Roll Winding/Stacking, Tab Welding, Can Insertion & Sealing, Electrolyte Filling</h6>
+                            <h6>3. Formation & Aging: Cycling protocol, Degassing, Aging process</h6>
+                            <h6>4. Testing & Grading (OCV, IR, Capacity)</h6>
+                            <h6>5. Automation & Material Transport</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIII. AI INFRASTRUCTURE (Dojo) -->
+        <div class="schema-container section-ai-infra" data-section-id="section-ai-infra">
+            <h2 class="section-title" id="section-ai-infra-title">VIII. AI Infrastructure (Dojo)</h2>
+            <div class="row">
+                 <div class="col-xl-4 col-lg-6 col-md-6"> <!-- Can be col-xl-12 if it's the only card -->
+                    <div class="info-card card-ai-infra" id="card-dojo-general">
+                        <div class="card-body">
+                            <h5><i class="bi bi-cpu-fill"></i> General Aspects for Dojo AI Supercomputer</h5>
+                            <div class="card-content-wrapper">
+                                <p class="summary">Technical architecture and capabilities of the Dojo AI training platform.</p>
+                                <button aria-controls="collapseDojoGeneral" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseDojoGeneral" data-bs-toggle="collapse" type="button">
+                                    Details <i class="bi bi-plus-lg"></i><i class="bi bi-dash-lg" style="display: none"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseDojoGeneral">
+                            <h6>1. System Architecture Philosophy (Neural Net Training at scale)</h6>
+                            <h6>2. D1 Chip Architecture (Custom ASIC, Core count, ISA, On-chip memory)</h6>
+                            <h6>3. Training Tile Architecture (Chips per tile, Interconnect, Power/Cooling)</h6>
+                            <h6>4. System Tray & Cabinet Architecture (Tiles per tray/cabinet, Interconnect fabric, Network topology, Compute power)</h6>
+                            <h6>5. Host Interface & Software Stack (Interface to host servers, Dojo Compiler & Libraries, Programming Model, Supported ML Frameworks)</h6>
+                            <h6>6. Power & Cooling Infrastructure (Total power, Liquid cooling system)</h6>
+                            <h6>7. Storage System for Training Data</h6>
+                            <h6>8. Performance Benchmarks</h6>
+                            <h6>9. Scalability & Reliability Features</h6>
+                            <h6>10. Deployment & Operational Considerations</h6>
+                            <h6>11. Revision History / Version Control</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- /container#main-container -->
+
+    <footer class="container text-center pb-3">
+        <div>
+            <p>&copy; Tesla, Inc. - Internal Engineering Documentation Framework</p>
+            <p class="small">Confidential & Proprietary</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const collapseElements = document.querySelectorAll(".collapse");
+            collapseElements.forEach((collapseEl) => {
+                const button = document.querySelector(`.details-toggle[data-bs-target="#${collapseEl.id}"]`);
+                const plusIcon = button ? button.querySelector(".bi-plus-lg") : null;
+                const dashIcon = button ? button.querySelector(".bi-dash-lg") : null;
+
+                if (button && plusIcon && dashIcon) {
+                    const updateIconAndButton = (isShown) => {
+                        if (isShown) {
+                            plusIcon.style.display = "none";
+                            dashIcon.style.display = "inline-block";
+                            button.setAttribute("aria-expanded", "true");
+                        } else {
+                            plusIcon.style.display = "inline-block";
+                            dashIcon.style.display = "none";
+                            button.setAttribute("aria-expanded", "false");
+                        }
+                    };
+                    // Initialize based on current state (e.g. if pre-opened via class "show")
+                    updateIconAndButton(collapseEl.classList.contains("show"));
+
+                    collapseEl.addEventListener("show.bs.collapse", () => updateIconAndButton(true));
+                    collapseEl.addEventListener("hide.bs.collapse", () => updateIconAndButton(false));
+                }
+            });
+
+            if (typeof tsParticles !== "undefined") {
+                tsParticles.load("tsparticles-background", {
+                    fpsLimit: 60,
+                    background: { color: "transparent" },
+                    particles: {
+                        number: { value: 50, density: { enable: true, value_area: 800 } },
+                        color: { value: "#4A4A4A" }, // Subtle grey particles
+                        shape: { type: "circle" },
+                        opacity: { value: 0.3, random: true },
+                        size: { value: 2, random: { enable: true, minimumValue: 0.5 } },
+                        links: {
+                            enable: true,
+                            color: "#555555", // Subtle grey links
+                            distance: 150,
+                            opacity: 0.2,
+                            width: 1,
+                        },
+                        move: {
+                            enable: true,
+                            speed: 0.4,
+                            direction: "none",
+                            random: true,
+                            straight: false,
+                            out_mode: "out",
+                        },
+                    },
+                    interactivity: {
+                        detect_on: "canvas",
+                        events: {
+                            onhover: { enable: true, mode: "grab" },
+                            onclick: { enable: false, mode: "push" },
+                            resize: true,
+                        },
+                        modes: {
+                            grab: { distance: 140, links: { opacity: 0.35 } },
+                            push: { quantity: 2 },
+                        },
+                    },
+                    detectRetina: true,
+                });
+            } else {
+                console.error("tsParticles library not loaded.");
+            }
+        });
+    </script>
+</body>
+</html>
