@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Human Skeleton - Anatomical Study</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        #skeleton-container { flex-grow: 1; background-color: #e0e0e0; /* Lighter gray */ }
+        #info-panel {
+            width: 350px; /* Slightly wider */
+            padding: 20px;
+            background-color: #ffffff;
+            border-left: 1px solid #ccc;
+            overflow-y: auto;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+        }
+        #info-panel h2 { margin-top: 0; color: #337ab7; } /* Styled header */
+        #bone-name { color: #333; font-size: 1.5em; margin-bottom: 10px; font-weight: bold;}
+        #bone-details { color: #555; font-size: 0.95em; line-height: 1.6; }
+        #bone-details strong { color: #337ab7; }
+        #bone-details ul { padding-left: 20px; }
+        canvas { display: block; }
+        .loader-message { text-align: center; padding: 20px; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+
+    <div id="skeleton-container">
+        <!-- The 3D scene will be rendered here by Three.js -->
+    </div>
+
+    <div id="info-panel">
+        <h2>Anatomical Information</h2>
+        <div id="bone-name">Loading model...</div>
+        <div id="bone-details">
+            <p class="loader-message">Please wait while the skeleton model is being loaded. This may take a moment.</p>
+            <p>Once loaded, click on a part of the skeleton to learn more about it.</p>
+            <p><strong>Controls:</strong></p>
+            <ul>
+                <li><strong>Left Mouse Button + Drag:</strong> Rotate</li>
+                <li><strong>Mouse Wheel:</strong> Zoom</li>
+                <li><strong>Right Mouse Button + Drag (or Ctrl + Left Click + Drag):</strong> Pan</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Three.js Library -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.164.1/examples/jsm/"
+            }
+        }
+    </script>
+
+    <!-- Your custom JavaScript for loading the model and interactivity -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        let scene, camera, renderer, controls, model;
+        let selectedObject = null;
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        const skeletonContainer = document.getElementById('skeleton-container');
+        const boneNameElement = document.getElementById('bone-name');
+        const boneDetailsElement = document.getElementById('bone-details');
+
+        // --- Anatomical Data (Update this based on your model's actual structure) ---
+        // The names "Object_2", "Object_3", etc. are based on the node names
+        // found in your GLB file's JSON header.
+        // You will need to inspect the model to determine what these parts actually are.
+        const anatomicalData = {
+            "Object_2": { name: "Skeleton Part 1 (e.g., Torso/Ribs?)", details: "This is one of the major components of the loaded skeleton model. Further details would describe the specific bones in this group." },
+            "Object_3": { name: "Skeleton Part 2 (e.g., Limbs?)", details: "This part of the skeleton model likely contains multiple bones. You can identify them by exploring the model." },
+            "Object_4": { name: "Skeleton Part 3 (e.g., Skull?)", details: "An important component of the skeleton. Specifics depend on how the model was segmented." },
+            "Object_5": { name: "Skeleton Part 4 (e.g., Pelvis/Legs?)", details: "Another major segment of the skeleton model provided." },
+            // Fallback if a sub-mesh without a direct entry is clicked
+            "Unknown": { name: "Unknown Part", details: "This is a part of the skeleton, but more specific information is not yet available in this demo." },
+            "Default": { name: "Select a bone", details: "Click on a part of the skeleton to learn more. Use mouse to rotate, zoom, and pan."}
+        };
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xe0e0e0);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(50, skeletonContainer.clientWidth / skeletonContainer.clientHeight, 0.1, 1000);
+            // Initial camera position might need adjustment based on model size and orientation
+            camera.position.set(0, 150, 400); // Values based on common skeleton model scales, adjust as needed
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(skeletonContainer.clientWidth, skeletonContainer.clientHeight);
+            skeletonContainer.appendChild(renderer.domElement);
+
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = true; // Allow panning across screen
+            controls.minDistance = 50;   // Adjust min zoom
+            controls.maxDistance = 700;  // Adjust max zoom
+            controls.target.set(0, 90, 0); // Assuming skeleton average height around Y=90 units, adjust
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Brighter ambient
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            directionalLight.position.set(100, 200, 150);
+            scene.add(directionalLight);
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4); // Softer fill light
+            directionalLight2.position.set(-100, -50, -100);
+            scene.add(directionalLight2);
+
+            // Load Model
+            const loader = new GLTFLoader();
+            loader.load(
+                'https://cheatsheets.davidveksler.com/human-skeleton.glb',
+                function (gltf) {
+                    model = gltf.scene;
+
+                    // --- Adjust model scale and position if necessary ---
+                    // This model seems to be quite large and potentially not centered.
+                    // The matrix in the GLTF node "Sketchfab_model" applies a rotation.
+                    // We might need to center it and scale it down.
+
+                    // Calculate bounding box to help center and scale
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+
+                    // Rescale model to a more manageable size if it's too large/small
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const desiredHeight = 180; // Roughly human height in scene units
+                    const scale = desiredHeight / maxDim;
+                    model.scale.set(scale, scale, scale);
+
+                    // Recalculate bounding box after scaling
+                    const scaledBox = new THREE.Box3().setFromObject(model);
+                    const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
+
+                    // Reposition model to be centered at origin (or a specific point)
+                    // This model seems to have its origin at the feet after initial rotation.
+                    // Let's try to adjust its Y position so the feet are near Y=0
+                    model.position.x -= scaledCenter.x;
+                    model.position.y -= scaledBox.min.y; // Align bottom of the bounding box to y=0
+                    model.position.z -= scaledCenter.z;
+
+
+                    scene.add(model);
+
+                    // Set camera target to the center of the model
+                    controls.target.copy(new THREE.Vector3(model.position.x, model.position.y + scaledBox.getSize(new THREE.Vector3()).y / 2, model.position.z));
+                    controls.update();
+
+                    // Store original materials for highlighting
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            child.userData.originalMaterial = child.material;
+                        }
+                    });
+
+                    updateInfoPanel("Default"); // Update panel after loading
+                    animate();
+                },
+                function (xhr) { // Progress
+                    const percentLoaded = (xhr.loaded / xhr.total * 100).toFixed(0);
+                    boneNameElement.textContent = `Loading Model: ${percentLoaded}%`;
+                    if (percentLoaded < 100) {
+                         boneDetailsElement.innerHTML = `<p class="loader-message">Please wait...</p>`;
+                    } else {
+                         boneDetailsElement.innerHTML = `<p class="loader-message">Processing model...</p>`;
+                    }
+                },
+                function (error) {
+                    console.error('An error happened while loading the model:', error);
+                    boneNameElement.textContent = "Error Loading Model";
+                    boneDetailsElement.innerHTML = `<p style='color:red;'><strong>Error:</strong> Could not load 3D model. <br>Details: ${error.message || 'Unknown error'}. <br>Please check the console (F12) for more information.</p>`;
+                }
+            );
+
+            // Event Listeners
+            window.addEventListener('resize', onWindowResize);
+            skeletonContainer.addEventListener('click', onModelClick);
+        }
+
+        function onWindowResize() {
+            if (!camera || !renderer) return;
+            camera.aspect = skeletonContainer.clientWidth / skeletonContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(skeletonContainer.clientWidth, skeletonContainer.clientHeight);
+        }
+
+        function onModelClick(event) {
+            if (!model) return; // Don't do anything if model isn't loaded
+
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(model, true); // Intersect with the loaded model and its children
+
+            // Revert previous selection
+            if (selectedObject && selectedObject.isMesh) {
+                selectedObject.material = selectedObject.userData.originalMaterial;
+            }
+            selectedObject = null;
+
+            if (intersects.length > 0) {
+                let clickedMesh = intersects[0].object;
+
+                // Traverse up to find the main named node if meshes are grouped
+                // The node names in your GLB are "Object_2", "Object_3", etc.
+                // These nodes directly contain the meshes.
+                let parentNode = clickedMesh;
+                while (parentNode.parent && parentNode.parent !== model && parentNode.parent !== scene ) {
+                    if (anatomicalData[parentNode.name]) { // Check if the current node name is in our data
+                        break;
+                    }
+                    parentNode = parentNode.parent;
+                }
+
+                selectedObject = parentNode.isMesh ? parentNode : (anatomicalData[parentNode.name] ? parentNode : clickedMesh) ;
+
+
+                if (selectedObject && selectedObject.isMesh) {
+                    // Highlight: Make a new material instance to avoid changing original
+                    selectedObject.material = selectedObject.userData.originalMaterial.clone();
+                    selectedObject.material.color.setHex(0xffa500); // Orange highlight
+                    selectedObject.material.emissive = new THREE.Color(0xffa500); // Make it glow slightly
+                    selectedObject.material.emissiveIntensity = 0.3;
+                }
+
+                // Use the *node's name* (Object_2, etc.) if available, otherwise the mesh's name
+                const keyToUpdate = anatomicalData[selectedObject.name] ? selectedObject.name : (selectedObject.isMesh ? "Unknown" : "Default");
+                updateInfoPanel(keyToUpdate);
+
+            } else {
+                updateInfoPanel("Default");
+            }
+        }
+
+
+        function updateInfoPanel(objectKey) {
+            const data = anatomicalData[objectKey] || anatomicalData["Unknown"]; // Fallback for unmapped parts
+            boneNameElement.textContent = data.name;
+            boneDetailsElement.innerHTML = `<p>${data.details || "No further information available for this part."}</p>`;
+             if (objectKey === "Default" || !anatomicalData[objectKey] || anatomicalData[objectKey].name === anatomicalData["Default"].name ) {
+                 boneDetailsElement.innerHTML += `
+                    <p><strong>Controls:</strong></p>
+                    <ul>
+                        <li><strong>Left Mouse Button + Drag:</strong> Rotate</li>
+                        <li><strong>Mouse Wheel:</strong> Zoom</li>
+                        <li><strong>Right Mouse Button + Drag (or Ctrl + Left Click + Drag):</strong> Pan</li>
+                    </ul>`;
+             }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // --- Start the application ---
+        init();
+
+    </script>
+</body>
+</html>
