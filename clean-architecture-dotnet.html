@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Clean Architecture in .NET Web API: Comprehensive Cheatsheet v3.3</title>
+<!-- SEO Meta Description -->
+<meta content="A comprehensive cheatsheet for Clean Architecture in .NET Web API projects, explaining its need, core principles, layers, C# examples, project structure, and best practices. Version 3.3 with enhanced clarity." name="description"/>
+<!-- Keywords -->
+<meta content="Clean Architecture, .NET, Web API, ASP.NET Core, Software Architecture, Domain-Driven Design, DDD, C#, Microservices, Software Design Patterns, .NET Cheatsheet, Developer Guide, Introduction to Clean Architecture, Best Practices" name="keywords"/>
+<!-- Canonical URL -->
+<link href="https://cheatsheets.davidveksler.com/clean-architecture-dotnet.html" rel="canonical"/>
+<!-- Favicon -->
+<link href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;🏗️&lt;/text&gt;&lt;/svg&gt;" rel="icon"/>
+<!-- Social Media Metadata (Open Graph & Twitter) -->
+<meta content="Clean Architecture in .NET Web API: Comprehensive Cheatsheet v3.3" property="og:title"/>
+<meta content="Why use Clean Architecture? Explore its benefits, principles, layers, and implementation in .NET Web API. Includes C# examples and best practices. Version 3.3 with enhanced clarity." property="og:description"/>
+<meta content="website" property="og:type"/>
+<meta content="https://cheatsheets.davidveksler.com/clean-architecture-dotnet.html" property="og:url"/>
+<meta content="https://cheatsheets.davidveksler.com/images/clean-architecture-dotnet-cheatsheet-v3.3.png" property="og:image"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<!-- Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Clean Architecture in .NET Web API: Comprehensive Cheatsheet Version 3.3 - Enhanced Clarity",
+      "description": "A comprehensive guide to Clean Architecture in .NET Web API, starting with why it's needed, then detailing layers, core principles, project structure, C# examples, and best practices. Version 3.3 with enhanced content clarity.",
+      "image": "https://cheatsheets.davidveksler.com/images/clean-architecture-dotnet-cheatsheet-v3.3.png",
+      "author": { "@type": "Person", "name": "David Veksler (AI Generated)" },
+      "publisher": { "@type": "Organization", "name": "David Veksler Cheatsheets" },
+      "datePublished": "2025-06-10",
+      "dateModified": "2025-06-10",
+      "keywords": "Clean Architecture Introduction, Why Clean Architecture, .NET, Web API, ASP.NET Core, C#, Software Architecture, DDD, Best Practices"
+    }
+    </script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Roboto+Slab:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<style>
+        :root {
+            --bs-body-bg: #f8f9fa;
+            --bs-primary: #005A9C;
+            --bs-primary-dark: #003E6B;
+            --bs-primary-light: #63A4FF;
+            --card-border-color: #dee2e6;
+            --card-shadow-color: rgba(0, 0, 0, 0.08);
+            --text-color-main: #2a363b;
+            --text-color-secondary: #5a6268;
+            --text-color-headings: #004085;
+            --code-bg-color: #2b303b;
+            --code-text-color: #c0c5ce;
+
+            /* Category Colors */
+            --color-introduction: #6A0DAD;
+            --color-core-principles: #005A9C;
+            --color-layers-overview: #00695C;
+            --color-domain-layer: #2E7D32;
+            --color-application-layer: #5E35B1;
+            --color-infrastructure-layer: #E65100;
+            --color-presentation-layer: #00838F;
+            --color-project-structure: #4E342E;
+            --color-best-practices: #37474F;
+
+            --current-category-color: var(--bs-primary);
+        }
+
+        body { /* ... (styles from previous version, no changes here) ... */ }
+        .page-header { /* ... */ }
+        .global-controls { /* ... */ }
+        .schema-container { /* ... */ }
+        .schema-container::before { /* ... */ }
+        .section-title { /* ... */ }
+
+        /* Applying category colors to section titles */
+        .section-introduction { --current-category-color: var(--color-introduction); }
+        .section-core-principles { --current-category-color: var(--color-core-principles); }
+        .section-layers-overview { --current-category-color: var(--color-layers-overview); }
+        .section-project-structure { --current-category-color: var(--color-project-structure); }
+        .section-best-practices { --current-category-color: var(--color-best-practices); }
+
+        .info-card { /* ... */ }
+        .info-card:hover { /* ... */ }
+        .info-card .card-header { /* ... */ }
+        .info-card .card-header .bi { /* ... */ }
+        .info-card .card-body { /* ... */ }
+        .info-card h5 { /* ... */ }
+        .info-card p, .info-card ul, .info-card dl { /* ... */ }
+        .info-card ul { /* ... */ }
+        .info-card li { /* ... */ }
+        .info-card .card-body pre { /* ... */ }
+        .info-card .card-body pre code { /* ... */ }
+
+        /* Card-specific category colors */
+        .card-introduction { --current-category-color: var(--color-introduction); }
+        .card-core-philosophy { --current-category-color: var(--color-core-principles); }
+        .card-when-to-use { --current-category-color: var(--color-core-principles); } /* Kept as core for consistency */
+        .card-domain-layer { --current-category-color: var(--color-domain-layer); }
+        .card-application-layer { --current-category-color: var(--color-application-layer); }
+        .card-infrastructure-layer { --current-category-color: var(--color-infrastructure-layer); }
+        .card-presentation-layer { --current-category-color: var(--color-presentation-layer); }
+        .card-project-structure { --current-category-color: var(--color-project-structure); }
+        .card-best-practices { --current-category-color: var(--color-best-practices); }
+
+        .details-toggle { /* ... */ }
+        .details-toggle:hover { /* ... */ }
+        .details-toggle .bi { /* ... */ }
+        .details-toggle[aria-expanded="true"] .bi { /* ... */ }
+
+        .collapse-content { /* ... */ }
+        .collapse-content h6 { /* ... */ }
+        .collapse-content ul { /* ... */ }
+        .collapse-content li { /* ... */ }
+        .collapse-content code { /* ... */ }
+        .collapse-content pre { /* ... */ }
+        .collapse-content pre code { /* ... */ }
+        .collapse-content pre::before { /* ... */ }
+
+        .term { /* ... */ }
+        .term:hover { /* ... */ }
+        a { /* ... */ }
+        a:hover { /* ... */ }
+        footer { /* ... */ }
+        footer a { /* ... */ }
+        footer a:hover { /* ... */ }
+
+        @media print { /* ... (styles from previous version, no changes here) ... */ }
+    </style>
+<style>
+    :root {
+        --bs-body-bg: #f8f9fa;
+        --bs-primary: #005A9C;
+        --bs-primary-dark: #003E6B;
+        --bs-primary-light: #63A4FF;
+        --card-border-color: #dee2e6;
+        --card-shadow-color: rgba(0, 0, 0, 0.08);
+        --text-color-main: #2a363b;
+        --text-color-secondary: #5a6268;
+        --text-color-headings: #004085;
+        --code-bg-color: #2b303b;
+        --code-text-color: #c0c5ce;
+
+        /* Category Colors */
+        --color-core-principles: #005A9C;
+        --color-layers-overview: #00695C;
+        --color-domain-layer: #2E7D32;
+        --color-application-layer: #5E35B1;
+        --color-infrastructure-layer: #E65100;
+        --color-presentation-layer: #00838F;
+        --color-project-structure: #4E342E;
+        --color-best-practices: #37474F;
+
+        --current-category-color: var(--bs-primary);
+    }
+
+    body {
+        background-color: var(--bs-body-bg);
+        font-family: 'Inter', sans-serif;
+        color: var(--text-color-main);
+        line-height: 1.7;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-primary-dark) 100%),
+                    url('data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22100%22%20height%3D%22100%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cdefs%3E%3Cpattern%20id%3D%22subtleDots%22%20width%3D%2210%22%20height%3D%2210%22%20patternUnits%3D%22userSpaceOnUse%22%3E%3Ccircle%20fill%3D%22rgba(255%2C255%2C255%2C0.05)%22%20cx%3D%225%22%20cy%3D%225%22%20r%3D%221%22/%3E%3C/pattern%3E%3C/defs%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22url(%23subtleDots)%22/%3E%3C/svg%3E');
+        color: #fff;
+        padding: 3rem 1.5rem;
+        text-align: center;
+        border-bottom: 5px solid var(--bs-primary-light);
+        margin-bottom: 2.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .page-header h1 {
+        font-family: 'Roboto Slab', serif;
+        font-weight: 700;
+        font-size: 2.8rem;
+        letter-spacing: 0.5px;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    }
+    .page-header h1 .bi { font-size: 1em; vertical-align: -0.1em; margin-right: 0.5em;}
+    .page-header .lead { font-size: 1.15rem; max-width: 900px; margin: 0.5rem auto 0; opacity: 0.95; }
+    .page-header .text-muted { color: rgba(255,255,255,0.75) !important; font-size: 0.9rem; }
+
+    .global-controls {
+        background-color: #fff;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .schema-container {
+        background-color: #ffffff;
+        border: 1px solid var(--card-border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        box-shadow: 0 6px 18px var(--card-shadow-color);
+        position: relative;
+        overflow: hidden;
+    }
+     .schema-container::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 6px;
+        background-color: var(--current-category-color);
+        border-radius: 11px 11px 0 0;
+     }
+
+    .section-title {
+        font-family: 'Roboto Slab', serif;
+        color: var(--text-color-headings);
+        margin-top: -0.5rem;
+        margin-bottom: 2rem;
+        font-weight: 700;
+        font-size: 2rem;
+        padding-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+    .section-title .bi { margin-right: 1rem; font-size: 1.8em; color: var(--current-category-color); opacity: 0.8;}
+
+    .section-core-principles { --current-category-color: var(--color-core-principles); }
+    .section-layers-overview { --current-category-color: var(--color-layers-overview); }
+    .section-project-structure { --current-category-color: var(--color-project-structure); }
+    .section-best-practices { --current-category-color: var(--color-best-practices); }
+
+    .info-card {
+        background: #fff;
+        border: 1px solid #e0e6ed;
+        border-top: 5px solid var(--current-category-color);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 2rem;
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+    .info-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.09);
+    }
+
+    .info-card .card-header {
+        color: var(--current-category-color);
+        background-color: #f8f9fc;
+        font-size: 1.3rem;
+        text-align: left;
+        padding: 1rem 1.25rem;
+        font-weight: 700;
+        font-family: 'Roboto Slab', serif;
+        display: flex; align-items: center; gap: .75rem;
+        border-bottom: 1px solid #e0e6ed;
+        border-radius: 7px 7px 0 0;
+    }
+    .info-card .card-header .bi { font-size: 1.5em; opacity: 0.85; }
+    .info-card .card-body { padding: 1.5rem; flex-grow: 1; }
+    .info-card h5 { font-weight: 600; color: var(--text-color-headings); margin-bottom: 0.75rem; font-family: 'Inter', sans-serif; font-size:1.1rem; }
+    .info-card p, .info-card ul, .info-card dl { font-size: 0.98rem; color: var(--text-color-secondary); line-height: 1.75; }
+    .info-card ul { padding-left: 1.5rem; list-style-type: '✓ '; }
+    .info-card li { margin-bottom: 0.6rem; padding-left: 0.5rem; }
+    .info-card .card-body pre { /* Style for pre within card-body (Solution Structure) */
+        background-color: #282c34; /* Dark background for code blocks */
+        color: #abb2bf; /* Light text color for dark background */
+        padding: 1em;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.875em;
+        line-height: 1.45;
+        border: 1px solid #444;
+    }
+     .info-card .card-body pre code {
+        background-color: transparent;
+        color: inherit;
+        padding: 0;
+        font-size: 1em;
+    }
+
+
+    .card-core-philosophy { --current-category-color: var(--color-core-principles); }
+    .card-when-to-use { --current-category-color: var(--color-core-principles); }
+    .card-domain-layer { --current-category-color: var(--color-domain-layer); }
+    .card-application-layer { --current-category-color: var(--color-application-layer); }
+    .card-infrastructure-layer { --current-category-color: var(--color-infrastructure-layer); }
+    .card-presentation-layer { --current-category-color: var(--color-presentation-layer); }
+    .card-project-structure { --current-category-color: var(--color-project-structure); }
+    .card-best-practices { --current-category-color: var(--color-best-practices); }
+
+    .details-toggle {
+        font-size: 0.9rem; font-weight: 500;
+        padding: 0.5rem 1rem; color: var(--current-category-color);
+        border: 2px solid var(--current-category-color); background-color: transparent;
+        transition: background-color 0.2s ease, color 0.2s ease;
+        display: inline-flex; align-items: center; gap: 0.4em;
+        border-radius: 6px; margin-top: 1.25rem;
+    }
+    .details-toggle:hover { background-color: var(--current-category-color); color: white; }
+    .details-toggle .bi { transition: transform 0.2s ease-in-out; }
+    .details-toggle[aria-expanded="true"] .bi { transform: rotate(180deg); }
+
+    .collapse-content {
+        font-size: 0.95rem;
+        border-top: 1px solid #e9ecef;
+        padding-top: 1.25rem; margin-top: 1.25rem;
+        background-color: #fbfcfe;
+        padding: 1.25rem; border-radius: 6px;
+    }
+    .collapse-content h6 { font-weight: 700; color: var(--text-color-headings); margin-top: 1rem; margin-bottom: 0.5rem; font-size: 1.05rem; font-family: 'Inter', sans-serif;}
+    .collapse-content ul { padding-left: 1.5rem; margin-bottom: 1rem; list-style-type: '– '; }
+    .collapse-content li { margin-bottom: 0.5rem; font-size: 0.92rem; padding-left: 0.3rem;}
+    .collapse-content code {
+        font-size: 0.88em;
+        color: #b72e52;
+        background-color: #fceef2;
+        padding: 0.25em 0.5em;
+        border-radius: 4px;
+        font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    .collapse-content pre {
+        background-color: var(--code-bg-color);
+        color: var(--code-text-color);
+        padding: 1.25em;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.9em;
+        line-height: 1.6;
+        border: 1px solid #444;
+        position: relative;
+    }
+    .collapse-content pre code {
+        background-color: transparent;
+        color: inherit;
+        padding: 0;
+        border-radius: 0;
+        font-size: 1em;
+    }
+    .collapse-content pre::before {
+        content: "C#";
+        position: absolute;
+        top: 0.5em; right: 0.75em;
+        font-size: 0.8em;
+        color: #777;
+        opacity: 0.7;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+    }
+
+    .term {
+        font-weight: 600; color: var(--bs-primary);
+        background-color: #e3f2fd;
+        padding: 0.2em 0.45em; border-radius: 4px; cursor: help;
+        border: 1px solid var(--bs-primary-light);
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .term:hover {
+        background-color: var(--bs-primary);
+        color: #fff;
+    }
+
+    a { color: var(--bs-primary); text-decoration: none; font-weight: 500; }
+    a:hover { color: var(--bs-primary-dark); text-decoration: underline; }
+
+    footer {
+        text-align: center;
+        padding: 2.5rem 0;
+        margin-top: 3rem;
+        background-color: #e2e6ea;
+        color: var(--text-color-secondary);
+        font-size: 0.9rem;
+        border-top: 1px solid var(--card-border-color);
+    }
+    footer a { color: var(--bs-primary); }
+    footer a:hover { color: var(--bs-primary-dark); }
+
+    @media print {
+        body { font-size: 10pt; background-color: #fff; color: #000; }
+        .page-header, footer, .details-toggle, .global-controls { display: none; }
+        .schema-container { border: 1px solid #bbb; box-shadow: none; margin-bottom: 1.5rem; padding: 1rem; border-left-width: 0; }
+        .schema-container::before { display: none; }
+        .section-title { font-size: 1.4rem; margin-bottom: 1rem; color: #000 !important; border-bottom-color: #000 !important;}
+        .section-title .bi { color: #000 !important; }
+        .info-card { box-shadow: none; border: 1px solid #ccc; border-top-width: 3px; margin-bottom: 1rem; page-break-inside: avoid; }
+        .info-card .card-header { background-color: #eee !important; color: #000 !important; font-size: 1.1rem; }
+        .collapse.show { display: block !important; }
+        .collapse-content { border-top: 1px solid #eee; background-color: #fff; }
+        .collapse-content pre, .collapse-content pre code, .info-card .card-body pre, .info-card .card-body pre code { background-color: #f8f9fa !important; color: #212529 !important; border: 1px solid #eee; white-space: pre-wrap; word-break: break-all; }
+        .collapse-content pre::before { display: none; }
+        .term { background-color: #e9ecef; border: 1px solid #ced4da; color: #000; padding: 0.1em 0.2em; }
+        a { text-decoration: none; color: #000; }
+        a[href^="http"]:after { content: " (" attr(href) ")"; font-size: 0.9em; }
+    }
+</style>
+<meta content="images/clean-architecture-dotnet-cheatsheet.png" name="twitter:image"/><meta content="Clean Architecture in .NET Web API" name="twitter:title"/><meta content="Read more about clean architecture dotnet cheatsheet on our site." name="twitter:description"/></head>
+<body>
+<header class="page-header">
+<h1><i class="bi bi-layers-half"></i> Clean Architecture in .NET Web API</h1>
+<p class="lead">An enhanced cheatsheet covering core principles, layer responsibilities, project structure, C# examples, and best practices for building robust and maintainable .NET Web APIs using Clean Architecture.</p>
+<p class="text-muted small">Last Updated: <span id="lastUpdatedDate">June 10, 2025</span></p>
+</header>
+<main class="container">
+<div class="global-controls">
+<button class="btn btn-primary btn-sm" id="expandAllBtn"><i class="bi bi-arrows-angle-expand"></i> Expand All</button>
+<button class="btn btn-secondary btn-sm" id="collapseAllBtn"><i class="bi bi-arrows-angle-contract"></i> Collapse All</button>
+</div>
+<!-- Introduction Section -->
+<div class="schema-container section-introduction">
+<h2 class="section-title"><i class="bi bi-info-circle-fill"></i> Understanding Clean Architecture</h2>
+<div class="row">
+<div class="col-12">
+<div class="info-card card-introduction">
+<div class="card-header"><i class="bi bi-patch-question-fill"></i> The Case for Clean Architecture: Taming Complexity</div>
+<div class="card-body">
+<p>In many software projects, traditional layered architectures can inadvertently lead to tightly coupled systems. Business logic often becomes entangled with database details, UI frameworks, or third-party service integrations. This "spaghetti architecture" results in code that is hard to test, painful to change, and brittle when modified. Technology choices become almost irreversible, leading to expensive migrations or outdated systems.</p>
+<p>Clean Architecture tackles these challenges head-on by championing the <span class="term" data-bs-toggle="tooltip" title="Dependencies must only point inwards. Inner layers (Domain, Application) do not depend on outer layers (Infrastructure, Presentation). This is achieved via abstractions (interfaces) defined in inner layers and implemented by outer layers.">Dependency Rule</span>. This fundamental principle dictates that source code dependencies can only point inwards. The core of your application—the Domain (enterprise business rules) and Application (application-specific business rules) layers—knows nothing about the outer layers like Infrastructure (databases, file systems, network calls) or Presentation (UI, Web API). Outer layers depend on abstractions (interfaces) defined by the inner layers, effectively inverting the control flow for technical details.</p>
+<button aria-controls="detailsIntroCleanArch" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#detailsIntroCleanArch" data-bs-toggle="collapse" type="button">
+                                Benefits &amp; Suitability <i class="bi bi-chevron-down"></i>
+</button>
+<div class="collapse collapse-content" id="detailsIntroCleanArch">
+<h6>Key Benefits Unlocked:</h6>
+<ul>
+<li><strong>Independent of Frameworks:</strong> The core business logic isn't tied to web frameworks, UI toolkits, or database technologies.</li>
+<li><strong>Enhanced Testability:</strong> Business rules can be unit-tested in isolation, without external dependencies, leading to faster and more reliable tests.</li>
+<li><strong>Independent of UI:</strong> The UI can change easily, without changing the rest of the system. A Web UI could be swapped for a console UI, for instance, without business rule changes.</li>
+<li><strong>Independent of Database:</strong> You can swap Oracle or SQL Server, for Mongo or BigTable. Your business rules are not bound to the database.</li>
+<li><strong>Independent of External Agencies:</strong> Your business rules don't know anything about the outside world.</li>
+<li><strong>Improved Maintainability &amp; Flexibility:</strong> Changes to external concerns have minimal impact on core logic, making the system easier to evolve and adapt.</li>
+</ul>
+<h6>When is Clean Architecture Most Beneficial?</h6>
+<ul>
+<li>For applications with significant and complex business logic that forms the heart of their value proposition.</li>
+<li>In long-lived projects expected to undergo evolution, maintenance, and potential technology shifts over many years.</li>
+<li>When high degrees of testability and maintainability are paramount project goals.</li>
+<li>If there's a strategic need for independence from specific external frameworks or technologies, ensuring future-proofing and adaptability.</li>
+</ul>
+<p class="mt-3"><strong>Important Note:</strong> Clean Architecture is not a silver bullet. It introduces a degree of initial setup complexity and requires discipline. For very simple CRUD applications or short-lived projects, the overhead might not be justified. However, for complex, evolving systems, the long-term benefits in resilience, adaptability, and reduced maintenance costs often far outweigh the upfront investment.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Core Philosophy & When to Use (Now 'Core Principles') -->
+<div class="schema-container section-core-principles">
+<h2 class="section-title"><i class="bi bi-journal-richtext"></i> Core Principles</h2>
+<div class="row">
+<div class="col-lg-6">
+<div class="info-card card-core-philosophy">
+<div class="card-header"><i class="bi bi-key-fill"></i> Core Philosophy</div>
+<div class="card-body">
+<ul>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="Source code dependencies must only point inwards. Inner layers (e.g., Domain) should not know anything about outer layers (e.g., Infrastructure, Presentation).">The Dependency Rule</span>:</strong> The cornerstone. Promotes independence of core business logic from external concerns.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="Inner layers define interfaces that outer layers implement. This allows specific implementations (e.g., database type) to change without affecting core logic.">Abstraction via Interfaces</span>:</strong> Inner layers define abstractions (interfaces); outer layers provide concrete implementations. This inverts traditional control flow for dependencies.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="Business rules can be tested in isolation, without dependencies on UI, databases, or external services, leading to more reliable and faster tests.">High Testability</span>:</strong> Business logic (Domain &amp; Application layers) can be unit-tested independently of UI, database, or any external service.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="Changes in one part of the system have minimal impact on other parts, making the system easier to evolve.">Enhanced Maintainability &amp; Flexibility</span>:</strong> The decoupling makes the system easier to understand, modify, and evolve. Changes in one area (e.g., database technology) are less likely to ripple through the entire codebase.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="col-lg-6">
+<div class="info-card card-when-to-use">
+<div class="card-header"><i class="bi bi-check-circle-fill"></i> Key Motivators for Adoption</div>
+<div class="card-body">
+<ul>
+<li>Tackling systems with **complex and evolving business logic** that needs protection from volatile external details.</li>
+<li>Ensuring the **longevity and adaptability** of an application over an extended lifecycle.</li>
+<li>Aligning with **<span class="term" data-bs-toggle="tooltip" title="An approach to software development that centers the development on programming a domain model that has a rich understanding of the processes and rules of a domain.">Domain-Driven Design (DDD)</span> principles**, placing the domain model at the application's heart.</li>
+<li>Achieving **superior testability** by isolating business rules from infrastructure for reliable unit testing.</li>
+<li>Gaining **independence from specific technologies** (databases, frameworks, UI), allowing for easier changes or deferral of decisions.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Layers Overview & Responsibilities (Content is the same as previous, only wrapper styles changed) -->
+<div class="schema-container section-layers-overview">
+<h2 class="section-title"><i class="bi bi-stack"></i> Layers Overview &amp; Responsibilities</h2>
+<div class="row">
+<!-- Domain Layer -->
+<div class="col-md-6 col-lg-6">
+<div class="info-card card-domain-layer">
+<div class="card-header"><i class="bi bi-shield-lock-fill"></i> Domain Layer (Core)</div>
+<div class="card-body">
+<p><strong>Purpose:</strong> Contains enterprise-wide business logic, entities, and value objects. It's the innermost layer and has no dependencies on other layers in the solution.</p>
+<button aria-controls="detailsDomainLayer" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#detailsDomainLayer" data-bs-toggle="collapse" type="button">
+                                Key Components <i class="bi bi-chevron-down"></i>
+</button>
+<div class="collapse collapse-content" id="detailsDomainLayer">
+<h6>Key Components:</h6>
+<ul>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="Core business objects with a distinct identity that persists over time, encapsulating business logic and data (e.g., Order, Product, Customer).">Entities</span>:</strong> Core business objects with an identity, encapsulating business logic and data.
+                                        <pre><code class="language-csharp">// Domain/Entities/Product.cs
+public class Product
+{
+    public Guid Id { get; private set; }
+    public string Name { get; private set; }
+    public decimal Price { get; private set; }
+
+    private Product() {} // For ORM/factory
+
+    public Product(Guid id, string name, decimal price)
+    {
+        if (id == Guid.Empty) throw new ArgumentException("Id cannot be empty.", nameof(id));
+        // ... more validation logic ...
+        Id = id; Name = name; Price = price;
+    }
+    public void UpdatePrice(decimal newPrice) { /* ... validation &amp; logic ... */ Price = newPrice; }
+}</code></pre>
+</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="Immutable objects representing descriptive aspects of the domain, identified by their attributes rather than an ID (e.g., Address, Money).">Value Objects</span>:</strong> Immutable objects defined by their attributes, not an ID.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="A cluster of domain objects (entities and value objects) that are treated as a single unit for data changes. An Aggregate Root is the main entity that controls access to the aggregate and ensures consistency.">Aggregates</span>:</strong> Clusters of domain objects ensuring consistency within a boundary, with an Aggregate Root entity.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="Operations that don't naturally belong to a single entity, often coordinating logic between multiple entities or aggregates.">Domain Services</span>:</strong> Business logic that doesn't naturally fit within a single entity.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="Abstractions for data persistence, defined in the Domain layer but implemented in the Infrastructure layer (e.g., IProductRepository). These define the contract for how domain objects are retrieved and stored.">Repository Interfaces</span>:</strong> Abstractions for data persistence operations.
+                                        <pre><code class="language-csharp">// Domain/Interfaces/IProductRepository.cs
+public interface IProductRepository
+{
+    Task&lt;Product?&gt; GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task&lt;IEnumerable&lt;Product&gt;&gt; GetAllAsync(CancellationToken cancellationToken = default);
+    Task AddAsync(Product product, CancellationToken cancellationToken = default);
+    Task UpdateAsync(Product product, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+}</code></pre>
+</li>
+<li><strong>Domain Events:</strong> Represent something significant that happened in the domain. Used for side effects and decoupling.</li>
+<li><strong>Custom Domain Exceptions:</strong> Specific exceptions to signal violations of domain rules (e.g., `InsufficientStockException`).</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<!-- Application Layer -->
+<div class="col-md-6 col-lg-6">
+<div class="info-card card-application-layer">
+<div class="card-header"><i class="bi bi-arrows-fullscreen"></i> Application Layer</div>
+<div class="card-body">
+<p><strong>Purpose:</strong> Contains application-specific business logic. It orchestrates use cases by interacting with the Domain layer and coordinating with the Infrastructure layer through interfaces.</p>
+<button aria-controls="detailsApplicationLayer" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#detailsApplicationLayer" data-bs-toggle="collapse" type="button">
+                                Key Components <i class="bi bi-chevron-down"></i>
+</button>
+<div class="collapse collapse-content" id="detailsApplicationLayer">
+<h6>Key Components:</h6>
+<ul>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="Classes that implement specific application operations or workflows, often corresponding to user actions or system events. Commonly implemented using the CQRS pattern.">Use Cases/Interactors/Services</span>:</strong> (often as CQRS Commands and Queries)
+                                        <pre><code class="language-csharp">// Application/Products/Commands/CreateProductCommand.cs
+public record CreateProductCommand(string Name, decimal Price) : IRequest&lt;Guid&gt;;
+
+// Application/Products/Handlers/CreateProductCommandHandler.cs
+public class CreateProductCommandHandler : IRequestHandler&lt;CreateProductCommand, Guid&gt;
+{
+    private readonly IProductRepository _productRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public CreateProductCommandHandler(IProductRepository productRepository, IUnitOfWork unitOfWork)
+    {
+        _productRepository = productRepository; _unitOfWork = unitOfWork;
+    }
+
+    public async Task&lt;Guid&gt; Handle(CreateProductCommand request, CancellationToken cancellationToken)
+    {
+        var product = new Product(Guid.NewGuid(), request.Name, request.Price);
+        await _productRepository.AddAsync(product, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken); // Explicitly save changes
+        return product.Id;
+    }
+}</code></pre>
+</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="Simple, typically immutable, objects used to transfer data between layers, particularly between Application and Presentation. They help decouple layers and prevent leaking domain models.">Data Transfer Objects (DTOs)</span>:</strong> For transferring data between layers.</li>
+<li><strong>Interfaces for Infrastructure Services:</strong> Abstractions for infrastructure concerns (e.g., `IEmailSender`, `IDateTimeProvider`, `IFileStorage`).</li>
+<li><strong>Validation Logic:</strong> For input data (e.g., using <span class="term" data-bs-toggle="tooltip" title="A popular .NET library for creating strongly-typed validation rules, often used with commands and DTOs.">FluentValidation</span>).</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="Command Query Responsibility Segregation: A pattern that separates read (Query) and update (Command) operations for a data store. Often implemented with MediatR.">CQRS</span>:</strong> Separates read and write operations. <span class="term" data-bs-toggle="tooltip" title="A popular in-process messaging library in .NET that helps implement Mediator and CQRS patterns by decoupling message senders from their handlers.">MediatR</span> is a common tool for this.</li>
+<li><strong>Application Exceptions:</strong> For errors specific to application logic (e.g., `ValidationException`, `NotFoundException`).</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<!-- Infrastructure Layer -->
+<div class="col-md-6 col-lg-6">
+<div class="info-card card-infrastructure-layer">
+<div class="card-header"><i class="bi bi-database-fill-gear"></i> Infrastructure Layer</div>
+<div class="card-body">
+<p><strong>Purpose:</strong> Handles all external concerns and technical details like databases, file systems, network calls, and third-party services. It implements the interfaces defined in the Application and Domain layers.</p>
+<button aria-controls="detailsInfrastructureLayer" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#detailsInfrastructureLayer" data-bs-toggle="collapse" type="button">
+                                Key Components <i class="bi bi-chevron-down"></i>
+</button>
+<div class="collapse collapse-content" id="detailsInfrastructureLayer">
+<h6>Key Components:</h6>
+<ul>
+<li><strong>Data Access/Persistence:</strong> Implementations of repository interfaces (e.g., using Entity Framework Core). Includes `DbContext`.
+                                        <pre><code class="language-csharp">// Infrastructure/Persistence/Repositories/ProductRepository.cs
+public class ProductRepository : IProductRepository
+{
+    private readonly ApplicationDbContext _dbContext;
+    public ProductRepository(ApplicationDbContext dbContext) {_dbContext = dbContext;}
+    // ... implementations of IProductRepository methods using _dbContext ...
+    public async Task AddAsync(Product product, CancellationToken ct) =&gt; 
+        await _dbContext.Products.AddAsync(product, ct);
+    // ... etc.
+}
+
+// Infrastructure/Persistence/ApplicationDbContext.cs (EF Core example)
+public class ApplicationDbContext : DbContext, IUnitOfWork // Explicitly implementing IUnitOfWork
+{
+    public ApplicationDbContext(DbContextOptions&lt;ApplicationDbContext&gt; options) : base(options) { }
+    public DbSet&lt;Product&gt; Products { get; set; }
+    // ... other DbSets
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        base.OnModelCreating(modelBuilder);
+    }
+
+    public async Task&lt;int&gt; SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+}</code></pre>
+</li>
+<li><strong>External Service Integrations:</strong> Clients for payment gateways, email services, third-party APIs.</li>
+<li><strong>Caching Implementations:</strong> (e.g., Redis, In-Memory).</li>
+<li><strong>Identity Services:</strong> User authentication and authorization implementations.</li>
+<li><strong>File System Access, Clock Services, Logging Implementations, etc.</strong></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<!-- Presentation Layer -->
+<div class="col-md-6 col-lg-6">
+<div class="info-card card-presentation-layer">
+<div class="card-header"><i class="bi bi-pc-display-horizontal"></i> Presentation Layer (Web API)</div>
+<div class="card-body">
+<p><strong>Purpose:</strong> Handles user interaction (HTTP requests/responses for an API). It translates user input into commands/queries for the Application layer and presents the results.</p>
+<button aria-controls="detailsPresentationLayer" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#detailsPresentationLayer" data-bs-toggle="collapse" type="button">
+                                Key Components <i class="bi bi-chevron-down"></i>
+</button>
+<div class="collapse collapse-content" id="detailsPresentationLayer">
+<h6>Key Components:</h6>
+<ul>
+<li><strong>Controllers/API Endpoints:</strong> Receive HTTP requests, perform minimal validation/mapping, and delegate to Application layer.
+                                        <pre><code class="language-csharp">// Presentation/Controllers/ProductsController.cs
+[ApiController]
+[Route("api/[controller]")]
+public class ProductsController : ControllerBase
+{
+    private readonly ISender _mediator; // Using MediatR's ISender
+
+    public ProductsController(ISender mediator) {_mediator = mediator;}
+
+    [HttpPost]
+    public async Task&lt;IActionResult&gt; CreateProduct([FromBody] CreateProductCommand command)
+    {
+        var productId = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetProductById), new { id = productId }, new { id = productId });
+    }
+
+    [HttpGet("{id}")]
+    public async Task&lt;IActionResult&gt; GetProductById(Guid id)
+    {
+        // var query = new GetProductByIdQuery(id); // Assuming a GetProductByIdQuery exists
+        // var productDto = await _mediator.Send(query);
+        // if (productDto == null) return NotFound();
+        // return Ok(productDto);
+        return Ok($"Product with ID {id} retrieved (example)."); // Simplified for cheatsheet
+    }
+}</code></pre>
+</li>
+<li><strong>Middleware:</strong> For cross-cutting concerns like global error handling, authentication, request logging.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="The central place in an application where dependencies are registered and configured, typically in Program.cs or Startup.cs. This is where layers are composed.">Dependency Injection (DI) Setup</span>:</strong> Configuration of services and their dependencies (typically in `Program.cs`). This is the "Composition Root".</li>
+<li><strong>API Models/ViewModels:</strong> Models specific to API requests/responses. Often mapped to/from Application layer DTOs.</li>
+<li><strong>API Versioning, OpenAPI/Swagger Configuration.</strong></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Project Structure Example -->
+<div class="schema-container section-project-structure">
+<h2 class="section-title"><i class="bi bi-diagram-3-fill"></i> Project Structure Example</h2>
+<div class="info-card card-project-structure">
+<div class="card-header"><i class="bi bi-folder2-open"></i> Solution Structure</div>
+<div class="card-body">
+<p>A common way to organize projects in a .NET solution reflecting Clean Architecture:</p>
+<pre><code class="language-text">
+Solution.sln
+├── src
+│   ├── Domain/ (Core.csproj - .NET Class Library)
+│   │   ├── Entities/
+│   │   ├── Aggregates/
+│   │   ├── Enums/
+│   │   ├── Events/
+│   │   ├── Exceptions/
+│   │   ├── Interfaces/ (e.g., IProductRepository.cs)
+│   │   └── ValueObjects/
+│   │
+│   ├── Application/ (Application.csproj - .NET Class Library)
+│   │   ├── Features/ (Organized by feature, e.g., Products, Orders)
+│   │   │   ├── Products/
+│   │   │   │   ├── Commands/
+│   │   │   │   ├── Queries/
+│   │   │   │   └── DTOs/
+│   │   ├── Common/
+│   │   │   ├── Interfaces/ (e.g., IEmailSender.cs)
+│   │   │   ├── Behaviors/ (MediatR pipeline behaviors for validation, logging)
+│   │   │   └── Mappings/ (AutoMapper profiles if used)
+│   │   └── Exceptions/
+│   │
+│   ├── Infrastructure/ (Infrastructure.csproj - .NET Class Library)
+│   │   ├── Persistence/
+│   │   │   ├── DataContext/ (e.g., ApplicationDbContext.cs)
+│   │   │   ├── Repositories/ (e.g., ProductRepository.cs)
+│   │   │   ├── Migrations/
+│   │   │   └── Configurations/ (EF Core entity type configurations)
+│   │   ├── Services/ (e.g., EmailSender.cs, DateTimeProvider.cs)
+│   │   └── Identity/
+│   │
+│   └── Presentation/ (WebApi.csproj - ASP.NET Core Web API Project)
+│       ├── Controllers/
+│       ├── Middleware/
+│       ├── Extensions/ (Service registration extensions)
+│       ├── appsettings.json
+│       └── Program.cs
+│
+└── tests
+    ├── Domain.UnitTests/
+    ├── Application.UnitTests/
+    ├── Infrastructure.IntegrationTests/ (May require test databases/services)
+    └── Presentation.IntegrationTests/ (API endpoint tests)
+                    </code></pre>
+</div>
+</div>
+</div>
+<!-- Best Practices & Considerations -->
+<div class="schema-container section-best-practices">
+<h2 class="section-title"><i class="bi bi-award-fill"></i> Best Practices &amp; Considerations</h2>
+<div class="info-card card-best-practices">
+<div class="card-header"><i class="bi bi-check-circle-fill"></i> Key Practices</div>
+<div class="card-body">
+<ul>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="A design pattern where objects receive their dependencies from an external source rather than creating them internally. Crucial for Clean Architecture.">Dependency Injection (DI)</span>:</strong> Absolutely crucial. Register dependencies in the Presentation layer's `Program.cs` (the Composition Root). Use constructor injection primarily.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="A popular library for in-process messaging that helps implement CQRS and Mediator patterns, decoupling senders from handlers.">MediatR</span>:</strong> Widely used for implementing CQRS in the Application layer. It helps decouple command/query senders from their handlers and allows for cross-cutting concerns via pipeline behaviors.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="A .NET library for creating strongly-typed validation rules, often used in Application layer for command/query validation.">FluentValidation</span>:</strong> A popular library for robust validation in the Application layer, often integrated with MediatR pipelines.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="A library for object-to-object mapping, useful for converting between Entities, DTOs, and API Models.">AutoMapper</span> (or similar):</strong> Useful for mapping between Entities, DTOs, and API Models. Define profiles in the Application layer or where the mapping is most relevant.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="A pattern that groups multiple repository operations into a single transaction, often implemented within the DbContext in the Infrastructure layer. An IUnitOfWork interface is defined in the Application layer.">Unit of Work (UoW) Pattern</span>:</strong> Often implemented in the Infrastructure layer (e.g., within the `DbContext`). An `IUnitOfWork` interface can be defined in the Application layer to be consumed by command handlers.</li>
+<li><strong>Error Handling:</strong> Implement a global error handling middleware in the Presentation layer to catch exceptions and return consistent API error responses. Define custom exceptions in Domain and Application layers for specific business or application errors.</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="A pattern in .NET for managing strongly-typed configuration settings, typically loaded from appsettings.json or environment variables.">Configuration (Options Pattern)</span>:</strong> Use the Options pattern (`IOptions<t>`) for strongly-typed configuration, typically configured in the Presentation layer and injected where needed.</t></li>
+<li><strong>Async/Await:</strong> Use `async`/`await` thoroughly for I/O-bound operations. Prefer `async Task` over `async void` for most methods (except event handlers where `async void` is sometimes necessary).</li>
+<li><strong><span class="term" data-bs-toggle="tooltip" title="A design principle stating that a class should have only one reason to change, meaning it should have only one job or responsibility.">Single Responsibility Principle (SRP)</span>:</strong> Apply SRP to classes and methods within each layer to improve cohesion and reduce coupling.</li>
+<li><strong>Lean Controllers:</strong> Controllers should be thin, primarily responsible for receiving HTTP requests, validating input (often with model binding), and delegating work to the Application layer (e.g., MediatR). Avoid business logic in controllers.</li>
+<li><strong>Avoid Leaking Abstractions:</strong> Do not expose `IQueryable` from repositories directly to the Application or Presentation layers, as this can lead to infrastructure concerns (like specific EF Core LINQ expressions) leaking outwards. Queries should be fully defined within the data access layer or use well-defined specification patterns.</li>
+<li><strong>Testing Strategy:</strong>
+<ul>
+<li><em>Domain Layer:</em> Pure unit tests with no external dependencies.</li>
+<li><em>Application Layer:</em> Unit tests, mocking repository interfaces and other infrastructure dependencies.</li>
+<li><em>Infrastructure Layer:</em> Integration tests against a real (or test instance of) database or external services.</li>
+<li><em>Presentation Layer:</em> Integration tests (testing API endpoints, e.g., using `WebApplicationFactory`).</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</main>
+<footer>
+<p>© <span id="currentYear"></span> David Veksler Cheatsheets. Content primarily AI-generated for illustrative purposes.</p>
+<div>
+<a class="mx-2" href="https://www.linkedin.com/in/davidveksler/" target="_blank" title="David Veksler on LinkedIn">
+<i class="bi bi-linkedin"></i> LinkedIn
+            </a>
+<a class="mx-2" href="https://cheatsheets.davidveksler.com/" title="Browse All Cheatsheets">
+<i class="bi bi-collection"></i> All Cheatsheets
+            </a>
+</div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentYearSpan = document.getElementById('currentYear');
+            if (currentYearSpan) {
+                currentYearSpan.textContent = new Date().getFullYear();
+            }
+            const lastUpdatedDateSpan = document.getElementById('lastUpdatedDate');
+             if (lastUpdatedDateSpan) {
+                const today = new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                lastUpdatedDateSpan.textContent = today.toLocaleDateString('en-US', options);
+            }
+
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl, {
+                    boundary: document.body,
+                    html: true
+                });
+            });
+
+            const allCollapseElements = document.querySelectorAll('.collapse');
+            const expandAllBtn = document.getElementById('expandAllBtn');
+            const collapseAllBtn = document.getElementById('collapseAllBtn');
+
+            allCollapseElements.forEach(collapseEl => {
+                const button = document.querySelector(`.details-toggle[data-bs-target="#${collapseEl.id}"]`);
+                if (button) {
+                    const iconEl = button.querySelector('.bi');
+                    const updateIconState = () => {
+                        if (collapseEl.classList.contains('show')) {
+                            iconEl.classList.remove('bi-chevron-down');
+                            iconEl.classList.add('bi-chevron-up');
+                        } else {
+                            iconEl.classList.remove('bi-chevron-up');
+                            iconEl.classList.add('bi-chevron-down');
+                        }
+                    };
+                    updateIconState();
+                    collapseEl.addEventListener('show.bs.collapse', updateIconState);
+                    collapseEl.addEventListener('hide.bs.collapse', updateIconState);
+                }
+            });
+
+            if (expandAllBtn) {
+                expandAllBtn.addEventListener('click', () => {
+                    allCollapseElements.forEach(el => {
+                        var bsCollapse = bootstrap.Collapse.getInstance(el);
+                        if (!bsCollapse) {
+                            bsCollapse = new bootstrap.Collapse(el, { toggle: false });
+                        }
+                        bsCollapse.show();
+                    });
+                });
+            }
+
+            if (collapseAllBtn) {
+                collapseAllBtn.addEventListener('click', () => {
+                    allCollapseElements.forEach(el => {
+                         var bsCollapse = bootstrap.Collapse.getInstance(el);
+                        if (!bsCollapse) {
+                            bsCollapse = new bootstrap.Collapse(el, { toggle: false });
+                        }
+                        bsCollapse.hide();
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
