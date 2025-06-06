@@ -162,7 +162,7 @@ try {
     <link rel="canonical" href="<?php echo htmlspecialchars($baseUrl); ?>">
     
     <!-- Sitemap reference for search engines -->
-    <link rel="sitemap" type="application/xml" href="<?php echo htmlspecialchars($baseUrl); ?>sitemap.xml">
+    <link rel="sitemap" type="application/xml" href="<?php echo htmlspecialchars($baseUrl); ?>sitemap.php">
 
     <!-- === Open Graph / Facebook / LinkedIn === -->
     <meta property="og:title" content="David Veksler's Cheatsheet Portfolio | Custom Design Services">
