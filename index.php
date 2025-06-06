@@ -160,6 +160,9 @@ try {
     <meta name="keywords" content="cheatsheets, portfolio, custom cheatsheets, information design, technical writing, data visualization, reference guide, programming, tech, philosophy, ai safety, bitcoin, leadership, david veksler, hire, freelance, consultant, interactive, learning, development, web design">
     <meta name="author" content="David Veksler">
     <link rel="canonical" href="<?php echo htmlspecialchars($baseUrl); ?>">
+    
+    <!-- Sitemap reference for search engines -->
+    <link rel="sitemap" type="application/xml" href="<?php echo htmlspecialchars($baseUrl); ?>sitemap.xml">
 
     <!-- === Open Graph / Facebook / LinkedIn === -->
     <meta property="og:title" content="David Veksler's Cheatsheet Portfolio | Custom Design Services">
