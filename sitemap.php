@@ -15,7 +15,7 @@ $excludedItems = [
     'PROMPT2.txt',
     'CLAUDE.md',
     'generate-image-previews.py',
-    'sitemap.xml',
+    'sitemap.php',
     // Add any other files you want to exclude from sitemap
 ];
 
