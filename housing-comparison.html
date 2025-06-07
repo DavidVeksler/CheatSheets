@@ -723,12 +723,10 @@
             sqftDisplayEl.textContent = tier.sqft;
             locationDisplayEl.textContent = tier.location;
             
-            // Update title icon
             if (tier.icon) {
                 titleIconEl.textContent = getIconEmoji(tier.icon);
             }
             
-            // Show/hide home price based on ownership type
             if (tier.ownershipType === 'own' && tier.homePrice) {
                 homePriceDisplayEl.textContent = tier.homePrice;
                 homePriceSpecEl.style.display = 'block';
@@ -736,9 +734,30 @@
                 homePriceSpecEl.style.display = 'none';
             }
 
-            // Update features
             const oldHTML = housingFeaturesContainer.innerHTML;
-            const featuresHTML = tier.features.map((category, categoryIdx) => {
+            
+            // --- MODIFICATION START ---
+            // Create a new category for operational/lifestyle features from the new JSON fields.
+            const operationalCategory = {
+                category: 'Lifestyle & Operations',
+                icon: 'bi-clipboard-check',
+                items: []
+            };
+
+            if (tier.socialHostingCapacity) operationalCategory.items.push({ title: 'Social Hosting Capacity', description: tier.socialHostingCapacity });
+            if (tier.powerRedundancy) operationalCategory.items.push({ title: 'Power Redundancy', description: tier.powerRedundancy });
+            if (tier.maintenancePhilosophy) operationalCategory.items.push({ title: 'Maintenance Philosophy', description: tier.maintenancePhilosophy });
+            if (tier.waterSystem) operationalCategory.items.push({ title: 'Water System', description: tier.waterSystem });
+            if (tier.householdStaff) operationalCategory.items.push({ title: 'Household Staff', description: tier.householdStaff });
+            
+            // Create a combined list of features to render.
+            let featuresToRender = [...tier.features];
+            if (operationalCategory.items.length > 0) {
+                featuresToRender.push(operationalCategory);
+            }
+            // --- MODIFICATION END ---
+
+            const featuresHTML = featuresToRender.map((category, categoryIdx) => {
                 const itemsHTML = category.items.map((item, itemIdx) => {
                     const brandsHTML = item.brands ? `<div class="item-brands">${item.brands}</div>` : '';
                     return `
@@ -783,7 +802,6 @@
 
             slider.addEventListener('input', updateHousingDisplay);
 
-            // Initial fade-in animation for categories
             setTimeout(() => {
                 const categories = document.querySelectorAll('.housing-category.fade-in');
                 categories.forEach((category, index) => {
