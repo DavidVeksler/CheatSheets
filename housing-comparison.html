@@ -172,6 +172,11 @@
             transition: color 1.2s ease-in-out, letter-spacing 0.5s ease, text-transform 0.5s ease;
         }
 
+        #titleIcon {
+            transition: all 0.3s ease-in-out;
+            display: inline-block;
+        }
+
         body.billionaire-theme-active .page-title {
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -515,7 +520,7 @@
     <main class="container">
         <div class="main-container">
             <div class="text-center">
-                <h1 class="page-title">🏠 Housing Comparison</h1>
+                <h1 class="page-title"><span id="titleIcon">🏠</span> Housing Comparison</h1>
                 <p class="page-subtitle">Slide to see what your housing budget really gets you!</p>
                 <p class="budget-note"><i class="bi bi-info-circle-fill"></i> This comparison shows **monthly housing costs** across different budget tiers. Costs are based on median US markets and vary by location.</p>
             </div>
@@ -534,6 +539,10 @@
                     <div class="spec-item">
                         <span class="spec-value" id="locationDisplay">Suburban areas, smaller cities</span>
                         Location Type
+                    </div>
+                    <div class="spec-item" id="homePriceSpec" style="display: none;">
+                        <span class="spec-value" id="homePriceDisplay">$300K - $450K</span>
+                        Total Home Price
                     </div>
                 </div>
 
@@ -573,6 +582,9 @@
         const housingScenarioEl = document.getElementById('housingScenario');
         const sqftDisplayEl = document.getElementById('sqftDisplay');
         const locationDisplayEl = document.getElementById('locationDisplay');
+        const homePriceDisplayEl = document.getElementById('homePriceDisplay');
+        const homePriceSpecEl = document.getElementById('homePriceSpec');
+        const titleIconEl = document.getElementById('titleIcon');
         const housingFeaturesContainer = document.getElementById('housing-features-container');
 
         const bgLayer1 = document.getElementById('background-layer-1');
@@ -582,6 +594,23 @@
         function formatBudget(budget) {
             if (budget >= 1000) return `$${(budget / 1000).toFixed(budget % 1000 === 0 ? 0 : 1)}K`;
             return `$${budget.toLocaleString()}`;
+        }
+
+        function getIconEmoji(iconClass) {
+            const iconMap = {
+                'bi-door-open': '🚪',
+                'bi-house-door': '🏠',
+                'bi-house': '🏡',
+                'bi-house-heart': '🏘️',
+                'bi-houses': '🏘️',
+                'bi-building': '🏢',
+                'bi-house-gear': '🏰',
+                'bi-gem': '💎',
+                'bi-crown': '👑',
+                'bi-bank': '🏛️',
+                'bi-award': '🏆'
+            };
+            return iconMap[iconClass] || '🏠';
         }
 
         function getRGBFromHex(hex) {
@@ -693,6 +722,19 @@
             housingScenarioEl.textContent = tier.scenario;
             sqftDisplayEl.textContent = tier.sqft;
             locationDisplayEl.textContent = tier.location;
+            
+            // Update title icon
+            if (tier.icon) {
+                titleIconEl.textContent = getIconEmoji(tier.icon);
+            }
+            
+            // Show/hide home price based on ownership type
+            if (tier.ownershipType === 'own' && tier.homePrice) {
+                homePriceDisplayEl.textContent = tier.homePrice;
+                homePriceSpecEl.style.display = 'block';
+            } else {
+                homePriceSpecEl.style.display = 'none';
+            }
 
             // Update features
             const oldHTML = housingFeaturesContainer.innerHTML;
