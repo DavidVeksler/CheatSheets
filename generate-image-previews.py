@@ -1,9 +1,12 @@
-An excellent suggestion. The current script only creates an image if the corresponding meta tag is missing. A more robust approach is to also handle cases where the tag exists but the referenced image file has been deleted or has a non-standard name.
+import sys
+import subprocess
 
-I will refine the script to ensure that for every HTML file, a corresponding standardized preview image (<filename>.png) exists, and the og:image and twitter:image meta tags correctly point to it.
+# Install dependencies
+subprocess.run([sys.executable, "-m", "pip", "install", "beautifulsoup4", "lxml", "playwright"], check=True)
+subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], check=True)
 
-Here is the refined generate-image-previews.py script:
 
+# Now, re-declare and run the full script
 import logging
 from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
@@ -129,7 +132,7 @@ def analyze_html_file(
                 logging.warning(f"File {html_file.name} is empty or whitespace only. Skipping analysis.")
                 analysis["error"] = "Empty file"
                 return analysis
-            soup = BeautifulSoup(content, "html.parser")
+            soup = BeautifulSoup(content, "lxml")
 
         analysis["soup"] = soup # Store soup for use in update function if needed for extraction
 
@@ -260,7 +263,6 @@ def generate_screenshots(
 
             for file_info in files_for_screenshot:
                 html_path = file_info["path"]
-                # Ensure expected_image_name is present; could happen if only one image tag was missing initially
                 image_name = file_info.get("expected_image_name", f"{html_path.stem}.png")
                 image_path = images_dir / image_name
                 try:
@@ -293,16 +295,15 @@ def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
     """Updates a single HTML file based on its analysis results."""
     html_path = file_analysis["path"]
 
-    # Retrieve the soup object from analysis if it's clean, otherwise re-read
     soup = file_analysis.get("soup")
-    if not soup: # If soup wasn't stored or an error occurred during analysis parsing
+    if not soup:
         try:
             with open(html_path, "r", encoding="utf-8", errors="replace") as f:
                 content = f.read()
-                if not content.strip(): # Should have been caught by analysis, but double check
+                if not content.strip():
                     logging.warning(f"Skipping update for empty file: {html_path.name}")
                     return
-                soup = BeautifulSoup(content, "html.parser")
+                soup = BeautifulSoup(content, "lxml")
         except IOError as e:
             logging.error(f"IOError re-reading {html_path.name} for update: {e}")
             return
@@ -319,13 +320,9 @@ def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
     file_stem = html_path.stem
     expected_canonical_url = file_analysis.get("expected_canonical_url", f"{base_url}{html_path.name}")
 
-    # --- Default Content Derivation ---
-    # (Do this once, used if tags are missing)
     default_title_text = _extract_content(soup, "h1", default_text=file_stem.replace('-', ' ').title())
     default_description_text = DEFAULT_DESCRIPTION_PLACEHOLDER.format(file_stem.replace('-', ' '))
 
-
-    # --- Social Media Image Tags (Add if missing or update if incorrect) ---
     if file_analysis.get("og_image_needs_update") or file_analysis.get("twitter_image_needs_update"):
         image_name_for_meta = file_analysis.get("expected_image_name", f"{file_stem}.png")
         image_url_for_meta = f"images/{image_name_for_meta}"
@@ -338,7 +335,6 @@ def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
             _, changed = _get_or_create_meta_tag(soup, head, {"name": "twitter:image"}, image_url_for_meta)
             if changed: total_changes_made_to_file = True
 
-    # --- Title Tags (Add if missing, preserve content if exists) ---
     if file_analysis.get("og_title_missing"):
         _, changed = _get_or_create_meta_tag(soup, head, {"property": "og:title"}, default_title_text)
         if changed: total_changes_made_to_file = True
@@ -346,18 +342,16 @@ def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
         _, changed = _get_or_create_meta_tag(soup, head, {"name": "twitter:title"}, default_title_text)
         if changed: total_changes_made_to_file = True
 
-    # --- Description Tags (Add if missing, preserve content if exists) ---
     if file_analysis.get("og_description_missing"):
         _, changed = _get_or_create_meta_tag(soup, head, {"property": "og:description"}, default_description_text)
         if changed: total_changes_made_to_file = True
     if file_analysis.get("twitter_description_missing"):
         _, changed = _get_or_create_meta_tag(soup, head, {"name": "twitter:description"}, default_description_text)
         if changed: total_changes_made_to_file = True
-    if file_analysis.get("meta_description_missing"): # Standard meta description
+    if file_analysis.get("meta_description_missing"):
         _, changed = _get_or_create_meta_tag(soup, head, {"name": "description"}, default_description_text)
         if changed: total_changes_made_to_file = True
 
-    # --- Other Social Tags (Add if missing, or update content if present and incorrect) ---
     if file_analysis.get("og_type_needs_update"):
         _, changed = _get_or_create_meta_tag(soup, head, {"property": "og:type"}, OG_TYPE_DEFAULT)
         if changed: total_changes_made_to_file = True
@@ -368,7 +362,6 @@ def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
         _, changed = _get_or_create_meta_tag(soup, head, {"name": "twitter:card"}, TWITTER_CARD_DEFAULT)
         if changed: total_changes_made_to_file = True
 
-    # --- Canonical URL (Add if missing, or update href if present and incorrect) ---
     if file_analysis.get("canonical_needs_fix"):
         _, changed = _get_or_create_link_tag(soup, head, {"rel": "canonical"}, expected_canonical_url)
         if changed:
@@ -378,7 +371,7 @@ def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
     if total_changes_made_to_file:
         try:
             with open(html_path, "w", encoding="utf-8") as f:
-                f.write(str(soup))
+                f.write(str(soup.prettify())) # Using prettify for readable output
             logging.info(f"Successfully updated meta tags for: {html_path.name}")
         except IOError as e:
             logging.error(f"IOError during final write of {html_path.name}: {e}")
@@ -387,9 +380,6 @@ def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
 
 
 def process_directory(directory: str = ".", base_url: str = "https://cheatsheets.davidveksler.com/"):
-    """
-    Main pipeline: Validates inputs, analyzes HTML files, generates screenshots, and updates HTML files.
-    """
     dir_path = Path(directory).resolve()
 
     if not dir_path.exists() or not dir_path.is_dir():
@@ -414,12 +404,11 @@ def process_directory(directory: str = ".", base_url: str = "https://cheatsheets
 
     http_base_url_netloc = parsed_base_url.netloc
 
-
     images_dir = dir_path / "images"
     logging.info(f"Processing directory: {dir_path}")
     logging.info(f"Using base URL: {base_url}")
 
-    all_html_files = list(dir_path.glob("*.html"))
+    all_html_files = sorted(list(dir_path.glob("*.html"))) # Sorted for deterministic output
     if not all_html_files:
         logging.info(f"No HTML files found in {dir_path}.")
         return
@@ -430,12 +419,11 @@ def process_directory(directory: str = ".", base_url: str = "https://cheatsheets
         analysis = analyze_html_file(html_file, base_url, http_base_url_netloc)
         if analysis.get("error"):
             logging.warning(f"Skipping {html_file.name} due to analysis error: {analysis['error']}")
-            if "soup" in analysis: del analysis["soup"] # Don't keep potentially bad soup
-            continue # Skip files with analysis errors for further processing
+            if "soup" in analysis: del analysis["soup"]
+            continue
 
         if analysis.get("needs_update") or analysis.get("needs_screenshot"):
             processed_files_info.append(analysis)
-
 
     if not processed_files_info:
         logging.info("No files need processing after analysis.")
@@ -444,7 +432,6 @@ def process_directory(directory: str = ".", base_url: str = "https://cheatsheets
     files_needing_screenshots = [
         res for res in processed_files_info if res.get("needs_screenshot")
     ]
-    # Files that need HTML modification
     files_needing_html_updates = [
         res for res in processed_files_info if res.get("needs_update")
     ]
@@ -461,23 +448,20 @@ def process_directory(directory: str = ".", base_url: str = "https://cheatsheets
 
     logging.info("Processing complete.")
 
+# Running the main function on our test directory
+process_directory(directory=".", base_url="https://test.com/")
 
-if __name__ == "__main__":
-    # To test this specific change, you might create files like:
-    # test_dir = Path("test_html_preserve")
-    # test_dir.mkdir(exist_ok=True)
-    # (test_dir / "test_preserve.html").write_text(
-    #     "<html><head><title>Original Title</title>"
-    #     "<meta property='og:title' content='My Custom OG Title'>"
-    #     "<meta name='twitter:title' content='My Custom Twitter Title'>"
-    #     "<meta property='og:description' content='My Custom OG Desc'>"
-    #     "<meta name='twitter:description' content='My Custom Twitter Desc'>"
-    #     "<meta name='description' content='My Custom Meta Desc'>"
-    #     # Missing og:type, og:url, twitter:card, canonical, images - these should be added/updated
-    #     "</head><body><h1>Page H1 For Defaults</h1></body></html>"
-    # )
-    # (test_dir / "test_add_new.html").write_text(
-    #    "<html><head><title>New Page</title></head><body><h1>H1 For New Page</h1></body></html>"
-    # )
-    # process_directory(str(test_dir), "https://example.com/docs/")
-    process_directory()
+
+# Finally, print the contents of the modified files to verify the changes
+print("\n--- Verification ---")
+for f in sorted(Path(".").glob("*.html")):
+    print(f"\n--- Contents of {f.name} ---")
+    print(f.read_text())
+
+# Check for generated images
+print("\n--- Generated Images ---")
+image_files = list(Path("./images").glob("*.png"))
+for img in image_files:
+    print(img.name)
+if not image_files:
+    print("No images found.")
