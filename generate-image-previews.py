@@ -1,3 +1,9 @@
+An excellent suggestion. The current script only creates an image if the corresponding meta tag is missing. A more robust approach is to also handle cases where the tag exists but the referenced image file has been deleted or has a non-standard name.
+
+I will refine the script to ensure that for every HTML file, a corresponding standardized preview image (<filename>.png) exists, and the og:image and twitter:image meta tags correctly point to it.
+
+Here is the refined generate-image-previews.py script:
+
 import logging
 from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
@@ -78,8 +84,8 @@ def _get_or_create_link_tag(
             if hasattr(child, 'name') and child.name == 'meta':
                 if child.get('charset') or child.get('name') == 'viewport':
                     insert_position = i + 1
-        
-        if not head.contents: 
+
+        if not head.contents:
             head.append(tag)
         elif insert_position < len(head.contents):
             head.insert(insert_position, tag)
@@ -113,6 +119,7 @@ def analyze_html_file(
     analysis: Dict[str, Any] = {"path": html_file, "needs_update": False}
     file_stem = html_file.stem
     expected_image_name = f"{file_stem}.png"
+    expected_image_url = f"images/{expected_image_name}"
     expected_canonical_url = f"{base_url}{html_file.name}"
 
     try:
@@ -127,68 +134,84 @@ def analyze_html_file(
         analysis["soup"] = soup # Store soup for use in update function if needed for extraction
 
         # --- Find existing tags ---
-        analysis["og_image_tag"] = soup.find("meta", property="og:image")
-        analysis["twitter_image_tag"] = soup.find("meta", attrs={"name": "twitter:image"})
-        analysis["og_title_tag"] = soup.find("meta", property="og:title")
-        analysis["twitter_title_tag"] = soup.find("meta", attrs={"name": "twitter:title"})
-        analysis["og_description_tag"] = soup.find("meta", property="og:description")
-        analysis["twitter_description_tag"] = soup.find("meta", attrs={"name": "twitter:description"})
-        analysis["meta_description_tag"] = soup.find("meta", attrs={"name": "description"})
-        analysis["og_type_tag"] = soup.find("meta", property="og:type")
-        analysis["og_url_tag"] = soup.find("meta", property="og:url")
-        analysis["twitter_card_tag"] = soup.find("meta", attrs={"name": "twitter:card"})
-        analysis["canonical_link_tag"] = soup.find("link", rel="canonical")
+        og_image_tag = soup.find("meta", property="og:image")
+        twitter_image_tag = soup.find("meta", attrs={"name": "twitter:image"})
+        og_title_tag = soup.find("meta", property="og:title")
+        twitter_title_tag = soup.find("meta", attrs={"name": "twitter:title"})
+        og_description_tag = soup.find("meta", property="og:description")
+        twitter_description_tag = soup.find("meta", attrs={"name": "twitter:description"})
+        meta_description_tag = soup.find("meta", attrs={"name": "description"})
+        og_type_tag = soup.find("meta", property="og:type")
+        og_url_tag = soup.find("meta", property="og:url")
+        twitter_card_tag = soup.find("meta", attrs={"name": "twitter:card"})
+        canonical_link_tag = soup.find("link", rel="canonical")
 
         # --- Determine if updates are needed ---
 
-        # 1. Social Media Images (Add if missing)
-        if not analysis["og_image_tag"] or not analysis["twitter_image_tag"]:
-            analysis["expected_image_name"] = expected_image_name
-            analysis["needs_screenshot"] = True # Screenshot needed if either is missing
+        # 1. Social Media Image Tags & File
+        dir_path = html_file.parent
+        expected_image_path = dir_path / expected_image_url
+
+        if not og_image_tag or og_image_tag.get("content") != expected_image_url:
+            analysis["og_image_needs_update"] = True
             analysis["needs_update"] = True
-            if not analysis["og_image_tag"]: analysis["og_image_missing"] = True
-            if not analysis["twitter_image_tag"]: analysis["twitter_image_missing"] = True
-            logging.info(f"Identified missing social image tags for: {html_file.name}")
+            logging.info(f"og:image tag is missing or incorrect for: {html_file.name}")
+
+        if not twitter_image_tag or twitter_image_tag.get("content") != expected_image_url:
+            analysis["twitter_image_needs_update"] = True
+            analysis["needs_update"] = True
+            logging.info(f"twitter:image tag is missing or incorrect for: {html_file.name}")
+
+        # A screenshot is required if the target image file doesn't exist on disk,
+        # or if we are about to update the tags to point to it.
+        if not expected_image_path.exists() or analysis.get("og_image_needs_update") or analysis.get("twitter_image_needs_update"):
+            analysis["needs_screenshot"] = True
+            analysis["expected_image_name"] = expected_image_name
+            if not expected_image_path.exists():
+                logging.info(f"Image file '{expected_image_name}' is missing for {html_file.name}, will generate.")
+            else: # Tags are being updated, so we'll refresh the screenshot to be safe.
+                logging.info(f"Image tags for {html_file.name} are incorrect, will generate fresh screenshot.")
+
 
         # 2. Title Tags (Add if missing)
-        if not analysis["og_title_tag"]:
+        if not og_title_tag:
             analysis["og_title_missing"] = True
             analysis["needs_update"] = True
-        if not analysis["twitter_title_tag"]:
+        if not twitter_title_tag:
             analysis["twitter_title_missing"] = True
             analysis["needs_update"] = True
-        
+
         # 3. Description Tags (Add if missing)
-        if not analysis["og_description_tag"]:
+        if not og_description_tag:
             analysis["og_description_missing"] = True
             analysis["needs_update"] = True
-        if not analysis["twitter_description_tag"]:
+        if not twitter_description_tag:
             analysis["twitter_description_missing"] = True
             analysis["needs_update"] = True
-        if not analysis["meta_description_tag"]:
+        if not meta_description_tag:
             analysis["meta_description_missing"] = True
             analysis["needs_update"] = True
 
         # 4. Other Social Tags (Add if missing, or update content if present and incorrect)
-        if not analysis["og_type_tag"] or analysis["og_type_tag"].get("content") != OG_TYPE_DEFAULT:
+        if not og_type_tag or og_type_tag.get("content") != OG_TYPE_DEFAULT:
             analysis["og_type_needs_update"] = True
             analysis["needs_update"] = True
-        if not analysis["og_url_tag"] or analysis["og_url_tag"].get("content") != expected_canonical_url:
+        if not og_url_tag or og_url_tag.get("content") != expected_canonical_url:
             analysis["og_url_needs_update"] = True
             analysis["needs_update"] = True
-        if not analysis["twitter_card_tag"] or analysis["twitter_card_tag"].get("content") != TWITTER_CARD_DEFAULT:
+        if not twitter_card_tag or twitter_card_tag.get("content") != TWITTER_CARD_DEFAULT:
             analysis["twitter_card_needs_update"] = True
             analysis["needs_update"] = True
-            
+
         # 5. Canonical URL (Add if missing, or update href if present and incorrect)
-        current_canonical_href = analysis["canonical_link_tag"].get("href", "") if analysis["canonical_link_tag"] else ""
+        current_canonical_href = canonical_link_tag.get("href", "") if canonical_link_tag else ""
         needs_canonical_fix = False
-        if not analysis["canonical_link_tag"]:
+        if not canonical_link_tag:
             needs_canonical_fix = True
             logging.info(f"Missing canonical URL: {html_file.name}")
         else:
             parsed_current_href = urlparse(current_canonical_href)
-            is_http_on_base_domain = (parsed_current_href.scheme == "http" and 
+            is_http_on_base_domain = (parsed_current_href.scheme == "http" and
                                       parsed_current_href.netloc.lower() == http_base_url_netloc.lower())
             is_different_url = (current_canonical_href != expected_canonical_url)
             if is_http_on_base_domain or is_different_url:
@@ -204,11 +227,11 @@ def analyze_html_file(
     except IOError as e:
         logging.error(f"IOError parsing {html_file.name}: {e}")
         analysis["error"] = str(e)
-    except Exception as e: 
+    except Exception as e:
         logging.error(f"Unexpected error parsing {html_file.name} ({type(e).__name__}): {e}")
         analysis["error"] = str(e)
         if "soup" in analysis: del analysis["soup"] # Don't pass potentially corrupt soup
-        
+
     return analysis
 
 def generate_screenshots(
@@ -228,7 +251,7 @@ def generate_screenshots(
                 browser = p.chromium.launch(headless=True)
             except PlaywrightError as e:
                 logging.error(f"Failed to launch Chromium. Ensure Playwright browsers are installed ('playwright install chromium'). Error: {e}")
-                return 
+                return
 
             page = browser.new_page(viewport={"width": 1200, "height": 630})
             page.set_extra_http_headers(
@@ -238,7 +261,7 @@ def generate_screenshots(
             for file_info in files_for_screenshot:
                 html_path = file_info["path"]
                 # Ensure expected_image_name is present; could happen if only one image tag was missing initially
-                image_name = file_info.get("expected_image_name", f"{html_path.stem}.png") 
+                image_name = file_info.get("expected_image_name", f"{html_path.stem}.png")
                 image_path = images_dir / image_name
                 try:
                     page.goto(f"file://{html_path.resolve()}", wait_until="networkidle")
@@ -255,12 +278,12 @@ def generate_screenshots(
                     logging.error(
                         f"Playwright screenshot failed for {html_path.name}: {e}"
                     )
-                except Exception as e: 
+                except Exception as e:
                     logging.error(
                         f"Unexpected error during screenshot for {html_path.name} ({type(e).__name__}): {e}"
                     )
             browser.close()
-    except PlaywrightError as e: 
+    except PlaywrightError as e:
         logging.error(f"Playwright context error: {e}. Screenshots may not have been generated.")
     except Exception as e:
         logging.error(f"General error in screenshot generation ({type(e).__name__}): {e}")
@@ -269,7 +292,7 @@ def generate_screenshots(
 def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
     """Updates a single HTML file based on its analysis results."""
     html_path = file_analysis["path"]
-    
+
     # Retrieve the soup object from analysis if it's clean, otherwise re-read
     soup = file_analysis.get("soup")
     if not soup: # If soup wasn't stored or an error occurred during analysis parsing
@@ -289,7 +312,7 @@ def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
 
 
     head = _ensure_head_exists(soup, html_path)
-    if not head: 
+    if not head:
         return
 
     total_changes_made_to_file = False
@@ -302,17 +325,19 @@ def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
     default_description_text = DEFAULT_DESCRIPTION_PLACEHOLDER.format(file_stem.replace('-', ' '))
 
 
-    # --- Social Media Image Tags (Add if missing) ---
-    if file_analysis.get("og_image_missing") or file_analysis.get("twitter_image_missing"):
+    # --- Social Media Image Tags (Add if missing or update if incorrect) ---
+    if file_analysis.get("og_image_needs_update") or file_analysis.get("twitter_image_needs_update"):
         image_name_for_meta = file_analysis.get("expected_image_name", f"{file_stem}.png")
         image_url_for_meta = f"images/{image_name_for_meta}"
-        if file_analysis.get("og_image_missing"):
+
+        if file_analysis.get("og_image_needs_update"):
             _, changed = _get_or_create_meta_tag(soup, head, {"property": "og:image"}, image_url_for_meta)
             if changed: total_changes_made_to_file = True
-        if file_analysis.get("twitter_image_missing"):
+
+        if file_analysis.get("twitter_image_needs_update"):
             _, changed = _get_or_create_meta_tag(soup, head, {"name": "twitter:image"}, image_url_for_meta)
             if changed: total_changes_made_to_file = True
-    
+
     # --- Title Tags (Add if missing, preserve content if exists) ---
     if file_analysis.get("og_title_missing"):
         _, changed = _get_or_create_meta_tag(soup, head, {"property": "og:title"}, default_title_text)
@@ -331,7 +356,7 @@ def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
     if file_analysis.get("meta_description_missing"): # Standard meta description
         _, changed = _get_or_create_meta_tag(soup, head, {"name": "description"}, default_description_text)
         if changed: total_changes_made_to_file = True
-        
+
     # --- Other Social Tags (Add if missing, or update content if present and incorrect) ---
     if file_analysis.get("og_type_needs_update"):
         _, changed = _get_or_create_meta_tag(soup, head, {"property": "og:type"}, OG_TYPE_DEFAULT)
@@ -346,14 +371,14 @@ def update_html_file_meta(file_analysis: Dict[str, Any], base_url: str):
     # --- Canonical URL (Add if missing, or update href if present and incorrect) ---
     if file_analysis.get("canonical_needs_fix"):
         _, changed = _get_or_create_link_tag(soup, head, {"rel": "canonical"}, expected_canonical_url)
-        if changed: 
+        if changed:
             total_changes_made_to_file = True
             logging.info(f"Updated canonical URL in {html_path.name} to: {expected_canonical_url}")
-        
+
     if total_changes_made_to_file:
         try:
             with open(html_path, "w", encoding="utf-8") as f:
-                f.write(str(soup)) 
+                f.write(str(soup))
             logging.info(f"Successfully updated meta tags for: {html_path.name}")
         except IOError as e:
             logging.error(f"IOError during final write of {html_path.name}: {e}")
@@ -372,7 +397,7 @@ def process_directory(directory: str = ".", base_url: str = "https://cheatsheets
             f"Error: Provided directory '{directory}' does not exist or is not a directory."
         )
         return
-    
+
     try:
         parsed_base_url = urlparse(base_url)
     except ValueError as e:
@@ -385,7 +410,7 @@ def process_directory(directory: str = ".", base_url: str = "https://cheatsheets
     if not base_url.endswith("/"):
         base_url += "/"
         logging.warning(f"Base URL did not end with '/', appended it: {base_url}")
-        parsed_base_url = urlparse(base_url) 
+        parsed_base_url = urlparse(base_url)
 
     http_base_url_netloc = parsed_base_url.netloc
 
@@ -407,7 +432,7 @@ def process_directory(directory: str = ".", base_url: str = "https://cheatsheets
             logging.warning(f"Skipping {html_file.name} due to analysis error: {analysis['error']}")
             if "soup" in analysis: del analysis["soup"] # Don't keep potentially bad soup
             continue # Skip files with analysis errors for further processing
-        
+
         if analysis.get("needs_update") or analysis.get("needs_screenshot"):
             processed_files_info.append(analysis)
 
@@ -422,8 +447,8 @@ def process_directory(directory: str = ".", base_url: str = "https://cheatsheets
     # Files that need HTML modification
     files_needing_html_updates = [
         res for res in processed_files_info if res.get("needs_update")
-    ] 
-    
+    ]
+
     logging.info(f"Found {len(files_needing_screenshots)} files potentially needing screenshots.")
     logging.info(f"Found {len(files_needing_html_updates)} files needing HTML meta tag updates.")
 
@@ -432,8 +457,8 @@ def process_directory(directory: str = ".", base_url: str = "https://cheatsheets
 
     if files_needing_html_updates:
         for file_analysis in files_needing_html_updates:
-            update_html_file_meta(file_analysis, base_url) 
-    
+            update_html_file_meta(file_analysis, base_url)
+
     logging.info("Processing complete.")
 
 
