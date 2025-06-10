@@ -115,13 +115,33 @@ def analyze_file(html_file: Path, base_url: str, proposal: ChangeProposal):
         if "YOUR_IMAGE_URL_HERE" not in current_og_image_url:
             try:
                 # Extract filename from a potential full URL or relative path
-                image_filename = Path(urlparse(current_og_image_url).path).name
-                if (images_dir / image_filename).exists():
-                    # A valid, existing image was found! Use it.
-                    final_image_url = f"images/{image_filename}"
-                    needs_screenshot = False # Don't generate a new one
+                image_path = urlparse(current_og_image_url).path
+                # Handle both absolute and relative paths
+                if image_path.startswith('/'):
+                    image_filename = Path(image_path).name
+                else:
+                    # For relative paths like "images/filename.png"
+                    image_filename = Path(image_path).name
+                    # Check if the relative path exists as specified
+                    if current_og_image_url.startswith("images/"):
+                        relative_path = html_file.parent / current_og_image_url
+                        if relative_path.exists():
+                            final_image_url = current_og_image_url
+                            needs_screenshot = False
+                        elif (images_dir / image_filename).exists():
+                            # Image exists but path format needs updating
+                            final_image_url = f"images/{image_filename}"
+                            needs_screenshot = False
+                    elif (images_dir / image_filename).exists():
+                        # A valid, existing image was found! Use it.
+                        final_image_url = f"images/{image_filename}"
+                        needs_screenshot = False
             except Exception as e:
                 logging.warning(f"Could not parse image path '{current_og_image_url}' in {html_file.name}: {e}")
+    
+    # Also check if the default image already exists even if no og:image tag
+    elif (images_dir / f"{file_stem}.png").exists():
+        needs_screenshot = False
 
     expected_canonical_url = f"{base_url}{html_file.name}"
 
@@ -148,10 +168,12 @@ def analyze_file(html_file: Path, base_url: str, proposal: ChangeProposal):
             proposal.update_tag(html_file, attrs, tag.get(content_attr, "N/A"), expected_content, tag_name, content_attr)
 
     # Add a screenshot task ONLY if we couldn't find a valid existing image
-    # AND the standardized target image doesn't exist either.
-    expected_image_path = images_dir / f"{file_stem}.png"
+    # Check if the actual final image exists (could be different from default)
+    final_image_filename = Path(final_image_url).name
+    expected_image_path = images_dir / final_image_filename
+    
     if needs_screenshot and not expected_image_path.exists():
-        proposal.add_screenshot_task(f"{file_stem}.png")
+        proposal.add_screenshot_task(final_image_filename)
 
 def apply_changes(proposal: ChangeProposal, images_dir: Path):
     if proposal.html_additions or proposal.html_updates:
