@@ -11,18 +11,18 @@ import os
 import sys
 from pathlib import Path
 
-PORT = 8000
+PORT = 8080
 
 class PHPHandler(http.server.SimpleHTTPRequestHandler):
     """Handler that serves PHP files as HTML for local testing"""
-    
+
     def end_headers(self):
         # Add CORS headers to prevent issues
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         super().end_headers()
-    
+
     def guess_type(self, path):
         # Serve PHP files as HTML for local testing
         if path.endswith('.php'):
@@ -33,11 +33,11 @@ def main():
     # Change to script directory
     script_dir = Path(__file__).parent
     os.chdir(script_dir)
-    
+
     print(f"Starting server in: {script_dir}")
     print(f"Server running at: http://localhost:{PORT}")
     print("Press Ctrl+C to stop the server")
-    
+
     try:
         with socketserver.TCPServer(("", PORT), PHPHandler) as httpd:
             # Open browser automatically
