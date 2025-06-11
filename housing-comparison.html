@@ -737,11 +737,11 @@
             housingScenarioEl.textContent = tier.scenario;
             sqftDisplayEl.textContent = tier.sqft;
             locationDisplayEl.textContent = tier.location;
-            
+
             if (tier.icon) {
                 titleIconEl.textContent = getIconEmoji(tier.icon);
             }
-            
+
             if (tier.ownershipType === 'own' && tier.homePrice) {
                 homePriceDisplayEl.textContent = tier.homePrice;
                 homePriceSpecEl.style.display = 'block';
@@ -750,7 +750,7 @@
             }
 
             const oldHTML = housingFeaturesContainer.innerHTML;
-            
+
             // --- MODIFICATION START ---
             // Create a new category for operational/lifestyle features from the new JSON fields.
             const operationalCategory = {
@@ -764,7 +764,7 @@
             if (tier.maintenancePhilosophy) operationalCategory.items.push({ title: 'Maintenance Philosophy', description: tier.maintenancePhilosophy });
             if (tier.waterSystem) operationalCategory.items.push({ title: 'Water System', description: tier.waterSystem });
             if (tier.householdStaff) operationalCategory.items.push({ title: 'Household Staff', description: tier.householdStaff });
-            
+
             // Create a combined list of features to render.
             let featuresToRender = [...tier.features];
             if (operationalCategory.items.length > 0) {
@@ -813,6 +813,21 @@
         function initializeApp() {
             slider.max = housingTiers.length - 1;
             lastSliderValue = parseInt(slider.value);
+
+            // Dynamically update slider labels to match the data from the JSON file
+            const sliderLabelsContainer = document.querySelector('.slider-labels');
+            if (sliderLabelsContainer && housingTiers.length > 0) {
+                const labels = sliderLabelsContainer.children;
+                const minTier = housingTiers[0];
+                const maxTier = housingTiers[housingTiers.length - 1];
+                const midIndex = Math.floor((housingTiers.length - 1) / 2);
+                const midTier = housingTiers[midIndex];
+
+                if (labels[0]) labels[0].textContent = formatBudget(minTier.budget);
+                if (labels[1]) labels[1].textContent = formatBudget(midTier.budget);
+                if (labels[2]) labels[2].textContent = formatBudget(maxTier.budget);
+            }
+
             updateHousingDisplay();
 
             slider.addEventListener('input', updateHousingDisplay);
