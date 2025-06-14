@@ -1,795 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern DevOps Pipelines Cheatsheet: Azure, Terraform & SonarQube Guide</title>
-    <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;🚀&lt;/text&gt;&lt;/svg&gt;">
-
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>A Modern DevOps Pipeline Cheatsheet</title>
+    <link href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;🚀&lt;/text&gt;&lt;/svg&gt;" rel="icon" />
     <!-- SEO & Metadata -->
-    <meta name="description" content="A comprehensive, opinionated cheatsheet for modern DevOps pipelines, focusing on the Azure DevOps ecosystem. Covers CI/CD with YAML, IaC with Terraform, code quality with SonarQube, security, and monitoring.">
-    <meta name="keywords" content="DevOps, CI/CD, Cheatsheet, Azure DevOps, Terraform, SonarQube, Infrastructure as Code, IaC, Continuous Integration, Continuous Delivery, Git, Automation, Security, YAML Pipelines, Azure Repos, Azure Pipelines">
-    <link rel="canonical" href="https://cheatsheets.davidveksler.com/modern-devops-pipelines.html">
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://cheatsheets.davidveksler.com/modern-devops-pipelines.html">
-    <meta property="og:title" content="Modern DevOps Pipelines Cheatsheet: Azure, Terraform & SonarQube Guide">
-    <meta property="og:description" content="A battle-hardened guide to building effective CI/CD pipelines in Azure DevOps with Terraform for IaC and SonarQube for code quality.">
-    <meta property="og:image" content="https://cheatsheets.davidveksler.com/images/modern-devops-pipelines.png">
-    <meta property="og:image:alt" content="A visual diagram of a DevOps pipeline showing stages like SCM, CI, CD, IaC, Security, and Monitoring.">
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://cheatsheets.davidveksler.com/modern-devops-pipelines.html">
-    <meta name="twitter:title" content="Modern DevOps Pipelines Cheatsheet: Azure, Terraform & SonarQube Guide">
-    <meta name="twitter:description" content="An opinionated cheatsheet for building robust DevOps pipelines using Azure DevOps, Terraform, and SonarQube.">
-    <meta name="twitter:image" content="https://cheatsheets.davidveksler.com/images/modern-devops-pipelines.png">
-    <meta name="twitter:creator" content="@heroiclife">
-
-    <!-- JSON-LD Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "headline": "The Modern DevOps Pipeline: A Battle-Hardened Cheatsheet",
-      "description": "A comprehensive, opinionated cheatsheet for modern DevOps pipelines, focusing on the Azure DevOps ecosystem. Covers CI/CD with YAML, IaC with Terraform, code quality with SonarQube, security, and monitoring.",
-      "image": "https://cheatsheets.davidveksler.com/images/modern-devops-pipelines.png",
-      "author": {
-        "@type": "Person",
-        "name": "David Veksler (AI Generated)"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "David Veksler Cheatsheets",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://cheatsheets.davidveksler.com/images/logo-placeholder.png"
-        }
-      },
-      "datePublished": "2024-06-14",
-      "dateModified": "2024-06-14",
-      "keywords": "DevOps, CI/CD, Azure DevOps, Terraform, SonarQube, IaC, Continuous Integration, Continuous Delivery, Git, Automation, Security"
-    }
-    </script>
-
+    <meta content="A logically structured cheatsheet for modern DevOps pipelines, covering the lifecycle from SCM, CI, CD, to Monitoring. Compares Azure DevOps and GitHub Actions, with details on Terraform, Kubernetes, and security." name="description" />
+    <meta content="DevOps, CI/CD, Cheatsheet, Azure DevOps, GitHub Actions, Terraform, Kubernetes, Jenkins, GitLab, IaC, SCM, Continuous Integration, Continuous Delivery, Monitoring" name="keywords" />
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" rel="stylesheet" />
     <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
     <style>
         :root {
             --bs-body-bg: #1a1d21;
             --bs-body-color: #e9ecef;
-            --bs-primary: #0d6efd; /* Azure Blue */
-            --bs-primary-dark: #0a58ca;
-            --bs-primary-light: #cfe2ff;
             --card-bg: #212529;
             --card-border-color: #495057;
             --card-shadow-color: rgba(0, 0, 0, 0.4);
             --text-color-main: #f8f9fa;
             --text-color-secondary: #adb5bd;
-            --text-color-highlight: #78C1F3; /* Light Blue Highlight */
+            --text-color-highlight: #78C1F3;
             --schema-bg-color: rgba(33, 37, 41, 0.7);
             --schema-border-color: #343a40;
             --blueprint-grid-color: rgba(108, 117, 125, 0.1);
-
-            /* DevOps Category Colors */
-            --devops-color-scm: #F05032;       /* Git Orange */
-            --devops-color-ci: #F7B601;        /* SonarQube Yellow */
-            --devops-color-cd: #0078D4;        /* Azure Blue */
-            --devops-color-iac: #7B42BC;       /* Terraform Purple */
-            --devops-color-security: #D73A49;  /* Security Red */
-            --devops-color-monitoring: #28A745;/* Monitoring Green */
-
-            --db-category-color: var(--bs-primary); /* Default */
+            --devops-color-concepts: #6c757d;
+            --devops-color-scm: #F05032;
+            --devops-color-ci: #F7B601;
+            --devops-color-cd: #32a852;
+            --devops-color-iac: #7B42BC;
+            --devops-color-security: #D73A49;
+            --devops-color-monitoring: #28a745;
         }
-
-        body {
-            background-color: var(--bs-body-bg);
-            background-image:
-                linear-gradient(var(--blueprint-grid-color) 1px, transparent 1px),
-                linear-gradient(to right, var(--blueprint-grid-color) 1px, transparent 1px);
-            background-size: 50px 50px;
-            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(0, 0, 0, 0.2));
-            padding: 3rem 1.5rem;
-            text-align: center;
-            border-bottom: 1px solid var(--schema-border-color);
-            margin-bottom: 2rem;
-            color: var(--text-color-main);
-        }
-        .page-header h1 {
-            color: #fff;
-            font-weight: 300;
-            font-size: 2.8rem;
-        }
-        .page-header .lead {
-            color: var(--text-color-secondary);
-            max-width: 800px;
-            margin: auto;
-            font-style: italic;
-        }
-
-        #filter-controls {
-            background-color: rgba(26, 29, 33, 0.85);
-            backdrop-filter: blur(8px);
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            margin-bottom: 2rem;
-            position: sticky;
-            top: 10px;
-            z-index: 1020;
-        }
-        #search-box {
-            background-color: #2c3136;
-            border-color: var(--card-border-color);
-            color: var(--bs-body-color);
-        }
-        #search-box::placeholder { color: #6c757d; }
-        #search-box:focus {
-            background-color: #2c3136;
-            color: var(--bs-body-color);
-            border-color: var(--bs-primary);
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-
-        .schema-container {
-            background-color: var(--schema-bg-color);
-            border: 1px solid var(--schema-border-color);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 2.5rem;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-            backdrop-filter: blur(5px);
-        }
-
-        .section-title {
-            color: var(--db-category-color);
-            margin: -2.7rem 0 1.5rem 0;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-            font-size: 1.1rem;
-            border-bottom: none;
-            padding: 0.4rem 1rem;
-            background-color: var(--bs-body-bg);
-            display: inline-block;
-            position: relative;
-            left: 1rem;
-        }
-
-        .info-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border-color);
-            border-radius: 6px;
-            box-shadow: 0 4px 12px var(--card-shadow-color);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-        .info-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px var(--card-shadow-color);
-        }
-
-        .info-card h5 {
-            color: #fff;
-            background-color: var(--db-category-color);
-            font-size: 1rem;
-            text-align: center;
-            margin: 0;
-            padding: 0.7rem 0.5rem;
-            font-weight: 600;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: .5rem;
-            border-bottom: 1px solid var(--card-border-color);
-            border-radius: 5px 5px 0 0;
-        }
-        .info-card h5 .bi { font-size: 1.2em; opacity: 0.9; }
-
+        body { background-color: var(--bs-body-bg); background-image: linear-gradient(var(--blueprint-grid-color) 1px, transparent 1px), linear-gradient(to right, var(--blueprint-grid-color) 1px, transparent 1px); background-size: 50px 50px; font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif; }
+        .page-header { background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(110, 64, 201, 0.1)); padding: 3rem 1.5rem; text-align: center; border-bottom: 1px solid var(--schema-border-color); margin-bottom: 2rem; }
+        .page-header h1 { color: #fff; font-weight: 300; font-size: 2.8rem; }
+        .page-header .lead { color: var(--text-color-secondary); max-width: 800px; margin: auto; font-style: italic; }
+        .section-title { color: var(--text-color-main); margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--schema-border-color); }
+        .info-card { background: var(--card-bg); border: 1px solid var(--card-border-color); border-radius: 6px; box-shadow: 0 4px 12px var(--card-shadow-color); height: 100%; display: flex; flex-direction: column; }
+        .info-card h5 { color: #fff; background-color: var(--card-category-color); font-size: 1rem; text-align: center; margin: 0; padding: 0.7rem 0.5rem; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: .5rem; border-bottom: 1px solid var(--card-border-color); border-radius: 5px 5px 0 0; }
+        .info-card h5 .bi { font-size: 1.2em; }
         .card-content-wrapper { padding: 1rem; flex-grow: 1; display: flex; flex-direction: column; }
         .info-card p.summary { font-size: .9rem; color: var(--text-color-secondary); margin-bottom: 1rem; flex-grow: 1; line-height: 1.6; }
-
-        .details-toggle {
-            font-size: 0.8rem;
-            margin-top: auto;
-            align-self: flex-start;
-            color: var(--text-color-secondary);
-            border-color: var(--text-color-secondary);
-            transition: all 0.2s ease;
-        }
-        .details-toggle:hover {
-            color: #fff;
-            background-color: var(--db-category-color);
-            border-color: var(--db-category-color);
-        }
-        .details-toggle .bi { transition: transform 0.2s ease-in-out; }
-        .details-toggle[aria-expanded="true"] .bi { transform: rotate(180deg); }
-
-        .collapse-content {
-            font-size: 0.9rem;
-            border-top: 1px solid var(--card-border-color);
-            padding: 1rem;
-            background-color: #1a1d21;
-        }
-        .collapse-content h6 {
-            font-weight: 700;
-            color: var(--text-color-highlight);
-            margin-top: 0.8rem;
-            margin-bottom: 0.5rem;
-            font-size: 0.95rem;
-        }
-        .collapse-content ul { padding-left: 1.2rem; }
-        .collapse-content code {
-            font-size: 0.85rem;
-            color: #e83e8c;
-            background-color: rgba(255, 255, 255, 0.05);
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
-            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-        }
-        .collapse-content .callout {
-            border-left: 4px solid var(--db-category-color);
-            padding: 0.8rem 1rem;
-            margin: 1rem 0;
-            background-color: rgba(255,255,255,0.03);
-            border-radius: 0 4px 4px 0;
-        }
-
-        .term {
-            font-weight: 600;
-            color: var(--text-color-highlight);
-            background-color: rgba(120, 193, 243, 0.1);
-            padding: 0.1em 0.35em;
-            border-radius: 3px;
-            cursor: help;
-        }
-
-        /* Category Color Styling */
-        .section-scm, .card-scm { --db-category-color: var(--devops-color-scm); }
-        .section-ci, .card-ci { --db-category-color: var(--devops-color-ci); }
-        .section-cd, .card-cd { --db-category-color: var(--devops-color-cd); }
-        .section-iac, .card-iac { --db-category-color: var(--devops-color-iac); }
-        .section-security, .card-security { --db-category-color: var(--devops-color-security); }
-        .section-monitoring, .card-monitoring { --db-category-color: var(--devops-color-monitoring); }
-
-        footer {
-            border-top: 1px solid var(--schema-border-color);
-            padding-top: 2rem;
-            margin-top: 2rem;
-            color: var(--text-color-secondary);
-            font-size: 0.9em;
-        }
-        footer a { color: var(--text-color-secondary); text-decoration: none; }
-        footer a:hover { color: #fff; text-decoration: underline; }
-
-        @media print {
-            body { background: #fff; color: #000; }
-            .page-header, #filter-controls, .details-toggle, footer { display: none; }
-            .schema-container {
-                border: 1px solid #ccc;
-                margin-bottom: 1.5rem;
-                box-shadow: none;
-                backdrop-filter: none;
-                background-color: transparent;
-                padding: 1rem;
-            }
-            .info-card {
-                border: 1px solid #ddd;
-                box-shadow: none;
-                page-break-inside: avoid;
-            }
-            .collapse { display: block !important; }
-            .collapse-content { border-top: 1px solid #ddd; }
-            .section-title { color: #000 !important; background: #fff; }
-            .info-card h5 { background-color: #eee !important; color: #000 !important; }
-            .term { color: #000; background: #eee; }
-            a { text-decoration: none; color: #000; }
-            a[href]::after { content: ' (' attr(href) ')'; font-size: 0.8em; }
-        }
+        .details-toggle { font-size: 0.8rem; margin-top: auto; align-self: flex-start; }
+        .collapse-content { font-size: 0.9rem; border-top: 1px solid var(--card-border-color); padding: 1rem; background-color: #1a1d21; }
+        .collapse-content h6 { font-weight: 700; color: var(--text-color-highlight); margin-top: 0.8rem; }
+        .collapse-content code { display: block; white-space: pre-wrap; word-wrap: break-word; font-size: 0.85rem; color: #e83e8c; background-color: rgba(0, 0, 0, 0.3); padding: 0.8em; border-radius: 4px; }
+        .card-concepts { --card-category-color: var(--devops-color-concepts); }
+        .card-scm { --card-category-color: var(--devops-color-scm); }
+        .card-ci { --card-category-color: var(--devops-color-ci); }
+        .card-cd { --card-category-color: var(--devops-color-cd); }
+        .card-iac { --card-category-color: var(--devops-color-iac); }
+        .card-security { --card-category-color: var(--devops-color-security); }
+        .card-monitoring { --card-category-color: var(--devops-color-monitoring); }
+        footer { border-top: 1px solid var(--schema-border-color); padding-top: 2rem; margin-top: 2rem; color: var(--text-color-secondary); font-size: 0.9em; text-align:center; }
     </style>
 </head>
-<body class="bg-dark text-light">
-
+<body>
     <header class="page-header">
-        <h1><i class="bi bi-bezier"></i> Modern DevOps Pipelines Cheatsheet</h1>
-        <p class="lead">A brutally honest, battle-hardened guide to building modern CI/CD pipelines, with a focus on the Azure DevOps ecosystem, Terraform, and SonarQube.</p>
+        <h1><i class="bi bi-bezier"></i> A Modern DevOps Pipeline Cheatsheet</h1>
+        <p class="lead">A logically structured, battle-hardened guide to the modern DevOps lifecycle, from source control to production monitoring.</p>
     </header>
 
-    <div class="container">
-        <div id="filter-controls">
-            <input type="search" id="search-box" class="form-control mb-3" placeholder="Search topics, tools, or keywords (e.g., YAML, Terraform, SAST)...">
-            <div id="category-filters" class="btn-toolbar" role="toolbar" aria-label="Category Filters">
-                <!-- Filter buttons injected by JS -->
-            </div>
-            <div class="alert alert-warning mt-3" id="no-results" style="display: none;">
-                No items match your criteria. Try a different search or filter.
-            </div>
-        </div>
-    </div>
-
-    <main class="container" id="main-container">
-
-        <!-- 1. Source Control Management (SCM) -->
-        <div class="schema-container section-scm" data-section-id="section-scm" data-section-name="SCM">
-            <h2 class="section-title">Source Control Management</h2>
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="info-card card-scm" id="card-scm-azure-repos">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-git"></i> Azure Repos</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">The foundation of your pipeline. It's Git. Don't overthink it. If your code is in TFVC, your top priority is migrating. No excuses.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseScmAzureRepos" aria-expanded="false" aria-controls="collapseScmAzureRepos">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseScmAzureRepos">
-                                <h6>Core Principle:</h6>
-                                <p>This is your single source of truth. All changes—code, configuration, pipelines, infrastructure—must live here. Protect it accordingly.</p>
-                                <h6>Tooling:</h6>
-                                <ul>
-                                    <li><strong>Azure Repos:</strong> It's a perfectly functional Git host. The UI can be cluttered, but it integrates tightly with the rest of Azure DevOps.</li>
-                                    <li><strong>Git:</strong> The undisputed standard for version control. Anything else is a historical artifact and technical debt.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="info-card card-scm" id="card-scm-branch-policies">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-sign-turn-right"></i> Best Practice: Branch Policies</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">Policies are non-negotiable. Protect your `main` branch like it's the last bastion of sanity. Automate your Pull Requests to enforce quality gates from the very start.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseScmBranchPolicies" aria-expanded="false" aria-controls="collapseScmBranchPolicies">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseScmBranchPolicies">
-                                <h6>Mandatory Policies for `main`:</h6>
-                                <ul>
-                                    <li><strong>Require a minimum number of reviewers:</strong> No developer merges their own code without a second pair of eyes. No exceptions.</li>
-                                    <li><strong>Check for linked work items:</strong> Every change should be traceable to a requirement or bug. This prevents rogue development.</li>
-                                    <li><strong>Check for comment resolution:</strong> Ensure all review feedback is addressed before merging.</li>
-                                    <li><strong>Enforce Build Validation:</strong> This is critical. Link your CI pipeline here. If the PR doesn't build and pass tests, it's blocked from merging. This is your first and most important quality gate.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. Continuous Integration (CI) -->
-        <div class="schema-container section-ci" data-section-id="section-ci" data-section-name="CI">
-            <h2 class="section-title">Continuous Integration</h2>
+    <main class="container">
+        <!-- Preamble: Core Concepts -->
+        <section class="mb-5">
+            <h2 class="section-title">Preamble: Core Pipeline Concepts</h2>
             <div class="row g-4">
                 <div class="col-lg-4">
-                    <div class="info-card card-ci" id="card-ci-pipelines">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-filetype-yml"></i> Azure Pipelines (YAML ONLY)</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">Your pipeline is code. Treat it like code. Do NOT use the "classic" UI editor. It creates a click-ops nightmare that is impossible to version, review, or scale.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCiPipelines" aria-expanded="false" aria-controls="collapseCiPipelines">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseCiPipelines">
-                                <h6>Core Principle:</h6>
-                                <p>Define your build pipeline as an `azure-pipelines.yml` file, committed to the root of your repository. This ensures your pipeline is versioned alongside your code and subject to the same review process (pull requests).</p>
-                                <h6>Best Practices:</h6>
-                                <ul>
-                                    <li><strong>Use Templates:</strong> Don't repeat yourself. For common, reusable steps (like a SonarQube scan or a Docker build), create pipeline templates. This standardizes your process and makes maintenance trivial.</li>
-                                    <li><strong>Use Variable Groups:</strong> For shared variables, use Variable Groups. Link them to Azure Key Vault for secrets. Don't hardcode values in your YAML.</li>
-                                </ul>
-                            </div>
+                    <div class="info-card card-concepts">
+                        <h5><i class="bi bi-hdd-rack"></i> Hosted vs. Self-Hosted Agents</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">The fundamental choice of who manages the build machines. This decision impacts speed, cost, security, and maintenance overhead.</p>
+                            <button class="btn btn-sm btn-outline-secondary details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAgents">Details</button>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseAgents">
+                            <h6>Hosted (Microsoft/GitHub-Managed)</h6>
+                            <p><strong>Pros:</strong> No maintenance, a fresh VM for every job, wide range of pre-installed software.<br/><strong>Cons:</strong> Slower startup, network restrictions, can be expensive at scale.</p>
+                            <h6>Self-Hosted</h6>
+                            <p><strong>Pros:</strong> Faster feedback, cheaper at scale, full control, direct access to private networks.<br/><strong>Cons:</strong> You own the maintenance, patching, security, and scaling.</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-4">
-                    <div class="info-card card-ci" id="card-ci-sonarqube">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-search-heart"></i> SonarQube Integration</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary"><span class="term" data-bs-toggle="tooltip" title="A tool for continuous inspection of code quality to perform automatic reviews with static analysis of code to detect bugs, code smells, and security vulnerabilities.">SonarQube</span> is your automated, merciless code reviewer. Integrate it into your CI pipeline and configure it to fail the build if the quality gate is not met.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCiSonarqube" aria-expanded="false" aria-controls="collapseCiSonarqube">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseCiSonarqube">
-                                <h6>Typical CI Pipeline Steps with SonarQube:</h6>
-                                <ol>
-                                    <li><strong>Prepare Analysis on SonarQube:</strong> This task connects to your SonarQube server and configures the scanner.</li>
-                                    <li><strong>Run Build & Tests:</strong> Compile your code and run unit tests. Crucially, generate code coverage reports here.</li>
-                                    <li><strong>Run Code Analysis:</strong> The Sonar scanner analyzes the code and test coverage reports, then uploads them to the server.</li>
-                                    <li><strong>Publish Quality Gate Result:</strong> This task polls the SonarQube server and waits for the analysis to complete. It will then check the Quality Gate status.</li>
-                                </ol>
-                                <div class="callout callout-danger">
-                                    <strong>Critical Rule:</strong> Configure the "Publish Quality Gate Result" task to fail the build if the gate fails. This prevents code that introduces new bugs, vulnerabilities, or has insufficient test coverage from ever being merged.
+                    <div class="info-card card-concepts">
+                        <h5><i class="bi bi-fast-forward-circle"></i> Dependency Caching</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">The easiest way to get a massive speed boost. Caching dependencies (NuGet, npm, etc.) between runs is critical for fast feedback loops.</p>
+                             <button class="btn btn-sm btn-outline-secondary details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCaching">Details</button>
+                        </div>
+                         <div class="collapse collapse-content" id="collapseCaching">
+                            <h6>Azure Pipelines (`cache` task):</h6>
+                            <code>- task: Cache@2
+  inputs:
+    key: 'nuget | "$(Agent.OS)" | **/packages.lock.json'
+    path: '$(NUGET_PACKAGES)'</code>
+                            <h6>GitHub Actions (`actions/cache`):</h6>
+                            <code>- uses: actions/cache@v4
+  with:
+    path: ~/.nuget/packages
+    key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="info-card card-concepts">
+                        <h5><i class="bi bi-sign-split"></i> Deployment Strategies</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">How to release code without causing outages. Use intelligent strategies to limit the blast radius of a bad deployment.</p>
+                            <button class="btn btn-sm btn-outline-secondary details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStrategies">Details</button>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseStrategies">
+                            <ul>
+                                <li><strong>Immutable Infrastructure:</strong> Don't modify running servers. Replace them with fresh ones built from versioned artifacts to eliminate configuration drift.</li>
+                                <li><strong>Blue/Green:</strong> Deploy to a parallel production environment ("Green"). Once verified, switch traffic from "Blue" to "Green" for instant rollback.</li>
+                                <li><strong>Canary:</strong> Deploy to a small subset of users, monitor for errors, then gradually roll out to everyone.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Phase 1: SCM -->
+        <section class="mb-5">
+            <h2 class="section-title" style="color: var(--devops-color-scm);">Phase 1: Source Control Management (SCM)</h2>
+            <div class="row g-4 justify-content-center">
+                 <div class="col-lg-8">
+                    <div class="info-card card-scm">
+                        <h5><i class="bi bi-git"></i> Critical Practice: Branch Protection</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Everything starts with code. The SCM is your single source of truth. Protecting the `main` branch is the first and most important quality gate.</p>
+                             <button class="btn btn-sm btn-outline-secondary details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseScm">Details</button>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseScm">
+                            <p>Use rules to enforce that no code merges into `main` without meeting specific criteria. This is non-negotiable for stable, high-quality software.</p>
+                            <h6>Mandatory Rules (Azure Repos & GitHub):</h6>
+                            <ul>
+                                <li><strong>Build Validation / Status Checks:</strong> The pull request code <em>must</em> build successfully and pass all CI checks.</li>
+                                <li><strong>Reviewer Requirements:</strong> At least one other person <em>must</em> approve the code changes. No self-merges.</li>
+                                <li><strong>Work Item / Conversation Linking:</strong> Ensure every change is traceable to a requirement or that all review comments are resolved.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Phase 2: CI -->
+        <section class="mb-5">
+            <h2 class="section-title" style="color: var(--devops-color-ci);">Phase 2: Continuous Integration (CI)</h2>
+             <div class="row g-4">
+                 <div class="col-lg-6">
+                    <div class="info-card card-ci">
+                        <h5><i class="bi bi-filetype-yml"></i> The "Pipeline as Code"</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Modern pipelines are defined in YAML files (`azure-pipelines.yml` or `.github/workflows/*.yml`) committed to the repository. This provides versioning, peer review, and repeatability. Avoid classic UI editors.</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-lg-6">
+                    <div class="info-card card-security">
+                        <h5><i class="bi bi-shield-shaded"></i> "Shift-Left" Security</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Security is not a separate step; it's a series of automated gates within CI. Find flaws early before they reach production.</p>
+                             <button class="btn btn-sm btn-outline-secondary details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecurity">Details</button>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseSecurity">
+                            <h6>Key Security Gates:</h6>
+                            <ul>
+                                <li><strong>SAST (Static Application Security Testing):</strong> Tools like SonarQube or GitHub CodeQL scan your source code for vulnerabilities and code quality issues.</li>
+                                <li><strong>SCA (Software Composition Analysis):</strong> Tools like Dependabot or Snyk scan your open-source dependencies for known vulnerabilities.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    <div class="info-card card-ci">
+                        <h5><i class="bi bi-box-seam"></i> Publishing Artifacts: The Docker Example</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">The final output of a successful CI run is a versioned, deployable artifact. Most commonly, this is a Docker image pushed to a container registry.</p>
+                            <button class="btn btn-sm btn-outline-secondary details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseArtifacts">Details</button>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseArtifacts">
+                             <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Azure Pipelines (`azure-pipelines.yml`)</h6>
+                                    <code>trigger:
+- main
+pool:
+  vmImage: ubuntu-latest
+steps:
+- task: Docker@2
+  inputs:
+    containerRegistry: 'MyACRConnection'
+    repository: 'my-app'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
+    tags: '$(Build.BuildId)'</code>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="info-card card-ci" id="card-ci-stages">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-boxes"></i> CI Key Stages</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">The moment code is merged, it must be built, tested, and packaged. This is non-negotiable. The goal is to catch errors early and often, before they reach production.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCiStages" aria-expanded="false" aria-controls="collapseCiStages">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseCiStages">
-                                <h6>Mandatory Stages:</h6>
-                                <ul>
-                                    <li><strong>Build:</strong> Compile the code. If it doesn't build, it's broken. Fail fast.</li>
-                                    <li><strong>Test:</strong> Run unit and integration tests. If they fail, the build is broken.</li>
-                                    <li><strong>Lint:</strong> Check for style and syntax errors. Keep your codebase clean and consistent.</li>
-                                    <li><strong>Scan:</strong> Perform security and quality scans (e.g., SonarQube).</li>
-                                    <li><strong>Package:</strong> Create a deployable artifact. For the love of all that is holy, make this a <span class="term" data-bs-toggle="tooltip" title="A standardized unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another.">Docker image</span>. Store it in a registry like ACR.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. Infrastructure as Code (IaC) -->
-        <div class="schema-container section-iac" data-section-id="section-iac" data-section-name="IaC">
-            <h2 class="section-title">Infrastructure as Code</h2>
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="info-card card-iac" id="card-iac-terraform">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-filetype-tf"></i> Terraform</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">Your infrastructure must be defined as code. Manual configuration in the Azure Portal is a recipe for disaster. <span class="term" data-bs-toggle="tooltip" title="An open-source infrastructure as code software tool that enables users to define and provision a datacenter infrastructure using a high-level configuration language known as HashiCorp Configuration Language (HCL).">Terraform</span> is the industry standard.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIacTerraform" aria-expanded="false" aria-controls="collapseIacTerraform">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseIacTerraform">
-                                <h6>Why Terraform?</h6>
-                                <p>While Microsoft pushes Bicep/ARM, Terraform is cloud-agnostic (a valuable option, even if you're all-in on Azure today), has a massive community, and its `plan` command is a lifesaver.</p>
-                                <h6>The Holy Trinity of Terraform Commands in a Pipeline:</h6>
-                                <ul>
-                                    <li><code>terraform init</code>: Initializes the backend and downloads providers.</li>
-                                    <li><code>terraform plan</code>: The most important step. It generates an execution plan showing exactly what will change. This step should create a plan artifact and require a manual approval in a Release Pipeline.</li>
-                                    <li><code>terraform apply</code>: Executes the approved plan. This should only run after a human has reviewed and approved the plan.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="info-card card-iac" id="card-iac-state">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-database-lock"></i> Terraform Remote State</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">The biggest mistake teams make with Terraform is storing the `terraform.tfstate` file locally. This is a critical failure. Always use a remote backend.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIacState" aria-expanded="false" aria-controls="collapseIacState">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseIacState">
-                                <h6>Action Plan:</h6>
-                                <p>Store your Terraform state file in an <strong>Azure Storage Account container</strong>. This is non-negotiable.</p>
-                                <h6>Why it's Critical:</h6>
-                                <ul>
-                                    <li><strong>Collaboration:</strong> Allows multiple team members to work on the same infrastructure.</li>
-                                    <li><strong>State Locking:</strong> Prevents multiple people from running `terraform apply` at the same time and corrupting the state.</li>
-                                    <li><strong>Security:</strong> The state file can contain secrets. Storing it in a secured, access-controlled storage account is essential.</li>
-                                    <li><strong>Durability:</strong> Protects your state file from being lost if your local machine dies.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. Continuous Delivery/Deployment (CD) -->
-        <div class="schema-container section-cd" data-section-id="section-cd" data-section-name="CD">
-            <h2 class="section-title">Continuous Delivery/Deployment</h2>
-            <div class="row g-4">
-                 <div class="col-lg-6">
-                    <div class="info-card card-cd" id="card-cd-releases">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-rocket-takeoff"></i> Azure Pipelines (Releases)</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">Automating your release is the whole point. While you can do deployment in YAML build pipelines, Release Pipelines offer better visualization of your environments and manual approval gates.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCdReleases" aria-expanded="false" aria-controls="collapseCdReleases">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseCdReleases">
-                                <h6>Release Pipeline Structure:</h6>
-                                <ul>
-                                    <li><strong>Artifacts:</strong> Your release should be triggered by a new build artifact (e.g., the Docker image from your CI pipeline).</li>
-                                    <li><strong>Stages:</strong> Create a stage for each environment (e.g., Dev, QA, Staging, Prod).</li>
-                                    <li><strong>Approval Gates:</strong> Use these to control promotion between stages.
-                                        <ul>
-                                            <li><strong>Automated Gates:</strong> Run integration or smoke tests after deployment to an environment. If they pass, automatically approve promotion to the next stage.</li>
-                                            <li><strong>Manual Gates:</strong> Use a manual approval gate before deploying to production. This is your one concession to the business folks who are scared of robots.</li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="info-card card-cd" id="card-cd-concepts">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-lightbulb"></i> Key Deployment Concepts</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">Differentiate between Continuous Delivery (manual deployment to production) and Continuous Deployment (automatic deployment to production). Strive for the latter.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCdConcepts" aria-expanded="false" aria-controls="collapseCdConcepts">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseCdConcepts">
-                                <ul>
-                                    <li><strong>Immutable Infrastructure:</strong> Don't modify running servers. Shoot them in the head and replace them with fresh ones built from your artifacts. This eliminates configuration drift.</li>
-                                    <li><strong>Blue/Green or Canary Deployments:</strong> Don't be a cowboy. Deploy to a subset of users (Canary) or a parallel production environment (Blue/Green) before a full rollout. This limits the blast radius of a bad deploy. Azure DevOps supports these strategies.</li>
-                                    <li><strong>Azure Artifacts:</strong> A decent place to store your packages (like NuGet, npm, or Maven packages). For Docker images, use Azure Container Registry (ACR).</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. Security -->
-        <div class="schema-container section-security" data-section-id="section-security" data-section-name="Security">
-            <h2 class="section-title">Security</h2>
-            <div class="row g-4">
-                 <div class="col-lg-6">
-                    <div class="info-card card-security" id="card-security-practices">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-shield-check"></i> Key Security Practices (Shift Left)</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">Security is not a separate step; it's a part of every step. Embed automated security checks into your pipeline to catch vulnerabilities early.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecurityPractices" aria-expanded="false" aria-controls="collapseSecurityPractices">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseSecurityPractices">
-                                <h6>Pipeline Integration Points:</h6>
-                                <ul>
-                                    <li><strong><span class="term" data-bs-toggle="tooltip" title="Static Application Security Testing: Analyzes source code for security vulnerabilities before the application is compiled or run.">SAST</span> (Static Application Security Testing):</strong> Analyze your source code for vulnerabilities. SonarQube has SAST capabilities. Integrate this in your CI pipeline.</li>
-                                    <li><strong><span class="term" data-bs-toggle="tooltip" title="Software Composition Analysis: Scans your application's dependencies for known vulnerabilities.">SCA</span> (Software Composition Analysis):</strong> Scan your open-source dependencies. That library you just imported probably has a dozen known vulnerabilities. Use tools like WhiteSource Bolt or Snyk. Fail the build if critical vulnerabilities are found.</li>
-                                    <li><strong>Container Scanning:</strong> Scan your Docker images for vulnerabilities before pushing them to the registry.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="info-card card-security" id="card-security-keyvault">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-key"></i> Secret Management: Azure Key Vault</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">Don't put secrets in your code, your variable groups, or your YAML files. This is amateur hour. Use Azure Key Vault.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecurityKeyvault" aria-expanded="false" aria-controls="collapseSecurityKeyvault">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseSecurityKeyvault">
-                                <h6>The Only Acceptable Way:</h6>
-                                <p>Store all secrets—connection strings, API keys, certificates—in Azure Key Vault.</p>
-                                <h6>Integration with Pipelines:</h6>
-                                <ol>
-                                    <li>Create a Service Connection in Azure DevOps that has `Get` and `List` permissions to your Key Vault secrets. Use a Managed Identity for this if possible.</li>
-                                    <li>In your Pipeline, use a Variable Group linked to the Azure Key Vault.</li>
-                                    <li>Reference the secrets in your pipeline tasks. They will be fetched at runtime and masked in logs.</li>
-                                </ol>
-                                <div class="callout callout-danger">
-                                    <strong>Critical Rule:</strong> Developers should not have direct access to production secrets. The pipeline should be the only entity that can fetch and use them in the production environment.
+                                <div class="col-md-6">
+                                    <h6>GitHub Actions (`.github/workflows/ci.yml`)</h6>
+                                    <code>on:
+  push:
+    branches: [ "main" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Log in to Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: myregistry.azurecr.io
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+    - name: Build and push image
+      run: |
+        docker build . -t my.acr.io/app:${{ github.sha }}
+        docker push my.acr.io/app:${{ github.sha }}</code>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- 6. Monitoring & Observability -->
-        <div class="schema-container section-monitoring" data-section-id="section-monitoring" data-section-name="Monitoring">
-            <h2 class="section-title">Monitoring & Observability</h2>
+         <!-- Phase 3: CD -->
+        <section class="mb-5">
+            <h2 class="section-title" style="color: var(--devops-color-cd);">Phase 3: Continuous Delivery (CD)</h2>
             <div class="row g-4">
                  <div class="col-lg-6">
-                    <div class="info-card card-monitoring" id="card-monitoring-pillars">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-kanban"></i> The Three Pillars</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">If you're not monitoring your application in production, you're flying blind and waiting for a crash. Observability is more than just logs; it's understanding your system's state from the outside.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMonitoringPillars" aria-expanded="false" aria-controls="collapseMonitoringPillars">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseMonitoringPillars">
-                                <ul>
-                                    <li><strong>Logging:</strong> Centralize your application and system logs. These are records of discrete events. Use structured logging to make them searchable.</li>
-                                    <li><strong>Metrics:</strong> Collect time-series data on key performance indicators (e.g., CPU usage, request latency, error rates). These are your aggregated numbers over time.</li>
-                                    <li><strong>Tracing:</strong> Track a single request as it moves through all the services in your distributed system. This is essential for debugging complex microservice architectures.</li>
-                                </ul>
-                            </div>
+                    <div class="info-card card-iac">
+                        <h5><i class="bi bi-filetype-tf"></i> IaC & The Approval Flow</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Use Infrastructure as Code (IaC) with Terraform to define environments. The key to safe CD is a `plan -> approve -> apply` flow with a manual approval gate before any infrastructure is changed.</p>
+                            <button class="btn btn-sm btn-outline-secondary details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIac">Details</button>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseIac">
+                            <h6>The Safety-Critical Flow:</h6>
+                             <ul>
+                                 <li><strong>Plan:</strong> The pipeline runs `terraform plan` and saves the plan file as an artifact.</li>
+                                 <li><strong>Approve:</strong> A human reviewer inspects the plan. Both Azure (Release Gates) and GitHub (Environments) have features to pause the pipeline and require manual sign-off.</li>
+                                 <li><strong>Apply:</strong> Only after approval does the pipeline run `terraform apply` using the saved plan.</li>
+                             </ul>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-6">
-                    <div class="info-card card-monitoring" id="card-monitoring-tools">
-                        <div class="card-body d-flex flex-column">
-                            <h5><i class="bi bi-tools"></i> Azure Tooling</h5>
-                            <div class="card-content-wrapper">
-                                <p class="summary">Use the integrated Azure tools. They're not always best-in-class, but they are already there and deeply integrated, which simplifies your life.</p>
-                                <button class="btn btn-outline-secondary btn-sm details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMonitoringTools" aria-expanded="false" aria-controls="collapseMonitoringTools">
-                                    Details <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse collapse-content" id="collapseMonitoringTools">
-                                <h6>Recommended Azure Stack:</h6>
-                                <ul>
-                                    <li><strong>Azure Monitor:</strong> The umbrella service. Use it for basic metrics and logging from your Azure resources. Create dashboards and alerts here.</li>
-                                    <li><strong>Application Insights:</strong> This is actually a pretty good part of Azure Monitor. It's the APM (Application Performance Management) solution. Instrument your code with the App Insights SDK to get rich logging, dependency tracking, and distributed tracing out of the box.</li>
-                                    <li><strong>Log Analytics Workspace:</strong> The destination for all your logs. Use Kusto Query Language (KQL) to query your logs and build powerful visualizations.</li>
-                                </ul>
-                            </div>
+                 <div class="col-lg-6">
+                    <div class="info-card card-cd">
+                        <h5><i class="bi bi-rocket-takeoff"></i> Application Deployment</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Getting the code running in the provisioned environment. This phase handles deploying the application itself and managing dependent changes, like database schemas.</p>
+                             <button class="btn btn-sm btn-outline-secondary details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAppDeploy">Details</button>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseAppDeploy">
+                            <h6>To Kubernetes:</h6>
+                            <p>Use <strong>Helm</strong>, the package manager for Kubernetes. The `helm upgrade --install` command is the standard for deploying or updating an application.</p>
+                             <h6>For Databases:</h6>
+                             <p>This is a classic point of failure. Migration scripts (using tools like EF Core Migrations or Flyway) must be applied <em>before</em> the application code is deployed to ensure compatibility.</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
+        <!-- Phase 4: Monitoring -->
+        <section class="mb-5">
+            <h2 class="section-title" style="color: var(--devops-color-monitoring);">Phase 4: Monitoring & Observability</h2>
+            <div class="row g-4 justify-content-center">
+                 <div class="col-lg-8">
+                    <div class="info-card card-monitoring">
+                        <h5><i class="bi bi-kanban"></i> The Three Pillars of Observability</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">Once deployed, you must be able to understand the application's health. If you're not monitoring your app, you're flying blind. Instrument your code with a tool like Application Insights or Prometheus.</p>
+                            <button class="btn btn-sm btn-outline-secondary details-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMonitoring">Details</button>
+                        </div>
+                        <div class="collapse collapse-content" id="collapseMonitoring">
+                            <p>You need all three to get a complete picture of your system's behavior:</p>
+                             <ul>
+                                <li><strong>Logs:</strong> Detailed, timestamped records of discrete events. (e.g., "User X failed to log in")</li>
+                                <li><strong>Metrics:</strong> Aggregated numerical data over time. (e.g., "5% error rate over the last 10 minutes")</li>
+                                <li><strong>Traces:</strong> A detailed view of a single request's journey through all services in your application.</li>
+                             </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Appendix: Platforms -->
+        <section class="mb-5">
+            <h2 class="section-title">Appendix: Platform Choices</h2>
+             <div class="row g-4">
+                 <div class="col-lg-6">
+                    <div class="info-card card-concepts">
+                        <h5><i class="bi bi-gear-wide-connected"></i> The Old Guard: Jenkins</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">The infinitely customizable, plugin-driven workhorse. If you can think of it, you can build it. But you own all its complexity, maintenance, and `Jenkinsfile` Groovy spaghetti.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="info-card card-concepts">
+                        <h5><i class="bi bi-bullseye"></i> The All-in-One: GitLab</h5>
+                        <div class="card-content-wrapper">
+                            <p class="summary">A powerful competitor with a "single application" philosophy. Its CI/CD is extremely mature and tightly integrated via `.gitlab-ci.yml`, with many security features built-in.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <footer class="container text-center py-4">
-        <p class="mb-1">© <span id="currentYear"></span> David Veksler Cheatsheets</p>
-        <p class="mb-2" style="font-size: 0.8em;">Last Updated: <span id="lastUpdatedDate">June 14, 2024</span></p>
-        <div>
-            <a href="https://learn.microsoft.com/en-us/azure/devops/" target="_blank" rel="noopener noreferrer" class="mx-2"><i class="bi bi-box"></i> Azure DevOps Docs</a>
-            <a href="https://www.terraform.io/docs" target="_blank" rel="noopener noreferrer" class="mx-2"><i class="bi bi-file-earmark-code"></i> Terraform Docs</a>
-            <a href="https://docs.sonarqube.org/latest/" target="_blank" rel="noopener noreferrer" class="mx-2"><i class="bi bi-search"></i> SonarQube Docs</a>
-        </div>
+    <footer class="container py-4">
+        <p>&copy; 2024 Cheatsheets</p>
     </footer>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize Bootstrap Tooltips
-            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-
-            // Set current year in footer
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
-
-            const searchBox = document.getElementById('search-box');
-            const categoryFiltersContainer = document.getElementById('category-filters');
-            const noResultsDiv = document.getElementById('no-results');
-            const allSchemaContainers = Array.from(document.querySelectorAll('.schema-container'));
-            let activeFilter = 'all';
-
-            // --- Initialize Filters & Search ---
-            function initializeFilters() {
-                const allButton = document.createElement('button');
-                allButton.type = 'button';
-                allButton.className = 'btn btn-primary filter-btn active';
-                allButton.textContent = 'All';
-                allButton.dataset.filter = 'all';
-                categoryFiltersContainer.appendChild(allButton);
-
-                const btnGroup = document.createElement('div');
-                btnGroup.className = 'btn-group flex-wrap ms-2';
-                btnGroup.setAttribute('role', 'group');
-
-                allSchemaContainers.forEach(section => {
-                    const sectionId = section.dataset.sectionId;
-                    const sectionName = section.dataset.sectionName || 'Unnamed';
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'btn btn-outline-secondary filter-btn';
-                    button.textContent = sectionName;
-                    button.dataset.filter = sectionId;
-                    btnGroup.appendChild(button);
-                });
-                categoryFiltersContainer.appendChild(btnGroup);
-
-                searchBox.addEventListener('input', applyFiltersAndSearch);
-                categoryFiltersContainer.addEventListener('click', (event) => {
-                    if (event.target.classList.contains('filter-btn')) {
-                        document.querySelectorAll('#category-filters .filter-btn').forEach(btn => btn.classList.remove('active', 'btn-primary', 'btn-outline-secondary'));
-                        
-                        const clickedBtn = event.target;
-                        clickedBtn.classList.add('active');
-                        if (clickedBtn.dataset.filter === 'all') {
-                            clickedBtn.classList.add('btn-primary');
-                        } else {
-                            clickedBtn.classList.add('btn-outline-secondary');
-                        }
-                        
-                        // Set all other non-active buttons to outline-secondary
-                        document.querySelectorAll('#category-filters .filter-btn:not(.active)').forEach(btn => {
-                            btn.classList.add('btn-outline-secondary');
-                        });
-
-
-                        activeFilter = event.target.dataset.filter;
-                        applyFiltersAndSearch();
-                    }
-                });
-            }
-
-            function applyFiltersAndSearch() {
-                const searchTerm = searchBox.value.toLowerCase().trim();
-                let itemsFound = 0;
-
-                allSchemaContainers.forEach(section => {
-                    const sectionId = section.dataset.sectionId;
-                    let sectionHasVisibleCards = false;
-                    const cardsInSection = Array.from(section.querySelectorAll('.info-card'));
-
-                    cardsInSection.forEach(card => {
-                        const cardTextContent = card.textContent.toLowerCase();
-                        const matchesSearch = searchTerm === '' || cardTextContent.includes(searchTerm);
-                        const matchesFilter = activeFilter === 'all' || sectionId === activeFilter;
-
-                        const cardColumn = card.closest('.col-lg-4, .col-lg-6');
-                        if (matchesSearch && matchesFilter) {
-                            if(cardColumn) cardColumn.style.display = '';
-                            sectionHasVisibleCards = true;
-                            itemsFound++;
-                        } else {
-                             if(cardColumn) cardColumn.style.display = 'none';
-                        }
-                    });
-                    
-                    if (sectionHasVisibleCards) {
-                        section.style.display = '';
-                    } else {
-                        section.style.display = 'none';
-                    }
-                });
-                noResultsDiv.style.display = itemsFound === 0 ? 'block' : 'none';
-            }
-
-            // --- Initialize Collapse Icon Toggles ---
-            const collapseElements = document.querySelectorAll('.collapse');
-            collapseElements.forEach(collapseEl => {
-                const button = document.querySelector(`.details-toggle[data-bs-target="#${collapseEl.id}"]`);
-                if(button) {
-                    const iconEl = button.querySelector('.bi');
-                    collapseEl.addEventListener('show.bs.collapse', () => {
-                        iconEl.classList.remove('bi-chevron-down');
-                        iconEl.classList.add('bi-chevron-up');
-                    });
-                    collapseEl.addEventListener('hide.bs.collapse', () => {
-                        iconEl.classList.remove('bi-chevron-up');
-                        iconEl.classList.add('bi-chevron-down');
-                    });
-                }
-            });
-
-            initializeFilters();
-        });
-    </script>
+    <script crossorigin="anonymous" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
