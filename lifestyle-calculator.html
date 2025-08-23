@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+`<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -71,7 +71,7 @@
             --info-color: #0dcaf0;
             --dark-color: #212529; /* Main text color */
             --light-color: #f8f9fa; /* Light element backgrounds */
-            
+
             --body-bg-color: #e9ecef;
             --main-container-bg: rgba(255, 255, 255, 0.98);
             --main-container-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
@@ -88,7 +88,7 @@
             --category-title-letter-spacing: normal;
             --category-title-text-transform: none;
             --category-title-font-weight: 700;
-            
+
             --category-icon-opacity: 0.8;
             --item-title-font-weight: 600;
             --item-description-color: #495057;
@@ -160,7 +160,7 @@
         .theme-luxury { background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%); }
         .theme-ultra { background: linear-gradient(135deg, #ede7f6 0%, #d1c4e9 100%); }
         .theme-elite { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); }
-        
+
         /* HNW and UHNW specific backgrounds */
         .theme-hnw-bg { background: linear-gradient(135deg, #FDF5E6 0%, #DAA520 100%); }
         .theme-uhnw-bg { background: linear-gradient(135deg, #1a1a1a 0%, #003366 70%, #00A9E0 100%); }
@@ -186,7 +186,7 @@
             text-transform: var(--page-title-text-transform);
             transition: color 1.2s ease-in-out, letter-spacing 0.5s ease, text-transform 0.5s ease;
         }
-        
+
         body.uhnw-theme-active .page-title {
             letter-spacing: 1.5px;
             text-transform: uppercase;
@@ -439,7 +439,7 @@
             opacity: 0.9;
             transition: color 1.2s ease-in-out;
         }
-        
+
         /* Specific category border colors - these should remain distinct */
         .dining { border-left-color: #fd7e14 !important; }
         .dining .category-icon, .dining .category-item-icon { color: #fd7e14 !important; }
@@ -883,6 +883,7 @@
         let incomeBrackets = [];
         let lifestyleData = {};
         let costOfLivingFactors = [];
+        let householdSizeAdjustments = {};
         let currentCurrencySymbol = "$";
         let budgetChart;
         let lastSliderValue = -1;
@@ -964,16 +965,16 @@
             if (isNaN(r) || isNaN(g) || isNaN(b)) return defaultStyles.primaryColorRGB; // Fallback for parsing errors
             return `${r}, ${g}, ${b}`;
         }
-        
+
         function updatePrimaryRGBVar(hexColor) {
             const rgbString = getRGBFromHex(hexColor);
             document.documentElement.style.setProperty('--primary-color-rgb', rgbString);
         }
 
-        
+
 
         function updateThemeStyling(bracketIndex) {
-            
+
             const body = document.body;
 
             body.classList.remove('hnw-theme-active', 'uhnw-theme-active');
@@ -989,7 +990,7 @@
                 rootStyle.setProperty('--main-container-bg', 'rgba(20, 20, 20, 0.97)'); // Slightly transparent dark
                 rootStyle.setProperty('--main-container-shadow', '0 15px 50px rgba(0, 169, 224, 0.2)');
                 rootStyle.setProperty('--card-shadow', '0 10px 30px rgba(0, 169, 224, 0.15)');
-                
+
                 rootStyle.setProperty('--page-title-color', 'var(--primary-color)');
                 // Typography changes for UHNW are in CSS via body.uhnw-theme-active .page-title
 
@@ -997,7 +998,7 @@
                 rootStyle.setProperty('--item-title-font-weight', '700');
                 rootStyle.setProperty('--item-description-color', '#D3D3D3'); // LightGray for descriptions
                 rootStyle.setProperty('--category-item-border-color', '#444444');
-                
+
                 rootStyle.setProperty('--slider-thumb-bg', 'var(--primary-color)');
                 rootStyle.setProperty('--slider-thumb-border', '3px solid #555555'); // Darker border for thumb
                 rootStyle.setProperty('--slider-thumb-shadow-opacity', '0.7');
@@ -1037,7 +1038,7 @@
                 rootStyle.setProperty('--item-title-font-weight', '600'); // Default is fine
                 rootStyle.setProperty('--item-description-color', '#554216'); // Darker Brown for descriptions
                 rootStyle.setProperty('--category-item-border-color', '#E0D6B3'); // Pale Gold/Beige
-                
+
                 rootStyle.setProperty('--slider-thumb-bg', 'var(--primary-color)');
                 rootStyle.setProperty('--slider-thumb-border', '4px solid #FFF8DC'); // Cornsilk border
                 rootStyle.setProperty('--slider-thumb-shadow-opacity', '0.6');
@@ -1076,9 +1077,9 @@
                 // Ensure primary color itself and its RGB are reset based on defaultStyles.primaryColor
                 rootStyle.setProperty('--primary-color', defaultStyles.primaryColor);
                 updatePrimaryRGBVar(defaultStyles.primaryColor); // Explicitly reset RGB from default hex
-                
+
                 // Let original dynamic background logic take over
-                updateDynamicBackground(bracketIndex, true); 
+                updateDynamicBackground(bracketIndex, true);
             }
             // Apply body background color explicitly after all var changes
             body.style.backgroundColor = rootStyle.getPropertyValue('--body-bg-color').trim();
@@ -1141,7 +1142,7 @@
 
             const isUHNW = document.body.classList.contains('uhnw-theme-active');
             const isHNW = document.body.classList.contains('hnw-theme-active');
-            
+
             const legendTextColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-legend-text-color').trim() || defaultStyles.chartLegendTextColor;
             const chartBorderColor = isUHNW ? '#121212' : (isHNW ? '#FDF5E6' : '#ffffff');
 
@@ -1165,7 +1166,7 @@
                         label: 'Budget Allocation',
                         data: data,
                         backgroundColor: currentPalette,
-                        borderColor: chartBorderColor, 
+                        borderColor: chartBorderColor,
                         borderWidth: 3,
                         hoverBorderColor: isUHNW ? '#333333' : (isHNW ? '#FAF0E6' : '#f8f9fa'),
                         hoverBorderWidth: 1,
@@ -1237,23 +1238,74 @@
             }
         }
 
+        function getCategoryMultiplier(category, selectedColaOption, householdAdjustment) {
+            const categoryMap = {
+                'dining': 'foodMultiplier',
+                'housing': 'housingMultiplier',
+                'transportation': 'transportMultiplier',
+                'travel': 'foodMultiplier', // travel costs often correlate with food costs
+                'entertainment': 'foodMultiplier', // entertainment often correlates with food costs
+                'health-wellness': 'foodMultiplier',
+                'services': 'foodMultiplier',
+                'education': 'foodMultiplier',
+                'financial-services': 'foodMultiplier'
+            };
+            
+            const colaMultiplierType = categoryMap[category] || 'foodMultiplier';
+            const colaMultiplier = parseFloat(selectedColaOption.dataset[colaMultiplierType] || selectedColaOption.dataset.factor);
+            
+            const householdMultiplierMap = {
+                'dining': 'foodMultiplier',
+                'housing': 'housingMultiplier', 
+                'transportation': 'transportMultiplier',
+                'travel': 'travelMultiplier',
+                'entertainment': 'entertainmentMultiplier',
+                'health-wellness': 'healthWellnessMultiplier',
+                'services': 'servicesMultiplier',
+                'education': 'educationMultiplier',
+                'financial-services': 'servicesMultiplier'
+            };
+            
+            const householdMultiplierType = householdMultiplierMap[category] || 'incomeMultiplier';
+            const householdMultiplier = householdAdjustment[householdMultiplierType] || 1.0;
+            
+            return colaMultiplier * householdMultiplier;
+        }
+
         function updateLifestyle() {
-            if (!incomeBrackets || incomeBrackets.length === 0 || !costOfLivingFactors || costOfLivingFactors.length === 0) return;
+            if (!incomeBrackets || incomeBrackets.length === 0 || !costOfLivingFactors || costOfLivingFactors.length === 0 || !householdSizeAdjustments) return;
 
             const selectedBracketIndex = parseInt(slider.value);
             const baseBracket = incomeBrackets[selectedBracketIndex];
             if (!baseBracket) return;
 
-            updateThemeStyling(selectedBracketIndex); 
+            updateThemeStyling(selectedBracketIndex);
 
-            const selectedColaFactor = parseFloat(colaSelectorEl.options[colaSelectorEl.selectedIndex].dataset.factor);
-            currentCurrencySymbol = colaSelectorEl.options[colaSelectorEl.selectedIndex].dataset.currency;
+            const selectedColaOption = colaSelectorEl.options[colaSelectorEl.selectedIndex];
+            const selectedColaFactor = parseFloat(selectedColaOption.dataset.factor);
+            const salaryAdjustment = parseFloat(selectedColaOption.dataset.salaryAdjustment);
+            currentCurrencySymbol = selectedColaOption.dataset.currency;
             const selectedFamilySize = familySizeSelectorEl.value;
 
-            const effectiveIncome = baseBracket.income / selectedColaFactor;
+            // Calculate effective income with household size and salary adjustments
+            const householdAdjustment = householdSizeAdjustments[selectedFamilySize] || { incomeMultiplier: 1.0 };
+            const adjustedIncome = baseBracket.income * salaryAdjustment * householdAdjustment.incomeMultiplier;
+            const effectiveIncome = adjustedIncome / selectedColaFactor;
 
             incomeDisplayEl.textContent = formatIncome(baseBracket.income, currentCurrencySymbol);
-            effectiveIncomeDisplayEl.textContent = selectedColaFactor !== 1.0 ? `(Effectively ~${formatIncome(effectiveIncome, currentCurrencySymbol)} in selected city)` : "";
+
+            let effectiveText = "";
+            if (householdAdjustment.incomeMultiplier !== 1.0) {
+                effectiveText += `(${householdAdjustment.label}: ~${formatIncome(adjustedIncome, currentCurrencySymbol)}`;;
+                if (selectedColaFactor !== 1.0) {
+                    effectiveText += ` → ~${formatIncome(effectiveIncome, currentCurrencySymbol)} in selected city)`;
+                } else {
+                    effectiveText += `)`;
+                }
+            } else if (selectedColaFactor !== 1.0) {
+                effectiveText = `(Effectively ~${formatIncome(effectiveIncome, currentCurrencySymbol)} in selected city)`;
+            }
+            effectiveIncomeDisplayEl.textContent = effectiveText;
             incomeBracketLabelEl.textContent = baseBracket.label;
             incomeBracketDescEl.textContent = baseBracket.description;
 
@@ -1277,7 +1329,7 @@
                     return;
                 }
 
-                const oldHTML = contentDiv.innerHTML; 
+                const oldHTML = contentDiv.innerHTML;
 
                 let itemsToDisplay = [];
                 for (let i = categoryData.length - 1; i >= 0; i--) {
@@ -1311,8 +1363,8 @@
                 if (contentDiv.innerHTML !== oldHTML) {
                     const categoryCard = contentDiv.closest('.lifestyle-category');
                     if (categoryCard) {
-                        categoryCard.classList.remove('highlight-update'); 
-                        void categoryCard.offsetWidth; 
+                        categoryCard.classList.remove('highlight-update');
+                        void categoryCard.offsetWidth;
                         categoryCard.classList.add('highlight-update');
                     }
                 }
@@ -1327,13 +1379,13 @@
             defaultStyles.primaryColorRGB = getRGBFromHex(actualInitialPrimaryColor);
             defaultStyles.pageTitleColor = actualInitialPrimaryColor; // Tie to actual initial
             defaultStyles.sliderThumbBg = actualInitialPrimaryColor;  // Tie to actual initial
-            
+
             // Set all default styles to root, ensuring --primary-color-rgb is derived correctly
             Object.keys(defaultStyles).forEach(key => {
                  const cssVarName = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
                  if (key === 'primaryColorRGB') {
                     // This is handled by updatePrimaryRGBVar called below
-                 } else if (key === 'pageTitleColor' || key === 'sliderThumbBg') { 
+                 } else if (key === 'pageTitleColor' || key === 'sliderThumbBg') {
                     rootStyle.setProperty(cssVarName, `var(--primary-color)`);
                  } else if (key === 'calculatorNoteText') {
                      rootStyle.setProperty(cssVarName, `var(--dark-color)`);
@@ -1354,11 +1406,15 @@
                 option.textContent = factor.city;
                 option.dataset.factor = factor.factor;
                 option.dataset.currency = factor.currencySymbol;
+                option.dataset.housingMultiplier = factor.housingMultiplier || factor.factor;
+                option.dataset.foodMultiplier = factor.foodMultiplier || factor.factor;
+                option.dataset.transportMultiplier = factor.transportMultiplier || factor.factor;
+                option.dataset.salaryAdjustment = factor.salaryAdjustment || 1.0;
                 colaSelectorEl.appendChild(option);
             });
-            
+
             lastSliderValue = parseInt(slider.value);
-            updateLifestyle(); 
+            updateLifestyle();
 
             slider.addEventListener('input', updateLifestyle);
             colaSelectorEl.addEventListener('change', updateLifestyle);
@@ -1382,6 +1438,7 @@
                     incomeBrackets = data.incomeBrackets;
                     lifestyleData = data.lifestyleData;
                     costOfLivingFactors = data.costOfLivingFactors;
+                    householdSizeAdjustments = data.householdSizeAdjustments || {};
                     slider.max = incomeBrackets.length - 1;
                     initializeApp();
                 })
