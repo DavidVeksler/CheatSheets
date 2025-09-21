@@ -90,6 +90,25 @@
         .section-title { color: var(--heading-color); border-bottom: 2px solid var(--accent-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem; font-weight: 600; }
         .section-title .bi { margin-right: 0.75rem; }
 
+        .caliber-category {
+            background-color: rgba(88, 166, 255, 0.03);
+            border-radius: 8px;
+            padding: 2rem 1.5rem;
+            border: 1px solid rgba(88, 166, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .caliber-category:hover {
+            background-color: rgba(88, 166, 255, 0.05);
+            border-color: rgba(88, 166, 255, 0.2);
+        }
+        .category-description {
+            color: var(--text-color);
+            opacity: 0.9;
+            font-size: 1.05rem;
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
+
         .info-card { background-color: var(--card-bg-color); border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 1.5rem; transition: all 0.2s ease-in-out; display: flex; flex-direction: column; }
         .info-card:hover { border-color: var(--accent-color); transform: translateY(-5px); box-shadow: 0 8px 24px rgba(88, 166, 255, 0.1); }
         .card-header.caliber-title { background-color: var(--table-header-bg); border-bottom: 1px solid var(--border-color); color: var(--heading-color); font-weight: 600; display: flex; align-items: center; }
@@ -123,6 +142,14 @@
             body { background-color: #ffffff; color: #000000; }
             :root { --text-color: #000; --heading-color: #000; }
             .page-header, #filter-controls, .details-toggle, footer { display: none; }
+            .caliber-category {
+                background-color: transparent;
+                border: none;
+                page-break-inside: avoid;
+                padding: 1rem 0;
+                margin-bottom: 2rem;
+            }
+            .category-description { color: #666; }
             .info-card, .info-card:hover { border: 1px solid #ccc; transform: none; box-shadow: none; page-break-inside: avoid; }
             .card-header.caliber-title, .table thead th { background-color: #eee; }
             .collapse { display: block !important; }
@@ -152,9 +179,11 @@
             </div>
         </div>
 
-        <div id="caliber-grid" class="row">
-            <!-- Template Start: Caliber Card -->
-            <!-- .22 Long Rifle -->
+        <!-- Training & Small Game Section -->
+        <section class="caliber-category mb-5">
+            <h2 class="section-title"><i class="bi bi-bullseye"></i>Training & Small Game</h2>
+            <p class="category-description">Ideal for beginners, training, and recreational shooting with minimal recoil and low cost.</p>
+            <div class="row">
             <div class="col-md-6 col-lg-4 caliber-card-wrapper">
                 <div class="info-card" data-caliber-name=".22 Long Rifle .22LR rimfire">
                     <div class="card-header caliber-title"><i class="bi bi-record-circle"></i>.22 Long Rifle (.22 LR)</div>
@@ -193,6 +222,14 @@
                     </div>
                 </div>
             </div>
+            </div>
+        </section>
+
+        <!-- Concealed Carry Section -->
+        <section class="caliber-category mb-5">
+            <h2 class="section-title"><i class="bi bi-shield-check"></i>Concealed Carry</h2>
+            <p class="category-description">Compact, lightweight options optimized for discreet carry with manageable recoil.</p>
+            <div class="row">
 
             <!-- .380 ACP -->
             <div class="col-md-6 col-lg-4 caliber-card-wrapper">
@@ -233,6 +270,14 @@
                     </div>
                 </div>
             </div>
+            </div>
+        </section>
+
+        <!-- Service & Defense Section -->
+        <section class="caliber-category mb-5">
+            <h2 class="section-title"><i class="bi bi-shield-fill"></i>Service & Defense</h2>
+            <p class="category-description">Standard law enforcement and military calibers offering balanced performance for duty and defense.</p>
+            <div class="row">
 
             <!-- 9mm Luger -->
             <div class="col-md-6 col-lg-4 caliber-card-wrapper">
@@ -353,6 +398,14 @@
                     </div>
                 </div>
             </div>
+            </div>
+        </section>
+
+        <!-- High Performance Section -->
+        <section class="caliber-category mb-5">
+            <h2 class="section-title"><i class="bi bi-lightning-fill"></i>High Performance</h2>
+            <p class="category-description">Specialized, high-velocity calibers for hunting, competition, and maximum terminal performance.</p>
+            <div class="row">
 
             <!-- 10mm Auto -->
             <div class="col-md-6 col-lg-4 caliber-card-wrapper">
@@ -433,6 +486,14 @@
                     </div>
                 </div>
             </div>
+            </div>
+        </section>
+
+        <!-- Revolver Calibers Section -->
+        <section class="caliber-category mb-5">
+            <h2 class="section-title"><i class="bi bi-arrow-repeat"></i>Revolver Calibers</h2>
+            <p class="category-description">Classic revolver cartridges prized for reliability, accuracy, and versatility in traditional wheelguns.</p>
+            <div class="row">
 
             <!-- .38 Special -->
             <div class="col-md-6 col-lg-4 caliber-card-wrapper">
@@ -513,8 +574,8 @@
                     </div>
                 </div>
             </div>
-            <!-- Template End: Caliber Card -->
-        </div>
+            </div>
+        </section>
 
     </main>
 
@@ -541,6 +602,7 @@
             // Caliber Search/Filter
             const searchInput = document.getElementById('caliber-search');
             const caliberCards = document.querySelectorAll('.caliber-card-wrapper');
+            const categories = document.querySelectorAll('.caliber-category');
 
             searchInput.addEventListener('keyup', function(event) {
                 const query = event.target.value.toLowerCase().trim();
@@ -552,6 +614,16 @@
                         cardWrapper.style.display = '';
                     } else {
                         cardWrapper.style.display = 'none';
+                    }
+                });
+
+                // Show/hide category sections based on whether they have visible cards
+                categories.forEach(function(category) {
+                    const visibleCards = category.querySelectorAll('.caliber-card-wrapper[style=""], .caliber-card-wrapper:not([style])');
+                    if (query === '' || visibleCards.length > 0) {
+                        category.style.display = '';
+                    } else {
+                        category.style.display = 'none';
                     }
                 });
             });
