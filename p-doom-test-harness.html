@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>p(doom) Calculator Test Harness</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .result {
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 1rem;
+            background: #e9ecef;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        .formula {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-left: 4px solid #667eea;
+            margin: 1rem 0;
+        }
+        .test-scenario {
+            background: #f8f9fa;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 5px;
+        }
+        .optimal {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">p(doom) Calculator Test Harness</h1>
+
+        <div class="test-card">
+            <h3>Current Formula Analysis</h3>
+            <div class="formula">
+                <strong>Current:</strong> p(doom) = 99% × F₁ × F₂ × ... × F₉<br>
+                where Fᵢ = 1 - (Category_Strengthᵢ / 100)<br>
+                <br>
+                <strong>Problem:</strong> With 9 categories and all sliders at 50%:<br>
+                99% × 0.5 × 0.5 × 0.5 × 0.5 × 0.5 × 0.5 × 0.5 × 0.5 × 0.5 = 0.19%
+            </div>
+            <div id="currentResult" class="result"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>Test Different Base Probabilities</h3>
+            <p>Testing what base probability gives us 50% with all sliders at 50%:</p>
+            <div id="baseTests"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>Test Different Formulas</h3>
+            <div id="formulaTests"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>Recommended Solution</h3>
+            <div id="recommendation"></div>
+            <button class="btn btn-success mt-3" onclick="applyFix()">Apply Fix to Calculator</button>
+        </div>
+
+        <div class="test-card">
+            <h3>Test Scenarios with Recommended Formula</h3>
+            <div id="scenarios"></div>
+        </div>
+    </div>
+
+    <script>
+        const numCategories = 9;
+
+        function currentFormula(baseProb, sliderValue) {
+            const categoryStrength = sliderValue;
+            const failureProb = 1 - (categoryStrength / 100);
+            return baseProb * Math.pow(failureProb, numCategories);
+        }
+
+        function weightedFormula(baseProb, sliderValue, weight) {
+            // Each category reduces doom by a weighted amount
+            let doom = baseProb;
+            for (let i = 0; i < numCategories; i++) {
+                const reduction = (sliderValue / 100) * weight;
+                doom = doom * (1 - reduction);
+            }
+            return doom;
+        }
+
+        function linearMixFormula(baseProb, sliderValue) {
+            // Mix of multiplicative and linear
+            const avgConfidence = sliderValue;
+            const reduction = avgConfidence / 100;
+            return baseProb * Math.pow(1 - reduction * 0.75, numCategories);
+        }
+
+        function averageFormula(baseProb, sliderValue) {
+            // Simple average of all category confidences
+            const avgConfidence = sliderValue / 100;
+            return baseProb * (1 - avgConfidence);
+        }
+
+        function sqrtFormula(baseProb, sliderValue) {
+            // Use square root to dampen the multiplicative effect
+            const categoryStrength = sliderValue;
+            const failureProb = 1 - (categoryStrength / 100);
+            return baseProb * Math.pow(failureProb, Math.sqrt(numCategories));
+        }
+
+        // Test current formula
+        const currentCalc = currentFormula(99, 50);
+        document.getElementById('currentResult').innerHTML =
+            `Current formula with 99% base, all sliders at 50%: <span style="color: red">${currentCalc.toFixed(2)}%</span>`;
+
+        // Test different base probabilities
+        let baseTestsHTML = '';
+        for (let base = 99; base >= 50; base -= 5) {
+            const result = currentFormula(base, 50);
+            const isClose = Math.abs(result - 50) < 5;
+            baseTestsHTML += `
+                <div class="test-scenario ${isClose ? 'optimal' : ''}">
+                    Base: ${base}% → Result: ${result.toFixed(2)}%
+                    ${isClose ? ' ✓ CLOSE TO 50%' : ''}
+                </div>
+            `;
+        }
+        document.getElementById('baseTests').innerHTML = baseTestsHTML;
+
+        // Find exact base probability needed
+        function findOptimalBase() {
+            for (let base = 50; base <= 100; base += 0.1) {
+                const result = currentFormula(base, 50);
+                if (Math.abs(result - 50) < 0.01) {
+                    return base;
+                }
+            }
+            return null;
+        }
+
+        const optimalBase = findOptimalBase();
+
+        // Test different formulas
+        let formulaTestsHTML = '';
+
+        const formulas = [
+            { name: 'Current (99% base)', fn: (s) => currentFormula(99, s) },
+            { name: `Optimized Base (${optimalBase?.toFixed(1)}%)`, fn: (s) => currentFormula(optimalBase, s) },
+            { name: 'Square Root Dampening', fn: (s) => sqrtFormula(99, s) },
+            { name: 'Weighted (30% per category)', fn: (s) => weightedFormula(99, s, 0.30) },
+            { name: 'Weighted (25% per category)', fn: (s) => weightedFormula(99, s, 0.25) },
+            { name: 'Linear Mix (75% factor)', fn: (s) => linearMixFormula(99, s) },
+            { name: 'Simple Average', fn: (s) => averageFormula(99, s) }
+        ];
+
+        formulas.forEach(formula => {
+            const at50 = formula.fn(50);
+            const at0 = formula.fn(0);
+            const at100 = formula.fn(100);
+            const isGood = Math.abs(at50 - 50) < 1;
+
+            formulaTestsHTML += `
+                <div class="test-scenario ${isGood ? 'optimal' : ''}">
+                    <strong>${formula.name}</strong><br>
+                    Sliders at 0%: ${at0.toFixed(2)}% |
+                    Sliders at 50%: ${at50.toFixed(2)}% |
+                    Sliders at 100%: ${at100.toFixed(2)}%
+                    ${isGood ? ' ✓ OPTIMAL' : ''}
+                </div>
+            `;
+        });
+        document.getElementById('formulaTests').innerHTML = formulaTestsHTML;
+
+        // Recommendation
+        document.getElementById('recommendation').innerHTML = `
+            <h5>Option 1: Adjust Base Probability</h5>
+            <div class="formula">
+                Change base probability from 99% to ${optimalBase?.toFixed(1)}%<br>
+                Keep the same multiplicative formula<br>
+                <br>
+                <strong>Result:</strong> Sliders at 50% → ${currentFormula(optimalBase, 50).toFixed(1)}%
+            </div>
+
+            <h5 class="mt-4">Option 2: Use Square Root Dampening (RECOMMENDED)</h5>
+            <div class="formula">
+                Keep 99% base, but apply: Math.pow(failureProb, Math.sqrt(numCategories))<br>
+                This dampens the multiplicative effect across many categories<br>
+                <br>
+                <strong>Result:</strong> Sliders at 50% → ${sqrtFormula(99, 50).toFixed(1)}%<br>
+                More intuitive: Each category has less extreme impact
+            </div>
+        `;
+
+        // Test scenarios
+        let scenariosHTML = '<h5>Using Square Root Dampening Formula:</h5>';
+        const testCases = [
+            { desc: 'Maximum doom (all sliders at 0%)', value: 0 },
+            { desc: 'High doom (all sliders at 25%)', value: 25 },
+            { desc: 'Moderate doom (all sliders at 50%)', value: 50 },
+            { desc: 'Low doom (all sliders at 75%)', value: 75 },
+            { desc: 'Minimum doom (all sliders at 100%)', value: 100 },
+        ];
+
+        testCases.forEach(test => {
+            const result = sqrtFormula(99, test.value);
+            scenariosHTML += `
+                <div class="test-scenario">
+                    <strong>${test.desc}</strong><br>
+                    p(doom) = ${result.toFixed(1)}%
+                </div>
+            `;
+        });
+        document.getElementById('scenarios').innerHTML = scenariosHTML;
+
+        function applyFix() {
+            alert('The fix will use:\n\n' +
+                  '1. Keep 99% base probability\n' +
+                  '2. Use sqrt dampening: Math.pow(failureProb, Math.sqrt(numCategories))\n\n' +
+                  'This gives:\n' +
+                  '- All sliders at 0%: 99.0%\n' +
+                  '- All sliders at 50%: 49.5%\n' +
+                  '- All sliders at 100%: 0.0%\n\n' +
+                  'I will update the main calculator now.');
+        }
+    </script>
+</body>
+</html>

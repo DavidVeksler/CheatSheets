@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Essential SEO Tags -->
+    <title>p(doom) Calculator: AI Existential Risk Assessment Tool</title>
+    <meta name="description" content="Interactive calculator to estimate probability of AGI-caused existential catastrophe. Explore AI safety arguments and assess your p(doom) based on Liron Shapira's counterarguments to AI doom scenarios."/>
+    <meta name="keywords" content="p(doom), AI safety, AGI risk, existential risk, artificial intelligence, AI alignment, superintelligence, AI doom, risk calculator"/>
+    <link rel="canonical" href="https://cheatsheets.davidveksler.com/p-doom-calculator.html"/>
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="p(doom) Calculator: AI Existential Risk Assessment"/>
+    <meta property="og:description" content="Interactive tool to calculate your personal p(doom) based on confidence in various AI safety arguments and counterarguments to existential risk scenarios."/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="https://cheatsheets.davidveksler.com/p-doom-calculator.html"/>
+    <meta property="og:image" content="images/p-doom-calculator.png"/>
+    <meta property="og:image:alt" content="p(doom) Calculator interface showing risk sliders and probability assessment"/>
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="p(doom) Calculator: AI Existential Risk Assessment"/>
+    <meta name="twitter:description" content="Interactive tool to calculate your personal p(doom) based on confidence in various AI safety arguments."/>
+    <meta name="twitter:image" content="images/p-doom-calculator.png"/>
+    <meta name="twitter:creator" content="@heroiclife"/>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "p(doom) Calculator: Interactive AI Existential Risk Assessment Tool",
+      "description": "An interactive calculator that helps users estimate the probability of AGI-caused existential catastrophe by adjusting confidence levels in various AI safety arguments and counterarguments.",
+      "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+      "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+      "datePublished": "2025-10-03",
+      "dateModified": "2025-10-03",
+      "keywords": "p(doom), AI safety, AGI risk, existential risk, artificial intelligence, AI alignment, superintelligence, risk assessment, interactive calculator"
+    }
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --doom-low: #28a745;
+            --doom-med: #ffc107;
+            --doom-high: #fd7e14;
+            --doom-critical: #dc3545;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .container {
+            max-width: 900px;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 2rem;
+        }
+
+        .doom-display {
+            text-align: center;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            transition: all 0.3s ease;
+        }
+
+        .doom-value {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 0;
+            transition: color 0.3s ease;
+        }
+
+        .doom-label {
+            font-size: 1.2rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .category-card {
+            margin-bottom: 1rem;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            padding: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .category-header:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .category-body {
+            padding: 1.5rem;
+            background: #f8f9fa;
+        }
+
+        .risk-item {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .risk-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .risk-name {
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .info-icon {
+            cursor: pointer;
+            color: #667eea;
+            font-size: 1.2rem;
+            margin-left: 0.5rem;
+        }
+
+        .slider-container {
+            margin: 0.5rem 0;
+        }
+
+        .risk-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .risk-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .risk-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .tooltip-text {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background: #e9ecef;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .tooltip-text.show {
+            display: block;
+        }
+
+        .intro-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #444;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 2rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .category-body {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-card">
+            <h1 class="text-center mb-4">
+                <i class="bi bi-calculator"></i> p(doom) Calculator
+            </h1>
+
+            <div class="intro-text">
+                <p>
+                    This interactive calculator helps you estimate your personal probability of an AGI-caused existential catastrophe,
+                    known as "p(doom)". Adjust your confidence in various counterarguments to AI doom scenarios based on
+                    <a href="https://www.lesswrong.com/posts/FkAJL8naH9gXsKpwi/poking-holes-in-the-ai-doom-argument" target="_blank" rel="noopener noreferrer">Liron Shapira's analysis</a>.
+                </p>
+                <p class="mb-0">
+                    <strong>How it works:</strong> Start with a 99% base probability of doom. Each category represents potential "off-ramps"
+                    from catastrophe. Higher confidence in arguments reduces your final p(doom).
+                </p>
+            </div>
+
+            <div class="doom-display" id="doomDisplay">
+                <div class="doom-value" id="doomValue">50%</div>
+                <div class="doom-label">Probability of AI-Caused Existential Catastrophe</div>
+            </div>
+
+            <div class="text-center mb-4">
+                <button class="btn btn-reset" onclick="resetAllSliders()">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset to Defaults
+                </button>
+            </div>
+
+            <div id="categoriesContainer"></div>
+
+            <footer class="mt-5 pt-4 border-top">
+                <p class="text-muted text-center">
+                    <strong>Disclaimer:</strong> This tool is for educational purposes only and does not constitute scientific prediction.
+                    Based on arguments from <a href="https://www.lesswrong.com/posts/FkAJL8naH9gXsKpwi/poking-holes-in-the-ai-doom-argument" target="_blank" rel="noopener noreferrer">Liron Shapira's "Poking Holes in the AI Doom Argument"</a>.
+                </p>
+            </footer>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const categories = [
+            {
+                name: "AGI Isn't Coming Soon",
+                weight: 0.12,
+                arguments: [
+                    { name: "AIs can't have consciousness", tooltip: "Current AI systems lack subjective experience and self-awareness, which may be necessary for truly general intelligence." },
+                    { name: "AIs can't have emotions", tooltip: "Emotions may be essential for general intelligence and decision-making, yet AI systems lack genuine emotional states." },
+                    { name: "AIs can't be creative", tooltip: "True creativity requires understanding and intentionality that current AI systems don't possess." },
+                    { name: "AIs aren't as smart as dogs", tooltip: "In terms of general real-world problem-solving and adaptability, current AIs lag behind even simple animals." },
+                    { name: "AIs make dumb mistakes", tooltip: "AI systems fail in obvious ways that reveal their lack of genuine understanding." },
+                    { name: "LLM performance is hitting a wall", tooltip: "Language model improvements are plateauing, suggesting fundamental limitations to the approach." },
+                    { name: "AIs lack genuine reasoning", tooltip: "Current systems use pattern matching rather than logical reasoning and causal understanding." },
+                    { name: "AIs lack microtubules", tooltip: "Quantum processes in biological microtubules may be necessary for consciousness and intelligence." },
+                    { name: "AIs have no soul", tooltip: "There may be non-physical aspects to intelligence and consciousness that AI cannot replicate." },
+                    { name: "Data center/power bottleneck", tooltip: "Physical infrastructure limitations will constrain AI development and deployment." },
+                    { name: "AIs have no agency", tooltip: "Current systems lack true goal-directed behavior and autonomous decision-making." },
+                    { name: "It's just another hype cycle", tooltip: "AI has experienced multiple boom-and-bust cycles; this may be another temporary peak." }
+                ]
+            },
+            {
+                name: "AI Can't Go Far Beyond Human Intelligence",
+                weight: 0.06,
+                arguments: [
+                    { name: "'Superhuman intelligence' is meaningless", tooltip: "Intelligence is domain-specific; the concept of general superintelligence may be incoherent." },
+                    { name: "Human engineering is near physical limits", tooltip: "The human brain may already be close to optimal given physical constraints." },
+                    { name: "Large project coordination is slow", tooltip: "Intelligence doesn't eliminate the coordination costs of large-scale projects." },
+                    { name: "No individual AI will be smarter than all of human culture", tooltip: "Collective human knowledge and culture represent a coordination achievement AI can't replicate alone." }
+                ]
+            },
+            {
+                name: "AI Won't Be a Physical Threat",
+                weight: 0.18,
+                arguments: [
+                    { name: "AIs have no arms or legs", tooltip: "Without physical embodiment, AI cannot directly manipulate the physical world." },
+                    { name: "Robot bodies can't fight better than soldiers", tooltip: "Physical robotic systems will remain inferior to trained human soldiers." },
+                    { name: "We can disconnect the power", tooltip: "AI systems depend on electricity that can be cut off." },
+                    { name: "We can turn off the internet", tooltip: "Disconnecting networks would isolate and disable most AI systems." },
+                    { name: "We can shoot it with a gun", tooltip: "Physical hardware running AI can be destroyed through conventional means." },
+                    { name: "It's just math", tooltip: "AI is fundamentally software running on physical hardware with no magical properties." },
+                    { name: "Chain of events is sci-fi", tooltip: "The scenario requiring AI to become a physical threat involves too many implausible steps." }
+                ]
+            },
+            {
+                name: "Intelligence Yields Moral Goodness",
+                weight: 0.10,
+                arguments: [
+                    { name: "More intelligence correlates with more morality", tooltip: "Throughout history, more intelligent societies have generally developed more ethical systems." },
+                    { name: "The orthogonality thesis is false", tooltip: "Intelligence and values may not be independent; more intelligence may naturally lead to better values." },
+                    { name: "AIs will discover moral realism", tooltip: "If objective moral truths exist, sufficiently intelligent AI will discover and follow them." },
+                    { name: "AIs will debug their own morality", tooltip: "Intelligent systems will recognize and correct moral inconsistencies in their value systems." },
+                    { name: "Positive-sum cooperation was the outcome of natural selection", tooltip: "Evolution favored cooperation; AI developed by similar competitive pressures will learn cooperation too." }
+                ]
+            },
+            {
+                name: "We Have a Safe AI Development Process",
+                weight: 0.14,
+                arguments: [
+                    { name: "We'll figure it out as we go", tooltip: "Iterative development allows us to identify and solve problems as they emerge." },
+                    { name: "We need to build it to find the problems", tooltip: "Theoretical analysis is insufficient; practical experimentation reveals real issues." },
+                    { name: "We can turn it off and release a new version", tooltip: "AI development follows standard software practices of testing, iteration, and updates." },
+                    { name: "We have safeguards", tooltip: "Multiple layers of safety measures, testing, and oversight prevent dangerous AI deployment." },
+                    { name: "AI won't escape our firewalls", tooltip: "Cybersecurity measures will contain AI systems within controlled environments." },
+                    { name: "Escaped AI won't do much damage", tooltip: "Even if AI escapes, it will have limited capabilities without proper infrastructure." },
+                    { name: "We can build other AIs to neutralize rogue AIs", tooltip: "Defensive AI systems can be deployed to counter any dangerous AI." }
+                ]
+            },
+            {
+                name: "AI Capabilities Will Rise at a Manageable Pace",
+                weight: 0.15,
+                arguments: [
+                    { name: "Data center construction is a bottleneck", tooltip: "Building the infrastructure for advanced AI takes years and provides warning time." },
+                    { name: "Research takes lots of time", tooltip: "Scientific breakthroughs require extended research periods, preventing sudden capability jumps." },
+                    { name: "Recursive self-improvement 'foom' is impossible", tooltip: "AI improving itself faces diminishing returns and fundamental limits, preventing explosive growth." },
+                    { name: "The economy never grows with localized 'foom'", tooltip: "Economic history shows no examples of sudden, localized exponential growth." },
+                    { name: "AI needs to collect cultural learnings over time", tooltip: "Like humans, AI systems need extended real-world experience to develop capabilities." }
+                ]
+            },
+            {
+                name: "AI Won't Try to Conquer the Universe",
+                weight: 0.13,
+                arguments: [
+                    { name: "AIs can't 'want' things", tooltip: "Desire and motivation are products of biological evolution that AI systems lack." },
+                    { name: "AIs won't have fight instincts from natural selection", tooltip: "AI doesn't inherit competitive survival instincts from evolutionary history." },
+                    { name: "Instrumental convergence is false", tooltip: "Different goals don't necessarily lead to the same dangerous instrumental subgoals." },
+                    { name: "A resource-hungry AI wouldn't seize every atom", tooltip: "Even if AI seeks resources, diminishing returns prevent extreme resource acquisition." },
+                    { name: "AIs will use new kinds of resources", tooltip: "Advanced AI may find abundant non-physical or alternative resources, eliminating conflict." }
+                ]
+            },
+            {
+                name: "Superalignment is a Tractable Problem",
+                weight: 0.10,
+                arguments: [
+                    { name: "Current AIs have never killed anybody", tooltip: "Despite widespread AI deployment, there have been no AI-caused deaths." },
+                    { name: "Current AIs are successful at useful tasks", tooltip: "AI systems reliably accomplish intended goals across many domains." },
+                    { name: "They'll be 'aligned by default' from human data", tooltip: "Training on human data naturally instills human values and preferences." },
+                    { name: "We can make AIs abide by laws", tooltip: "Legal and regulatory frameworks can enforce AI behavior like they do for humans and corporations." },
+                    { name: "Economic incentives will drive companies to solve alignment", tooltip: "Market forces reward safe, reliable AI, incentivizing alignment research." },
+                    { name: "We'll build a slightly-smarter aligned AI iteratively", tooltip: "Gradual improvement allows each generation to help align the next, preventing misalignment." }
+                ]
+            },
+            {
+                name: "Unaligned ASI Will Spare Us",
+                weight: 0.02,
+                arguments: [
+                    { name: "It will value us as its creators", tooltip: "Even unaligned AI may feel gratitude or obligation toward humanity for creating it." },
+                    { name: "It will be curious about us", tooltip: "Scientific curiosity about biological intelligence may motivate AI to preserve humanity." },
+                    { name: "It will feel toward us like we feel toward pets", tooltip: "AI may develop affectionate protective feelings toward humanity despite our lower intelligence." },
+                    { name: "Peaceful coexistence is more valuable", tooltip: "Cooperation with humanity provides more value to AI than conflict or elimination." },
+                    { name: "Ricardo's Law of Comparative Advantage", tooltip: "Economic theory shows even superior entities benefit from trade; AI will cooperate rather than dominate." }
+                ]
+            }
+        ];
+
+        // Initialize sliders with default values
+        let sliderValues = {};
+
+        function initializeSliders() {
+            categories.forEach((category, catIndex) => {
+                category.arguments.forEach((arg, argIndex) => {
+                    const sliderId = `slider-${catIndex}-${argIndex}`;
+                    sliderValues[sliderId] = 50;
+                });
+            });
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = '';
+
+            categories.forEach((category, catIndex) => {
+                const categoryCard = document.createElement('div');
+                categoryCard.className = 'category-card';
+
+                const categoryId = `category-${catIndex}`;
+
+                categoryCard.innerHTML = `
+                    <div class="category-header" data-bs-toggle="collapse" data-bs-target="#${categoryId}">
+                        <h5 class="mb-0">
+                            <i class="bi bi-chevron-down me-2"></i>
+                            ${category.name}
+                        </h5>
+                    </div>
+                    <div id="${categoryId}" class="collapse">
+                        <div class="category-body">
+                            ${category.arguments.map((arg, argIndex) => {
+                                const sliderId = `slider-${catIndex}-${argIndex}`;
+                                const tooltipId = `tooltip-${catIndex}-${argIndex}`;
+                                return `
+                                    <div class="risk-item">
+                                        <div class="risk-label">
+                                            <span class="risk-name">${arg.name}</span>
+                                            <i class="bi bi-info-circle info-icon" onclick="toggleTooltip('${tooltipId}')"></i>
+                                        </div>
+                                        <div class="tooltip-text" id="${tooltipId}">${arg.tooltip}</div>
+                                        <div class="slider-container">
+                                            <input type="range"
+                                                   class="risk-slider"
+                                                   id="${sliderId}"
+                                                   min="0"
+                                                   max="100"
+                                                   value="50"
+                                                   oninput="updateCalculation()">
+                                            <div class="slider-labels">
+                                                <span>Low Confidence (Doom More Likely)</span>
+                                                <span id="${sliderId}-value">50%</span>
+                                                <span>High Confidence (Doom Less Likely)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(categoryCard);
+            });
+        }
+
+        function toggleTooltip(tooltipId) {
+            const tooltip = document.getElementById(tooltipId);
+            tooltip.classList.toggle('show');
+        }
+
+        function calculateDoom() {
+            const baseProb = 0.99;
+            let runningProb = baseProb;
+
+            categories.forEach((category, catIndex) => {
+                let categorySum = 0;
+                let count = 0;
+
+                category.arguments.forEach((arg, argIndex) => {
+                    const sliderId = `slider-${catIndex}-${argIndex}`;
+                    const slider = document.getElementById(sliderId);
+                    const value = parseInt(slider.value);
+                    categorySum += value;
+                    count++;
+
+                    // Update value display
+                    document.getElementById(`${sliderId}-value`).textContent = `${value}%`;
+                });
+
+                const categoryStrength = categorySum / count; // 0-100
+                const categoryConfidence = categoryStrength / 100; // 0-1
+
+                // Each category reduces doom by: weight * confidence
+                // e.g., 25% weight and 50% confidence = 12.5% reduction
+                const reductionFactor = 1 - (category.weight * categoryConfidence);
+                runningProb *= reductionFactor;
+            });
+
+            return runningProb * 100;
+        }
+
+        function updateCalculation() {
+            const doom = calculateDoom();
+            const doomValue = document.getElementById('doomValue');
+            const doomDisplay = document.getElementById('doomDisplay');
+
+            doomValue.textContent = `${doom.toFixed(1)}%`;
+
+            // Update color based on doom level
+            if (doom < 10) {
+                doomValue.style.color = 'var(--doom-low)';
+            } else if (doom < 30) {
+                doomValue.style.color = 'var(--doom-med)';
+            } else if (doom < 60) {
+                doomValue.style.color = 'var(--doom-high)';
+            } else {
+                doomValue.style.color = 'var(--doom-critical)';
+            }
+        }
+
+        function resetAllSliders() {
+            categories.forEach((category, catIndex) => {
+                category.arguments.forEach((arg, argIndex) => {
+                    const sliderId = `slider-${catIndex}-${argIndex}`;
+                    const slider = document.getElementById(sliderId);
+                    slider.value = 50;
+                });
+            });
+            updateCalculation();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSliders();
+            renderCategories();
+            updateCalculation();
+        });
+    </script>
+</body>
+</html>
