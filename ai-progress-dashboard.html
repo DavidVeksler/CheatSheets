@@ -1,0 +1,1090 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Progress Live Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1a1f36;
+    background: #ffffff;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
+  header.top {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 4px 0 16px 0; border-bottom: 1px solid #e1e4e8; margin-bottom: 16px;
+  }
+  header.top h1 { font-size: 18px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  header.top .sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  .actions { display: flex; gap: 8px; align-items: center; }
+  button.btn {
+    background: #1a1f36; color: #fff; border: 0; padding: 7px 12px; border-radius: 6px;
+    font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit;
+  }
+  button.btn:hover { background: #2b3554; }
+  button.btn[disabled] { opacity: .55; cursor: progress; }
+  button.btn.secondary { background: #fff; color: #1a1f36; border: 1px solid #d1d5db; }
+  button.btn.secondary:hover { background: #f3f4f6; }
+
+  .grid {
+    display: grid; gap: 14px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "synth synth"
+      "swe   swe"
+      "metr  metr"
+      "aa    owid";
+  }
+  @media (max-width: 800px) {
+    .grid { grid-template-columns: 1fr; grid-template-areas: "synth" "swe" "metr" "aa" "owid"; }
+  }
+  .card {
+    border: 1px solid #e1e4e8; border-radius: 10px; background: #ffffff; padding: 16px;
+    position: relative; overflow: hidden;
+  }
+  .card.synth { grid-area: synth; background: linear-gradient(180deg, #f7f5ff 0%, #ffffff 100%); border-color: #ddd6ff; }
+  .card.swe { grid-area: swe; }
+  .card.metr { grid-area: metr; }
+  .card.aa { grid-area: aa; }
+  .card.owid { grid-area: owid; }
+
+  .card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; font-weight: 600; }
+  .card .label .source { color: #635bff; text-decoration: none; margin-left: 6px; font-weight: 500; text-transform: none; letter-spacing: 0; }
+  .card .label .source:hover { text-decoration: underline; }
+  .card h2 { font-size: 15px; margin: 4px 0 8px 0; font-weight: 600; }
+  .card .meta { font-size: 11px; color: #6b7280; margin-top: 6px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .card .caveat { font-size: 11px; color: #6b7280; border-top: 1px dashed #e1e4e8; margin-top: 12px; padding-top: 10px; line-height: 1.5; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; letter-spacing: 0.02em;
+    border: 1px solid transparent;
+  }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge.fresh   { background: #ecfdf5; color: #047857; border-color: #d1fae5; }
+  .badge.fresh .dot { background: #10b981; }
+  .badge.amber   { background: #fffbeb; color: #92400e; border-color: #fef3c7; }
+  .badge.amber .dot { background: #f59e0b; }
+  .badge.stale   { background: #fef2f2; color: #b91c1c; border-color: #fee2e2; }
+  .badge.stale .dot { background: #ef4444; }
+  .badge.error   { background: #f3f4f6; color: #374151; border-color: #e5e7eb; }
+  .badge.error .dot { background: #9ca3af; }
+
+  /* Synthesis */
+  .synth-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .synth-body { margin-top: 10px; font-size: 13.5px; line-height: 1.6; color: #1a1f36; }
+  .synth-body p { margin: 0 0 10px 0; }
+  .synth-section h3 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: #6b21a8; margin: 14px 0 6px 0; font-weight: 600;
+  }
+  .synth-list { margin: 0; padding-left: 18px; }
+  .synth-list li { margin: 0 0 4px 0; font-size: 13px; }
+  .synth-loading { color: #6b7280; font-style: italic; font-size: 13px; }
+  .delta-pill { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-right: 4px; }
+  .delta-up   { background: #ecfdf5; color: #047857; }
+  .delta-down { background: #fef2f2; color: #b91c1c; }
+  .delta-flat { background: #f3f4f6; color: #4b5563; }
+
+  /* SWE-bench hero */
+  .hero {
+    display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: center;
+  }
+  .hero-num {
+    font-size: 64px; font-weight: 700; letter-spacing: -0.03em; color: #1a1f36;
+    line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .hero-num .pct { font-size: 32px; font-weight: 600; color: #6b7280; margin-left: 2px; }
+  .hero-right { font-size: 13px; }
+  .hero-right .model { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+  .hero-right .scaffold { color: #525f7f; }
+  .hero-right .scaffold strong { color: #1a1f36; }
+  .hero-right .date { color: #6b7280; margin-top: 4px; font-size: 12px; }
+  .spark-wrap { margin-top: 14px; height: 110px; position: relative; }
+
+  /* Charts */
+  .chart-wrap { position: relative; height: 320px; margin-top: 12px; }
+  .chart-wrap.short { height: 260px; }
+  .chart-wrap.tall  { height: 360px; }
+  .extrap-key {
+    display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: #525f7f; margin-top: 10px;
+  }
+  .extrap-key .pair { display: inline-flex; align-items: center; gap: 4px; }
+  .extrap-key .swatch { width: 18px; height: 2px; background: #635bff; display: inline-block; }
+  .extrap-key .swatch.dash { background: repeating-linear-gradient(90deg, #635bff 0 3px, transparent 3px 6px); height: 2px; }
+  .extrap-key .swatch.ceil { background: #d62728; }
+
+  /* AA table fallback */
+  .aa-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  .aa-table th { text-align: left; padding: 6px 4px; border-bottom: 1px solid #e1e4e8; color: #6b7280; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .aa-table td { padding: 6px 4px; border-bottom: 1px solid #f3f4f6; font-variant-numeric: tabular-nums; }
+  .aa-table tr.pareto td:first-child { font-weight: 600; }
+  .pareto-mark { color: #00897b; font-weight: 700; margin-left: 4px; }
+
+  .footnote { font-size: 11px; color: #6b7280; padding: 12px 4px 0 4px; text-align: center; }
+  .footnote a { color: #6b7280; }
+
+  /* Error states */
+  .err-box {
+    background: #fef2f2; border: 1px solid #fee2e2; border-radius: 6px;
+    color: #b91c1c; font-size: 12px; padding: 8px 10px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>AI Progress Live Dashboard</h1>
+      <div class="sub">Cross-source synthesis · extrapolation · delta-since-last-look</div>
+    </div>
+    <div class="actions">
+      <span id="last-updated" class="sub" style="font-size:11px"></span>
+      <button id="refresh-btn" class="btn secondary" type="button">Refresh synthesis</button>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- SYNTHESIS HEADER -->
+    <section class="card synth" id="synth-card">
+      <div class="synth-head">
+        <div>
+          <div class="label">Synthesis</div>
+          <h2>State of play across the four nodes</h2>
+        </div>
+        <span id="synth-badge" class="badge fresh"><span class="dot"></span>live</span>
+      </div>
+      <div class="synth-body">
+        <div id="synth-state" class="synth-loading">Generating synthesis…</div>
+        <div class="synth-section">
+          <h3>Extrapolations</h3>
+          <ul id="synth-extrap" class="synth-list"><li class="synth-loading">…</li></ul>
+        </div>
+        <div class="synth-section">
+          <h3>Δ since last look</h3>
+          <ul id="synth-delta" class="synth-list"><li class="synth-loading">…</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- TILE 1: SWE-BENCH VERIFIED (HERO) -->
+    <section class="card swe" id="swe-card">
+      <div class="synth-head">
+        <div>
+          <div class="label">Applied capability
+            <a class="source" href="https://epoch.ai/benchmarks/swe-bench-verified" target="_blank" rel="noopener">epoch.ai ↗</a>
+          </div>
+          <h2>SWE-bench Verified — top score</h2>
+        </div>
+        <span id="swe-badge" class="badge fresh"><span class="dot"></span>fresh</span>
+      </div>
+      <div class="hero">
+        <div class="hero-num" id="swe-num">—</div>
+        <div class="hero-right">
+          <div class="model" id="swe-model">—</div>
+          <div class="scaffold">scaffold: <strong id="swe-scaffold">—</strong></div>
+          <div class="date" id="swe-date">—</div>
+        </div>
+      </div>
+      <div class="spark-wrap"><canvas id="swe-spark"></canvas></div>
+      <div class="caveat">
+        Score is <strong>agent + scaffold</strong>, not raw model capability — the scaffold label keeps a bespoke harness from being misread as model headroom. This is <em>Verified</em> (the 500-sample human-validated subset; Epoch runs 484), not full SWE-bench. Epoch upgraded its scaffold significantly in Feb 2026.
+      </div>
+    </section>
+
+    <!-- TILE 2: METR (MARQUEE) -->
+    <section class="card metr" id="metr-card">
+      <div class="synth-head">
+        <div>
+          <div class="label">Autonomy trajectory
+            <a class="source" href="https://metr.org/time-horizons/" target="_blank" rel="noopener">metr.org ↗</a>
+          </div>
+          <h2>METR 50% time-horizon — frontier curve + live extrapolation</h2>
+        </div>
+        <span id="metr-badge" class="badge fresh"><span class="dot"></span>fresh</span>
+      </div>
+      <div class="meta">
+        <span><strong id="metr-headline">—</strong></span>
+        <span>·</span>
+        <span id="metr-double">doubling ~7 mo (2019–25); ~4 mo recent</span>
+        <span>·</span>
+        <span id="metr-asof">—</span>
+      </div>
+      <div class="chart-wrap tall"><canvas id="metr-chart"></canvas></div>
+      <div class="extrap-key">
+        <span class="pair"><span class="swatch"></span>fitted (7-mo doubling)</span>
+        <span class="pair"><span class="swatch dash"></span>live extrapolation from current anchor</span>
+        <span class="pair"><span class="swatch ceil"></span>16-h measurement ceiling (flagged May 2026)</span>
+      </div>
+      <div class="caveat" id="metr-extrap-note">
+        <strong>Forward markers (extrapolation from current anchor at 7-mo doubling):</strong>
+        <span id="metr-forward">…</span><br/>
+        Robustness: METR notes that a 10× absolute-measurement error shifts arrival by ~2 years — slope dominates. Gaps in coverage are not regressions; METR doesn't evaluate every release. Newest points (esp. Claude Mythos Preview) sit at or past the suite's measurement ceiling — wide CI.
+      </div>
+    </section>
+
+    <!-- TILE 3: ARTIFICIAL ANALYSIS -->
+    <section class="card aa" id="aa-card">
+      <div class="synth-head">
+        <div>
+          <div class="label">Frontier now
+            <a class="source" href="https://artificialanalysis.ai/leaderboards/models" target="_blank" rel="noopener">artificialanalysis.ai ↗</a>
+          </div>
+          <h2>What to reach for this week</h2>
+        </div>
+        <span id="aa-badge" class="badge fresh"><span class="dot"></span>fresh</span>
+      </div>
+      <div class="chart-wrap short"><canvas id="aa-chart"></canvas></div>
+      <table class="aa-table" id="aa-table">
+        <thead><tr><th>Model</th><th>Intel</th><th>$/Mtok</th><th>tok/s</th></tr></thead>
+        <tbody id="aa-tbody"></tbody>
+      </table>
+      <div class="caveat">
+        AA's <em>Intelligence Index</em> is a composite of ~10 benchmarks (v4.0). Methodology shifts; values are relative, not absolute, and reflect benchmark/style biases. Blended $/Mtok shown as 3:1 input:output (a common heuristic, not AA's exact blend — AA uses 7:2:1 cache:input:output).
+      </div>
+    </section>
+
+    <!-- TILE 4: OWID COMPUTE -->
+    <section class="card owid" id="owid-card">
+      <div class="synth-head">
+        <div>
+          <div class="label">Input layer
+            <a class="source" href="https://ourworldindata.org/grapher/exponential-growth-of-computation-in-the-training-of-notable-ai-systems" target="_blank" rel="noopener">ourworldindata.org ↗</a>
+          </div>
+          <h2>Training compute over time</h2>
+        </div>
+        <span id="owid-badge" class="badge fresh"><span class="dot"></span>fresh</span>
+      </div>
+      <div class="chart-wrap"><canvas id="owid-chart"></canvas></div>
+      <div class="caveat">
+        OWID's AI-compute series is Epoch-derived — same lineage as anything else Epoch-sourced; don't read this as independent corroboration of Epoch's other numbers. Trend lines: 1.5×/yr (1950–2010) → 4.2×/yr (2010–25). Recent frontier runs sit near 10¹¹ petaFLOP (≈10²⁶ FLOP).
+      </div>
+    </section>
+
+  </div>
+
+  <div class="footnote">
+    Data baked at build time on May 30, 2026 (Cowork artifacts can't reach external APIs). Synthesis runs live in your browser via window.cowork.askClaude. Ask Claude to rebuild this artifact to refresh underlying numbers.
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   DATA (pre-fetched at build time — sandbox can't reach external APIs)
+   ============================================================================ */
+const BUILD_DATE = "2026-05-30";
+
+// --- SWE-bench Verified (Epoch leaderboard) ---
+const SWE = {
+  top_score_pct: 93.9,
+  model: "Claude Mythos Preview",
+  scaffold: "Epoch v2.0.3 (bash + text_editor + apply_patch, no network)",
+  date: "2026-05-28",
+  source_url: "https://epoch.ai/benchmarks/swe-bench-verified",
+  source_sentence: "Claude Mythos Preview leads the SWE-bench Verified leaderboard with 93.9% as of May 28, 2026.",
+  history: [
+    { date: "2024-06-20", model: "Claude 3.5 Sonnet",       score: 49.0 },
+    { date: "2024-10-22", model: "Claude 3.5 Sonnet (new)", score: 53.7 },
+    { date: "2025-02-24", model: "Claude 3.7 Sonnet",       score: 62.3 },
+    { date: "2025-05-22", model: "Claude Opus 4",           score: 72.5 },
+    { date: "2025-08-07", model: "GPT-5",                   score: 74.9 },
+    { date: "2025-09-30", model: "Claude Sonnet 4.5",       score: 77.2 },
+    { date: "2025-12-19", model: "Claude Opus 4.5",         score: 80.8 },
+    { date: "2026-02-20", model: "Claude Opus 4.6",         score: 80.8 },
+    { date: "2026-04-15", model: "Claude Opus 4.7 (Adaptive)", score: 87.6 },
+    { date: "2026-05-15", model: "Claude Opus 4.8",         score: 88.6 },
+    { date: "2026-05-28", model: "Claude Mythos Preview",   score: 93.9 }
+  ]
+};
+
+// --- METR Time Horizon 1.1 (50% horizons in minutes) ---
+const METR = {
+  frontier_horizon_min: 960,            // 16h cap — Claude Mythos Preview
+  frontier_model: "Claude Mythos Preview (early)",
+  frontier_horizon_is_capped: true,
+  doubling_months_historical: 7,
+  doubling_months_recent: 4,
+  as_of_date: "2026-05-08",
+  ceiling_min: 960,
+  source_url: "https://metr.org/time-horizons/",
+  source_sentence: "Added Claude Mythos Preview (early) and notice that 'Measurements above 16 hrs are unreliable with our current task suite.'",
+  // 50%-time horizons in MINUTES, dates approximate (per METR Time Horizon 1.1 updates timeline)
+  recent_points: [
+    { model: "GPT-4",                 date: "2023-03-15", horizon_min: 5    },
+    { model: "Claude 3.5 Sonnet",     date: "2024-06-20", horizon_min: 18   },
+    { model: "Claude 3.7 Sonnet",     date: "2025-02-24", horizon_min: 59   },
+    { model: "o3",                    date: "2025-04-16", horizon_min: 95   },
+    { model: "Claude Opus 4",         date: "2025-05-22", horizon_min: 80   },
+    { model: "GPT-5",                 date: "2025-08-07", horizon_min: 137  },  // ~2h17m per METR
+    { model: "Claude Sonnet 4.5",     date: "2025-09-30", horizon_min: 110  },
+    { model: "Claude Opus 4.5",       date: "2025-12-19", horizon_min: 175  },
+    { model: "GPT-5.1-Codex-Max",     date: "2025-11-19", horizon_min: 240  },
+    { model: "GPT-5.2",               date: "2026-02-04", horizon_min: 290  },
+    { model: "Claude Opus 4.6",       date: "2026-02-20", horizon_min: 415  },  // ~6.9h estimated
+    { model: "GPT-5.3-Codex (xhigh)", date: "2026-02-20", horizon_min: 495  },  // ~8.25h estimated
+    { model: "Gemini 3.1 Pro",        date: "2026-04-15", horizon_min: 660  },  // ~11h estimated
+    { model: "GPT-5.4",               date: "2026-04-10", horizon_min: 540  },
+    { model: "Claude Mythos Preview", date: "2026-05-08", horizon_min: 960  }   // ≥16h, capped
+  ]
+};
+
+// --- Artificial Analysis (Intelligence Index v4.0, May 2026 snapshot) ---
+// Blended price computed simple 3:1 input:output for comparability across models.
+const AA = {
+  as_of: "2026-05-28",
+  source_url: "https://artificialanalysis.ai/leaderboards/models",
+  models: [
+    { name: "Claude Opus 4.8 (max)",    intelligence_index: 61, in_per_mtok: 6.25, out_per_mtok: 25,  output_tok_per_s: 57.7 },
+    { name: "GPT-5.5 (xhigh)",          intelligence_index: 60, in_per_mtok: 5.00, out_per_mtok: 30,  output_tok_per_s: 65   },
+    { name: "GPT-5.5 (high)",           intelligence_index: 59, in_per_mtok: 5.00, out_per_mtok: 30,  output_tok_per_s: 75   },
+    { name: "Claude Opus 4.7 (max)",    intelligence_index: 57, in_per_mtok: 15,   out_per_mtok: 75,  output_tok_per_s: 52   },
+    { name: "Gemini 3.1 Pro Preview",   intelligence_index: 57, in_per_mtok: 2.50, out_per_mtok: 15,  output_tok_per_s: 110  }
+  ]
+};
+// derive blended price (3:1 in:out) for each row
+AA.models.forEach(m => {
+  m.blended_price_per_mtok = +((3*m.in_per_mtok + m.out_per_mtok) / 4).toFixed(2);
+});
+
+// --- OWID compute (filtered to notable frontier systems for visual clarity) ---
+const OWID = {
+  source_url: "https://ourworldindata.org/grapher/exponential-growth-of-computation-in-the-training-of-notable-ai-systems",
+  as_of: "2026-04-24",
+  // {model, date, petaflop}  — selected from full OWID CSV
+  points: [
+    { model: "Theseus",         date: "1950-07-02", petaflop: 4e-14 },
+    { model: "Perceptron Mk I", date: "1957-01-01", petaflop: 6.95e-10 },
+    { model: "Neocognitron",    date: "1980-04-01", petaflop: 2.74e-7 },
+    { model: "LeNet-5",         date: "1998-11-01", petaflop: 2.81e-3 },
+    { model: "AlexNet",         date: "2012-09-30", petaflop: 470 },
+    { model: "GPT-1",           date: "2018-06-01", petaflop: 17578 },
+    { model: "BERT-Large",      date: "2018-10-11", petaflop: 285000 },
+    { model: "GPT-2 (1.5B)",    date: "2019-02-14", petaflop: 1.92e6 },
+    { model: "GPT-3 (175B)",    date: "2020-05-28", petaflop: 3.14e8 },
+    { model: "GPT-3.5",         date: "2022-03-15", petaflop: 2.58e9 },
+    { model: "PaLM (540B)",     date: "2022-04-04", petaflop: 2.53e9 },
+    { model: "GPT-4",           date: "2023-03-15", petaflop: 2.1e10 },
+    { model: "Claude 2",        date: "2023-07-11", petaflop: 3.87e9 },
+    { model: "Gemini 1.0 Ultra",date: "2023-12-06", petaflop: 5.0e10 },
+    { model: "Llama 3.1 (405B)",date: "2024-07-23", petaflop: 3.8e10 },
+    { model: "Claude 3.5 Sonnet",date:"2024-06-20", petaflop: 2.7e10 },
+    { model: "Grok-2",          date: "2024-08-13", petaflop: 2.96e10 },
+    { model: "DeepSeek-V3",     date: "2024-12-24", petaflop: 3.3e9 },
+    { model: "Claude 3.7 Sonnet",date:"2025-02-24", petaflop: 3.35e10 },
+    { model: "GPT-4.5",         date: "2025-02-27", petaflop: 3.8e11 },
+    { model: "Grok 3",          date: "2025-02-17", petaflop: 3.5e11 },
+    { model: "Llama 4 Behemoth",date: "2025-04-05", petaflop: 5.18e10 },
+    { model: "Grok 4",          date: "2025-07-09", petaflop: 5.0e11 },
+    { model: "GPT-5",           date: "2025-08-07", petaflop: 6.6e10 },
+    { model: "Doubao-pro",      date: "2024-10-28", petaflop: 2.5e10 },
+    { model: "Qwen3-Max",       date: "2025-09-05", petaflop: 1.51e10 },
+    { model: "GLM-5",           date: "2026-02-17", petaflop: 6.84e9 },
+    { model: "DeepSeek-V4-Pro", date: "2026-04-24", petaflop: 9.7e9 }
+  ],
+  trend_lines: [
+    { name: "1.5×/yr (1950–2010)", points: [
+        { date: "1950-07-02", petaflop: 7.92e-12 },
+        { date: "2009-11-22", petaflop: 0.299 }
+    ]},
+    { name: "4.2×/yr (2010–2025)", points: [
+        { date: "2010-05-13", petaflop: 0.194 },
+        { date: "2025-03-11", petaflop: 6.06e8 }
+    ]}
+  ]
+};
+
+/* ============================================================================
+   HELPERS
+   ============================================================================ */
+const $ = (id) => document.getElementById(id);
+const dayMs = 86400000;
+// Staleness measured against real-time NOW (so a baked artifact ages visibly).
+function daysSince(iso) {
+  const d = new Date(iso + (iso.length === 10 ? "T00:00:00Z" : ""));
+  return Math.floor((Date.now() - d.getTime()) / dayMs);
+}
+function formatHorizon(min) {
+  if (min < 60) return min.toFixed(0) + " min";
+  const h = min / 60;
+  if (h < 24) return h.toFixed(h < 10 ? 1 : 0) + " h";
+  const d = h / 24;
+  return d.toFixed(d < 10 ? 1 : 0) + " d";
+}
+function fmtDate(iso) {
+  return new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric", timeZone:"UTC" });
+}
+function fmtShortDate(iso) {
+  return new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { month:"short", year:"2-digit", timeZone:"UTC" });
+}
+function setBadge(el, asOfDays, failed) {
+  el.className = "badge " + (failed ? "error" : asOfDays < 14 ? "fresh" : asOfDays < 60 ? "amber" : "stale");
+  el.innerHTML = '<span class="dot"></span>' + (failed ? "error" : asOfDays < 14 ? "fresh" : asOfDays < 60 ? "aging" : "stale");
+}
+
+/* ============================================================================
+   SNAPSHOT / DELTA via localStorage
+   localStorage is available in Cowork artifacts and persists across sessions.
+   ============================================================================ */
+const SNAPSHOT_KEY = "ai_progress_dashboard_v1_snapshot";
+
+function currentSnapshot() {
+  return {
+    ts: new Date().toISOString(),
+    swe_top: SWE.top_score_pct,
+    swe_model: SWE.model,
+    metr_top: METR.frontier_horizon_min,
+    metr_model: METR.frontier_model,
+    aa_top: AA.models[0].intelligence_index,
+    aa_top_model: AA.models[0].name,
+    owid_max_petaflop: Math.max(...OWID.points.map(p => p.petaflop))
+  };
+}
+
+function readPrevSnapshot() {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) { return null; }
+}
+function writeSnapshot(snap) {
+  try { localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap)); } catch (e) {}
+}
+
+function computeDelta(prev, cur) {
+  if (!prev) return ["First time loading — no prior snapshot to diff against."];
+  const out = [];
+  const dSwe = +(cur.swe_top - prev.swe_top).toFixed(1);
+  if (dSwe !== 0 || cur.swe_model !== prev.swe_model) {
+    const pill = dSwe > 0 ? "delta-up" : dSwe < 0 ? "delta-down" : "delta-flat";
+    out.push(`<span class="delta-pill ${pill}">SWE-bench ${dSwe >= 0 ? "+" : ""}${dSwe}pt</span> new leader: ${cur.swe_model} (was ${prev.swe_model || "—"})`);
+  }
+  const dMetr = cur.metr_top - prev.metr_top;
+  if (dMetr !== 0 || cur.metr_model !== prev.metr_model) {
+    const pill = dMetr > 0 ? "delta-up" : dMetr < 0 ? "delta-down" : "delta-flat";
+    out.push(`<span class="delta-pill ${pill}">METR ${dMetr >= 0 ? "+" : ""}${formatHorizon(Math.abs(dMetr))}</span> frontier now ${formatHorizon(cur.metr_top)} (${cur.metr_model})`);
+  }
+  const dAa = cur.aa_top - prev.aa_top;
+  if (dAa !== 0 || cur.aa_top_model !== prev.aa_top_model) {
+    const pill = dAa > 0 ? "delta-up" : dAa < 0 ? "delta-down" : "delta-flat";
+    out.push(`<span class="delta-pill ${pill}">AA Intel ${dAa >= 0 ? "+" : ""}${dAa}</span> top: ${cur.aa_top_model}`);
+  }
+  if (cur.owid_max_petaflop !== prev.owid_max_petaflop) {
+    const factor = cur.owid_max_petaflop / prev.owid_max_petaflop;
+    out.push(`<span class="delta-pill delta-up">Compute ×${factor.toFixed(2)}</span> new high-water training run`);
+  }
+  if (out.length === 0) {
+    const days = Math.floor((Date.now() - new Date(prev.ts).getTime()) / dayMs);
+    out.push(`No changes vs snapshot ${days} day${days===1?"":"s"} ago.`);
+  }
+  return out;
+}
+
+/* ============================================================================
+   RENDER: SWE-bench tile
+   ============================================================================ */
+function renderSWE() {
+  $("swe-num").innerHTML = SWE.top_score_pct.toFixed(1) + '<span class="pct">%</span>';
+  $("swe-model").textContent = SWE.model;
+  $("swe-scaffold").textContent = SWE.scaffold;
+  $("swe-date").textContent = "Achieved " + fmtDate(SWE.date);
+  setBadge($("swe-badge"), daysSince(SWE.date), false);
+
+  // sparkline — use linear time scale so date clustering (4 points in Feb-May 2026) is visible
+  const ctx = $("swe-spark").getContext("2d");
+  const sweTsPts = SWE.history.map(h => ({
+    x: new Date(h.date + "T00:00:00Z").getTime(),
+    y: h.score, model: h.model, dateRaw: h.date
+  }));
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      datasets: [{
+        data: sweTsPts,
+        borderColor: "#635bff",
+        backgroundColor: "rgba(99,91,255,0.12)",
+        fill: true, tension: 0.25, borderWidth: 2, showLine: true,
+        pointRadius: (ctx) => ctx.dataIndex === sweTsPts.length - 1 ? 5 : 2.5,
+        pointHoverRadius: 6,
+        pointBackgroundColor: (ctx) => ctx.dataIndex === sweTsPts.length - 1 ? "#00897b" : "#635bff",
+        pointBorderColor: "#fff", pointBorderWidth: 1.5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => items[0].raw.model,
+            label: (item) => item.raw.y.toFixed(1) + "% — " + fmtShortDate(item.raw.dateRaw)
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: "linear", display: true,
+          ticks: {
+            font: { size: 10 }, color: "#6b7280", maxRotation: 0, autoSkipPadding: 24,
+            callback: (v) => new Date(v).toLocaleDateString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" })
+          },
+          grid: { display: false }
+        },
+        y: {
+          display: true, min: 40, max: 100,
+          ticks: { font: { size: 10 }, color: "#9ca3af", stepSize: 20, callback: (v) => v + "%" },
+          grid: { color: "#f3f4f6" }
+        }
+      }
+    }
+  });
+}
+
+/* ============================================================================
+   RENDER: METR tile — trajectory + live extrapolation
+   ============================================================================ */
+function renderMETR() {
+  // headline + extrapolation
+  $("metr-headline").textContent =
+    "Frontier 50% horizon: " + formatHorizon(METR.frontier_horizon_min) +
+    (METR.frontier_horizon_is_capped ? " (capped — measurement ceiling)" : "") +
+    " — " + METR.frontier_model;
+  $("metr-asof").textContent = "as of " + fmtDate(METR.as_of_date);
+  setBadge($("metr-badge"), daysSince(METR.as_of_date), false);
+
+  // live extrapolation: when does the curve cross 40h and 160h, starting from the frontier anchor?
+  const anchorMin = METR.frontier_horizon_min;
+  const anchorDate = new Date(METR.as_of_date + "T00:00:00Z");
+  const dbl7 = METR.doubling_months_historical;
+  const dbl4 = METR.doubling_months_recent;
+
+  function monthsToReach(target) {
+    return [dbl7 * Math.log2(target / anchorMin), dbl4 * Math.log2(target / anchorMin)];
+  }
+  function dateAfterMonths(m) {
+    const d = new Date(anchorDate);
+    d.setUTCDate(d.getUTCDate() + Math.round(m * 30.44));
+    return d.toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+  }
+  const tgt40h = 40 * 60, tgt160h = 160 * 60;
+  const [a40_7, a40_4] = monthsToReach(tgt40h);
+  const [a160_7, a160_4] = monthsToReach(tgt160h);
+  $("metr-forward").innerHTML =
+    " 40 h (one work-week) → <strong>" + dateAfterMonths(a40_7) + "</strong> at 7-mo doubling, " +
+    "<strong>" + dateAfterMonths(a40_4) + "</strong> at recent 4-mo pace. " +
+    " 160 h (one month) → <strong>" + dateAfterMonths(a160_7) + "</strong> at 7-mo, " +
+    "<strong>" + dateAfterMonths(a160_4) + "</strong> at 4-mo.";
+
+  // chart: log-y horizon vs date. Fit and extrapolation.
+  const ctx = $("metr-chart").getContext("2d");
+  const pts = METR.recent_points
+    .map(p => ({ x: new Date(p.date + "T00:00:00Z").getTime(), y: p.horizon_min, model: p.model, dateRaw: p.date }))
+    .sort((a, b) => a.x - b.x);
+
+  // log-linear fit: y = a * 2^((x-x0)/T)  =>  log2(y) = log2(a) + (x-x0)/T
+  // Use months as x unit; fit slope = 1/T (1/months)
+  const x0 = pts[0].x;
+  const fitData = pts.map(p => ({ months: (p.x - x0) / (1000*60*60*24*30.44), log2y: Math.log2(p.y) }));
+  const n = fitData.length;
+  const sumX = fitData.reduce((a, b) => a + b.months, 0);
+  const sumY = fitData.reduce((a, b) => a + b.log2y, 0);
+  const sumXY = fitData.reduce((a, b) => a + b.months * b.log2y, 0);
+  const sumXX = fitData.reduce((a, b) => a + b.months * b.months, 0);
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+  const fittedDoublingMonths = 1 / slope;
+
+  function fitY(timestamp) {
+    const months = (timestamp - x0) / (1000*60*60*24*30.44);
+    return Math.pow(2, intercept + slope * months);
+  }
+  const startTs = pts[0].x;
+  const endTs   = pts[pts.length-1].x;
+  const extrapEndTs = new Date("2028-12-31T00:00:00Z").getTime();
+  const fitPoints = [{ x: startTs, y: fitY(startTs) }, { x: endTs, y: fitY(endTs) }];
+  const extrapPoints = [{ x: endTs, y: fitY(endTs) }, { x: extrapEndTs, y: fitY(extrapEndTs) }];
+
+  const ceilingPoints = [
+    { x: new Date("2023-01-01T00:00:00Z").getTime(), y: METR.ceiling_min },
+    { x: extrapEndTs, y: METR.ceiling_min }
+  ];
+
+  new Chart(ctx, {
+    type: "scatter",
+    data: {
+      datasets: [
+        {
+          label: "Frontier models", data: pts,
+          backgroundColor: "rgba(99,91,255,0.85)", borderColor: "#fff", borderWidth: 1.5,
+          pointRadius: 5, pointHoverRadius: 7
+        },
+        {
+          label: "Fitted (" + fittedDoublingMonths.toFixed(1) + "-mo doubling)",
+          data: fitPoints, type: "line", showLine: true, borderColor: "#635bff",
+          borderWidth: 2, pointRadius: 0, fill: false, borderDash: []
+        },
+        {
+          label: "Extrapolation", data: extrapPoints, type: "line", showLine: true,
+          borderColor: "#635bff", borderWidth: 2, pointRadius: 0, fill: false, borderDash: [4, 4]
+        },
+        {
+          label: "16-h measurement ceiling", data: ceilingPoints, type: "line", showLine: true,
+          borderColor: "#d62728", borderWidth: 1.5, pointRadius: 0, fill: false, borderDash: [2, 3]
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { right: 20, left: 4, top: 4, bottom: 4 } },
+      plugins: {
+        legend: {
+          position: "bottom", align: "start",
+          labels: { font: { size: 10 }, color: "#525f7f", boxWidth: 12, padding: 10, usePointStyle: false }
+        },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const p = items[0].raw;
+              return p.model || "";
+            },
+            label: (item) => {
+              const p = item.raw;
+              if (p.model) return formatHorizon(p.y) + " · " + p.dateRaw;
+              return formatHorizon(p.y);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: "linear",
+          min: new Date("2023-01-01T00:00:00Z").getTime(),
+          max: extrapEndTs,
+          ticks: {
+            font: { size: 10 }, color: "#6b7280",
+            callback: (v) => new Date(v).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }),
+            maxTicksLimit: 8, maxRotation: 0, autoSkipPadding: 12
+          },
+          grid: { color: "#f3f4f6" }
+        },
+        y: {
+          type: "logarithmic", min: 1, max: 100000,
+          ticks: {
+            font: { size: 10 }, color: "#6b7280",
+            callback: (v) => {
+              const allowed = [1, 10, 60, 240, 960, 9600, 100000];
+              const labels  = ["1m","10m","1h","4h","16h","160h","1700h"];
+              const i = allowed.indexOf(v);
+              return i >= 0 ? labels[i] : "";
+            }
+          },
+          grid: { color: "#f3f4f6" }
+        }
+      }
+    }
+  });
+}
+
+/* ============================================================================
+   RENDER: Artificial Analysis tile — intelligence vs price scatter + table
+   ============================================================================ */
+function renderAA() {
+  setBadge($("aa-badge"), daysSince(AA.as_of), false);
+
+  // Pareto: a model is Pareto-efficient if no other has both >= intelligence AND <= price
+  const pareto = AA.models.filter(m =>
+    !AA.models.some(o =>
+      o !== m && o.intelligence_index >= m.intelligence_index && o.blended_price_per_mtok <= m.blended_price_per_mtok &&
+      (o.intelligence_index > m.intelligence_index || o.blended_price_per_mtok < m.blended_price_per_mtok)
+    )
+  );
+  const paretoSet = new Set(pareto.map(p => p.name));
+
+  // table
+  const tbody = $("aa-tbody");
+  tbody.innerHTML = AA.models.map(m => {
+    const onP = paretoSet.has(m.name);
+    return `<tr class="${onP ? "pareto" : ""}">
+      <td>${m.name}${onP ? '<span class="pareto-mark">★</span>' : ""}</td>
+      <td>${m.intelligence_index}</td>
+      <td>$${m.blended_price_per_mtok.toFixed(2)}</td>
+      <td>${m.output_tok_per_s.toFixed(0)}</td>
+    </tr>`;
+  }).join("");
+
+  // bubble chart
+  const ctx = $("aa-chart").getContext("2d");
+  const bubbles = AA.models.map(m => ({
+    x: m.blended_price_per_mtok,
+    y: m.intelligence_index,
+    r: Math.max(5, Math.min(20, m.output_tok_per_s / 6)),
+    name: m.name, tps: m.output_tok_per_s, onP: paretoSet.has(m.name)
+  }));
+  new Chart(ctx, {
+    type: "bubble",
+    data: {
+      datasets: [
+        {
+          label: "Pareto-efficient",
+          data: bubbles.filter(b => b.onP),
+          backgroundColor: "rgba(0, 137, 123, 0.55)",
+          borderColor: "#00897b", borderWidth: 2
+        },
+        {
+          label: "Dominated",
+          data: bubbles.filter(b => !b.onP),
+          backgroundColor: "rgba(156, 163, 175, 0.45)",
+          borderColor: "#9ca3af", borderWidth: 1.5
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "top", align: "end", labels: { font: { size: 10 }, color: "#525f7f", boxWidth: 10, padding: 8 } },
+        tooltip: {
+          callbacks: {
+            label: (item) => {
+              const b = item.raw;
+              return b.name + " · Intel " + b.y + " · $" + b.x.toFixed(2) + "/Mtok · " + b.tps.toFixed(0) + " tok/s";
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: "Blended $/Mtok (3:1 in:out)", font: { size: 10 }, color: "#6b7280" },
+          ticks: { font: { size: 10 }, color: "#6b7280", callback: (v) => "$" + v },
+          grid: { color: "#f3f4f6" }
+        },
+        y: {
+          title: { display: true, text: "Intelligence Index", font: { size: 10 }, color: "#6b7280" },
+          min: 54, max: 63,
+          ticks: { font: { size: 10 }, color: "#6b7280", stepSize: 1 },
+          grid: { color: "#f3f4f6" }
+        }
+      }
+    }
+  });
+}
+
+/* ============================================================================
+   RENDER: OWID compute tile
+   ============================================================================ */
+function renderOWID() {
+  setBadge($("owid-badge"), daysSince(OWID.as_of), false);
+  const ctx = $("owid-chart").getContext("2d");
+
+  const modelPoints = OWID.points.map(p => ({
+    x: new Date(p.date + "T00:00:00Z").getTime(),
+    y: p.petaflop, model: p.model, dateRaw: p.date
+  }));
+  const trendDatasets = OWID.trend_lines.map((tl, i) => ({
+    label: tl.name,
+    type: "line", showLine: true, fill: false,
+    data: tl.points.map(p => ({ x: new Date(p.date + "T00:00:00Z").getTime(), y: p.petaflop })),
+    borderColor: i === 0 ? "#9ca3af" : "#f59e0b", borderWidth: 1.5, borderDash: [4, 3],
+    pointRadius: 0
+  }));
+
+  new Chart(ctx, {
+    type: "scatter",
+    data: {
+      datasets: [
+        {
+          label: "Notable systems", data: modelPoints,
+          backgroundColor: "rgba(99,91,255,0.75)", borderColor: "#fff", borderWidth: 1,
+          pointRadius: 4, pointHoverRadius: 6
+        },
+        ...trendDatasets
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "top", align: "end", labels: { font: { size: 10 }, color: "#525f7f", boxWidth: 10, padding: 8 } },
+        tooltip: {
+          callbacks: {
+            title: (items) => items[0].raw.model || "",
+            label: (item) => {
+              const p = item.raw;
+              const fmt = p.y >= 1e9 ? (p.y/1e9).toFixed(1)+" EFLOP" : p.y >= 1e6 ? (p.y/1e6).toFixed(1)+" PFLOP·k" : p.y.toExponential(2) + " PFLOP";
+              return fmt + (p.dateRaw ? " · " + p.dateRaw : "");
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: "linear",
+          min: new Date("1950-01-01T00:00:00Z").getTime(),
+          max: new Date("2027-01-01T00:00:00Z").getTime(),
+          ticks: {
+            font: { size: 10 }, color: "#6b7280",
+            callback: (v) => new Date(v).getUTCFullYear(),
+            maxTicksLimit: 9, maxRotation: 0
+          },
+          grid: { color: "#f3f4f6" }
+        },
+        y: {
+          type: "logarithmic",
+          title: { display: true, text: "Training compute (petaFLOP)", font: { size: 10 }, color: "#6b7280" },
+          ticks: { font: { size: 10 }, color: "#6b7280",
+            callback: (v) => {
+              const allowed = [1e-13, 1e-9, 1e-6, 1e-3, 1, 1000, 1e6, 1e9, 1e12];
+              const labels  = ["10⁻¹³","10⁻⁹","10⁻⁶","10⁻³","1","10³","10⁶","10⁹","10¹²"];
+              const i = allowed.indexOf(v);
+              return i >= 0 ? labels[i] : "";
+            }
+          },
+          grid: { color: "#f3f4f6" }
+        }
+      }
+    }
+  });
+}
+
+/* ============================================================================
+   SYNTHESIS via window.cowork.askClaude (Haiku) — with cache + fallback
+   ============================================================================ */
+const SYNTH_CACHE_KEY = "ai_progress_dashboard_v1_synth";
+const SYNTH_TTL_MS = 6 * 60 * 60 * 1000; // 6h
+
+function buildSynthPrompt(curSnap, prevSnap) {
+  return [
+    "You are writing a 'state of play' synthesis for a daily AI-progress dashboard.",
+    "I will give you four current numeric data nodes. Return JSON ONLY, no prose, no markdown fences.",
+    "",
+    "Schema (strict):",
+    '{',
+    '  "state_of_play": "3-4 sentence prose tying the four nodes together — applied capability, autonomy trajectory, frontier-now, and the compute input layer driving them",',
+    '  "extrapolations": ["3-5 short bullets reasoning over the live numbers, ranges and dates allowed"]',
+    '}',
+    "",
+    "Be direct, technical, opinionated. No hedging. Quantify when possible. No preamble.",
+    "Reason over the CURRENT values supplied — do NOT use stale training priors.",
+    "If a node is capped (METR ceiling at 16h), say so explicitly and note what that means for extrapolation."
+  ].join("\n");
+}
+
+function fallbackSynthesis(cur) {
+  return {
+    state_of_play:
+      `Frontier coding capability is at ${cur.swe_top}% on SWE-bench Verified (${cur.swe_model}), agent-scaffold included. ` +
+      `METR's 50% time horizon is ${formatHorizon(cur.metr_top)} on ${cur.metr_model}${METR.frontier_horizon_is_capped ? " — at the suite's measurement ceiling" : ""}, ` +
+      `extending the ~7-month doubling trend (recent runs nearer 4 months). ` +
+      `For day-to-day use, the Pareto frontier on Artificial Analysis runs from ${AA.models[0].name} (Intel ${cur.aa_top}) down to cheaper, fast tiers. ` +
+      `All of this rides on a training-compute curve that has held a ~4.2×/yr slope since 2010, now sitting near 10¹¹ petaFLOP for top runs.`,
+    extrapolations: [
+      "SWE-bench Verified is near saturation — expect <5pt headroom and a switch to harder benchmarks (SWE-bench Pro, Terminal-Bench) within ~6 months.",
+      "If the 7-month doubling holds from today's anchor, 40h (one work-week) lands ~mid-to-late 2027; the recent 4-month pace pulls that into 2026 H2 — but METR's 16h ceiling means new top scores are now upper-bounded, not measured.",
+      "Compute and capability are decoupling at the margin: DeepSeek-V4 and Qwen3 deliver frontier-class scores at 1-2 orders of magnitude less FLOP than GPT-4.5/Grok 4.",
+      "Pricing for the frontier intelligence tier has collapsed ~3-5× over the last 12 months at the same Intel index — keep this in mind for any cost projections."
+    ]
+  };
+}
+
+// Resolve askClaude across plausible locations / cold-start timing.
+async function resolveAskClaude(maxWaitMs) {
+  const start = Date.now();
+  while (Date.now() - start < maxWaitMs) {
+    const candidates = [
+      window.cowork && window.cowork.askClaude,
+      window.askClaude,
+      window.cowork && window.cowork.ask_claude
+    ].filter(f => typeof f === "function");
+    if (candidates.length) return candidates[0];
+    await new Promise(r => setTimeout(r, 200));
+  }
+  return null;
+}
+
+// askClaude responses come back in various shapes; normalize to a string.
+function extractText(resp) {
+  if (resp == null) return "";
+  if (typeof resp === "string") return resp;
+  if (typeof resp === "object") {
+    if (typeof resp.text === "string") return resp.text;
+    if (typeof resp.content === "string") return resp.content;
+    if (Array.isArray(resp.content)) {
+      return resp.content.map(b => (b && (b.text || b.content)) || "").join("");
+    }
+    if (resp.message && typeof resp.message === "string") return resp.message;
+    if (resp.message && resp.message.content) {
+      const c = resp.message.content;
+      if (typeof c === "string") return c;
+      if (Array.isArray(c)) return c.map(b => (b && (b.text || b.content)) || "").join("");
+    }
+  }
+  try { return JSON.stringify(resp); } catch (_) { return String(resp); }
+}
+
+function parseSynthJSON(text) {
+  if (!text) return null;
+  let cleaned = String(text).trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
+    .trim();
+  // Try direct parse first; if that fails, extract the first {...} block.
+  try { return JSON.parse(cleaned); } catch (_) {}
+  const m = cleaned.match(/\{[\s\S]*\}/);
+  if (m) { try { return JSON.parse(m[0]); } catch (_) {} }
+  return null;
+}
+
+async function runSynthesis(forceRefresh) {
+  const cur = currentSnapshot();
+  const prev = readPrevSnapshot();
+  const deltaBullets = computeDelta(prev, cur);
+
+  // try cache
+  if (!forceRefresh) {
+    try {
+      const raw = localStorage.getItem(SYNTH_CACHE_KEY);
+      if (raw) {
+        const c = JSON.parse(raw);
+        if (c.ts && (Date.now() - c.ts) < SYNTH_TTL_MS && c.snapKey === JSON.stringify(cur)) {
+          renderSynth(c.payload, deltaBullets, true);
+          return;
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Show "thinking" state while we resolve + call askClaude
+  $("synth-state").innerHTML = '<div class="synth-loading">Generating synthesis with askClaude…</div>';
+
+  let payload = null;
+  let usedFallback = false;
+  let diag = "";
+
+  const askClaude = await resolveAskClaude(forceRefresh ? 8000 : 4000);
+
+  if (!askClaude) {
+    diag = "window.cowork.askClaude not exposed in this artifact runtime";
+    console.warn("[synth]", diag);
+    payload = fallbackSynthesis(cur);
+    usedFallback = true;
+  } else {
+    // Trim payload aggressively — Haiku prompts care about size.
+    const compactSnapshot = {
+      current: cur,
+      prior: prev ? { swe_top: prev.swe_top, swe_model: prev.swe_model, metr_top: prev.metr_top, aa_top: prev.aa_top, ts: prev.ts } : null,
+      metr_extras: {
+        doubling_months_historical: METR.doubling_months_historical,
+        doubling_months_recent: METR.doubling_months_recent,
+        ceiling_min: METR.ceiling_min,
+        frontier_is_capped: METR.frontier_horizon_is_capped
+      },
+      aa_top5: AA.models.map(m => ({ name: m.name, intel: m.intelligence_index, price: m.blended_price_per_mtok, tps: m.output_tok_per_s }))
+    };
+    const prompt = buildSynthPrompt(cur, prev);
+
+    // Two attempts: bare prompt+data, then prompt-only as a fallback if shape is rejected.
+    const attempts = [
+      () => askClaude(prompt, [compactSnapshot]),
+      () => askClaude(prompt + "\n\nDATA:\n" + JSON.stringify(compactSnapshot), [])
+    ];
+
+    for (let i = 0; i < attempts.length && !payload; i++) {
+      try {
+        const resp = await Promise.race([
+          attempts[i](),
+          new Promise((_, rej) => setTimeout(() => rej(new Error("timeout 30s")), 30000))
+        ]);
+        const text = extractText(resp);
+        const parsed = parseSynthJSON(text);
+        if (parsed && typeof parsed.state_of_play === "string" && parsed.state_of_play.length > 30) {
+          if (!Array.isArray(parsed.extrapolations)) parsed.extrapolations = [];
+          payload = parsed;
+          diag = "askClaude attempt #" + (i+1) + " ok (" + text.length + " chars)";
+        } else {
+          diag = "askClaude attempt #" + (i+1) + " returned unparseable: " + (text || "").slice(0, 140);
+          console.warn("[synth]", diag, "raw:", resp);
+        }
+      } catch (e) {
+        diag = "askClaude attempt #" + (i+1) + " threw: " + (e && e.message || e);
+        console.warn("[synth]", diag);
+      }
+    }
+
+    if (!payload) {
+      payload = fallbackSynthesis(cur);
+      usedFallback = true;
+    }
+  }
+
+  renderSynth(payload, deltaBullets, false, usedFallback, diag);
+
+  if (!usedFallback) {
+    try {
+      localStorage.setItem(SYNTH_CACHE_KEY, JSON.stringify({
+        ts: Date.now(), snapKey: JSON.stringify(cur), payload
+      }));
+    } catch (e) {}
+  }
+  writeSnapshot(cur);
+}
+
+function renderSynth(payload, deltaBullets, fromCache, usedFallback, diag) {
+  $("synth-state").innerHTML = "<p>" + payload.state_of_play + "</p>";
+  const extrapEl = $("synth-extrap");
+  extrapEl.innerHTML = (payload.extrapolations && payload.extrapolations.length
+    ? payload.extrapolations.map(s => "<li>" + s + "</li>").join("")
+    : "<li>—</li>");
+  const deltaEl = $("synth-delta");
+  deltaEl.innerHTML = deltaBullets.map(s => "<li>" + s + "</li>").join("");
+
+  const badge = $("synth-badge");
+  if (usedFallback) {
+    badge.className = "badge amber";
+    badge.innerHTML = '<span class="dot"></span>baseline';
+    badge.title = diag || "askClaude unavailable; rendered hard-coded baseline";
+  } else if (fromCache) {
+    badge.className = "badge fresh";
+    badge.innerHTML = '<span class="dot"></span>cached';
+    badge.title = "Loaded from localStorage cache (TTL 6h)";
+  } else {
+    badge.className = "badge fresh";
+    badge.innerHTML = '<span class="dot"></span>live';
+    badge.title = diag || "Generated live via window.cowork.askClaude";
+  }
+}
+
+/* ============================================================================
+   BOOT
+   ============================================================================ */
+function init() {
+  $("last-updated").textContent = "Data baked " + fmtDate(BUILD_DATE);
+  try { renderSWE(); } catch (e) { console.error(e); $("swe-card").querySelector(".hero").innerHTML = '<div class="err-box">SWE render error</div>'; }
+  try { renderMETR(); } catch (e) { console.error(e); $("metr-card").querySelector(".chart-wrap").innerHTML = '<div class="err-box">METR render error</div>'; }
+  try { renderAA(); }  catch (e) { console.error(e); $("aa-card").querySelector(".chart-wrap").innerHTML = '<div class="err-box">AA render error</div>'; }
+  try { renderOWID(); } catch (e) { console.error(e); $("owid-card").querySelector(".chart-wrap").innerHTML = '<div class="err-box">OWID render error</div>'; }
+  runSynthesis(false);
+}
+
+$("refresh-btn").addEventListener("click", async () => {
+  const btn = $("refresh-btn");
+  btn.disabled = true;
+  $("synth-state").innerHTML = '<div class="synth-loading">Regenerating synthesis…</div>';
+  await runSynthesis(true);
+  btn.disabled = false;
+});
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
