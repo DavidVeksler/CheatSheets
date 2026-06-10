@@ -1,43 +1,84 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Cross-agent guidance for this repository. Read by Claude Code, Codex, and Cursor. If a tool needs its own file, point it here (`CLAUDE.md` → this file; `.cursorrules` → this file) so the standard lives in one place.
 
 ## Project Overview
 
-This is a collection of interactive HTML cheatsheets covering various topics including technology, philosophy, AI safety, cryptocurrencies, martial arts, and more. The project consists of standalone HTML files that function as comprehensive reference guides.
+A collection of interactive, standalone HTML cheatsheets covering technology, finance, philosophy, AI safety, crypto, martial arts, and more. Each file is a self-contained reference guide.
 
-## Architecture
+The defining quality bar is **comprehensiveness plus accuracy**. A cheatsheet here is a *terminal reference*: a competent practitioner should be able to do real work from a single page for the topic's common cases without opening another tab. Density and correctness win over brevity. The Content Comprehensiveness Standard and the Accuracy & Freshness Protocol below are hard acceptance criteria, not style suggestions.
 
-### Core Structure
-- **Standalone HTML files**: Each cheatsheet is a self-contained HTML file with embedded CSS and JavaScript
-- **PHP index file**: `index.php` - Main portfolio gallery with card-based layout and detailed metadata extraction
-- **PHP sitemap**: `sitemap.php` - SEO-optimized XML sitemap with dynamic priority and changefreq
-- **Image management**: Screenshot generation and metadata extraction using Python (`generate-image-previews.py`)
-- **Static assets**: Images stored in `/images/` directory for social media previews and content
+## Generation Protocol (read first)
 
-### Key Files
-- `index.php` - Main portfolio gallery with card-based layout and detailed metadata extraction
-- `sitemap.php` - SEO-optimized XML sitemap generator with category-based priorities
-- `generate-image-previews.py` - Python script for automated screenshot generation and HTML metadata management
-- Individual `.html` files - Self-contained cheatsheets with Bootstrap 5.3.3, custom CSS, and interactive JavaScript
+1. **Effort = High** (the Opus 4.8 default). Comprehensiveness comes from the spec in this file, not the effort dial — do not rely on Extra/Max to add coverage the spec already mandates. If a draft is thin, apply the standard harder.
+2. **Research before writing.** For any version-sensitive, fast-moving, or specific factual content, verify against primary sources via web search first (see Accuracy & Freshness). AI-generated cheatsheets are exactly where hallucinated specifics creep in — close that gap up front.
+3. **Outline to three depths, then fill** (see Coverage Contract). No section ships hollow.
+4. **Self-verify against the Testing Checklist** before finishing. The model is expected to run its own output through the checklist, not assume it passed.
 
-### File Status (Current)
-- `index2.php` - Removed (duplicate functionality)
-- Total cheatsheets: 47+ HTML files covering technology, finance, philosophy, martial arts, and tools
-- Recent additions: `lifestyle-calculator.html`, `clean-architecture-dotnet.html`
+Treat the Coverage Contract, Atomic Entry Rule, and Accuracy Protocol as binding acceptance criteria. A cheatsheet that violates them is not done, regardless of polish.
 
-### HTML Cheatsheet Pattern
-Each cheatsheet follows a consistent structure:
-- Bootstrap 5.3.3 framework via CDN
-- Bootstrap Icons for visual elements
-- Collapsible sections using `<details>`/`<summary>` or Bootstrap collapse
-- Interactive elements (filters, toggles, checkboxes with localStorage)
-- Responsive design with print-friendly styles
-- Comprehensive SEO metadata package
-- Semantic HTML5 with accessibility considerations
+## Content Comprehensiveness Standard (REQUIRED)
 
-### Required Metadata Standards
-Every cheatsheet must include:
+### Coverage contract — three depths
+Every cheatsheet MUST cover its topic at three depths:
+1. **Fundamentals** — definitions, mental model, the 20% that explains 80%.
+2. **Working knowledge** — the syntax, commands, patterns, and decisions a practitioner uses daily.
+3. **Edge & advanced** — gotchas, failure modes, performance characteristics, the things that trip up experienced people.
+
+Any section in the outline MUST be fully populated. No placeholder stubs, no "TODO," no "see the docs." If a section can't be filled, cut or merge it.
+
+### Atomic entry rule
+Every entry (concept, command, pattern, term, technique) MUST include:
+- A precise one-line definition or statement of purpose.
+- At least one **concrete** example with realistic values — never `foo`/`bar` when a real value teaches more.
+- Where applicable, a gotcha, pitfall, or explicit "when NOT to use this."
+
+**Quantify everything quantifiable.** "Fast" → "~O(log n), sub-ms for n < 10⁶." "Expensive" → the actual price/token figure. "Large" → the actual cutoff. Real defaults, thresholds, limits, versions, complexity, latencies, rates.
+
+### Breadth requirements (include when the topic supports them)
+- **Comparison table** whenever 2+ alternatives exist — alternatives × decision criteria.
+- **Explicit decision guidance** — "use X when…, use Y when…."
+- **Common Mistakes / Anti-Patterns section** — MANDATORY for any technical topic.
+- **Quick Reference block** near the top — the highest-frequency lookups in one scannable table (the cheat-within-the-cheat).
+- Copy-paste-ready snippets, CLI flags, config keys with defaults, shortcuts where relevant.
+
+### Density floor
+Err toward over-inclusion: when uncertain whether an item belongs, include it. A finished cheatsheet should typically carry **20+ distinct substantive entries** and read as exhaustive for its scope. Any section with fewer than ~3 entries is either not a real section (fold it) or under-developed (expand it). **Thinness is a defect, not an aesthetic choice.**
+
+### Self-containment test (run before finishing)
+*"Could a competent practitioner do real work from this page alone for the common cases?"* If not, close the gap before shipping.
+
+## Accuracy & Freshness Protocol (REQUIRED)
+
+These cheatsheets are AI-generated and increasingly AI-consumed, so wrong specifics propagate. Hold the line:
+
+- **Verify, don't recall.** Any version number, price, API signature, default, limit, benchmark, or date MUST be checked against a primary source (official docs, the spec, the vendor) before it goes in. If you can't verify it, omit it or flag the uncertainty explicitly — never fabricate a plausible-looking number.
+- **Date volatile facts.** Tag anything that drifts with "as of <Mon YYYY>" or a version tag inline, so staleness is visible rather than silent.
+- **Show freshness.** Include a visible `Last verified: YYYY-MM-DD` line in the page footer/header, and set `dateModified` in JSON-LD to the real edit date.
+- **Structured data must match visible content** — never describe in schema what isn't on the page.
+- **Prefer primary sources** over aggregators, SEO blogs, and forum posts.
+
+## Tech Baseline
+
+### Framework
+- **Bootstrap 5.3.x — pin the current stable (5.3.8 as of 2026-06).** Bootstrap 6 is not yet stable; do not target it. Bootstrap is retained for visual consistency across the 47+ existing files — do not rip it out wholesale.
+- Add **Subresource Integrity (`integrity` + `crossorigin`)** to all CDN `<link>`/`<script>` tags. Load JS with `defer`.
+- Bootstrap Icons via CDN, pinned.
+
+### Modern Platform Baseline (prefer these — all Baseline-supported in 2026)
+Use native platform features over Bootstrap's JS wherever they're strictly better. Highest-value swaps:
+- **Exclusive accordions: native `<details name="group">` + `<summary>`.** Zero JS, prints fully expanded-capable, works without JS, accessible by default. This replaces Bootstrap collapse for the core collapsible pattern — and satisfies the "works without JS" requirement for free.
+- **Theming: `color-scheme` + the `light-dark()` CSS function**, honoring `prefers-color-scheme` automatically. Offer an optional manual override via `[data-theme]` (a tiny JS shim or `:has()`), not a hand-rolled dual stylesheet.
+- **Layout: CSS Grid + container queries** for the card grid, so cards respond to their container, not just the viewport.
+- **Specificity: wrap custom CSS in `@layer`** so it sits cleanly above Bootstrap without `!important` wars.
+- **`:has()`** for state-driven styling without JS.
+- **Typography: `text-wrap: balance`** on headings, `text-wrap: pretty` on body copy.
+- **Motion: gate all animations and any View Transitions behind `@media (prefers-reduced-motion: no-preference)`.**
+- **Persistence:** `localStorage` for checkbox/progress state (existing pattern) — feature-detect and fail soft.
+
+## Required Metadata Standards
+
+Every cheatsheet must include all blocks below. JSON-LD MUST match the visible content.
 
 #### Essential SEO Tags
 ```html
@@ -47,7 +88,7 @@ Every cheatsheet must include:
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/filename.html"/>
 ```
 
-#### Open Graph Tags
+#### Open Graph + Twitter/X Card
 ```html
 <meta property="og:title" content="Title"/>
 <meta property="og:description" content="Description"/>
@@ -55,10 +96,6 @@ Every cheatsheet must include:
 <meta property="og:url" content="https://cheatsheets.davidveksler.com/filename.html"/>
 <meta property="og:image" content="images/filename.png"/>
 <meta property="og:image:alt" content="Descriptive alt text"/>
-```
-
-#### Twitter Card Tags
-```html
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Title"/>
 <meta name="twitter:description" content="Description"/>
@@ -83,78 +120,75 @@ Every cheatsheet must include:
 </script>
 ```
 
-## Common Development Tasks
+## Discoverability: Search + AI Answer Engines
 
-### Working with PHP Index Files
-- The PHP files dynamically scan for `.html` files in the root directory
-- They extract metadata from HTML files (title, description, og:image)
-- Category assignment is handled via filename pattern matching in `getCategoryForFile()`
+The consumption model has shifted. Optimize for both classic search and AI answer engines (Claude, ChatGPT, Perplexity, Gemini) that read structured data and clean semantics when indexing.
 
-### Adding New Cheatsheets
-1. Create a new `.html` file in the root directory following the established pattern
-2. Include ALL required metadata sections (SEO, Open Graph, Twitter, JSON-LD)
-3. Use consistent naming: `topic-subtopic.html` (lowercase, hyphens)
-4. The PHP index and sitemap files will automatically discover and include it
-5. Run `python generate-image-previews.py` to generate social media preview images
+- **Keep `TechArticle` JSON-LD.** It is valid, machine-readable, and consumed by AI crawlers.
+- **Do NOT add `FAQPage` or `HowTo` schema to chase rich results.** FAQ rich results were deprecated in Google Search on 2026-05-07 (tooling removed June–Aug 2026); HowTo since 2023. Both remain valid schema.org types but earn no SERP feature. Only include `FAQPage` if it mirrors a real, visible Q&A section on the page.
+- **There is no special schema that buys AI Overview / AI Mode inclusion.** The lever is genuinely good, accurate, self-contained content under clear headings — which is exactly what the Comprehensiveness Standard already enforces. Write answers that stand alone under a heading and are scannable; that is what answer engines extract.
+- Keep meta description (150–200 chars), canonical, keywords, OG/X tags, and descriptive image alt text.
+- **Repo-level (optional):** add `/llms.txt` summarizing the cheatsheet index for LLM crawlers.
 
-### Image Management
-- Social media preview images are stored in `/images/` directory
-- The Python script uses Playwright to generate screenshots
-- Images follow naming convention: `{filename}.png` (matching HTML filename)
-- The script also updates HTML files with missing metadata tags
-- Use descriptive alt text for accessibility
+## Architecture
 
-### Content Structure
-Cheatsheets typically include:
-- Page header with title and description
-- Collapsible information cards
-- Interactive elements (search, filters, toggles)
-- Print-optimized styles
-- External links with proper attributes (`target="_blank" rel="noopener noreferrer"`)
+- **Standalone HTML files** — each cheatsheet self-contained (embedded CSS/JS).
+- **`index.php`** — portfolio gallery; scans root for `.html`, extracts metadata, assigns categories via `getCategoryForFile()`.
+- **`sitemap.php`** — SEO sitemap with category-based priorities.
+- **`generate-image-previews.py`** — Playwright screenshot generation + metadata backfill; outputs `images/{filename}.png`.
+- No build step. Static-hosting friendly. 47+ cheatsheets; recent additions include `lifestyle-calculator.html`, `clean-architecture-dotnet.html`.
 
-## Theme and Styling Approach
-- Clean, modern design with responsive layouts
-- Color theming appropriate to subject matter (dark themes for tech, light themes for academic content)
-- Consistent use of Bootstrap components
-- Custom CSS variables for theming
-- Interactive hover effects and animations
+## Adding New Cheatsheets
 
-## File Organization
-- Root directory contains all HTML cheatsheets
-- `/images/` for preview images and assets
-- No build process - all files are standalone
-- Static hosting friendly (can be served directly)
+1. Run the **Generation Protocol** (research → outline to three depths → fill to density floor → self-verify).
+2. Create `topic-subtopic.html` (lowercase, hyphens) in root, following the established pattern + Modern Platform Baseline.
+3. Include ALL metadata blocks; ensure JSON-LD matches visible content; set a real `Last verified` date.
+4. `index.php` and `sitemap.php` auto-discover it.
+5. Run `python generate-image-previews.py` for the preview image.
 
-## Development Guidelines
+## Theme & Styling
 
-### Code Quality Standards
-- Maintain consistency with existing cheatsheet patterns
-- Use semantic HTML with proper accessibility attributes
-- Include ALL required metadata sections (no exceptions)
-- Test responsiveness and print styles
-- Ensure all interactive elements work without JavaScript as fallback
-- Use consistent Bootstrap 5.3.3 components and utilities
+- Clean, modern, responsive. Color theming suited to subject (dark for tech, light for academic).
+- Dark/light via `color-scheme` + `light-dark()`; respect `prefers-color-scheme`, optional manual toggle.
+- Custom CSS variables under `@layer`; consistent Bootstrap components for shared chrome.
+- Hover/animation effects gated behind `prefers-reduced-motion`.
 
-### SEO Best Practices
-- Every new cheatsheet MUST include JSON-LD structured data
-- Optimize meta descriptions (150-200 characters)
-- Use descriptive, keyword-rich titles
-- Include comprehensive keyword lists
-- Ensure all images have proper alt text
-- Test Open Graph and Twitter Card previews
+## Accessibility (target WCAG 2.2 AA)
 
-### Content Guidelines
-- Use clear, actionable section headers
-- Implement collapsible sections for better UX
-- Include interactive elements where appropriate
-- Add print-friendly styles
-- Ensure content is accessible without JavaScript
+- Semantic landmarks (`<main>`, `<nav>`, `<section>` with headings in order).
+- Visible focus (`:focus-visible`), full keyboard operability.
+- Contrast ≥ 4.5:1 for body text, 3:1 for large text/UI.
+- Native `<details>`/`<summary>` for collapsibles (a11y built in).
+- All images have meaningful `alt`; decorative images `alt=""`.
+- Honor `prefers-reduced-motion`.
 
-### Testing Checklist
-- [ ] All metadata tags present and valid
-- [ ] Responsive design on mobile/tablet/desktop
-- [ ] Print styles work correctly
-- [ ] Interactive elements function properly
-- [ ] Accessibility standards met
-- [ ] Social media previews display correctly
-- [ ] Image generated and placed in `/images/` directory
+## Performance (Core Web Vitals)
+
+- Targets: **LCP < 2.5s, INP < 200ms** (INP replaced FID in 2024), **CLS < 0.1**.
+- `defer` all JS; lazy-load non-critical images; keep CDN payload minimal (only the Bootstrap JS components actually used).
+- Inline critical CSS is acceptable given the standalone model.
+
+## Testing Checklist
+
+Comprehensiveness & accuracy:
+- [ ] Coverage contract met: fundamentals + working knowledge + edge/advanced
+- [ ] Atomic entry rule: every entry has definition + concrete example + gotcha where applicable
+- [ ] Quantified: vague qualifiers replaced with real numbers/defaults/complexity
+- [ ] Breadth: comparison tables, decision guidance, Common Mistakes section where supported
+- [ ] Quick Reference block present near top
+- [ ] Density floor: 20+ substantive entries; no section under ~3 entries
+- [ ] Self-containment test passed
+- [ ] **Accuracy gate: every version/price/limit/benchmark verified against a primary source; no fabricated specifics**
+- [ ] Volatile facts dated; visible `Last verified` line; `dateModified` is real
+
+Platform & delivery:
+- [ ] Bootstrap pinned to current 5.3.x with SRI; JS deferred
+- [ ] Collapsibles use native `<details name>`; theming via `light-dark()`
+- [ ] All metadata blocks present and valid; JSON-LD matches visible content
+- [ ] No FAQ/HowTo schema added for rich-result purposes
+- [ ] Responsive (mobile/tablet/desktop) incl. container-query behavior
+- [ ] Print styles correct
+- [ ] Works without JS (native details, content visible)
+- [ ] WCAG 2.2 AA: landmarks, focus-visible, contrast, reduced-motion
+- [ ] Core Web Vitals targets plausibly met (LCP/INP/CLS)
+- [ ] Social previews render; image generated in `/images/`
