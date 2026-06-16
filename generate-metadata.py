@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """Scan every cheatsheet HTML file and emit a single metadata JSON file.
 
-This is a faithful port of the metadata extraction in ``index.php`` so the
-generated JSON matches what the PHP page would produce at request time:
-title, description (with ``og:description`` fallback), and an absolute
-``og:image`` URL. A few extra fields useful to a JS/static consumer are
-included (``keywords``, ``dateModified``); trim the SELECTED_FIELDS list
-below if you want a leaner file.
+The extraction mirrors ``index.php``'s ``extractMetadata()`` (title,
+description with ``og:description`` fallback, absolute ``og:image`` URL,
+same exclusion list, case-insensitive title sort), with two deliberate
+differences suited to a data-file consumer rather than a rendered page:
+  * Descriptions are NOT truncated to 150 chars. ``index.php`` clamps them
+    only for card display; the JSON keeps the full value so the consumer can
+    clamp via CSS.
+  * Extra fields useful to a JS/static consumer are added (``keywords`` and
+    JSON-LD ``dateModified``); trim the SELECTED_FIELDS list to slim output.
 
 Usage:
     python generate-metadata.py [--output cheatsheets.json]
                                 [--base-url https://cheatsheets.davidveksler.com/]
+                                [--dir .]
 """
 
 import argparse
@@ -61,7 +65,7 @@ def humanize(filename: str) -> str:
     return stem.replace("-", " ").replace("_", " ").title()
 
 
-def meta_content(soup: BeautifulSoup, *, name: str = None, prop: str = None) -> Optional[str]:
+def meta_content(soup: BeautifulSoup, *, name: Optional[str] = None, prop: Optional[str] = None) -> Optional[str]:
     """Return the trimmed @content of a <meta name=...> or <meta property=...>."""
     if name is not None:
         tag = soup.find("meta", attrs={"name": name})
