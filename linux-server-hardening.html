@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Essential SEO Tags -->
+    <title>Linux Server Hardening &amp; Sysadmin: Interactive Checklist + Paste-Ready Commands</title>
+    <meta name="description" content="A comprehensive, interactive Linux/Ubuntu/Debian server hardening checklist with saved progress and copy-paste commands: SSH keys, ufw firewall, fail2ban, systemd unit sandboxing, users & permissions, sudo, sysctl, and unattended-upgrades."/>
+    <meta name="keywords" content="linux server hardening, ubuntu hardening checklist, ssh key setup, ufw firewall, fail2ban, systemd unit hardening, unattended-upgrades, sysctl hardening, sudo, file permissions, sysadmin cheatsheet, debian security"/>
+    <link rel="canonical" href="https://cheatsheets.davidveksler.com/linux-server-hardening.html"/>
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Linux Server Hardening &amp; Sysadmin: Interactive Checklist"/>
+    <meta property="og:description" content="Interactive Linux server hardening checklist with saved progress and paste-ready commands: SSH, ufw, fail2ban, systemd, users/permissions, unattended-upgrades, sysctl."/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="https://cheatsheets.davidveksler.com/linux-server-hardening.html"/>
+    <meta property="og:image" content="images/linux-server-hardening.png"/>
+    <meta property="og:image:alt" content="Linux Server Hardening interactive checklist preview"/>
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Linux Server Hardening &amp; Sysadmin: Interactive Checklist"/>
+    <meta name="twitter:description" content="Interactive Linux server hardening checklist with saved progress and paste-ready commands: SSH, ufw, fail2ban, systemd, users/permissions, unattended-upgrades, sysctl."/>
+    <meta name="twitter:image" content="images/linux-server-hardening.png"/>
+    <meta name="twitter:creator" content="@heroiclife"/>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Linux Server Hardening & Sysadmin: Interactive Checklist + Paste-Ready Commands",
+      "description": "A comprehensive, interactive Linux/Ubuntu/Debian server hardening checklist with saved progress and copy-paste commands covering SSH keys, ufw firewall, fail2ban, systemd unit sandboxing, users & permissions, sudo, sysctl, and unattended-upgrades.",
+      "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+      "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+      "datePublished": "2026-06-15",
+      "dateModified": "2026-06-15",
+      "keywords": "linux server hardening, ubuntu hardening checklist, ssh key setup, ufw firewall, fail2ban, systemd unit hardening, unattended-upgrades, sysctl hardening, sudo, file permissions"
+    }
+    </script>
+
+    <!-- Bootstrap 5.3.8 CSS (SRI-pinned) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Bootstrap Icons (SRI-pinned) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+
+    <style>
+    @layer base, components, utilities;
+
+    @layer base {
+        :root {
+            color-scheme: light dark;
+            --term-bg: #0d1117;
+            --term-border: #30363d;
+            --accent: #2dd4bf;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --ok: #22c55e;
+        }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding-bottom: 4rem;
+            scroll-behavior: smooth;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            body, * { scroll-behavior: auto !important; }
+        }
+        h1, h2, h3 { text-wrap: balance; }
+        p, li { text-wrap: pretty; }
+        code { color: var(--accent); }
+        a { text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    }
+
+    @layer components {
+        .masthead {
+            background: linear-gradient(135deg, rgba(45,212,191,0.12), rgba(13,17,23,0.05));
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+
+        /* Sticky progress */
+        .progress-wrap {
+            position: sticky; top: 0; z-index: 1020;
+            background: var(--bs-body-bg);
+            border-bottom: 1px solid var(--bs-border-color);
+            padding: .55rem 0;
+        }
+        .progress { height: 1.35rem; }
+
+        /* Command block */
+        .cmd {
+            position: relative;
+            margin: .65rem 0;
+            border: 1px solid var(--term-border);
+            border-radius: .5rem;
+            overflow: hidden;
+            background: var(--term-bg);
+        }
+        .cmd pre {
+            margin: 0;
+            padding: .85rem 3rem .85rem 1rem;
+            overflow-x: auto;
+            color: #e6edf3;
+            font-size: .855rem;
+            line-height: 1.5;
+        }
+        .cmd pre code { color: #e6edf3; background: none; padding: 0; white-space: pre; }
+        .cmd .copy-btn {
+            position: absolute; top: .45rem; right: .45rem;
+            border: 1px solid var(--term-border);
+            background: #21262d; color: #c9d1d9;
+            border-radius: .375rem;
+            padding: .15rem .5rem; font-size: .8rem; line-height: 1.4;
+            cursor: pointer;
+        }
+        .cmd .copy-btn:hover { background: #30363d; color: #fff; }
+        .cmd .copy-btn.copied { background: var(--ok); border-color: var(--ok); color: #04210f; }
+        .cmd-label {
+            font-size: .7rem; letter-spacing: .04em; text-transform: uppercase;
+            color: #8b949e; padding: .35rem .9rem; border-bottom: 1px solid var(--term-border);
+            background: #161b22; display: block;
+        }
+
+        /* Task card via native details */
+        details.task {
+            border: 1px solid var(--bs-border-color);
+            border-radius: .6rem;
+            margin-bottom: .85rem;
+            background: var(--bs-tertiary-bg);
+            overflow: clip;
+        }
+        details.task > summary {
+            list-style: none; cursor: pointer;
+            display: flex; align-items: flex-start; gap: .75rem;
+            padding: .85rem 1rem;
+        }
+        details.task > summary::-webkit-details-marker { display: none; }
+        details.task > summary:hover { background: var(--bs-secondary-bg); }
+        details.task[open] > summary { border-bottom: 1px solid var(--bs-border-color); }
+        .task-body { padding: .25rem 1rem 1rem; }
+        .task .form-check-input { width: 1.4em; height: 1.4em; margin-top: .15em; flex: 0 0 auto; cursor: pointer; }
+        .task .t-title { font-weight: 600; flex: 1 1 auto; }
+        .task .chev { transition: transform .2s ease; color: var(--bs-secondary-color); }
+        @media (prefers-reduced-motion: reduce) { .task .chev { transition: none; } }
+        details.task[open] .chev { transform: rotate(180deg); }
+        .done .t-title { text-decoration: line-through; color: var(--bs-secondary-color); }
+
+        .callout { border-left: 4px solid var(--bs-border-color); border-radius: 0 .35rem .35rem 0; padding: .7rem 1rem; margin: .75rem 0; background: var(--bs-tertiary-bg); }
+        .callout-warn { border-left-color: var(--warn); background: rgba(245,158,11,.08); }
+        .callout-danger { border-left-color: var(--danger); background: rgba(239,68,68,.08); }
+        .callout-ok { border-left-color: var(--ok); background: rgba(34,197,94,.08); }
+        .callout-info { border-left-color: var(--accent); background: rgba(45,212,191,.08); }
+
+        .phase-tag { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+
+        .qref td, .qref th { vertical-align: top; }
+        .qref code { white-space: nowrap; }
+
+        .toc a { display: inline-block; padding: .15rem .1rem; }
+
+        .theme-toggle {
+            position: fixed; bottom: 20px; right: 20px; z-index: 1030;
+            border-radius: 50%; width: 48px; height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,.3);
+        }
+        .backtop { position: fixed; bottom: 20px; right: 78px; z-index: 1030; border-radius: 50%; width: 48px; height: 48px; }
+    }
+
+    @layer utilities {
+        .text-accent { color: var(--accent) !important; }
+        @media print {
+            .no-print { display: none !important; }
+            details.task { break-inside: avoid; border: 1px solid #ccc; }
+            details.task > .task-body { display: block !important; }
+            details.task:not([open]) > .task-body { display: block !important; }
+            .cmd { background: #f6f8fa; }
+            .cmd pre, .cmd pre code { color: #111; }
+            a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .8em; color: #555; }
+            body { padding: 0; }
+        }
+    }
+    </style>
+</head>
+<body>
+
+<header class="masthead py-4 mb-3">
+    <div class="container">
+        <div class="row align-items-center g-3">
+            <div class="col-lg-8">
+                <div class="phase-tag text-accent mb-1"><i class="bi bi-hdd-stack"></i> Ubuntu 22.04/24.04 LTS &amp; Debian 12/13 &middot; systemd</div>
+                <h1 class="display-6 fw-bold mb-1">Linux Server Hardening &amp; Sysadmin</h1>
+                <p class="lead mb-0 text-secondary">An interactive hardening checklist with <strong>saved progress</strong> and <strong>paste-ready commands</strong> — SSH keys, ufw, fail2ban, systemd sandboxing, users &amp; permissions, sudo, sysctl, and unattended-upgrades.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end no-print">
+                <button id="resetBtn" class="btn btn-outline-danger btn-sm"><i class="bi bi-arrow-counterclockwise"></i> Reset progress</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Sticky progress bar -->
+<div class="progress-wrap no-print">
+    <div class="container d-flex align-items-center gap-3">
+        <span class="text-nowrap small fw-semibold"><i class="bi bi-shield-check text-accent"></i> Hardening</span>
+        <div class="progress flex-grow-1" role="progressbar" aria-label="Hardening checklist completion" aria-valuemin="0" aria-valuemax="100">
+            <div id="progressBar" class="progress-bar bg-success" style="width:0%">0%</div>
+        </div>
+        <span id="progressCount" class="text-nowrap small text-secondary mono">0 / 0</span>
+    </div>
+</div>
+
+<main class="container my-4">
+
+    <!-- HOW TO USE -->
+    <div class="callout callout-danger">
+        <strong><i class="bi bi-exclamation-octagon-fill"></i> Golden rule: never close your only SSH session until a second session works.</strong>
+        After every SSH or firewall change, open a <em>new</em> terminal and confirm you can still log in <em>before</em> dropping the original. A locked-out cloud box means console/rescue mode or a rebuild. Snapshot the VM first if your provider supports it.
+    </div>
+    <div class="callout callout-info">
+        <strong><i class="bi bi-info-circle-fill"></i> How to use this page.</strong> Tick each task as you finish it — progress is saved in your browser (<code>localStorage</code>), so you can close the tab and resume. Hit the <i class="bi bi-clipboard"></i> button to copy any command block. Commands assume a Debian/Ubuntu host and a non-root user with <code>sudo</code>; notes call out RHEL/Fedora (<code>dnf</code>, <code>firewalld</code>) differences where they matter.
+    </div>
+
+    <!-- QUICK REFERENCE -->
+    <section id="quickref" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-lightning-charge-fill text-accent"></i> Quick Reference — highest-frequency lookups</h2>
+        <div class="table-responsive">
+        <table class="table table-sm table-striped qref align-middle">
+            <thead><tr><th>Task</th><th>Command</th><th>Notes</th></tr></thead>
+            <tbody>
+                <tr><td>New ed25519 key (client)</td><td><code>ssh-keygen -t ed25519 -C "you@host"</code></td><td>Default &amp; fastest; ~256-bit security.</td></tr>
+                <tr><td>Install your key on server</td><td><code>ssh-copy-id user@host</code></td><td>Appends to <code>~/.ssh/authorized_keys</code> (mode 600).</td></tr>
+                <tr><td>Reload sshd safely</td><td><code>sudo systemctl reload ssh</code></td><td>Keeps live sessions; <code>ssh</code> on Ubuntu, <code>sshd</code> on RHEL.</td></tr>
+                <tr><td>Open a firewall port</td><td><code>sudo ufw allow 443/tcp</code></td><td>Then <code>sudo ufw enable</code> once SSH is allowed.</td></tr>
+                <tr><td>Firewall status</td><td><code>sudo ufw status verbose</code></td><td>Shows default policy + rules.</td></tr>
+                <tr><td>Ban status (fail2ban)</td><td><code>sudo fail2ban-client status sshd</code></td><td>Lists currently banned IPs.</td></tr>
+                <tr><td>Unban an IP</td><td><code>sudo fail2ban-client set sshd unbanip 1.2.3.4</code></td><td>For when you ban yourself.</td></tr>
+                <tr><td>Who's listening</td><td><code>sudo ss -tulpn</code></td><td>Open TCP/UDP sockets + owning process.</td></tr>
+                <tr><td>Service status / logs</td><td><code>systemctl status nginx</code> &middot; <code>journalctl -u nginx -e</code></td><td><code>-f</code> to follow, <code>-p err</code> for errors only.</td></tr>
+                <tr><td>Failed logins</td><td><code>sudo lastb | head</code> &middot; <code>journalctl -u ssh -g "Failed"</code></td><td>Audit brute-force attempts.</td></tr>
+                <tr><td>Pending security updates</td><td><code>apt list --upgradable 2>/dev/null | grep -i security</code></td><td>Or trust unattended-upgrades.</td></tr>
+                <tr><td>Make a file owner-only</td><td><code>chmod 600 file</code> &middot; <code>chmod 700 dir</code></td><td>600 = rw owner; 700 = rwx owner.</td></tr>
+                <tr><td>Add sudo user</td><td><code>adduser deploy &amp;&amp; usermod -aG sudo deploy</code></td><td><code>wheel</code> group on RHEL.</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </section>
+
+    <!-- TOC -->
+    <nav class="toc callout callout-info no-print" aria-label="Section navigation">
+        <strong><i class="bi bi-list-ol"></i> Jump to:</strong>
+        <a href="#phase0">0 · First login</a> ·
+        <a href="#phase1">1 · SSH keys</a> ·
+        <a href="#phase2">2 · ufw firewall</a> ·
+        <a href="#phase3">3 · fail2ban</a> ·
+        <a href="#phase4">4 · Auto-updates</a> ·
+        <a href="#phase5">5 · Users &amp; sudo</a> ·
+        <a href="#phase6">6 · Permissions</a> ·
+        <a href="#phase7">7 · systemd hardening</a> ·
+        <a href="#phase8">8 · Kernel/sysctl</a> ·
+        <a href="#phase9">9 · Audit &amp; logging</a> ·
+        <a href="#verify">Verify</a> ·
+        <a href="#mistakes">Anti-patterns</a> ·
+        <a href="#maint">Maintenance</a>
+    </nav>
+
+    <!-- ============ PHASE 0 ============ -->
+    <section id="phase0" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 0</span><br>First login &amp; baseline</h2>
+
+        <details class="task" data-task="p0-update">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Patch everything before touching config</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">An unpatched box is the biggest hole; close it first. <code>full-upgrade</code> resolves dependency changes that plain <code>upgrade</code> holds back.</p>
+                <div class="cmd"><span class="cmd-label">Debian / Ubuntu</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo apt update &amp;&amp; sudo apt full-upgrade -y
+sudo apt autoremove --purge -y</code></pre></div>
+                <div class="cmd"><span class="cmd-label">RHEL / Fedora / Rocky</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo dnf upgrade --refresh -y</code></pre></div>
+                <div class="callout callout-warn mb-0"><strong>Gotcha:</strong> if <code>/var/run/reboot-required</code> exists after upgrade, a new kernel/libc is staged — reboot during a maintenance window. Check live-patch coverage if you can't: <code>sudo apt install needrestart</code> then <code>sudo needrestart</code>.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="p0-user">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Create a non-root sudo user (stop using root)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Day-to-day work as root means every typo runs with full privilege and there's no audit trail of <em>who</em> did what. Create a named human account.</p>
+                <div class="cmd"><span class="cmd-label">create + grant sudo (Debian/Ubuntu)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo adduser deploy                 # interactive: sets password
+sudo usermod -aG sudo deploy        # 'sudo' group grants admin
+# verify:
+groups deploy</code></pre></div>
+                <div class="callout callout-info mb-0"><strong>RHEL/Fedora:</strong> the admin group is <code>wheel</code> — <code>sudo usermod -aG wheel deploy</code>. Test <code>sudo whoami</code> as the new user <em>before</em> locking root out. See <a href="#phase5">Phase 5</a> for sudoers detail.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="p0-hostname">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Set hostname, timezone &amp; time sync</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Correct, monotonically-synced time is a security control: TLS cert validation, log correlation, TOTP/2FA, and Kerberos all break with clock drift.</p>
+                <div class="cmd"><span class="cmd-label">identity + clock</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo hostnamectl set-hostname web-01
+sudo timedatectl set-timezone UTC          # UTC on servers avoids DST bugs
+sudo timedatectl set-ntp true              # enable systemd-timesyncd
+timedatectl status                         # confirm "System clock synchronized: yes"</code></pre></div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 1 ============ -->
+    <section id="phase1" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 1</span><br>SSH keys &amp; daemon hardening</h2>
+
+        <details class="task" data-task="p1-keygen">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Generate a strong key pair (on your laptop, not the server)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1"><code>ed25519</code> is the modern default: small, fast, and resistant to the RNG pitfalls that bit RSA. Use a passphrase + ssh-agent so a stolen laptop ≠ stolen server.</p>
+                <div class="cmd"><span class="cmd-label">generate (run locally)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>ssh-keygen -t ed25519 -a 100 -C "deploy@web-01 2026-06"
+# -a 100 = 100 KDF rounds, slows brute-force of the passphrase
+# For hosts stuck on very old OpenSSH (&lt;6.5), fall back to:
+ssh-keygen -t rsa -b 4096 -C "deploy@web-01 2026-06"</code></pre></div>
+                <div class="cmd"><span class="cmd-label">load into agent (avoids retyping passphrase)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519          # macOS: ssh-add --apple-use-keychain</code></pre></div>
+                <div class="callout callout-warn mb-0"><strong>Pitfall:</strong> the private key (<code>id_ed25519</code>, no <code>.pub</code>) never leaves your machine. If you ever paste a key blob into a server, it must start with <code>ssh-ed25519</code>/<code>ssh-rsa</code> — that's the <em>public</em> half.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="p1-copy">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Install the public key &amp; test login</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="cmd"><span class="cmd-label">easiest — ssh-copy-id</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>ssh-copy-id deploy@SERVER_IP        # prompts for password one last time
+ssh deploy@SERVER_IP                # should log in with NO password prompt</code></pre></div>
+                <div class="cmd"><span class="cmd-label">manual fallback (if ssh-copy-id unavailable)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>cat ~/.ssh/id_ed25519.pub | ssh deploy@SERVER_IP \
+  "mkdir -p ~/.ssh &amp;&amp; chmod 700 ~/.ssh &amp;&amp; cat >> ~/.ssh/authorized_keys &amp;&amp; chmod 600 ~/.ssh/authorized_keys"</code></pre></div>
+                <div class="callout callout-danger mb-0"><strong>Do not proceed</strong> to disabling passwords until key login works. Permissions matter: <code>~/.ssh</code> must be <code>700</code> and <code>authorized_keys</code> <code>600</code>, or sshd silently ignores the key (see <code>StrictModes</code>).</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="p1-config">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Harden sshd via a drop-in (no root, no passwords)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Edit a drop-in under <code>/etc/ssh/sshd_config.d/</code> rather than the main file — it survives package upgrades and keeps your intent isolated. Drop-ins are <code>Include</code>d at the top, and <strong>first match wins</strong> in sshd, so your file overrides defaults below it.</p>
+                <div class="cmd"><span class="cmd-label">/etc/ssh/sshd_config.d/99-hardening.conf</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo tee /etc/ssh/sshd_config.d/99-hardening.conf >/dev/null &lt;&lt;'EOF'
+# --- Authentication ---
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AuthenticationMethods publickey
+PermitEmptyPasswords no
+MaxAuthTries 3
+LoginGraceTime 20
+MaxSessions 4
+
+# --- Limit who can log in ---
+AllowUsers deploy
+
+# --- Reduce attack surface ---
+X11Forwarding no
+AllowAgentForwarding no
+AllowTcpForwarding no
+ClientAliveInterval 300
+ClientAliveCountMax 2
+EOF</code></pre></div>
+                <div class="cmd"><span class="cmd-label">validate, then reload (NOT restart)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo sshd -t &amp;&amp; echo "config OK"     # aborts here if syntax is wrong
+sudo systemctl reload ssh             # 'reload' keeps your current session alive</code></pre></div>
+                <div class="callout callout-danger"><strong>Test in a second terminal NOW:</strong> <code>ssh deploy@SERVER_IP</code>. If it works, you're safe to close the first session. If it fails, fix it from the still-open original.</div>
+                <div class="callout callout-info mb-0"><strong>Ubuntu 22.10+ uses socket activation</strong> (<code>ssh.socket</code>). Changing <code>Port</code> in a drop-in is ignored — set it via <code>sudo systemctl edit ssh.socket</code> (<code>ListenStream=</code>) or run <code>sudo systemctl disable --now ssh.socket; sudo systemctl enable --now ssh.service</code>. <strong>Port-changing is obscurity, not security</strong> — it cuts log noise but key-only auth is what actually protects you.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="p1-2fa">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">(Optional) Add TOTP 2FA for SSH</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Defense in depth for high-value hosts: require key <em>and</em> a 6-digit code. Skip for fleet/automation boxes where a key in a vault is the better model.</p>
+                <div class="cmd"><span class="cmd-label">install + enroll</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo apt install -y libpam-google-authenticator
+google-authenticator      # run as YOUR user; scan QR, save scratch codes
+# /etc/pam.d/sshd : add ->  auth required pam_google_authenticator.so
+# /etc/ssh/sshd_config.d/99-hardening.conf:
+#   AuthenticationMethods publickey,keyboard-interactive
+#   KbdInteractiveAuthentication yes
+sudo systemctl reload ssh</code></pre></div>
+                <div class="callout callout-warn mb-0"><strong>Lockout risk:</strong> keep one session open and store the scratch codes off-box. Get it wrong and you need console access.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 2 ============ -->
+    <section id="phase2" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 2</span><br>Firewall — ufw (default-deny)</h2>
+
+        <details class="task" data-task="p2-ufw">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Default-deny inbound, allow only what you serve</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1"><code>ufw</code> is a friendly front-end to nftables. The cardinal sin is enabling the firewall before allowing SSH — do these in order.</p>
+                <div class="cmd"><span class="cmd-label">order matters — allow SSH FIRST</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo apt install -y ufw
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw limit OpenSSH          # 'limit' = rate-cap brute force (6 hits/30s -&gt; deny)
+sudo ufw allow 80/tcp           # http  (omit if no web server)
+sudo ufw allow 443/tcp          # https
+sudo ufw enable                 # answer 'y' — SSH already allowed, so safe
+sudo ufw status verbose</code></pre></div>
+                <div class="callout callout-info"><strong><code>limit</code> vs <code>allow</code> for SSH:</strong> <code>limit</code> throttles repeated connections from one IP (cheap brute-force defense); pair it with fail2ban for real bans. If you changed the SSH port, use <code>sudo ufw limit 2222/tcp</code> instead of the <code>OpenSSH</code> app profile.</div>
+                <div class="cmd"><span class="cmd-label">scope a rule to one source (e.g. admin allowlist)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo ufw allow from 203.0.113.10 to any port 22 proto tcp
+sudo ufw status numbered         # list with rule numbers
+sudo ufw delete 3                # remove rule #3</code></pre></div>
+                <div class="callout callout-warn mb-0"><strong>RHEL/Fedora ship firewalld:</strong> <code>sudo firewall-cmd --permanent --add-service=ssh --add-service=https; sudo firewall-cmd --set-default-zone=drop; sudo firewall-cmd --reload</code>. Don't run ufw and firewalld together.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="p2-docker">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Know the Docker / ufw bypass trap</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="callout callout-danger mb-2"><strong>Docker punches through ufw.</strong> A published port (<code>-p 5432:5432</code>) writes its own DOCKER nft chain ahead of ufw's rules, so your "blocked" database is exposed to the internet even though <code>ufw status</code> looks locked down.</div>
+                <p class="mb-1">Fixes: bind to localhost in compose (<code>127.0.0.1:5432:5432</code>), or install the <code>ufw-docker</code> rules. Verify reality from <em>outside</em> the box, not from ufw's own view.</p>
+                <div class="cmd"><span class="cmd-label">verify exposure from another machine</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code># from your laptop, NOT the server:
+nmap -Pn -p 22,80,443,5432,3306,6379 SERVER_IP
+# anything OPEN that you didn't intend is a finding</code></pre></div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 3 ============ -->
+    <section id="phase3" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 3</span><br>fail2ban — ban brute-forcers</h2>
+
+        <details class="task" data-task="p3-f2b">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Install &amp; configure jail.local</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">fail2ban scans logs and temporarily bans IPs that fail auth repeatedly. <strong>Always edit <code>jail.local</code>, never <code>jail.conf</code></strong> — the <code>.conf</code> is overwritten on upgrade.</p>
+                <div class="cmd"><span class="cmd-label">install</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo apt install -y fail2ban</code></pre></div>
+                <div class="cmd"><span class="cmd-label">/etc/fail2ban/jail.local</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo tee /etc/fail2ban/jail.local >/dev/null &lt;&lt;'EOF'
+[DEFAULT]
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+# never ban yourself — add your office/home IP:
+ignoreip = 127.0.0.1/8 ::1 203.0.113.10
+# escalate repeat offenders:
+bantime.increment = true
+bantime.factor    = 2
+bantime.maxtime   = 1w
+
+[sshd]
+enabled = true
+EOF</code></pre></div>
+                <div class="callout callout-info"><strong>Backend note:</strong> On modern systemd hosts SSH logs go to the journal, not <code>/var/log/auth.log</code>. fail2ban's shipped <code>sshd</code> jail defaults to <code>backend = systemd</code> on Debian/Ubuntu, so it works out of the box. If bans never fire, set <code>backend = systemd</code> explicitly in the <code>[sshd]</code> block.</div>
+                <div class="cmd"><span class="cmd-label">enable + verify</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo systemctl enable --now fail2ban
+sudo fail2ban-client status            # lists active jails
+sudo fail2ban-client status sshd       # banned IPs, total failures</code></pre></div>
+                <div class="cmd"><span class="cmd-label">if you ban yourself</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo fail2ban-client set sshd unbanip 203.0.113.10</code></pre></div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 4 ============ -->
+    <section id="phase4" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 4</span><br>Automatic security updates</h2>
+
+        <details class="task" data-task="p4-unattended">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">unattended-upgrades for security patches</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Most breaches exploit known, patched CVEs. Auto-apply the <em>security</em> pocket only — leave feature upgrades manual to avoid surprise breakage.</p>
+                <div class="cmd"><span class="cmd-label">install + enable</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo apt install -y unattended-upgrades
+sudo dpkg-reconfigure -plow unattended-upgrades   # answer "Yes"</code></pre></div>
+                <div class="cmd"><span class="cmd-label">/etc/apt/apt.conf.d/20auto-upgrades (the schedule)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo tee /etc/apt/apt.conf.d/20auto-upgrades >/dev/null &lt;&lt;'EOF'
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+EOF</code></pre></div>
+                <div class="cmd"><span class="cmd-label">tune /etc/apt/apt.conf.d/50unattended-upgrades</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code># Uncomment to auto-reboot when a patch needs it (e.g. kernel):
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "03:30";
+# Email yourself on action (needs a configured MTA):
+Unattended-Upgrade::Mail "admin@example.com";
+Unattended-Upgrade::MailReport "on-change";</code></pre></div>
+                <div class="cmd"><span class="cmd-label">dry-run to prove it works</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo unattended-upgrade --dry-run --debug | tail -n 20</code></pre></div>
+                <div class="callout callout-warn mb-0"><strong>Trade-off:</strong> auto-reboot at 03:30 fixes kernel CVEs without you, but interrupts service — only enable on hosts that tolerate a brief restart, or where you run live-patching (Ubuntu Pro / kpatch). <strong>RHEL/Fedora:</strong> use <code>dnf-automatic</code> with <code>apply_updates = yes</code> in <code>/etc/dnf/automatic.conf</code>.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 5 ============ -->
+    <section id="phase5" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 5</span><br>Users, groups &amp; sudo</h2>
+
+        <details class="task" data-task="p5-sudoers">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Edit sudoers the safe way (visudo)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">A syntax error in <code>/etc/sudoers</code> can lock out <em>all</em> admin access. <code>visudo</code> validates before saving; drop-ins under <code>/etc/sudoers.d/</code> keep changes modular.</p>
+                <div class="cmd"><span class="cmd-label">grant scoped, password-required sudo</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo visudo -f /etc/sudoers.d/deploy
+# put a single line, then save:
+deploy ALL=(ALL:ALL) ALL
+# validate the whole tree:
+sudo visudo -c</code></pre></div>
+                <div class="callout callout-danger mb-2"><strong>Avoid blanket <code>NOPASSWD: ALL</code>.</strong> It turns any RCE in a service the user can reach into instant root. If automation needs it, scope to exact commands: <code>deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart myapp</code>.</div>
+                <div class="cmd"><span class="cmd-label">audit who has root-equivalent power</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>getent group sudo          # Debian/Ubuntu admins (wheel on RHEL)
+sudo grep -RvE '^\s*#|^\s*$' /etc/sudoers /etc/sudoers.d/   # all live rules
+awk -F: '$3==0 {print $1}' /etc/passwd                      # UID 0 = root; should be ONLY 'root'</code></pre></div>
+            </div>
+        </details>
+
+        <details class="task" data-task="p5-lock">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Lock unused accounts &amp; enforce password policy</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="cmd"><span class="cmd-label">lock the password &amp; shell of service/stale accounts</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo passwd -l olduser                 # lock password
+sudo usermod -s /usr/sbin/nologin olduser   # deny interactive shell
+# find accounts WITH a login shell:
+getent passwd | awk -F: '$7 ~ /(bash|sh|zsh)$/ {print $1, $7}'</code></pre></div>
+                <div class="cmd"><span class="cmd-label">password aging &amp; strength (libpam-pwquality)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo apt install -y libpam-pwquality
+# /etc/login.defs:
+#   PASS_MAX_DAYS 365
+#   PASS_MIN_DAYS 1
+# apply max-age to an existing user:
+sudo chage --maxdays 365 --warndays 14 deploy
+sudo chage -l deploy                   # review aging</code></pre></div>
+                <div class="callout callout-info mb-0"><strong>Set a safe default umask</strong> so new files aren't world-readable: confirm <code>027</code> (or <code>077</code> for single-tenant) in <code>/etc/login.defs</code> (<code>UMASK 027</code>). <code>027</code> → new files <code>640</code>, dirs <code>750</code>.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 6 ============ -->
+    <section id="phase6" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 6</span><br>File permissions &amp; ownership</h2>
+
+        <details class="task" data-task="p6-perms">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Lock down secrets &amp; audit risky permissions</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="cmd"><span class="cmd-label">secrets are owner-only</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>chmod 600 ~/.ssh/authorized_keys ~/.ssh/id_*    # rw owner only
+chmod 700 ~/.ssh                                # rwx owner only
+chmod 600 .env config/secrets.yml               # app secrets
+sudo chown -R deploy:deploy /srv/myapp</code></pre></div>
+                <div class="cmd"><span class="cmd-label">hunt world-writable files &amp; stray SUID binaries</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code># world-writable files outside /tmp (privilege-escalation risk):
+sudo find / -xdev -type f -perm -0002 ! -path '/proc/*' 2>/dev/null
+# SUID/SGID binaries — baseline this list; investigate anything unexpected:
+sudo find / -xdev -type f \( -perm -4000 -o -perm -2000 \) -exec ls -l {} \; 2>/dev/null</code></pre></div>
+
+                <h3 class="h6 mt-3">Octal permission reference</h3>
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered mono small mb-2">
+                    <thead><tr><th>Octal</th><th>Symbolic</th><th>Meaning</th><th>Typical use</th></tr></thead>
+                    <tbody>
+                        <tr><td>600</td><td>rw-------</td><td>owner read/write</td><td>private keys, <code>.env</code></td></tr>
+                        <tr><td>640</td><td>rw-r-----</td><td>owner rw, group r</td><td>shared config, logs</td></tr>
+                        <tr><td>644</td><td>rw-r--r--</td><td>owner rw, all read</td><td>web assets, public files</td></tr>
+                        <tr><td>700</td><td>rwx------</td><td>owner only</td><td><code>~/.ssh</code>, private dirs</td></tr>
+                        <tr><td>750</td><td>rwxr-x---</td><td>owner rwx, group rx</td><td>app dirs, scripts (group)</td></tr>
+                        <tr><td>755</td><td>rwxr-xr-x</td><td>owner rwx, all rx</td><td>binaries, public dirs</td></tr>
+                        <tr><td>1777</td><td>rwxrwxrwt</td><td>world-write + sticky</td><td><code>/tmp</code> (sticky = only owner deletes)</td></tr>
+                        <tr><td>4755</td><td>rwsr-xr-x</td><td>SUID — runs as owner</td><td><code>/usr/bin/passwd</code> (audit these!)</td></tr>
+                    </tbody>
+                </table>
+                </div>
+                <p class="small mb-0"><strong>Digit math:</strong> r=4, w=2, x=1 — add them. Leading 4th digit: 4=SUID, 2=SGID, 1=sticky. <code>chmod -R</code> on a tree is dangerous — it strips <code>x</code> from <em>files</em> or adds it everywhere; prefer <code>find … -type d -exec chmod 750</code> and <code>-type f -exec chmod 640</code> separately.</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 7 ============ -->
+    <section id="phase7" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 7</span><br>systemd units &amp; service sandboxing</h2>
+
+        <details class="task" data-task="p7-unit">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Write a hardened service unit</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Run apps as a dedicated unprivileged user with kernel-enforced sandboxing — these directives are free defense-in-depth that contain a compromised process.</p>
+                <div class="cmd"><span class="cmd-label">/etc/systemd/system/myapp.service</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>[Unit]
+Description=My App
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Auto-create a transient unprivileged user; no shell, no home:
+DynamicUser=yes
+WorkingDirectory=/srv/myapp
+ExecStart=/srv/myapp/bin/server
+Restart=on-failure
+RestartSec=5
+
+# --- Sandboxing (kernel-enforced) ---
+NoNewPrivileges=yes          # block setuid escalation
+ProtectSystem=strict         # whole FS read-only...
+ProtectHome=yes              # ...and /home, /root hidden
+ReadWritePaths=/var/lib/myapp   # ...except what it truly needs
+PrivateTmp=yes               # private /tmp, /var/tmp
+PrivateDevices=yes           # no raw device access
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+[Install]
+WantedBy=multi-user.target</code></pre></div>
+                <div class="cmd"><span class="cmd-label">apply + score the hardening</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo systemctl daemon-reload
+sudo systemctl enable --now myapp
+systemd-analyze security myapp        # lower "exposure" score = better; aim &lt; 5.0</code></pre></div>
+                <div class="callout callout-warn mb-0"><strong>Gotcha:</strong> tighten incrementally. <code>ProtectSystem=strict</code> + <code>SystemCallFilter</code> can break apps that write outside <code>ReadWritePaths</code> or use exotic syscalls. Watch <code>journalctl -u myapp -e</code> after each tightening and loosen the one directive that breaks.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="p7-disable">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Disable services you don't need</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Every listening service is attack surface. Audit what's enabled and what's actually on a port.</p>
+                <div class="cmd"><span class="cmd-label">enumerate &amp; prune</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>systemctl list-units --type=service --state=running   # what's running
+sudo ss -tulpn                                        # what's LISTENING + pid
+systemctl list-unit-files --state=enabled             # what starts at boot
+# turn one off completely:
+sudo systemctl disable --now cups avahi-daemon 2>/dev/null</code></pre></div>
+                <div class="callout callout-info mb-0">Common removable extras on a headless server: <code>cups</code> (printing), <code>avahi-daemon</code> (mDNS), <code>ModemManager</code>, <code>bluetooth</code>. Confirm nothing depends on them first with <code>systemctl list-dependencies</code>.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 8 ============ -->
+    <section id="phase8" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 8</span><br>Kernel / network sysctl hardening</h2>
+
+        <details class="task" data-task="p8-sysctl">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Apply network &amp; kernel sysctl baseline</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Drop in a sysctl file (loaded in lexical order, last wins). These curb spoofing, redirects, and info leaks. Test on a staging box first if you run unusual networking.</p>
+                <div class="cmd"><span class="cmd-label">/etc/sysctl.d/99-hardening.conf</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo tee /etc/sysctl.d/99-hardening.conf >/dev/null &lt;&lt;'EOF'
+# --- Spoofing / routing ---
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.all.log_martians = 1
+
+# --- ICMP / SYN ---
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv4.tcp_syncookies = 1
+
+# --- Kernel info leaks / exploit mitigation ---
+kernel.kptr_restrict = 2
+kernel.dmesg_restrict = 1
+kernel.randomize_va_space = 2
+fs.protected_hardlinks = 1
+fs.protected_symlinks = 1
+fs.suid_dumpable = 0
+EOF
+sudo sysctl --system        # load all sysctl.d files now</code></pre></div>
+                <div class="callout callout-warn mb-0"><strong>Don't blindly disable IP forwarding</strong> (<code>net.ipv4.ip_forward</code>) on a Docker/Kubernetes/router host — it breaks container and pod networking. Leave it as-is on those roles.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 9 ============ -->
+    <section id="phase9" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 9</span><br>Audit, logging &amp; intrusion checks</h2>
+
+        <details class="task" data-task="p9-audit">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Enable auditd &amp; review the journal</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="cmd"><span class="cmd-label">auditd — tamper-evident kernel audit log</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo apt install -y auditd audispd-plugins
+sudo systemctl enable --now auditd
+# watch a sensitive file for any change:
+sudo auditctl -w /etc/passwd -p wa -k passwd_changes
+sudo ausearch -k passwd_changes -i        # human-readable matches</code></pre></div>
+                <div class="cmd"><span class="cmd-label">persist the journal &amp; cap its size</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo mkdir -p /var/log/journal
+sudo sed -i 's/^#\?Storage=.*/Storage=persistent/;s/^#\?SystemMaxUse=.*/SystemMaxUse=500M/' /etc/systemd/journald.conf
+sudo systemctl restart systemd-journald
+journalctl --disk-usage</code></pre></div>
+                <div class="cmd"><span class="cmd-label">daily triage one-liners</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>journalctl -p err -b               # all errors this boot
+journalctl -u ssh -g "Accepted|Failed" --since "24 hours ago"
+sudo lastb | head                  # recent failed logins (btmp)
+last -a | head                     # recent successful logins
+who -a                             # who is on right now</code></pre></div>
+            </div>
+        </details>
+
+        <details class="task" data-task="p9-backup">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Verify backups &amp; restore path (the real security control)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Hardening reduces the odds; backups decide whether an incident is an inconvenience or a catastrophe. A backup you've never restored is a hypothesis.</p>
+                <div class="callout callout-ok mb-2"><strong>3-2-1 rule:</strong> 3 copies, on 2 media types, 1 off-site/immutable. Ransomware deletes online backups — keep one copy the server can't reach (pull-based or object-lock).</div>
+                <div class="cmd"><span class="cmd-label">test a restore (don't just trust the cron job)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code># example with restic — verify integrity, then do a trial restore:
+restic snapshots
+restic check --read-data-subset=10%
+restic restore latest --target /tmp/restore-test --include /etc</code></pre></div>
+            </div>
+        </details>
+    </section>
+
+    <!-- VERIFY -->
+    <section id="verify" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-clipboard2-check text-accent"></i> Post-hardening verification</h2>
+        <p>Run these to confirm the work actually took effect — from the server and, for the firewall, from outside it.</p>
+        <div class="cmd"><span class="cmd-label">on the server</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sshd -T | grep -Ei 'permitrootlogin|passwordauthentication|pubkeyauthentication|maxauthtries'
+sudo ufw status verbose
+sudo fail2ban-client status sshd
+systemctl is-enabled unattended-upgrades fail2ban
+sudo ss -tulpn                       # only intended ports listening?
+awk -F: '$3==0{print $1}' /etc/passwd # only 'root' has UID 0?</code></pre></div>
+        <div class="cmd"><span class="cmd-label">from your laptop (external truth)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>nmap -Pn -sV --top-ports 100 SERVER_IP    # what's actually reachable
+ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no deploy@SERVER_IP
+# ^ should be REJECTED ("Permission denied (publickey)") = passwords are off</code></pre></div>
+        <div class="callout callout-info mb-0"><strong>Optional auditors:</strong> <code>sudo lynis audit system</code> (CIS-style scoring &amp; suggestions) and <code>debsecan</code> / <code>ares</code> for CVE exposure. Treat their output as a to-do list, not a grade.</div>
+    </section>
+
+    <!-- MISTAKES -->
+    <section id="mistakes" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-bug-fill text-danger"></i> Common mistakes &amp; anti-patterns</h2>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="callout callout-danger h-100 mb-0"><strong>Enabling ufw before allowing SSH.</strong> Instant lockout. Always <code>ufw limit OpenSSH</code> first, <em>then</em> <code>ufw enable</code>.</div></div>
+            <div class="col-md-6"><div class="callout callout-danger h-100 mb-0"><strong>Closing your only session after an sshd change.</strong> Keep it open; verify a fresh login in a second terminal first.</div></div>
+            <div class="col-md-6"><div class="callout callout-danger h-100 mb-0"><strong>Disabling passwords before testing keys.</strong> Confirm key login works <em>and</em> <code>~/.ssh</code>=700 / <code>authorized_keys</code>=600, or sshd ignores the key.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Editing <code>jail.conf</code> / <code>sshd_config</code> / <code>sudoers</code> directly.</strong> Use <code>jail.local</code>, a <code>sshd_config.d/</code> drop-in, and <code>visudo</code> — upgrade-safe and validated.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Trusting <code>ufw status</code> with Docker.</strong> Published ports bypass ufw. Bind to <code>127.0.0.1</code> and verify with external <code>nmap</code>.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong><code>NOPASSWD: ALL</code> for convenience.</strong> Any app-level RCE becomes instant root. Scope sudo to exact commands.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong><code>chmod -R 777</code> to "fix permissions".</strong> It makes everything world-writable forever. Find the real owner/mode instead.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Port-knocking / non-standard port = "secure".</strong> It only cuts log noise. Key-only auth + fail2ban is the real control.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong><code>restart</code> instead of <code>reload</code> for sshd.</strong> Both keep existing sessions, but <code>reload</code> is gentler; either way, never assume — test.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>No backups / untested restore.</strong> Hardening can't undo deletion or ransomware. 3-2-1, and actually restore.</div></div>
+        </div>
+    </section>
+
+    <!-- MAINTENANCE -->
+    <section id="maint" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-calendar-check text-accent"></i> Maintenance cadence</h2>
+        <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle">
+            <thead><tr><th>When</th><th>Do</th></tr></thead>
+            <tbody>
+                <tr><td class="text-nowrap"><strong>Daily (automated)</strong></td><td>unattended-upgrades applies security patches; fail2ban bans abusers; journald rotates logs.</td></tr>
+                <tr><td class="text-nowrap"><strong>Weekly</strong></td><td>Skim <code>journalctl -p err -b</code> and <code>fail2ban-client status sshd</code>. Check <code>/var/run/reboot-required</code>.</td></tr>
+                <tr><td class="text-nowrap"><strong>Monthly</strong></td><td>Review users with shells &amp; sudo; re-run <code>ss -tulpn</code> and external <code>nmap</code>; run <code>lynis audit system</code>; verify a backup restore.</td></tr>
+                <tr><td class="text-nowrap"><strong>Quarterly</strong></td><td>Rotate SSH keys / secrets; review firewall rules for drift; audit SUID list against baseline; confirm LTS still in support window.</td></tr>
+                <tr><td class="text-nowrap"><strong>On event</strong></td><td>After any breach indicator: rotate all credentials, review <code>last</code>/<code>lastb</code>/<code>ausearch</code>, and assume the box is untrusted until proven clean (often: rebuild from known-good image).</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </section>
+
+    <footer class="text-secondary small border-top pt-3">
+        <p class="mb-1"><strong>Last verified: 2026-06-15.</strong> Targets Ubuntu 22.04/24.04 LTS &amp; Debian 12/13 with systemd. Bootstrap 5.3.8. Commands assume Debian/Ubuntu unless a RHEL/Fedora note is given. Verify destructive commands against your own environment before running.</p>
+        <p class="mb-0">AI-generated reference · Part of <a href="https://cheatsheets.davidveksler.com/">David Veksler's Cheatsheets</a>. Not a substitute for a threat model — adapt to your role and compliance needs (CIS Benchmarks, STIG).</p>
+    </footer>
+</main>
+
+<button class="btn btn-secondary backtop no-print" id="backTop" aria-label="Back to top" title="Back to top"><i class="bi bi-arrow-up"></i></button>
+<button class="btn btn-primary theme-toggle no-print" id="themeToggle" aria-label="Toggle dark mode"><i class="bi bi-moon-stars-fill" id="themeIcon"></i></button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script>
+(function () {
+    'use strict';
+    const STORE = 'linux_hardening_';
+
+    /* ---------- Theme ---------- */
+    const html = document.documentElement;
+    const tBtn = document.getElementById('themeToggle');
+    const tIco = document.getElementById('themeIcon');
+    const applyTheme = (t) => {
+        html.setAttribute('data-bs-theme', t);
+        tIco.classList.toggle('bi-sun-fill', t === 'dark');
+        tIco.classList.toggle('bi-moon-stars-fill', t !== 'dark');
+    };
+    try {
+        const saved = localStorage.getItem(STORE + 'theme');
+        const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(saved || (sysDark ? 'dark' : 'light'));
+    } catch (e) { applyTheme('dark'); }
+    tBtn.addEventListener('click', () => {
+        const next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        try { localStorage.setItem(STORE + 'theme', next); } catch (e) {}
+    });
+
+    /* ---------- Copy buttons ---------- */
+    document.querySelectorAll('.cmd').forEach((block) => {
+        const btn = block.querySelector('.copy-btn');
+        const code = block.querySelector('pre');
+        if (!btn || !code) return;
+        btn.addEventListener('click', async () => {
+            const text = code.innerText;
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                const r = document.createRange(); r.selectNode(code);
+                const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+                try { document.execCommand('copy'); } catch (_) {}
+                s.removeAllRanges();
+            }
+            btn.classList.add('copied');
+            btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = '<i class="bi bi-clipboard"></i>';
+            }, 1400);
+        });
+    });
+
+    /* ---------- Checklist progress (saved) ---------- */
+    const tasks = Array.from(document.querySelectorAll('details.task'));
+    const bar = document.getElementById('progressBar');
+    const wrap = bar.closest('.progress');
+    const count = document.getElementById('progressCount');
+
+    const render = () => {
+        const done = tasks.filter(t => t.classList.contains('done')).length;
+        const total = tasks.length;
+        const pct = total ? Math.round(done / total * 100) : 0;
+        bar.style.width = pct + '%';
+        bar.textContent = pct + '%';
+        count.textContent = done + ' / ' + total;
+        wrap.setAttribute('aria-valuenow', pct);
+    };
+
+    tasks.forEach((t) => {
+        const key = STORE + (t.dataset.task || '');
+        const cb = t.querySelector('.task-check');
+        if (!cb) return;
+        let saved = false;
+        try { saved = localStorage.getItem(key) === '1'; } catch (e) {}
+        cb.checked = saved;
+        t.classList.toggle('done', saved);
+
+        // checkbox toggles state without opening/closing the <details>
+        cb.addEventListener('click', (e) => e.stopPropagation());
+        cb.addEventListener('change', () => {
+            t.classList.toggle('done', cb.checked);
+            try { localStorage.setItem(key, cb.checked ? '1' : '0'); } catch (e) {}
+            render();
+        });
+    });
+    render();
+
+    /* ---------- Reset ---------- */
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        if (!confirm('Reset all checklist progress on this device?')) return;
+        tasks.forEach((t) => {
+            const cb = t.querySelector('.task-check');
+            if (cb) cb.checked = false;
+            t.classList.remove('done');
+            try { localStorage.removeItem(STORE + (t.dataset.task || '')); } catch (e) {}
+        });
+        render();
+    });
+
+    /* ---------- Back to top ---------- */
+    const back = document.getElementById('backTop');
+    const onScroll = () => { back.style.display = window.scrollY > 600 ? 'flex' : 'none'; };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    back.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+})();
+</script>
+</body>
+</html>
