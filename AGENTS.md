@@ -144,7 +144,30 @@ The consumption model has shifted. Optimize for both classic search and AI answe
 2. Create `topic-subtopic.html` (lowercase, hyphens) in root, following the established pattern + Modern Platform Baseline.
 3. Include ALL metadata blocks; ensure JSON-LD matches visible content; set a real `Last verified` date.
 4. `index.php` and `sitemap.php` auto-discover it.
-5. Run `python generate-image-previews.py` for the preview image.
+5. Generate the preview image → `images/{filename}.png` (see **Build & Verify Workflow**).
+6. **Auto-commit when done.** Once the cheatsheet is written, verified in a browser, and its preview image exists, commit it to `main` directly — this repo ships cheatsheets straight to `main` (linear history, no PR/branch per file). One cheatsheet per commit, bundling the `.html` and its `images/*.png`. Message: `Add <topic> cheatsheet`, ending with the `Co-Authored-By` trailer. Do **not** push unless asked, and never stage `.claude/` or other unrelated working-tree changes — commit only the cheatsheet files by explicit path.
+
+## Build & Verify Workflow
+
+Concrete steps from past builds that make a cheatsheet correct on the first pass — do these before claiming "done":
+
+- **Compute SRI hashes from the real files — never recall them or trust a summarizer/WebFetch.** Pin the current Bootstrap (**5.3.8**) and Icons (**1.13.1**), then hash the actual CDN bytes:
+  ```bash
+  curl -sL https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css | openssl dgst -sha384 -binary | openssl base64 -A
+  ```
+  Add `integrity="sha384-…" crossorigin="anonymous"` to every CDN `<link>`/`<script>`. A wrong hash silently blocks the asset — which is why you verify load (below).
+- **Verify in a real browser, don't just eyeball the markup.** `file://` is blocked by the Playwright MCP, so serve locally first:
+  ```bash
+  nohup python3 -m http.server 8765 >/tmp/serve.log 2>&1 &   # a `(cmd &)` subshell can fail to bind; use nohup
+  ```
+  Load `http://127.0.0.1:8765/<file>.html` and assert: console is clean (a `favicon.ico` 404 is the only acceptable error); Bootstrap actually loaded (`typeof window.bootstrap !== 'undefined'`) so a bad SRI hash can't pass silently; CSS custom props resolve.
+- **Exercise the interactive bits.** For checklist/progress pages, toggle checkboxes via `dispatchEvent(new Event('change'))` and confirm the progress count + `localStorage` keys update; confirm copy buttons map 1:1 to command blocks. Check both light and dark themes.
+- **Generate the preview image yourself at 1200×630** (matches `og:image`/`twitter:image`): resize viewport to 1200×630, pick the theme that flatters the topic (dark for tech), hide floating controls (e.g. `themeToggle`, `backTop`), scroll to top, screenshot to `images/{filename}.png`. `generate-image-previews.py` remains the batch fallback.
+- **Clean up** stray screenshots and kill the `http.server` before committing.
+
+### Reusable interactive patterns
+- **Saved-progress checklist** (the recurring "hook"): native `<details>` task cards, each with a `.task-check` checkbox + a `data-task` id; persist state to `localStorage` under a per-page prefix; a sticky Bootstrap progress bar reads done/total; a Reset button clears the keys. `stopPropagation` on the checkbox so ticking it doesn't toggle the `<details>`. Reference: `linux-server-hardening.html`, `privacy-data-broker-opt-out.html`.
+- **Paste-ready command blocks:** a `.cmd` wrapper with an optional `.cmd-label`, a `<pre><code>`, and a copy button using the Clipboard API with an `execCommand('copy')` fallback; flash a checkmark on success. Reference: `linux-server-hardening.html`.
 
 ## Theme & Styling
 
