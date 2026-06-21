@@ -19,6 +19,7 @@ Usage:
 
 import argparse
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -76,8 +77,23 @@ def meta_content(soup: BeautifulSoup, *, name: Optional[str] = None, prop: Optio
     return None
 
 
+def _iter_jsonld_nodes(data):
+    """Yield every dict node in a JSON-LD blob, descending into lists and @graph."""
+    if isinstance(data, list):
+        for item in data:
+            yield from _iter_jsonld_nodes(item)
+    elif isinstance(data, dict):
+        yield data
+        if "@graph" in data:
+            yield from _iter_jsonld_nodes(data["@graph"])
+
+
 def extract_date_modified(soup: BeautifulSoup) -> Optional[str]:
-    """Pull dateModified (fallback datePublished) from the first JSON-LD block."""
+    """Pull dateModified (fallback datePublished) from any JSON-LD block.
+
+    Handles top-level objects, arrays, and ``@graph`` wrappers (e.g.
+    aws-vs-azure.html nests the date inside an ``@graph`` node).
+    """
     for script in soup.find_all("script", attrs={"type": "application/ld+json"}):
         if not script.string:
             continue
@@ -85,10 +101,8 @@ def extract_date_modified(soup: BeautifulSoup) -> Optional[str]:
             data = json.loads(script.string)
         except (json.JSONDecodeError, TypeError):
             continue
-        if isinstance(data, list):
-            data = next((d for d in data if isinstance(d, dict)), {})
-        if isinstance(data, dict):
-            value = data.get("dateModified") or data.get("datePublished")
+        for node in _iter_jsonld_nodes(data):
+            value = node.get("dateModified") or node.get("datePublished")
             if value:
                 return str(value).strip()
     return None
@@ -108,7 +122,13 @@ def extract_metadata(path: Path, base_url: str) -> Dict[str, Optional[str]]:
         "dateModified": None,
     }
 
-    soup = BeautifulSoup(path.read_text(encoding="utf-8", errors="replace"), HTML_PARSER)
+    try:
+        content = path.read_text(encoding="utf-8", errors="replace")
+        soup = BeautifulSoup(content, HTML_PARSER)
+    except OSError as exc:
+        # Match index.php: an unreadable file is non-fatal; keep defaults.
+        print(f"Warning: could not read {path.name}: {exc}", file=sys.stderr)
+        return {key: meta[key] for key in SELECTED_FIELDS}
 
     if soup.title and soup.title.string:
         meta["title"] = soup.title.string.strip()
@@ -146,7 +166,8 @@ def main() -> None:
         sheets.append(extract_metadata(path, base_url))
 
     # Sort by title, case-insensitive, matching index.php's usort(strcasecmp).
-    sheets.sort(key=lambda s: (s["title"] or "").casefold())
+    # Use .get() so dropping "title" from SELECTED_FIELDS can't raise KeyError.
+    sheets.sort(key=lambda s: (s.get("title") or "").casefold())
 
     payload = {
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
