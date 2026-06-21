@@ -15,6 +15,7 @@
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
+      "dateModified": "2026-06-21",
       "mainEntity": [{
         "@type": "Question",
         "name": "What is Temperature in Google AI Studio?",
@@ -430,7 +431,7 @@
 </div>
 <div class="page-header-text">
 <h1>Google AI Studio</h1>
-<p class="lead">Enhanced Settings Cheatsheet</p>
+<p class="lead">Enhanced Settings Cheatsheet · June 2026</p>
 </div>
 </div>
 <div class="header-actions">
@@ -458,10 +459,11 @@
 <h5><i class="bi bi-robot"></i> Model</h5>
 <p class="summary">Choose the foundational model for your task. Models vary in capabilities (reasoning, creativity), context window size, speed, and cost.</p>
 <select aria-label="Model select" class="form-select mb-2" id="modelSelect">
-<option value="gemini-1.0-pro">Gemini 1.0 Pro (Balanced)</option>
-<option selected="" value="gemini-2.5-pro-preview">Gemini 2.5 Pro Preview 05-06 (Advanced)</option>
-<option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast &amp; Efficient)</option>
-<option value="gemini-1.5-pro-experimental">Gemini 1.5 Pro (Experimental)</option>
+<option selected="" value="gemini-3.5-flash">Gemini 3.5 Flash (Default — Frontier performance)</option>
+<option value="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview (Advanced reasoning &amp; agents)</option>
+<option value="gemini-2.5-pro">Gemini 2.5 Pro (Complex tasks, deep reasoning)</option>
+<option value="gemini-2.5-flash">Gemini 2.5 Flash (Best price-performance)</option>
+<option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (High-volume, low-latency)</option>
 </select>
 <button class="btn btn-sm btn-outline-info mb-3 w-100" data-bs-target="#modelCompareModal" data-bs-toggle="modal"><i class="bi bi-columns-gap"></i> Quick Compare Models</button>
 <button aria-controls="collapseModel" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseModel" data-bs-toggle="collapse" type="button">
@@ -895,41 +897,54 @@
 <thead>
 <tr>
 <th>Feature</th>
-<th>Gemini 1.5 Flash</th>
-<th>Gemini 1.0 Pro</th>
-<th>Gemini 2.5 Pro Preview</th>
+<th>Gemini 3.1 Flash-Lite</th>
+<th>Gemini 3.5 Flash</th>
+<th>Gemini 2.5 Pro</th>
+<th>Gemini 3.1 Pro Preview</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>Primary Use Case</strong></td>
-<td>High speed, efficiency, high volume tasks</td>
-<td>Balanced performance and capability</td>
-<td>Advanced reasoning, complex tasks, latest features</td>
+<td>High-volume, low-cost, low-latency tasks</td>
+<td>Default: frontier performance, agentic &amp; coding tasks</td>
+<td>Complex reasoning, deep analysis, coding</td>
+<td>Advanced reasoning, multi-step agents, coding</td>
 </tr>
 <tr>
 <td><strong>Context Window</strong></td>
-<td>Large (e.g., 1M tokens)</td>
-<td>Standard (e.g., 32k tokens)</td>
-<td>Very Large (e.g., 1M+ tokens, up to 2M in image)</td>
+<td>1M tokens (1,048,576)</td>
+<td>1M tokens (1,048,576)</td>
+<td>1M tokens (1,048,576)</td>
+<td>1M tokens (1,048,576)</td>
+</tr>
+<tr>
+<td><strong>Max Output</strong></td>
+<td>65,536 tokens</td>
+<td>65,536 tokens</td>
+<td>65,536 tokens</td>
+<td>65,536 tokens</td>
 </tr>
 <tr>
 <td><strong>Speed</strong></td>
-<td>Fastest</td>
+<td>Fastest / most cost-efficient</td>
+<td>Fast (GA default)</td>
 <td>Moderate</td>
-<td>Moderate to Fast (for its power)</td>
+<td>Moderate (Preview)</td>
 </tr>
 <tr>
 <td><strong>Cost Indication</strong></td>
-<td>Lower</td>
-<td>Medium</td>
-<td>Higher (Preview pricing may apply)</td>
+<td>Lowest</td>
+<td>Low–Medium</td>
+<td>Higher</td>
+<td>Higher (Preview pricing)</td>
 </tr>
 <tr>
 <td><strong>Strengths</strong></td>
-<td>Chat, summarization, RAG at scale</td>
-<td>General purpose, content generation, instruction following</td>
-<td>Complex problem solving, multi-modal understanding, code gen</td>
+<td>Translation, transcription, classification at scale</td>
+<td>General purpose, agents, code gen, multimodal</td>
+<td>Deep data analysis, long-document understanding, complex code</td>
+<td>Grounded reasoning, precise tool use, agentic workflows</td>
 </tr>
 </tbody>
 </table>
@@ -1012,17 +1027,11 @@
         // Token Estimator & Progress Bar
         let maxTokens = 1048576; // Default, can be updated by model select if needed
 
-        if (modelSelect) { // Update maxTokens based on model (conceptual)
+        if (modelSelect) { // Update maxTokens based on model (verified June 2026: all current models = 1M input)
             const updateMaxTokensForModel = () => {
                 const selectedModel = modelSelect.value;
-                // This is a simplified mapping; actual limits vary and are complex
-                if (selectedModel.includes("2.5-pro") || selectedModel.includes("1.5-pro")) {
-                     maxTokens = 1048576 * 2; // From UI image, token limit of model is 2M
-                } else if (selectedModel.includes("flash")) {
-                     maxTokens = 1048576;
-                } else {
-                     maxTokens = 32768; // Older Gemini 1.0 Pro
-                }
+                // All current Gemini models (2.5+, 3.x) share a 1,048,576-token input limit
+                maxTokens = 1048576;
                  tokenCountDisplay.textContent = `${currentTokens} / ${maxTokens.toLocaleString()}`;
                  updateTokenProgress();
             };
@@ -1221,7 +1230,10 @@
     </a>
   </div>
   <p class="mb-2">
-    © 2025 David Veksler · Compiled &amp; expanded based on Google's official resources and developer guides.
+    © 2026 David Veksler · Compiled &amp; expanded based on Google's official resources and developer guides.
+  </p>
+  <p class="mb-2" style="font-size:0.8rem; color: var(--ai-studio-text-tertiary);">
+    Last verified: 2026-06-21 · Model lineup sourced from <a href="https://ai.google.dev/gemini-api/docs/models" target="_blank" rel="noopener noreferrer">ai.google.dev/gemini-api/docs/models</a>
   </p>
   <div>
     <a class="mx-2 link-secondary" href="https://www.linkedin.com/in/davidveksler/" target="_blank" title="David Veksler on LinkedIn">
