@@ -383,6 +383,9 @@ try {
             <a class="navbar-brand" href="<?php echo htmlspecialchars($baseUrl); ?>">
                  <i class="bi bi-journal-richtext me-2"></i>David Veksler's Cheatsheet Portfolio
             </a>
+            <a class="btn btn-sm btn-outline-light ms-auto" href="<?php echo htmlspecialchars($baseUrl); ?>history.php">
+                <i class="bi bi-clock-history me-1"></i>Change History
+            </a>
         </div>
     </nav>
 
@@ -507,6 +510,10 @@ try {
               <span class="mx-1 small">|</span>
               <a href="<?php echo htmlspecialchars($baseUrl); ?>" title="Browse All Cheatsheet Examples" class="mx-2 small">
                 <i class="bi bi-collection-fill"></i> View All Examples
+              </a>
+              <span class="mx-1 small">|</span>
+              <a href="<?php echo htmlspecialchars($baseUrl); ?>history.php" title="Browse the git change history" class="mx-2 small">
+                <i class="bi bi-clock-history"></i> Change History
               </a>
             </div>
         </div>
