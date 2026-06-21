@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Weight-Loss Levers: An Interactive Body-Composition Control Panel</title>
+<meta name="description" content="Interactive weight-loss guide: tweak energy deficit, eating window, protein, sleep, training, and steps to see projected rate of loss, fat-vs-lean split, time to goal, and a sustainability score grounded in published research." />
+<meta name="keywords" content="weight loss levers, calorie deficit calculator, TDEE, protein muscle retention, sleep fat loss, intermittent fasting, body recomposition, sustainable fat loss" />
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/weight-loss-levers.html" />
+
+<meta property="og:title" content="Weight-Loss Levers: Interactive Body-Composition Control Panel" />
+<meta property="og:description" content="Tweak the real levers of fat loss — deficit, eating window, protein, sleep, training — and watch rate, fat-vs-lean split, and sustainability update live." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/weight-loss-levers.html" />
+<meta property="og:image" content="images/weight-loss-levers.png" />
+<meta property="og:image:alt" content="Weight-loss lever control panel with sliders for deficit, protein, sleep, and training and a live projection readout" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Weight-Loss Levers: Interactive Control Panel" />
+<meta name="twitter:description" content="Tweak deficit, eating window, protein, sleep, and training; see rate, fat-vs-lean split, and a sustainability score live." />
+<meta name="twitter:image" content="images/weight-loss-levers.png" />
+<meta name="twitter:creator" content="@heroiclife" />
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Weight-Loss Levers: An Interactive Body-Composition Control Panel",
+  "description": "Interactive guide to the controllable levers of fat loss — energy deficit, eating window, protein, sleep, training, and NEAT — with a live model projecting rate of loss, fat-vs-lean split, time to goal, and a sustainability score, grounded in published research (Nedeltcheva 2010; Helms 2014; ISSN position stand).",
+  "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+  "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "keywords": "weight loss levers, calorie deficit, TDEE, protein, sleep, fat loss, body recomposition, intermittent fasting, sustainability"
+}
+</script>
+
+<style>
+@layer tokens, base, components, utilities;
+
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --accent: light-dark(#0d6efd, #4c9aff);
+    --good: light-dark(#198754, #46c98b);
+    --warn: light-dark(#b8860b, #e3b341);
+    --bad: light-dark(#c0392b, #ff6b5e);
+    --panel: light-dark(#ffffff, #1b1f26);
+    --panel-2: light-dark(#f6f8fb, #232833);
+    --ink: light-dark(#1a1d23, #e6e9ef);
+    --ink-soft: light-dark(#5a6270, #9aa4b2);
+    --line: light-dark(#e2e6ee, #333a47);
+    --hero: light-dark(linear-gradient(135deg,#0d3b66,#1d6fb8), linear-gradient(135deg,#0a1c33,#11314f));
+  }
+  [data-theme="light"] { color-scheme: light; }
+  [data-theme="dark"]  { color-scheme: dark; }
+}
+
+@layer base {
+  body { background: var(--panel-2); color: var(--ink); }
+  h1,h2,h3 { text-wrap: balance; }
+  p, li { text-wrap: pretty; }
+  section { scroll-margin-top: 1rem; }
+  a { color: var(--accent); }
+  code { color: light-dark(#9c2d6b,#ff9ed1); background: light-dark(#f2e9f0,#2a2230); padding:.05rem .3rem; border-radius:4px; }
+}
+
+@layer components {
+  .hero { background: var(--hero); color:#fff; border-radius: 1rem; }
+  .card-sheet { background: var(--panel); border:1px solid var(--line); border-radius: .9rem; }
+  .lever-lab { background: var(--panel); border:1px solid var(--line); border-radius:1rem; }
+  .readout-tile { background: var(--panel-2); border:1px solid var(--line); border-radius:.7rem; padding:.8rem .9rem; height:100%; }
+  .readout-tile .big { font-size:1.65rem; font-weight:700; line-height:1.1; }
+  .readout-tile .lbl { font-size:.72rem; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft); }
+  .lever-row { padding:.55rem 0; border-bottom:1px dashed var(--line); }
+  .lever-row:last-child { border-bottom:0; }
+  .lever-val { font-variant-numeric: tabular-nums; font-weight:600; min-width:5.5ch; text-align:right; }
+  input[type=range]{ width:100%; accent-color: var(--accent); }
+  .score-bar { height:.85rem; border-radius:1rem; background: light-dark(#e9edf3,#2b313c); overflow:hidden; }
+  .score-fill { height:100%; transition: width .25s ease, background .25s ease; }
+  @media (prefers-reduced-motion: reduce){ .score-fill { transition: none; } }
+  .pill { font-size:.72rem; font-weight:600; padding:.15rem .55rem; border-radius:1rem; }
+  .pill-good{ background: light-dark(#d8f3e3,#163a2a); color: var(--good);}
+  .pill-warn{ background: light-dark(#fbf0d2,#3a3216); color: var(--warn);}
+  .pill-bad { background: light-dark(#fde0dc,#3a1d1a); color: var(--bad);}
+  .lever-table th, .micro-table th { position: sticky; top:0; background: var(--panel); }
+  table { color: var(--ink); }
+  .table > :not(caption) > * > * { background: transparent; color: var(--ink); }
+  details.sheet { background: var(--panel); border:1px solid var(--line); border-radius:.8rem; padding:.2rem .9rem; margin-bottom:.6rem; }
+  details.sheet > summary { cursor:pointer; font-weight:600; padding:.6rem 0; list-style: revert; }
+  .leverage-5{color:var(--good);font-weight:700} .leverage-3{color:var(--warn);font-weight:700} .leverage-1{color:var(--ink-soft)}
+  .controls-float{ position:fixed; right:1rem; bottom:1rem; display:flex; gap:.4rem; z-index:50; }
+  .gotcha{ border-left:3px solid var(--warn); padding-left:.7rem; color:var(--ink-soft); font-size:.92rem;}
+  .verified{ font-size:.8rem; color:var(--ink-soft); }
+  @media print { .controls-float, .lever-lab input { display:none !important; } details.sheet[open], details.sheet { border:0; } }
+}
+</style>
+</head>
+<body>
+<a href="#lab" class="visually-hidden-focusable position-absolute top-0 start-0 m-2 btn btn-sm btn-primary">Skip to lever lab</a>
+
+<main class="container my-4" style="max-width: 1100px;">
+
+  <!-- HERO -->
+  <header class="hero p-4 p-md-5 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+      <div>
+        <h1 class="display-6 fw-bold mb-2">Weight-Loss Levers</h1>
+        <p class="lead mb-1" style="max-width:60ch;">A control panel for body composition. Every input below is a <em>lever you actually control</em>. Move one, watch rate of loss, the fat-vs-lean split, time to goal, and a sustainability score react.</p>
+        <p class="mb-0 small opacity-75">Calibrated against a real cut: ~1,400 kcal/day, ~17 h daily fast, ~53 g net carb, → <strong>2.0–2.4 lb/week</strong>, bottoming at 160 lb before adherence (not metabolism) ended it at week 3.</p>
+      </div>
+      <span class="badge text-bg-light align-self-center">v1.0</span>
+    </div>
+  </header>
+
+  <!-- QUICK REFERENCE -->
+  <section id="quickref" class="mb-4">
+    <h2 class="h4 mb-3"><i class="bi bi-lightning-charge-fill text-warning"></i> Quick Reference — Levers by Leverage</h2>
+    <div class="card-sheet p-2 p-md-3 table-responsive">
+      <table class="table table-sm align-middle lever-table mb-0">
+        <thead><tr>
+          <th>Lever</th><th>What it controls</th><th>Leverage</th><th>Effort to hold</th><th class="d-none d-md-table-cell">Your setting</th>
+        </tr></thead>
+        <tbody>
+          <tr><td><strong>Energy deficit</strong></td><td>How fast you lose weight at all</td><td class="leverage-5">Highest</td><td>High (willpower)</td><td class="d-none d-md-table-cell">~300–500 now; ~750+ later</td></tr>
+          <tr><td><strong>Eating window (TRE)</strong></td><td>Caps intake without counting — your proven tool</td><td class="leverage-5">Highest</td><td class="text-success">Low (a rule)</td><td class="d-none d-md-table-cell">16:8, default rule</td></tr>
+          <tr><td><strong>Sleep</strong></td><td>Whether the loss is fat or muscle</td><td class="leverage-5">Highest</td><td>Constrained (newborn)</td><td class="d-none d-md-table-cell">Protect ruthlessly</td></tr>
+          <tr><td><strong>Protein</strong></td><td>Muscle retention in the deficit</td><td class="leverage-3">High</td><td>Medium</td><td class="d-none d-md-table-cell">150–180 g (you ran 95)</td></tr>
+          <tr><td><strong>Resistance / BJJ</strong></td><td>Signals the body to keep muscle</td><td class="leverage-3">High</td><td>Medium</td><td class="d-none d-md-table-cell">BJJ 2–3× + 1–2 lifts</td></tr>
+          <tr><td><strong>Steps / NEAT</strong></td><td>Pads the deficit; weak alone</td><td class="leverage-1">Moderate</td><td>Low</td><td class="d-none d-md-table-cell">7–9k (you cut to 5.7k)</td></tr>
+          <tr><td><strong>Carb level / electrolytes</strong></td><td>Water weight + how the cut <em>feels</em></td><td class="leverage-1">Low (real loss)</td><td>Medium</td><td class="d-none d-md-table-cell">Moderate; salt K⁺/Mg²⁺</td></tr>
+          <tr><td><strong>Adherence system</strong></td><td>Whether any of the above survives week 3</td><td class="leverage-5">Decisive</td><td class="text-success">Build once</td><td class="d-none d-md-table-cell">Weekly weigh-in automation</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small text-secondary mt-2 mb-0">The uncomfortable truth from your own data: you don't have a weight-loss problem (you hit 160), you have a <strong>drift problem</strong>. Drift is beaten by a small permanent change held for years, not a big temporary one held for three weeks.</p>
+  </section>
+
+  <!-- LEVER LAB -->
+  <section id="lab" class="mb-4">
+    <div class="lever-lab p-3 p-md-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h4 mb-0"><i class="bi bi-sliders text-primary"></i> Lever Lab</h2>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Presets">
+          <button class="btn btn-outline-secondary" data-preset="2023">Your 2023 cut</button>
+          <button class="btn btn-outline-success" data-preset="now">Newborn-safe (now)</button>
+          <button class="btn btn-outline-primary" data-preset="later">Post-sleep cut</button>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <!-- LEVERS -->
+        <div class="col-lg-6">
+          <h3 class="h6 text-uppercase text-secondary mb-2">Your numbers</h3>
+          <div class="lever-row d-flex align-items-center gap-2">
+            <label class="flex-grow-1" for="wt">Current weight <span class="text-secondary small">(lb)</span></label>
+            <input type="range" id="wt" min="140" max="230" step="1" value="183" style="max-width:55%" />
+            <span class="lever-val" id="wt-v">183</span>
+          </div>
+          <div class="lever-row d-flex align-items-center gap-2">
+            <label class="flex-grow-1" for="goal">Goal weight <span class="text-secondary small">(lb)</span></label>
+            <input type="range" id="goal" min="140" max="220" step="1" value="170" style="max-width:55%" />
+            <span class="lever-val" id="goal-v">170</span>
+          </div>
+          <div class="lever-row d-flex align-items-center gap-2">
+            <label class="flex-grow-1" for="act">Activity level <span class="text-secondary small" id="act-lbl">(light)</span></label>
+            <input type="range" id="act" min="1.25" max="1.7" step="0.05" value="1.45" style="max-width:55%" />
+            <span class="lever-val" id="act-v">1.45</span>
+          </div>
+
+          <h3 class="h6 text-uppercase text-secondary mt-3 mb-2">The levers</h3>
+          <div class="lever-row d-flex align-items-center gap-2">
+            <label class="flex-grow-1" for="cal">Daily intake <span class="text-secondary small">(kcal)</span></label>
+            <input type="range" id="cal" min="1000" max="3000" step="50" value="2100" style="max-width:55%" />
+            <span class="lever-val" id="cal-v">2100</span>
+          </div>
+          <div class="lever-row d-flex align-items-center gap-2">
+            <label class="flex-grow-1" for="win">Eating window <span class="text-secondary small">(h/day)</span></label>
+            <input type="range" id="win" min="4" max="14" step="1" value="8" style="max-width:55%" />
+            <span class="lever-val" id="win-v">8</span>
+          </div>
+          <div class="lever-row d-flex align-items-center gap-2">
+            <label class="flex-grow-1" for="pro">Protein <span class="text-secondary small">(g/day)</span></label>
+            <input type="range" id="pro" min="60" max="220" step="5" value="150" style="max-width:55%" />
+            <span class="lever-val" id="pro-v">150</span>
+          </div>
+          <div class="lever-row d-flex align-items-center gap-2">
+            <label class="flex-grow-1" for="sleep">Sleep <span class="text-secondary small">(h/night)</span></label>
+            <input type="range" id="sleep" min="4.5" max="9" step="0.25" value="6.5" style="max-width:55%" />
+            <span class="lever-val" id="sleep-v">6.5</span>
+          </div>
+          <div class="lever-row d-flex align-items-center gap-2">
+            <label class="flex-grow-1" for="train">Training sessions <span class="text-secondary small">(/week)</span></label>
+            <input type="range" id="train" min="0" max="7" step="1" value="3" style="max-width:55%" />
+            <span class="lever-val" id="train-v">3</span>
+          </div>
+        </div>
+
+        <!-- READOUT -->
+        <div class="col-lg-6">
+          <h3 class="h6 text-uppercase text-secondary mb-2">Projection</h3>
+          <div class="row g-2 mb-2">
+            <div class="col-6"><div class="readout-tile"><div class="lbl">Maintenance (TDEE)</div><div class="big" id="o-tdee">—</div><div class="small text-secondary">kcal/day</div></div></div>
+            <div class="col-6"><div class="readout-tile"><div class="lbl">Daily deficit</div><div class="big" id="o-def">—</div><div class="small text-secondary" id="o-defpct">—</div></div></div>
+            <div class="col-6"><div class="readout-tile"><div class="lbl">Rate of loss</div><div class="big" id="o-rate">—</div><div class="small text-secondary" id="o-ratepct">—</div></div></div>
+            <div class="col-6"><div class="readout-tile"><div class="lbl">Time to goal</div><div class="big" id="o-time">—</div><div class="small text-secondary" id="o-goaldate">—</div></div></div>
+          </div>
+
+          <div class="readout-tile mb-2">
+            <div class="lbl mb-1">Composition of loss <span id="o-split-pill" class="pill pill-good ms-1">—</span></div>
+            <div class="score-bar mb-1"><div class="score-fill" id="o-fatbar" style="width:78%; background:var(--good);"></div></div>
+            <div class="d-flex justify-content-between small">
+              <span><span id="o-fat">—</span> fat</span>
+              <span class="text-secondary"><span id="o-lean">—</span> lean/water</span>
+            </div>
+          </div>
+
+          <div class="readout-tile">
+            <div class="lbl mb-1">Sustainability score <span id="o-sus-pill" class="pill pill-good ms-1">—</span></div>
+            <div class="score-bar mb-1"><div class="score-fill" id="o-susbar" style="width:60%;"></div></div>
+            <div class="small text-secondary" id="o-sus-note">—</div>
+          </div>
+
+          <div id="o-flags" class="mt-2 small"></div>
+        </div>
+      </div>
+      <p class="verified mt-3 mb-0"><i class="bi bi-info-circle"></i> Model is a transparent estimator, not a measurement. Assumptions and citations are in <a href="#math">The Math</a>. Your config saves locally on this device.</p>
+    </div>
+  </section>
+
+  <!-- LEVERS EXPLAINED -->
+  <section id="levers" class="mb-4">
+    <h2 class="h4 mb-3"><i class="bi bi-list-check"></i> The Levers, One by One</h2>
+
+    <details class="sheet" open><summary>1. Energy deficit — the only thing that <em>causes</em> loss</summary>
+      <p>Weight changes with energy balance, not exercise. A deficit of <strong>~3,500 kcal ≈ 1 lb</strong> of mostly-fat tissue (a useful approximation; real tissue is ~3,100–3,500 and the rule drifts as you get leaner).</p>
+      <p><strong>Concrete (you):</strong> estimated TDEE ~2,400–2,600. Your 2023 cut ate ~1,400 → a ~1,000–1,200 kcal deficit → ~2.0–2.4 lb/week. Effective, but above the muscle-sparing ceiling.</p>
+      <p class="gotcha"><strong>Gotcha / when not to:</strong> deficits &gt;25–30% of TDEE accelerate lean-mass loss and willpower burnout. During the newborn window, run <em>small</em> (300–500 kcal); save the aggressive cut for when you're sleeping.</p>
+    </details>
+
+    <details class="sheet"><summary>2. Eating window (TRE) — caps intake without counting</summary>
+      <p>Time-restricted eating compresses the hours you can eat. It works by making a deficit happen <em>passively</em> — there's nothing to log, so it survives chaos. It is not magic beyond the deficit it creates.</p>
+      <p><strong>Concrete (you):</strong> Jan 2023 averaged a 17.1 h fast (16 h+ on 24/31 days). The narrow window is precisely why you hit 1,400 kcal without daily macro tracking. This is your single most sustainable tool.</p>
+      <p class="gotcha"><strong>Gotcha:</strong> a wide window (&gt;10 h) plus a big intended deficit means you're back to counting — the thing that broke at week 3. Pick a window and treat it as identity ("I don't eat before noon"), not a daily decision.</p>
+    </details>
+
+    <details class="sheet"><summary>3. Sleep — decides whether you lose fat or muscle</summary>
+      <p>Under matched calorie restriction, sleeping 5.5 h vs 8.5 h produced the <em>same</em> weight loss but cut the fraction lost as fat by <strong>55%</strong> and raised fat-free (muscle) loss by <strong>60%</strong> (Nedeltcheva 2010, mean age 41, mostly men — i.e., you).</p>
+      <p><strong>Concrete (you):</strong> newborn fragmentation is suppressing your HRV and capping sleep. That is the strongest argument against an aggressive cut <em>right now</em> — you'd disproportionately burn muscle and feel terrible.</p>
+      <p class="gotcha"><strong>Gotcha:</strong> you cannot out-protein or out-train a severe sleep deficit. If sleep is &lt;6 h, the correct deficit is "barely any."</p>
+    </details>
+
+    <details class="sheet"><summary>4. Protein — the muscle-retention floor</summary>
+      <p>For lean, trained people in a deficit, <strong>1.8–2.7 g/kg bodyweight</strong> (≈2.3–3.1 g/kg lean mass) maximizes muscle retention (Helms 2014; ISSN position stand). Above ~2.4 g/kg adds little.</p>
+      <p><strong>Concrete (you):</strong> 83 kg → target ~150–225 g/day. Your Jan cut averaged 95 g (~1.15 g/kg) — well under, which is one reason a chunk of the 160-lb low was likely lean tissue.</p>
+      <p class="gotcha"><strong>Gotcha:</strong> protein's benefit is real but second-order to the deficit and sleep. It protects the <em>quality</em> of the loss; it doesn't drive the amount.</p>
+    </details>
+
+    <details class="sheet"><summary>5. Resistance / BJJ — the "keep this muscle" signal</summary>
+      <p>Resistance training during a deficit tells the body the muscle is needed, shifting loss toward fat. BJJ counts partially (it's intense but not progressive-overload hypertrophy work).</p>
+      <p><strong>Concrete (you):</strong> garage has a heavy bag + pull-up bar; BJJ 2–3×/week is your anchor. BJJ 2–3 + 1–2 short lifts covers the retention signal without adding hours you don't have.</p>
+      <p class="gotcha"><strong>Gotcha:</strong> training is for muscle retention, not "burning off" food — your 2023 data showed exercise contributed ~nothing to the actual loss (5.7 min/day avg).</p>
+    </details>
+
+    <details class="sheet"><summary>6. Steps / NEAT — pads the deficit, weak solo</summary>
+      <p>Non-exercise activity (walking, fidgeting, standing) is a real but modest contributor — a few hundred kcal/day swing. Useful as a deficit pad, useless as a primary lever.</p>
+      <p><strong>Concrete (you):</strong> you <em>cut</em> steps from ~7,900 to 5,739/day during the 2023 loss and still lost — proof the deficit, not movement, did the work. 7–9k is a fine maintenance band.</p>
+      <p class="gotcha"><strong>Gotcha:</strong> don't trade sleep or recovery for step targets during the newborn window.</p>
+    </details>
+
+    <details class="sheet"><summary>7. Carb level / electrolytes — water weight + how it feels</summary>
+      <p>Dropping carbs produces a fast 3–5 lb whoosh (glycogen + water), not fat — and reverses the moment carbs return. The real cost is electrolytes: low-carb strips potassium and magnesium and inverts the Na:K ratio, which manufactures fatigue.</p>
+      <p><strong>Concrete (you):</strong> Jan 2023 ran ~53 g net carb (moderate, not keto). Micronutrient logs showed potassium 64% RDA, magnesium 85%, plus low B-complex and choline — a fatigue tax stacked on newborn fatigue.</p>
+      <p class="gotcha"><strong>Gotcha:</strong> carb level is a <em>comfort/scale-noise</em> lever, not a fat-loss lever. If you go low-carb, deliberately salt potassium/magnesium/B-complex or the cut feels like illness.</p>
+    </details>
+
+    <details class="sheet"><summary>8. Adherence system — the decisive meta-lever</summary>
+      <p>None of the above matters past the point you stop doing it. Your 2023 cut didn't fail metabolically — <strong>logging died Feb 20</strong> and the deficit quietly vanished, producing a 3-year regain to 183–191.</p>
+      <p><strong>Concrete (you):</strong> the fix is structural, not motivational: one passive weekly weigh-in trend, a rule-based eating window, and an automated nudge — not the app streak counter that already failed once.</p>
+      <p class="gotcha"><strong>Gotcha:</strong> the failure point is week 3. Design for that specific cliff instead of assuming willpower scales.</p>
+    </details>
+  </section>
+
+  <!-- COMMON MISTAKES -->
+  <section id="mistakes" class="mb-4">
+    <h2 class="h4 mb-3"><i class="bi bi-exclamation-triangle-fill text-warning"></i> Common Mistakes &amp; Anti-Patterns</h2>
+    <div class="card-sheet p-3">
+      <ul class="mb-0">
+        <li><strong>Running a sprint, not a ratchet.</strong> Aggressive 3-week cuts followed by regain (your exact sawtooth). A small permanent change beats a big temporary one.</li>
+        <li><strong>Cutting hard on no sleep.</strong> The fastest way to lose muscle and quit. Match deficit size to sleep quality.</li>
+        <li><strong>Treating exercise as the deficit engine.</strong> It's the muscle-retention signal; the kitchen sets the deficit.</li>
+        <li><strong>Tracking everything until you crash.</strong> High-burden logging is the documented failure mode. Prefer rules (window, protein floor) over daily math.</li>
+        <li><strong>Confusing the carb whoosh with fat loss.</strong> The first 3–5 lb is water and comes back; judge by a 7-day trend, not day-to-day.</li>
+        <li><strong>Under-eating protein.</strong> 95 g at 83 kg sheds muscle. Floor it at ~1.8 g/kg.</li>
+        <li><strong>Weighing daily and reacting.</strong> Noise. Use a weekly average; that's the real signal.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- PROTOCOLS -->
+  <section id="protocols" class="mb-4">
+    <h2 class="h4 mb-3"><i class="bi bi-clipboard2-check"></i> Three Protocols (load them in the lab)</h2>
+    <div class="row g-3">
+      <div class="col-md-4"><div class="card-sheet p-3 h-100">
+        <h3 class="h6">Newborn-safe ratchet <span class="pill pill-good">now</span></h3>
+        <p class="small mb-2">The only one to run during fragmented sleep. Bank the habit, not the loss.</p>
+        <ul class="small mb-0">
+          <li>16:8 window as a fixed rule</li>
+          <li>~300–500 kcal deficit (≈0.5 lb/wk)</li>
+          <li>Protein 150 g+</li>
+          <li>BJJ 2–3× + 1 short lift</li>
+          <li>Weekly weigh-in only</li>
+        </ul>
+      </div></div>
+      <div class="col-md-4"><div class="card-sheet p-3 h-100">
+        <h3 class="h6">Post-sleep cut <span class="pill pill-warn">later</span></h3>
+        <p class="small mb-2">When sleep consolidates (~7.5 h). Faster but muscle-sparing.</p>
+        <ul class="small mb-0">
+          <li>~700–900 kcal deficit (~1 lb/wk, ≤1% BW)</li>
+          <li>Protein 170–180 g</li>
+          <li>BJJ 3 + resistance 2</li>
+          <li>8 h eating window</li>
+          <li>K⁺/Mg²⁺/B-complex floor</li>
+        </ul>
+      </div></div>
+      <div class="col-md-4"><div class="card-sheet p-3 h-100">
+        <h3 class="h6">Your 2023 cut <span class="pill pill-bad">reference</span></h3>
+        <p class="small mb-2">What you actually did — the calibration baseline. Effective but fragile.</p>
+        <ul class="small mb-0">
+          <li>~1,400 kcal, ~1,000+ deficit</li>
+          <li>~17 h fast, ~53 g net carb</li>
+          <li>Protein only 95 g</li>
+          <li>~2.0–2.4 lb/wk (a bit fast)</li>
+          <li>Broke at week 3 (adherence)</li>
+        </ul>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- THE MATH -->
+  <section id="math" class="mb-4">
+    <h2 class="h4 mb-3"><i class="bi bi-calculator"></i> The Math (so you can trust the dials)</h2>
+    <div class="card-sheet p-3">
+      <p class="mb-2"><strong>Maintenance (TDEE)</strong> = Mifflin-St Jeor BMR × activity factor.<br>
+      BMR = 10·kg + 6.25·cm − 5·age + 5 (male). Defaults assume 178 cm, age 45; edit weight + activity in the lab.</p>
+      <p class="mb-2"><strong>Rate</strong> = deficit × 7 ÷ 3,500 lb/week. The 3,500 kcal/lb rule is an approximation that overstates loss slightly as you lean out.</p>
+      <p class="mb-2"><strong>Fat-vs-lean split</strong> starts at ~78% fat and is adjusted by protein (g/kg), training frequency, sleep, and deficit aggressiveness, then clamped to 35–92%. The sleep term is anchored to Nedeltcheva 2010 (5.5 h vs 8.5 h: −55% fat fraction, +60% lean loss). It is a <em>directional estimate</em>, not DEXA.</p>
+      <p class="mb-0"><strong>Sustainability score</strong> rewards moderate deficit, adequate sleep, adequate protein, and a narrow eating window (your proven tool); it penalizes aggressive deficits and short sleep. It encodes the lesson that the binding constraint is adherence, not knowledge.</p>
+      <hr>
+      <p class="small mb-1"><strong>Sources (primary, verified 2026-06-20):</strong></p>
+      <ul class="small mb-0">
+        <li>Nedeltcheva AV et al. <em>Insufficient Sleep Undermines Dietary Efforts to Reduce Adiposity.</em> Ann Intern Med 2010;153:435–441.</li>
+        <li>Helms ER et al. <em>A Systematic Review of Dietary Protein During Caloric Restriction in Resistance-Trained Lean Athletes.</em> IJSNEM 2014.</li>
+        <li>Jäger R et al. <em>ISSN Position Stand: Protein and Exercise.</em> JISSN 2017 (1.4–2.0 g/kg general; 2.3–3.1 g/kg deficit retention).</li>
+        <li>Helms ER et al. <em>Evidence-based recommendations for natural bodybuilding contest prep.</em> JISSN 2014 (0.5–1%/wk for muscle retention).</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="text-center py-4 border-top" style="border-color:var(--line) !important;">
+    <p class="verified mb-1"><i class="bi bi-patch-check"></i> Last verified: 2026-06-20 · Model calibrated to David's Apple Health + Carb Manager export (Dec 2022–Mar 2023).</p>
+    <p class="verified mb-0">Estimator for personal planning. Not medical advice.</p>
+  </footer>
+</main>
+
+<div class="controls-float">
+  <button id="themeToggle" class="btn btn-sm btn-secondary" aria-label="Toggle theme"><i class="bi bi-circle-half"></i></button>
+  <button id="backTop" class="btn btn-sm btn-primary" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const LS = "wll-config-v1";
+  const HEIGHT_CM = 178, AGE = 45, KCAL_PER_LB = 3500;
+
+  const levers = ["wt","goal","act","cal","win","pro","sleep","train"];
+
+  const actLabel = a =>
+    a < 1.35 ? "sedentary" : a < 1.45 ? "light" : a < 1.6 ? "moderate" : "active";
+
+  function clamp(x,lo,hi){ return Math.max(lo, Math.min(hi, x)); }
+
+  function compute() {
+    const wtLb = +$("wt").value, goalLb = +$("goal").value, act = +$("act").value;
+    const cal = +$("cal").value, win = +$("win").value, pro = +$("pro").value;
+    const sleep = +$("sleep").value, train = +$("train").value;
+    const kg = wtLb / 2.20462;
+
+    const bmr = 10*kg + 6.25*HEIGHT_CM - 5*AGE + 5;
+    const tdee = Math.round(bmr * act);
+    const deficit = tdee - cal;
+    const defPct = deficit / tdee * 100;
+    const ratePerWk = deficit * 7 / KCAL_PER_LB;          // lb/wk (can be negative = gain)
+    const ratePctBW = ratePerWk / wtLb * 100;
+
+    // fat fraction model
+    let fatFrac = 0.78;
+    const gPerKg = pro / kg;
+    if (gPerKg < 1.2) fatFrac -= 0.12; else if (gPerKg < 1.6) fatFrac -= 0.05;
+    else if (gPerKg < 2.0) fatFrac += 0.00; else if (gPerKg < 2.4) fatFrac += 0.04; else fatFrac += 0.05;
+    if (train === 0) fatFrac -= 0.10; else if (train <= 2) fatFrac -= 0.04; else if (train >= 5) fatFrac += 0.03;
+    if (sleep >= 7.5) {} else if (sleep >= 7) fatFrac -= 0.03; else if (sleep >= 6.5) fatFrac -= 0.06;
+    else if (sleep >= 6) fatFrac -= 0.10; else if (sleep >= 5.5) fatFrac -= 0.15; else fatFrac -= 0.20;
+    if (defPct > 30) fatFrac -= 0.08; else if (defPct > 25) fatFrac -= 0.04;
+    if (ratePctBW > 1.0) fatFrac -= 0.05;
+    fatFrac = clamp(fatFrac, 0.35, 0.92);
+
+    // sustainability score (0-100, higher better)
+    let sus = 100;
+    sus -= clamp((defPct - 12) * 2.2, 0, 45);          // deficit aggressiveness
+    if (sleep < 5.5) sus -= 30; else if (sleep < 6.5) sus -= 18; else if (sleep < 7) sus -= 8;
+    if (gPerKg < 1.4) sus -= 12; else if (gPerKg < 1.6) sus -= 5;
+    if (win > 10 && defPct > 18) sus -= 12; else if (win <= 8) sus += 5;  // TRE rewarded
+    if (train === 0) sus -= 6;
+    sus = Math.round(clamp(sus, 0, 100));
+
+    return {wtLb,goalLb,tdee,deficit,defPct,ratePerWk,ratePctBW,fatFrac,sus,gPerKg,sleep,win,defPctRaw:defPct};
+  }
+
+  function band(score){
+    if (score >= 75) return ["pill-good","Sustainable"];
+    if (score >= 55) return ["pill-warn","Workable"];
+    if (score >= 35) return ["pill-bad","Fragile"];
+    return ["pill-bad","Will break"];
+  }
+
+  function render() {
+    levers.forEach(id => { const v=$(id+"-v"); if (v) v.textContent = $(id).value; });
+    $("act-lbl").textContent = "(" + actLabel(+$("act").value) + ")";
+
+    const r = compute();
+    $("o-tdee").textContent = r.tdee.toLocaleString();
+    $("o-def").textContent = (r.deficit<0?"+":"") + Math.round(r.deficit).toLocaleString();
+    $("o-defpct").textContent = (r.defPct>=0? r.defPct.toFixed(0):"+"+Math.abs(r.defPct).toFixed(0)) + "% of TDEE";
+
+    if (r.ratePerWk <= 0) {
+      $("o-rate").textContent = "+" + Math.abs(r.ratePerWk).toFixed(2);
+      $("o-rate").style.color = "var(--bad)";
+      $("o-ratepct").textContent = "lb/wk — surplus";
+      $("o-time").textContent = "—";
+      $("o-goaldate").textContent = "no deficit";
+    } else {
+      $("o-rate").textContent = r.ratePerWk.toFixed(2);
+      $("o-rate").style.color = "";
+      $("o-ratepct").textContent = "lb/wk (" + r.ratePctBW.toFixed(2) + "% BW)";
+      const toLose = r.wtLb - r.goalLb;
+      if (toLose <= 0) { $("o-time").textContent = "at goal"; $("o-goaldate").textContent = ""; }
+      else {
+        const wks = toLose / r.ratePerWk;
+        $("o-time").textContent = wks < 8 ? wks.toFixed(1)+" wk" : (wks/4.345).toFixed(1)+" mo";
+        const d = new Date(); d.setDate(d.getDate()+Math.round(wks*7));
+        $("o-goaldate").textContent = "≈ " + d.toLocaleDateString(undefined,{month:"short",year:"numeric"});
+      }
+    }
+
+    // composition
+    const fatPct = Math.round(r.fatFrac*100);
+    $("o-fatbar").style.width = fatPct+"%";
+    $("o-fatbar").style.background = fatPct>=75 ? "var(--good)" : fatPct>=60 ? "var(--warn)" : "var(--bad)";
+    if (r.ratePerWk > 0) {
+      $("o-fat").textContent = (r.ratePerWk*r.fatFrac).toFixed(2)+" lb";
+      $("o-lean").textContent = (r.ratePerWk*(1-r.fatFrac)).toFixed(2)+" lb";
+    } else { $("o-fat").textContent="—"; $("o-lean").textContent="—"; }
+    const sp = $("o-split-pill");
+    sp.textContent = fatPct+"% fat";
+    sp.className = "pill ms-1 " + (fatPct>=75?"pill-good":fatPct>=60?"pill-warn":"pill-bad");
+
+    // sustainability
+    const [cls,lbl] = band(r.sus);
+    $("o-susbar").style.width = r.sus+"%";
+    $("o-susbar").style.background = r.sus>=75?"var(--good)":r.sus>=55?"var(--warn)":"var(--bad)";
+    const susPill=$("o-sus-pill"); susPill.textContent = r.sus+" · "+lbl; susPill.className="pill ms-1 "+cls;
+
+    // flags
+    const f = [];
+    if (r.sleep < 6) f.push(`<span class="pill pill-bad">Sleep ${r.sleep}h</span> at this sleep, expect a muscle-heavy loss — keep the deficit small.`);
+    if (r.defPct > 30) f.push(`<span class="pill pill-bad">Deficit ${r.defPct.toFixed(0)}%</span> aggressive — high lean-loss + burnout risk.`);
+    if (r.gPerKg < 1.6 && r.deficit > 200) f.push(`<span class="pill pill-warn">Protein ${r.gPerKg.toFixed(1)} g/kg</span> below the ~1.8 g/kg retention floor.`);
+    if (r.ratePctBW > 1.0) f.push(`<span class="pill pill-warn">${r.ratePctBW.toFixed(1)}%/wk</span> faster than the 0.5–1% muscle-sparing band.`);
+    if (r.win <= 8 && r.deficit > 200) f.push(`<span class="pill pill-good">${r.win}h window</span> your proven, low-willpower tool is engaged.`);
+    if (r.deficit > 200 && r.deficit < 600 && r.sleep >= 6.5 && r.gPerKg >= 1.6) f.push(`<span class="pill pill-good">Ratchet zone</span> small, durable, newborn-compatible.`);
+    if (f.length === 0) f.push(`<span class="text-secondary">Move the levers to see flags and tradeoffs.</span>`);
+    $("o-flags").innerHTML = f.map(x=>`<div class="mb-1">${x}</div>`).join("");
+
+    save();
+  }
+
+  const PRESETS = {
+    "2023": {wt:183,goal:160,act:1.45,cal:1400,win:7,pro:95,sleep:6,train:1},
+    "now":  {wt:183,goal:175,act:1.4, cal:2100,win:8,pro:155,sleep:6.5,train:3},
+    "later":{wt:183,goal:168,act:1.5, cal:1750,win:8,pro:175,sleep:7.5,train:5}
+  };
+  function applyPreset(name){
+    const p = PRESETS[name]; if(!p) return;
+    Object.entries(p).forEach(([k,v]) => { if($(k)) $(k).value = v; });
+    render();
+  }
+
+  function save(){ try{
+    const o={}; levers.forEach(id=>o[id]=$(id).value);
+    localStorage.setItem(LS, JSON.stringify(o));
+  }catch(e){} }
+  function load(){ try{
+    const o=JSON.parse(localStorage.getItem(LS)||"null");
+    if(o) levers.forEach(id=>{ if($(id)&&o[id]!=null) $(id).value=o[id]; });
+  }catch(e){} }
+
+  // theme toggle
+  function initTheme(){
+    const t = $("themeToggle");
+    t.addEventListener("click", () => {
+      const cur = document.documentElement.getAttribute("data-theme");
+      const next = cur === "dark" ? "light" : cur === "light" ? "dark" :
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
+      document.documentElement.setAttribute("data-theme", next);
+      try{ localStorage.setItem("wll-theme", next); }catch(e){}
+    });
+    try{ const s=localStorage.getItem("wll-theme"); if(s) document.documentElement.setAttribute("data-theme",s);}catch(e){}
+  }
+
+  function init(){
+    load();
+    levers.forEach(id => $(id).addEventListener("input", render));
+    document.querySelectorAll("[data-preset]").forEach(b =>
+      b.addEventListener("click", () => applyPreset(b.dataset.preset)));
+    $("backTop").addEventListener("click", () => scrollTo({top:0,behavior:"smooth"}));
+    initTheme();
+    render();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+</script>
+</body>
+</html>
