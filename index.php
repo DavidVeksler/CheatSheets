@@ -40,6 +40,7 @@ function extractMetadata(string $filepath): array {
         'description' => 'Explore this ' . htmlspecialchars($defaultTitle) . ' cheatsheet for a concise overview of key concepts.',
         'image' => null,
         'url' => $baseUrl . $filename,
+        'mtime' => @filemtime($filepath) ?: 0,
         'error' => null
     ];
 
@@ -401,11 +402,22 @@ try {
         </header>
 
         <div class="container mt-4 mb-5">
-            <div class="row mb-4 justify-content-center">
+            <div class="row mb-4 justify-content-center g-2">
                 <div class="col-md-8 col-lg-6">
                     <div class="input-group input-group-lg shadow-sm">
                         <span class="input-group-text bg-white border-end-0 text-primary" id="filter-addon"><i class="bi bi-search"></i></span>
                         <input type="search" id="filterInput" class="form-control border-start-0" placeholder="Filter by title or topic (e.g., Buddhism, Python)..." aria-label="Filter cheatsheets" aria-describedby="filter-addon">
+                    </div>
+                </div>
+                <div class="col-md-8 col-lg-3">
+                    <div class="input-group input-group-lg shadow-sm">
+                        <label class="input-group-text bg-white border-end-0 text-primary" for="sortSelect"><i class="bi bi-sort-down"></i></label>
+                        <select id="sortSelect" class="form-select border-start-0" aria-label="Sort cheatsheets">
+                            <option value="title-asc" selected>Title (A–Z)</option>
+                            <option value="title-desc">Title (Z–A)</option>
+                            <option value="date-desc">Newest first</option>
+                            <option value="date-asc">Oldest first</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -431,7 +443,7 @@ try {
 
             <div id="cheatsheetGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                 <?php foreach ($cheatsheets as $sheet): ?>
-                    <div class="col portfolio-item">
+                    <div class="col portfolio-item" data-title="<?php echo htmlspecialchars($sheet['title']); ?>" data-mtime="<?php echo (int)$sheet['mtime']; ?>">
                         <article class="card shadow-sm">
                             <?php if (!empty($sheet['image'])): ?>
                                 <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="card-img-top-container" aria-label="Preview image for <?php echo htmlspecialchars($sheet['title']); ?>">
@@ -523,9 +535,31 @@ try {
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const filterInput = document.getElementById('filterInput');
+        const sortSelect = document.getElementById('sortSelect');
         const grid = document.getElementById('cheatsheetGrid');
         const noResultsMessage = document.getElementById('noResults');
         const items = grid ? Array.from(grid.querySelectorAll('.portfolio-item')) : [];
+
+        if (sortSelect && grid && items.length > 0) {
+            const sortItems = function() {
+                const mode = sortSelect.value;
+                const sorted = items.slice().sort((a, b) => {
+                    switch (mode) {
+                        case 'title-desc':
+                            return b.dataset.title.localeCompare(a.dataset.title, undefined, { sensitivity: 'base' });
+                        case 'date-desc':
+                            return (Number(b.dataset.mtime) || 0) - (Number(a.dataset.mtime) || 0);
+                        case 'date-asc':
+                            return (Number(a.dataset.mtime) || 0) - (Number(b.dataset.mtime) || 0);
+                        case 'title-asc':
+                        default:
+                            return a.dataset.title.localeCompare(b.dataset.title, undefined, { sensitivity: 'base' });
+                    }
+                });
+                sorted.forEach(item => grid.appendChild(item));
+            };
+            sortSelect.addEventListener('change', sortItems);
+        }
 
         if (filterInput && grid && items.length > 0) {
             filterInput.addEventListener('input', function() {
