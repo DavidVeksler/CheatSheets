@@ -247,8 +247,21 @@
             </div>
         </div>
 
+        <div id="data-panel" class="card" style="display:none; margin-top:20px;">
+            <div class="section-label" style="margin-bottom:8px"><i class="bi bi-database-lock"></i> Your data — stays in this browser, never sent to a server</div>
+            <p style="font-size:12px; color:var(--text-3); margin:0 0 10px;">Paste your <code>command-deck-data.local.json</code> below and import it. On the public site this is the only way your real numbers load — they live in this browser's localStorage and are never uploaded.</p>
+            <textarea id="data-blob" rows="6" style="width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius-sm); color:var(--text); padding:8px 10px; font-family:'JetBrains Mono',monospace; font-size:12px; resize:vertical;" placeholder='{ "meta": {...}, "gates": [...], "lanes": [...], "cadence": {...} }'></textarea>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px;">
+                <button class="btn" id="data-import" style="margin-top:0;"><i class="bi bi-box-arrow-in-down"></i> Import to this browser</button>
+                <button class="btn" id="data-download" style="margin-top:0;"><i class="bi bi-download"></i> Download backup</button>
+                <button class="btn" id="data-export" style="margin-top:0;"><i class="bi bi-box-arrow-up"></i> Load current into box</button>
+                <button class="btn" id="data-clear" style="margin-top:0;"><i class="bi bi-trash3"></i> Clear stored data</button>
+                <span id="data-msg" style="font-size:12px; color:var(--text-3);"></span>
+            </div>
+        </div>
+
         <div class="footer">
-            <span>Local-first · saved in your browser. Edit <code>command-deck-data.local.json</code> to personalize.</span>
+            <span>Local-first · <span id="data-source">data: example</span>. <a href="#" id="data-toggle">Manage your data</a></span>
             <span id="reset-link"><a href="#" id="reset-day">Reset today</a></span>
         </div>
     </div>
@@ -429,6 +442,15 @@
         };
     }
 
+    const USERDATA_KEY = 'userdata';
+    let DATA_SOURCE = 'example';
+    const validData = (o) => o && Array.isArray(o.gates) && Array.isArray(o.lanes);
+    const dataMsg = (t, isErr) => { const m = $('#data-msg'); m.textContent = t; m.style.color = isErr ? 'var(--danger-text)' : 'var(--ok-text)'; };
+    function updateDataSource() {
+        const label = { 'this browser': 'data: this browser (private)', 'command-deck-data.local.json': 'data: local file', 'command-deck-data.json': 'data: example', 'example': 'data: example' }[DATA_SOURCE] || 'data: example';
+        $('#data-source').textContent = label;
+    }
+
     // ---------- Wire global controls ----------
     function wire() {
         $('#reseed').onclick = () => { seedD3(); renderD3(); };
@@ -438,18 +460,56 @@
             ['d3:'+todayKey(),'cad-d:'+todayKey(),'calib:'+todayKey()].forEach(k=>{ try{localStorage.removeItem('cmddeck:'+k);}catch(e){} });
             renderAll();
         };
+        $('#data-toggle').onclick = (e) => {
+            e.preventDefault();
+            const p = $('#data-panel');
+            p.style.display = p.style.display === 'none' ? 'block' : 'none';
+            if (p.style.display === 'block') p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
+        $('#data-export').onclick = () => { $('#data-blob').value = JSON.stringify(DATA, null, 2); dataMsg('Loaded current data into the box.', false); };
+        $('#data-download').onclick = () => {
+            const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const d = new Date();
+            const stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `command-deck-data-backup-${stamp}.json`;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            dataMsg('Backup downloaded — rename to command-deck-data.local.json to restore.', false);
+        };
+        $('#data-import').onclick = () => {
+            const t = $('#data-blob').value.trim();
+            if (!t) { dataMsg('Paste your JSON first.', true); return; }
+            let obj; try { obj = JSON.parse(t); } catch (err) { dataMsg('Invalid JSON: ' + err.message, true); return; }
+            if (!validData(obj)) { dataMsg('JSON needs "gates" and "lanes" arrays.', true); return; }
+            store.set(USERDATA_KEY, obj);
+            dataMsg('Imported to this browser. Reloading…', false);
+            setTimeout(() => location.reload(), 600);
+        };
+        $('#data-clear').onclick = () => {
+            if (!confirm('Remove your imported data from this browser? The deck reverts to the local file / example.')) return;
+            try { localStorage.removeItem('cmddeck:' + USERDATA_KEY); } catch (e) {}
+            dataMsg('Cleared. Reloading…', false);
+            setTimeout(() => location.reload(), 600);
+        };
     }
 
-    function renderAll() { renderHeader(); renderGates(); renderLanes(); renderD3(); renderCadence(); initCalib(); }
+    function renderAll() { renderHeader(); renderGates(); renderLanes(); renderD3(); renderCadence(); initCalib(); updateDataSource(); }
 
-    // ---------- Boot: try local override, then example, then embedded ----------
-    // Load order: command-deck-data.local.json (your private, gitignored data)
-    // → command-deck-data.json (sanitized example, committed) → embedded DEFAULT_DATA.
+    // ---------- Boot: imported data → local file → example → embedded ----------
+    // Priority: localStorage 'userdata' (your private data, lives ONLY in this browser —
+    // the only safe way to load real numbers on the public host) → command-deck-data.local.json
+    // (private, gitignored, served from disk/localhost) → command-deck-data.json (sanitized
+    // example, committed) → embedded DEFAULT_DATA.
     async function loadData() {
+        const ud = store.get(USERDATA_KEY, null);
+        if (validData(ud)) { DATA_SOURCE = 'this browser'; return ud; }
         for (const file of ['command-deck-data.local.json', 'command-deck-data.json']) {
             try {
                 const r = await fetch(file, { cache: 'no-store' });
-                if (r.ok) return await r.json();
+                if (r.ok) { DATA_SOURCE = file; return await r.json(); }
             } catch (e) { /* try next */ }
         }
         return null;
@@ -457,10 +517,10 @@
     loadData()
         .then(json => {
             if (json) { DATA = json; return; }
-            DATA = DEFAULT_DATA;
+            DATA = DEFAULT_DATA; DATA_SOURCE = 'example';
             const b = $('#load-banner');
             b.style.display = 'block';
-            b.innerHTML = '<i class="bi bi-info-circle"></i> Showing built-in example data. To personalize, create <code>command-deck-data.local.json</code> next to this file and serve over http (a local <code>file://</code> open can\'t read it).';
+            b.innerHTML = '<i class="bi bi-info-circle"></i> Showing built-in example data. To load your real numbers here, click <strong>Manage your data</strong> below and import your JSON — it stays in this browser and is never sent to the server.';
         })
         .finally(() => { renderAll(); wire(); });
     </script>
