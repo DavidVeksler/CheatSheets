@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Command Deck: A Daily One-Page Cockpit for Your Open Loops</title>
+    <meta
+        content="A personalizable, single-page daily cockpit. Track your parallel life campaigns, count down hard deadlines, auto-propose your highest-leverage Daily 3, run your standing cadence, and log calibrated decisions — all in one local-first HTML file with no backend."
+        name="description" />
+    <meta
+        content="daily dashboard, productivity cockpit, daily planner, personal operating system, decision log, leading indicators, life campaigns, deep work, time management, local-first, self-hosted dashboard"
+        name="keywords" />
+    <link href="https://cheatsheets.davidveksler.com/command-deck.html" rel="canonical" />
+    <meta content="website" property="og:type" />
+    <meta content="https://cheatsheets.davidveksler.com/command-deck.html" property="og:url" />
+    <meta content="Command Deck: A Daily One-Page Cockpit for Your Open Loops" property="og:title" />
+    <meta
+        content="One screen, one move per front. A local-first daily cockpit that surfaces your deadlines, proposes your Daily 3, and tracks your standing cadence."
+        property="og:description" />
+    <meta content="images/command-deck.png" property="og:image" />
+    <meta content="summary_large_image" name="twitter:card" />
+    <meta content="Command Deck: A Daily One-Page Cockpit for Your Open Loops" name="twitter:title" />
+    <meta
+        content="One screen, one move per front. A local-first daily cockpit that surfaces deadlines, proposes your Daily 3, and tracks your cadence."
+        name="twitter:description" />
+    <meta content="images/command-deck.png" name="twitter:image" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Command Deck: A Daily One-Page Cockpit",
+      "description": "A personalizable local-first daily cockpit that tracks parallel life campaigns, counts down hard deadlines, proposes a Daily 3, runs a standing cadence, and logs calibrated decisions.",
+      "applicationCategory": "ProductivityApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires a modern web browser with JavaScript enabled.",
+      "url": "https://cheatsheets.davidveksler.com/command-deck.html",
+      "creator": { "@type": "Person", "name": "David Veksler" },
+      "dateModified": "2026-06-21"
+    }
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg: #0f1115;
+            --surface: #171a21;
+            --surface-2: #1d212a;
+            --line: #2a2f3a;
+            --line-2: #353c49;
+            --text: #e6e9ef;
+            --text-2: #9aa3b2;
+            --text-3: #6b7484;
+            --accent: #6ea8fe;
+            --danger-bg: #2a161a;
+            --danger-line: #7a2a30;
+            --danger-text: #ff8a8a;
+            --warn-bg: #2a2410;
+            --warn-line: #6e5a1f;
+            --warn-text: #f0c04a;
+            --ok-bg: #11241d;
+            --ok-line: #1f5a45;
+            --ok-text: #4ec9a0;
+            --radius: 12px;
+            --radius-sm: 8px;
+            font-synthesis: none;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            padding: clamp(16px, 4vw, 40px);
+        }
+        .wrap { max-width: 1080px; margin: 0 auto; }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .topbar { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+        .brand { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+        .brand .dot { color: var(--accent); }
+        .meta-right { font-size: 13px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+        .reframe {
+            font-style: italic; color: var(--text-2); margin: 6px 0 22px;
+            font-size: 14.5px; border-left: 2px solid var(--line-2); padding-left: 12px;
+        }
+        .reframe .rotate-btn {
+            background: none; border: none; color: var(--text-3); cursor: pointer;
+            font-size: 12px; padding: 0 0 0 8px; vertical-align: 1px;
+        }
+        .reframe .rotate-btn:hover { color: var(--text); }
+
+        .section-label {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 0.09em;
+            color: var(--text-3); font-weight: 600; margin: 0 0 10px;
+        }
+
+        /* Gate strip */
+        .gates { display: grid; grid-template-columns: repeat(auto-fit, minmax(116px, 1fr)); gap: 10px; margin-bottom: 26px; }
+        .gate { border-radius: var(--radius-sm); padding: 11px 13px; border: 1px solid var(--line); background: var(--surface); }
+        .gate .g-label { font-size: 12px; color: var(--text-2); }
+        .gate .g-big { font-size: 23px; font-weight: 600; line-height: 1.15; font-variant-numeric: tabular-nums; margin-top: 2px; }
+        .gate .g-sub { font-size: 11px; color: var(--text-3); }
+        .gate.danger { background: var(--danger-bg); border-color: var(--danger-line); }
+        .gate.danger .g-label, .gate.danger .g-big, .gate.danger .g-sub { color: var(--danger-text); }
+        .gate.warning { background: var(--warn-bg); border-color: var(--warn-line); }
+        .gate.warning .g-label, .gate.warning .g-big, .gate.warning .g-sub { color: var(--warn-text); }
+
+        /* Main grid */
+        .grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 18px; align-items: start; }
+        @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+        /* Daily 3 — the hero */
+        .hero { background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 18px; }
+        .hero-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+        .hero-head h2 { font-size: 16px; font-weight: 600; margin: 0; }
+        .hero-head .prog { font-size: 13px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+        .hero-hint { font-size: 12px; color: var(--text-3); margin: 0 0 12px; }
+        .d3-item {
+            display: flex; align-items: flex-start; gap: 12px; padding: 11px 12px;
+            border: 1px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 8px;
+            background: var(--surface-2); cursor: pointer; transition: border-color .12s, opacity .12s;
+        }
+        .d3-item:hover { border-color: var(--line-2); }
+        .d3-item:last-child { margin-bottom: 0; }
+        .d3-item.done { opacity: 0.5; }
+        .d3-item.done .d3-text { text-decoration: line-through; }
+        .d3-check {
+            flex: 0 0 auto; width: 20px; height: 20px; border-radius: 6px; margin-top: 1px;
+            border: 1.5px solid var(--line-2); display: flex; align-items: center; justify-content: center;
+            font-size: 13px; color: var(--bg);
+        }
+        .d3-item.done .d3-check { background: var(--ok-text); border-color: var(--ok-text); }
+        .d3-text { font-size: 15px; font-weight: 500; }
+        .d3-tag { font-size: 12px; color: var(--text-3); font-weight: 400; margin-left: 7px; }
+        .d3-empty { font-size: 13px; color: var(--text-3); padding: 8px 2px; }
+
+        /* Lanes */
+        .lane {
+            background: var(--surface); border: 1px solid var(--line);
+            border-left: 3px solid var(--text-3); border-radius: var(--radius-sm);
+            padding: 11px 13px; margin-bottom: 9px;
+        }
+        .lane:last-child { margin-bottom: 0; }
+        .lane-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+        .lane-name { font-weight: 600; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
+        .lane-name i { font-size: 15px; opacity: 0.9; }
+        .lane-ind { font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .lane-action { font-size: 13px; color: var(--text-2); margin-top: 4px; display: flex; gap: 7px; align-items: baseline; }
+        .lane-action i { font-size: 12px; flex: 0 0 auto; }
+        .lane.status-alert .lane-ind { color: var(--danger-text); }
+        .lane.status-nominal .lane-action i { color: var(--ok-text); }
+
+        /* Side cards */
+        .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; }
+        .card:last-child { margin-bottom: 0; }
+        .check-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; cursor: pointer; font-size: 13.5px; }
+        .check-row input { accent-color: var(--ok-text); width: 16px; height: 16px; flex: 0 0 auto; }
+        .check-row.done span { text-decoration: line-through; color: var(--text-3); }
+        .cad-group + .cad-group { margin-top: 12px; }
+        .cad-group .cg-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-3); margin-bottom: 4px; }
+
+        /* Calibration */
+        .calib textarea, .calib input[type=text], .calib input[type=date] {
+            width: 100%; background: var(--surface-2); border: 1px solid var(--line);
+            border-radius: var(--radius-sm); color: var(--text); padding: 8px 10px;
+            font-family: inherit; font-size: 13px; margin-top: 6px; resize: vertical;
+        }
+        .calib textarea:focus, .calib input:focus { outline: none; border-color: var(--accent); }
+        .calib label { font-size: 12px; color: var(--text-2); display: block; margin-top: 10px; }
+        .calib label:first-of-type { margin-top: 0; }
+        .btn {
+            background: var(--surface-2); border: 1px solid var(--line-2); color: var(--text);
+            border-radius: var(--radius-sm); padding: 8px 14px; font-size: 13px; font-weight: 500;
+            cursor: pointer; margin-top: 12px; font-family: inherit;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .btn.ok { color: var(--ok-text); border-color: var(--ok-line); }
+
+        .footer { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--text-3); display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; }
+        .footer code { font-family: 'JetBrains Mono', monospace; color: var(--text-2); background: var(--surface); padding: 1px 6px; border-radius: 4px; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+        .banner { background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn-text); border-radius: var(--radius-sm); padding: 10px 13px; font-size: 13px; margin-bottom: 18px; }
+    </style>
+</head>
+
+<body>
+    <h1 class="sr-only">Command Deck — daily one-page cockpit</h1>
+    <div class="wrap" id="app">
+        <div class="topbar">
+            <div class="brand">Command deck<span class="dot">.</span></div>
+            <div class="meta-right" id="today-str"></div>
+        </div>
+        <div class="reframe" id="reframe"></div>
+
+        <div id="load-banner" class="banner" style="display:none"></div>
+
+        <div class="section-label">Hard gates</div>
+        <div class="gates" id="gates"></div>
+
+        <div class="grid">
+            <div class="col-left">
+                <div class="hero">
+                    <div class="hero-head">
+                        <h2><i class="bi bi-bullseye" style="color:var(--accent)"></i> The daily 3</h2>
+                        <span class="prog" id="d3-prog"></span>
+                    </div>
+                    <p class="hero-hint">The highest-leverage move on each live front. Close these, the day counts. <button class="btn" id="reseed" style="margin-top:0;padding:3px 9px;font-size:11px;">Re-seed from lanes</button></p>
+                    <div id="d3-list"></div>
+                </div>
+
+                <div class="section-label">Campaign lanes</div>
+                <div id="lanes"></div>
+            </div>
+
+            <div class="col-right">
+                <div class="card">
+                    <div class="section-label" style="margin-bottom:8px">Cadence</div>
+                    <div class="cad-group">
+                        <div class="cg-label">Daily — resets at midnight</div>
+                        <div id="cad-daily"></div>
+                    </div>
+                    <div class="cad-group">
+                        <div class="cg-label">Weekly — resets Monday</div>
+                        <div id="cad-weekly"></div>
+                    </div>
+                </div>
+
+                <div class="card calib">
+                    <div class="section-label" style="margin-bottom:8px"><i class="bi bi-crosshair"></i> Calibration card</div>
+                    <label>Today's one real decision</label>
+                    <textarea id="cal-q" rows="2" placeholder="The actual question / move…"></textarea>
+                    <label>Falsifiable prediction — how you'll know</label>
+                    <textarea id="cal-p" rows="2" placeholder="If X, then Y by &lt;date&gt;…"></textarea>
+                    <label>Review date</label>
+                    <input type="date" id="cal-r" />
+                    <button class="btn" id="cal-copy"><i class="bi bi-clipboard"></i> Copy decision shard</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span>Local-first · saved in your browser. Edit <code>command-deck-data.local.json</code> to personalize.</span>
+            <span id="reset-link"><a href="#" id="reset-day">Reset today</a></span>
+        </div>
+    </div>
+
+    <script>
+    // ---------- Embedded fallback data (works offline / file://) ----------
+    const DEFAULT_DATA = {
+        meta: {
+            owner: "Operator",
+            subtitle: "One screen. One move per front.",
+            reframe: [
+                "The threat model is cortisol, not cashflow.",
+                "You are not behind. You are running several campaigns at once.",
+                "Process over outcome — was the mechanism right, regardless of result?",
+                "Your stated lean is the position to scrutinize hardest, not defend.",
+                "Fewer open loops on screen is the actual goal.",
+                "The artifact persists; the instruction decays. Ship the artifact."
+            ]
+        },
+        gates: [
+            { id: "g1", label: "campaign gate", date: "2026-06-25", sub: "3+ real convos?", severity: "danger" },
+            { id: "g2", label: "term life", status: "overdue", sub: "quote unbought", severity: "danger" },
+            { id: "g3", label: "trust signature", status: "3y+", sub: "drafted, unsigned", severity: "danger" },
+            { id: "g4", label: "DEXA rescan", date: "2026-08-01", sub: "VAT 138 to 110", severity: "warning" },
+            { id: "g5", label: "Q2 milestone", status: "~here", sub: "bandwidth window", severity: "neutral" }
+        ],
+        lanes: [
+            { id: "career", name: "career pivot", icon: "bi-briefcase", color: "#378ADD", indicator: "0 sent · 0/3 convos", nextAction: "Send first 2 high-EV warm touches", status: "go", today: true },
+            { id: "defense", name: "estate / defense", icon: "bi-shield-shaded", color: "#E24B4A", indicator: "2 of 6 closed", nextAction: "Get term-life quote — 20 min, unblocks the rest", status: "alert", today: true },
+            { id: "health", name: "health / visceral fat", icon: "bi-heart-pulse", color: "#1D9E75", indicator: "175 lb · ruck 0/2 wk", nextAction: "Zone-2 ruck 45 min (non-training day)", status: "go", today: true },
+            { id: "capital", name: "capital / leverage", icon: "bi-coin", color: "#BA7517", indicator: "LTV 28% · buffer 47%", nextAction: "Nominal — no action (trip-wire at 40%)", status: "nominal", today: false },
+            { id: "writing", name: "writing / audience", icon: "bi-pencil-square", color: "#7F77DD", indicator: "3.5k subs · 1 post/wk", nextAction: "Draft next post (reuse from payload library)", status: "go", today: false }
+        ],
+        cadence: {
+            daily: ["15-min engagement round", "Account-check reframe (look once, then close)", "Cash sweep to savings"],
+            weekly: ["Friday weekly review", "Re-verify stale signals (14-day window)", "Plan next week's 5–7 moves"]
+        }
+    };
+
+    // ---------- Helpers ----------
+    const $ = (s, r=document) => r.querySelector(s);
+    const el = (t, c) => { const e = document.createElement(t); if (c) e.className = c; return e; };
+    const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+    const weekKey = () => {
+        const d = new Date(); const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        const day = dt.getUTCDay() || 7; dt.setUTCDate(dt.getUTCDate() + 4 - day);
+        const ys = new Date(Date.UTC(dt.getUTCFullYear(),0,1));
+        const wk = Math.ceil((((dt - ys) / 86400000) + 1) / 7);
+        return `${dt.getUTCFullYear()}-W${String(wk).padStart(2,'0')}`;
+    };
+    const dayIndex = () => Math.floor(Date.now() / 86400000);
+    const store = {
+        get: (k, d) => { try { const v = localStorage.getItem('cmddeck:'+k); return v===null ? d : JSON.parse(v); } catch(e){ return d; } },
+        set: (k, v) => { try { localStorage.setItem('cmddeck:'+k, JSON.stringify(v)); } catch(e){} }
+    };
+
+    let DATA = DEFAULT_DATA;
+
+    function daysUntil(dateStr) {
+        const t = new Date(); t.setHours(0,0,0,0);
+        const d = new Date(dateStr + 'T00:00:00');
+        return Math.round((d - t) / 86400000);
+    }
+
+    // ---------- Render: header ----------
+    function renderHeader() {
+        const d = new Date();
+        $('#today-str').textContent = d.toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long', year:'numeric' }).toLowerCase() + ' · saved locally';
+        renderReframe();
+    }
+    function renderReframe() {
+        const arr = DATA.meta.reframe || ["Fewer open loops is the goal."];
+        const idx = (store.get('reframe-bump', 0) + dayIndex()) % arr.length;
+        $('#reframe').innerHTML = `${arr[idx]} <button class="rotate-btn" id="reframe-rot" title="Another"><i class="bi bi-arrow-repeat"></i></button>`;
+        $('#reframe-rot').onclick = () => { store.set('reframe-bump', store.get('reframe-bump',0)+1); renderReframe(); };
+    }
+
+    // ---------- Render: gates ----------
+    function renderGates() {
+        const g = $('#gates'); g.innerHTML = '';
+        DATA.gates.forEach(gate => {
+            const box = el('div', 'gate ' + (gate.severity||'neutral'));
+            let big = gate.status || '';
+            let sev = gate.severity || 'neutral';
+            if (gate.date) {
+                const n = daysUntil(gate.date);
+                if (n < 0) { big = 'overdue'; sev = 'danger'; }
+                else if (n === 0) { big = 'today'; sev = 'danger'; }
+                else { big = n + 'd'; }
+                if (gate.severity === 'neutral' && n >= 0) sev = n <= 7 ? 'warning' : 'neutral';
+            }
+            box.className = 'gate ' + sev;
+            box.innerHTML = `<div class="g-label">${gate.label}</div><div class="g-big">${big}</div><div class="g-sub">${gate.sub||''}</div>`;
+            g.appendChild(box);
+        });
+    }
+
+    // ---------- Render: lanes ----------
+    function renderLanes() {
+        const wrap = $('#lanes'); wrap.innerHTML = '';
+        DATA.lanes.forEach(lane => {
+            const box = el('div', 'lane status-' + (lane.status||'go'));
+            box.style.borderLeftColor = lane.color || 'var(--text-3)';
+            const icon = lane.status === 'nominal' ? 'bi-check-lg' : 'bi-arrow-right-short';
+            box.innerHTML = `
+                <div class="lane-top">
+                    <span class="lane-name"><i class="bi ${lane.icon||'bi-circle'}" style="color:${lane.color}"></i>${lane.name}</span>
+                    <span class="lane-ind">${lane.indicator||''}</span>
+                </div>
+                <div class="lane-action"><i class="bi ${icon}"></i><span>${lane.nextAction||''}</span></div>`;
+            wrap.appendChild(box);
+        });
+    }
+
+    // ---------- Daily 3 ----------
+    function seedD3() {
+        const picks = DATA.lanes.filter(l => l.today).slice(0, 3).map(l => ({
+            text: l.nextAction, tag: l.name, laneId: l.id, done: false
+        }));
+        store.set('d3:' + todayKey(), picks);
+        return picks;
+    }
+    function getD3() {
+        let d3 = store.get('d3:' + todayKey(), null);
+        if (!d3) d3 = seedD3();
+        return d3;
+    }
+    function renderD3() {
+        const d3 = getD3();
+        const list = $('#d3-list'); list.innerHTML = '';
+        if (!d3.length) { list.innerHTML = '<div class="d3-empty">No fronts flagged for today. Mark a lane with <code>"today": true</code> in the JSON, or re-seed.</div>'; $('#d3-prog').textContent=''; return; }
+        d3.forEach((item, i) => {
+            const row = el('div', 'd3-item' + (item.done ? ' done' : ''));
+            row.innerHTML = `<div class="d3-check">${item.done ? '<i class="bi bi-check-lg"></i>' : ''}</div>
+                <div class="d3-text">${item.text}<span class="d3-tag">${item.tag||''}</span></div>`;
+            row.onclick = () => { d3[i].done = !d3[i].done; store.set('d3:'+todayKey(), d3); renderD3(); };
+            list.appendChild(row);
+        });
+        const done = d3.filter(x=>x.done).length;
+        $('#d3-prog').textContent = `${done}/${d3.length} done`;
+    }
+
+    // ---------- Cadence ----------
+    function renderCadence() {
+        renderCadGroup('#cad-daily', DATA.cadence.daily || [], 'cad-d:' + todayKey());
+        renderCadGroup('#cad-weekly', DATA.cadence.weekly || [], 'cad-w:' + weekKey());
+    }
+    function renderCadGroup(sel, items, key) {
+        const state = store.get(key, {});
+        const wrap = $(sel); wrap.innerHTML = '';
+        items.forEach((label, i) => {
+            const done = !!state[i];
+            const row = el('label', 'check-row' + (done ? ' done' : ''));
+            row.innerHTML = `<input type="checkbox" ${done?'checked':''}><span>${label}</span>`;
+            row.querySelector('input').onchange = (e) => { state[i] = e.target.checked; store.set(key, state); row.classList.toggle('done', e.target.checked); };
+            wrap.appendChild(row);
+        });
+    }
+
+    // ---------- Calibration ----------
+    function initCalib() {
+        const k = 'calib:' + todayKey();
+        const saved = store.get(k, {});
+        $('#cal-q').value = saved.q || '';
+        $('#cal-p').value = saved.p || '';
+        $('#cal-r').value = saved.r || '';
+        ['cal-q','cal-p','cal-r'].forEach(id => $('#'+id).oninput = () => {
+            store.set(k, { q:$('#cal-q').value, p:$('#cal-p').value, r:$('#cal-r').value });
+        });
+        $('#cal-copy').onclick = () => {
+            const q=$('#cal-q').value.trim(), p=$('#cal-p').value.trim(), r=$('#cal-r').value.trim();
+            const shard = `---\ndate: ${todayKey()}\nstatus: OPEN\nreview: ${r||'TBD'}\noutcome: pending\ntitle: ${q.split('\n')[0].slice(0,60) || 'Untitled decision'}\n---\n\n# Question\n${q||'—'}\n\n# Predicted outcome + how we'll know\n${p||'—'}\n\n# Actual outcome\n(filled on review)\n\n# Calibration note\n(process, not outcome — was the mechanism right?)\n`;
+            navigator.clipboard.writeText(shard).then(() => {
+                const b = $('#cal-copy'); const o = b.innerHTML;
+                b.innerHTML = '<i class="bi bi-check-lg"></i> Copied — paste into your decision log'; b.classList.add('ok');
+                setTimeout(()=>{ b.innerHTML=o; b.classList.remove('ok'); }, 2200);
+            });
+        };
+    }
+
+    // ---------- Wire global controls ----------
+    function wire() {
+        $('#reseed').onclick = () => { seedD3(); renderD3(); };
+        $('#reset-day').onclick = (e) => {
+            e.preventDefault();
+            if (!confirm('Clear today\'s Daily 3, cadence and calibration?')) return;
+            ['d3:'+todayKey(),'cad-d:'+todayKey(),'calib:'+todayKey()].forEach(k=>{ try{localStorage.removeItem('cmddeck:'+k);}catch(e){} });
+            renderAll();
+        };
+    }
+
+    function renderAll() { renderHeader(); renderGates(); renderLanes(); renderD3(); renderCadence(); initCalib(); }
+
+    // ---------- Boot: try local override, then example, then embedded ----------
+    // Load order: command-deck-data.local.json (your private, gitignored data)
+    // → command-deck-data.json (sanitized example, committed) → embedded DEFAULT_DATA.
+    async function loadData() {
+        for (const file of ['command-deck-data.local.json', 'command-deck-data.json']) {
+            try {
+                const r = await fetch(file, { cache: 'no-store' });
+                if (r.ok) return await r.json();
+            } catch (e) { /* try next */ }
+        }
+        return null;
+    }
+    loadData()
+        .then(json => {
+            if (json) { DATA = json; return; }
+            DATA = DEFAULT_DATA;
+            const b = $('#load-banner');
+            b.style.display = 'block';
+            b.innerHTML = '<i class="bi bi-info-circle"></i> Showing built-in example data. To personalize, create <code>command-deck-data.local.json</code> next to this file and serve over http (a local <code>file://</code> open can\'t read it).';
+        })
+        .finally(() => { renderAll(); wire(); });
+    </script>
+</body>
+
+</html>
