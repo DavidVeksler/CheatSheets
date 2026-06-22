@@ -14,7 +14,7 @@
 </script>
 <title>Weight-Loss Levers: An Interactive Body-Composition Control Panel</title>
 <meta name="description" content="Interactive weight-loss control panel: tweak energy deficit, eating window, protein, sleep, training, and steps to see projected rate of loss, fat-vs-lean split, time to goal, and a live sustainability gauge grounded in published research." />
-<meta name="keywords" content="weight loss levers, calorie deficit calculator, TDEE, protein muscle retention, sleep fat loss, intermittent fasting, body recomposition, sustainable fat loss, weight maintenance, reverse dieting, anti-drift, hunger satiety tactics, ghrelin leptin sleep" />
+<meta name="keywords" content="weight loss levers, calorie deficit calculator, TDEE, protein muscle retention, sleep fat loss, intermittent fasting, body recomposition, sustainable fat loss, weight maintenance, reverse dieting, anti-drift, hunger satiety tactics, ghrelin leptin sleep, high protein meal plan, protein per calorie, weight trajectory projection" />
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/weight-loss-levers.html" />
 
 <meta property="og:title" content="Weight-Loss Levers: Interactive Body-Composition Control Panel" />
@@ -144,6 +144,7 @@
 
   .gauge-card { background:var(--panel-2); border:1px solid var(--line); border-radius:.6rem; padding:.7rem .8rem; }
   .gauge-num { font-family:var(--mono); font-weight:700; font-variant-numeric:tabular-nums; }
+  .traj-axis { font-family:var(--mono); font-size:11px; fill:var(--ink-soft); }
 
   /* rate tape */
   .tape { position:relative; height:1.4rem; border-radius:.4rem; overflow:hidden; border:1px solid var(--line);
@@ -354,6 +355,27 @@ body {
           </div>
         </div>
       </div>
+
+      <!-- TRAJECTORY CHART (full-width, below the lab grid) -->
+      <div class="gauge-card mt-3">
+        <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+          <span class="lbl tag-mono text-uppercase" style="font-size:.66rem;color:var(--ink-soft);">Projected trajectory to goal</span>
+          <span class="gauge-num" id="o-traj-eta" style="font-size:.8rem;color:var(--accent);">—</span>
+        </div>
+        <svg id="traj-svg" viewBox="0 0 800 230" width="100%" role="img" aria-labelledby="trajTitle" style="display:block;overflow:visible">
+          <title id="trajTitle">Projected weight over time, accounting for the metabolic slowdown as you lose</title>
+          <line id="traj-goal" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="5 4" opacity=".65" />
+          <path id="traj-area" fill="var(--accent)" opacity=".10" />
+          <path id="traj-line" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+          <circle id="traj-dot" r="4.5" fill="var(--good)" stroke="var(--panel-2)" stroke-width="2" style="display:none" />
+          <text id="traj-dot-lbl" class="traj-axis" style="display:none;font-weight:700;fill:var(--good)"></text>
+          <text id="traj-y-top" class="traj-axis" x="2" y="0"></text>
+          <text id="traj-goal-lbl" class="traj-axis" x="2" y="0" style="fill:var(--accent)"></text>
+          <text id="traj-x0" class="traj-axis" x="2" y="224">today</text>
+          <text id="traj-x1" class="traj-axis" x="798" y="224" text-anchor="end"></text>
+        </svg>
+        <div class="tape-scale mt-1">Curve accounts for falling TDEE as you lighten — at a fixed intake the deficit shrinks, so the real timeline is a little longer than the instantaneous rate implies.</div>
+      </div>
     </div>
   </section>
 
@@ -504,6 +526,97 @@ body {
     </div>
   </section>
 
+  <!-- WHAT DO I EAT -->
+  <section id="eat" class="mb-4">
+    <div class="sec-head h5 mb-3"><span class="idx">EAT</span> <i class="bi bi-basket3-fill"></i> What Do I Eat? <span class="small text-secondary ms-1" style="font-family:var(--sans);font-weight:400;">— translating levers into meals</span></div>
+    <p class="small text-secondary mb-3">The lab tells you <em>150 g protein, 1,400 kcal, noon–8pm</em>. This section turns that into food. The whole game is one rule, then a template you can run on autopilot.</p>
+
+    <!-- the one rule -->
+    <div class="bezel p-3 mb-3">
+      <h3 class="h6"><i class="bi bi-1-circle-fill text-warning"></i> The one rule: anchor on protein, treat fat as seasoning</h3>
+      <p class="small">Your 2023 cut averaged only <strong>95 g protein</strong> despite eating plenty — because the calories came from <em>fat-forward</em> keto foods (bacon grease, pork rinds, ghee, cheese, almonds). Fat did the calorie work; protein lagged. The fix isn't eating more, it's <strong>spending your calorie budget on lean protein first</strong>, then filling the rest. Judge every food by <strong>protein per 100&nbsp;kcal</strong> — anchor meals on the 15–20&nbsp;g rows, use the bottom of the table for flavor only.</p>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle lever-table mb-0 small">
+          <thead><tr><th>Food</th><th>Protein / 100&nbsp;kcal</th><th>Role</th><th class="d-none d-md-table-cell">Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Egg whites</td><td class="leverage-5">~17 g</td><td>Anchor</td><td class="d-none d-md-table-cell">Stack on whole eggs to lift protein without more fat</td></tr>
+            <tr><td>Whey / casein isolate</td><td class="leverage-5">~18 g</td><td>Anchor</td><td class="d-none d-md-table-cell">Your shake habit — cheapest protein density you own</td></tr>
+            <tr><td>Chicken breast</td><td class="leverage-5">~19 g</td><td>Anchor</td><td class="d-none d-md-table-cell">The leanest volume protein</td></tr>
+            <tr><td>White fish (cod, tilapia)</td><td class="leverage-5">~20 g</td><td>Anchor</td><td class="d-none d-md-table-cell">Highest efficiency, low effort</td></tr>
+            <tr><td>Bone broth protein</td><td class="leverage-5">~16 g</td><td>Anchor</td><td class="d-none d-md-table-cell">You already log it — keep it</td></tr>
+            <tr><td>Nonfat Greek yogurt / low-fat cottage cheese</td><td class="leverage-5">~14–16 g</td><td>Anchor</td><td class="d-none d-md-table-cell">Great noon or snack protein</td></tr>
+            <tr><td>Sirloin (lean)</td><td class="leverage-3">~12 g</td><td>Anchor</td><td class="d-none d-md-table-cell">Your Texas Roadhouse staple — fine</td></tr>
+            <tr><td>90/10 ground beef</td><td class="leverage-3">~10 g</td><td>Half-anchor</td><td class="d-none d-md-table-cell">Good, but watch the fat ride-along</td></tr>
+            <tr><td>Pork rinds</td><td class="leverage-3">~10 g</td><td>Filler</td><td class="d-none d-md-table-cell">Decent ratio, but pure fat-protein, no volume</td></tr>
+            <tr><td>Cheddar / hard cheese</td><td class="leverage-1">~6 g</td><td>Flavor</td><td class="d-none d-md-table-cell">Calorie-dense; portion it</td></tr>
+            <tr><td>Almonds</td><td class="leverage-1">~3.5 g</td><td>Flavor</td><td class="d-none d-md-table-cell">A handful is 160 kcal of mostly fat</td></tr>
+            <tr><td>Bacon grease / ghee / oil</td><td class="leverage-1">0 g</td><td>Flavor</td><td class="d-none d-md-table-cell">Pure calories — the thing that crowded out protein last time</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- the template -->
+    <h3 class="h6 mb-1"><i class="bi bi-clock text-info"></i> The template <span class="small text-secondary" style="font-weight:400;">— 16:8, noon–8pm, ~1,450 kcal, ~155 g protein</span></h3>
+    <p class="small text-secondary mb-2">Three feedings, protein front-loaded so you've banked most of it by mid-afternoon and dinner is easy.</p>
+    <div class="row g-3 mb-2">
+      <div class="col-md-4"><div class="bezel p-3 h-100">
+        <div class="eyebrow mb-1">Noon · break the fast</div>
+        <p class="small mb-2">4 whole eggs + 5 oz cooked 90/10 ground beef (or leftover steak), greens sautéed in 1 tsp ghee.</p>
+        <div class="small" style="font-family:var(--mono);color:var(--good);">~655 kcal · 63 g protein · 4 g net carb</div>
+      </div></div>
+      <div class="col-md-4"><div class="bezel p-3 h-100">
+        <div class="eyebrow mb-1">~3–4pm · bridge</div>
+        <p class="small mb-2">1.5 scoops whey (or your Musclepharm / bone broth protein) in water or unsweetened almond milk.</p>
+        <div class="small" style="font-family:var(--mono);color:var(--good);">~165 kcal · 37 g protein</div>
+      </div></div>
+      <div class="col-md-4"><div class="bezel p-3 h-100">
+        <div class="eyebrow mb-1">~7pm · close the window</div>
+        <p class="small mb-2">7 oz sirloin + a big house salad with oil &amp; vinegar.</p>
+        <div class="small" style="font-family:var(--mono);color:var(--good);">~610 kcal · 55 g protein · 7 g net carb</div>
+      </div></div>
+    </div>
+    <div class="bezel p-2 px-3 mb-3" style="border-color:var(--accent);">
+      <p class="small mb-0" style="font-family:var(--mono);"><strong>Day total ≈ 1,430 kcal · 155 g protein · ~14 g net carb · ~70 g fat.</strong></p>
+      <p class="small text-secondary mb-0 mt-1" style="font-family:var(--sans);">That's <strong>43% of calories from protein</strong> — what makes a ~1,000-kcal deficit survivable. Protein is the most satiating macro, so you're not white-knuckling hunger the way a fat-heavy 1,400-kcal day leaves you.</p>
+    </div>
+
+    <!-- restaurant version -->
+    <div class="bezel p-3 mb-3">
+      <h3 class="h6"><i class="bi bi-shop text-warning"></i> The restaurant version <span class="small text-secondary" style="font-weight:400;">— Texas Roadhouse, your actual Jan 16</span></h3>
+      <p class="small">You don't have to cook to hit this. Eating out the way you already do:</p>
+      <ul class="small mb-2">
+        <li><strong>Noon:</strong> bone broth protein + a small whey shake to front-load protein on a restaurant day → ~250 kcal, ~40 g protein</li>
+        <li><strong>Dinner @ TR:</strong> 8 oz USDA sirloin (340 / 49 g) + cup of Texas Red Chili (290 / 18 g) + house salad, no croutons, oil &amp; vinegar (175 / 9 g)</li>
+        <li><strong>Day total ≈ 1,055 kcal · ~116 g protein.</strong> Room to add a 4th-meal shake or a side to land at goal.</li>
+      </ul>
+      <p class="small mb-0 text-secondary">The point: your real Jan 16 was <em>already</em> 80% of a great cut day. It only missed on protein volume, and one front-loaded shake fixes it.</p>
+    </div>
+
+    <!-- swaps -->
+    <div class="bezel p-3 mb-3">
+      <h3 class="h6"><i class="bi bi-arrow-left-right text-info"></i> Swaps that fix the protein gap without changing calories</h3>
+      <p class="small">1:1 calorie-neutral trades that buy you protein:</p>
+      <ul class="small mb-0">
+        <li>Bacon grease / ghee cooking fat → <strong>cook in a non-stick pan with 1 tsp oil</strong>, bank the ~100 kcal toward 3 oz more meat (+22 g protein)</li>
+        <li>Handful of almonds (160 kcal, 6 g) → <strong>nonfat Greek yogurt</strong> (160 kcal, ~27 g) — +21 g protein</li>
+        <li>Extra cheese on a plate → <strong>egg whites or a half-scoop of whey</strong> for the same calories at 2–3× the protein</li>
+        <li>Pork rinds as a snack → fine occasionally, but <strong>jerky or a shake</strong> gives more protein per calorie with less fat</li>
+      </ul>
+    </div>
+
+    <!-- gotchas -->
+    <div class="bezel p-3">
+      <h3 class="h6"><i class="bi bi-exclamation-triangle-fill text-warning"></i> Gotchas</h3>
+      <ul class="small mb-0">
+        <li class="mb-1"><strong>Don't chase the protein target with fat ride-along.</strong> 90/10 beef and cheese are protein <em>and</em> a fat tax. Lean cuts, egg whites, whey, and white fish let you hit 155 g without blowing the fat budget.</li>
+        <li class="mb-1"><strong>Front-load protein.</strong> If you leave 100 g for dinner you won't get there. Bank 60 g+ at noon.</li>
+        <li class="mb-1"><strong>Celiac household helps you here.</strong> A protein-anchored low-carb day is naturally gluten-free, so it aligns with how Sarah already cooks — no separate menu.</li>
+        <li><strong>Electrolytes, not more food, fix the 3pm crash.</strong> On low carb the afternoon slump is potassium/magnesium/sodium, not hunger. Salt your food and consider a magnesium glycinate; don't "solve" it by eating into your window early.</li>
+      </ul>
+    </div>
+  </section>
+
   <!-- HUNGER & SATIETY -->
   <section id="hunger" class="mb-4">
     <div class="sec-head h5 mb-3"><span class="idx">SAT</span> <i class="bi bi-emoji-dizzy"></i> Hunger &amp; Satiety <span class="small text-secondary ms-1" style="font-family:var(--sans);font-weight:400;">— surviving Tuesday</span></div>
@@ -553,7 +666,7 @@ body {
       <p class="mb-2"><strong>Rate</strong> = deficit × 7 ÷ 3,500 lb/week, where deficit = TDEE − <em>effective</em> intake. The 3,500 kcal/lb rule is an approximation that overstates loss slightly as you lean out.</p>
       <p class="mb-2"><strong>Eating window → effective intake.</strong> A window of 12 h or wider imposes no passive cap. Below that, each narrower hour shaves an estimated passive amount, ramping linearly to a ~500 kcal/day ceiling at a tight ≤6 h window — the spontaneous-reduction range reported in time-restricted-eating trials (Gabel 2018: ~341 kcal/day at 8 h). This is a <em>soft cap</em>: effective intake = min(your set intake, TDEE − passive cut), so the window only ever pulls intake <em>down</em>. If you deliberately set a lower intake (as in the 2023 preset), your number wins and the window stops binding.</p>
       <p class="mb-2"><strong>Fat-vs-lean split</strong> starts at ~78% fat and is adjusted by protein (g/kg), training frequency, sleep, and deficit aggressiveness, then clamped to 35–92%. The sleep term is anchored to Nedeltcheva 2010 (5.5 h vs 8.5 h: −55% fat fraction, +60% lean loss). It is a <em>directional estimate</em>, not DEXA.</p>
-      <p class="mb-0"><strong>Sustainability score</strong> rewards moderate deficit, adequate sleep, adequate protein, and a narrow eating window (your proven tool); it penalizes aggressive deficits and short sleep. It encodes the lesson that the binding constraint is adherence, not knowledge.</p>
+      <p class="mb-0"><strong>Sustainability score</strong> rewards moderate deficit, adequate sleep, adequate protein, and a <em>moderate</em> 16:8-style window (~6–9h, your proven tool); it penalizes aggressive deficits, short sleep, wide windows, and very tight near-OMAD windows (≤4h) that few people hold for years. It encodes the lesson that the binding constraint is adherence, not knowledge.</p>
       <hr>
       <p class="small mb-1"><strong>Sources (primary, verified 2026-06-20):</strong></p>
       <ul class="small mb-0">
@@ -621,7 +734,7 @@ body {
     // ~200-550 kcal/day spontaneous reductions seen in TRE trials (Gabel 2018).
     // The window can only pull effective intake DOWN — a lower manual intake wins.
     const passiveCut = Math.round(PASSIVE_MAX * clamp((W_FULL - win) / (W_FULL - W_TIGHT), 0, 1));
-    const windowCap = tdee - passiveCut;
+    const windowCap = passiveCut > 0 ? tdee - passiveCut : Infinity;  // open window => no cap (surplus stays possible)
     const effCal = Math.min(cal, windowCap);
     const windowBinds = effCal < cal;            // window, not the slider, sets intake
 
@@ -647,11 +760,19 @@ body {
     sus -= clamp((defPct - 12) * 2.2, 0, 45);          // deficit aggressiveness
     if (sleep < 5.5) sus -= 30; else if (sleep < 6.5) sus -= 18; else if (sleep < 7) sus -= 8;
     if (gPerKg < 1.4) sus -= 12; else if (gPerKg < 1.6) sus -= 5;
-    if (win > 10 && defPct > 18) sus -= 12; else if (win <= 8) sus += 5;  // TRE rewarded
+    // Eating window: inverted-U. The ~6-9h zone (16:8) is the proven, durable
+    // tool; wider windows lose the passive benefit; very tight windows (OMAD-ish)
+    // are an extreme restriction few hold for years.
+    if (win < 3)        sus -= 28;                    // 1-2h: extreme, won't last
+    else if (win < 5)   sus -= 16;                    // 3-4h: very tight, fragile
+    else if (win < 6)   sus -= 6;                     // 5h: getting hard
+    else if (win <= 9)  sus += 5;                     // 6-9h: proven, sustainable
+    else if (win <= 11) sus -= (defPct > 18 ? 8 : 0); // 10-11h: open-ish
+    else                sus -= (defPct > 18 ? 12 : 4);// >11h: weak TRE / easy overeat
     if (train === 0) sus -= 6;
     sus = Math.round(clamp(sus, 0, 100));
 
-    return {wtLb,goalLb,tdee,deficit,defPct,ratePerWk,ratePctBW,fatFrac,sus,gPerKg,sleep,win,cal,effCal,passiveCut,windowBinds};
+    return {wtLb,goalLb,act,tdee,deficit,defPct,ratePerWk,ratePctBW,fatFrac,sus,gPerKg,sleep,win,cal,effCal,passiveCut,windowBinds};
   }
 
   function band(score){
@@ -667,6 +788,84 @@ body {
     el.style.setProperty("--fill", pct.toFixed(1));
   }
 
+  // Week-by-week weight projection at a fixed effective intake. As weight falls,
+  // BMR (and thus TDEE) falls, the deficit shrinks, and the curve flattens —
+  // the adaptive slowdown. Equilibrium is the weight where TDEE = intake.
+  function trajectory(r){
+    const pts = [{wk:0, w:r.wtLb}];
+    const goal = r.goalLb, toLose = r.wtLb - goal;
+    let w = r.wtLb, reachedWk = null;
+    const MAXW = 156;                                      // 3-year ceiling
+    for (let wk=1; wk<=MAXW; wk++){
+      const kg = w / 2.20462;
+      const tdee = (10*kg + 6.25*HEIGHT_CM - 5*AGE + 5) * r.act;
+      const rate = (tdee - r.effCal) * 7 / KCAL_PER_LB;   // + = losing weight
+      w -= rate;
+      pts.push({wk, w});
+      if (toLose > 0 && w <= goal){ pts[pts.length-1].w = goal; reachedWk = wk; break; }
+      if (toLose < 0 && w >= goal){ pts[pts.length-1].w = goal; reachedWk = wk; break; }
+      if (Math.abs(rate) < 0.03) break;                    // reached equilibrium
+    }
+    const kgEq = (r.effCal / r.act - 6.25*HEIGHT_CM + 5*AGE - 5) / 10;
+    return { pts, reachedWk, eqLb: kgEq * 2.20462 };
+  }
+
+  const fmtDur = wks => wks < 8 ? wks + " wk" : (wks/4.345).toFixed(1) + " mo";
+
+  function drawTrajectory(r){
+    const { pts, reachedWk, eqLb } = trajectory(r);
+    const VB_W=800, VB_H=230, padL=44, padR=8, padT=14, padB=22;
+    const xL=padL, xR=VB_W-padR, yT=padT, yB=VB_H-padB;
+    const maxWk = Math.max(1, pts[pts.length-1].wk);
+    const ws = pts.map(p=>p.w).concat(r.goalLb);
+    let hi = Math.max(...ws), lo = Math.min(...ws);
+    const padW = Math.max(1.5, (hi-lo)*0.08); hi += padW; lo -= padW;
+    const X = wk => xL + (wk/maxWk)*(xR-xL);
+    const Y = ww => yB - ((ww-lo)/(hi-lo))*(yB-yT);
+
+    const line = pts.map((p,i)=>(i?"L":"M")+X(p.wk).toFixed(1)+" "+Y(p.w).toFixed(1)).join(" ");
+    $("traj-line").setAttribute("d", line);
+    $("traj-area").setAttribute("d", line + ` L ${X(maxWk).toFixed(1)} ${yB} L ${X(0).toFixed(1)} ${yB} Z`);
+
+    const gy = Y(r.goalLb);
+    const gl = $("traj-goal");
+    gl.setAttribute("x1", xL); gl.setAttribute("x2", xR);
+    gl.setAttribute("y1", gy.toFixed(1)); gl.setAttribute("y2", gy.toFixed(1));
+
+    const yTop = $("traj-y-top");
+    yTop.setAttribute("y", (Y(pts[0].w)+4).toFixed(1));
+    yTop.textContent = Math.round(pts[0].w) + " lb";
+    const gLbl = $("traj-goal-lbl");
+    gLbl.setAttribute("y", (gy > yT+16 ? gy-5 : gy+13).toFixed(1));
+    gLbl.textContent = "goal " + Math.round(r.goalLb);
+    $("traj-x1").textContent = fmtDur(maxWk);
+
+    const dot = $("traj-dot"), dotLbl = $("traj-dot-lbl"), eta = $("o-traj-eta"), toLose = r.wtLb - r.goalLb;
+    if (reachedWk){
+      const cx = X(reachedWk);
+      dot.style.display="";
+      dot.setAttribute("cx", cx.toFixed(1));
+      dot.setAttribute("cy", gy.toFixed(1));
+      const d = new Date(); d.setDate(d.getDate() + Math.round(reachedWk*7));
+      const dateStr = d.toLocaleDateString(undefined,{month:"short", year:"numeric"});
+      eta.textContent = "≈ " + fmtDur(reachedWk) + " to " + Math.round(r.goalLb) + " lb · " + dateStr;
+      eta.style.color = "var(--good)";
+      const rightHalf = cx > (xL+xR)/2;
+      dotLbl.style.display="";
+      dotLbl.setAttribute("x", (rightHalf ? cx-7 : cx+7).toFixed(1));
+      dotLbl.setAttribute("y", (gy-8).toFixed(1));
+      dotLbl.setAttribute("text-anchor", rightHalf ? "end" : "start");
+      dotLbl.textContent = dateStr;
+    } else {
+      dot.style.display="none";
+      dotLbl.style.display="none";
+      if (Math.abs(toLose) < 0.6){ eta.textContent = "holding ≈ " + Math.round(r.wtLb) + " lb"; eta.style.color = "var(--accent)"; }
+      else if (r.deficit < -5){ eta.textContent = "drifting up — surplus"; eta.style.color = "var(--bad)"; }
+      else if (toLose > 0 && eqLb > r.goalLb){ eta.textContent = "plateaus ≈ " + Math.round(eqLb) + " lb — won't reach goal"; eta.style.color = "var(--warn)"; }
+      else { eta.textContent = "stalled — no real deficit"; eta.style.color = "var(--bad)"; }
+    }
+  }
+
   function render() {
     levers.forEach(id => { setFill(id); const v=$(id+"-v"); if (v && id!=="winStart" && id!=="winEnd") v.textContent = $(id).value; });
     $("act-lbl").textContent = "(" + actLabel(+$("act").value) + ")";
@@ -677,7 +876,7 @@ body {
     const r = compute();
     $("win-len").textContent = "(" + wlen + " h" + (r.passiveCut > 0 ? " · −" + r.passiveCut + " kcal passive" : " window") + ")";
     $("o-tdee").textContent = r.tdee.toLocaleString();
-    $("o-def").textContent = (r.deficit<0?"+":"") + Math.round(r.deficit).toLocaleString();
+    $("o-def").textContent = (r.deficit<0?"+":"") + Math.round(Math.abs(r.deficit)).toLocaleString();
     $("o-defpct").textContent = (r.defPct>=0? r.defPct.toFixed(0):"+"+Math.abs(r.defPct).toFixed(0)) + "% of TDEE"
       + (r.windowBinds ? " · eff " + r.effCal.toLocaleString() + " kcal" : "");
 
@@ -741,12 +940,14 @@ body {
     if (r.defPct > 30) f.push(["bad","exclamation-octagon-fill",`<strong>Deficit ${r.defPct.toFixed(0)}%.</strong> Aggressive — high lean-loss + burnout risk.`]);
     if (r.gPerKg < 1.6 && r.deficit > 200) f.push(["warn","exclamation-triangle-fill",`<strong>Protein ${r.gPerKg.toFixed(1)} g/kg.</strong> Below the ~1.8 g/kg retention floor.`]);
     if (r.ratePctBW > 1.0) f.push(["warn","speedometer2",`<strong>${r.ratePctBW.toFixed(1)}%/wk.</strong> Faster than the 0.5–1% muscle-sparing band.`]);
-    if (r.windowBinds) f.push(["good","check-circle-fill",`<strong>${r.win}h window → ~${r.effCal.toLocaleString()} kcal.</strong> Passively trims ~${r.passiveCut} kcal vs an open window — no counting needed.`]);
+    if (r.win <= 4) f.push(["warn","exclamation-triangle-fill",`<strong>${r.win}h window.</strong> Near-OMAD — an extreme restriction few hold for long; the durable zone is ~6–9h.`]);
+    else if (r.windowBinds) f.push(["good","check-circle-fill",`<strong>${r.win}h window → ~${r.effCal.toLocaleString()} kcal.</strong> Passively trims ~${r.passiveCut} kcal vs an open window — no counting needed.`]);
     else if (r.passiveCut > 0 && r.deficit > 200) f.push(["good","check-circle-fill",`<strong>${r.win}h window engaged.</strong> Could passively cap ~${r.passiveCut} kcal, but your ${r.cal.toLocaleString()} intake is already lower.`]);
     if (r.deficit > 200 && r.deficit < 600 && r.sleep >= 6.5 && r.gPerKg >= 1.6) f.push(["good","shield-check",`<strong>Ratchet zone.</strong> Small, durable, newborn-compatible.`]);
     if (f.length === 0) f.push(["good","dot",`<span class="text-secondary">All clear — move the levers to surface tradeoffs.</span>`]);
     $("o-flags").innerHTML = f.map(([t,ic,msg])=>`<div class="annun annun-${t}"><i class="bi bi-${ic}"></i><span>${msg}</span></div>`).join("");
 
+    drawTrajectory(r);
     save();
   }
 
