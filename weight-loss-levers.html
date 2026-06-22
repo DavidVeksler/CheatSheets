@@ -270,9 +270,14 @@ body {
               <span class="lever-val" id="cal-v">2100</span>
             </div>
             <div class="lever-row d-flex align-items-center gap-2">
-              <label class="flex-grow-1" for="win">Eating window <span class="text-secondary small">(h/day)</span></label>
-              <input type="range" id="win" min="4" max="14" step="1" value="8" style="max-width:50%" />
-              <span class="lever-val" id="win-v">8</span>
+              <label class="flex-grow-1" for="winStart">Eat from <span class="text-secondary small" id="win-len">(8&nbsp;h window)</span></label>
+              <input type="range" id="winStart" min="0" max="23" step="1" value="12" style="max-width:50%" />
+              <span class="lever-val" id="winStart-v">12&nbsp;pm</span>
+            </div>
+            <div class="lever-row d-flex align-items-center gap-2">
+              <label class="flex-grow-1" for="winEnd">Eat until <span class="text-secondary small">(window close)</span></label>
+              <input type="range" id="winEnd" min="1" max="24" step="1" value="20" style="max-width:50%" />
+              <span class="lever-val" id="winEnd-v">8&nbsp;pm</span>
             </div>
             <div class="lever-row d-flex align-items-center gap-2">
               <label class="flex-grow-1" for="pro">Protein <span class="text-secondary small">(g/day)</span></label>
@@ -525,7 +530,16 @@ body {
   const LS = "wll-config-v1";
   const HEIGHT_CM = 178, AGE = 45, KCAL_PER_LB = 3500;
 
-  const levers = ["wt","goal","act","cal","win","pro","sleep","train"];
+  const levers = ["wt","goal","act","cal","winStart","winEnd","pro","sleep","train"];
+
+  // 24h hour -> clock label, e.g. 0 -> "12 am", 12 -> "12 pm", 24 -> "12 am"
+  const fmtHour = h => {
+    h = ((h % 24) + 24) % 24;
+    const hr = h % 12 === 0 ? 12 : h % 12;
+    return hr + " " + (h < 12 ? "am" : "pm");
+  };
+  // window length in hours from start/end (handles overnight wrap)
+  const windowLen = (start, end) => { let w = end - start; if (w <= 0) w += 24; return w; };
 
   const actLabel = a =>
     a < 1.35 ? "sedentary" : a < 1.45 ? "light" : a < 1.6 ? "moderate" : "active";
@@ -534,7 +548,8 @@ body {
 
   function compute() {
     const wtLb = +$("wt").value, goalLb = +$("goal").value, act = +$("act").value;
-    const cal = +$("cal").value, win = +$("win").value, pro = +$("pro").value;
+    const cal = +$("cal").value, pro = +$("pro").value;
+    const win = windowLen(+$("winStart").value, +$("winEnd").value);
     const sleep = +$("sleep").value, train = +$("train").value;
     const kg = wtLb / 2.20462;
 
@@ -583,8 +598,12 @@ body {
   }
 
   function render() {
-    levers.forEach(id => { const v=$(id+"-v"); if (v) v.textContent = $(id).value; setFill(id); });
+    levers.forEach(id => { setFill(id); const v=$(id+"-v"); if (v && id!=="winStart" && id!=="winEnd") v.textContent = $(id).value; });
     $("act-lbl").textContent = "(" + actLabel(+$("act").value) + ")";
+    const ws = +$("winStart").value, we = +$("winEnd").value, wlen = windowLen(ws, we);
+    $("winStart-v").textContent = fmtHour(ws);
+    $("winEnd-v").textContent = fmtHour(we);
+    $("win-len").textContent = "(" + wlen + " h window)";
 
     const r = compute();
     $("o-tdee").textContent = r.tdee.toLocaleString();
@@ -660,9 +679,9 @@ body {
   }
 
   const PRESETS = {
-    "2023": {wt:183,goal:160,act:1.45,cal:1400,win:7,pro:95,sleep:6,train:1},
-    "now":  {wt:183,goal:175,act:1.4, cal:2100,win:8,pro:155,sleep:6.5,train:3},
-    "later":{wt:183,goal:168,act:1.5, cal:1750,win:8,pro:175,sleep:7.5,train:5}
+    "2023": {wt:183,goal:160,act:1.45,cal:1400,winStart:13,winEnd:20,pro:95,sleep:6,train:1},
+    "now":  {wt:183,goal:175,act:1.4, cal:2100,winStart:12,winEnd:20,pro:155,sleep:6.5,train:3},
+    "later":{wt:183,goal:168,act:1.5, cal:1750,winStart:12,winEnd:20,pro:175,sleep:7.5,train:5}
   };
   function applyPreset(name){
     const p = PRESETS[name]; if(!p) return;
