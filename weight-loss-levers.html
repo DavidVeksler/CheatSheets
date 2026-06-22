@@ -3,22 +3,35 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<script>
+  /* Set theme before paint to keep Bootstrap (data-bs-theme) in sync with our light-dark() tokens — no flash. */
+  (function(){ try {
+    var s = localStorage.getItem("wll-theme");
+    if (s === "light" || s === "dark") document.documentElement.setAttribute("data-theme", s);
+    var dark = s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-bs-theme", dark ? "dark" : "light");
+  } catch(e){} })();
+</script>
 <title>Weight-Loss Levers: An Interactive Body-Composition Control Panel</title>
-<meta name="description" content="Interactive weight-loss guide: tweak energy deficit, eating window, protein, sleep, training, and steps to see projected rate of loss, fat-vs-lean split, time to goal, and a sustainability score grounded in published research." />
+<meta name="description" content="Interactive weight-loss control panel: tweak energy deficit, eating window, protein, sleep, training, and steps to see projected rate of loss, fat-vs-lean split, time to goal, and a live sustainability gauge grounded in published research." />
 <meta name="keywords" content="weight loss levers, calorie deficit calculator, TDEE, protein muscle retention, sleep fat loss, intermittent fasting, body recomposition, sustainable fat loss" />
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/weight-loss-levers.html" />
 
 <meta property="og:title" content="Weight-Loss Levers: Interactive Body-Composition Control Panel" />
-<meta property="og:description" content="Tweak the real levers of fat loss — deficit, eating window, protein, sleep, training — and watch rate, fat-vs-lean split, and sustainability update live." />
+<meta property="og:description" content="Tweak the real levers of fat loss — deficit, eating window, protein, sleep, training — and watch rate, fat-vs-lean split, and a sustainability gauge update live." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://cheatsheets.davidveksler.com/weight-loss-levers.html" />
 <meta property="og:image" content="images/weight-loss-levers.png" />
-<meta property="og:image:alt" content="Weight-loss lever control panel with sliders for deficit, protein, sleep, and training and a live projection readout" />
+<meta property="og:image:alt" content="Weight-loss instrument cluster with faders for deficit, protein, sleep, and training and live gauges for rate of loss and sustainability" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Weight-Loss Levers: Interactive Control Panel" />
-<meta name="twitter:description" content="Tweak deficit, eating window, protein, sleep, and training; see rate, fat-vs-lean split, and a sustainability score live." />
+<meta name="twitter:description" content="Tweak deficit, eating window, protein, sleep, and training; watch rate, fat-vs-lean split, and a sustainability gauge react live." />
 <meta name="twitter:image" content="images/weight-loss-levers.png" />
 <meta name="twitter:creator" content="@heroiclife" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous" />
@@ -28,11 +41,11 @@
   "@context": "https://schema.org",
   "@type": "TechArticle",
   "headline": "Weight-Loss Levers: An Interactive Body-Composition Control Panel",
-  "description": "Interactive guide to the controllable levers of fat loss — energy deficit, eating window, protein, sleep, training, and NEAT — with a live model projecting rate of loss, fat-vs-lean split, time to goal, and a sustainability score, grounded in published research (Nedeltcheva 2010; Helms 2014; ISSN position stand).",
+  "description": "Interactive control panel for the controllable levers of fat loss — energy deficit, eating window, protein, sleep, training, and NEAT — with a live model projecting rate of loss, fat-vs-lean split, time to goal, and a sustainability gauge, grounded in published research (Nedeltcheva 2010; Helms 2014; ISSN position stand).",
   "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
   "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
   "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "dateModified": "2026-06-21",
   "keywords": "weight loss levers, calorie deficit, TDEE, protein, sleep, fat loss, body recomposition, intermittent fasting, sustainability"
 }
 </script>
@@ -43,82 +56,305 @@
 @layer tokens {
   :root {
     color-scheme: light dark;
-    --accent: light-dark(#0d6efd, #4c9aff);
-    --good: light-dark(#198754, #46c98b);
-    --warn: light-dark(#b8860b, #e3b341);
-    --bad: light-dark(#c0392b, #ff6b5e);
-    --panel: light-dark(#ffffff, #1b1f26);
-    --panel-2: light-dark(#f6f8fb, #232833);
-    --ink: light-dark(#1a1d23, #e6e9ef);
-    --ink-soft: light-dark(#5a6270, #9aa4b2);
-    --line: light-dark(#e2e6ee, #333a47);
-    --hero: light-dark(linear-gradient(135deg,#0d3b66,#1d6fb8), linear-gradient(135deg,#0a1c33,#11314f));
+    --accent: light-dark(#0f6fb8, #38c7ff);
+    --accent-soft: light-dark(#cde7f7, #123048);
+    --readout: light-dark(#0a6b58, #46e0b0);   /* phosphor green-cyan */
+    --good: light-dark(#15835a, #46e0a0);
+    --warn: light-dark(#a9760a, #f5c451);
+    --bad:  light-dark(#bf3322, #ff7a6b);
+    --bg:     light-dark(#eef1f5, #0b0e13);
+    --panel:  light-dark(#ffffff, #141922);
+    --panel-2:light-dark(#f3f6fa, #1b212c);
+    --bezel:  light-dark(#dfe5ee, #0a0d12);
+    --ink:    light-dark(#161a21, #e7ecf3);
+    --ink-soft:light-dark(#5d6675, #93a0b2);
+    --line:   light-dark(#dde3ec, #2a323f);
+    --line-2: light-dark(#c6cedb, #38424f);
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    /* gradients can't go through light-dark(); set per-scheme below */
+    --hero: radial-gradient(120% 140% at 15% 0%, #16456b 0%, #0c2a44 55%, #081a2c 100%);
   }
-  [data-theme="light"] { color-scheme: light; }
-  [data-theme="dark"]  { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root { --hero: radial-gradient(120% 140% at 15% 0%, #11314f 0%, #0a1c30 55%, #05101c 100%); }
+  }
+  [data-theme="light"] { color-scheme: light; --hero: radial-gradient(120% 140% at 15% 0%, #16456b 0%, #0c2a44 55%, #081a2c 100%); }
+  [data-theme="dark"]  { color-scheme: dark; --hero: radial-gradient(120% 140% at 15% 0%, #11314f 0%, #0a1c30 55%, #05101c 100%); }
 }
 
 @layer base {
-  body { background: var(--panel-2); color: var(--ink); }
+  body { font-family: var(--sans); }
   h1,h2,h3 { text-wrap: balance; }
   p, li { text-wrap: pretty; }
   section { scroll-margin-top: 1rem; }
-  a { color: var(--accent); }
-  code { color: light-dark(#9c2d6b,#ff9ed1); background: light-dark(#f2e9f0,#2a2230); padding:.05rem .3rem; border-radius:4px; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  code { font-family: var(--mono); color: light-dark(#9c2d6b,#ff9ed1); background: light-dark(#f2e9f0,#241b29); padding:.05rem .3rem; border-radius:4px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 
 @layer components {
-  .hero { background: var(--hero); color:#fff; border-radius: 1rem; }
-  .card-sheet { background: var(--panel); border:1px solid var(--line); border-radius: .9rem; }
-  .lever-lab { background: var(--panel); border:1px solid var(--line); border-radius:1rem; }
-  .readout-tile { background: var(--panel-2); border:1px solid var(--line); border-radius:.7rem; padding:.8rem .9rem; height:100%; }
-  .readout-tile .big { font-size:1.65rem; font-weight:700; line-height:1.1; }
-  .readout-tile .lbl { font-size:.72rem; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft); }
-  .lever-row { padding:.55rem 0; border-bottom:1px dashed var(--line); }
+  /* ---- shared instrument chrome ---- */
+  .eyebrow { font-family: var(--mono); font-size:.7rem; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-soft); }
+  .sec-head { display:flex; align-items:center; gap:.6rem; font-family:var(--mono); font-weight:600; letter-spacing:.04em; }
+  .sec-head .idx { font-size:.72rem; color:var(--accent); border:1px solid var(--line-2); border-radius:.35rem; padding:.05rem .4rem; }
+  .bezel { background: var(--panel); border:1px solid var(--line-2); border-radius:.9rem;
+           box-shadow: inset 0 1px 0 light-dark(#ffffff, #ffffff10), 0 1px 2px #00000010; }
+  .card-sheet { background: var(--panel); border:1px solid var(--line); border-radius:.8rem; }
+
+  /* ---- hero / title cluster ---- */
+  .hero { background: var(--hero); color:#eaf2fb; border-radius:1rem; position:relative; overflow:hidden; border:1px solid #ffffff1a; }
+  .hero::after { content:""; position:absolute; inset:0;
+    background-image: linear-gradient(#ffffff0a 1px, transparent 1px), linear-gradient(90deg,#ffffff0a 1px, transparent 1px);
+    background-size: 2rem 2rem; pointer-events:none; }
+  .hero > * { position:relative; }
+  .tag-mono { font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; }
+  .calib-strip { font-family:var(--mono); font-size:.78rem; }
+  .calib-strip b { color:#fff; }
+
+  /* ---- lever lab ---- */
+  .lab-grid { display:grid; gap:1rem; grid-template-columns: 1fr; }
+  @media (min-width: 992px){ .lab-grid { grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); } }
+
+  .mode-btn { font-family:var(--mono); font-size:.74rem; letter-spacing:.03em; }
+
+  .deck { background:var(--panel-2); border:1px solid var(--line); border-radius:.7rem; padding:.4rem .9rem; }
+  .lever-row { padding:.5rem 0; border-bottom:1px dashed var(--line); }
   .lever-row:last-child { border-bottom:0; }
-  .lever-val { font-variant-numeric: tabular-nums; font-weight:600; min-width:5.5ch; text-align:right; }
-  input[type=range]{ width:100%; accent-color: var(--accent); }
-  .score-bar { height:.85rem; border-radius:1rem; background: light-dark(#e9edf3,#2b313c); overflow:hidden; }
+  .lever-row label { font-size:.92rem; }
+  .lever-val { font-family:var(--mono); font-variant-numeric: tabular-nums; font-weight:600; min-width:5.5ch; text-align:right; color:var(--accent); }
+
+  /* custom faders */
+  input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:1.4rem; background:transparent; cursor:pointer; }
+  input[type=range]::-webkit-slider-runnable-track{ height:.45rem; border-radius:1rem;
+    background: linear-gradient(90deg, var(--accent) calc(var(--fill,0)*1%), var(--line-2) calc(var(--fill,0)*1%)); }
+  input[type=range]::-moz-range-track{ height:.45rem; border-radius:1rem; background:var(--line-2); }
+  input[type=range]::-moz-range-progress{ height:.45rem; border-radius:1rem; background:var(--accent); }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; margin-top:-.36rem; width:1.15rem; height:1.15rem; border-radius:50%;
+    background: var(--panel); border:3px solid var(--accent); box-shadow:0 1px 3px #00000040; }
+  input[type=range]::-moz-range-thumb{ width:1.05rem; height:1.05rem; border-radius:50%; background:var(--panel); border:3px solid var(--accent); }
+
+  /* ---- readout cluster ---- */
+  .readout-wrap { position:sticky; top:.75rem; }
+  .tile-grid { display:grid; grid-template-columns: repeat(2,1fr); gap:.55rem; }
+  .tile { background:var(--panel-2); border:1px solid var(--line); border-radius:.6rem; padding:.65rem .75rem; }
+  .tile .lbl { font-family:var(--mono); font-size:.66rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); }
+  .tile .big { font-family:var(--mono); font-size:1.7rem; font-weight:700; line-height:1.05; font-variant-numeric:tabular-nums; color:var(--readout); }
+  @media (prefers-color-scheme: dark){ .tile .big{ text-shadow:0 0 14px color-mix(in srgb, var(--readout) 45%, transparent); } }
+  .tile .sub { font-family:var(--mono); font-size:.72rem; color:var(--ink-soft); }
+
+  .gauge-card { background:var(--panel-2); border:1px solid var(--line); border-radius:.6rem; padding:.7rem .8rem; }
+  .gauge-num { font-family:var(--mono); font-weight:700; font-variant-numeric:tabular-nums; }
+
+  /* rate tape */
+  .tape { position:relative; height:1.4rem; border-radius:.4rem; overflow:hidden; border:1px solid var(--line);
+    background: linear-gradient(90deg, var(--panel) 0 33%, color-mix(in srgb,var(--good) 22%, transparent) 33% 66%, color-mix(in srgb,var(--bad) 20%, transparent) 66% 100%); }
+  .tape .needle { position:absolute; top:-2px; bottom:-2px; width:3px; background:var(--ink); border-radius:2px; transition:left .25s ease; }
+  @media (prefers-reduced-motion: reduce){ .tape .needle, .score-fill, .arc-val { transition:none; } }
+  .tape-scale { font-family:var(--mono); font-size:.62rem; color:var(--ink-soft); }
+
+  /* composition split */
+  .score-bar { height:.85rem; border-radius:1rem; background: var(--line-2); overflow:hidden; position:relative; }
   .score-fill { height:100%; transition: width .25s ease, background .25s ease; }
-  @media (prefers-reduced-motion: reduce){ .score-fill { transition: none; } }
-  .pill { font-size:.72rem; font-weight:600; padding:.15rem .55rem; border-radius:1rem; }
-  .pill-good{ background: light-dark(#d8f3e3,#163a2a); color: var(--good);}
-  .pill-warn{ background: light-dark(#fbf0d2,#3a3216); color: var(--warn);}
-  .pill-bad { background: light-dark(#fde0dc,#3a1d1a); color: var(--bad);}
-  .lever-table th, .micro-table th { position: sticky; top:0; background: var(--panel); }
+  .split-mark { position:absolute; top:-2px; bottom:-2px; left:75%; width:2px; background:var(--ink); opacity:.55; }
+
+  .arc-val { transition: stroke-dasharray .3s ease, stroke .3s ease; }
+
+  /* annunciator (flags) */
+  .annun { display:flex; gap:.5rem; align-items:flex-start; font-size:.85rem; padding:.45rem .6rem; border-radius:.5rem; border:1px solid var(--line); background:var(--panel-2); }
+  .annun i { font-size:1rem; line-height:1.2; }
+  .annun-good i{ color:var(--good);} .annun-warn i{ color:var(--warn);} .annun-bad i{ color:var(--bad);}
+
+  /* pills */
+  .pill { font-family:var(--mono); font-size:.7rem; font-weight:600; padding:.12rem .5rem; border-radius:.4rem; white-space:nowrap; }
+  .pill-good{ background: color-mix(in srgb,var(--good) 18%, transparent); color: var(--good);}
+  .pill-warn{ background: color-mix(in srgb,var(--warn) 20%, transparent); color: var(--warn);}
+  .pill-bad { background: color-mix(in srgb,var(--bad) 18%, transparent); color: var(--bad);}
+
+  /* tables */
+  .lever-table th { position: sticky; top:0; background: var(--panel); font-family:var(--mono); font-size:.72rem; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft); }
   table { color: var(--ink); }
   .table > :not(caption) > * > * { background: transparent; color: var(--ink); }
-  details.sheet { background: var(--panel); border:1px solid var(--line); border-radius:.8rem; padding:.2rem .9rem; margin-bottom:.6rem; }
-  details.sheet > summary { cursor:pointer; font-weight:600; padding:.6rem 0; list-style: revert; }
   .leverage-5{color:var(--good);font-weight:700} .leverage-3{color:var(--warn);font-weight:700} .leverage-1{color:var(--ink-soft)}
-  .controls-float{ position:fixed; right:1rem; bottom:1rem; display:flex; gap:.4rem; z-index:50; }
+
+  /* details */
+  details.sheet { background: var(--panel); border:1px solid var(--line); border-radius:.7rem; padding:.1rem .9rem; margin-bottom:.55rem; }
+  details.sheet > summary { cursor:pointer; font-weight:600; padding:.65rem 0; list-style:none; display:flex; gap:.6rem; align-items:baseline; }
+  details.sheet > summary::-webkit-details-marker{ display:none; }
+  details.sheet > summary::before{ content:"▸"; color:var(--accent); font-family:var(--mono); transition:transform .15s ease; }
+  details.sheet[open] > summary::before{ transform:rotate(90deg); }
+  details.sheet > summary .num { font-family:var(--mono); color:var(--accent); font-size:.85rem; }
   .gotcha{ border-left:3px solid var(--warn); padding-left:.7rem; color:var(--ink-soft); font-size:.92rem;}
-  .verified{ font-size:.8rem; color:var(--ink-soft); }
-  @media print { .controls-float, .lever-lab input { display:none !important; } details.sheet[open], details.sheet { border:0; } }
+  .verified{ font-family:var(--mono); font-size:.76rem; color:var(--ink-soft); }
+
+  .controls-float{ position:fixed; right:1rem; bottom:1rem; display:flex; gap:.4rem; z-index:50; }
+
+  @media print {
+    body{ background:#fff; }
+    .controls-float, .lab-grid input { display:none !important; }
+    .readout-wrap{ position:static; }
+    details.sheet, details.sheet[open] { border:1px solid #ccc; }
+    .hero::after{ display:none; }
+  }
 }
+
+/* Unlayered: beats Bootstrap's unlayered body background-color; --bg is theme-aware via light-dark() */
+body {
+  background:
+    linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 2.4rem,
+    linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 2.4rem 100%,
+    var(--bg);
+  background-blend-mode: soft-light, soft-light, normal;
+}
+@media print { body { background: #fff; } }
 </style>
 </head>
 <body>
 <a href="#lab" class="visually-hidden-focusable position-absolute top-0 start-0 m-2 btn btn-sm btn-primary">Skip to lever lab</a>
 
-<main class="container my-4" style="max-width: 1100px;">
+<main class="container my-4" style="max-width: 1140px;">
 
-  <!-- HERO -->
+  <!-- HERO / TITLE CLUSTER -->
   <header class="hero p-4 p-md-5 mb-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
-      <div>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+      <div style="max-width:62ch;">
+        <div class="tag-mono mb-2" style="color:#8fd4ff;"><i class="bi bi-sliders2"></i> Body-Composition Control Panel</div>
         <h1 class="display-6 fw-bold mb-2">Weight-Loss Levers</h1>
-        <p class="lead mb-1" style="max-width:60ch;">A control panel for body composition. Every input below is a <em>lever you actually control</em>. Move one, watch rate of loss, the fat-vs-lean split, time to goal, and a sustainability score react.</p>
-        <p class="mb-0 small opacity-75">Calibrated against a real cut: ~1,400 kcal/day, ~17 h daily fast, ~53 g net carb, → <strong>2.0–2.4 lb/week</strong>, bottoming at 160 lb before adherence (not metabolism) ended it at week 3.</p>
+        <p class="lead mb-0">Every input below is a <em>lever you actually control</em>. Move one — watch rate of loss, the fat-vs-lean split, time to goal, and a live sustainability gauge react.</p>
       </div>
-      <span class="badge text-bg-light align-self-center">v1.0</span>
+      <span class="badge text-bg-light align-self-start tag-mono">v2.0</span>
+    </div>
+    <div class="calib-strip mt-3 pt-3" style="border-top:1px solid #ffffff22; color:#b9d4ea;">
+      <i class="bi bi-broadcast-pin"></i> Calibrated to a real cut — <b>~1,400 kcal/day</b>, <b>~17 h</b> daily fast, <b>~53 g</b> net carb → <b>2.0–2.4 lb/wk</b>, bottoming at <b>160 lb</b> before adherence (not metabolism) ended it at week&nbsp;3.
     </div>
   </header>
 
+  <!-- LEVER LAB (HERO INTERACTIVE) -->
+  <section id="lab" class="mb-4">
+    <div class="bezel p-3 p-md-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div class="sec-head h5 mb-0"><span class="idx">LAB</span> <i class="bi bi-cpu text-primary"></i> Lever Lab</div>
+        <div class="btn-group btn-group-sm flex-wrap" role="group" aria-label="Load a preset configuration">
+          <button class="btn btn-outline-secondary mode-btn" data-preset="2023"><i class="bi bi-clock-history"></i> 2023 cut</button>
+          <button class="btn btn-outline-success mode-btn" data-preset="now"><i class="bi bi-moon-stars"></i> Newborn-safe</button>
+          <button class="btn btn-outline-primary mode-btn" data-preset="later"><i class="bi bi-rocket-takeoff"></i> Post-sleep cut</button>
+        </div>
+      </div>
+
+      <div class="lab-grid">
+        <!-- CONTROL DECK -->
+        <div>
+          <div class="deck mb-3">
+            <div class="eyebrow my-2">Your numbers</div>
+            <div class="lever-row d-flex align-items-center gap-2">
+              <label class="flex-grow-1" for="wt">Current weight <span class="text-secondary small">(lb)</span></label>
+              <input type="range" id="wt" min="140" max="230" step="1" value="183" style="max-width:50%" />
+              <span class="lever-val" id="wt-v">183</span>
+            </div>
+            <div class="lever-row d-flex align-items-center gap-2">
+              <label class="flex-grow-1" for="goal">Goal weight <span class="text-secondary small">(lb)</span></label>
+              <input type="range" id="goal" min="140" max="220" step="1" value="170" style="max-width:50%" />
+              <span class="lever-val" id="goal-v">170</span>
+            </div>
+            <div class="lever-row d-flex align-items-center gap-2">
+              <label class="flex-grow-1" for="act">Activity level <span class="text-secondary small" id="act-lbl">(light)</span></label>
+              <input type="range" id="act" min="1.25" max="1.7" step="0.05" value="1.45" style="max-width:50%" />
+              <span class="lever-val" id="act-v">1.45</span>
+            </div>
+          </div>
+
+          <div class="deck">
+            <div class="eyebrow my-2">The levers</div>
+            <div class="lever-row d-flex align-items-center gap-2">
+              <label class="flex-grow-1" for="cal">Daily intake <span class="text-secondary small">(kcal)</span></label>
+              <input type="range" id="cal" min="1000" max="3000" step="50" value="2100" style="max-width:50%" />
+              <span class="lever-val" id="cal-v">2100</span>
+            </div>
+            <div class="lever-row d-flex align-items-center gap-2">
+              <label class="flex-grow-1" for="win">Eating window <span class="text-secondary small">(h/day)</span></label>
+              <input type="range" id="win" min="4" max="14" step="1" value="8" style="max-width:50%" />
+              <span class="lever-val" id="win-v">8</span>
+            </div>
+            <div class="lever-row d-flex align-items-center gap-2">
+              <label class="flex-grow-1" for="pro">Protein <span class="text-secondary small">(g/day)</span></label>
+              <input type="range" id="pro" min="60" max="220" step="5" value="150" style="max-width:50%" />
+              <span class="lever-val" id="pro-v">150</span>
+            </div>
+            <div class="lever-row d-flex align-items-center gap-2">
+              <label class="flex-grow-1" for="sleep">Sleep <span class="text-secondary small">(h/night)</span></label>
+              <input type="range" id="sleep" min="4.5" max="9" step="0.25" value="6.5" style="max-width:50%" />
+              <span class="lever-val" id="sleep-v">6.5</span>
+            </div>
+            <div class="lever-row d-flex align-items-center gap-2">
+              <label class="flex-grow-1" for="train">Training sessions <span class="text-secondary small">(/week)</span></label>
+              <input type="range" id="train" min="0" max="7" step="1" value="3" style="max-width:50%" />
+              <span class="lever-val" id="train-v">3</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- READOUT CLUSTER (sticky) -->
+        <div>
+          <div class="readout-wrap">
+            <div class="eyebrow mb-2">Live projection</div>
+            <div class="tile-grid mb-2">
+              <div class="tile"><div class="lbl">Maintenance · TDEE</div><div class="big" id="o-tdee">—</div><div class="sub">kcal/day</div></div>
+              <div class="tile"><div class="lbl">Daily deficit</div><div class="big" id="o-def">—</div><div class="sub" id="o-defpct">—</div></div>
+              <div class="tile"><div class="lbl">Rate of loss</div><div class="big" id="o-rate">—</div><div class="sub" id="o-ratepct">—</div></div>
+              <div class="tile"><div class="lbl">Time to goal</div><div class="big" id="o-time">—</div><div class="sub" id="o-goaldate">—</div></div>
+            </div>
+
+            <!-- rate tape -->
+            <div class="gauge-card mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="lbl tag-mono text-uppercase" style="font-size:.66rem;color:var(--ink-soft);">Loss rate vs muscle-sparing band</span>
+                <span class="gauge-num" id="o-band-pill"><span class="pill pill-good">—</span></span>
+              </div>
+              <div class="tape"><div class="needle" id="o-tape-needle" style="left:0%"></div></div>
+              <div class="d-flex justify-content-between tape-scale mt-1"><span>0</span><span>0.5</span><span>1.0</span><span>1.5%/wk</span></div>
+            </div>
+
+            <!-- composition + sustainability gauge -->
+            <div class="row g-2 mb-2">
+              <div class="col-7">
+                <div class="gauge-card h-100">
+                  <div class="lbl tag-mono text-uppercase mb-1" style="font-size:.66rem;color:var(--ink-soft);">Composition of loss <span id="o-split-pill" class="pill pill-good ms-1">—</span></div>
+                  <div class="score-bar mb-1"><div class="score-fill" id="o-fatbar" style="width:78%;background:var(--good);"></div><div class="split-mark"></div></div>
+                  <div class="d-flex justify-content-between" style="font-family:var(--mono);font-size:.74rem;">
+                    <span><span id="o-fat" style="color:var(--good);">—</span> fat</span>
+                    <span class="text-secondary"><span id="o-lean">—</span> lean/water</span>
+                  </div>
+                  <div class="tape-scale mt-1">marker = 75% fat target</div>
+                </div>
+              </div>
+              <div class="col-5">
+                <div class="gauge-card h-100 text-center d-flex flex-column align-items-center justify-content-center">
+                  <div class="lbl tag-mono text-uppercase mb-1" style="font-size:.66rem;color:var(--ink-soft);">Sustainability</div>
+                  <svg viewBox="0 0 160 92" width="100%" style="max-width:150px" role="img" aria-labelledby="susTitle">
+                    <title id="susTitle">Sustainability gauge</title>
+                    <path d="M 14 82 A 66 66 0 0 1 146 82" fill="none" stroke="var(--line-2)" stroke-width="13" stroke-linecap="round" pathLength="100"/>
+                    <path id="o-sus-arc" class="arc-val" d="M 14 82 A 66 66 0 0 1 146 82" fill="none" stroke="var(--good)" stroke-width="13" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
+                    <text x="80" y="74" text-anchor="middle" class="gauge-num" id="o-sus-num" style="font-size:1.9rem;fill:var(--ink);">—</text>
+                  </svg>
+                  <span id="o-sus-pill" class="pill pill-good">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- annunciator panel -->
+            <div class="eyebrow mb-1 mt-1">Annunciator</div>
+            <div id="o-flags" class="d-flex flex-column gap-1"></div>
+
+            <p class="verified mt-2 mb-0"><i class="bi bi-info-circle"></i> Transparent estimator, not a measurement. Assumptions &amp; citations in <a href="#math">The&nbsp;Math</a>. Config saves locally on this device.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- QUICK REFERENCE -->
   <section id="quickref" class="mb-4">
-    <h2 class="h4 mb-3"><i class="bi bi-lightning-charge-fill text-warning"></i> Quick Reference — Levers by Leverage</h2>
-    <div class="card-sheet p-2 p-md-3 table-responsive">
+    <div class="sec-head h5 mb-3"><span class="idx">REF</span> <i class="bi bi-lightning-charge-fill text-warning"></i> Levers by Leverage</div>
+    <div class="bezel p-2 p-md-3 table-responsive">
       <table class="table table-sm align-middle lever-table mb-0">
         <thead><tr>
           <th>Lever</th><th>What it controls</th><th>Leverage</th><th>Effort to hold</th><th class="d-none d-md-table-cell">Your setting</th>
@@ -138,145 +374,53 @@
     <p class="small text-secondary mt-2 mb-0">The uncomfortable truth from your own data: you don't have a weight-loss problem (you hit 160), you have a <strong>drift problem</strong>. Drift is beaten by a small permanent change held for years, not a big temporary one held for three weeks.</p>
   </section>
 
-  <!-- LEVER LAB -->
-  <section id="lab" class="mb-4">
-    <div class="lever-lab p-3 p-md-4">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <h2 class="h4 mb-0"><i class="bi bi-sliders text-primary"></i> Lever Lab</h2>
-        <div class="btn-group btn-group-sm" role="group" aria-label="Presets">
-          <button class="btn btn-outline-secondary" data-preset="2023">Your 2023 cut</button>
-          <button class="btn btn-outline-success" data-preset="now">Newborn-safe (now)</button>
-          <button class="btn btn-outline-primary" data-preset="later">Post-sleep cut</button>
-        </div>
-      </div>
-
-      <div class="row g-4">
-        <!-- LEVERS -->
-        <div class="col-lg-6">
-          <h3 class="h6 text-uppercase text-secondary mb-2">Your numbers</h3>
-          <div class="lever-row d-flex align-items-center gap-2">
-            <label class="flex-grow-1" for="wt">Current weight <span class="text-secondary small">(lb)</span></label>
-            <input type="range" id="wt" min="140" max="230" step="1" value="183" style="max-width:55%" />
-            <span class="lever-val" id="wt-v">183</span>
-          </div>
-          <div class="lever-row d-flex align-items-center gap-2">
-            <label class="flex-grow-1" for="goal">Goal weight <span class="text-secondary small">(lb)</span></label>
-            <input type="range" id="goal" min="140" max="220" step="1" value="170" style="max-width:55%" />
-            <span class="lever-val" id="goal-v">170</span>
-          </div>
-          <div class="lever-row d-flex align-items-center gap-2">
-            <label class="flex-grow-1" for="act">Activity level <span class="text-secondary small" id="act-lbl">(light)</span></label>
-            <input type="range" id="act" min="1.25" max="1.7" step="0.05" value="1.45" style="max-width:55%" />
-            <span class="lever-val" id="act-v">1.45</span>
-          </div>
-
-          <h3 class="h6 text-uppercase text-secondary mt-3 mb-2">The levers</h3>
-          <div class="lever-row d-flex align-items-center gap-2">
-            <label class="flex-grow-1" for="cal">Daily intake <span class="text-secondary small">(kcal)</span></label>
-            <input type="range" id="cal" min="1000" max="3000" step="50" value="2100" style="max-width:55%" />
-            <span class="lever-val" id="cal-v">2100</span>
-          </div>
-          <div class="lever-row d-flex align-items-center gap-2">
-            <label class="flex-grow-1" for="win">Eating window <span class="text-secondary small">(h/day)</span></label>
-            <input type="range" id="win" min="4" max="14" step="1" value="8" style="max-width:55%" />
-            <span class="lever-val" id="win-v">8</span>
-          </div>
-          <div class="lever-row d-flex align-items-center gap-2">
-            <label class="flex-grow-1" for="pro">Protein <span class="text-secondary small">(g/day)</span></label>
-            <input type="range" id="pro" min="60" max="220" step="5" value="150" style="max-width:55%" />
-            <span class="lever-val" id="pro-v">150</span>
-          </div>
-          <div class="lever-row d-flex align-items-center gap-2">
-            <label class="flex-grow-1" for="sleep">Sleep <span class="text-secondary small">(h/night)</span></label>
-            <input type="range" id="sleep" min="4.5" max="9" step="0.25" value="6.5" style="max-width:55%" />
-            <span class="lever-val" id="sleep-v">6.5</span>
-          </div>
-          <div class="lever-row d-flex align-items-center gap-2">
-            <label class="flex-grow-1" for="train">Training sessions <span class="text-secondary small">(/week)</span></label>
-            <input type="range" id="train" min="0" max="7" step="1" value="3" style="max-width:55%" />
-            <span class="lever-val" id="train-v">3</span>
-          </div>
-        </div>
-
-        <!-- READOUT -->
-        <div class="col-lg-6">
-          <h3 class="h6 text-uppercase text-secondary mb-2">Projection</h3>
-          <div class="row g-2 mb-2">
-            <div class="col-6"><div class="readout-tile"><div class="lbl">Maintenance (TDEE)</div><div class="big" id="o-tdee">—</div><div class="small text-secondary">kcal/day</div></div></div>
-            <div class="col-6"><div class="readout-tile"><div class="lbl">Daily deficit</div><div class="big" id="o-def">—</div><div class="small text-secondary" id="o-defpct">—</div></div></div>
-            <div class="col-6"><div class="readout-tile"><div class="lbl">Rate of loss</div><div class="big" id="o-rate">—</div><div class="small text-secondary" id="o-ratepct">—</div></div></div>
-            <div class="col-6"><div class="readout-tile"><div class="lbl">Time to goal</div><div class="big" id="o-time">—</div><div class="small text-secondary" id="o-goaldate">—</div></div></div>
-          </div>
-
-          <div class="readout-tile mb-2">
-            <div class="lbl mb-1">Composition of loss <span id="o-split-pill" class="pill pill-good ms-1">—</span></div>
-            <div class="score-bar mb-1"><div class="score-fill" id="o-fatbar" style="width:78%; background:var(--good);"></div></div>
-            <div class="d-flex justify-content-between small">
-              <span><span id="o-fat">—</span> fat</span>
-              <span class="text-secondary"><span id="o-lean">—</span> lean/water</span>
-            </div>
-          </div>
-
-          <div class="readout-tile">
-            <div class="lbl mb-1">Sustainability score <span id="o-sus-pill" class="pill pill-good ms-1">—</span></div>
-            <div class="score-bar mb-1"><div class="score-fill" id="o-susbar" style="width:60%;"></div></div>
-            <div class="small text-secondary" id="o-sus-note">—</div>
-          </div>
-
-          <div id="o-flags" class="mt-2 small"></div>
-        </div>
-      </div>
-      <p class="verified mt-3 mb-0"><i class="bi bi-info-circle"></i> Model is a transparent estimator, not a measurement. Assumptions and citations are in <a href="#math">The Math</a>. Your config saves locally on this device.</p>
-    </div>
-  </section>
-
   <!-- LEVERS EXPLAINED -->
   <section id="levers" class="mb-4">
-    <h2 class="h4 mb-3"><i class="bi bi-list-check"></i> The Levers, One by One</h2>
+    <div class="sec-head h5 mb-3"><span class="idx">DOC</span> <i class="bi bi-list-check"></i> The Levers, One by One</div>
 
-    <details class="sheet" open><summary>1. Energy deficit — the only thing that <em>causes</em> loss</summary>
+    <details class="sheet" open><summary><span class="num">01</span> Energy deficit — the only thing that <em>causes</em> loss</summary>
       <p>Weight changes with energy balance, not exercise. A deficit of <strong>~3,500 kcal ≈ 1 lb</strong> of mostly-fat tissue (a useful approximation; real tissue is ~3,100–3,500 and the rule drifts as you get leaner).</p>
       <p><strong>Concrete (you):</strong> estimated TDEE ~2,400–2,600. Your 2023 cut ate ~1,400 → a ~1,000–1,200 kcal deficit → ~2.0–2.4 lb/week. Effective, but above the muscle-sparing ceiling.</p>
       <p class="gotcha"><strong>Gotcha / when not to:</strong> deficits &gt;25–30% of TDEE accelerate lean-mass loss and willpower burnout. During the newborn window, run <em>small</em> (300–500 kcal); save the aggressive cut for when you're sleeping.</p>
     </details>
 
-    <details class="sheet"><summary>2. Eating window (TRE) — caps intake without counting</summary>
+    <details class="sheet"><summary><span class="num">02</span> Eating window (TRE) — caps intake without counting</summary>
       <p>Time-restricted eating compresses the hours you can eat. It works by making a deficit happen <em>passively</em> — there's nothing to log, so it survives chaos. It is not magic beyond the deficit it creates.</p>
       <p><strong>Concrete (you):</strong> Jan 2023 averaged a 17.1 h fast (16 h+ on 24/31 days). The narrow window is precisely why you hit 1,400 kcal without daily macro tracking. This is your single most sustainable tool.</p>
       <p class="gotcha"><strong>Gotcha:</strong> a wide window (&gt;10 h) plus a big intended deficit means you're back to counting — the thing that broke at week 3. Pick a window and treat it as identity ("I don't eat before noon"), not a daily decision.</p>
     </details>
 
-    <details class="sheet"><summary>3. Sleep — decides whether you lose fat or muscle</summary>
+    <details class="sheet"><summary><span class="num">03</span> Sleep — decides whether you lose fat or muscle</summary>
       <p>Under matched calorie restriction, sleeping 5.5 h vs 8.5 h produced the <em>same</em> weight loss but cut the fraction lost as fat by <strong>55%</strong> and raised fat-free (muscle) loss by <strong>60%</strong> (Nedeltcheva 2010, mean age 41, mostly men — i.e., you).</p>
       <p><strong>Concrete (you):</strong> newborn fragmentation is suppressing your HRV and capping sleep. That is the strongest argument against an aggressive cut <em>right now</em> — you'd disproportionately burn muscle and feel terrible.</p>
       <p class="gotcha"><strong>Gotcha:</strong> you cannot out-protein or out-train a severe sleep deficit. If sleep is &lt;6 h, the correct deficit is "barely any."</p>
     </details>
 
-    <details class="sheet"><summary>4. Protein — the muscle-retention floor</summary>
+    <details class="sheet"><summary><span class="num">04</span> Protein — the muscle-retention floor</summary>
       <p>For lean, trained people in a deficit, <strong>1.8–2.7 g/kg bodyweight</strong> (≈2.3–3.1 g/kg lean mass) maximizes muscle retention (Helms 2014; ISSN position stand). Above ~2.4 g/kg adds little.</p>
       <p><strong>Concrete (you):</strong> 83 kg → target ~150–225 g/day. Your Jan cut averaged 95 g (~1.15 g/kg) — well under, which is one reason a chunk of the 160-lb low was likely lean tissue.</p>
       <p class="gotcha"><strong>Gotcha:</strong> protein's benefit is real but second-order to the deficit and sleep. It protects the <em>quality</em> of the loss; it doesn't drive the amount.</p>
     </details>
 
-    <details class="sheet"><summary>5. Resistance / BJJ — the "keep this muscle" signal</summary>
+    <details class="sheet"><summary><span class="num">05</span> Resistance / BJJ — the "keep this muscle" signal</summary>
       <p>Resistance training during a deficit tells the body the muscle is needed, shifting loss toward fat. BJJ counts partially (it's intense but not progressive-overload hypertrophy work).</p>
       <p><strong>Concrete (you):</strong> garage has a heavy bag + pull-up bar; BJJ 2–3×/week is your anchor. BJJ 2–3 + 1–2 short lifts covers the retention signal without adding hours you don't have.</p>
       <p class="gotcha"><strong>Gotcha:</strong> training is for muscle retention, not "burning off" food — your 2023 data showed exercise contributed ~nothing to the actual loss (5.7 min/day avg).</p>
     </details>
 
-    <details class="sheet"><summary>6. Steps / NEAT — pads the deficit, weak solo</summary>
+    <details class="sheet"><summary><span class="num">06</span> Steps / NEAT — pads the deficit, weak solo</summary>
       <p>Non-exercise activity (walking, fidgeting, standing) is a real but modest contributor — a few hundred kcal/day swing. Useful as a deficit pad, useless as a primary lever.</p>
       <p><strong>Concrete (you):</strong> you <em>cut</em> steps from ~7,900 to 5,739/day during the 2023 loss and still lost — proof the deficit, not movement, did the work. 7–9k is a fine maintenance band.</p>
       <p class="gotcha"><strong>Gotcha:</strong> don't trade sleep or recovery for step targets during the newborn window.</p>
     </details>
 
-    <details class="sheet"><summary>7. Carb level / electrolytes — water weight + how it feels</summary>
+    <details class="sheet"><summary><span class="num">07</span> Carb level / electrolytes — water weight + how it feels</summary>
       <p>Dropping carbs produces a fast 3–5 lb whoosh (glycogen + water), not fat — and reverses the moment carbs return. The real cost is electrolytes: low-carb strips potassium and magnesium and inverts the Na:K ratio, which manufactures fatigue.</p>
       <p><strong>Concrete (you):</strong> Jan 2023 ran ~53 g net carb (moderate, not keto). Micronutrient logs showed potassium 64% RDA, magnesium 85%, plus low B-complex and choline — a fatigue tax stacked on newborn fatigue.</p>
       <p class="gotcha"><strong>Gotcha:</strong> carb level is a <em>comfort/scale-noise</em> lever, not a fat-loss lever. If you go low-carb, deliberately salt potassium/magnesium/B-complex or the cut feels like illness.</p>
     </details>
 
-    <details class="sheet"><summary>8. Adherence system — the decisive meta-lever</summary>
+    <details class="sheet"><summary><span class="num">08</span> Adherence system — the decisive meta-lever</summary>
       <p>None of the above matters past the point you stop doing it. Your 2023 cut didn't fail metabolically — <strong>logging died Feb 20</strong> and the deficit quietly vanished, producing a 3-year regain to 183–191.</p>
       <p><strong>Concrete (you):</strong> the fix is structural, not motivational: one passive weekly weigh-in trend, a rule-based eating window, and an automated nudge — not the app streak counter that already failed once.</p>
       <p class="gotcha"><strong>Gotcha:</strong> the failure point is week 3. Design for that specific cliff instead of assuming willpower scales.</p>
@@ -285,8 +429,8 @@
 
   <!-- COMMON MISTAKES -->
   <section id="mistakes" class="mb-4">
-    <h2 class="h4 mb-3"><i class="bi bi-exclamation-triangle-fill text-warning"></i> Common Mistakes &amp; Anti-Patterns</h2>
-    <div class="card-sheet p-3">
+    <div class="sec-head h5 mb-3"><span class="idx">ERR</span> <i class="bi bi-exclamation-triangle-fill text-warning"></i> Common Mistakes &amp; Anti-Patterns</div>
+    <div class="bezel p-3">
       <ul class="mb-0">
         <li><strong>Running a sprint, not a ratchet.</strong> Aggressive 3-week cuts followed by regain (your exact sawtooth). A small permanent change beats a big temporary one.</li>
         <li><strong>Cutting hard on no sleep.</strong> The fastest way to lose muscle and quit. Match deficit size to sleep quality.</li>
@@ -301,48 +445,51 @@
 
   <!-- PROTOCOLS -->
   <section id="protocols" class="mb-4">
-    <h2 class="h4 mb-3"><i class="bi bi-clipboard2-check"></i> Three Protocols (load them in the lab)</h2>
+    <div class="sec-head h5 mb-3"><span class="idx">RUN</span> <i class="bi bi-clipboard2-check"></i> Three Protocols <span class="small text-secondary ms-1" style="font-family:var(--sans);font-weight:400;">— load them in the lab</span></div>
     <div class="row g-3">
-      <div class="col-md-4"><div class="card-sheet p-3 h-100">
-        <h3 class="h6">Newborn-safe ratchet <span class="pill pill-good">now</span></h3>
+      <div class="col-md-4"><div class="bezel p-3 h-100">
+        <h3 class="h6 d-flex justify-content-between align-items-center">Newborn-safe ratchet <span class="pill pill-good">now</span></h3>
         <p class="small mb-2">The only one to run during fragmented sleep. Bank the habit, not the loss.</p>
-        <ul class="small mb-0">
+        <ul class="small mb-3">
           <li>16:8 window as a fixed rule</li>
           <li>~300–500 kcal deficit (≈0.5 lb/wk)</li>
           <li>Protein 150 g+</li>
           <li>BJJ 2–3× + 1 short lift</li>
           <li>Weekly weigh-in only</li>
         </ul>
+        <button class="btn btn-sm btn-outline-success mode-btn w-100" data-preset="now"><i class="bi bi-box-arrow-in-down"></i> Load in lab</button>
       </div></div>
-      <div class="col-md-4"><div class="card-sheet p-3 h-100">
-        <h3 class="h6">Post-sleep cut <span class="pill pill-warn">later</span></h3>
+      <div class="col-md-4"><div class="bezel p-3 h-100">
+        <h3 class="h6 d-flex justify-content-between align-items-center">Post-sleep cut <span class="pill pill-warn">later</span></h3>
         <p class="small mb-2">When sleep consolidates (~7.5 h). Faster but muscle-sparing.</p>
-        <ul class="small mb-0">
+        <ul class="small mb-3">
           <li>~700–900 kcal deficit (~1 lb/wk, ≤1% BW)</li>
           <li>Protein 170–180 g</li>
           <li>BJJ 3 + resistance 2</li>
           <li>8 h eating window</li>
           <li>K⁺/Mg²⁺/B-complex floor</li>
         </ul>
+        <button class="btn btn-sm btn-outline-primary mode-btn w-100" data-preset="later"><i class="bi bi-box-arrow-in-down"></i> Load in lab</button>
       </div></div>
-      <div class="col-md-4"><div class="card-sheet p-3 h-100">
-        <h3 class="h6">Your 2023 cut <span class="pill pill-bad">reference</span></h3>
+      <div class="col-md-4"><div class="bezel p-3 h-100">
+        <h3 class="h6 d-flex justify-content-between align-items-center">Your 2023 cut <span class="pill pill-bad">reference</span></h3>
         <p class="small mb-2">What you actually did — the calibration baseline. Effective but fragile.</p>
-        <ul class="small mb-0">
+        <ul class="small mb-3">
           <li>~1,400 kcal, ~1,000+ deficit</li>
           <li>~17 h fast, ~53 g net carb</li>
           <li>Protein only 95 g</li>
           <li>~2.0–2.4 lb/wk (a bit fast)</li>
           <li>Broke at week 3 (adherence)</li>
         </ul>
+        <button class="btn btn-sm btn-outline-secondary mode-btn w-100" data-preset="2023"><i class="bi bi-box-arrow-in-down"></i> Load in lab</button>
       </div></div>
     </div>
   </section>
 
   <!-- THE MATH -->
   <section id="math" class="mb-4">
-    <h2 class="h4 mb-3"><i class="bi bi-calculator"></i> The Math (so you can trust the dials)</h2>
-    <div class="card-sheet p-3">
+    <div class="sec-head h5 mb-3"><span class="idx">SRC</span> <i class="bi bi-calculator"></i> The Math <span class="small text-secondary ms-1" style="font-family:var(--sans);font-weight:400;">— so you can trust the dials</span></div>
+    <div class="bezel p-3">
       <p class="mb-2"><strong>Maintenance (TDEE)</strong> = Mifflin-St Jeor BMR × activity factor.<br>
       BMR = 10·kg + 6.25·cm − 5·age + 5 (male). Defaults assume 178 cm, age 45; edit weight + activity in the lab.</p>
       <p class="mb-2"><strong>Rate</strong> = deficit × 7 ÷ 3,500 lb/week. The 3,500 kcal/lb rule is an approximation that overstates loss slightly as you lean out.</p>
@@ -366,7 +513,7 @@
 </main>
 
 <div class="controls-float">
-  <button id="themeToggle" class="btn btn-sm btn-secondary" aria-label="Toggle theme"><i class="bi bi-circle-half"></i></button>
+  <button id="themeToggle" class="btn btn-sm btn-secondary" aria-label="Toggle light/dark theme"><i class="bi bi-circle-half"></i></button>
   <button id="backTop" class="btn btn-sm btn-primary" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>
 </div>
 
@@ -419,18 +566,24 @@
     if (train === 0) sus -= 6;
     sus = Math.round(clamp(sus, 0, 100));
 
-    return {wtLb,goalLb,tdee,deficit,defPct,ratePerWk,ratePctBW,fatFrac,sus,gPerKg,sleep,win,defPctRaw:defPct};
+    return {wtLb,goalLb,tdee,deficit,defPct,ratePerWk,ratePctBW,fatFrac,sus,gPerKg,sleep,win};
   }
 
   function band(score){
-    if (score >= 75) return ["pill-good","Sustainable"];
-    if (score >= 55) return ["pill-warn","Workable"];
-    if (score >= 35) return ["pill-bad","Fragile"];
-    return ["pill-bad","Will break"];
+    if (score >= 75) return ["pill-good","Sustainable","var(--good)"];
+    if (score >= 55) return ["pill-warn","Workable","var(--warn)"];
+    if (score >= 35) return ["pill-bad","Fragile","var(--bad)"];
+    return ["pill-bad","Will break","var(--bad)"];
+  }
+
+  function setFill(id){
+    const el = $(id);
+    const pct = (el.value - el.min) / (el.max - el.min) * 100;
+    el.style.setProperty("--fill", pct.toFixed(1));
   }
 
   function render() {
-    levers.forEach(id => { const v=$(id+"-v"); if (v) v.textContent = $(id).value; });
+    levers.forEach(id => { const v=$(id+"-v"); if (v) v.textContent = $(id).value; setFill(id); });
     $("act-lbl").textContent = "(" + actLabel(+$("act").value) + ")";
 
     const r = compute();
@@ -438,6 +591,7 @@
     $("o-def").textContent = (r.deficit<0?"+":"") + Math.round(r.deficit).toLocaleString();
     $("o-defpct").textContent = (r.defPct>=0? r.defPct.toFixed(0):"+"+Math.abs(r.defPct).toFixed(0)) + "% of TDEE";
 
+    // rate + time
     if (r.ratePerWk <= 0) {
       $("o-rate").textContent = "+" + Math.abs(r.ratePerWk).toFixed(2);
       $("o-rate").style.color = "var(--bad)";
@@ -458,34 +612,49 @@
       }
     }
 
+    // rate tape (0–1.5 %/wk scale); safe band 0.5–1.0
+    const tapePct = clamp(r.ratePctBW / 1.5 * 100, 0, 100);
+    $("o-tape-needle").style.left = tapePct + "%";
+    const bp = $("o-band-pill");
+    if (r.ratePerWk <= 0) bp.innerHTML = '<span class="pill pill-bad">surplus</span>';
+    else if (r.ratePctBW < 0.5) bp.innerHTML = '<span class="pill pill-warn">gentle</span>';
+    else if (r.ratePctBW <= 1.0) bp.innerHTML = '<span class="pill pill-good">in band</span>';
+    else bp.innerHTML = '<span class="pill pill-bad">too fast</span>';
+
     // composition
     const fatPct = Math.round(r.fatFrac*100);
-    $("o-fatbar").style.width = fatPct+"%";
-    $("o-fatbar").style.background = fatPct>=75 ? "var(--good)" : fatPct>=60 ? "var(--warn)" : "var(--bad)";
+    const fb = $("o-fatbar");
+    fb.style.width = fatPct+"%";
+    const fatColor = fatPct>=75 ? "var(--good)" : fatPct>=60 ? "var(--warn)" : "var(--bad)";
+    fb.style.background = fatColor;
     if (r.ratePerWk > 0) {
       $("o-fat").textContent = (r.ratePerWk*r.fatFrac).toFixed(2)+" lb";
+      $("o-fat").style.color = fatColor;
       $("o-lean").textContent = (r.ratePerWk*(1-r.fatFrac)).toFixed(2)+" lb";
     } else { $("o-fat").textContent="—"; $("o-lean").textContent="—"; }
     const sp = $("o-split-pill");
     sp.textContent = fatPct+"% fat";
     sp.className = "pill ms-1 " + (fatPct>=75?"pill-good":fatPct>=60?"pill-warn":"pill-bad");
 
-    // sustainability
-    const [cls,lbl] = band(r.sus);
-    $("o-susbar").style.width = r.sus+"%";
-    $("o-susbar").style.background = r.sus>=75?"var(--good)":r.sus>=55?"var(--warn)":"var(--bad)";
-    const susPill=$("o-sus-pill"); susPill.textContent = r.sus+" · "+lbl; susPill.className="pill ms-1 "+cls;
+    // sustainability gauge (arc fill + number)
+    const [cls,lbl,col] = band(r.sus);
+    const arc = $("o-sus-arc");
+    arc.setAttribute("stroke-dasharray", r.sus + " 100");
+    arc.setAttribute("stroke", col);
+    $("o-sus-num").textContent = r.sus;
+    $("o-sus-num").style.fill = col;
+    const susPill=$("o-sus-pill"); susPill.textContent = lbl; susPill.className="pill "+cls;
 
-    // flags
+    // annunciator flags
     const f = [];
-    if (r.sleep < 6) f.push(`<span class="pill pill-bad">Sleep ${r.sleep}h</span> at this sleep, expect a muscle-heavy loss — keep the deficit small.`);
-    if (r.defPct > 30) f.push(`<span class="pill pill-bad">Deficit ${r.defPct.toFixed(0)}%</span> aggressive — high lean-loss + burnout risk.`);
-    if (r.gPerKg < 1.6 && r.deficit > 200) f.push(`<span class="pill pill-warn">Protein ${r.gPerKg.toFixed(1)} g/kg</span> below the ~1.8 g/kg retention floor.`);
-    if (r.ratePctBW > 1.0) f.push(`<span class="pill pill-warn">${r.ratePctBW.toFixed(1)}%/wk</span> faster than the 0.5–1% muscle-sparing band.`);
-    if (r.win <= 8 && r.deficit > 200) f.push(`<span class="pill pill-good">${r.win}h window</span> your proven, low-willpower tool is engaged.`);
-    if (r.deficit > 200 && r.deficit < 600 && r.sleep >= 6.5 && r.gPerKg >= 1.6) f.push(`<span class="pill pill-good">Ratchet zone</span> small, durable, newborn-compatible.`);
-    if (f.length === 0) f.push(`<span class="text-secondary">Move the levers to see flags and tradeoffs.</span>`);
-    $("o-flags").innerHTML = f.map(x=>`<div class="mb-1">${x}</div>`).join("");
+    if (r.sleep < 6) f.push(["bad","exclamation-octagon-fill",`<strong>Sleep ${r.sleep}h.</strong> Expect a muscle-heavy loss — keep the deficit small.`]);
+    if (r.defPct > 30) f.push(["bad","exclamation-octagon-fill",`<strong>Deficit ${r.defPct.toFixed(0)}%.</strong> Aggressive — high lean-loss + burnout risk.`]);
+    if (r.gPerKg < 1.6 && r.deficit > 200) f.push(["warn","exclamation-triangle-fill",`<strong>Protein ${r.gPerKg.toFixed(1)} g/kg.</strong> Below the ~1.8 g/kg retention floor.`]);
+    if (r.ratePctBW > 1.0) f.push(["warn","speedometer2",`<strong>${r.ratePctBW.toFixed(1)}%/wk.</strong> Faster than the 0.5–1% muscle-sparing band.`]);
+    if (r.win <= 8 && r.deficit > 200) f.push(["good","check-circle-fill",`<strong>${r.win}h window engaged.</strong> Your proven, low-willpower tool is doing the work.`]);
+    if (r.deficit > 200 && r.deficit < 600 && r.sleep >= 6.5 && r.gPerKg >= 1.6) f.push(["good","shield-check",`<strong>Ratchet zone.</strong> Small, durable, newborn-compatible.`]);
+    if (f.length === 0) f.push(["good","dot",`<span class="text-secondary">All clear — move the levers to surface tradeoffs.</span>`]);
+    $("o-flags").innerHTML = f.map(([t,ic,msg])=>`<div class="annun annun-${t}"><i class="bi bi-${ic}"></i><span>${msg}</span></div>`).join("");
 
     save();
   }
@@ -499,6 +668,7 @@
     const p = PRESETS[name]; if(!p) return;
     Object.entries(p).forEach(([k,v]) => { if($(k)) $(k).value = v; });
     render();
+    $("lab").scrollIntoView({behavior:"smooth", block:"start"});
   }
 
   function save(){ try{
@@ -510,7 +680,13 @@
     if(o) levers.forEach(id=>{ if($(id)&&o[id]!=null) $(id).value=o[id]; });
   }catch(e){} }
 
-  // theme toggle
+  function effectiveTheme(){
+    const t = document.documentElement.getAttribute("data-theme");
+    if (t === "dark" || t === "light") return t;
+    return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  function syncBsTheme(){ document.documentElement.setAttribute("data-bs-theme", effectiveTheme()); }
+
   function initTheme(){
     const t = $("themeToggle");
     t.addEventListener("click", () => {
@@ -518,9 +694,13 @@
       const next = cur === "dark" ? "light" : cur === "light" ? "dark" :
         (matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
       document.documentElement.setAttribute("data-theme", next);
+      syncBsTheme();
       try{ localStorage.setItem("wll-theme", next); }catch(e){}
     });
-    try{ const s=localStorage.getItem("wll-theme"); if(s) document.documentElement.setAttribute("data-theme",s);}catch(e){}
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      if (!document.documentElement.getAttribute("data-theme")) syncBsTheme();
+    });
+    syncBsTheme();
   }
 
   function init(){
