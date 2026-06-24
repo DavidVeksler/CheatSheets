@@ -129,6 +129,23 @@ $categoryMap = [
     'samsung-bespoke-oven-guide.html' => 'Home & Lifestyle',
 ];
 
+// --- Category Styles ---
+// Per-category accent color, light background tint, and Bootstrap Icons class.
+$categoryStyles = [
+    'AI & Safety'             => ['color' => '#0891b2', 'bg' => '#cffafe', 'icon' => 'bi-robot'],
+    'Software & DevOps'       => ['color' => '#4338ca', 'bg' => '#e0e7ff', 'icon' => 'bi-terminal-fill'],
+    'Security & Privacy'      => ['color' => '#dc2626', 'bg' => '#fee2e2', 'icon' => 'bi-shield-lock-fill'],
+    'Bitcoin & Finance'       => ['color' => '#d97706', 'bg' => '#fef3c7', 'icon' => 'bi-currency-bitcoin'],
+    'Martial Arts & Strategy' => ['color' => '#9f1239', 'bg' => '#ffe4e6', 'icon' => 'bi-person-arms-up'],
+    'Firearms & Military'     => ['color' => '#3f6212', 'bg' => '#ecfccb', 'icon' => 'bi-crosshair2'],
+    'Radio'                   => ['color' => '#1e40af', 'bg' => '#dbeafe', 'icon' => 'bi-broadcast-pin'],
+    'Health & Fitness'        => ['color' => '#065f46', 'bg' => '#d1fae5', 'icon' => 'bi-heart-pulse-fill'],
+    'Philosophy & Religion'   => ['color' => '#6b21a8', 'bg' => '#f3e8ff', 'icon' => 'bi-yin-yang'],
+    'Engineering & Science'   => ['color' => '#0c4a6e', 'bg' => '#e0f2fe', 'icon' => 'bi-gear-fill'],
+    'Home & Lifestyle'        => ['color' => '#0f766e', 'bg' => '#ccfbf1', 'icon' => 'bi-house-heart-fill'],
+    'Other'                   => ['color' => '#374151', 'bg' => '#f3f4f6', 'icon' => 'bi-file-earmark-text'],
+];
+
 // --- Base URL Calculation ---
 $scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'];
@@ -138,27 +155,27 @@ $scriptDir = ($scriptDir === '.' || $scriptDir === DIRECTORY_SEPARATOR) ? '' : $
 $baseUrl = rtrim($scheme . '://' . $host . $scriptDir, '/') . '/';
 
 
-// --- Helper Function: Extract Metadata ---
-function extractMetadata(string $filepath): array {
-    global $baseUrl, $scheme, $host; // Access global vars
-
+// --- Helper Function: Extract raw, host-independent metadata (the expensive part) ---
+// Reads + parses the file. Returns only values that do NOT depend on the request
+// host, so the result is safe to cache across requests. URL/image resolution that
+// needs $host happens later in resolveMetadata().
+function extractRawMetadata(string $filepath, int $mtime): array {
     $filename = basename($filepath);
     $defaultTitle = preg_replace('/\.html$/i', '', $filename); // Remove .html extension
     $defaultTitle = ucwords(str_replace(['-', '_'], ' ', $defaultTitle)); // Capitalize and replace hyphens/underscores
 
-    $metadata = [
+    $raw = [
         'title' => $defaultTitle,
         'description' => 'Explore this ' . htmlspecialchars($defaultTitle) . ' cheatsheet for a concise overview of key concepts.',
-        'image' => null,
-        'url' => $baseUrl . $filename,
-        'mtime' => @filemtime($filepath) ?: 0,
+        'image_raw' => null, // og:image as authored (relative/absolute), resolved per-request later
+        'mtime' => $mtime,
         'error' => null
     ];
 
     $content = @file_get_contents($filepath);
     if ($content === false) {
-        $metadata['error'] = "Could not read file: " . htmlspecialchars($filename);
-        return $metadata;
+        $raw['error'] = "Could not read file: " . htmlspecialchars($filename);
+        return $raw;
     }
 
     $dom = new DOMDocument();
@@ -168,28 +185,48 @@ function extractMetadata(string $filepath): array {
 
     $titleNode = $xpath->query('//title')->item(0);
     if ($titleNode) {
-        $metadata['title'] = trim($titleNode->textContent);
+        $raw['title'] = trim($titleNode->textContent);
     }
 
     $descNode = $xpath->query('//meta[@name="description"]/@content')->item(0);
     if ($descNode) {
-        $metadata['description'] = trim($descNode->nodeValue);
+        $raw['description'] = trim($descNode->nodeValue);
     } else {
         $ogDescNode = $xpath->query('//meta[@property="og:description"]/@content')->item(0);
         if ($ogDescNode) {
-            $metadata['description'] = trim($ogDescNode->nodeValue);
+            $raw['description'] = trim($ogDescNode->nodeValue);
         }
     }
 
     $imgNode = $xpath->query('//meta[@property="og:image"]/@content')->item(0);
     if ($imgNode) {
-        $imageUrl = trim($imgNode->nodeValue);
+        $raw['image_raw'] = trim($imgNode->nodeValue);
+    }
+
+    // Ensure description isn't excessively long for the card display
+    if (mb_strlen($raw['description']) > 150) {
+        $raw['description'] = mb_substr($raw['description'], 0, 147) . '...';
+    }
+
+    return $raw;
+}
+
+// --- Helper Function: Resolve cached raw metadata into request-specific URLs ---
+function resolveMetadata(array $raw, string $filename): array {
+    global $baseUrl, $scheme, $host;
+
+    $meta = $raw;
+    $meta['url'] = $baseUrl . $filename;
+    $meta['image'] = null;
+
+    $imageUrl = $raw['image_raw'] ?? null;
+    if ($imageUrl) {
         if (preg_match('/^https?:\/\//i', $imageUrl)) { // Absolute URL
-            $metadata['image'] = $imageUrl;
+            $meta['image'] = $imageUrl;
         } elseif (str_starts_with($imageUrl, '/')) { // Root-relative URL
-            $metadata['image'] = $scheme . '://' . $host . $imageUrl;
+            $meta['image'] = $scheme . '://' . $host . $imageUrl;
         } else { // Relative URL to the cheatsheet's path
-            $baseCheatsheetWebPath = dirname($metadata['url']);
+            $baseCheatsheetWebPath = dirname($meta['url']);
             $resolvedImageUrl = rtrim($baseCheatsheetWebPath, '/') . '/' . $imageUrl;
 
             // Normalize path (e.g., /path/../image.png to /image.png)
@@ -212,27 +249,37 @@ function extractMetadata(string $filepath): array {
                     $finalPath = '/';
                 }
 
-                $metadata['image'] = $parsedResolved['scheme'] . '://' . $parsedResolved['host'] .
+                $meta['image'] = $parsedResolved['scheme'] . '://' . $parsedResolved['host'] .
                                      (isset($parsedResolved['port']) ? ':' . $parsedResolved['port'] : '') .
                                      $finalPath;
             } else {
-                $metadata['image'] = $resolvedImageUrl; // Fallback if parsing or normalization fails
+                $meta['image'] = $resolvedImageUrl; // Fallback if parsing or normalization fails
             }
         }
     }
+    unset($meta['image_raw']);
 
-    // Ensure description isn't excessively long for the card display
-    if (mb_strlen($metadata['description']) > 150) {
-        $metadata['description'] = mb_substr($metadata['description'], 0, 147) . '...';
-    }
-
-    return $metadata;
+    return $meta;
 }
 
 // --- Main Logic: Scan Directory and Build Cheatsheet List ---
 $cheatsheets = [];
 $categories = [];
 $errors = [];
+
+// Per-mtime metadata cache: avoids re-parsing every HTML file on every request.
+// Stores only host-independent raw fields, keyed by filename; an entry is reused
+// only while its cached mtime matches the file's current mtime.
+$cacheFile = rtrim($cheatsheetDir, '/') . '/.metadata-cache.json';
+$cache = [];
+if (is_readable($cacheFile)) {
+    $decoded = json_decode((string)@file_get_contents($cacheFile), true);
+    if (is_array($decoded)) {
+        $cache = $decoded;
+    }
+}
+$cacheDirty = false;
+$seenFiles = [];
 
 try {
     $files = scandir($cheatsheetDir);
@@ -245,14 +292,43 @@ try {
         if (in_array($file, $excludedItems, true) || !is_file($filePath) || !is_readable($filePath) || !str_ends_with(strtolower($file), '.html')) {
             continue;
         }
-        $meta = extractMetadata($filePath);
-        if ($meta['error']) {
-            $errors[] = $meta['error'];
+        $seenFiles[$file] = true;
+        $mtime = @filemtime($filePath) ?: 0;
+
+        // Reuse cached raw metadata only if the file hasn't changed since it was cached.
+        if (isset($cache[$file]) && ($cache[$file]['mtime'] ?? null) === $mtime) {
+            $raw = $cache[$file];
         } else {
-            $meta['category'] = $categoryMap[$file] ?? 'Other';
-            $cheatsheets[] = $meta;
+            $raw = extractRawMetadata($filePath, $mtime);
+            $cache[$file] = $raw;
+            $cacheDirty = true;
+        }
+
+        if (!empty($raw['error'])) {
+            $errors[] = $raw['error'];
+            continue;
+        }
+        $meta = resolveMetadata($raw, $file);
+        $meta['category'] = $categoryMap[$file] ?? 'Other';
+        $catStyle = $categoryStyles[$meta['category']] ?? $categoryStyles['Other'];
+        $meta['cat_color'] = $catStyle['color'];
+        $meta['cat_bg']    = $catStyle['bg'];
+        $meta['cat_icon']  = $catStyle['icon'];
+        $cheatsheets[] = $meta;
+    }
+
+    // Drop cache entries for files that no longer exist.
+    foreach (array_keys($cache) as $cachedFile) {
+        if (!isset($seenFiles[$cachedFile])) {
+            unset($cache[$cachedFile]);
+            $cacheDirty = true;
         }
     }
+    // Persist the cache if anything changed (best-effort; ignore read-only filesystems).
+    if ($cacheDirty) {
+        @file_put_contents($cacheFile, json_encode($cache), LOCK_EX);
+    }
+
     // Sort cheatsheets by newest edit date first by default
     usort($cheatsheets, fn($a, $b) => $b['mtime'] <=> $a['mtime']);
 
@@ -267,6 +343,9 @@ try {
 } catch (Exception $e) {
     $errors[] = "An error occurred: " . $e->getMessage();
 }
+
+// Cheatsheets updated within this window are flagged "New" in the grid.
+$newThreshold = time() - 30 * 24 * 60 * 60;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -335,6 +414,12 @@ try {
               "name": "<?php echo htmlspecialchars($sheet['title']); ?>",
               "url": "<?php echo htmlspecialchars($sheet['url']); ?>",
               "description": "<?php echo htmlspecialchars($sheet['description']); ?>"
+              <?php if (!empty($sheet['category']) && $sheet['category'] !== 'Other'): ?>
+              ,"genre": "<?php echo htmlspecialchars($sheet['category']); ?>"
+              <?php endif; ?>
+              <?php if (!empty($sheet['mtime'])): ?>
+              ,"dateModified": "<?php echo htmlspecialchars(date('Y-m-d', $sheet['mtime'])); ?>"
+              <?php endif; ?>
               <?php if (!empty($sheet['image'])): ?>
               ,"image": "<?php echo htmlspecialchars($sheet['image']); ?>"
               <?php endif; ?>
@@ -346,8 +431,8 @@ try {
     }
     </script>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
 
     <style>
         :root {
@@ -362,51 +447,23 @@ try {
         .card {
             transition: transform .15s ease-out, box-shadow .15s ease-out; /* Quicker, smoother transition */
             border: 1px solid #dee2e6; border-radius: .3rem; overflow: hidden; background-color: #fff; display: flex; flex-direction: column;
+            border-top: 3px solid var(--cat-color, #dee2e6);
         }
         .card:hover { transform: translateY(var(--card-lift-height)); box-shadow: 0 0.5rem 1rem var(--card-shadow-intensity); }
-        .card-img-top-container { /* New container for fixed aspect ratio */
+        .card-img-top-container {
             aspect-ratio: 16 / 9;
             width: 100%;
             overflow: hidden;
-            background-color: #e9ecef;
+            background: linear-gradient(135deg, var(--cat-bg, #e9ecef) 0%, #fff 100%);
             border-bottom: 1px solid #dee2e6;
-            position: relative; /* For ::before pseudo-element */
+            position: relative;
             display: flex; align-items: center; justify-content: center;
-        }
-        .card-img-top-container::before { /* Placeholder icon, improved */
-             font-family: 'bootstrap-icons'; content: "\F31F"; /* bi-card-image or F48B bi-image-alt */
-             font-size: 3rem; color: #adb5bd; position: absolute;
         }
         .card-img-top-container img {
             width: 100%; height: 100%; object-fit: cover; display: block;
+            position: relative; z-index: 1; /* Cover the ::before placeholder icon */
         }
-        .card-img-top-container img[src]:not([src=""]):not(.error) { /* Hide icon if img src is valid and not errored */
-             position: relative; /* To ensure it covers the ::before */
-             z-index: 1;
-        }
-        .card-img-top-container img[src]:not([src=""]):not(.error) + ::before,
-        .card-img-top-container img.error + ::before {
-            display: block; /* Show icon if image errors */
-        }
-        .card-img-top-container img:not(.error)::before {
-             display:none; /* Hide icon if image loaded */
-        }
-        .iframe-preview-container { /* Used when image fails or is not primary */
-            aspect-ratio: 16 / 9; width: 100%; position: relative; display: flex; align-items: center; justify-content: center;
-            background-color: #e9ecef; border-bottom: 1px solid #dee2e6; color: #adb5bd;
-        }
-        .iframe-preview-container::before { /* Placeholder icon for iframe */
-             font-family: 'bootstrap-icons'; content: "\F423"; /* bi-window-fullscreen or similar */
-             font-size: 2.5rem; display: block; position: absolute; top: 50%; left: 50%;
-             transform: translate(-50%, -50%);
-        }
-        .iframe-preview-container iframe {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            border: 0; background-color: #fff; opacity: 0;
-            transition: opacity 0.4s ease-in-out .1s; /* Slight delay for smoother visual */
-        }
-        .iframe-preview-container iframe.loaded { opacity: 1; z-index: 2; /* Ensure iframe is above ::before when loaded */ }
-        .iframe-preview-container iframe.loaded + ::before { display: none; } /* Hide icon when iframe loaded */
+        .card-img-top-container img.error { display: none; } /* Reveal ::before icon on broken image */
 
         .card-title a { text-decoration: none; color: #1a508b; font-weight: 600; } /* Darker blue */
         .card-title a:hover { color: #003d73; text-decoration: underline; }
@@ -498,11 +555,31 @@ try {
             height: 100%; /* This is critical for making cards in a row the same height */
         }
         .category-badge {
-            background-color: #e7f1ff;
-            color: #1a508b;
+            background-color: var(--cat-bg, #e7f1ff);
+            color: var(--cat-color, #1a508b);
             font-weight: 500;
             font-size: 0.7rem;
             letter-spacing: .02em;
+        }
+        .new-badge {
+            position: absolute;
+            top: .5rem;
+            right: .5rem;
+            z-index: 2; /* Above the preview image */
+            background-color: #198754;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+        }
+        .cat-placeholder-icon {
+            position: absolute;
+            font-size: 3.5rem;
+            color: var(--cat-color, #adb5bd);
+            opacity: 0.3;
+            z-index: 0;
         }
     </style>
 </head>
@@ -583,37 +660,19 @@ try {
             <div id="cheatsheetGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                 <?php foreach ($cheatsheets as $sheet): ?>
                     <div class="col portfolio-item" data-title="<?php echo htmlspecialchars($sheet['title']); ?>" data-mtime="<?php echo (int)$sheet['mtime']; ?>" data-category="<?php echo htmlspecialchars($sheet['category']); ?>">
-                        <article class="card shadow-sm">
-                            <?php if (!empty($sheet['image'])): ?>
-                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="card-img-top-container" aria-label="Preview image for <?php echo htmlspecialchars($sheet['title']); ?>">
-                                    <img src="<?php echo htmlspecialchars($sheet['image']); ?>" alt="Preview for <?php echo htmlspecialchars($sheet['title']); ?>" loading="lazy"
-                                    onerror="this.classList.add('error'); this.closest('.card-img-top-container').style.display='none'; this.closest('.card').querySelector('.iframe-preview-container').style.display='flex';">
-                                </a>
-                                <div class="iframe-preview-container" style="display: none;"> <!-- Initially hidden if image exists and loads -->
-                                    <iframe src="<?php echo htmlspecialchars($sheet['url']); ?>"
-                                            title="Interactive preview of <?php echo htmlspecialchars($sheet['title']); ?>"
-                                            loading="lazy"
-                                            frameborder="0"
-                                            scrolling="no"
-                                            referrerpolicy="no-referrer"
-                                            onload="this.classList.add('loaded');">
-                                    </iframe>
-                                </div>
-                            <?php else: ?>
-                                <div class="iframe-preview-container" style="display: flex;"> <!-- Display flex to show ::before icon as no image provided -->
-                                    <iframe src="<?php echo htmlspecialchars($sheet['url']); ?>"
-                                            title="Interactive preview of <?php echo htmlspecialchars($sheet['title']); ?>"
-                                            loading="lazy"
-                                            frameborder="0"
-                                            scrolling="no"
-                                            referrerpolicy="no-referrer"
-                                            onload="this.classList.add('loaded');">
-                                    </iframe>
-                                </div>
-                            <?php endif; ?>
+                        <article class="card shadow-sm" style="--cat-color: <?php echo htmlspecialchars($sheet['cat_color']); ?>; --cat-bg: <?php echo htmlspecialchars($sheet['cat_bg']); ?>;">
+                            <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="card-img-top-container" aria-label="Open <?php echo htmlspecialchars($sheet['title']); ?>">
+                                <i class="bi <?php echo htmlspecialchars($sheet['cat_icon']); ?> cat-placeholder-icon" aria-hidden="true"></i>
+                                <?php if (!empty($sheet['mtime']) && $sheet['mtime'] >= $newThreshold): ?>
+                                    <span class="badge new-badge"><i class="bi bi-stars me-1"></i>New</span>
+                                <?php endif; ?>
+                                <?php if (!empty($sheet['image'])): ?>
+                                    <img src="<?php echo htmlspecialchars($sheet['image']); ?>" alt="Preview for <?php echo htmlspecialchars($sheet['title']); ?>" loading="lazy" onerror="this.classList.add('error');">
+                                <?php endif; ?>
+                            </a>
                             <div class="card-body">
                                 <?php if (!empty($sheet['category'])): ?>
-                                    <span class="badge category-badge mb-2 align-self-start"><i class="bi bi-tag-fill me-1"></i><?php echo htmlspecialchars($sheet['category']); ?></span>
+                                    <span class="badge category-badge mb-2 align-self-start"><i class="bi <?php echo htmlspecialchars($sheet['cat_icon']); ?> me-1"></i><?php echo htmlspecialchars($sheet['category']); ?></span>
                                 <?php endif; ?>
                                 <h5 class="card-title">
                                     <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener">
@@ -630,7 +689,7 @@ try {
                                 <?php endif; ?>
                             </div>
                             <div class="card-footer">
-                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary w-100">
+                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary w-100" style="--bs-btn-color: var(--cat-color); --bs-btn-border-color: var(--cat-color); --bs-btn-hover-bg: var(--cat-color); --bs-btn-hover-border-color: var(--cat-color); --bs-btn-hover-color: #fff; --bs-btn-active-bg: var(--cat-color); --bs-btn-active-border-color: var(--cat-color); --bs-btn-active-color: #fff;">
                                     View Cheatsheet <i class="bi bi-box-arrow-up-right ms-1"></i>
                                 </a>
                             </div>
@@ -678,7 +737,7 @@ try {
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const filterInput = document.getElementById('filterInput');
@@ -742,58 +801,11 @@ try {
              filterInput.placeholder = "No cheatsheets available to filter.";
         }
 
-        // Enhanced image error and load handling
+        // Catch images cached as broken: a 'complete' image with zero dimensions
+        // may never fire 'error', so the inline onerror handler won't run for it.
         document.querySelectorAll('.card-img-top-container img').forEach(img => {
-            const imageAnchorContainer = img.closest('.card-img-top-container');
-            const card = img.closest('.card');
-            const iframePreviewContainer = card ? card.querySelector('.iframe-preview-container') : null;
-
-            function handleImageError() {
-                img.classList.add('error'); // Mark image as errored
-                if (imageAnchorContainer) {
-                    imageAnchorContainer.style.display = 'none'; // Hide the whole <a> container
-                }
-                if (iframePreviewContainer) {
-                    iframePreviewContainer.style.display = 'flex'; // Show iframe container
-                }
-            }
-
-            function handleImageLoad() {
-                // Only proceed if the image hasn't errored and has valid dimensions
-                if (!img.classList.contains('error') && img.naturalWidth > 0 && img.naturalHeight > 0) {
-                    if (imageAnchorContainer) {
-                        // The image container (<a>) is a flex container for its ::before icon
-                        imageAnchorContainer.style.display = 'flex';
-                    }
-                    // The <img> tag itself will be display:block or as per CSS.
-
-                    if (iframePreviewContainer) {
-                        iframePreviewContainer.style.display = 'none'; // Hide iframe container as image loaded
-                    }
-                } else if (!img.classList.contains('error')) {
-                    // Image 'load' event fired but naturalWidth/Height is 0 or invalid.
-                    // This can happen for broken images that still fire 'load'. Treat as error.
-                    // console.warn('Image loaded with 0 dimensions, treating as error:', img.src);
-                    handleImageError(); // Manually trigger error handling
-                }
-            }
-
-            img.addEventListener('error', handleImageError);
-            img.addEventListener('load', handleImageLoad);
-
-            // Check for images that might be cached as broken or have src issues
-            // not firing 'error' immediately if 'complete' is true but dimensions are 0.
-            // This needs to be after event listeners are attached.
-            if (img.complete) {
-                if (typeof img.naturalWidth !== "undefined" && img.naturalWidth === 0 && img.src && img.src !== '') {
-                    // console.warn('Image already complete but with 0 width, triggering error:', img.src);
-                    // Use a micro-timeout to ensure it runs after initial rendering cycle and doesn't interfere
-                    // with other potential 'load' or 'error' events being queued for the same image.
-                    setTimeout(handleImageError, 0);
-                } else if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-                    // If already complete and valid, ensure correct visibility state
-                     setTimeout(handleImageLoad, 0);
-                }
+            if (img.complete && img.naturalWidth === 0 && img.src) {
+                img.classList.add('error');
             }
         });
     });
