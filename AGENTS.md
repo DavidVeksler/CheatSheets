@@ -133,7 +133,7 @@ The consumption model has shifted. Optimize for both classic search and AI answe
 ## Architecture
 
 - **Standalone HTML files** — each cheatsheet self-contained (embedded CSS/JS).
-- **`index.php`** — portfolio gallery; scans root for `.html`, extracts metadata, assigns categories via `getCategoryForFile()`.
+- **`index.php`** — portfolio gallery; scans root for `.html`, extracts metadata (title/description/og:image/mtime), and assigns each file a category from the `$categoryMap` array (filename → category; unmapped files fall back to `'Other'`). Cards show an "Updated" date from `filemtime()`, default-sort newest-first, and support client-side category + text filtering.
 - **`sitemap.php`** — SEO sitemap with category-based priorities.
 - **`generate-image-previews.py`** — Playwright screenshot generation + metadata backfill; outputs `images/{filename}.png`.
 - No build step. Static-hosting friendly. 47+ cheatsheets; recent additions include `lifestyle-calculator.html`, `clean-architecture-dotnet.html`.
@@ -143,7 +143,7 @@ The consumption model has shifted. Optimize for both classic search and AI answe
 1. Run the **Generation Protocol** (research → outline to three depths → fill to density floor → self-verify).
 2. Create `topic-subtopic.html` (lowercase, hyphens) in root, following the established pattern + Modern Platform Baseline.
 3. Include ALL metadata blocks; ensure JSON-LD matches visible content; set a real `Last verified` date.
-4. `index.php` and `sitemap.php` auto-discover it.
+4. `index.php` and `sitemap.php` auto-discover the `.html` file — but **add the new file to the `$categoryMap` array in `index.php`** (`'topic-subtopic.html' => 'Category'`), or it shows up under "Other". Reuse an existing category label; only add a new one if nothing fits.
 5. Generate the preview image → `images/{filename}.png` (see **Build & Verify Workflow**).
 6. **Auto-commit when done.** Once the cheatsheet is written, verified in a browser, and its preview image exists, commit it to `main` directly — this repo ships cheatsheets straight to `main` (linear history, no PR/branch per file). One cheatsheet per commit, bundling the `.html` and its `images/*.png`. Message: `Add <topic> cheatsheet`, ending with the `Co-Authored-By` trailer. Do **not** push unless asked, and never stage `.claude/` or other unrelated working-tree changes — commit only the cheatsheet files by explicit path.
 
