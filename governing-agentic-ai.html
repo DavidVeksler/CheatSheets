@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script>
+  /* Set theme before paint so Bootstrap (data-bs-theme) stays in sync with our light-dark() tokens — no flash. */
+  (function(){ try {
+    var s = localStorage.getItem("gai-theme");
+    if (s === "light" || s === "dark") document.documentElement.setAttribute("data-theme", s);
+    var dark = s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-bs-theme", dark ? "dark" : "light");
+  } catch(e){} })();
+</script>
+<title>Governing Agentic AI: A Field Guide for Software Organizations</title>
+<meta name="description" content="How to turn scattered, private AI use into a shared, reviewed capability without risking your systems of record: the Golden Rule, four safety invariants, a reviewed-skill lifecycle, the open SKILL.md standard, a maturity path, anti-patterns, and a getting-started checklist." />
+<meta name="keywords" content="agentic AI governance, AI delivery function, AI skills governance, SKILL.md open standard, Agent Skills, shadow AI, system of record, read-only by default, human-in-the-loop, AI review gate, prompt injection, AI observability, regulated AI, LLM safety, AI autonomy, AI maturity model" />
+<meta name="author" content="David Veksler" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/governing-agentic-ai.html" />
+<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;🛡️&lt;/text&gt;&lt;/svg&gt;" />
+
+<meta property="og:title" content="Governing Agentic AI: A Field Guide for Software Organizations" />
+<meta property="og:description" content="Turn scattered, private AI use into a shared, reviewed capability — the substrate, not the agent: the Golden Rule, four safety invariants, a reviewed-skill lifecycle, the open SKILL.md standard, and how to start." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/governing-agentic-ai.html" />
+<meta property="og:image" content="images/governing-agentic-ai.png" />
+<meta property="og:image:alt" content="Governing agentic AI cheatsheet: Golden Rule, four invariants, reviewed-skill lifecycle, open standard, maturity path, and anti-patterns" />
+<meta property="og:site_name" content="David Veksler Cheatsheets" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Governing Agentic AI: A Field Guide for Software Organizations" />
+<meta name="twitter:description" content="The Golden Rule, four safety invariants, a reviewed-skill lifecycle, the open SKILL.md standard, a maturity path, anti-patterns, and a getting-started checklist for governing AI in a real org." />
+<meta name="twitter:image" content="images/governing-agentic-ai.png" />
+<meta name="twitter:image:alt" content="Governing agentic AI: build the reviewed substrate, not just the agent." />
+<meta name="twitter:creator" content="@heroiclife" />
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Governing Agentic AI: A Field Guide for Software Organizations",
+  "description": "A practitioner's reference for governing agentic AI in a software organization: how to turn scattered, private AI use into a shared, reviewed capability without risking systems of record. Covers shadow AI, the substrate-not-the-agent bet, the Golden Rule, four safety invariants, a reviewed-skill development lifecycle, the open SKILL.md / Agent Skills standard, a monitor-to-ship maturity path, anti-patterns, a getting-started checklist, and a glossary.",
+  "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+  "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+  "datePublished": "2026-06-24",
+  "dateModified": "2026-06-24",
+  "keywords": "agentic AI governance, AI delivery function, SKILL.md, Agent Skills, shadow AI, system of record, read-only by default, human-in-the-loop, review gate, prompt injection, AI observability, AI autonomy, AI maturity model"
+}
+</script>
+
+<style>
+@layer tokens, base, components, utilities;
+
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --accent:      light-dark(#5b3fd6, #9b87ff);   /* governance indigo */
+    --accent-2:    light-dark(#0f7d8f, #4fd0e3);   /* teal */
+    --accent-soft: light-dark(#e7e1fb, #241b46);
+    --good:  light-dark(#1f7a4d, #4fd693);          /* read-only / approved */
+    --warn:  light-dark(#9a6b04, #f3c149);          /* gated / higher-stakes */
+    --bad:   light-dark(#bb2d20, #ff7b6e);          /* write / blocked */
+    --bg:      light-dark(#f2f1f7, #100f17);
+    --panel:   light-dark(#ffffff, #1a1828);
+    --panel-2: light-dark(#f4f2fb, #221f33);
+    --ink:     light-dark(#1a1822, #e9e7f2);
+    --ink-soft:light-dark(#585369, #a39ec0);
+    --line:    light-dark(#e2def0, #2c2940);
+    --line-2:  light-dark(#cdc8e3, #3a364f80);
+    --chip:    light-dark(#ece8f8, #272338);
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --hero: linear-gradient(135deg, #1d1640 0%, #2e2168 46%, #0f4a55 100%);
+  }
+  [data-theme="light"] { color-scheme: light; }
+  [data-theme="dark"]  { color-scheme: dark; }
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--sans);
+    background-color: var(--bg);
+    color: var(--ink);
+    margin: 0;
+    padding-bottom: 4rem;
+    line-height: 1.55;
+  }
+  h1,h2,h3,h4 { text-wrap: balance; line-height: 1.2; }
+  p, li { text-wrap: pretty; }
+  section { scroll-margin-top: 4.2rem; }
+  a { color: var(--accent-2); text-underline-offset: 2px; }
+  code, kbd { font-family: var(--mono); }
+  :focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; border-radius: 4px; }
+}
+
+@layer components {
+  /* ---------- Header ---------- */
+  .hero {
+    background: var(--hero);
+    color: #f3f0ff;
+    padding: 2.8rem 1.25rem 2.2rem;
+    text-align: center;
+    border-bottom: 4px solid var(--accent);
+  }
+  .hero h1 { font-weight: 800; font-size: clamp(1.8rem, 4.3vw, 2.9rem); margin: 0 0 .6rem; letter-spacing: .2px; }
+  .hero h1 .bi { color: #c7b6ff; }
+  .hero p.lead { max-width: 780px; margin: 0 auto 1.3rem; font-size: 1.05rem; color: #e4def7; }
+  .hero .badge-row { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; }
+  .hero .badge-row span {
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25);
+    border-radius: 50rem; padding: .25rem .7rem; font-size: .78rem; backdrop-filter: blur(3px);
+  }
+
+  /* ---------- Quick reference strip ---------- */
+  .quick-ref { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7rem; max-width: 1080px; margin: 1.6rem auto 0; padding: 0 1rem; }
+  .qr {
+    background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    border-radius: 8px; padding: .7rem .85rem;
+  }
+  .qr .k { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-soft); font-weight: 600; }
+  .qr .v { font-size: 1.12rem; font-weight: 800; color: var(--accent); line-height: 1.18; }
+  .qr .s { font-size: .76rem; color: var(--ink-soft); }
+
+  /* ---------- Sticky nav ---------- */
+  .section-nav {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto; white-space: nowrap;
+    padding: .45rem .5rem; scrollbar-width: thin;
+  }
+  .section-nav a {
+    display: inline-block; color: var(--ink-soft); text-decoration: none;
+    font-size: .82rem; font-weight: 600; padding: .3rem .65rem; border-radius: 6px;
+  }
+  .section-nav a:hover { background: var(--accent-soft); color: var(--accent); }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 0 1rem; }
+
+  section > h2 {
+    font-size: 1.5rem; font-weight: 800; margin: 2.4rem 0 .35rem;
+    display: flex; align-items: center; gap: .55rem;
+  }
+  section > h2 .bi { color: var(--accent); }
+  section > .sec-intro { color: var(--ink-soft); margin: 0 0 1.1rem; max-width: 74ch; }
+
+  .card2 {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 1.1rem 1.15rem; margin-bottom: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .card2 h3 { font-size: 1.06rem; font-weight: 700; margin: 0 0 .55rem; }
+  .card2 h3 .bi { color: var(--accent); margin-right: .3rem; }
+  .grid2 { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .grid3 { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+  /* numbered cards */
+  .num { display:inline-flex; align-items:center; justify-content:center; width:1.5rem; height:1.5rem; border-radius:50%; background: var(--accent); color:#fff; font-size:.85rem; font-weight:800; margin-right:.45rem; flex:none; }
+
+  /* ---------- Tables ---------- */
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 1rem; }
+  table.ct { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 560px; }
+  table.ct th, table.ct td { padding: .55rem .7rem; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.ct thead th { background: var(--panel-2); font-weight: 700; position: sticky; top: 0; }
+  table.ct tbody tr:nth-child(even) { background: color-mix(in srgb, var(--panel-2) 55%, transparent); }
+  table.ct td code { background: var(--chip); padding: .05rem .35rem; border-radius: 4px; font-size: .85em; }
+
+  .pill { display:inline-block; font-size:.72rem; font-weight:700; padding:.12rem .5rem; border-radius:50rem; }
+  .pill.good { background: color-mix(in srgb, var(--good) 22%, transparent); color: var(--good); }
+  .pill.warn { background: color-mix(in srgb, var(--warn) 22%, transparent); color: var(--warn); }
+  .pill.bad  { background: color-mix(in srgb, var(--bad) 22%, transparent); color: var(--bad); }
+  .pill.info { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
+
+  /* ---------- details/accordion ---------- */
+  details.acc {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    margin-bottom: .6rem; overflow: hidden;
+  }
+  details.acc > summary {
+    cursor: pointer; padding: .8rem 1rem; font-weight: 700; list-style: none;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  details.acc > summary::-webkit-details-marker { display: none; }
+  details.acc > summary::after { content: "\F282"; font-family: "bootstrap-icons"; margin-left: auto; color: var(--ink-soft); transition: transform .2s; font-weight: 400; }
+  details.acc[open] > summary::after { transform: rotate(180deg); }
+  details.acc > summary .lift-tag { font-size: .72rem; font-weight: 600; color: var(--ink-soft); background: var(--chip); padding: .1rem .5rem; border-radius: 50rem; }
+  details.acc .acc-body { padding: 0 1rem 1rem; }
+  details.acc .acc-body ul { margin: .3rem 0 .6rem 0; padding-left: 1.2rem; }
+  details.acc .acc-body li { margin-bottom: .28rem; }
+  .cue-do::before { content:"\F26B"; font-family:"bootstrap-icons"; color:var(--good); margin-right:.4rem; }
+  .cue-dont::before { content:"\F623"; font-family:"bootstrap-icons"; color:var(--bad); margin-right:.4rem; }
+
+  /* ---------- Flow strip (maturity / lifecycle) ---------- */
+  .flow { display:flex; flex-wrap:wrap; align-items:stretch; gap:.5rem; margin:.4rem 0 1rem; }
+  .flow .step { flex:1 1 150px; background: var(--panel); border:1px solid var(--line); border-top:3px solid var(--accent); border-radius:10px; padding:.7rem .8rem; }
+  .flow .step .n { font-size:.7rem; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.5px; }
+  .flow .step .t { font-weight:800; color:var(--accent); margin:.1rem 0; }
+  .flow .step .d { font-size:.8rem; color:var(--ink-soft); }
+
+  /* ---------- code / SKILL.md block ---------- */
+  .cmd { background: var(--panel-2); border:1px solid var(--line); border-radius:10px; margin-bottom:1rem; overflow:hidden; }
+  .cmd .cmd-label { display:flex; align-items:center; gap:.4rem; font-size:.76rem; font-weight:700; color:var(--ink-soft); padding:.5rem .8rem; border-bottom:1px solid var(--line); background: color-mix(in srgb, var(--panel) 60%, transparent); }
+  .cmd pre { margin:0; padding:.85rem .9rem; overflow-x:auto; }
+  .cmd code { font-family: var(--mono); font-size:.84rem; line-height:1.5; color: var(--ink); }
+  .cmd .c { color: var(--ink-soft); } /* comment */
+  .cmd .key { color: var(--accent); font-weight:600; } /* yaml key */
+
+  .callout { border-radius: 10px; padding: .85rem 1rem; margin: 1rem 0; border: 1px solid var(--line); border-left: 4px solid var(--accent); background: var(--panel-2); }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.bad { border-left-color: var(--bad); }
+  .callout.good { border-left-color: var(--good); }
+  .callout .h { font-weight: 800; display:flex; align-items:center; gap:.45rem; margin-bottom:.25rem; }
+
+  blockquote.golden {
+    margin: 1rem 0; padding: 1.1rem 1.25rem; border-radius: 12px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--panel)), var(--panel));
+    border: 1px solid var(--line); border-left: 5px solid var(--accent);
+    font-size: 1.18rem; font-weight: 700; line-height: 1.35; text-wrap: balance;
+  }
+  blockquote.golden .by { display:block; font-size:.82rem; font-weight:600; color:var(--ink-soft); margin-top:.5rem; }
+
+  .miss { display:grid; grid-template-columns: 1fr 1fr; gap:0; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:.7rem; }
+  .miss > div { padding:.7rem .85rem; }
+  .miss .x { background: color-mix(in srgb, var(--bad) 9%, transparent); border-right:1px solid var(--line); }
+  .miss .o { background: color-mix(in srgb, var(--good) 9%, transparent); }
+  .miss .tag { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
+  .miss .x .tag { color: var(--bad); } .miss .o .tag { color: var(--good); }
+  @media (max-width: 520px){ .miss { grid-template-columns: 1fr; } .miss .x { border-right:none; border-bottom:1px solid var(--line); } }
+
+  /* ---------- Checklist ---------- */
+  .progress-wrap { position: sticky; top: 3rem; z-index: 40; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .7rem .9rem; margin-bottom: 1rem; }
+  .progress-wrap .label { display:flex; justify-content:space-between; font-size:.82rem; font-weight:600; margin-bottom:.35rem; }
+  .task-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin-bottom: .55rem; }
+  .task-card > summary { cursor:pointer; padding:.7rem .9rem; display:flex; align-items:center; gap:.6rem; list-style:none; font-weight:600; }
+  .task-card > summary::-webkit-details-marker { display:none; }
+  .task-card > summary::after { content:"\F282"; font-family:"bootstrap-icons"; margin-left:auto; color:var(--ink-soft); font-weight:400; }
+  .task-card[open] > summary::after { transform: rotate(180deg); }
+  .task-card .task-check { width: 1.15rem; height: 1.15rem; flex: none; accent-color: var(--accent); }
+  .task-card .task-body { padding: 0 .9rem .9rem 2.5rem; color: var(--ink-soft); }
+  .task-card.done > summary { color: var(--ink-soft); text-decoration: line-through; }
+
+  footer { max-width: 1080px; margin: 2.5rem auto 0; padding: 1.4rem 1rem; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: .86rem; }
+  .verified { display:inline-flex; align-items:center; gap:.4rem; background: var(--panel-2); border:1px solid var(--line); border-radius:50rem; padding:.25rem .7rem; font-weight:600; }
+
+  /* Theme toggle + back-to-top */
+  .fab { position: fixed; right: 1rem; z-index: 60; width: 2.7rem; height: 2.7rem; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 2px 8px rgba(0,0,0,.18); font-size: 1.1rem; }
+  #themeToggle { bottom: 4.6rem; } #backTop { bottom: 1rem; }
+}
+
+@layer utilities {
+  .muted { color: var(--ink-soft); }
+  .small { font-size: .85rem; }
+  .nowrap { white-space: nowrap; }
+  .mono { font-family: var(--mono); }
+  .lead-line { font-size:1.02rem; }
+  @media print {
+    .section-nav, .fab, .progress-wrap { display: none !important; }
+    details.acc .acc-body, details.task-card .task-body { display: block !important; }
+    details.acc > summary::after, details.task-card > summary::after { display: none; }
+    body { background: #fff; color: #000; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1><i class="bi bi-shield-shaded"></i> Governing Agentic AI</h1>
+  <p class="lead">A field guide for software organizations: how to turn scattered, private AI use into a shared, reviewed capability — <strong>without putting your systems of record at risk</strong>. Most writing is about the agent. This is about the substrate underneath it: the review, the observability, and the guardrails that let a whole team build on AI safely.</p>
+  <div class="badge-row">
+    <span>Shadow AI &rarr; shared asset</span><span>The Golden Rule</span><span>4 safety invariants</span>
+    <span>Reviewed-skill lifecycle</span><span>Open SKILL.md standard</span><span>Maturity path</span><span>Anti-patterns</span>
+  </div>
+</header>
+
+<div class="quick-ref" aria-label="Quick reference">
+  <div class="qr"><div class="k">Golden Rule</div><div class="v">Validate vs. truth</div><div class="s">human checks output against a source of record</div></div>
+  <div class="qr"><div class="k">Default posture</div><div class="v">Read-only</div><div class="s">writes are earned &amp; gated</div></div>
+  <div class="qr"><div class="k">Unit of delivery</div><div class="v">The Skill</div><div class="s">reviewed, versioned module</div></div>
+  <div class="qr"><div class="k">Review gate</div><div class="v">Report, not verdict</div><div class="s">a human merges, never the gate</div></div>
+  <div class="qr"><div class="k">Build the gate by</div><div class="v">Skill&nbsp;#3</div><div class="s">before, not after the incident</div></div>
+  <div class="qr"><div class="k">Format</div><div class="v">SKILL.md</div><div class="s">open spec, ~30+ tools read it</div></div>
+  <div class="qr"><div class="k">Autonomy</div><div class="v">Earned</div><div class="s">per-skill, from telemetry</div></div>
+  <div class="qr"><div class="k">Maturity loop</div><div class="v">Monitor&rarr;Ship</div><div class="s">tighten it; never drop oversight</div></div>
+</div>
+
+<nav class="section-nav" aria-label="Section navigation">
+  <a href="#problem">Shadow AI</a>
+  <a href="#bet">The Core Bet</a>
+  <a href="#golden">Golden Rule</a>
+  <a href="#invariants">4 Invariants</a>
+  <a href="#lifecycle">Lifecycle</a>
+  <a href="#skill">Anatomy of a Skill</a>
+  <a href="#standard">Open Standard</a>
+  <a href="#maturity">Maturity Path</a>
+  <a href="#velocity">Velocity</a>
+  <a href="#mistakes">Anti-Patterns</a>
+  <a href="#start">Getting Started</a>
+  <a href="#worked">Worked Example</a>
+  <a href="#glossary">Glossary</a>
+</nav>
+
+<main>
+
+<!-- ============ PROBLEM ============ -->
+<section id="problem">
+  <h2><i class="bi bi-incognito"></i> The Problem: Shadow AI Is Already in Your Org</h2>
+  <p class="sec-intro">The adoption question is settled. Your engineers are already using AI assistants — the open question is whether that use is <strong>governed</strong>. Ungoverned, it shows up in three forms, and all three are velocity you are buying with risk you can't see. A governed standard turns all three into an asset. The goal isn't to police AI use; it's to <strong>capture</strong> it.</p>
+  <div class="grid3">
+    <div class="card2"><h3><i class="bi bi-clipboard-x"></i> Ungrounded copy/paste</h3><p class="small">Output that was never checked against the real systems, pasted in because it <em>looked</em> right. The plausible-but-wrong answer is the dangerous one — it passes a glance and fails in production.</p></div>
+    <div class="card2"><h3><i class="bi bi-eye-slash"></i> Quiet, low-quality use</h3><p class="small">People who treat AI as cheating, so they use it in private and carry the risk without ever submitting it for review. The work never gets a second set of eyes precisely because it's hidden.</p></div>
+    <div class="card2"><h3><i class="bi bi-person-lock"></i> Siloed sophistication</h3><p class="small">One engineer works out how to safely do something hard — and that hard-won method dies in their session history instead of becoming something the team inherits.</p></div>
+  </div>
+  <div class="callout"><div class="h"><i class="bi bi-arrow-repeat"></i> The reframe</div><p class="small mb-0">Each failure mode has the same root: <strong>AI use that is invisible and unreviewed</strong>. You can't ban it (adoption already won) and you shouldn't want to. The move is to make the safe path the easy path — capture the expertise once, review it, and hand it to everyone.</p></div>
+</section>
+
+<!-- ============ THE CORE BET ============ -->
+<section id="bet">
+  <h2><i class="bi bi-layers-half"></i> The Core Bet: The Substrate, Not the Agent</h2>
+  <p class="sec-intro">The value isn't any single clever automation. Anyone can demo an agent; almost no one builds the foundation. The value is the shared, trusted foundation that lets the whole team build on top of it safely.</p>
+  <blockquote class="golden" style="font-size:1.05rem;">A reviewed library compounds; a thousand private prompts do not.</blockquote>
+  <div class="grid2">
+    <div class="card2"><h3><i class="bi bi-box-seam"></i> The unit of delivery is a <em>skill</em></h3><p class="small">A <strong>reviewed, versioned instruction module</strong> — a folder of instructions, scripts, and resources an agent loads on demand — with a declared <strong>safety posture</strong> and an explicit list of the systems it touches. One engineer captures "here's how we safely do X" once; it's reviewed once; then anyone on the team loads the reviewed copy.</p></div>
+    <div class="card2"><h3><i class="bi bi-graph-up-arrow"></i> Why it compounds</h3><p class="small">Knowledge stops dying in session histories. Every contributed skill makes the next problem cheaper to solve and the library more valuable. Private prompts have no such network effect — each one is solved, used once, and lost.</p></div>
+  </div>
+  <div class="tbl-wrap">
+  <table class="ct">
+    <thead><tr><th>Dimension</th><th>A thousand private prompts</th><th>A reviewed skill library</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Reuse</strong></td><td>None — dies in one session</td><td>Loaded by the whole team</td></tr>
+      <tr><td><strong>Review</strong></td><td>Never seen by a second person</td><td>Reviewed once, inherited by all</td></tr>
+      <tr><td><strong>Safety posture</strong></td><td>Implicit, per-person, invisible</td><td>Declared and enforced per skill</td></tr>
+      <tr><td><strong>Cost / usage</strong></td><td>Unmeasured</td><td>Instrumented per skill</td></tr>
+      <tr><td><strong>Value over time</strong></td><td>Flat — resets every prompt</td><td>Compounds with each contribution</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============ GOLDEN RULE ============ -->
+<section id="golden">
+  <h2><i class="bi bi-star-fill"></i> The Golden Rule</h2>
+  <p class="sec-intro">Everything rests on one rule. A skill exists to make a knowledgeable person <em>faster</em>, not to replace their judgment.</p>
+  <blockquote class="golden">
+    <i class="bi bi-quote"></i> LLMs are safe when a knowledgeable human validates output against a known source of truth.
+    <span class="by">— The single load-bearing principle; every invariant below is a corollary of it.</span>
+  </blockquote>
+  <div class="grid3">
+    <div class="card2"><h3><i class="bi bi-person-check"></i> Knowledgeable human</h3><p class="small">Not any human — someone who can tell a right answer from a plausible one. The skill accelerates an expert; it doesn't manufacture expertise that isn't in the room.</p></div>
+    <div class="card2"><h3><i class="bi bi-clipboard2-check"></i> Validates output</h3><p class="small">An active check, not a rubber stamp. The human's job is the verification step the model can't be trusted to do on itself.</p></div>
+    <div class="card2"><h3><i class="bi bi-database-check"></i> Known source of truth</h3><p class="small">Validation needs a referent: the authoritative system, spec, or record the answer can be checked against. No source of truth &rarr; no safe validation.</p></div>
+  </div>
+</section>
+
+<!-- ============ FOUR INVARIANTS ============ -->
+<section id="invariants">
+  <h2><i class="bi bi-shield-lock-fill"></i> The Four Invariants</h2>
+  <p class="sec-intro">From the Golden Rule, four properties that must hold for every skill, always. These are architectural guarantees, not policy reminders — build them so they can't be violated, don't just ask people to remember them.</p>
+
+  <div class="grid2">
+    <div class="card2"><h3><span class="num">1</span>The system of record always wins</h3><p class="small">The <strong>system of record</strong> is the authoritative store the business runs on — the canonical truth, not a copy that can be overwritten. The agent <em>reads</em> that truth and drafts against it; it never silently mutates a shared environment or invents state. The same discipline any serious business applies to its books: <strong>nothing — human or agent — writes to the record without a person accountable for the write.</strong></p></div>
+    <div class="card2"><h3><span class="num">2</span>Read-only by default; writes are earned and gated</h3><p class="small">Read-only is an <strong>architectural property</strong>, not a reminder. The agent drafts or diagnoses; a human approves anything that changes a shared system. A skill that can only read <em>cannot</em> break the system of record — that's the whole point of the default.</p></div>
+    <div class="card2"><h3><span class="num">3</span>Higher-stakes paths route to a named human</h3><p class="small">Anything touching <strong>regulated data, money, or a production write</strong> is flagged and owned by a <strong>named reviewer</strong>. Critically, the human checkpoint sits where prompt injection cannot reach it: <strong>one layer below the agent, not inside it</strong>. A check the agent can talk its way past is not a check.</p></div>
+    <div class="card2"><h3><span class="num">4</span>Everything is observable; nothing drifts</h3><p class="small">Each skill declares what it touches, the copy that runs is the <strong>reviewed copy</strong> (no personal forks), and usage and cost are visible per skill. Observability is the gap most orgs hit first — <strong>build it in from day one</strong>, not after the first incident.</p></div>
+  </div>
+
+  <div class="tbl-wrap">
+  <table class="ct">
+    <thead><tr><th>Invariant</th><th>What it prevents</th><th>How you enforce it (not just ask)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>System of record wins</strong></td><td>Silent mutation, invented state, an agent overwriting canonical truth</td><td>Agent gets read creds to the record; writes go through a separate, accountable path</td></tr>
+      <tr><td><strong>Read-only by default</strong></td><td>Any unreviewed change to a shared system</td><td>Default scope = read; write scopes granted explicitly, per skill</td></tr>
+      <tr><td><strong>Named human on high-stakes</strong></td><td>Unowned writes to regulated data / money / prod; injection bypassing the check</td><td>Route flag &rarr; named reviewer; checkpoint outside the agent's context</td></tr>
+      <tr><td><strong>Observable, no drift</strong></td><td>Personal forks, blind spend, "which version ran?"</td><td>Auto-synced reviewed copy; declared systems-touched; per-skill usage/cost telemetry</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout warn"><div class="h"><i class="bi bi-bullseye"></i> The injection corollary</div><p class="small mb-0">If your human approval lives <em>inside</em> the agent's prompt or output, a hostile input can rewrite the very text the human is reading. Put the gate <strong>one layer down</strong> — in the deploy pipeline, the merge, the write-path — where the model can't author what the reviewer sees.</p></div>
+</section>
+
+<!-- ============ LIFECYCLE ============ -->
+<section id="lifecycle">
+  <h2><i class="bi bi-diagram-2-fill"></i> The Development Lifecycle</h2>
+  <p class="sec-intro">Every capability moves through the same reviewed path — from a real, repeated problem to a governed, instrumented skill whose autonomy is earned, never assumed. <strong>Distribution is not permission.</strong></p>
+
+  <div class="flow" aria-hidden="false">
+    <div class="step"><div class="n">1 · Intake</div><div class="t">Candidate</div><div class="d">A repeated problem &rarr; a candidate skill, not a private prompt.</div></div>
+    <div class="step"><div class="n">2 · Build</div><div class="t">Author</div><div class="d">Versioned: declared posture, systems-touched list, tests.</div></div>
+    <div class="step"><div class="n">3 · Review</div><div class="t">Gate</div><div class="d">Deterministic checks + named reviewer. Report, not verdict.</div></div>
+    <div class="step"><div class="n">4 · Deploy</div><div class="t">Govern</div><div class="d">Auto-synced channel; everyone loads the reviewed copy.</div></div>
+    <div class="step"><div class="n">5 · Observe</div><div class="t">Instrument</div><div class="d">Usage, cost-per-skill, outcomes.</div></div>
+    <div class="step"><div class="n">6 · Autonomy</div><div class="t">Earn</div><div class="d">Read-only by default; broaden only when telemetry justifies.</div></div>
+  </div>
+
+  <details class="acc"><summary><i class="bi bi-1-circle"></i> Intake <span class="lift-tag">repeated problem &rarr; candidate</span></summary>
+    <div class="acc-body small">
+      <p class="mb-1">A real, repeated problem a person already solves by hand becomes a candidate skill. The bar is <em>repetition + a known-good method</em> — not novelty. If it only happens once, it's not a skill; if nobody can yet do it safely by hand, it's not ready to encode.</p>
+    </div>
+  </details>
+  <details class="acc"><summary><i class="bi bi-2-circle"></i> Build <span class="lift-tag">declared posture + tests</span></summary>
+    <div class="acc-body small">
+      <p class="mb-1">Author it as a versioned skill with three non-negotiables:</p>
+      <ul class="mb-0">
+        <li class="cue-do"><strong>Declared safety posture</strong> — read-only vs. drafts vs. gated-write.</li>
+        <li class="cue-do"><strong>Explicit systems-touched list</strong> — every system of record / data store it reads or proposes to write.</li>
+        <li class="cue-do"><strong>Tests</strong> — so the reviewed behavior is the behavior that ships.</li>
+      </ul>
+    </div>
+  </details>
+  <details class="acc"><summary><i class="bi bi-3-circle"></i> Review <span class="lift-tag">report, not verdict</span></summary>
+    <div class="acc-body small">
+      <p class="mb-1">A merge gate runs <strong>deterministic checks</strong> and routes higher-stakes skills to a named reviewer:</p>
+      <ul class="mb-1">
+        <li class="cue-do">Secrets &amp; PII scan.</li>
+        <li class="cue-do">Naming conventions.</li>
+        <li class="cue-do"><strong>Declared-vs-actual systems</strong> — does what it touches match what it claims?</li>
+      </ul>
+      <p class="mb-0"><strong>The gate produces a report, not a verdict — a human merges. The gate never merges.</strong> Automation finds; a person decides.</p>
+    </div>
+  </details>
+  <details class="acc"><summary><i class="bi bi-4-circle"></i> Governed deploy <span class="lift-tag">no drifted forks</span></summary>
+    <div class="acc-body small">
+      <p class="mb-0">The skill ships through an <strong>auto-synced channel</strong> (e.g. CI-distributed) so everyone loads the reviewed copy. No personal forks, no "the version I'm running is different." The reviewed copy <em>is</em> the running copy.</p>
+    </div>
+  </details>
+  <details class="acc"><summary><i class="bi bi-5-circle"></i> Observe <span class="lift-tag">cost-per-skill</span></summary>
+    <div class="acc-body small">
+      <p class="mb-0">Usage, cost-per-skill, and outcomes are instrumented. You cannot reason about adoption or safety you can't see — and you can't justify autonomy (next step) without the telemetry to back it.</p>
+    </div>
+  </details>
+  <details class="acc"><summary><i class="bi bi-6-circle"></i> Earn autonomy <span class="lift-tag">distribution &ne; permission</span></summary>
+    <div class="acc-body small">
+      <p class="mb-0">Read-only and drafts-only by default; broader autonomy is granted <strong>per-skill, only when telemetry justifies it</strong>. A skill being widely distributed does not mean it has earned the right to write. Autonomy is a privilege a skill earns from its own track record, one capability at a time.</p>
+    </div>
+  </details>
+</section>
+
+<!-- ============ ANATOMY OF A SKILL ============ -->
+<section id="skill">
+  <h2><i class="bi bi-file-earmark-code-fill"></i> Anatomy of a Skill</h2>
+  <p class="sec-intro">A skill is a folder whose entry point is a <code>SKILL.md</code> file: YAML frontmatter (required: <code>name</code> + <code>description</code>) plus instructions, and optionally bundled scripts, templates, and reference files the agent loads on demand. The governance metadata — safety posture and systems-touched — is what turns a prompt into a <em>governed</em> capability.</p>
+
+  <div class="cmd">
+    <div class="cmd-label"><i class="bi bi-filetype-md"></i> incident-triage/SKILL.md &mdash; a read-only diagnostic skill</div>
+<pre><code><span class="c">---</span>
+<span class="key">name</span>: incident-triage
+<span class="key">description</span>: Diagnose a production incident from logs and metrics and
+  draft a root-cause hypothesis. Read-only; never writes or restarts services.
+<span class="c"># --- governance metadata (org convention, enforced by the review gate) ---</span>
+<span class="key">safety_posture</span>: read-only        <span class="c"># read-only | drafts-only | gated-write</span>
+<span class="key">systems_touched</span>:
+  - observability-platform   <span class="c"># READ</span>
+  - incident-tracker         <span class="c"># READ</span>
+<span class="key">stakes</span>: standard               <span class="c"># standard | high (routes to a named reviewer)</span>
+<span class="key">owner</span>: sre-oncall
+<span class="c">---</span>
+
+<span class="c"># Incident Triage</span>
+1. Pull the error spike window from the observability platform.
+2. Correlate with recent deploys and the incident tracker.
+3. **Draft** a ranked root-cause hypothesis for a human to confirm.
+   Never restart, roll back, or modify any service — propose, don't act.</code></pre>
+  </div>
+
+  <div class="grid2">
+    <div class="card2"><h3><i class="bi bi-card-list"></i> What every governed skill declares</h3><ul class="small mb-0">
+      <li><strong>name / description</strong> — the only fields the open spec requires; the description is how the agent decides when to load it.</li>
+      <li><strong>safety_posture</strong> — read-only, drafts-only, or gated-write.</li>
+      <li><strong>systems_touched</strong> — every record/store it reads or proposes to write, with the access kind.</li>
+      <li><strong>stakes / owner</strong> — high-stakes routes to a named reviewer; an owner is accountable.</li>
+    </ul></div>
+    <div class="card2"><h3><i class="bi bi-lightning-charge"></i> Progressive disclosure</h3><p class="small">A skill costs only <strong>~30–50 tokens at startup</strong> (just its name + description); the full instructions load <em>only</em> when the skill activates for a task. An agent with 100 skills installed pays roughly <strong>3,000–5,000 tokens</strong> at session start. That's what makes a large governed library cheap to carry — you can install everything and pay only for what fires. <span class="muted">(as of Dec 2025 spec)</span></p></div>
+  </div>
+</section>
+
+<!-- ============ OPEN STANDARD ============ -->
+<section id="standard">
+  <h2><i class="bi bi-unlock-fill"></i> Build on the Open Standard, Not a Vendor</h2>
+  <p class="sec-intro">A crucial design choice: don't lock your institutional knowledge to one model vendor. What you standardize is the <strong>format and the governance</strong>, not the model. Your reviewed library outlives any single vendor's moment in the lead.</p>
+  <div class="grid2">
+    <div class="card2"><h3><i class="bi bi-file-earmark-text"></i> The <code>SKILL.md</code> / Agent Skills standard</h3><p class="small">Originally from Anthropic and <a href="https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills" rel="nofollow">published as an open spec</a> on <strong>18 Dec 2025</strong> (hosted at <a href="https://agentskills.io" rel="nofollow">agentskills.io</a>). The same skill files are portable across tools — only <em>discovery and distribution</em> differ per tool. By 2026, <strong>30+ tools</strong> read the same <code>SKILL.md</code> from the same folder structure.</p></div>
+    <div class="card2"><h3><i class="bi bi-people"></i> Why portability is the safety play</h3><p class="small">A team that arrives on a different toolset joins the <strong>same disciplined way of building</strong>. The standard travels; your governance rides on it. You're insulated from any one vendor's pricing, deprecation, or fall from the lead.</p></div>
+  </div>
+  <div class="tbl-wrap">
+  <table class="ct">
+    <thead><tr><th>Standardize this</th><th>Don't lock this</th></tr></thead>
+    <tbody>
+      <tr><td>The <strong>skill format</strong> (<code>SKILL.md</code> + bundled resources)</td><td>The <strong>model vendor</strong> / specific LLM</td></tr>
+      <tr><td>The <strong>governance</strong> (posture, systems-touched, review gate)</td><td>The <strong>tool</strong> that discovers and runs skills</td></tr>
+      <tr><td>The <strong>review &amp; distribution pipeline</strong></td><td>A proprietary, single-vendor skill schema</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout"><div class="h"><i class="bi bi-globe2"></i> Tools that read <code>SKILL.md</code></div><p class="small mb-0">Claude Code, OpenAI Codex, Google Gemini CLI, GitHub Copilot, Cursor, and a growing list of others (30+ by 2026) load the same files. <span class="muted">Adoption count is volatile — verify the current list at agentskills.io before quoting a number.</span></p></div>
+</section>
+
+<!-- ============ MATURITY PATH ============ -->
+<section id="maturity">
+  <h2><i class="bi bi-bar-chart-steps"></i> The Maturity Path: Closing the Loop</h2>
+  <p class="sec-intro">A skill library matures in a predictable sequence — <strong>monitor &rarr; diagnose &rarr; fix &rarr; ship</strong>. You start with isolated, read-only helpers and add connective tissue over time. The point isn't full autonomy; it's that the org moves from "isolated helpers" to "a reviewed pipeline" <strong>without ever giving up the human checkpoint on anything that writes</strong>. The loop tightens; oversight never leaves.</p>
+
+  <div class="flow">
+    <div class="step"><div class="n">Stage 1</div><div class="t">Monitor</div><div class="d">Read-only helpers that surface a class of issue.</div></div>
+    <div class="step"><div class="n">Stage 2</div><div class="t">Diagnose</div><div class="d">Skills that safely root-cause; encode reviewer judgment.</div></div>
+    <div class="step"><div class="n">Stage 3</div><div class="t">Fix (draft)</div><div class="d">Turn a diagnosis into a <em>draft</em> fix — human approves.</div></div>
+    <div class="step"><div class="n">Stage 4</div><div class="t">Ship (verify)</div><div class="d">Check the fix vs. the source of truth before it ships.</div></div>
+  </div>
+
+  <div class="tbl-wrap">
+  <table class="ct">
+    <thead><tr><th>Stage</th><th>Example skill</th><th>Posture</th><th>Human checkpoint</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Monitor</strong></td><td>Safely diagnose a class of production issue; <code>pr-code-review</code> encoding senior reviewers' judgment</td><td><span class="pill good">read-only</span></td><td>Not yet writing — informational</td></tr>
+      <tr><td><strong>Diagnose</strong></td><td><code>incident-triage</code> orchestrator that composes the read-only helpers into one flow</td><td><span class="pill good">read-only</span></td><td>Human reads the hypothesis</td></tr>
+      <tr><td><strong>Fix</strong></td><td>A skill that turns a diagnosis into a <strong>draft</strong> fix</td><td><span class="pill warn">drafts-only</span></td><td>Human approves the draft</td></tr>
+      <tr><td><strong>Ship</strong></td><td><code>change-verification</code> step that checks a fix against the source of truth before it ships</td><td><span class="pill bad">gated-write</span></td><td>Named reviewer on the write</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout good"><div class="h"><i class="bi bi-infinity"></i> The loop tightens; oversight stays</div><p class="small mb-0">Manual toil falls as the stages connect into a pipeline. But the human checkpoint on anything that writes is <strong>not</strong> one of the things you optimize away — it's the constant that lets you optimize everything around it.</p></div>
+</section>
+
+<!-- ============ VELOCITY ============ -->
+<section id="velocity">
+  <h2><i class="bi bi-speedometer"></i> Governance Is the Velocity Play, Not the Brake</h2>
+  <p class="sec-intro">The instinct is that guardrails slow you down. The opposite is true: the guardrails are what let you go fast and <em>keep</em> going fast. Ungoverned AI use is quick — right up until the first bad write to a system of record, and that single incident sets you back further than the slow status quo ever would.</p>
+  <div class="grid2">
+    <div class="card2"><h3><i class="bi bi-rocket-takeoff"></i> Guardrails are why adoption scales</h3><p class="small">They're the reason adoption gets past a handful of enthusiasts <strong>without an incident forcing a halt</strong>. The org that never has the headline-making bad write keeps compounding; the one that does spends its next two quarters on remediation and a moratorium.</p></div>
+    <div class="card2"><h3><i class="bi bi-bezier2"></i> The shape lesson</h3><p class="small">Big, all-or-nothing platform programs concentrate risk in a <strong>single basket and a single cutover</strong> — and most of us have watched one fail. A governed skill library is the opposite shape: <strong>small reviewed increments</strong>, each owned, each earning the next.</p></div>
+  </div>
+  <div class="tbl-wrap">
+  <table class="ct">
+    <thead><tr><th></th><th>Big-bang AI platform program</th><th>Governed skill library</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Risk shape</strong></td><td>One basket, one cutover</td><td>Many small reviewed increments</td></tr>
+      <tr><td><strong>Origin</strong></td><td>Mandated top-down</td><td>Emerges from a real problem a team solved</td></tr>
+      <tr><td><strong>Failure mode</strong></td><td>Whole program fails at once</td><td>One skill is rejected; the rest stand</td></tr>
+      <tr><td><strong>Return over time</strong></td><td>Binary — works or doesn't</td><td>Compounds with each contribution</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout"><div class="h"><i class="bi bi-diagram-3"></i> Shared pattern, not mandated skills</div><p class="small mb-0">The <strong>pattern</strong> is shared, but the skills aren't dictated from the top — each emerges from a real problem a specific team already solved, captured once and handed to everyone. That's why it compounds: a reviewed library gets stronger with every skill a team contributes. A thousand private prompts do not.</p></div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section id="mistakes">
+  <h2><i class="bi bi-x-octagon-fill"></i> Anti-Patterns &amp; What to Do Instead</h2>
+  <p class="sec-intro">The fastest way to a safe, fast AI practice is usually to stop doing these — not to add a new tool.</p>
+
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Banning AI assistants outright — driving the use underground.</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0">Make the <strong>governed path the easy path</strong>; capture the use, don't police it.</p></div>
+  </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Letting the agent write directly to a shared system "to save a step."</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0"><strong>Read-only by default</strong>; the agent drafts, a human approves every write.</p></div>
+  </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Putting the human approval <em>inside</em> the agent's prompt/output.</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0">Place the checkpoint <strong>one layer below the agent</strong>, beyond prompt injection's reach.</p></div>
+  </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">A gate that auto-merges when checks pass — automation as judge.</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0">The gate produces a <strong>report, not a verdict</strong>; a person merges.</p></div>
+  </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Retrofitting governance after the library already exists.</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0"><strong>Build the review gate before your third skill</strong> — far cheaper than bolting it on.</p></div>
+  </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Shipping skills with no usage/cost instrumentation.</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0"><strong>Instrument from day one</strong> — you can't manage safety or spend you can't see.</p></div>
+  </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Personal forks of a skill drifting from the reviewed copy.</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0">Distribute via an <strong>auto-synced channel</strong>; the reviewed copy is the running copy.</p></div>
+  </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Treating wide distribution as permission to write.</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0"><strong>Distribution &ne; permission.</strong> Earn autonomy per skill, from telemetry.</p></div>
+  </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Encoding institutional knowledge in one vendor's proprietary format.</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0">Use the open <strong><code>SKILL.md</code></strong> format; standardize format + governance, not the model.</p></div>
+  </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Launching a big-bang AI platform with one risky cutover.</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0">Grow a library of <strong>small reviewed increments</strong>, each earning the next.</p></div>
+  </div>
+</section>
+
+<!-- ============ GETTING STARTED ============ -->
+<section id="start">
+  <h2><i class="bi bi-flag-fill"></i> Getting Started</h2>
+  <p class="sec-intro">You don't need a program or a budget line — you need the first reviewed skill and the discipline to grow from there. Work the six steps in order; tick them off as you go (progress saves in your browser). The whole thing is one bet, repeated: <strong>capture expertise once, review it, and let everyone build on it.</strong></p>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="label"><span id="progressText">0 of 6 done</span><button id="resetBtn" class="btn btn-sm btn-outline-secondary" style="padding:.05rem .5rem; font-size:.75rem;">Reset</button></div>
+    <div class="progress" role="progressbar" aria-label="Getting-started progress" aria-valuemin="0" aria-valuemax="100" style="height:.55rem;">
+      <div class="progress-bar" id="progressBar" style="width:0%; background:var(--accent);"></div>
+    </div>
+  </div>
+
+  <details class="task-card" data-task="one-problem">
+    <summary><input type="checkbox" class="task-check" /> Start with one real, repeated problem</summary>
+    <div class="task-body small">Pick something a person already solves by hand. Capture it as a <strong>single skill — not a platform</strong>. Repetition plus a known-good method is the bar; resist the urge to build a framework.</div>
+  </details>
+
+  <details class="task-card" data-task="declare-readonly">
+    <summary><input type="checkbox" class="task-check" /> Declare what it touches, default it to read-only</summary>
+    <div class="task-body small">List every system of record it reads. Set <code>safety_posture: read-only</code>. If it can only read, it <strong>can't break the system of record</strong> — that property is the safety, not a promise to be careful.</div>
+  </details>
+
+  <details class="task-card" data-task="review-gate">
+    <summary><input type="checkbox" class="task-check" /> Build the review gate before your third skill</summary>
+    <div class="task-body small">Deterministic checks (secrets/PII scan, naming, declared-vs-actual systems) + a named reviewer for high-stakes skills. The gate emits a <strong>report, not a verdict</strong>. Retrofitting governance later is far harder than starting with it.</div>
+  </details>
+
+  <details class="task-card" data-task="instrument">
+    <summary><input type="checkbox" class="task-check" /> Instrument from day one</summary>
+    <div class="task-body small">Usage and cost <strong>per skill</strong>, in one place. You can't reason about adoption or safety you can't see — and you'll need this telemetry to justify autonomy later.</div>
+  </details>
+
+  <details class="task-card" data-task="human-checkpoint">
+    <summary><input type="checkbox" class="task-check" /> Keep the human checkpoint on every write</summary>
+    <div class="task-body small">Earn autonomy <strong>per skill, from telemetry</strong> — never grant it by default. Place the checkpoint one layer below the agent so prompt injection can't reach it.</div>
+  </details>
+
+  <details class="task-card" data-task="open-format">
+    <summary><input type="checkbox" class="task-check" /> Use the open <code>SKILL.md</code> format</summary>
+    <div class="task-body small">So nothing you build is hostage to one vendor. Standardize the <strong>format and the governance</strong>, not the model. Your reviewed library then travels to whatever tool the team lands on.</div>
+  </details>
+
+  <div class="callout"><div class="h"><i class="bi bi-recycle"></i> The repeated bet</div><p class="small mb-0">Each new skill is the same loop again: a repeated problem &rarr; declared posture &rarr; reviewed once &rarr; governed deploy &rarr; instrumented &rarr; autonomy earned. Do it once well and the seventh skill is far cheaper than the first.</p></div>
+</section>
+
+<!-- ============ WORKED EXAMPLE ============ -->
+<section id="worked">
+  <h2><i class="bi bi-bank"></i> A Worked Example: A Regulated Lender</h2>
+  <p class="sec-intro">This was built end-to-end as the embedded AI lead at a regulated commercial lender: a CI-distributed skill marketplace, a publish-and-audit governance gate, and AI observability stood up from zero.</p>
+  <div class="callout bad"><div class="h"><i class="bi bi-shield-exclamation"></i> The single most instructive moment</div><p class="small mb-0">On its <strong>first run</strong>, a follow-up skill was about to request a borrower's <strong>Social Security number</strong> — and the review discipline caught it, because the skill had inherited a wrong assumption about the source of truth. The gate, the named reviewer, and the read-only default existed precisely so a wrong assumption surfaced as a <em>caught</em> request, not a leaked SSN. <strong>Every failure like that became an architectural rule</strong> — which is how the four invariants above were earned, not theorized.</p></div>
+  <div class="grid3">
+    <div class="card2"><h3><i class="bi bi-shop"></i> Skill marketplace</h3><p class="small">CI-distributed so everyone loads the reviewed copy — no drifted forks. (Invariant 4.)</p></div>
+    <div class="card2"><h3><i class="bi bi-clipboard2-check"></i> Publish-and-audit gate</h3><p class="small">A compliance-routing review gate: deterministic checks, high-stakes skills to a named reviewer. (Lifecycle step 3.)</p></div>
+    <div class="card2"><h3><i class="bi bi-activity"></i> AI observability</h3><p class="small">Usage and cost per skill, from zero — so autonomy could be earned on evidence. (Invariant 4 + step 5.)</p></div>
+  </div>
+  <p class="small muted">Full writeup — including the observability backend and the compliance-routing gate: <a href="https://davidveksler.com/david/ai-strategy.html" rel="nofollow">Founding the AI delivery function at a regulated lender</a>.</p>
+</section>
+
+<!-- ============ GLOSSARY ============ -->
+<section id="glossary">
+  <h2><i class="bi bi-book-half"></i> Glossary</h2>
+  <div class="tbl-wrap">
+  <table class="ct">
+    <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Skill</strong></td><td>A reviewed, versioned instruction module — a folder of instructions, scripts, and resources an agent loads on demand, with a declared safety posture and systems-touched list.</td></tr>
+      <tr><td><strong>SKILL.md</strong></td><td>The entry-point file of a skill: YAML frontmatter (required: <code>name</code>, <code>description</code>) plus instructions. The core of the open Agent Skills standard.</td></tr>
+      <tr><td><strong>Agent Skills</strong></td><td>The open standard for the skill format, published by Anthropic on 18 Dec 2025 at agentskills.io; read by 30+ tools by 2026.</td></tr>
+      <tr><td><strong>System of record</strong></td><td>The authoritative store the business runs on — canonical truth, not a copy that can be overwritten.</td></tr>
+      <tr><td><strong>Safety posture</strong></td><td>A skill's declared write-capability: read-only, drafts-only, or gated-write.</td></tr>
+      <tr><td><strong>Systems-touched</strong></td><td>The explicit list of records/stores a skill reads or proposes to write, declared in the skill and checked by the gate.</td></tr>
+      <tr><td><strong>Read-only by default</strong></td><td>The architectural default: a skill can read but not change shared systems unless a write scope is explicitly earned.</td></tr>
+      <tr><td><strong>Review gate</strong></td><td>A merge-time check that runs deterministic scans and routes high-stakes skills to a named reviewer. Produces a report, not a verdict.</td></tr>
+      <tr><td><strong>Named reviewer</strong></td><td>The accountable human who owns approval of a higher-stakes skill (regulated data, money, production writes).</td></tr>
+      <tr><td><strong>Human checkpoint</strong></td><td>The point where a person validates output against the source of truth — placed one layer below the agent, beyond prompt injection's reach.</td></tr>
+      <tr><td><strong>Prompt injection</strong></td><td>A hostile input that manipulates an agent's behavior or the text a human is asked to approve; why checkpoints must sit outside the agent.</td></tr>
+      <tr><td><strong>Observability</strong></td><td>Per-skill visibility into usage, cost, and outcomes — the gap most orgs hit first; build it in from day one.</td></tr>
+      <tr><td><strong>Drift</strong></td><td>Divergence between the reviewed copy of a skill and what's actually running (e.g. personal forks). Prevented by auto-synced distribution.</td></tr>
+      <tr><td><strong>Governed deploy</strong></td><td>Shipping a skill through an auto-synced channel so everyone loads the reviewed copy.</td></tr>
+      <tr><td><strong>Autonomy</strong></td><td>How much a skill may do without per-action human approval — earned per skill from telemetry, never granted by default.</td></tr>
+      <tr><td><strong>Progressive disclosure</strong></td><td>The design that loads only a skill's name + description (~30–50 tokens) at startup, expanding to full instructions only when it activates.</td></tr>
+      <tr><td><strong>Shadow AI</strong></td><td>Ungoverned, invisible AI use inside an org — ungrounded copy/paste, quiet low-quality use, and siloed sophistication.</td></tr>
+      <tr><td><strong>Distribution &ne; permission</strong></td><td>The rule that a skill being widely available does not grant it the right to write or act autonomously.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p><span class="verified"><i class="bi bi-shield-check"></i> Last verified: 2026-06-24</span></p>
+  <p class="small">A generalized field guide based on an approach taken into production founding the AI delivery function at a regulated lender. The Agent Skills / <code>SKILL.md</code> standard was published by Anthropic on 18 Dec 2025 (agentskills.io); cross-tool adoption counts are volatile — verify the current list before quoting figures. Governance specifics (review routing, write-path design, retention) must be adapted to your own regulatory and security context; this is not legal or compliance advice.</p>
+  <p class="small muted">Part of the David Veksler Cheatsheets collection · AI-generated, human-reviewed.</p>
+</footer>
+
+<button id="themeToggle" class="fab" aria-label="Toggle light/dark theme" title="Toggle theme"><i class="bi bi-circle-half"></i></button>
+<button id="backTop" class="fab" aria-label="Back to top" title="Back to top"><i class="bi bi-arrow-up"></i></button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+<script defer>
+  document.addEventListener("DOMContentLoaded", function () {
+    /* ---- Theme toggle ---- */
+    var root = document.documentElement;
+    var toggle = document.getElementById("themeToggle");
+    function currentDark(){ return root.getAttribute("data-bs-theme") === "dark"; }
+    toggle.addEventListener("click", function () {
+      var dark = !currentDark();
+      root.setAttribute("data-theme", dark ? "dark" : "light");
+      root.setAttribute("data-bs-theme", dark ? "dark" : "light");
+      try { localStorage.setItem("gai-theme", dark ? "dark" : "light"); } catch (e) {}
+    });
+
+    /* ---- Back to top (honor prefers-reduced-motion) ---- */
+    var backTop = document.getElementById("backTop");
+    backTop.addEventListener("click", function () {
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    });
+
+    /* ---- Expand all <details> for printing, restore afterward ---- */
+    var printOpened = [];
+    window.addEventListener("beforeprint", function () {
+      printOpened = [];
+      document.querySelectorAll("details:not([open])").forEach(function (d) { d.open = true; printOpened.push(d); });
+    });
+    window.addEventListener("afterprint", function () {
+      printOpened.forEach(function (d) { d.open = false; });
+      printOpened = [];
+    });
+
+    /* ---- Checklist progress (localStorage) ---- */
+    var PREFIX = "gai-task-";
+    var cards = Array.prototype.slice.call(document.querySelectorAll(".task-card[data-task]"));
+    var bar = document.getElementById("progressBar");
+    var text = document.getElementById("progressText");
+
+    function render() {
+      var done = 0;
+      cards.forEach(function (c) {
+        var cb = c.querySelector(".task-check");
+        if (cb.checked) { done++; c.classList.add("done"); } else { c.classList.remove("done"); }
+      });
+      var pct = cards.length ? Math.round((done / cards.length) * 100) : 0;
+      bar.style.width = pct + "%";
+      text.textContent = done + " of " + cards.length + " done";
+      document.querySelector("#progressWrap .progress").setAttribute("aria-valuenow", pct);
+    }
+
+    cards.forEach(function (c) {
+      var id = c.getAttribute("data-task");
+      var cb = c.querySelector(".task-check");
+      try { if (localStorage.getItem(PREFIX + id) === "1") cb.checked = true; } catch (e) {}
+      cb.addEventListener("click", function (e) { e.stopPropagation(); });
+      cb.addEventListener("change", function () {
+        try { localStorage.setItem(PREFIX + id, cb.checked ? "1" : "0"); } catch (e) {}
+        render();
+      });
+    });
+
+    var resetBtn = document.getElementById("resetBtn");
+    if (resetBtn) resetBtn.addEventListener("click", function () {
+      cards.forEach(function (c) {
+        var cb = c.querySelector(".task-check");
+        cb.checked = false;
+        try { localStorage.removeItem(PREFIX + c.getAttribute("data-task")); } catch (e) {}
+      });
+      render();
+    });
+
+    render();
+  });
+</script>
+</body>
+</html>
