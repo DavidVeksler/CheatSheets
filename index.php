@@ -18,6 +18,117 @@ $excludedItems = [
 
 $cheatsheetDir = '.'; // Current directory where cheatsheet HTML files are located
 
+// --- Category Map ---
+// Single source of truth: filename => category. Unmapped sheets fall back to "Other".
+// Add one line here when you publish a new cheatsheet.
+$categoryMap = [
+    // AI & Safety
+    'agi-development-guide.html' => 'AI & Safety',
+    'ai-frontier.html' => 'AI & Safety',
+    'ai-progress-dashboard.html' => 'AI & Safety',
+    'ai-risk-timeline.html' => 'AI & Safety',
+    'airisk.html' => 'AI & Safety',
+    'aisafety.html' => 'AI & Safety',
+    'google-ai-studio-guide.html' => 'AI & Safety',
+    'governing-agentic-ai.html' => 'AI & Safety',
+    'p-doom-calculator.html' => 'AI & Safety',
+    'p-doom-test-harness.html' => 'AI & Safety',
+    'prompt-builder.html' => 'AI & Safety',
+    'yudkowsky-rationality-ai-cheatsheet.html' => 'AI & Safety',
+
+    // Software & DevOps
+    'aws-vs-azure.html' => 'Software & DevOps',
+    'azure-devops.html' => 'Software & DevOps',
+    'clean-architecture-dotnet.html' => 'Software & DevOps',
+    'compression-algorithms.html' => 'Software & DevOps',
+    'databases.html' => 'Software & DevOps',
+    'dotnet-cheatsheet.html' => 'Software & DevOps',
+    'git-scm.html' => 'Software & DevOps',
+    'javascript-for-architects.html' => 'Software & DevOps',
+    'modern-devops-pipelines.html' => 'Software & DevOps',
+    'postgresql.html' => 'Software & DevOps',
+    'python-for-architects.html' => 'Software & DevOps',
+    'scrum.html' => 'Software & DevOps',
+    'versioncontrol.html' => 'Software & DevOps',
+
+    // Security & Privacy
+    'linux-server-hardening.html' => 'Security & Privacy',
+    'post-quantum-cryptography.html' => 'Security & Privacy',
+    'privacy-data-broker-opt-out.html' => 'Security & Privacy',
+
+    // Bitcoin & Finance
+    'bitcoin-exchanges-cards.html' => 'Bitcoin & Finance',
+    'bitcoin-self-custody-guide.html' => 'Bitcoin & Finance',
+    'bitcoin-wallet.html' => 'Bitcoin & Finance',
+    'bitcoin-whitepaper.html' => 'Bitcoin & Finance',
+    'currency-timeline.html' => 'Bitcoin & Finance',
+    'housing-comparison.html' => 'Bitcoin & Finance',
+    'index-investing-tax-advantaged.html' => 'Bitcoin & Finance',
+    'lifestyle-calculator.html' => 'Bitcoin & Finance',
+
+    // Martial Arts & Strategy
+    'art-of-war-sun-tzu.html' => 'Martial Arts & Strategy',
+    'ashihara-karate.html' => 'Martial Arts & Strategy',
+    'brazilian-jiu-jitsu.html' => 'Martial Arts & Strategy',
+    'judo.html' => 'Martial Arts & Strategy',
+    'martial-arts-cheatsheet.html' => 'Martial Arts & Strategy',
+
+    // Firearms & Military
+    'future-of-warfare-technology.html' => 'Firearms & Military',
+    'handgun-calibers.html' => 'Firearms & Military',
+    'military-aphorisms.html' => 'Firearms & Military',
+    'modern-firearms.html' => 'Firearms & Military',
+    'operator-loadouts.html' => 'Firearms & Military',
+
+    // Radio
+    'baofeng-uv5r-ham-guide.html' => 'Radio',
+    'baofeng-uv5r-quick-ref.html' => 'Radio',
+    'emergency-radio-card.html' => 'Radio',
+    'ham-radio-technician.html' => 'Radio',
+
+    // Health & Fitness
+    'cycling.html' => 'Health & Fitness',
+    'human-skeleton.html' => 'Health & Fitness',
+    'medical-school-curriculum.html' => 'Health & Fitness',
+    'running.html' => 'Health & Fitness',
+    'strength-training.html' => 'Health & Fitness',
+    'veterinary-diagnostics.html' => 'Health & Fitness',
+    'weight-loss-levers.html' => 'Health & Fitness',
+    'weightloss-cheatsheet.html' => 'Health & Fitness',
+
+    // Philosophy & Religion
+    'anapanasati-mindfulness-of-breathing.html' => 'Philosophy & Religion',
+    'buddhism.html' => 'Philosophy & Religion',
+    'capitalism.html' => 'Philosophy & Religion',
+    'conscious-leadership-contexts.html' => 'Philosophy & Religion',
+    'islam.html' => 'Philosophy & Religion',
+    'israel-history.html' => 'Philosophy & Religion',
+    'judaism.html' => 'Philosophy & Religion',
+    'leadership.html' => 'Philosophy & Religion',
+    'objectivism.html' => 'Philosophy & Religion',
+    'shabbat-services-cheatsheet.html' => 'Philosophy & Religion',
+
+    // Engineering & Science
+    'automotive-innovation-timeline.html' => 'Engineering & Science',
+    'boom-supersonic.html' => 'Engineering & Science',
+    'engineering-materials-future.html' => 'Engineering & Science',
+    'engineering-metals-selection.html' => 'Engineering & Science',
+    'geoengineering-approaches.html' => 'Engineering & Science',
+    'human-evolution.html' => 'Engineering & Science',
+    'humanoid-robots.html' => 'Engineering & Science',
+    'orbital-rockets-comparison.html' => 'Engineering & Science',
+    'tesla-products.html' => 'Engineering & Science',
+
+    // Home & Lifestyle
+    'command-deck.html' => 'Home & Lifestyle',
+    'cooking-guide.html' => 'Home & Lifestyle',
+    'global_cuisine_guide.html' => 'Home & Lifestyle',
+    'home-maintenance-guide.html' => 'Home & Lifestyle',
+    'hot-tub-treatment.html' => 'Home & Lifestyle',
+    'living-richly-guide.html' => 'Home & Lifestyle',
+    'samsung-bespoke-oven-guide.html' => 'Home & Lifestyle',
+];
+
 // --- Base URL Calculation ---
 $scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'];
@@ -120,6 +231,7 @@ function extractMetadata(string $filepath): array {
 
 // --- Main Logic: Scan Directory and Build Cheatsheet List ---
 $cheatsheets = [];
+$categories = [];
 $errors = [];
 
 try {
@@ -137,11 +249,20 @@ try {
         if ($meta['error']) {
             $errors[] = $meta['error'];
         } else {
+            $meta['category'] = $categoryMap[$file] ?? 'Other';
             $cheatsheets[] = $meta;
         }
     }
     // Sort cheatsheets by newest edit date first by default
     usort($cheatsheets, fn($a, $b) => $b['mtime'] <=> $a['mtime']);
+
+    // Distinct categories for the filter dropdown (alphabetical, "Other" last)
+    $categories = array_values(array_unique(array_column($cheatsheets, 'category')));
+    usort($categories, function ($a, $b) {
+        if ($a === 'Other') return 1;
+        if ($b === 'Other') return -1;
+        return strcasecmp($a, $b);
+    });
 
 } catch (Exception $e) {
     $errors[] = "An error occurred: " . $e->getMessage();
@@ -376,6 +497,13 @@ try {
         .portfolio-item .card {
             height: 100%; /* This is critical for making cards in a row the same height */
         }
+        .category-badge {
+            background-color: #e7f1ff;
+            color: #1a508b;
+            font-weight: 500;
+            font-size: 0.7rem;
+            letter-spacing: .02em;
+        }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -403,10 +531,21 @@ try {
 
         <div class="container mt-4 mb-5">
             <div class="row mb-4 justify-content-center g-2">
-                <div class="col-md-8 col-lg-6">
+                <div class="col-md-8 col-lg-5">
                     <div class="input-group input-group-lg shadow-sm">
                         <span class="input-group-text bg-white border-end-0 text-primary" id="filter-addon"><i class="bi bi-search"></i></span>
                         <input type="search" id="filterInput" class="form-control border-start-0" placeholder="Filter by title or topic (e.g., Buddhism, Python)..." aria-label="Filter cheatsheets" aria-describedby="filter-addon">
+                    </div>
+                </div>
+                <div class="col-md-8 col-lg-4">
+                    <div class="input-group input-group-lg shadow-sm">
+                        <label class="input-group-text bg-white border-end-0 text-primary" for="categorySelect"><i class="bi bi-tags"></i></label>
+                        <select id="categorySelect" class="form-select border-start-0" aria-label="Filter by category">
+                            <option value="" selected>All categories</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </div>
                 <div class="col-md-8 col-lg-3">
@@ -443,7 +582,7 @@ try {
 
             <div id="cheatsheetGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                 <?php foreach ($cheatsheets as $sheet): ?>
-                    <div class="col portfolio-item" data-title="<?php echo htmlspecialchars($sheet['title']); ?>" data-mtime="<?php echo (int)$sheet['mtime']; ?>">
+                    <div class="col portfolio-item" data-title="<?php echo htmlspecialchars($sheet['title']); ?>" data-mtime="<?php echo (int)$sheet['mtime']; ?>" data-category="<?php echo htmlspecialchars($sheet['category']); ?>">
                         <article class="card shadow-sm">
                             <?php if (!empty($sheet['image'])): ?>
                                 <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="card-img-top-container" aria-label="Preview image for <?php echo htmlspecialchars($sheet['title']); ?>">
@@ -473,6 +612,9 @@ try {
                                 </div>
                             <?php endif; ?>
                             <div class="card-body">
+                                <?php if (!empty($sheet['category'])): ?>
+                                    <span class="badge category-badge mb-2 align-self-start"><i class="bi bi-tag-fill me-1"></i><?php echo htmlspecialchars($sheet['category']); ?></span>
+                                <?php endif; ?>
                                 <h5 class="card-title">
                                     <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener">
                                         <?php echo htmlspecialchars($sheet['title']); ?>
@@ -540,6 +682,7 @@ try {
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const filterInput = document.getElementById('filterInput');
+        const categorySelect = document.getElementById('categorySelect');
         const sortSelect = document.getElementById('sortSelect');
         const grid = document.getElementById('cheatsheetGrid');
         const noResultsMessage = document.getElementById('noResults');
@@ -567,8 +710,9 @@ try {
         }
 
         if (filterInput && grid && items.length > 0) {
-            filterInput.addEventListener('input', function() {
+            const applyFilters = function() {
                 const filterText = filterInput.value.toLowerCase().trim();
+                const selectedCategory = categorySelect ? categorySelect.value : '';
                 let itemsVisible = 0;
 
                 items.forEach(item => {
@@ -577,7 +721,9 @@ try {
                     const title = titleElement ? titleElement.textContent.toLowerCase() : '';
                     const description = descriptionElement ? descriptionElement.textContent.toLowerCase() : '';
 
-                    const isVisible = filterText === '' || title.includes(filterText) || description.includes(filterText);
+                    const matchesText = filterText === '' || title.includes(filterText) || description.includes(filterText);
+                    const matchesCategory = selectedCategory === '' || item.dataset.category === selectedCategory;
+                    const isVisible = matchesText && matchesCategory;
 
                     if (isVisible) {
                         item.style.display = '';
@@ -586,8 +732,11 @@ try {
                         item.style.display = 'none';
                     }
                 });
-                noResultsMessage.classList.toggle('d-none', itemsVisible > 0 || filterText === '');
-            });
+                noResultsMessage.classList.toggle('d-none', itemsVisible > 0);
+            };
+
+            filterInput.addEventListener('input', applyFilters);
+            if (categorySelect) categorySelect.addEventListener('change', applyFilters);
         } else if (filterInput) {
              filterInput.disabled = true;
              filterInput.placeholder = "No cheatsheets available to filter.";
