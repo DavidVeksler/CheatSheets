@@ -367,7 +367,7 @@
     <div class="card2"><h3><span class="num">1</span>The system of record always wins</h3><p class="small">The <strong>system of record</strong> is the authoritative store the business runs on — the canonical truth, not a copy that can be overwritten. The agent <em>reads</em> that truth and drafts against it; it never silently mutates a shared environment or invents state. The same discipline any serious business applies to its books: <strong>nothing — human or agent — writes to the record without a person accountable for the write.</strong></p></div>
     <div class="card2"><h3><span class="num">2</span>Read-only by default; writes are earned and gated</h3><p class="small">Read-only is an <strong>architectural property</strong>, not a reminder. The agent drafts or diagnoses; a human approves anything that changes a shared system. A skill that can only read <em>cannot</em> break the system of record — that's the whole point of the default.</p></div>
     <div class="card2"><h3><span class="num">3</span>Higher-stakes paths route to a named human</h3><p class="small">Anything touching <strong>regulated data, money, or a production write</strong> is flagged and owned by a <strong>named reviewer</strong>. Critically, the human checkpoint sits where <a href="https://owasp.org/www-project-top-10-for-large-language-model-applications/" target="_blank" rel="noopener">prompt injection</a> cannot reach it: <strong>one layer below the agent, not inside it</strong>. A check the agent can talk its way past is not a check.</p></div>
-    <div class="card2"><h3><span class="num">4</span>Everything is observable; nothing drifts</h3><p class="small">Each skill declares what it touches, the copy that runs is the <strong>reviewed copy</strong> (no personal forks), and usage and cost are visible per skill. Observability is the gap most orgs hit first — <strong>build it in from day one</strong>, not after the first incident.</p></div>
+    <div class="card2"><h3><span class="num">4</span>Everything is observable; nothing drifts</h3><p class="small">Each skill declares what it touches, the copy that runs is the <strong>reviewed copy</strong> (no personal forks), and usage and cost are visible per skill. Observability is the gap most orgs hit first — <strong>build it in from day one</strong>, not after the first incident. And it's <strong>two jobs, not one</strong>: operational analytics (who uses what, at what cost) <em>and</em> agent-quality (why a bad output happened) — stand up both.</p></div>
   </div>
 
   <div class="tbl-wrap">
@@ -381,7 +381,7 @@
     </tbody>
   </table>
   </div>
-  <div class="callout warn"><div class="h"><i class="bi bi-bullseye"></i> The injection corollary</div><p class="small mb-0">If your human approval lives <em>inside</em> the agent's prompt or output, a hostile input can rewrite the very text the human is reading. Put the gate <strong>one layer down</strong> — in the deploy pipeline, the merge, the write-path — where the model can't author what the reviewer sees.</p></div>
+  <div class="callout warn"><div class="h"><i class="bi bi-bullseye"></i> The injection corollary</div><p class="small mb-0">If your human approval lives <em>inside</em> the agent's prompt or output, a hostile input can rewrite the very text the human is reading. Put the gate <strong>one layer down</strong> — in the deploy pipeline, the merge, the write-path — where the model can't author what the reviewer sees. And <strong>isolate the sessions that read untrusted content</strong> (inbound email, scraped pages) from the sessions that can act, so the injection chain can't form. In one regulated-lender deployment, that isolation plus a native send-confirmation checkpoint cut prompt-injection success from <strong>~24% unprotected to ~1%</strong>.</p></div>
 </section>
 
 <!-- ============ LIFECYCLE ============ -->
@@ -436,7 +436,7 @@
   </details>
   <details class="acc"><summary><i class="bi bi-6-circle"></i> Earn autonomy <span class="lift-tag">distribution &ne; permission</span></summary>
     <div class="acc-body small">
-      <p class="mb-0">Read-only and drafts-only by default; broader autonomy is granted <strong>per-skill, only when telemetry justifies it</strong>. A skill being widely distributed does not mean it has earned the right to write. Autonomy is a privilege a skill earns from its own track record, one capability at a time.</p>
+      <p class="mb-0">Read-only and drafts-only by default; broader autonomy is granted <strong>per-skill, only when telemetry justifies it</strong>. A skill being widely distributed does not mean it has earned the right to write. Autonomy is a privilege a skill earns from its own track record, one capability at a time. Calibrate the bar to reality: comparable sales-AI workflows see roughly <strong>70–80% draft acceptance</strong>, not 99%+ — the telemetry tells you when a skill has earned more rope, not an aspirational target.</p>
     </div>
   </details>
 </section>
@@ -593,6 +593,18 @@
     <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Launching a big-bang AI platform with one risky cutover.</p></div>
     <div class="o"><span class="tag">Do instead</span><p class="small mb-0">Grow a library of <strong>small reviewed increments</strong>, each earning the next.</p></div>
   </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Status inflation — calling a draft "built" or a prototype "in production."</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0">Use <strong>precise status words</strong> (drafted &ne; prototyped &ne; built); status inflation is how an AI program loses credibility with risk &amp; audit.</p></div>
+  </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Reviewing skills only one at a time, letting two authors ship overlapping ones.</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0">Add a <strong>catalog-level overlap review</strong>; overlapping authorship is the failure mode that quietly kills a skills platform.</p></div>
+  </div>
+  <div class="miss">
+    <div class="x"><span class="tag">Anti-pattern</span><p class="small mb-0">Relying on catalog or department segmentation as a security boundary.</p></div>
+    <div class="o"><span class="tag">Do instead</span><p class="small mb-0">Treat the <strong>connector credential as the real access boundary</strong>; catalog membership is documentation &amp; ergonomics, not permission.</p></div>
+  </div>
 </section>
 
 <!-- ============ GETTING STARTED ============ -->
@@ -643,13 +655,21 @@
 <!-- ============ WORKED EXAMPLE ============ -->
 <section id="worked">
   <h2><i class="bi bi-bank"></i> A Worked Example: A Regulated Lender</h2>
-  <p class="sec-intro">This was built end-to-end as the embedded AI lead at a regulated commercial lender: a CI-distributed skill marketplace, a publish-and-audit governance gate, and AI observability stood up from zero.</p>
-  <div class="callout bad"><div class="h"><i class="bi bi-shield-exclamation"></i> The single most instructive moment</div><p class="small mb-0">On its <strong>first run</strong>, a follow-up skill was about to request a borrower's <strong>Social Security number</strong> — and the review discipline caught it, because the skill had inherited a wrong assumption about the source of truth. The gate, the named reviewer, and the read-only default existed precisely so a wrong assumption surfaced as a <em>caught</em> request, not a leaked SSN. <strong>Every failure like that became an architectural rule</strong> — which is how the four invariants above were earned, not theorized.</p></div>
+  <p class="sec-intro">This was built end-to-end as the embedded AI lead at a regulated commercial lender — ~3 dozen people across 9 departments, in a 2-month engagement: a CI-distributed skill marketplace, a publish-and-audit governance gate, and AI observability stood up from zero.</p>
+
+  <div class="grid3" style="margin-bottom:1rem;">
+    <div class="qr"><div class="k">Skills shipped</div><div class="v">~30</div><div class="s">19 firm-authored, across 10 plugins</div></div>
+    <div class="qr"><div class="k">30-day model spend</div><div class="v">~$8,980</div><div class="s">3,685 sessions · ~$2.44 each</div></div>
+    <div class="qr"><div class="k">Latent capacity</div><div class="v">30–80 hr/wk</div><div class="s">measured, gated on adoption</div></div>
+  </div>
+
+  <div class="callout bad"><div class="h"><i class="bi bi-shield-exclamation"></i> The single most instructive moment</div><p class="small mb-0">On its <strong>first run</strong>, a follow-up skill was about to request a borrower's <strong>Social Security number</strong> — from the wrong people: <strong>4 of the first 5 CRM contacts were brokers, not borrowers</strong>, because the skill had inherited a wrong assumption about the source of truth. The gate, the named reviewer, and the drafts-only default existed precisely so this surfaced as a <em>caught</em> request, not a leaked SSN to an intermediary. The fixes became rules: treat the CRM lead-status as authoritative over the application API, gate the SSN ask on a tax-ID-on-file flag, and skip broker-intermediated deals entirely. <strong>Every failure like that became an architectural rule</strong> — which is how the four invariants above were earned, not theorized.</p></div>
   <div class="grid3">
     <div class="card2"><h3><i class="bi bi-shop"></i> Skill marketplace</h3><p class="small">CI-distributed so everyone loads the reviewed copy — no drifted forks. (Invariant 4.)</p></div>
     <div class="card2"><h3><i class="bi bi-clipboard2-check"></i> Publish-and-audit gate</h3><p class="small">A compliance-routing review gate: deterministic checks, high-stakes skills to a named reviewer. (Lifecycle step 3.)</p></div>
     <div class="card2"><h3><i class="bi bi-activity"></i> AI observability</h3><p class="small">Usage and cost per skill, from zero — so autonomy could be earned on evidence. (Invariant 4 + step 5.)</p></div>
   </div>
+  <div class="callout"><div class="h"><i class="bi bi-bullseye"></i> The thesis, in one line</div><p class="small mb-0">In a small, regulated, system-of-record-centric business, the highest-leverage AI work is <em>not</em> the cleverest agent — it's the platform that lets non-engineers ship reviewed, observable, drafts-only automation on top of the existing stack, without ever competing with the system of record. <strong>Get the substrate right and capability compounds safely; get it wrong and you accumulate unauditable risk that someone eventually has to unwind.</strong></p></div>
   <p class="small muted">Full writeup — including the observability backend and the compliance-routing gate: <a href="https://davidveksler.com/david/ai-strategy.html" rel="nofollow">Founding the AI delivery function at a regulated lender</a>.</p>
 </section>
 
@@ -701,6 +721,11 @@
   <p><span class="verified"><i class="bi bi-shield-check"></i> Last verified: 2026-06-24</span></p>
   <p class="small">A generalized field guide based on an approach taken into production founding the AI delivery function at a regulated lender. The Agent Skills / <code>SKILL.md</code> standard was published by Anthropic on 18 Dec 2025 (agentskills.io); cross-tool adoption counts are volatile — verify the current list before quoting figures. Governance specifics (review routing, write-path design, retention) must be adapted to your own regulatory and security context; this is not legal or compliance advice.</p>
   <p class="small muted">Part of the David Veksler Cheatsheets collection · AI-generated, human-reviewed.</p>
+  <p class="small" style="margin-top:.6rem;">
+    <a href="https://cheatsheets.davidveksler.com/" title="Browse all cheatsheets"><i class="bi bi-collection"></i> All Cheatsheets</a>
+    &nbsp;·&nbsp;
+    <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener" title="David Veksler on LinkedIn"><i class="bi bi-linkedin"></i> LinkedIn</a>
+  </p>
 </footer>
 
 <button id="themeToggle" class="fab" aria-label="Toggle light/dark theme" title="Toggle theme"><i class="bi bi-circle-half"></i></button>
