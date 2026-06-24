@@ -13,7 +13,7 @@
   } catch(e){} })();
 </script>
 <title>Strength Training Cheatsheet: Programming, Lifts &amp; Progression</title>
-<meta name="description" content="A complete strength-training reference: progressive overload, rep ranges, RIR/RPE, weekly volume landmarks, the big-five lift cues, program comparison (5/3/1, PPL, full-body), periodization, deloads, protein and creatine, recovery, and a beginner starter routine." />
+<meta name="description" content="A complete strength-training reference: progressive overload, rep ranges, RIR/RPE, weekly volume landmarks, the big-six lift cues, program comparison (5/3/1, PPL, full-body), periodization, deloads, protein and creatine, recovery, and a beginner starter routine." />
 <meta name="keywords" content="strength training cheatsheet, progressive overload, rep ranges hypertrophy strength, RIR RPE, training volume landmarks MEV MRV, 5/3/1, push pull legs, full body workout, squat bench deadlift overhead press technique, periodization, deload, protein intake muscle, creatine, beginner lifting program, double progression" />
 <meta name="author" content="David Veksler" />
 <meta name="robots" content="index, follow" />
@@ -21,7 +21,7 @@
 <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;🏋️&lt;/text&gt;&lt;/svg&gt;" />
 
 <meta property="og:title" content="Strength Training Cheatsheet: Programming, Lifts &amp; Progression" />
-<meta property="og:description" content="The terminal reference for lifting: progressive overload, rep ranges, RIR, weekly volume landmarks, big-five lift cues, program comparison, periodization, deloads, nutrition, and a beginner starter routine." />
+<meta property="og:description" content="The terminal reference for lifting: progressive overload, rep ranges, RIR, weekly volume landmarks, big-six lift cues, program comparison, periodization, deloads, nutrition, and a beginner starter routine." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://cheatsheets.davidveksler.com/strength-training.html" />
 <meta property="og:image" content="images/strength-training.png" />
@@ -29,7 +29,7 @@
 <meta property="og:site_name" content="David Veksler Cheatsheets" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Strength Training Cheatsheet: Programming, Lifts &amp; Progression" />
-<meta name="twitter:description" content="Progressive overload, rep ranges, RIR, volume landmarks, big-five lift cues, program comparison, periodization, deloads, protein &amp; creatine, recovery, and a starter routine." />
+<meta name="twitter:description" content="Progressive overload, rep ranges, RIR, volume landmarks, big-six lift cues, program comparison, periodization, deloads, protein &amp; creatine, recovery, and a starter routine." />
 <meta name="twitter:image" content="images/strength-training.png" />
 <meta name="twitter:image:alt" content="Strength training reference: programming, the big lifts, volume, and recovery." />
 <meta name="twitter:creator" content="@heroiclife" />
@@ -42,7 +42,7 @@
   "@context": "https://schema.org",
   "@type": "TechArticle",
   "headline": "Strength Training Cheatsheet: Programming, Lifts & Progression",
-  "description": "A comprehensive strength-training reference covering progressive overload, rep ranges, RIR/RPE autoregulation, weekly volume landmarks (MV/MEV/MAV/MRV), technique cues for the squat, bench, deadlift, overhead press and row, program comparison (5/3/1, PPL, upper/lower, full-body), periodization, deloads, protein and creatine dosing, recovery, common mistakes, and a beginner starter routine.",
+  "description": "A comprehensive strength-training reference covering progressive overload, rep ranges, RIR/RPE autoregulation, weekly volume landmarks (MV/MEV/MAV/MRV), technique cues for the squat, bench, deadlift, overhead press, row and pull-up, program comparison (5/3/1, PPL, upper/lower, full-body), periodization, deloads, protein and creatine dosing, recovery, common mistakes, and a beginner starter routine.",
   "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
   "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
   "datePublished": "2026-06-24",
@@ -228,8 +228,10 @@
   .mono { font-family: var(--mono); }
   @media print {
     .section-nav, .fab, .progress-wrap { display: none !important; }
-    details.acc, details.task-card { open: true; }
-    details[open] .acc-body { display:block; }
+    /* Force collapsed accordions to reveal their content on paper (native <details>
+       can't be forced open via CSS; JS sets the open attribute on beforeprint too). */
+    details.acc .acc-body, details.task-card .task-body { display: block !important; }
+    details.acc > summary::after, details.task-card > summary::after { display: none; }
     body { background: #fff; color: #000; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
@@ -801,9 +803,23 @@
       try { localStorage.setItem("st-theme", dark ? "dark" : "light"); } catch (e) {}
     });
 
-    /* ---- Back to top ---- */
+    /* ---- Back to top (honor prefers-reduced-motion) ---- */
     var backTop = document.getElementById("backTop");
-    backTop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+    backTop.addEventListener("click", function () {
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    });
+
+    /* ---- Expand all <details> for printing, restore afterward ---- */
+    var printOpened = [];
+    window.addEventListener("beforeprint", function () {
+      printOpened = [];
+      document.querySelectorAll("details:not([open])").forEach(function (d) { d.open = true; printOpened.push(d); });
+    });
+    window.addEventListener("afterprint", function () {
+      printOpened.forEach(function (d) { d.open = false; });
+      printOpened = [];
+    });
 
     /* ---- Checklist progress (localStorage) ---- */
     var PREFIX = "st-task-";
