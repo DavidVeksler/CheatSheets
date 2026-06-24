@@ -140,8 +140,8 @@ try {
             $cheatsheets[] = $meta;
         }
     }
-    // Sort cheatsheets alphabetically by title
-    usort($cheatsheets, fn($a, $b) => strcasecmp($a['title'], $b['title']));
+    // Sort cheatsheets by newest edit date first by default
+    usort($cheatsheets, fn($a, $b) => $b['mtime'] <=> $a['mtime']);
 
 } catch (Exception $e) {
     $errors[] = "An error occurred: " . $e->getMessage();
@@ -413,10 +413,10 @@ try {
                     <div class="input-group input-group-lg shadow-sm">
                         <label class="input-group-text bg-white border-end-0 text-primary" for="sortSelect"><i class="bi bi-sort-down"></i></label>
                         <select id="sortSelect" class="form-select border-start-0" aria-label="Sort cheatsheets">
-                            <option value="title-asc" selected>Title (A–Z)</option>
-                            <option value="title-desc">Title (Z–A)</option>
-                            <option value="date-desc">Newest first</option>
+                            <option value="date-desc" selected>Newest first</option>
                             <option value="date-asc">Oldest first</option>
+                            <option value="title-asc">Title (A–Z)</option>
+                            <option value="title-desc">Title (Z–A)</option>
                         </select>
                     </div>
                 </div>
@@ -481,6 +481,11 @@ try {
                                 <p class="card-text">
                                     <?php echo htmlspecialchars($sheet['description']); ?>
                                 </p>
+                                <?php if (!empty($sheet['mtime'])): ?>
+                                    <p class="card-date text-muted small mb-0">
+                                        <i class="bi bi-calendar3 me-1"></i>Updated <?php echo htmlspecialchars(date('M j, Y', $sheet['mtime'])); ?>
+                                    </p>
+                                <?php endif; ?>
                             </div>
                             <div class="card-footer">
                                 <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary w-100">
