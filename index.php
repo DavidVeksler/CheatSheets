@@ -446,7 +446,12 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
         .navbar-brand { font-weight: 500; color: #f8f9fa !important; }
         .card {
             transition: transform .15s ease-out, box-shadow .15s ease-out; /* Quicker, smoother transition */
-            border: 1px solid #dee2e6; border-radius: .3rem; overflow: hidden; background-color: #fff; display: flex; flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, .45);
+            border-radius: .3rem; overflow: hidden;
+            background-color: rgba(255, 255, 255, .55); /* Frosted glass */
+            backdrop-filter: blur(10px) saturate(130%);
+            -webkit-backdrop-filter: blur(10px) saturate(130%);
+            display: flex; flex-direction: column;
             border-top: 3px solid var(--cat-color, #dee2e6);
         }
         .card:hover { transform: translateY(var(--card-lift-height)); box-shadow: 0 0.5rem 1rem var(--card-shadow-intensity); }
@@ -542,13 +547,68 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
         }
         .footer { background-color: #343a40; color: #adb5bd; border-top: 1px solid #495057; }
         .footer a { color: #f8f9fa; } .footer a:hover { color: #ced4da; }
-        .page-hero { padding: 3rem 0; margin-bottom: 2rem; background-color: #e9ecef; border-bottom: 1px solid #dee2e6;}
-        .page-hero h1 { color: #212529; font-weight: 600;}
-        .page-hero .lead { color: #495057; font-size: 1.1rem; margin-bottom: 1.25rem;}
+        /* === Animated glassmorphism hero (cool indigo / violet / cyan mesh) === */
+        .page-hero {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            padding: 4.5rem 0;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, .15);
+            background-color: #1e1b4b; /* Deep indigo base behind the blobs */
+            background-image:
+                radial-gradient(42% 55% at 18% 28%, rgba(99, 102, 241, .85) 0%, transparent 60%),  /* indigo */
+                radial-gradient(46% 60% at 82% 22%, rgba(139, 92, 246, .80) 0%, transparent 60%),  /* violet */
+                radial-gradient(50% 65% at 72% 80%, rgba(34, 211, 238, .55) 0%, transparent 60%),  /* cyan  */
+                radial-gradient(46% 60% at 25% 82%, rgba(67, 56, 202, .80) 0%, transparent 62%);   /* deep indigo */
+            background-size: 200% 200%;
+            background-position: 0% 50%;
+            animation: heroGradientShift 22s ease-in-out infinite alternate;
+        }
+        @keyframes heroGradientShift {
+            0%   { background-position: 0%   50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 50%  100%; }
+        }
+        /* Cursor-following highlight; --mx/--my default to centre until JS updates them */
+        .hero-glow {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: radial-gradient(
+                30rem 30rem at var(--mx, 50%) var(--my, 40%),
+                rgba(255, 255, 255, .22) 0%,
+                rgba(255, 255, 255, .08) 25%,
+                transparent 60%);
+            transition: background .12s linear;
+        }
+        .hero-glass {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 2.25rem 2.5rem;
+            background: rgba(255, 255, 255, .12);
+            border: 1px solid rgba(255, 255, 255, .25);
+            border-radius: 1rem;
+            box-shadow: 0 8px 32px rgba(30, 27, 75, .35);
+            backdrop-filter: blur(14px) saturate(140%);
+            -webkit-backdrop-filter: blur(14px) saturate(140%);
+        }
+        .page-hero h1 { color: #fff; font-weight: 600; text-shadow: 0 2px 12px rgba(30, 27, 75, .45); }
+        .page-hero .lead { color: rgba(255, 255, 255, .9); font-size: 1.1rem; margin-bottom: 1.25rem; }
         #filterInput { border-radius: .25rem; font-size: 1rem; padding: .6rem 1rem; }
         #filterInput:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25); }
-        .cta-scroll-link { font-size: 0.9rem; text-decoration: none; color: #0056b3; font-weight:500; }
-        .cta-scroll-link:hover { text-decoration: underline; }
+        .cta-scroll-link { font-size: 0.9rem; text-decoration: none; color: #e0e7ff; font-weight: 500; }
+        .cta-scroll-link:hover { color: #fff; text-decoration: underline; }
+        /* Frosted filter/search toolbar (sits on the light page, so the frost is subtle) */
+        .filter-toolbar .input-group-text,
+        .filter-toolbar .form-control,
+        .filter-toolbar .form-select {
+            background-color: rgba(255, 255, 255, .6) !important; /* override Bootstrap .bg-white */
+            backdrop-filter: blur(8px) saturate(130%);
+            -webkit-backdrop-filter: blur(8px) saturate(130%);
+            border-color: rgba(255, 255, 255, .55);
+        }
         .cta-section { background-color: #ffffff; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; padding: 3rem 0; margin: 3rem 0;}
         .cta-section h3 {font-weight: 600; color: #212529;}
         .portfolio-item .card {
@@ -581,6 +641,19 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
             opacity: 0.3;
             z-index: 0;
         }
+        /* Graceful fallback where backdrop-filter is unsupported: solid surfaces */
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+            .card { background-color: #fff; }
+            .hero-glass { background: rgba(30, 27, 75, .55); }
+            .filter-toolbar .input-group-text,
+            .filter-toolbar .form-control,
+            .filter-toolbar .form-select { background-color: #fff !important; }
+        }
+        /* Respect reduced-motion: freeze the drift and disable the cursor-follow easing */
+        @media (prefers-reduced-motion: reduce) {
+            .page-hero { animation: none; }
+            .hero-glow { transition: none; }
+        }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -596,18 +669,21 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
     </nav>
 
     <main class="main-content">
-        <header class="page-hero text-center">
+        <header class="page-hero text-center" id="pageHero">
+            <span class="hero-glow" aria-hidden="true"></span>
             <div class="container">
-                <h1 class="display-5">Cheatsheet Design Showcase</h1>
-                <p class="lead">Explore examples of clear, concise, and interactive reference guides meticulously crafted by David Veksler.</p>
-                <a href="#custom-cheatsheet-cta" class="cta-scroll-link">
-                    <i class="bi bi-tools me-1"></i>Need Custom Cheatsheet Design Services? Let's Talk!
-                </a>
+                <div class="hero-glass">
+                    <h1 class="display-5">Cheatsheet Design Showcase</h1>
+                    <p class="lead">Explore examples of clear, concise, and interactive reference guides meticulously crafted by David Veksler.</p>
+                    <a href="#custom-cheatsheet-cta" class="cta-scroll-link">
+                        <i class="bi bi-tools me-1"></i>Need Custom Cheatsheet Design Services? Let's Talk!
+                    </a>
+                </div>
             </div>
         </header>
 
         <div class="container mt-4 mb-5">
-            <div class="row mb-4 justify-content-center g-2">
+            <div class="row mb-4 justify-content-center g-2 filter-toolbar">
                 <div class="col-md-8 col-lg-5">
                     <div class="input-group input-group-lg shadow-sm">
                         <span class="input-group-text bg-white border-end-0 text-primary" id="filter-addon"><i class="bi bi-search"></i></span>
@@ -808,6 +884,27 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
                 img.classList.add('error');
             }
         });
+
+        // Hero highlight follows the cursor (fine pointers only, skipped under reduced-motion).
+        // Updates are coalesced into one rAF tick per frame to avoid layout thrash.
+        const hero = document.getElementById('pageHero');
+        const wantsMotion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (hero && wantsMotion && window.matchMedia('(pointer: fine)').matches) {
+            let ticking = false, mx = 50, my = 40;
+            hero.addEventListener('pointermove', function(e) {
+                const rect = hero.getBoundingClientRect();
+                mx = ((e.clientX - rect.left) / rect.width) * 100;
+                my = ((e.clientY - rect.top) / rect.height) * 100;
+                if (!ticking) {
+                    ticking = true;
+                    requestAnimationFrame(function() {
+                        hero.style.setProperty('--mx', mx + '%');
+                        hero.style.setProperty('--my', my + '%');
+                        ticking = false;
+                    });
+                }
+            });
+        }
     });
     </script>
 
