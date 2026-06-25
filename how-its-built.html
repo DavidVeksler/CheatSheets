@@ -428,11 +428,14 @@
   <div class="signup" id="signup">
     <h3><i class="bi bi-envelope-paper"></i> Get new references &amp; build notes</h3>
     <p class="sub">Occasional email when a new reference ships or the pipeline changes. No spam, no tracking, unsubscribe anytime.</p>
-    <!-- CONFIGURE: point action= at your provider's form-submit endpoint (Buttondown, Listmonk,
-         Formspree, a serverless function, etc.). See AGENTS.md → "Email signup endpoint".
-         Until configured, JS shows an inline notice instead of navigating. -->
-    <form action="https://example.com/REPLACE-WITH-YOUR-SUBSCRIBE-ENDPOINT" method="post" class="email-signup">
+    <!-- Posts to subscribe.php (same-origin native-PHP handler). Degrades gracefully
+         without JS; JS enhances to an inline confirmation. See AGENTS.md → "Email signup endpoint". -->
+    <form action="subscribe.php" method="post" class="email-signup">
       <label class="visually-hidden" for="emailField">Email address</label>
+      <div class="visually-hidden" aria-hidden="true">
+        <label for="website-hp">Leave this field empty</label>
+        <input type="text" id="website-hp" name="website" tabindex="-1" autocomplete="off" />
+      </div>
       <input type="email" id="emailField" name="email" required autocomplete="email" inputmode="email" placeholder="you@example.com" />
       <button type="submit"><i class="bi bi-bell me-1"></i>Notify me</button>
       <p class="note">A single field, no third-party scripts. Falls back to a plain form post without JavaScript.</p>
@@ -502,14 +505,11 @@
       printOpened = [];
     });
 
-    /* ---- Email signup: progressive enhancement over a plain form post ----
-       No JS  → the form posts natively to its configured action endpoint.
-       With JS → submit asynchronously and confirm inline without leaving the page.
-       Placeholder endpoint → show an inline notice instead of a broken navigation. */
+    /* ---- Email signup: progressive enhancement over a plain same-origin form post ----
+       No JS  → the form posts natively to subscribe.php, which renders a confirmation page.
+       With JS → submit asynchronously and confirm inline from the JSON response. */
     document.querySelectorAll("form.email-signup").forEach(function (form) {
       var status = form.querySelector(".status");
-      var endpoint = form.getAttribute("action") || "";
-      var configured = endpoint && !/REPLACE-WITH-YOUR|example\.com/i.test(endpoint);
       function show(msg, isError) {
         if (!status) return;
         status.hidden = false;
@@ -519,17 +519,16 @@
       form.addEventListener("submit", function (e) {
         var email = form.querySelector('input[type="email"]');
         if (email && !email.checkValidity()) return; /* let native validation surface */
-        if (!configured) {
-          e.preventDefault();
-          show("Signup endpoint isn’t configured yet — see AGENTS.md.", true);
-          return;
-        }
         e.preventDefault();
         var btn = form.querySelector("button");
         if (btn) btn.disabled = true;
-        fetch(endpoint, { method: "POST", mode: "no-cors", body: new FormData(form) })
-          .then(function () { show("Thanks — you’re on the list."); form.reset(); })
-          .catch(function () { show("Something went wrong. Please try again later.", true); })
+        fetch(form.action, { method: "POST", headers: { "Accept": "application/json" }, body: new FormData(form) })
+          .then(function (r) { return r.json().catch(function () { return { ok: r.ok }; }); })
+          .then(function (d) {
+            if (d && d.ok) { show("Thanks — you’re on the list."); form.reset(); }
+            else { show((d && d.error) || "Sorry, that didn’t go through. Please try again.", true); }
+          })
+          .catch(function () { show("Network error — please try again later.", true); })
           .finally(function () { if (btn) btn.disabled = false; });
       });
     });
