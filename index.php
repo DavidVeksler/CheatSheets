@@ -734,7 +734,7 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
                             <i class="bi bi-gear-wide-connected me-1"></i>How this site is built
                         </a>
                         <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-lg">
-                            <i class="bi bi-linkedin me-1"></i>I build governed agentic-AI systems — let's talk
+                            <i class="bi bi-linkedin me-1"></i>Connect on LinkedIn
                         </a>
                     </div>
                 </div>
@@ -841,9 +841,9 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
 
     <section id="custom-cheatsheet-cta" class="cta-section text-center">
         <div class="container">
-              <h3 class="mb-3">Build it with governed agentic AI</h3>
+              <h3 class="mb-3">How this collection is built</h3>
               <p class="text-muted mb-4 mx-auto" style="max-width: 720px;">
-                  This whole collection is a working exhibit: a Claude Code pipeline producing polished, accurate references at scale, kept honest by a version-controlled spec, a self-verification gate, and a public git audit trail. If you're standing up an agentic-AI capability — the spec, the review gate, the guardrails — that's the work I do.
+                  This whole collection is a working exhibit: a Claude Code pipeline producing polished, accurate references at scale, kept honest by a version-controlled spec, a self-verification gate, and a public git audit trail. If that's the kind of thing you're working on, I'm happy to compare notes.
               </p>
               <div class="cta-actions mb-5">
                   <a href="how-its-built.html" class="btn btn-primary btn-lg px-4">
