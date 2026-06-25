@@ -136,7 +136,25 @@ The consumption model has shifted. Optimize for both classic search and AI answe
 - **`index.php`** — portfolio gallery; scans root for `.html`, extracts metadata (title/description/og:image/mtime), and assigns each file a category from the `$categoryMap` array (filename → category; unmapped files fall back to `'Other'`). Cards show an "Updated" date from `filemtime()`, default-sort newest-first, and support client-side category + text filtering.
 - **`sitemap.php`** — SEO sitemap with category-based priorities.
 - **`generate-image-previews.py`** — Playwright screenshot generation + metadata backfill; outputs `images/{filename}.png`.
+- **`how-its-built.html`** — the "How this site is built" engineering exhibit. Describes this very pipeline (spec, generation, self-verification gate, governance, tech choices) from real repo facts; cross-links `governing-agentic-ai.html` and `history.php`. Keep it in sync if the pipeline materially changes.
 - No build step. Static-hosting friendly. 47+ cheatsheets; recent additions include `lifestyle-calculator.html`, `clean-architecture-dotnet.html`.
+
+## Email signup endpoint
+
+The homepage (`index.php`) and `how-its-built.html` carry a lightweight, privacy-respecting email signup (one field + submit, no tracking scripts). The form **posts to a single configurable endpoint** and degrades gracefully without JavaScript (native form POST); with JS it submits asynchronously (`fetch`, `mode: "no-cors"`) and confirms inline.
+
+- **`index.php`** reads the endpoint from the `$emailSignupEndpoint` PHP variable near the top of the file.
+- **`how-its-built.html`** (static) hard-codes the same value in the form's `action=` attribute, flagged with a `CONFIGURE:` comment.
+
+To point it at a real provider (Buttondown, Listmonk, Formspree, Mailchimp embedded form action, a serverless function, etc.): replace the placeholder URL `https://example.com/REPLACE-WITH-YOUR-SUBSCRIBE-ENDPOINT` in **both** places with the provider's form-submit URL. The field is named `email`; add any provider-required hidden inputs to the form. **Do not** hard-code API keys or secrets in these files — use a provider whose public form-submit endpoint accepts an unauthenticated POST, or proxy through your own handler. Until configured, the placeholder is detected client-side and the form shows an inline "not configured" notice instead of navigating to a dead URL.
+
+## Phase 2 — Affiliate links (planned, NOT yet implemented)
+
+Deferred. Do **not** add affiliate links in the current pass. When implemented, apply this pattern to the ~6–8 commercial-intent sheets only: `bitcoin-exchanges-cards.html`, `bitcoin-wallet.html`, `baofeng-uv5r-ham-guide.html`, `baofeng-uv5r-quick-ref.html`, `modern-firearms.html`, `operator-loadouts.html`, `hot-tub-treatment.html`, `samsung-bespoke-oven-guide.html`.
+
+- **Disclose** every affiliate relationship with a clear, visible FTC-compliant disclosure on the page (not buried).
+- **No fabricated IDs.** Affiliate/tracking IDs come from a single config source (a PHP config var or documented placeholder), never invented or guessed — same discipline as the email endpoint and SRI hashes.
+- Keep links `rel="sponsored nofollow noopener"` and only on genuinely commercial-intent pages; do not retrofit informational/reference sheets.
 
 ## Adding New Cheatsheets
 
