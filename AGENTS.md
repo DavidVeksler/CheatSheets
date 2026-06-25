@@ -141,12 +141,17 @@ The consumption model has shifted. Optimize for both classic search and AI answe
 
 ## Email signup endpoint
 
-The homepage (`index.php`) and `how-its-built.html` carry a lightweight, privacy-respecting email signup (one field + submit, no tracking scripts). The form **posts to a single configurable endpoint** and degrades gracefully without JavaScript (native form POST); with JS it submits asynchronously (`fetch`, `mode: "no-cors"`) and confirms inline.
+The homepage (`index.php`) and `how-its-built.html` carry a lightweight, privacy-respecting email signup (one field + submit, no tracking scripts, no cookies, no third-party services). Both forms POST to **`subscribe.php`**, a same-origin native-PHP handler.
 
-- **`index.php`** reads the endpoint from the `$emailSignupEndpoint` PHP variable near the top of the file.
-- **`how-its-built.html`** (static) hard-codes the same value in the form's `action=` attribute, flagged with a `CONFIGURE:` comment.
+**How it works** (`subscribe.php`):
+- Validates the address (`FILTER_VALIDATE_EMAIL`), rejects a tripped honeypot (`website` field), then **appends the address to `.subscribers.jsonl`** (the source of truth) and **emails a notification** to the owner via PHP `mail()`.
+- Responds with JSON (`{ok, message|error}`) to `fetch` requests, or a small self-contained confirmation page to a plain no-JS form POST. So it degrades gracefully: without JavaScript the native POST still records the signup and shows a confirmation; with JS it confirms inline.
 
-To point it at a real provider (Buttondown, Listmonk, Formspree, Mailchimp embedded form action, a serverless function, etc.): replace the placeholder URL `https://example.com/REPLACE-WITH-YOUR-SUBSCRIBE-ENDPOINT` in **both** places with the provider's form-submit URL. The field is named `email`; add any provider-required hidden inputs to the form. **Do not** hard-code API keys or secrets in these files — use a provider whose public form-submit endpoint accepts an unauthenticated POST, or proxy through your own handler. Until configured, the placeholder is detected client-side and the form shows an inline "not configured" notice instead of navigating to a dead URL.
+**Configuration (one env var):**
+- Set **`CHEATSHEET_NOTIFY_EMAIL`** in the server environment to the address that should receive new-signup notifications (e.g. in the vhost/`php-fpm` pool config, `.htaccess` `SetEnv`, or the hosting panel's env settings). **Do not hard-code the address in source** — this is a public repo. If it's unset, signups are still recorded to `.subscribers.jsonl`; only the notification email is skipped.
+- `.subscribers.jsonl` is **gitignored** — subscriber addresses must never be committed (public repo; see [[public-repo-no-personal-data]]).
+- Requires a working `mail()` (sendmail/Postfix or the host's mail relay). If `mail()` is unavailable or you outgrow a flat-file list, swap the notify/record block in `subscribe.php` for a provider API (Kit, Buttondown, MailerLite, or a WordPress newsletter plugin on `davidveksler.com`) — the form contract (`POST` with an `email` field, JSON or HTML response) stays the same.
+- Spam protection is intentionally minimal (honeypot + email validation). Add rate-limiting or a CAPTCHA if abuse appears.
 
 ## Phase 2 — Affiliate links (planned, NOT yet implemented)
 
