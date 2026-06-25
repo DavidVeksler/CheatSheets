@@ -167,8 +167,9 @@ function extractRawMetadata(string $filepath, int $mtime): array {
     $raw = [
         'title' => $defaultTitle,
         'description' => 'Explore this ' . htmlspecialchars($defaultTitle) . ' cheatsheet for a concise overview of key concepts.',
-        'image_raw' => null, // og:image as authored (relative/absolute), resolved per-request later
-        'mtime' => $mtime,
+        'image' => null,
+        'url' => $baseUrl . $filename,
+        'mtime' => @filectime($filepath) ?: 0,
         'error' => null
     ];
 
@@ -361,7 +362,7 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
     <meta name="keywords" content="cheatsheets, portfolio, custom cheatsheets, information design, technical writing, data visualization, reference guide, programming, tech, philosophy, ai safety, bitcoin, leadership, david veksler, hire, freelance, consultant, interactive, learning, development, web design">
     <meta name="author" content="David Veksler">
     <link rel="canonical" href="<?php echo htmlspecialchars($baseUrl); ?>">
-    
+
     <!-- Sitemap reference for search engines -->
     <link rel="sitemap" type="application/xml" href="<?php echo htmlspecialchars($baseUrl); ?>sitemap.php">
 
