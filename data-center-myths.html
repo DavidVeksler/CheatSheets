@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script>
+  /* Set theme before paint so Bootstrap (data-bs-theme) stays in sync with our light-dark() tokens — no flash. */
+  (function(){ try {
+    var s = localStorage.getItem("dcm-theme");
+    if (s === "light" || s === "dark") document.documentElement.setAttribute("data-theme", s);
+    var dark = s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-bs-theme", dark ? "dark" : "light");
+  } catch(e){} })();
+</script>
+<title>Stop Calling Them AI Data Centers: A Myth-by-Myth Field Guide</title>
+<meta name="description" content="AI is about a quarter of what data centers run; the rest is the plumbing of modern civilization — including the campaign against them. A fact-checked, myth-by-myth reference on data centers, electricity prices, and energy policy." />
+<meta name="keywords" content="data centers, AI data centers, electricity prices, data center moratorium, ERCOT, grid demand, rate design, data center electricity, AI energy use, nuclear data centers, hyperscaler nuclear, FERC large load, Texas SB6, data center tax exemption, consumer surplus AI, AI capex GDP" />
+<meta name="author" content="David Veksler" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/data-center-myths.html" />
+<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;🏢&lt;/text&gt;&lt;/svg&gt;" />
+
+<meta property="og:title" content="Stop Calling Them AI Data Centers" />
+<meta property="og:description" content="AI is about a quarter of what these buildings run. The rest is the plumbing of modern civilization — including the campaign against them. A fact-checked, myth-by-myth field guide." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/data-center-myths.html" />
+<meta property="og:image" content="images/data-center-myths.png" />
+<meta property="og:image:alt" content="Data-center myths field guide: the four-floor building, where AI is only the top floor, plus the claims-vs-reality reference." />
+<meta property="og:site_name" content="David Veksler Cheatsheets" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Stop Calling Them AI Data Centers" />
+<meta name="twitter:description" content="AI is ~a quarter of what data centers run; the rest is the plumbing of modern civilization — including the campaign against them. Fact-checked, myth-by-myth." />
+<meta name="twitter:image" content="images/data-center-myths.png" />
+<meta name="twitter:image:alt" content="The four-floor building: AI is only the top floor of the infrastructure modern civilization runs on." />
+<meta name="twitter:creator" content="@heroiclife" />
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Stop Calling Them AI Data Centers: A Myth-by-Myth Field Guide",
+  "description": "A fact-checked reference arguing that data centers run modern civilization — AI is roughly a quarter of their workload, the rest is banking, healthcare, government, logistics, communications, and the opposition's own campaign infrastructure. Covers the workload mix, AI consumer surplus and GDP impact, electricity prices as a rate-design problem, the ERCOT demand breakdown, when big loads raise vs. lower rates, the data-center tax exemption, hyperscaler nuclear deals, and the US-China strategic stakes.",
+  "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+  "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+  "datePublished": "2026-06-24",
+  "dateModified": "2026-06-24",
+  "keywords": "data centers, AI data centers, electricity prices, data center moratorium, ERCOT, rate design, nuclear data centers, FERC large load, Texas SB6, data center tax exemption, AI consumer surplus, AI capex GDP"
+}
+</script>
+
+<style>
+@layer tokens, base, components, utilities;
+
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --accent:      light-dark(#1f5fa8, #6fb4ff);   /* infrastructure blue */
+    --accent-2:    light-dark(#b5730a, #f0b24a);   /* energy amber */
+    --accent-soft: light-dark(#e2edf8, #152740);
+    --good:  light-dark(#1f7a4d, #4fd693);          /* lowers / confirmed */
+    --warn:  light-dark(#9a6b04, #f3c149);          /* projection / caution */
+    --bad:   light-dark(#bb2d20, #ff7b6e);          /* myth / raises */
+    --bg:      light-dark(#eef1f5, #0c1118);
+    --panel:   light-dark(#ffffff, #151c26);
+    --panel-2: light-dark(#f2f5f9, #1d2632);
+    --ink:     light-dark(#17202b, #e7ecf3);
+    --ink-soft:light-dark(#54606e, #9aa7b8);
+    --line:    light-dark(#dde4ec, #2a3543);
+    --chip:    light-dark(#e8edf3, #232e3c);
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --hero: linear-gradient(135deg, #0b1f33 0%, #143a55 52%, #3a2c0c 100%);
+  }
+  [data-theme="light"] { color-scheme: light; }
+  [data-theme="dark"]  { color-scheme: dark; }
+}
+
+@layer base {
+  * { box-sizing: border-box; min-width: 0; }
+  body {
+    font-family: var(--sans);
+    background-color: var(--bg);
+    color: var(--ink);
+    margin: 0;
+    padding-bottom: 4rem;
+    line-height: 1.6;
+  }
+  img, svg, table, pre { max-width: 100%; }
+  h1,h2,h3,h4 { text-wrap: balance; line-height: 1.2; }
+  p, li { text-wrap: pretty; }
+  section { scroll-margin-top: 4.2rem; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  code, kbd { font-family: var(--mono); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+}
+
+@layer components {
+  /* ---------- Header ---------- */
+  .hero {
+    background: var(--hero);
+    color: #eef4fb;
+    padding: 3rem 1.25rem 2.3rem;
+    text-align: center;
+    border-bottom: 4px solid var(--accent-2);
+  }
+  .hero h1 { font-weight: 800; font-size: clamp(1.9rem, 4.6vw, 3.1rem); margin: 0 0 .7rem; letter-spacing: .2px; }
+  .hero h1 .bi { color: #f0b24a; }
+  .hero p.lead { max-width: 820px; margin: 0 auto 1.1rem; font-size: 1.06rem; color: #d8e3f0; }
+  .hero p.lead strong { color: #fff; }
+  .hero .kicker { max-width: 820px; margin: 0 auto 1.4rem; font-size: .97rem; color: #c0cedd; }
+  .hero .kicker strong { color: #ffd98a; }
+  .hero .badge-row { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; }
+  .hero .badge-row a {
+    background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.24);
+    border-radius: 50rem; padding: .25rem .7rem; font-size: .78rem; backdrop-filter: blur(3px);
+    color: #eef4fb; text-decoration: none; transition: background .15s, border-color .15s;
+  }
+  .hero .badge-row a:hover, .hero .badge-row a:focus-visible {
+    background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.5); color: #fff;
+  }
+
+  /* ---------- Quick reference stat strip ---------- */
+  .quick-ref { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7rem; max-width: 1080px; margin: 1.6rem auto 0; padding: 0 1rem; }
+  .qr {
+    background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    border-radius: 8px; padding: .7rem .85rem;
+  }
+  .qr.amber { border-left-color: var(--accent-2); }
+  .qr .k { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-soft); font-weight: 600; }
+  .qr .v { font-size: 1.18rem; font-weight: 800; color: var(--accent); line-height: 1.18; }
+  .qr.amber .v { color: var(--accent-2); }
+  .qr .s { font-size: .76rem; color: var(--ink-soft); }
+
+  /* ---------- Sticky nav ---------- */
+  .section-nav {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto; white-space: nowrap;
+    padding: .45rem .5rem; scrollbar-width: thin;
+  }
+  .section-nav a {
+    display: inline-block; color: var(--ink-soft); text-decoration: none;
+    font-size: .82rem; font-weight: 600; padding: .3rem .65rem; border-radius: 6px;
+  }
+  .section-nav a:hover { background: var(--accent-soft); color: var(--accent); }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 0 1rem; }
+
+  section > h2 {
+    font-size: 1.5rem; font-weight: 800; margin: 2.6rem 0 .35rem;
+    display: flex; align-items: center; gap: .55rem;
+  }
+  section > h2 .bi { color: var(--accent-2); }
+  section > h2 .depth { font-size: .64rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); border-radius: 50rem; padding: .15rem .55rem; }
+  section > .sec-intro { color: var(--ink-soft); margin: 0 0 1.1rem; max-width: 76ch; }
+
+  .depth-rule { display:flex; align-items:center; gap:.7rem; margin:2.6rem 0 .4rem; color:var(--accent); font-size:.78rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+  .depth-rule::before, .depth-rule::after { content:""; height:1px; background:var(--line); flex:1; }
+
+  .card2 {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 1.1rem 1.15rem; margin-bottom: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .card2 h3 { font-size: 1.06rem; font-weight: 700; margin: 0 0 .55rem; }
+  .grid2 { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+  /* ---------- Tables ---------- */
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 1rem; }
+  table.ct { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 560px; }
+  table.ct th, table.ct td { padding: .6rem .75rem; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.ct thead th { background: var(--panel-2); font-weight: 700; position: sticky; top: 0; }
+  table.ct tbody tr:nth-child(even) { background: color-mix(in srgb, var(--panel-2) 55%, transparent); }
+  table.ct.claims td:first-child { color: var(--bad); font-weight: 600; }
+
+  .pill { display:inline-block; font-size:.72rem; font-weight:700; padding:.12rem .5rem; border-radius:50rem; }
+  .pill.good { background: color-mix(in srgb, var(--good) 22%, transparent); color: var(--good); }
+  .pill.warn { background: color-mix(in srgb, var(--warn) 24%, transparent); color: var(--warn); }
+  .pill.bad  { background: color-mix(in srgb, var(--bad) 22%, transparent); color: var(--bad); }
+
+  /* ---------- Callouts ---------- */
+  .callout { border-radius: 10px; padding: .9rem 1.05rem; margin: 1.1rem 0; border: 1px solid var(--line); border-left: 4px solid var(--accent); background: var(--panel-2); }
+  .callout.amber { border-left-color: var(--accent-2); }
+  .callout.bad { border-left-color: var(--bad); }
+  .callout.good { border-left-color: var(--good); }
+  .callout .h { font-weight: 800; display:flex; align-items:center; gap:.45rem; margin-bottom:.3rem; }
+  .callout .h .bi { color: var(--accent); }
+  .callout.amber .h .bi { color: var(--accent-2); }
+  .callout.good .h .bi { color: var(--good); }
+  .callout.bad .h .bi { color: var(--bad); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- decision box ---------- */
+  .decision { border-radius: 10px; padding: .9rem 1.05rem; margin: 1.1rem 0; border: 1px solid var(--line); background: var(--panel);
+    border-left: 4px solid var(--accent); }
+  .decision .h { font-weight: 800; display:flex; align-items:center; gap:.45rem; margin-bottom:.3rem; }
+  .decision .h .bi { color: var(--accent); }
+  .decision p:last-child { margin-bottom: 0; }
+
+  /* ---------- Mistakes (myth/correction) grid ---------- */
+  .miss { display:grid; grid-template-columns: 1fr 1fr; gap:0; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:.7rem; }
+  .miss > div { padding:.7rem .85rem; }
+  .miss .x { background: color-mix(in srgb, var(--bad) 9%, transparent); border-right:1px solid var(--line); }
+  .miss .o { background: color-mix(in srgb, var(--good) 9%, transparent); }
+  .miss .tag { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:.2rem; }
+  .miss .x .tag { color: var(--bad); } .miss .o .tag { color: var(--good); }
+  @media (max-width: 520px){ .miss { grid-template-columns: 1fr; } .miss .x { border-right:none; border-bottom:1px solid var(--line); } }
+
+  /* ---------- closing thesis ---------- */
+  blockquote.thesis {
+    margin: 1.2rem 0; padding: 1.4rem 1.5rem; border-radius: 14px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--panel)), var(--panel));
+    border: 1px solid var(--line); border-left: 5px solid var(--accent-2);
+  }
+  blockquote.thesis .menu { font-size: 1.2rem; font-weight: 800; line-height: 1.4; text-wrap: balance; margin: .4rem 0 .7rem; }
+  blockquote.thesis p { margin: 0 0 .6rem; }
+  blockquote.thesis p:last-child { margin-bottom: 0; }
+
+  /* ============ INTERACTIVE 1: four-floor building ============ */
+  .building { margin: 1.3rem 0 .5rem; border: 2px solid var(--accent); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+  .floor { border-bottom: 1px solid var(--line); }
+  .floor:last-child { border-bottom: none; }
+  .floor > button {
+    width: 100%; text-align: left; background: var(--panel); border: none; cursor: pointer; color: var(--ink);
+    padding: .9rem 1.1rem; font: inherit; font-weight: 700; display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap;
+  }
+  .floor.ai > button { background: color-mix(in srgb, var(--accent-2) 14%, var(--panel)); }
+  .floor > button:hover { background: var(--accent-soft); }
+  .floor .flabel { display:flex; align-items:center; gap:.5rem; }
+  .floor .flabel .bi { color: var(--accent-2); }
+  .floor .tag { font-size: .8rem; color: var(--ink-soft); font-weight: 400; flex: 1 1 auto; }
+  .floor > button::after { content: "\F282"; font-family: "bootstrap-icons"; color: var(--ink-soft); font-weight: 400; margin-left: auto; transition: transform .2s; }
+  .floor.open > button::after { transform: rotate(180deg); }
+  .floor .panel { display: none; padding: .3rem 1.1rem 1rem; background: var(--panel-2); font-size: .92rem; }
+  .floor.open .panel { display: block; }
+  .floor .panel ul { margin: .5rem 0 0; padding-left: 1.2rem; }
+  .floor .panel li { margin-bottom: .25rem; }
+  .building-caption { font-size: .85rem; color: var(--ink-soft); margin: 0 0 1.1rem; }
+
+  /* ============ INTERACTIVE 2: bill decomposition ============ */
+  .decomp { margin: 1.3rem 0; padding: 1.2rem 1.25rem; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  .decomp .dtitle { font-weight: 800; display:flex; align-items:center; gap:.45rem; margin-bottom:.6rem; }
+  .decomp .dtitle .bi { color: var(--accent-2); }
+  .decomp .bar-row { margin: .7rem 0; }
+  .decomp .bar-label { font-size: .85rem; margin-bottom: .28rem; display: flex; justify-content: space-between; gap:.6rem; }
+  .decomp .bar-label .pct { font-weight: 800; color: var(--ink); white-space: nowrap; }
+  .decomp .track { height: 30px; background: var(--chip); border-radius: 5px; overflow: hidden; }
+  .decomp .fill { height: 100%; width: 0; border-radius: 5px; transition: width .6s ease; }
+  .decomp .fill.s0 { background: var(--accent); }
+  .decomp .fill.s1 { background: color-mix(in srgb, var(--accent) 55%, var(--ink-soft)); }
+  .decomp .fill.s2 { background: var(--bad); }
+  .decomp .controls { margin-top: 1rem; display:flex; gap:.5rem; flex-wrap:wrap; }
+  .decomp .controls button { font: inherit; font-weight: 600; padding: .5rem .95rem; cursor: pointer; border: 1px solid var(--accent); background: var(--panel); color: var(--accent); border-radius: 8px; }
+  .decomp .controls button:hover { background: var(--accent-soft); }
+  .decomp .narration { font-size: .9rem; color: var(--ink-soft); margin: .8rem 0 0; min-height: 2.6em; }
+
+  /* ---------- footer ---------- */
+  footer { max-width: 1080px; margin: 2.5rem auto 0; padding: 1.4rem 1rem; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: .86rem; }
+  .verified { display:inline-flex; align-items:center; gap:.4rem; background: var(--panel-2); border:1px solid var(--line); border-radius:50rem; padding:.25rem .7rem; font-weight:600; }
+  ol.src { font-size: .88rem; line-height: 1.5; padding-left: 1.2rem; }
+  ol.src li { margin-bottom: .4rem; }
+  ol.src em { color: var(--ink-soft); }
+
+  /* Theme toggle + back-to-top */
+  .fab { position: fixed; right: 1rem; z-index: 60; width: 2.7rem; height: 2.7rem; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 2px 8px rgba(0,0,0,.18); font-size: 1.1rem; }
+  #themeToggle { bottom: 4.6rem; } #backTop { bottom: 1rem; }
+}
+
+@layer utilities {
+  .muted { color: var(--ink-soft); }
+  .small { font-size: .85rem; }
+  .mb-0 { margin-bottom: 0; }
+  @media print {
+    .section-nav, .fab { display: none !important; }
+    .floor .panel { display: block !important; }
+    .floor > button::after { display: none; }
+    body { background: #fff; color: #000; }
+    .hero { background: #0b1f33 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1><i class="bi bi-building"></i> Stop Calling Them AI Data Centers</h1>
+  <p class="lead">Call it an "AI data center" and you've won half the argument before anyone checks a number. <strong>AI is about a quarter of what these buildings actually run.</strong> The rest is the boring plumbing of your life: the cloud your bank clears transactions on, the servers holding your hospital's records, payroll that has to land Friday, the logistics network that stocked the shelf this morning, the license-renewal portal you cursed at last month, every app on your phone.</p>
+  <p class="kicker">A data center is not an AI thing. It's the thing modern civilization runs on, with a fast-growing new tenant on the top floor. And here's the part the campaign can't survive: <strong>the opposition to data centers runs on data centers too</strong> — the petition site, the Zoom town hall, the email blast, the streamed press conference, the AI that drafted the talking points.</p>
+  <div class="badge-row">
+    <a href="#mix">~27% AI workload</a><a href="#floors">The other three floors</a><a href="#pricing">Pricing ≠ production</a>
+    <a href="#fraction">A fraction of a fraction</a><a href="#lower">Loads can lower rates</a><a href="#patterns">Kill the subsidy &amp; the moratorium</a><a href="#nuclear">The nuclear it's financing</a>
+  </div>
+</header>
+
+<div class="quick-ref" aria-label="Quick reference statistics">
+  <div class="qr"><div class="k">AI's share</div><div class="v">~27%</div><div class="s">of data-center workload (2027 proj.)</div></div>
+  <div class="qr amber"><div class="k">TX growth w/o data centers</div><div class="v">~40%</div><div class="s">peak demand still climbs by 2031</div></div>
+  <div class="qr"><div class="k">Consumer surplus</div><div class="v">$172B/yr</div><div class="s">US gen-AI value, mostly free tools</div></div>
+  <div class="qr amber"><div class="k">AI capex</div><div class="v">~5% of GDP</div><div class="s">&gt; all consumer spending, H1 2025</div></div>
+  <div class="qr"><div class="k">Honest target</div><div class="v">The tariff</div><div class="s">a pricing problem, not production</div></div>
+  <div class="qr amber"><div class="k">Nuclear signed</div><div class="v">~9.8 GW</div><div class="s">hyperscaler deals (mostly announced)</div></div>
+</div>
+
+<nav class="section-nav" aria-label="Section navigation">
+  <a href="#floors">The Other Three Floors</a>
+  <a href="#claims">Claims vs. Reality</a>
+  <a href="#mix">Workload Mix</a>
+  <a href="#value">Most Valuable Tenant</a>
+  <a href="#economy">Carrying the Economy</a>
+  <a href="#pricing">A Pricing Problem</a>
+  <a href="#fraction">Fraction of a Fraction</a>
+  <a href="#lower">Can Lower Rates</a>
+  <a href="#patterns">Patterns Underneath</a>
+  <a href="#mistakes">Anti-Patterns</a>
+  <a href="#sources">Sources</a>
+</nav>
+
+<main>
+
+<div class="depth-rule">Depth 1 — Fundamentals</div>
+
+<!-- ============ §1 THE OTHER THREE FLOORS ============ -->
+<section id="floors">
+  <h2><i class="bi bi-buildings"></i> The Other Three Floors <span class="depth">Lead</span></h2>
+  <p class="sec-intro">A data center isn't an AI thing. That's the first move in the campaign against them, and it's the one that does all the quiet work. Call it an "AI data center" and you get to take every anxiety attached to AI — the job losses, the bubble, the sense that nobody asked for this — and aim it at a slab of concrete. But AI is about a quarter of what these buildings run. The other three-quarters is the ordinary digital economy, and it is not optional.</p>
+  <p><strong>The opposition's own stack is on those floors too.</strong> The platforms that activism runs on — the petition sites, the video town halls, the advocacy email tools, the streaming, the search, the generative AI now drafting public testimony — are all hosted in the very buildings under dispute. The campaign to condemn the infrastructure is itself a tenant of it. You can oppose data centers. You just can't do it without one.</p>
+
+  <h3 style="font-size:1.05rem;font-weight:700;margin:1.4rem 0 .2rem;">The building, floor by floor</h3>
+  <p class="building-caption">A moratorium proposes condemning all four floors to slow down the one on top. Select a floor to see what's running there.</p>
+  <div class="building" id="building">
+    <div class="floor ai">
+      <button type="button" aria-expanded="false"><span class="flabel"><i class="bi bi-cpu"></i> Top floor — AI</span> <span class="tag">~27% of the load · the minority tenant getting blamed for the whole building</span></button>
+      <div class="panel"><ul>
+        <li>Frontier models, copilots, the tools driving the productivity gains</li>
+        <li>The floor the building is named after — and the one everyone's taught to fear</li>
+      </ul></div>
+    </div>
+    <div class="floor">
+      <button type="button" aria-expanded="false"><span class="flabel"><i class="bi bi-cloud"></i> 3rd floor — Conventional cloud</span> <span class="tag">~half of the load</span></button>
+      <div class="panel"><ul>
+        <li><strong>Banking &amp; payments:</strong> card networks, ACH/wire clearing, fraud detection, ATM/POS auth</li>
+        <li><strong>Communications:</strong> email, messaging, video calls, VoIP, the entire mobile-app layer</li>
+        <li><strong>Media &amp; knowledge:</strong> news systems, streaming, search, every website</li>
+      </ul></div>
+    </div>
+    <div class="floor">
+      <button type="button" aria-expanded="false"><span class="flabel"><i class="bi bi-hdd-stack"></i> 2nd floor — Legacy enterprise &amp; government</span> <span class="tag">~quarter of the load</span></button>
+      <div class="panel"><ul>
+        <li><strong>Healthcare:</strong> EHRs, medical imaging (PACS), lab results, e-prescribing, scheduling</li>
+        <li><strong>Government:</strong> tax filing, benefits, DMV/licensing, courts, 911 dispatch, elections</li>
+        <li><strong>Logistics &amp; retail:</strong> inventory, freight matching, warehouse automation, point-of-sale</li>
+        <li><strong>Utilities themselves:</strong> grid balancing, SCADA, smart-meter data, outage management</li>
+      </ul></div>
+    </div>
+    <div class="floor">
+      <button type="button" aria-expanded="false"><span class="flabel"><i class="bi bi-megaphone"></i> Ground floor — The opposition's own stack</span> <span class="tag">the campaign, hosted in the thing it opposes</span></button>
+      <div class="panel"><ul>
+        <li>Petition platforms, town-hall video, advocacy email tools</li>
+        <li>The streamed press conference, the reporter's cloud CMS, the search that surfaced the outrage</li>
+        <li>The generative AI now drafting the public testimony against data centers</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="ct">
+      <caption class="visually-hidden">What runs on each floor and what breaks if the buildout halts</caption>
+      <thead><tr><th>Floor / sector</th><th>What's actually running there</th><th>What breaks if you halt the buildout</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Banking &amp; payments</strong></td><td>Card networks, ACH and wire clearing, real-time fraud detection, ATM and point-of-sale auth</td><td>Cards decline, payroll doesn't settle, the fraud check protecting your account goes dark</td></tr>
+        <tr><td><strong>Healthcare</strong></td><td>Electronic health records, imaging (PACS), lab results, e-prescribing, hospital scheduling</td><td>Doctors lose your chart, prescriptions stall, imaging can't route</td></tr>
+        <tr><td><strong>Government</strong></td><td>Tax filing, benefits, DMV/licensing, courts, 911 dispatch, election systems</td><td>The portal you renew your license on; the system that pays out benefits</td></tr>
+        <tr><td><strong>Logistics &amp; retail</strong></td><td>Inventory, freight matching, warehouse automation, last-mile routing, point-of-sale</td><td>Empty shelves, packages stop tracking, "out of stock" everywhere</td></tr>
+        <tr><td><strong>Communications</strong></td><td>Email, messaging, video calls, VoIP, the entire mobile-app layer</td><td>Your texts, your work calls, your group chat</td></tr>
+        <tr><td><strong>Utilities themselves</strong></td><td>Grid balancing, SCADA, smart-meter data, outage management</td><td>The power company can't run the power company</td></tr>
+        <tr><td><strong>Media &amp; knowledge</strong></td><td>News content systems, streaming, search, every website</td><td>Including the article telling you to fear data centers</td></tr>
+        <tr><td><strong>The opposition's stack</strong></td><td>Petition platforms, town-hall video, advocacy email, the AI drafting the testimony</td><td>The campaign against data centers — which is hosted in one</td></tr>
+        <tr><td><strong>AI (the top floor)</strong></td><td>Frontier models, copilots, the tools driving the productivity gains</td><td>~27% of the load — the <em>minority</em> tenant getting blamed for the whole building</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout amber">
+    <div class="h"><i class="bi bi-arrow-repeat"></i> The campaign that runs on the thing it opposes</div>
+    <p class="mb-0">Every modern political campaign is now a digital campaign, which means it is a data-center campaign. The petition reaches you through a hyperscaler. The outrage clip streams from one. The "ban data centers" mailing list is managed in one. This isn't hypocrisy worth a gotcha — it's evidence of the actual claim: this infrastructure is so foundational that even its opposition can't function without it. The thing you're being told to fear is carrying the message that tells you to fear it.</p>
+  </div>
+
+  <div class="callout bad">
+    <div class="h"><i class="bi bi-tag"></i> "AI data center" is a framing weapon</div>
+    <p class="mb-0">Naming the building after its newest, scariest floor lets you import every AI anxiety and aim it at concrete. It's shutting the power plant to slow down crypto. The thing you're afraid of is one floor of the building you want to condemn.</p>
+  </div>
+</section>
+
+<!-- ============ CLAIMS VS REALITY ============ -->
+<section id="claims">
+  <h2><i class="bi bi-clipboard2-check"></i> Quick Reference — Claims vs. Reality</h2>
+  <p class="sec-intro">The cheat-within-the-cheat: the highest-frequency rebuttals, in one scan.</p>
+  <div class="tbl-wrap">
+    <table class="ct claims">
+      <thead><tr><th style="width:42%">What you'll hear</th><th>What's actually true</th></tr></thead>
+      <tbody>
+        <tr><td>"AI data centers are eating the grid."</td><td>AI is ~27% of data-center workload. The other ~73% is conventional cloud and legacy enterprise — the digital economy you already use.</td></tr>
+        <tr><td>"A moratorium pauses AI."</td><td>It freezes the physical layer of the <em>entire</em> digital economy to slow down one floor of the building.</td></tr>
+        <tr><td>"Data centers raise everyone's electric bill."</td><td>Only where power is tight and a monopoly smears the cost across the base. Where the load pays its own way, they can <em>lower</em> rates.</td></tr>
+        <tr><td>"Data centers are driving the demand spike."</td><td>On ERCOT's forecast, even with zero new data centers, Texas peak demand still climbs ~40% (≈87→121 GW by 2031) on manufacturing, oil &amp; gas, crypto, and electrification.</td></tr>
+        <tr><td>"AI is spiking your bill."</td><td>A fraction (AI) of a fraction (data centers) of total demand growth — wearing the costume of the whole.</td></tr>
+        <tr><td>"This is a runaway luxury nobody asked for."</td><td>The buildout added more to US GDP growth over two quarters than all consumer spending combined.</td></tr>
+        <tr><td>"Big Tech is getting a free ride."</td><td>Partly true — the tax breaks are indefensible. But that argues for killing the subsidy, not banning the building.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ §2 WORKLOAD MIX ============ -->
+<section id="mix">
+  <h2><i class="bi bi-pie-chart"></i> The Workload Mix (What the Dollars Hide)</h2>
+  <p class="sec-intro">The confusion between "data center" and "AI" isn't an accident of language — it's baked into how the money looks.</p>
+  <p><strong>The function is mostly plumbing; the dollars skew to AI.</strong> By 2027 the workload mix is projected at roughly half conventional cloud, a quarter legacy enterprise, and about 27% AI <span class="pill warn">Goldman Sachs proj., Feb 2025</span>. But the capital spending tells a different story, because an AI rack draws far more power than a conventional one: NVIDIA's current rack-scale systems pull around 130 kW, with next-generation designs targeting 250 kW, against 10–15 kW for a conventional rack — and they cost to match. So in dollars, this is unmistakably an AI buildout. In what the buildings <em>do</em>, it's the machinery of daily life with a fast-growing tenant on the top floor.</p>
+  <div class="decision">
+    <div class="h"><i class="bi bi-eyeglasses"></i> How to read any data-center statistic</div>
+    <p class="mb-0">Always ask which lens it's using. <em>In dollars</em>, AI dominates — it's where the capex and the power draw concentrate. <em>In function</em>, AI is the minority — most of what these buildings do is the ordinary digital economy. A claim that uses the dollar figure to describe the workload (or vice versa) is doing a magic trick. Watch which cup the ball is under.</p>
+  </div>
+</section>
+
+<div class="depth-rule">Depth 2 — Working Knowledge</div>
+
+<!-- ============ §3 MOST VALUABLE TENANT ============ -->
+<section id="value">
+  <h2><i class="bi bi-gem"></i> The Newest Tenant Is Also the Most Valuable</h2>
+  <p class="sec-intro">The top floor everyone's afraid of happens to be the most valuable thing in the economy right now — and most of the value doesn't land where you'd expect.</p>
+  <div class="grid2">
+    <div class="card2"><h3><i class="bi bi-people"></i> The value lands on users, not sellers</h3><p class="small mb-0">US consumer surplus from generative AI ran about <strong>$172 billion a year by early 2026</strong>, up from $112 billion twelve months earlier, with median value per user roughly tripling — and most tools are free or close to it <span class="pill warn">Stanford HAI, Apr 2026 · modeled</span>. Surplus is the part the seller doesn't capture; it lands on the user.</p></div>
+    <div class="card2"><h3><i class="bi bi-graph-up-arrow"></i> Jobs &amp; wages went up where AI is heaviest</h3><p class="small mb-0">The industries most exposed to AI posted higher productivity, employment, and wages — not lower: <strong>34% vs 24%</strong> productivity growth since 2018, <strong>52% vs 36%</strong> headcount growth, a <strong>62%</strong> AI-skills wage premium <span class="pill warn">PwC 2026 · correlational</span>. If AI were the job-destroyer of the narrative, the damage would show first where the tools are used most. It's the opposite.</p></div>
+  </div>
+</section>
+
+<!-- ============ §4 CARRYING THE ECONOMY ============ -->
+<section id="economy">
+  <h2><i class="bi bi-bank"></i> The Buildout Is Carrying the Economy</h2>
+  <p class="sec-intro">The buildout isn't riding the economy. For the moment, it's carrying it.</p>
+  <p><strong>AI capex has out-driven all consumer spending.</strong> Over the first two quarters of 2025, AI-related capital expenditure added more to US GDP growth than all consumer spending combined <span class="pill warn">Renaissance Macro, 2025</span>. It now runs near 5% of GDP — a leading driver of US economic growth <span class="pill warn">KKR, 2025–26</span>.</p>
+  <div class="callout">
+    <div class="h"><i class="bi bi-exclamation-diamond"></i> The counterfactual nobody states</div>
+    <p class="mb-0">Pull the buildout out and you don't land in a world with cheaper power and the same prosperity. You land in the recession it's been papering over. "Pause the data centers" is also "pause the thing currently holding up the economy" — said in a calmer voice.</p>
+  </div>
+</section>
+
+<!-- ============ §5 PRICING PROBLEM ============ -->
+<section id="pricing">
+  <h2><i class="bi bi-receipt"></i> The Cost Grievance Is Real — and It's a Pricing Problem</h2>
+  <p class="sec-intro">None of which makes the cost complaint fake. It isn't.</p>
+  <p><strong>Residential power is genuinely up.</strong> Prices rose about 42% from March 2021 to March 2026 on EIA monthly data <span class="pill warn">PolitiFact, Jun 2026</span> — and about 27% on EIA's annual-average basis (2019–2024), with more in some regulated markets. Pick either yardstick: the bill went up, and it's a real grievance.</p>
+  <p><strong>But a pricing problem and a production problem share no solutions.</strong> The complaint is about who pays for the grid and how the cost is allocated — a pricing question. The moratorium attacks supply — a production answer. They don't connect. And the pricing fixes are already arriving:</p>
+  <div class="tbl-wrap">
+    <table class="ct">
+      <thead><tr><th>Where</th><th>Mechanism</th><th>What it fixes</th></tr></thead>
+      <tbody>
+        <tr><td><strong>FERC (federal)</strong></td><td>Show-cause orders (Jun 2026) directing the six grid operators to make large loads bear the cost of upgrades built to serve them <span class="pill warn">tariffs pending</span></td><td>Stops the buildout's grid costs from landing on ordinary ratepayers</td></tr>
+        <tr><td><strong>Oregon &amp; Virginia</strong></td><td>Dedicated large-load rate classes — Oregon's POWER Act (2025); a Virginia SCC order (Nov 2025, ≥85% contracted demand)</td><td>Separates big-load costs from the residential base</td></tr>
+        <tr><td><strong>Texas (SB6, 2025)</strong></td><td>Puts interconnection cost plus curtailment / remote-disconnect duties on loads ≥75 MW</td><td>Makes the data center carry the capacity it triggers</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="decision">
+    <div class="h"><i class="bi bi-signpost-split"></i> The honest target of your anger is the PUC, not the server hall</div>
+    <p class="mb-0">Set the tariff right and the grievance shrinks to a line item. You don't halt the most productive infrastructure wave since electrification to spare someone forty dollars a month that a rate class already fixes.</p>
+  </div>
+</section>
+
+<!-- ============ §6 FRACTION OF A FRACTION ============ -->
+<section id="fraction">
+  <h2><i class="bi bi-diagram-3"></i> A Fraction of a Fraction</h2>
+  <p class="sec-intro">The grievance leans on a conflation that runs the whole way down.</p>
+  <p><strong>Data centers are a minority of demand growth. AI is a minority of the data centers.</strong> On ERCOT's 2025 long-term load forecast, data centers account for roughly 46% of projected load growth through 2031 — and even with <em>no new data centers at all</em>, peak demand would still climb about 40% (from ~87 GW to ~121 GW) on manufacturing, oil and gas, crypto, and electrification <span class="pill warn">ERCOT forecast, Apr 2025</span>. So the bill pressure that exists mostly isn't data centers, and the data-center share mostly isn't AI.</p>
+
+  <div class="decomp" id="decomp">
+    <div class="dtitle"><i class="bi bi-bar-chart-steps"></i> Watch the scary number shrink</div>
+    <div class="bar-row">
+      <div class="bar-label"><span>Total projected demand growth</span><span class="pct">100%</span></div>
+      <div class="track"><div class="fill s0" data-target="100"></div></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label"><span>…of which data centers (ERCOT, through 2031)</span><span class="pct">46%</span></div>
+      <div class="track"><div class="fill s1" data-target="46"></div></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label"><span>…of which AI (~27% of data-center workload — illustrative)</span><span class="pct">~12%</span></div>
+      <div class="track"><div class="fill s2" data-target="12"></div></div>
+    </div>
+    <div class="controls">
+      <button type="button" id="decompStep"><i class="bi bi-caret-right-fill"></i> Step</button>
+      <button type="button" id="decompReset"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+    </div>
+    <p class="narration" id="decompNarration">"AI is spiking your bill" — let's decompose that claim, one layer at a time.</p>
+  </div>
+
+  <div class="callout bad">
+    <div class="h"><i class="bi bi-mask"></i> Fraction of a fraction</div>
+    <p class="mb-0">"AI is spiking your electric bill" is a fraction of a fraction wearing the costume of the whole. Strip the costume off and you're left with a line item inside a line item — being blamed for the entire bill.</p>
+  </div>
+</section>
+
+<div class="depth-rule">Depth 3 — Edge &amp; Advanced</div>
+
+<!-- ============ §7 CAN LOWER RATES ============ -->
+<section id="lower">
+  <h2><i class="bi bi-graph-down-arrow"></i> Data Centers Can <em>Lower</em> Rates</h2>
+  <p class="sec-intro">Here's what should retire "data centers raise prices" as a flat claim: they don't, everywhere.</p>
+  <p><strong>Where load pays its own way, big customers spread fixed costs.</strong> In inflation-adjusted terms, North Dakota's residential rates <em>fell</em> between 2019 and 2024 — one of the largest real declines in the country <span class="pill warn">Lawrence Berkeley Nat'l Lab</span> — even as the nominal rate ticked up from 10.3¢ to 11.5¢/kWh, because new large loads spread the grid's fixed costs across more usage. Oncor told Texas legislators that a single Dallas-area project would throw off $160 million in revenue against $143 million in cost — a net gain for everyone else on the system, as long as the load pays for the capacity it triggers <span class="pill warn">Oncor testimony, Apr 2026</span>.</p>
+  <div class="decision">
+    <div class="h"><i class="bi bi-arrow-down-up"></i> When big loads push rates UP vs. DOWN</div>
+    <p class="mb-0">Where power is plentiful and the customer carries its own weight, big loads push rates <span class="pill good">down</span> by spreading fixed costs. Where power is tight and a regulated monopoly smears the cost across the base, they push <span class="pill bad">up</span>. Same building either way. The variable is the rate-and-energy policy wrapped around it — which means the honest target of your anger is your public utility commission, not the server hall down the road.</p>
+  </div>
+</section>
+
+<!-- ============ §8 PATTERNS UNDERNEATH ============ -->
+<section id="patterns">
+  <h2><i class="bi bi-bezier2"></i> The Patterns Underneath</h2>
+  <div class="callout amber">
+    <div class="h"><i class="bi bi-house-gear"></i> The housing shortage with cooling towers</div>
+    <p class="mb-0">A local veto over construction. The cost landing on the neighbors. The benefit diffusing across the country. The whole thing dressed up as protecting the character of the place. We've watched that movie for forty years with housing — the same zoning machinery that made it illegal to build homes where people want to live is now being swung at the infrastructure the modern economy runs on. We know how it ends.</p>
+  </div>
+  <p><strong>Kill the subsidy <em>and</em> the moratorium — in the same motion.</strong> One concession, and it cuts against the companies: the tax breaks are indefensible. Texas alone is forgoing at least $1.3 billion this fiscal year — and a projected $3 billion-plus over the 2027–2028 biennium — on its data-center sales-tax exemption alone, separate from any local incentives <span class="pill warn">TX Comptroller, 2025</span>. If a project already pencils out on cheap land and cheap power — which is exactly why these things cluster in Texas — it doesn't need a tax holiday on top. Make them pay market price for power and full freight on taxes, like any other industrial load. That isn't carrying water for Big Tech. It's refusing to socialize either the costs or the gains.</p>
+
+  <p id="nuclear" style="scroll-margin-top:4.2rem;"><strong>The buildout is financing the nuclear revival fifty years of energy politics couldn't deliver.</strong> Every major hyperscaler has now signed nuclear. Customers with 24/7 baseload needs and the balance sheets to underwrite first-of-a-kind reactors are the best thing to happen to American nuclear in a generation.</p>
+  <div class="tbl-wrap">
+    <table class="ct">
+      <caption class="visually-hidden">Hyperscaler nuclear deals</caption>
+      <thead><tr><th>Player</th><th>Project / site</th><th>Scale</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Microsoft</strong></td><td>Three Mile Island Unit 1 (Crane Clean Energy Center) restart</td><td>~835 MW</td><td>20-year PPA; restart targeted 2028</td></tr>
+        <tr><td><strong>Amazon</strong></td><td>Talen Susquehanna</td><td>~1.9 GW</td><td>Front-of-meter PPA (after FERC rejected the original co-location, 2024–25)</td></tr>
+        <tr><td><strong>Amazon</strong></td><td>X-energy Xe-100 SMRs (Energy Northwest)</td><td>up to ~960 MW</td><td>Development; led ~$500M round</td></tr>
+        <tr><td><strong>Google</strong></td><td>Kairos Power SMRs</td><td>~500 MW</td><td>Development</td></tr>
+        <tr><td><strong>Meta</strong></td><td>Oklo Aurora SMRs</td><td>~1.2 GW</td><td>Development</td></tr>
+        <tr><td><strong>Industry total</strong></td><td>Announced hyperscaler + data-center nuclear deals (13)</td><td>~9.8 GW</td><td>Mostly announced/contracted <span class="pill warn">near-zero operating</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>The strategic floor.</strong> The federal push to speed grid connections was framed explicitly as a China race: Energy Secretary Chris Wright urged FERC to help the US "better compete with China for superiority in the fast-growing AI sector," and in June 2026 FERC unanimously directed grid operators to connect large AI loads <span class="pill warn">AP, Jun 2026</span>. Compute is the binding constraint on frontier models, and frontier AI is the strategic technology of the next two decades the way oil was for the last hundred. "Pause the data centers" is "cede the lead," said in a calmer voice. That's a real floor of the building too — the most consequential one — even if it isn't most of the square footage.</p>
+  <div class="callout good">
+    <div class="h"><i class="bi bi-recycle"></i> The irony, twice over</div>
+    <p class="mb-0">The movement that strangled nuclear for decades, then recoiled when gas turbines filled the gap, is now trying to block the load that's financing the clean firm power it says it wants.</p>
+  </div>
+</section>
+
+<!-- ============ §9 ANTI-PATTERNS ============ -->
+<section id="mistakes">
+  <h2><i class="bi bi-x-octagon"></i> Common Mistakes &amp; Anti-Patterns</h2>
+  <p class="sec-intro">Each is a trap on the left, the correction on the right.</p>
+  <div class="miss"><div class="x"><span class="tag">Mistake</span>Treating "data center" and "AI" as synonyms</div><div class="o"><span class="tag">Correction</span>AI is ~27% of the workload; the rest is the digital economy you already depend on</div></div>
+  <div class="miss"><div class="x"><span class="tag">Mistake</span>Reading capex share as workload share</div><div class="o"><span class="tag">Correction</span>Dollars skew to AI (~130 kW racks); function stays mostly conventional cloud</div></div>
+  <div class="miss"><div class="x"><span class="tag">Mistake</span>Blaming data centers for the whole demand curve</div><div class="o"><span class="tag">Correction</span>Even with zero new data centers, ERCOT projects Texas peak demand still climbs ~40% (≈87→121 GW by 2031)</div></div>
+  <div class="miss"><div class="x"><span class="tag">Mistake</span>Assuming big loads always raise rates</div><div class="o"><span class="tag">Correction</span>Where the load pays its own way, it spreads fixed costs and <em>lowers</em> them</div></div>
+  <div class="miss"><div class="x"><span class="tag">Mistake</span>Conflating a pricing problem with a production problem</div><div class="o"><span class="tag">Correction</span>Rate design fixes the bill; a moratorium just freezes supply against rising demand</div></div>
+  <div class="miss"><div class="x"><span class="tag">Mistake</span>Thinking a moratorium "pauses AI"</div><div class="o"><span class="tag">Correction</span>It freezes the physical layer of the entire digital economy</div></div>
+  <div class="miss"><div class="x"><span class="tag">Mistake</span>Confusing the subsidy fight with the moratorium</div><div class="o"><span class="tag">Correction</span>Killing the tax break is right; banning the building is not — do the first, not the second</div></div>
+</section>
+
+<!-- ============ CLOSE ============ -->
+<section id="close">
+  <h2><i class="bi bi-flag"></i> The Honest Position</h2>
+  <blockquote class="thesis">
+    <p>The position was never pro-data-center or anti. It's that the thing being built runs the economy we already have, is financing the one we're about to get, and delivers more value to more people than nearly anything else going.</p>
+    <p class="menu">Charge it for what it costs. Tax it like any other industrial load. Build the power to feed it. And stop pretending a ban on buildings is an energy policy.</p>
+    <p class="mb-0">The people selling you the pause aren't protecting your bill. They're using it — and they're reaching you through the very infrastructure they're telling you to fear.</p>
+  </blockquote>
+</section>
+
+<!-- ============ SOURCES ============ -->
+<section id="sources">
+  <h2><i class="bi bi-journal-check"></i> Sources &amp; Methodology</h2>
+  <p class="sec-intro">Verified 2026-06-24 against primary sources where reachable. Forecasts are labeled as projections with their vintage. Figures that drift quickly — consumer surplus, GDP share, electricity prices, the ERCOT and tax-exemption forecasts — are dated inline.</p>
+  <ol class="src">
+    <li><strong>Workload mix (27% AI by 2027):</strong> Goldman Sachs Research, "AI to drive 165% increase in data center power demand by 2030," Feb 4, 2025. <em>Projection.</em></li>
+    <li><strong>Rack power density (~130 kW AI today, 250 kW roadmap; 10–15 kW conventional):</strong> NVIDIA technical blog (GB200/GB300 NVL72); Schneider Electric, "The 1 MW AI rack is coming," Oct 2025; Uptime Institute Global Data Center Survey 2024.</li>
+    <li><strong>Consumer surplus ($172B / $112B; value-per-user tripled):</strong> Stanford HAI, <em>2026 AI Index Report</em>, Ch. 4 (Economy), Apr 2026. <em>Modeled willingness-to-pay estimate.</em></li>
+    <li><strong>AI-exposed industries (productivity / employment / wages):</strong> PwC, <em>2026 Global AI Jobs Barometer</em>. <em>Correlational.</em></li>
+    <li><strong>AI capex &gt; consumer spending (H1 2025):</strong> Renaissance Macro Research (Neil Dutta), 2025, via DataCenterDynamics, Aug 6, 2025.</li>
+    <li><strong>~5% of GDP:</strong> KKR (Henry McVey), "Beyond the Bubble: Why AI Infrastructure Will Compound," 2025–26.</li>
+    <li><strong>Residential prices (+42% Mar 2021–Mar 2026 monthly / +27% annual 2019–24):</strong> PolitiFact fact-check, Jun 12, 2026; U.S. EIA <em>Electric Power Monthly</em>.</li>
+    <li><strong>FERC large-load cost recovery:</strong> FERC show-cause orders, Docket RM26-4, Jun 18, 2026. <em>Tariffs pending.</em></li>
+    <li><strong>Rate classes:</strong> Oregon POWER Act (2025); Virginia SCC order, Nov 2025.</li>
+    <li><strong>Texas SB6 (≥75 MW):</strong> Texas SB 6, 89th Legislature, signed Jun 20, 2025.</li>
+    <li><strong>ERCOT load growth (46% data centers; ~40% / ≈121 GW ex-data-centers by 2031):</strong> ERCOT 2025 Long-Term Load Forecast, Apr 2025; data-center share derived via electricityplans.com. <em>Projection.</em></li>
+    <li><strong>North Dakota real-dollar rate decline:</strong> Lawrence Berkeley National Laboratory; nominal prices per U.S. EIA. <em>Inflation-adjusted.</em></li>
+    <li><strong>Oncor ($160M vs $143M):</strong> Brian Lloyd testimony, Texas House State Affairs Committee, Apr 2026. <em>Project forecast.</em></li>
+    <li><strong>Texas data-center sales-tax exemption ($1.3B/yr; $3B+/biennium):</strong> Texas Comptroller, <em>Tax Exemptions &amp; Tax Incidence</em>, 2025.</li>
+    <li><strong>Hyperscaler nuclear (~9.8 GW; TMI; Susquehanna; X-energy / Kairos / Oklo):</strong> SMR Intel deal tracker (Jun 2026); Constellation Energy (Sep 2024); Utility Dive (Jun 2025). <em>Mostly announced/contracted, near-zero operating.</em></li>
+    <li><strong>China-competitiveness framing:</strong> Energy Secretary Chris Wright / FERC action, Associated Press, Jun 18, 2026.</li>
+  </ol>
+</section>
+
+</main>
+
+<footer>
+  <p><span class="verified"><i class="bi bi-patch-check"></i> Last verified: 2026-06-24</span></p>
+  <p class="small">An opinionated, fact-checked field guide. Figures verified against primary sources; projections labeled and dated inline. AI-generated and human-edited. Corrections welcome.</p>
+</footer>
+
+<button class="fab" id="themeToggle" aria-label="Toggle light/dark theme" title="Toggle theme"><i class="bi bi-circle-half"></i></button>
+<button class="fab" id="backTop" aria-label="Back to top" title="Back to top"><i class="bi bi-arrow-up"></i></button>
+
+<script>
+  // ----- Theme toggle (persists; keeps Bootstrap data-bs-theme in sync) -----
+  (function () {
+    var btn = document.getElementById('themeToggle');
+    function current() {
+      var t = document.documentElement.getAttribute('data-theme');
+      if (t) return t;
+      return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    btn.addEventListener('click', function () {
+      var next = current() === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      document.documentElement.setAttribute('data-bs-theme', next);
+      try { localStorage.setItem('dcm-theme', next); } catch (e) {}
+    });
+  })();
+
+  // ----- Back to top -----
+  document.getElementById('backTop').addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ----- INTERACTIVE 1: four-floor building -----
+  document.querySelectorAll('#building .floor > button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var floor = btn.parentElement;
+      var open = floor.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  });
+
+  // ----- INTERACTIVE 2: bill decomposition -----
+  (function () {
+    var fills = Array.prototype.slice.call(document.querySelectorAll('#decomp .fill'));
+    var narration = document.getElementById('decompNarration');
+    var steps = [
+      'Start with ALL projected demand growth — manufacturing, oil & gas, electrification, and data centers combined.',
+      'Data centers are 46% of that growth (ERCOT, through 2031). The majority of the spike isn’t data centers at all.',
+      'And AI is only ~27% of what data centers run — so AI is roughly 12% of total demand growth. A fraction of a fraction. (Illustrative: a Texas growth share × a national workload share.)'
+    ];
+    var i = -1;
+    function render() {
+      fills.forEach(function (f, idx) {
+        f.style.width = idx <= i ? (f.dataset.target + '%') : '0';
+      });
+      if (i >= 0 && i < steps.length) narration.textContent = steps[i];
+    }
+    document.getElementById('decompStep').addEventListener('click', function () {
+      if (i < fills.length - 1) { i++; render(); }
+    });
+    document.getElementById('decompReset').addEventListener('click', function () {
+      i = -1; render();
+      narration.textContent = '"AI is spiking your bill" — let’s decompose that claim, one layer at a time.';
+    });
+  })();
+</script>
+
+</body>
+</html>
