@@ -440,7 +440,25 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
              --card-shadow-intensity: rgba(0, 0, 0, .1); /* Softer shadow */
         }
         html { scroll-behavior: smooth; }
-        body { display: flex; flex-direction: column; min-height: 100vh; background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background-color: #f4f5fb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
+        /* Fixed, lightly-tinted animated mesh so the frosted cards refract colour.
+           position: fixed keeps it out of the flex flow and off the scroll path. */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-color: #f4f5fb;
+            background-image:
+                radial-gradient(40% 50% at 15% 18%, rgba(99, 102, 241, .18) 0%, transparent 60%),  /* indigo */
+                radial-gradient(45% 55% at 85% 25%, rgba(139, 92, 246, .16) 0%, transparent 60%),  /* violet */
+                radial-gradient(50% 60% at 78% 85%, rgba(34, 211, 238, .14) 0%, transparent 60%),  /* cyan  */
+                radial-gradient(45% 55% at 18% 90%, rgba(67, 56, 202, .14) 0%, transparent 62%);   /* deep indigo */
+            background-size: 200% 200%;
+            background-position: 0% 50%;
+            animation: heroGradientShift 28s ease-in-out infinite alternate;
+        }
         .main-content { flex: 1; }
         .navbar { background-image: linear-gradient(to bottom, #343a40, #2c3034); } /* Darker, less contrast gradient */
         .navbar-brand { font-weight: 500; color: #f8f9fa !important; }
@@ -651,7 +669,8 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
         }
         /* Respect reduced-motion: freeze the drift and disable the cursor-follow easing */
         @media (prefers-reduced-motion: reduce) {
-            .page-hero { animation: none; }
+            .page-hero,
+            body::before { animation: none; }
             .hero-glow { transition: none; }
         }
     </style>
