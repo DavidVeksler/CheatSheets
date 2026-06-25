@@ -1,266 +1,290 @@
-import logging
+#!/usr/bin/env python3
+"""generate-image-previews.py
+
+Does exactly two things, and nothing else:
+
+  1. Generates a 1200x630 social-preview screenshot per cheatsheet -> images/{stem}.png
+  2. Adds any MISSING Open Graph / Twitter / canonical meta tags to the <head>
+
+It NEVER reformats or re-serializes your HTML. Tags are inserted surgically as a
+text block immediately before </head>; existing tags are left untouched. This is
+the deliberate fix for the old version, which round-tripped every file through
+BeautifulSoup.prettify() and mangled <pre>/<code> whitespace and attribute order.
+
+Usage:
+  python3 generate-image-previews.py                 # dry run: report what's missing
+  python3 generate-image-previews.py --apply         # add missing OG tags + make missing images
+  python3 generate-image-previews.py --apply --force # also regenerate images that already exist
+  python3 generate-image-previews.py --apply foo.html bar.html   # only these files
+  python3 generate-image-previews.py --apply --no-images         # tags only
+  python3 generate-image-previews.py --apply --no-og             # images only
+
+Deps: beautifulsoup4 (tag reading), playwright (screenshots).
+"""
+
 import argparse
+import html as html_lib
+import socket
+import sys
+import threading
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import List, Dict, Set
-from urllib.parse import urlparse
-
-# Optional dependency loading
-try:
-    from playwright.sync_api import sync_playwright, Error as PlaywrightError
-    PLAYWRIGHT_AVAILABLE = True
-except ImportError:
-    PLAYWRIGHT_AVAILABLE = False
 
 try:
-    from bs4 import BeautifulSoup, FeatureNotFound
+    from bs4 import BeautifulSoup
 except ImportError:
-    print("Error: BeautifulSoup is not installed. Please run: python3 -m pip install beautifulsoup4")
-    exit(1)
+    sys.exit("Error: beautifulsoup4 is not installed. Run: python3 -m pip install beautifulsoup4")
 
-# --- Configuration & Constants ---
-logging.basicConfig(level=logging.WARNING, format="%(asctime)s - %(levelname)s - %(message)s")
-OG_TYPE_DEFAULT = "website"
-TWITTER_CARD_DEFAULT = "summary_large_image"
+DEFAULT_BASE_URL = "https://cheatsheets.davidveksler.com/"
+VIEWPORT = {"width": 1200, "height": 630}
+# Floating UI chrome that should not appear in the social preview.
+HIDE_SELECTORS = ["#themeToggle", "#backTop", ".theme-toggle", ".back-top", ".back-to-top"]
 
-class Colors:
-    HEADER, BLUE, GREEN, YELLOW, RED, ENDC, BOLD, UNDERLINE = '\033[95m', '\033[94m', '\033[92m', '\033[93m', '\033[91m', '\033[0m', '\033[1m', '\033[4m'
 
-def get_parser():
-    """Determines the best available HTML parser."""
-    try:
-        BeautifulSoup("<html></html>", "lxml")
-        return "lxml"
-    except FeatureNotFound:
-        print(f"{Colors.YELLOW}Note: 'lxml' parser not found. Falling back to the built-in 'html.parser'.\nFor better performance, run: {Colors.BOLD}python3 -m pip install lxml{Colors.ENDC}")
-        return "html.parser"
-HTML_PARSER = get_parser()
+class C:
+    HEADER, BLUE, GREEN, YELLOW, RED, ENDC, BOLD = (
+        "\033[95m", "\033[94m", "\033[92m", "\033[93m", "\033[91m", "\033[0m", "\033[1m",
+    )
 
-class ChangeProposal:
-    """Stores all proposed changes for files and images."""
-    def __init__(self):
-        self.html_additions: Dict[Path, List[Dict]] = {}
-        self.html_updates: Dict[Path, List[Dict]] = {}
-        self.screenshot_tasks: Set[str] = set()
-        self.scanned_files = 0
-        self.unparseable_files = 0
 
-    def add_tag(self, file_path: Path, attrs: Dict, content: str, tag_name: str, content_attr: str):
-        if file_path not in self.html_additions: self.html_additions[file_path] = []
-        self.html_additions[file_path].append({"attrs": attrs, "content": content, "tag_name": tag_name, "content_attr": content_attr})
+# --------------------------------------------------------------------------- #
+# OG / meta tag analysis (read-only) + surgical insertion
+# --------------------------------------------------------------------------- #
 
-    def update_tag(self, file_path: Path, attrs: Dict, old_val: str, new_val: str, tag_name: str, content_attr: str):
-        if file_path not in self.html_updates: self.html_updates[file_path] = []
-        self.html_updates[file_path].append({"attrs": attrs, "old": old_val, "new": new_val, "tag_name": tag_name, "content_attr": content_attr})
+def attr(value: str) -> str:
+    """Escape a string for safe use inside a double-quoted HTML attribute."""
+    return html_lib.escape(value or "", quote=True)
 
-    def add_screenshot_task(self, image_name: str): self.screenshot_tasks.add(image_name)
-    def file_has_changes(self, file_path: Path) -> bool: return file_path in self.html_additions or file_path in self.html_updates
-    def has_changes(self) -> bool: return bool(self.html_additions or self.html_updates or self.screenshot_tasks)
 
-    def print_report(self):
-        print(f"\n{Colors.BOLD}{Colors.HEADER}--- Meta Tag Analysis Report ---{Colors.ENDC}")
-        changed_file_count = len(set(self.html_additions.keys()) | set(self.html_updates.keys()))
-        perfect_files = self.scanned_files - changed_file_count - self.unparseable_files
-        print(f"Scanned {self.scanned_files} files: {Colors.GREEN}{perfect_files} perfect{Colors.ENDC}, {Colors.YELLOW}{changed_file_count} with issues{Colors.ENDC}, {Colors.RED}{self.unparseable_files} unparseable.{Colors.ENDC}")
+def desired_tags(soup: BeautifulSoup, stem: str, page_url: str, image_url: str):
+    """Return an ordered list of (label, html) for tags this page SHOULD have.
 
-        if not self.has_changes(): return
+    Each tag's html is only used if the tag is currently missing (add-only).
+    """
+    title_el = soup.find("title")
+    title = title_el.get_text(strip=True) if title_el else stem
 
-        all_changed_files = sorted(list(set(self.html_additions.keys()) | set(self.html_updates.keys())))
+    desc_el = soup.find("meta", attrs={"name": "description"})
+    desc = desc_el.get("content", "").strip() if desc_el else ""
 
-        for file_path in all_changed_files:
-            print(f"\n📄 {Colors.BOLD}{file_path.name}{Colors.ENDC}")
-            for change in sorted(self.html_additions.get(file_path, []), key=lambda x: str(x['attrs'])):
-                tag_html = f'<{change["tag_name"]} {list(change["attrs"].keys())[0]}="{list(change["attrs"].values())[0]}" {change["content_attr"]}="{change["content"]}">'
-                print(f"  {Colors.GREEN}[+] ADD:    {Colors.ENDC}{tag_html}")
-            for change in sorted(self.html_updates.get(file_path, []), key=lambda x: str(x['attrs'])):
-                tag_html = f'<{change["tag_name"]} {list(change["attrs"].keys())[0]}="{list(change["attrs"].values())[0]}" {change["content_attr"]}="{change["new"]}">'
-                print(f"  {Colors.YELLOW}[~] UPDATE: {Colors.ENDC}{tag_html}")
-                print(f"            (from: {change['old']})")
+    t, d = attr(title), attr(desc)
+    img, url = attr(image_url), attr(page_url)
 
-        if self.screenshot_tasks:
-            print(f"\n{Colors.UNDERLINE}{Colors.BLUE}Required Screenshot Generations:{Colors.ENDC}")
-            for image_name in sorted(list(self.screenshot_tasks)):
-                print(f"  {Colors.GREEN}[+] GENERATE: {Colors.ENDC}images/{image_name}")
-        print("-" * 30)
+    tags = [
+        ("og:title", f'<meta property="og:title" content="{t}">'),
+        ("og:type", '<meta property="og:type" content="website">'),
+        ("og:url", f'<meta property="og:url" content="{url}">'),
+        ("og:image", f'<meta property="og:image" content="{img}">'),
+        ("og:image:alt", f'<meta property="og:image:alt" content="{t}">'),
+        ("twitter:card", '<meta name="twitter:card" content="summary_large_image">'),
+        ("twitter:title", f'<meta name="twitter:title" content="{t}">'),
+        ("twitter:image", f'<meta name="twitter:image" content="{img}">'),
+        ("canonical", f'<link rel="canonical" href="{url}">'),
+    ]
+    # Description-derived tags only if the page actually has a description.
+    if desc:
+        tags.insert(1, ("og:description", f'<meta property="og:description" content="{d}">'))
+        tags.append(("twitter:description", f'<meta name="twitter:description" content="{d}">'))
+    return tags
 
-def analyze_file(html_file: Path, base_url: str, proposal: ChangeProposal):
-    proposal.scanned_files += 1
+
+def existing_labels(soup: BeautifulSoup) -> set:
+    """Set of meta/link labels already present in the document."""
+    present = set()
+    for m in soup.find_all("meta"):
+        key = m.get("property") or m.get("name")
+        if key:
+            present.add(key.lower())
+    if soup.find("link", rel="canonical"):
+        present.add("canonical")
+    return present
+
+
+def missing_tags(html_file: Path, base_url: str):
+    """Return (list of html-strings to insert, error-or-None)."""
     try:
         content = html_file.read_text(encoding="utf-8")
-        if not content.strip(): return
-        soup = BeautifulSoup(content, HTML_PARSER)
     except Exception as e:
-        logging.error(f"Could not parse {html_file.name}: {e}")
-        proposal.unparseable_files += 1
-        return
+        return [], f"read failed: {e}"
+    if not content.strip():
+        return [], "empty file"
 
-    head = soup.head
-    if not head:
-        logging.warning(f"No <head> tag in {html_file.name}. Skipping.")
-        proposal.unparseable_files += 1
-        return
+    soup = BeautifulSoup(content, "html.parser")
+    if not soup.head:
+        return [], "no <head>"
 
-    # --- Analysis Logic ---
-    file_stem = html_file.stem
-    images_dir = html_file.parent / "images"
+    stem = html_file.stem
+    page_url = f"{base_url}{html_file.name}"
+    image_url = f"images/{stem}.png"
 
-    # Determine the correct, final image URL to use for this page
-    final_image_url = f"images/{file_stem}.png"  # Default if no valid image is found
-    needs_screenshot = True
+    present = existing_labels(soup)
+    return [html for label, html in desired_tags(soup, stem, page_url, image_url)
+            if label not in present], None
 
-    # Check for an existing, valid og:image tag
-    og_image_tag = soup.find("meta", property="og:image")
-    if og_image_tag and og_image_tag.get("content"):
-        current_og_image_url = og_image_tag.get("content")
 
-        if "YOUR_IMAGE_URL_HERE" not in current_og_image_url:
-            try:
-                # Extract filename from a potential full URL or relative path
-                image_path = urlparse(current_og_image_url).path
-                # Handle both absolute and relative paths
-                if image_path.startswith('/'):
-                    image_filename = Path(image_path).name
-                else:
-                    # For relative paths like "images/filename.png"
-                    image_filename = Path(image_path).name
-                    # Check if the relative path exists as specified
-                    if current_og_image_url.startswith("images/"):
-                        relative_path = html_file.parent / current_og_image_url
-                        if relative_path.exists():
-                            final_image_url = current_og_image_url
-                            needs_screenshot = False
-                        elif (images_dir / image_filename).exists():
-                            # Image exists but path format needs updating
-                            final_image_url = f"images/{image_filename}"
-                            needs_screenshot = False
-                    elif (images_dir / image_filename).exists():
-                        # A valid, existing image was found! Use it.
-                        final_image_url = f"images/{image_filename}"
-                        needs_screenshot = False
-            except Exception as e:
-                logging.warning(f"Could not parse image path '{current_og_image_url}' in {html_file.name}: {e}")
-    
-    # Also check if the default image already exists even if no og:image tag
-    elif (images_dir / f"{file_stem}.png").exists():
-        needs_screenshot = False
+def insert_tags(html_file: Path, tags: list) -> None:
+    """Insert tag strings immediately before </head>, matching its indentation.
 
-    expected_canonical_url = f"{base_url}{html_file.name}"
+    Pure text edit — the rest of the document is byte-for-byte untouched.
+    """
+    content = html_file.read_text(encoding="utf-8")
+    lower = content.lower()
+    idx = lower.rfind("</head>")
+    if idx == -1:
+        raise ValueError("no </head> found")
 
-    # ADD-ONLY tags (Creative Content - will not overwrite)
-    if not soup.find("meta", property="og:title"):
-        title = soup.find("title")
-        if title and title.get_text(strip=True):
-            proposal.add_tag(html_file, {"property": "og:title"}, title.get_text(strip=True), "meta", "content")
+    line_start = content.rfind("\n", 0, idx) + 1
+    indent = content[line_start:idx]  # whitespace preceding </head>
+    if indent.strip():
+        indent = ""  # </head> not at line start; fall back to no indent
 
-    # ADD or UPDATE tags (Technical Content)
-    technical_tags = {
-        "og:image": ({"property": "og:image"}, final_image_url, "meta", "content"),
-        "twitter:image": ({"name": "twitter:image"}, final_image_url, "meta", "content"),
-        "og:url": ({"property": "og:url"}, expected_canonical_url, "meta", "content"),
-        "canonical": ({"rel": "canonical"}, expected_canonical_url, "link", "href"),
-        "og:type": ({"property": "og:type"}, OG_TYPE_DEFAULT, "meta", "content"),
-        "twitter:card": ({"name": "twitter:card"}, TWITTER_CARD_DEFAULT, "meta", "content"),
-    }
-    for _, (attrs, expected_content, tag_name, content_attr) in technical_tags.items():
-        tag = soup.find(tag_name, attrs=attrs)
-        if not tag:
-            proposal.add_tag(html_file, attrs, expected_content, tag_name, content_attr)
-        elif tag.get(content_attr) != expected_content:
-            proposal.update_tag(html_file, attrs, tag.get(content_attr, "N/A"), expected_content, tag_name, content_attr)
+    block = "".join(f"{indent}{tag}\n" for tag in tags)
+    new_content = content[:line_start] + block + content[line_start:]
+    html_file.write_text(new_content, encoding="utf-8")
 
-    # Add a screenshot task ONLY if we couldn't find a valid existing image
-    # Check if the actual final image exists (could be different from default)
-    final_image_filename = Path(final_image_url).name
-    expected_image_path = images_dir / final_image_filename
-    
-    if needs_screenshot and not expected_image_path.exists():
-        proposal.add_screenshot_task(final_image_filename)
 
-def apply_changes(proposal: ChangeProposal, images_dir: Path):
-    if proposal.html_additions or proposal.html_updates:
-        print(f"\n{Colors.BLUE}Applying HTML changes...{Colors.ENDC}")
-        all_changed_files = sorted(list(set(proposal.html_additions.keys()) | set(proposal.html_updates.keys())))
-        for file_path in all_changed_files:
-            try:
-                soup = BeautifulSoup(file_path.read_text(encoding="utf-8"), HTML_PARSER)
-                head = soup.head
-                if not head: continue
+# --------------------------------------------------------------------------- #
+# Screenshots
+# --------------------------------------------------------------------------- #
 
-                updates_for_file = proposal.html_updates.get(file_path, [])
-                for update in updates_for_file:
-                    old_tag = soup.find(update['tag_name'], attrs=update['attrs'])
-                    if old_tag: old_tag.decompose()
+def start_server(directory: Path):
+    handler = partial(QuietHandler, directory=str(directory))
+    server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server, server.server_address[1]
 
-                all_tags_to_add = proposal.html_additions.get(file_path, []) + updates_for_file
-                for change in all_tags_to_add:
-                    new_tag = soup.new_tag(change['tag_name'], attrs=change['attrs'])
-                    new_tag[change['content_attr']] = change.get('new', change.get('content'))
-                    head.append(new_tag)
 
-                file_path.write_text(str(soup.prettify()), encoding="utf-8")
-                print(f"  {Colors.GREEN}Updated:{Colors.ENDC} {file_path.name}")
-            except Exception as e:
-                print(f"{Colors.RED}Error updating {file_path.name}: {e}{Colors.ENDC}")
+class QuietHandler(SimpleHTTPRequestHandler):
+    def log_message(self, *args):  # silence per-request logging
+        pass
 
-    if proposal.screenshot_tasks:
-        generate_screenshots(list(proposal.screenshot_tasks), images_dir)
 
-def generate_screenshots(image_names: List[str], images_dir: Path):
-    if not PLAYWRIGHT_AVAILABLE:
-        print(f"{Colors.RED}\nPlaywright is not installed. Cannot generate screenshots.{Colors.ENDC}")
-        print(f"{Colors.YELLOW}To enable, run: {Colors.BOLD}python3 -m pip install playwright && python3 -m playwright install{Colors.ENDC}")
+def generate_screenshots(files: list, images_dir: Path, root: Path, dark: bool):
+    try:
+        from playwright.sync_api import sync_playwright, Error as PlaywrightError
+    except ImportError:
+        print(f"{C.RED}Playwright not installed. Skipping screenshots.{C.ENDC}")
+        print(f"{C.YELLOW}Enable with: python3 -m pip install playwright && python3 -m playwright install chromium{C.ENDC}")
         return
 
     images_dir.mkdir(exist_ok=True)
-    print(f"\n{Colors.BLUE}Generating {len(image_names)} screenshots...{Colors.ENDC}")
-    with sync_playwright() as p:
-        try:
+    server, port = start_server(root)
+    print(f"\n{C.BLUE}Generating {len(files)} preview image(s)...{C.ENDC}")
+    hide_css = ",".join(HIDE_SELECTORS) + "{display:none !important}"
+
+    try:
+        with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            page = browser.new_page(viewport={"width": 1200, "height": 630})
-            for image_name in sorted(image_names):
-                html_path = (images_dir.parent / f"{Path(image_name).stem}.html").resolve()
-                if not html_path.exists():
-                    print(f"  {Colors.YELLOW}Warning:{Colors.ENDC} Could not find source file {html_path.name} to generate screenshot.")
-                    continue
+            context = browser.new_context(
+                viewport=VIEWPORT,
+                device_scale_factor=2,  # crisp 2400x1260 capture downscaled by viewers
+                color_scheme="dark" if dark else "light",
+            )
+            page = context.new_page()
+            for html_file in files:
+                out = images_dir / f"{html_file.stem}.png"
                 try:
-                    page.goto(f"file://{html_path}", wait_until="networkidle")
-                    page.screenshot(path=images_dir / image_name, type="png")
-                    print(f"  {Colors.GREEN}Generated:{Colors.ENDC} {Path('images') / image_name}")
+                    page.goto(f"http://127.0.0.1:{port}/{html_file.name}", wait_until="load", timeout=30000)
+                    page.add_style_tag(content=hide_css)
+                    page.evaluate("window.scrollTo(0, 0)")
+                    page.wait_for_timeout(400)  # let fonts/animations settle
+                    page.screenshot(path=str(out), type="png", clip={"x": 0, "y": 0, **VIEWPORT})
+                    print(f"  {C.GREEN}Generated:{C.ENDC} images/{out.name}")
                 except PlaywrightError as e:
-                    print(f"  {Colors.RED}Error: {Colors.ENDC}Could not screenshot {html_path.name}: {e}")
+                    print(f"  {C.RED}Failed:{C.ENDC} {html_file.name}: {e}")
             browser.close()
-        except PlaywrightError as e:
-            print(f"{Colors.RED}Playwright Error: {e}. Ensure browsers are installed with: {Colors.BOLD}python3 -m playwright install{Colors.ENDC}")
+    finally:
+        server.shutdown()
+
+
+# --------------------------------------------------------------------------- #
+# Main
+# --------------------------------------------------------------------------- #
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyzes and fixes meta tags in HTML files.", formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("directory", nargs="?", default=".", help="Directory to scan (default: current).")
-    parser.add_argument("--base-url", default="https://cheatsheets.davidveksler.com/", help="Base URL for canonical links.")
-    parser.add_argument("--apply", action="store_true", help="Apply proposed changes to files. Default is a dry-run report.")
-    args = parser.parse_args()
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("files", nargs="*", help="Specific .html files (default: all in --dir).")
+    ap.add_argument("--dir", default=".", help="Directory to scan (default: current).")
+    ap.add_argument("--base-url", default=DEFAULT_BASE_URL, help="Base URL for canonical/og:url.")
+    ap.add_argument("--apply", action="store_true", help="Apply changes (default: dry run).")
+    ap.add_argument("--force", action="store_true", help="Regenerate images that already exist.")
+    ap.add_argument("--no-images", action="store_true", help="Skip screenshot generation.")
+    ap.add_argument("--no-og", action="store_true", help="Skip OG/meta tag insertion.")
+    ap.add_argument("--dark", action="store_true", help="Render previews in dark color scheme.")
+    args = ap.parse_args()
 
-    dir_path = Path(args.directory)
-    if not dir_path.is_dir():
-        print(f"{Colors.RED}Error: Directory '{args.directory}' not found.{Colors.ENDC}")
-        return
+    root = Path(args.dir).resolve()
+    if not root.is_dir():
+        sys.exit(f"{C.RED}Directory not found: {root}{C.ENDC}")
 
-    proposal = ChangeProposal()
-    html_files = sorted(list(dir_path.glob("*.html")))
-    if not html_files:
-        print(f"{Colors.YELLOW}No HTML files found in '{dir_path.resolve()}' to analyze.{Colors.ENDC}")
-        return
-
-    for html_file in html_files:
-        analyze_file(html_file, args.base_url, proposal)
-
-    proposal.print_report()
-    if not proposal.has_changes():
-        return
-
-    if args.apply:
-        apply_changes(proposal, dir_path / "images")
-        print(f"\n{Colors.GREEN}Processing complete.{Colors.ENDC}")
+    if args.files:
+        files = [Path(f) if Path(f).is_absolute() else root / Path(f).name for f in args.files]
+        files = [f for f in files if f.suffix == ".html" and f.exists()]
     else:
-        print(f"\n{Colors.YELLOW}This was a dry run. To apply these changes, run again with the {Colors.BOLD}--apply{Colors.YELLOW} flag.{Colors.ENDC}")
+        files = sorted(root.glob("*.html"))
+    if not files:
+        sys.exit(f"{C.YELLOW}No HTML files found.{C.ENDC}")
+
+    images_dir = root / "images"
+
+    # --- Plan OG tag insertions ---
+    tag_plan = {}  # file -> list[str]
+    if not args.no_og:
+        for f in files:
+            tags, err = missing_tags(f, args.base_url)
+            if err:
+                print(f"  {C.YELLOW}Skip OG:{C.ENDC} {f.name} ({err})")
+            elif tags:
+                tag_plan[f] = tags
+
+    # --- Plan screenshots ---
+    shot_plan = []
+    if not args.no_images:
+        for f in files:
+            if args.force or not (images_dir / f"{f.stem}.png").exists():
+                shot_plan.append(f)
+
+    # --- Report ---
+    print(f"\n{C.BOLD}{C.HEADER}Plan ({len(files)} file(s) scanned){C.ENDC}")
+    if tag_plan:
+        print(f"\n{C.BOLD}OG/meta tags to add:{C.ENDC}")
+        for f, tags in sorted(tag_plan.items()):
+            print(f"  {C.BOLD}{f.name}{C.ENDC}")
+            for t in tags:
+                print(f"    {C.GREEN}+{C.ENDC} {t}")
+    else:
+        print(f"  {C.GREEN}No missing OG tags.{C.ENDC}")
+
+    if shot_plan:
+        print(f"\n{C.BOLD}Preview images to generate:{C.ENDC}")
+        for f in shot_plan:
+            print(f"    {C.GREEN}+{C.ENDC} images/{f.stem}.png")
+    else:
+        print(f"  {C.GREEN}No images to generate.{C.ENDC}")
+
+    if not tag_plan and not shot_plan:
+        return
+
+    if not args.apply:
+        print(f"\n{C.YELLOW}Dry run. Re-run with {C.BOLD}--apply{C.ENDC}{C.YELLOW} to make changes.{C.ENDC}")
+        return
+
+    # --- Apply ---
+    if tag_plan:
+        print(f"\n{C.BLUE}Inserting OG tags...{C.ENDC}")
+        for f, tags in sorted(tag_plan.items()):
+            try:
+                insert_tags(f, tags)
+                print(f"  {C.GREEN}Updated:{C.ENDC} {f.name} (+{len(tags)})")
+            except Exception as e:
+                print(f"  {C.RED}Failed:{C.ENDC} {f.name}: {e}")
+
+    if shot_plan:
+        generate_screenshots(shot_plan, images_dir, root, args.dark)
+
+    print(f"\n{C.GREEN}Done.{C.ENDC}")
+
 
 if __name__ == "__main__":
     main()
