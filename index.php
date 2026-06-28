@@ -32,6 +32,7 @@ $emailSignupEndpoint = 'subscribe.php';
 $categoryMap = [
     // AI & Safety
     'agi-development-guide.html' => 'AI & Safety',
+    'ai-coding-agents-compared.html' => 'AI & Safety',
     'ai-frontier.html' => 'AI & Safety',
     'ai-progress-dashboard.html' => 'AI & Safety',
     'ai-risk-timeline.html' => 'AI & Safety',
