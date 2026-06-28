@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Essential SEO Tags -->
+    <title>Ubuntu Linux for AI &amp; Agentic Developers: Setup &amp; Workflow Cheatsheet</title>
+    <meta name="description" content="A complete, paste-ready Ubuntu setup cheatsheet for AI and agentic developers: pick an LTS, Python the right way with uv (PEP 668), Node LTS, Docker, NVIDIA GPU + CUDA + the container toolkit, Ollama for local LLMs, Claude Code and other agent CLIs, WSL2, and the anti-patterns that break ML boxes. Verified for Ubuntu 24.04/26.04 LTS, June 2026."/>
+    <meta name="keywords" content="ubuntu for AI developers, ubuntu 24.04, ubuntu 26.04, uv python, PEP 668 externally-managed, nvidia container toolkit, cuda ubuntu, ollama, claude code linux, wsl2 gpu, ai dev environment, ubuntu setup cheatsheet, docker ubuntu"/>
+    <link rel="canonical" href="https://cheatsheets.davidveksler.com/ubuntu-linux-for-ai-developers.html"/>
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Ubuntu Linux for AI &amp; Agentic Developers: Setup Cheatsheet"/>
+    <meta property="og:description" content="Paste-ready Ubuntu dev box for AI work: uv + PEP 668, Node LTS, Docker, NVIDIA CUDA + container toolkit, Ollama, Claude Code and agent CLIs, WSL2, and the anti-patterns to avoid. Verified June 2026."/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="https://cheatsheets.davidveksler.com/ubuntu-linux-for-ai-developers.html"/>
+    <meta property="og:image" content="images/ubuntu-linux-for-ai-developers.png"/>
+    <meta property="og:image:alt" content="Ubuntu Linux for AI developers setup cheatsheet preview"/>
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Ubuntu Linux for AI &amp; Agentic Developers: Setup Cheatsheet"/>
+    <meta name="twitter:description" content="Paste-ready Ubuntu dev box for AI work: uv + PEP 668, Node LTS, Docker, NVIDIA CUDA + container toolkit, Ollama, Claude Code and agent CLIs, WSL2, and anti-patterns. Verified June 2026."/>
+    <meta name="twitter:image" content="images/ubuntu-linux-for-ai-developers.png"/>
+    <meta name="twitter:creator" content="@heroiclife"/>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Ubuntu Linux for AI & Agentic Developers: Setup & Workflow Cheatsheet",
+      "description": "A complete, paste-ready Ubuntu setup reference for AI and agentic developers covering LTS selection, Python with uv (PEP 668), Node LTS, Docker, NVIDIA GPU/CUDA and the container toolkit, Ollama, Claude Code and other agent CLIs, WSL2, and common anti-patterns. Verified for Ubuntu 24.04/26.04 LTS as of June 2026.",
+      "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+      "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+      "datePublished": "2026-06-28",
+      "dateModified": "2026-06-28",
+      "keywords": "ubuntu for AI developers, uv python, PEP 668, nvidia container toolkit, cuda ubuntu, ollama, claude code linux, wsl2 gpu, docker ubuntu"
+    }
+    </script>
+
+    <!-- Bootstrap 5.3.8 CSS (SRI-pinned) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Bootstrap Icons (SRI-pinned) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+
+    <style>
+    @layer base, components, utilities;
+
+    @layer base {
+        :root {
+            color-scheme: light dark;
+            --term-bg: #0d1117;
+            --term-border: #30363d;
+            --accent: #E95420;          /* Ubuntu orange */
+            --accent-2: #ff7a45;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --ok: #22c55e;
+        }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding-bottom: 4rem;
+            scroll-behavior: smooth;
+        }
+        @media (prefers-reduced-motion: reduce) { body, * { scroll-behavior: auto !important; } }
+        h1, h2, h3 { text-wrap: balance; }
+        p, li { text-wrap: pretty; }
+        code { color: var(--accent-2); }
+        a { text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    }
+
+    @layer components {
+        .masthead {
+            background: linear-gradient(135deg, rgba(233,84,32,0.18), rgba(13,17,23,0.05));
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+
+        .progress-wrap {
+            position: sticky; top: 0; z-index: 1020;
+            background: var(--bs-body-bg);
+            border-bottom: 1px solid var(--bs-border-color);
+            padding: .55rem 0;
+        }
+        .progress { height: 1.35rem; }
+        .progress-bar { background: var(--accent) !important; }
+
+        .cmd {
+            position: relative; margin: .65rem 0;
+            border: 1px solid var(--term-border); border-radius: .5rem;
+            overflow: hidden; background: var(--term-bg);
+        }
+        .cmd pre { margin: 0; padding: .85rem 3rem .85rem 1rem; overflow-x: auto; color: #e6edf3; font-size: .855rem; line-height: 1.5; }
+        .cmd pre code { color: #e6edf3; background: none; padding: 0; white-space: pre; }
+        .cmd .copy-btn {
+            position: absolute; top: .45rem; right: .45rem;
+            border: 1px solid var(--term-border); background: #21262d; color: #c9d1d9;
+            border-radius: .375rem; padding: .15rem .5rem; font-size: .8rem; line-height: 1.4; cursor: pointer;
+        }
+        .cmd .copy-btn:hover { background: #30363d; color: #fff; }
+        .cmd .copy-btn.copied { background: var(--ok); border-color: var(--ok); color: #04210f; }
+        .cmd-label { font-size: .7rem; letter-spacing: .04em; text-transform: uppercase; color: #8b949e; padding: .35rem .9rem; border-bottom: 1px solid var(--term-border); background: #161b22; display: block; }
+
+        details.task, details.ref {
+            border: 1px solid var(--bs-border-color); border-radius: .6rem;
+            margin-bottom: .85rem; background: var(--bs-tertiary-bg); overflow: clip;
+        }
+        details.task > summary, details.ref > summary {
+            list-style: none; cursor: pointer; display: flex; align-items: flex-start; gap: .75rem; padding: .85rem 1rem;
+        }
+        details.task > summary::-webkit-details-marker, details.ref > summary::-webkit-details-marker { display: none; }
+        details.task > summary:hover, details.ref > summary:hover { background: var(--bs-secondary-bg); }
+        details.task[open] > summary, details.ref[open] > summary { border-bottom: 1px solid var(--bs-border-color); }
+        .task-body { padding: .35rem 1rem 1rem; }
+        .task .form-check-input { width: 1.4em; height: 1.4em; margin-top: .15em; flex: 0 0 auto; cursor: pointer; }
+        .task .form-check-input:checked { background-color: var(--accent); border-color: var(--accent); }
+        .task .t-title, .ref .t-title { font-weight: 600; flex: 1 1 auto; }
+        .ref .t-title { color: var(--accent-2); }
+        .chev { transition: transform .2s ease; color: var(--bs-secondary-color); flex: 0 0 auto; }
+        @media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
+        details[open] .chev { transform: rotate(180deg); }
+        .done .t-title { text-decoration: line-through; color: var(--bs-secondary-color); }
+
+        .callout { border-left: 4px solid var(--bs-border-color); border-radius: 0 .35rem .35rem 0; padding: .7rem 1rem; margin: .75rem 0; background: var(--bs-tertiary-bg); }
+        .callout-warn { border-left-color: var(--warn); background: rgba(245,158,11,.08); }
+        .callout-danger { border-left-color: var(--danger); background: rgba(239,68,68,.08); }
+        .callout-ok { border-left-color: var(--ok); background: rgba(34,197,94,.08); }
+        .callout-info { border-left-color: var(--accent); background: rgba(233,84,32,.10); }
+
+        .phase-tag { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+        .qref td, .qref th { vertical-align: top; }
+        .qref code { white-space: nowrap; }
+        .toc a { display: inline-block; padding: .15rem .1rem; }
+
+        .theme-toggle { position: fixed; bottom: 20px; right: 20px; z-index: 1030; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+        .backtop { position: fixed; bottom: 20px; right: 78px; z-index: 1030; border-radius: 50%; width: 48px; height: 48px; }
+    }
+
+    @layer utilities {
+        .text-accent { color: var(--accent-2) !important; }
+        @media print {
+            .no-print { display: none !important; }
+            details.task, details.ref { break-inside: avoid; border: 1px solid #ccc; }
+            details.task > .task-body, details.ref > .task-body { display: block !important; }
+            .cmd { background: #f6f8fa; } .cmd pre, .cmd pre code { color: #111; }
+            a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .8em; color: #555; }
+            body { padding: 0; }
+        }
+    }
+    </style>
+</head>
+<body>
+
+<header class="masthead py-4 mb-3">
+    <div class="container">
+        <div class="row align-items-center g-3">
+            <div class="col-lg-8">
+                <div class="phase-tag text-accent mb-1"><i class="bi bi-ubuntu"></i> Ubuntu 24.04 / 26.04 LTS &middot; native, VM &amp; WSL2 &middot; June 2026</div>
+                <h1 class="display-6 fw-bold mb-1">Ubuntu Linux for AI &amp; Agentic Developers</h1>
+                <p class="lead mb-0 text-secondary">A paste-ready setup checklist with <strong>saved progress</strong> for a clean AI/ML dev box: <strong>uv</strong> Python (PEP 668), Node LTS, Docker, <strong>NVIDIA CUDA + container toolkit</strong>, Ollama for local LLMs, Claude Code &amp; other agent CLIs, and WSL2 — plus the anti-patterns that break ML environments.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end no-print">
+                <button id="resetBtn" class="btn btn-outline-danger btn-sm"><i class="bi bi-arrow-counterclockwise"></i> Reset progress</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="progress-wrap no-print">
+    <div class="container d-flex align-items-center gap-3">
+        <span class="text-nowrap small fw-semibold"><i class="bi bi-terminal-fill text-accent"></i> Dev box setup</span>
+        <div class="progress flex-grow-1" role="progressbar" aria-label="Setup checklist completion" aria-valuemin="0" aria-valuemax="100">
+            <div id="progressBar" class="progress-bar" style="width:0%">0%</div>
+        </div>
+        <span id="progressCount" class="text-nowrap small text-secondary mono">0 / 0</span>
+    </div>
+</div>
+
+<main class="container my-4">
+
+    <div class="callout callout-info">
+        <strong><i class="bi bi-info-circle-fill"></i> How to use this page.</strong> Work top-down; tick each step as you finish it (progress saves to your browser's <code>localStorage</code>). Hit <i class="bi bi-clipboard"></i> to copy any command block. Commands assume a non-root user with <code>sudo</code> on <strong>Ubuntu 24.04 or 26.04 LTS</strong> (Debian-family <code>apt</code>); WSL2 differences are flagged in <a href="#wsl">Phase 9</a>. Version-sensitive figures are tagged <em>(as of mid-2026)</em> — re-verify before pinning in production.
+    </div>
+    <div class="callout callout-warn">
+        <strong><i class="bi bi-shield-lock"></i> Security.</strong> Adding your user to the <code>docker</code> group is <strong>root-equivalent</strong>; the NVIDIA/GPU steps and any <code>curl … | sh</code> installer run untrusted code as you — read scripts before piping to a shell. For internet-facing boxes, also work through <a href="linux-server-hardening.html">Linux Server Hardening</a>.
+    </div>
+
+    <!-- QUICK REFERENCE -->
+    <section id="quickref" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-lightning-charge-fill text-accent"></i> Quick Reference — highest-frequency commands</h2>
+        <div class="table-responsive">
+        <table class="table table-sm table-striped qref align-middle">
+            <thead><tr><th>Task</th><th>Command</th><th>Notes</th></tr></thead>
+            <tbody>
+                <tr><td>Full system update</td><td><code>sudo apt update &amp;&amp; sudo apt full-upgrade -y</code></td><td><code>full-upgrade</code> handles dependency changes.</td></tr>
+                <tr><td>Install uv (Python toolchain)</td><td><code>curl -LsSf https://astral.sh/uv/install.sh | sh</code></td><td>Replaces pip+venv+pyenv+pipx. v0.11.x.</td></tr>
+                <tr><td>New project env</td><td><code>uv venv &amp;&amp; uv add numpy torch</code></td><td>Per-project venv + lockfile. Never <code>sudo pip</code>.</td></tr>
+                <tr><td>Run a script in its env</td><td><code>uv run train.py</code></td><td>Auto-syncs deps first.</td></tr>
+                <tr><td>Pin a Python version</td><td><code>uv python install 3.12</code></td><td>No pyenv needed.</td></tr>
+                <tr><td>GPU status</td><td><code>nvidia-smi</code></td><td>Header shows driver + max CUDA; table shows VRAM/process.</td></tr>
+                <tr><td>GPU inside Docker</td><td><code>docker run --rm --gpus all ubuntu nvidia-smi</code></td><td>Needs nvidia-container-toolkit (Phase 6).</td></tr>
+                <tr><td>Run a local LLM</td><td><code>ollama run llama3.1</code></td><td>Serves API on <code>localhost:11434</code>.</td></tr>
+                <tr><td>Install Claude Code</td><td><code>curl -fsSL https://claude.ai/install.sh | bash</code></td><td>Or <code>npm i -g @anthropic-ai/claude-code</code> (Node 18+).</td></tr>
+                <tr><td>Reclaim Docker disk</td><td><code>docker system df</code> · <code>docker system prune -a</code></td><td>Images/volumes fill disks fast on ML boxes.</td></tr>
+                <tr><td>What's listening</td><td><code>sudo ss -tulpn</code></td><td>Open ports + owning process.</td></tr>
+                <tr><td>Which Ubuntu am I on</td><td><code>lsb_release -a</code> · <code>cat /etc/os-release</code></td><td>Confirm LTS codename.</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </section>
+
+    <!-- TOC -->
+    <nav class="toc callout callout-info no-print" aria-label="Section navigation">
+        <strong><i class="bi bi-list-ol"></i> Jump to:</strong>
+        <a href="#phase0">0 · Choose Ubuntu</a> ·
+        <a href="#phase1">1 · Baseline</a> ·
+        <a href="#phase2">2 · Shell &amp; CLI</a> ·
+        <a href="#phase3">3 · Python (uv)</a> ·
+        <a href="#phase4">4 · Node.js</a> ·
+        <a href="#phase5">5 · Docker</a> ·
+        <a href="#phase6">6 · NVIDIA GPU</a> ·
+        <a href="#phase7">7 · Local LLMs</a> ·
+        <a href="#phase8">8 · Agent CLIs</a> ·
+        <a href="#wsl">9 · WSL2</a> ·
+        <a href="#disk">Disk &amp; upkeep</a> ·
+        <a href="#mistakes">Anti-patterns</a>
+    </nav>
+
+    <!-- ============ PHASE 0 ============ -->
+    <section id="phase0" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 0</span><br>Choose your Ubuntu (and where to run it)</h2>
+
+        <details class="ref" open>
+            <summary><span class="t-title">Which release? Always an LTS</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-2">
+                    <thead><tr><th>Release</th><th>Status (mid-2026)</th><th>Default Python</th><th>Use it?</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>26.04 LTS "Resolute Raccoon"</strong></td><td>Released 2026-04-23</td><td>3.14</td><td class="text-success">✅ Newest LTS — best for a fresh box</td></tr>
+                        <tr><td><strong>24.04 LTS "Noble Numbat"</strong> (24.04.4)</td><td>Point release Feb 2026</td><td>3.12</td><td class="text-success">✅ Proven, widest tooling support</td></tr>
+                        <tr><td>25.10 "Questing Quokka" (interim)</td><td>EOL ~2026-07-09</td><td>3.13</td><td class="text-danger">❌ About to expire</td></tr>
+                    </tbody>
+                </table>
+                </div>
+                <p class="mb-1"><strong>Support windows:</strong> an LTS gets <strong>5 years</strong> of free security maintenance; <strong>10 years</strong> total via free <em>Ubuntu Pro</em> (ESM, covers <code>universe</code> too) for personal use on up to 5 machines; <strong>15 years</strong> with the Legacy add-on.</p>
+                <div class="callout callout-warn mb-0"><strong>Don't develop on an interim release</strong> (the non-LTS like 25.10): only 9 months of updates, and CUDA/driver/PyTorch wheels target the LTS first. Pick an LTS and stay on it.</div>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Native, VM, WSL2, or cloud GPU?</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <ul class="mb-0">
+                    <li><strong>Bare-metal Ubuntu</strong> — best for a local NVIDIA GPU; full driver/CUDA performance, no virtualization tax. The default for serious local training/inference.</li>
+                    <li><strong>WSL2 (Ubuntu on Windows 11)</strong> — excellent now: GPU passthrough works (host driver only), systemd is on by default in the Ubuntu image. Great if your daily driver is Windows. See <a href="#wsl">Phase 9</a>. Keep code in the Linux FS, not <code>/mnt/c</code>.</li>
+                    <li><strong>VM (UTM/VMware/VirtualBox)</strong> — fine for CPU dev; GPU passthrough is fiddly. Good for isolation/testing.</li>
+                    <li><strong>Cloud GPU</strong> (Lambda, RunPod, AWS/GCP/Azure) — rent an H100/A100/L40S by the hour when you don't own a GPU; same Ubuntu setup applies. Use SSH + VS Code Remote-SSH (Phase 8).</li>
+                </ul>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 1 ============ -->
+    <section id="phase1" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 1</span><br>System baseline, git &amp; GitHub</h2>
+
+        <details class="task" data-task="u-update">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Update, then install build essentials</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="cmd"><span class="cmd-label">baseline packages</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo apt update &amp;&amp; sudo apt full-upgrade -y
+sudo apt install -y build-essential curl wget git ca-certificates gnupg \
+                    unzip pkg-config software-properties-common</code></pre></div>
+                <p class="mb-0 small text-secondary"><code>build-essential</code> (gcc/make) is needed to compile many Python/native wheels and CUDA samples.</p>
+            </div>
+        </details>
+
+        <details class="task" data-task="u-git">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Latest git + GitHub CLI</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Distro git is often old. Add the maintainers' PPA for current git, and install <code>gh</code> from GitHub's repo (note the keyring now lives in <code>/etc/apt/keyrings</code>).</p>
+                <div class="cmd"><span class="cmd-label">git (current) + gh CLI</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code># current git
+sudo add-apt-repository -y ppa:git-core/ppa &amp;&amp; sudo apt update &amp;&amp; sudo apt install -y git
+
+# GitHub CLI (official repo)
+sudo mkdir -p -m 755 /etc/apt/keyrings
+wget -nv -O- https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+  | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+  | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+sudo apt update &amp;&amp; sudo apt install -y gh</code></pre></div>
+            </div>
+        </details>
+
+        <details class="task" data-task="u-sshkey">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">SSH key + git identity for GitHub</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="cmd"><span class="cmd-label">ed25519 key + auth</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>ssh-keygen -t ed25519 -C "you@example.com"     # accept defaults; set a passphrase
+git config --global user.name  "Your Name"
+git config --global user.email "you@example.com"
+git config --global init.defaultBranch main
+git config --global pull.rebase true
+# authenticate gh (opens browser / device code), then it manages the key:
+gh auth login</code></pre></div>
+                <div class="callout callout-info mb-0"><code>gh auth login</code> can upload your SSH key and set credential helpers automatically — simpler than pasting keys into the web UI.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 2 ============ -->
+    <section id="phase2" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 2</span><br>Shell &amp; modern CLI tools</h2>
+
+        <details class="task" data-task="u-shell">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">zsh + starship prompt (optional but nice)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="cmd"><span class="cmd-label">shell</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo apt install -y zsh
+chsh -s "$(which zsh)"                         # log out/in to take effect
+# starship: fast cross-shell prompt
+curl -sS https://starship.rs/install.sh | sh
+echo 'eval "$(starship init zsh)"' &gt;&gt; ~/.zshrc</code></pre></div>
+            </div>
+        </details>
+
+        <details class="task" data-task="u-cli">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Fast CLI tools (mind the renamed binaries)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="cmd"><span class="cmd-label">install</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo apt install -y ripgrep fd-find bat fzf zoxide jq btop
+# Debian/Ubuntu rename two of them to avoid clashes — alias them back:
+mkdir -p ~/.local/bin
+ln -sf "$(which fdfind)" ~/.local/bin/fd
+echo 'alias bat=batcat' &gt;&gt; ~/.zshrc
+echo 'eval "$(zoxide init zsh)"' &gt;&gt; ~/.zshrc      # adds the `z` smart-cd</code></pre></div>
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered mono small mb-0">
+                    <thead><tr><th>Tool</th><th>apt package</th><th>Binary you type</th><th>Gotcha</th></tr></thead>
+                    <tbody>
+                        <tr><td>ripgrep</td><td><code>ripgrep</code></td><td><code>rg</code></td><td>package ≠ command name</td></tr>
+                        <tr><td>fd</td><td><code>fd-find</code></td><td><code>fdfind</code></td><td>symlink to <code>fd</code> (name clash)</td></tr>
+                        <tr><td>bat</td><td><code>bat</code></td><td><code>batcat</code></td><td><code>alias bat=batcat</code></td></tr>
+                        <tr><td>eza (ls)</td><td>universe or gierens.de repo</td><td><code>eza</code></td><td>successor to deprecated <code>exa</code></td></tr>
+                        <tr><td>fzf / zoxide / jq / btop</td><td>same</td><td>same</td><td>—</td></tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 3 ============ -->
+    <section id="phase3" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 3</span><br>Python the right way — uv &amp; PEP 668</h2>
+
+        <details class="ref" open>
+            <summary><span class="t-title">⚠️ Why <code>sudo pip install</code> now fails (PEP 668)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">On Ubuntu 24.04+ the system Python is <strong>externally managed</strong>: <code>pip install requests</code> against it errors with <code>error: externally-managed-environment</code>. This is on purpose — pip and apt fighting over the same files used to silently break the OS.</p>
+                <div class="callout callout-danger mb-2"><strong>Never</strong> "fix" it with <code>sudo pip install --break-system-packages</code>. That bypasses the guard rail and can corrupt distro tooling (apt itself is written in Python). The correct answer is always a <strong>per-project virtual environment</strong>.</div>
+                <p class="mb-0">Three valid approaches: <code>uv</code> (recommended below), the stdlib <code>python3 -m venv</code>, or <code>pipx</code> for standalone CLI apps.</p>
+            </div>
+        </details>
+
+        <details class="task" data-task="u-uv">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Install uv — one tool for Python, venvs &amp; deps</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1"><strong>uv</strong> (by Astral, <em>v0.11.x as of mid-2026</em>) is a Rust-fast drop-in that replaces pip, virtualenv, pyenv, pip-tools, and pipx. It's the modern default for AI work — resolves and installs huge dep trees (torch, transformers) in seconds.</p>
+                <div class="cmd"><span class="cmd-label">install</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>curl -LsSf https://astral.sh/uv/install.sh | sh
+# restart your shell, then confirm:
+uv --version</code></pre></div>
+                <div class="cmd"><span class="cmd-label">daily workflow</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>uv python install 3.12        # download a CPython (replaces pyenv)
+uv init myproj &amp;&amp; cd myproj   # new project with pyproject.toml
+uv add torch transformers     # add deps + write uv.lock
+uv run python train.py        # run inside the project env (auto-synced)
+uv venv                       # just make a .venv in an existing project
+uv pip install -r requirements.txt   # pip-compatible interface
+uv tool install ruff          # install a CLI app isolated (pipx-style)
+uvx ruff check .              # run a tool ephemerally, no install</code></pre></div>
+                <div class="callout callout-info mb-0">Commit <code>uv.lock</code> for reproducible installs. <code>uv sync</code> recreates the exact env on another machine — gold for "works on my box" GPU repros.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="u-pipx">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">pipx &amp; deadsnakes (the alternatives)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="cmd"><span class="cmd-label">pipx — isolated Python CLI apps</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo apt install -y pipx
+pipx ensurepath          # adds ~/.local/bin to PATH; restart shell
+pipx install httpie      # each app gets its own venv</code></pre></div>
+                <div class="cmd"><span class="cmd-label">deadsnakes — extra Python versions (when uv won't do)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo add-apt-repository -y ppa:deadsnakes/ppa
+sudo apt update &amp;&amp; sudo apt install -y python3.11 python3.11-venv python3.11-dev</code></pre></div>
+                <div class="callout callout-warn mb-0"><strong>Skip conda</strong> unless a specific package demands it (rare now). Mixing conda's <code>base</code> with system Python/apt shadows binaries and breaks imports. If you must, never auto-activate <code>base</code> (<code>conda config --set auto_activate_base false</code>).</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 4 ============ -->
+    <section id="phase4" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 4</span><br>Node.js (for agent CLIs &amp; tooling)</h2>
+
+        <details class="task" data-task="u-node">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Install Node via nvm or fnm — not apt/snap</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Most agent CLIs (Claude Code, Gemini CLI, Codex) and JS tooling need Node. <strong>Node 24 "Krypton" is the active LTS as of mid-2026.</strong> Use a version manager so global <code>npm -g</code> doesn't need sudo (the cause of endless <code>EACCES</code> errors).</p>
+                <div class="cmd"><span class="cmd-label">nvm</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh | bash
+# restart shell, then:
+nvm install --lts &amp;&amp; nvm use --lts &amp;&amp; nvm alias default 'lts/*'
+node --version    # v24.x</code></pre></div>
+                <div class="cmd"><span class="cmd-label">fnm (faster Rust alternative)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>curl -fsSL https://fnm.vercel.app/install | bash
+fnm install --lts &amp;&amp; fnm use lts/latest</code></pre></div>
+                <div class="callout callout-warn mb-0"><strong>Avoid the snap/apt Node</strong> for development: apt pins an old major; snap confinement blocks access to some paths and breaks native toolchains.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 5 ============ -->
+    <section id="phase5" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 5</span><br>Docker Engine (the right repo, not snap)</h2>
+
+        <details class="task" data-task="u-docker">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Install Docker Engine + Compose v2 from Docker's repo</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Install <em>Docker Engine</em> (not the snap, not <code>docker.io</code>) using the current DEB822 <code>.sources</code> format. Docker Desktop is optional and separate.</p>
+                <div class="cmd"><span class="cmd-label">official apt install</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+sudo tee /etc/apt/sources.list.d/docker.sources &gt;/dev/null &lt;&lt;EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release &amp;&amp; echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io \
+                    docker-buildx-plugin docker-compose-plugin</code></pre></div>
+                <div class="cmd"><span class="cmd-label">run without sudo (root-equivalent — see note)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>sudo usermod -aG docker "$USER"
+newgrp docker            # or log out/in
+docker run hello-world
+docker compose version   # Compose v2 = `docker compose` (space), not docker-compose</code></pre></div>
+                <div class="callout callout-warn mb-0"><strong>The <code>docker</code> group = root.</strong> Anyone in it can mount the host FS as root via a container. On shared/exposed machines prefer <strong>rootless mode</strong>: <code>dockerd-rootless-setuptool.sh install</code> (needs <code>uidmap</code>).</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 6 ============ -->
+    <section id="phase6" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 6</span><br>NVIDIA GPU: driver, CUDA &amp; the container toolkit</h2>
+
+        <details class="task" data-task="u-driver">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Install the NVIDIA driver</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">The <strong>R595 production branch</strong> is current <em>(as of mid-2026)</em>; newer feature branches exist (R610). Let <code>ubuntu-drivers</code> pick the right one, then reboot. <strong>Skip this entirely in WSL2</strong> — the driver lives on the Windows host (Phase 9).</p>
+                <div class="cmd"><span class="cmd-label">auto-install best driver</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>ubuntu-drivers list                 # see candidates (add --gpgpu on servers)
+sudo ubuntu-drivers install         # autoinstall the recommended driver
+# or pin explicitly, e.g.:  sudo apt install -y nvidia-driver-595
+sudo reboot</code></pre></div>
+                <div class="cmd"><span class="cmd-label">verify after reboot</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>nvidia-smi    # header: Driver Version + max CUDA; table: per-GPU util/VRAM/processes</code></pre></div>
+                <div class="callout callout-info mb-0"><strong>Reading <code>nvidia-smi</code>:</strong> the "CUDA Version" in the header is the <em>maximum</em> the driver supports — not what's installed. <code>nvcc --version</code> shows the actual toolkit. The toolkit must be ≤ the driver's max.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="u-cuda">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">CUDA toolkit — usually you don't need the full install</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1"><strong>CUDA Toolkit 13.3</strong> is current <em>(as of mid-2026)</em>. But for most PyTorch/TensorFlow work you <em>don't</em> install the system CUDA toolkit at all — the framework wheels bundle the CUDA runtime; you only need the driver.</p>
+                <div class="cmd"><span class="cmd-label">install GPU PyTorch into a uv project (no system CUDA)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>uv venv &amp;&amp; uv add torch --torch-backend=auto
+uv run python -c "import torch; print(torch.cuda.is_available(), torch.version.cuda)"</code></pre></div>
+                <p class="mb-0 small text-secondary">Install the full toolkit (<code>nvcc</code>, headers) only when compiling custom CUDA kernels or building from source.</p>
+            </div>
+        </details>
+
+        <details class="task" data-task="u-nvctk">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">NVIDIA Container Toolkit — GPUs inside Docker</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">To use <code>--gpus all</code> in containers, install the container toolkit and point Docker's runtime at it.</p>
+                <div class="cmd"><span class="cmd-label">install + configure</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+  | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+  | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+  | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt update &amp;&amp; sudo apt install -y nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker</code></pre></div>
+                <div class="cmd"><span class="cmd-label">prove it works</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>docker run --rm --gpus all nvidia/cuda:13.3.0-base-ubuntu24.04 nvidia-smi</code></pre></div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 7 ============ -->
+    <section id="phase7" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 7</span><br>Local LLMs with Ollama</h2>
+
+        <details class="task" data-task="u-ollama">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Install Ollama &amp; run a model locally</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Ollama runs open-weight LLMs locally and serves an OpenAI-compatible REST API on <code>localhost:11434</code> — handy for offline coding agents, RAG, and privacy-sensitive work.</p>
+                <div class="cmd"><span class="cmd-label">install + use</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>curl -fsSL https://ollama.com/install.sh | sh
+ollama pull llama3.1            # download weights
+ollama run llama3.1            # interactive chat
+ollama list                    # what's installed
+# API: curl http://localhost:11434/api/generate -d '{"model":"llama3.1","prompt":"hi"}'</code></pre></div>
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-2">
+                    <thead><tr><th>Model size (~Q4)</th><th>Min RAM/VRAM (approx.)</th></tr></thead>
+                    <tbody>
+                        <tr><td>7–8B</td><td>~8 GB</td></tr>
+                        <tr><td>13–14B</td><td>~16 GB</td></tr>
+                        <tr><td>33–34B</td><td>~32 GB</td></tr>
+                        <tr><td>70B</td><td>~48–64 GB (community estimate)</td></tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="callout callout-warn mb-0"><strong>Disk warning:</strong> models land in <code>~/.ollama/models</code> and are multi-GB each. Audit with <code>du -sh ~/.ollama</code>; remove with <code>ollama rm &lt;model&gt;</code>. With no GPU, models run on CPU — slow but functional.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 8 ============ -->
+    <section id="phase8" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 8</span><br>AI coding agents &amp; editors</h2>
+
+        <details class="task" data-task="u-agents">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Install the agent CLIs</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">All run great on Ubuntu/WSL2. Need a paid account for the hosted models. Compare them in <a href="ai-coding-agents-compared.html">AI Coding Agents Compared</a>.</p>
+                <div class="cmd"><span class="cmd-label">Claude Code (Anthropic)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>curl -fsSL https://claude.ai/install.sh | bash      # native installer (recommended)
+# or via npm (needs Node 18+):  npm install -g @anthropic-ai/claude-code
+claude        # launch in your project dir</code></pre></div>
+                <div class="cmd"><span class="cmd-label">OpenAI Codex CLI · Google Gemini CLI · aider</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>npm install -g @openai/codex          # OpenAI Codex CLI
+npx @google/gemini-cli                 # Gemini CLI (needs Node 20+); or npm i -g @google/gemini-cli
+uv tool install aider-chat             # aider (open-source, bring-your-own API key)</code></pre></div>
+                <div class="callout callout-info mb-0">Prefer the <strong>native installers</strong> over <code>sudo npm -g</code> — they avoid permission issues and self-update. Keep API keys in your shell profile or a secrets manager, never in a committed file.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="u-editor">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">VS Code (+ Remote-SSH/WSL) or Cursor</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="cmd"><span class="cmd-label">VS Code (Microsoft apt repo)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>wget -qO- https://packages.microsoft.com/keys/microsoft.asc \
+  | sudo gpg --dearmor -o /usr/share/keyrings/microsoft.gpg
+sudo tee /etc/apt/sources.list.d/vscode.sources &gt;/dev/null &lt;&lt;'EOF'
+Types: deb
+URIs: https://packages.microsoft.com/repos/code
+Suites: stable
+Components: main
+Architectures: amd64,arm64,armhf
+Signed-By: /usr/share/keyrings/microsoft.gpg
+EOF
+sudo apt update &amp;&amp; sudo apt install -y code</code></pre></div>
+                <p class="mb-1"><strong>Cursor</strong> ships an official <code>.deb</code>/<code>.rpm</code>/AppImage (x64 + ARM64) from <a href="https://cursor.com/download" rel="noopener">cursor.com/download</a>; the <code>.deb</code> auto-updates via its own repo.</p>
+                <div class="callout callout-info mb-0"><strong>Develop on a remote/cloud GPU box</strong> with the <code>Remote-SSH</code> extension (or <code>WSL</code> extension for WSL2) — you edit locally while code, terminals, and the agent run on the remote machine.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ PHASE 9: WSL ============ -->
+    <section id="wsl" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Phase 9</span><br>WSL2 — Ubuntu on Windows 11</h2>
+
+        <details class="ref">
+            <summary><span class="t-title">Install, systemd, and the rules that matter</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="cmd"><span class="cmd-label">PowerShell (Windows)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>wsl --install -d Ubuntu-24.04     # installs WSL2 + Ubuntu
+wsl --update                       # keep the WSL kernel current
+wsl --shutdown                     # restart the WSL2 VM after config changes</code></pre></div>
+                <div class="cmd"><span class="cmd-label">/etc/wsl.conf (inside Ubuntu) — enable systemd if needed</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>[boot]
+systemd=true
+# then run `wsl --shutdown` in PowerShell and reopen</code></pre></div>
+                <ul class="mb-0">
+                    <li><strong>systemd</strong> is preset to <code>true</code> in the official Ubuntu WSL image, so <code>systemctl</code> works out of the box.</li>
+                    <li><strong>GPU just works</strong> — install the NVIDIA driver on <em>Windows only</em>; <code>nvidia-smi</code> runs in WSL via the host driver. Never install a Linux display driver inside WSL.</li>
+                    <li><strong>Filesystem performance:</strong> keep project files in the Linux ext4 FS (<code>~/</code>), <strong>not</strong> under <code>/mnt/c/...</code> — cross-OS access is dramatically slower (kills <code>git status</code>, installs, model loads).</li>
+                    <li><strong>localhost forwarding</strong> is on by default: a server on <code>:8000</code> in WSL is reachable at <code>localhost:8000</code> from Windows (unless you switch to mirrored networking).</li>
+                </ul>
+            </div>
+        </details>
+    </section>
+
+    <!-- ============ DISK & UPKEEP ============ -->
+    <section id="disk" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-hdd-fill text-accent"></i> Disk &amp; upkeep (AI boxes fill up fast)</h2>
+        <p>Model weights, datasets, Docker layers, and HF caches devour disk silently. Audit and reclaim regularly:</p>
+        <div class="cmd"><span class="cmd-label">find &amp; reclaim space</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>df -h /                                  # overall disk
+du -sh ~/.cache/huggingface ~/.ollama ~/.cache/uv 2>/dev/null   # usual culprits
+docker system df                          # docker images/volumes/build cache
+docker system prune -a --volumes          # reclaim (destructive — removes unused)
+sudo apt autoremove --purge -y &amp;&amp; sudo apt clean
+# move the HF cache to a bigger disk if needed:
+echo 'export HF_HOME=/data/hf' &gt;&gt; ~/.zshrc</code></pre></div>
+        <div class="callout callout-info mb-0">Set <code>HF_HOME</code> / <code>OLLAMA_MODELS</code> to a large data volume up front if your root partition is small (common on cloud GPU instances).</div>
+    </section>
+
+    <!-- ============ MISTAKES ============ -->
+    <section id="mistakes" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-bug-fill text-danger"></i> Common mistakes &amp; anti-patterns</h2>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="callout callout-danger h-100 mb-0"><strong><code>sudo pip install</code> / <code>--break-system-packages</code>.</strong> Bypasses PEP 668 and can break apt itself. Always use a venv (uv).</div></div>
+            <div class="col-md-6"><div class="callout callout-danger h-100 mb-0"><strong>One giant shared Python env.</strong> Dependency conflicts and silent breakage. One venv per project; commit <code>uv.lock</code>.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Installing dev tools via snap.</strong> Confinement blocks paths and toolchains (Docker, Node, browsers). Prefer apt repos / official installers.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Mixing conda <code>base</code> with system Python/apt.</strong> Shadowed binaries, broken imports. Disable <code>auto_activate_base</code> or skip conda.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Installing a Linux NVIDIA driver inside WSL.</strong> Breaks GPU passthrough. Driver belongs on the Windows host only.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Toolkit &gt; driver CUDA version.</strong> A CUDA toolkit newer than the driver's max (from <code>nvidia-smi</code>) won't run. Match them.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Project files in <code>/mnt/c</code> on WSL.</strong> 5–20× slower I/O. Keep code in the Linux home dir.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Ignoring disk until training crashes.</strong> HF/Ollama/Docker caches fill root. Audit with <code>docker system df</code> + <code>du -sh</code>.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Developing on an interim (non-LTS) release.</strong> 9-month support; ML wheels target the LTS. Stay on an LTS.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong><code>sudo npm install -g</code>.</strong> Permission hell (<code>EACCES</code>). Use nvm/fnm so globals live in your home dir.</div></div>
+        </div>
+    </section>
+
+    <footer class="text-secondary small border-top pt-3">
+        <p class="mb-1"><strong>Last verified: 2026-06-28.</strong> Targets Ubuntu 24.04.4 LTS (Noble) &amp; 26.04 LTS (Resolute Raccoon, released 2026-04-23). Version pins as of mid-2026: uv 0.11.x, Node 24 LTS "Krypton", NVIDIA R595 production driver, CUDA Toolkit 13.3, Python 3.12 (24.04) / 3.14 (26.04). Bootstrap 5.3.8. Re-verify version-sensitive commands against official docs before pinning. Read any <code>curl … | sh</code> installer before running.</p>
+        <p class="mb-0">AI-generated reference &middot; Part of <a href="https://cheatsheets.davidveksler.com/">David Veksler's Cheatsheets</a> &middot; pairs with <a href="linux-server-hardening.html">Linux Server Hardening</a> and <a href="ai-coding-agents-compared.html">AI Coding Agents Compared</a>.</p>
+    </footer>
+</main>
+
+<button class="btn btn-secondary backtop no-print" id="backTop" aria-label="Back to top" title="Back to top"><i class="bi bi-arrow-up"></i></button>
+<button class="btn btn-primary theme-toggle no-print" id="themeToggle" aria-label="Toggle dark mode"><i class="bi bi-moon-stars-fill" id="themeIcon"></i></button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script>
+(function () {
+    'use strict';
+    const STORE = 'ubuntu_ai_';
+
+    const html = document.documentElement;
+    const tBtn = document.getElementById('themeToggle');
+    const tIco = document.getElementById('themeIcon');
+    const applyTheme = (t) => {
+        html.setAttribute('data-bs-theme', t);
+        tIco.classList.toggle('bi-sun-fill', t === 'dark');
+        tIco.classList.toggle('bi-moon-stars-fill', t !== 'dark');
+    };
+    try {
+        const saved = localStorage.getItem(STORE + 'theme');
+        const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(saved || (sysDark ? 'dark' : 'light'));
+    } catch (e) { applyTheme('dark'); }
+    tBtn.addEventListener('click', () => {
+        const next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        try { localStorage.setItem(STORE + 'theme', next); } catch (e) {}
+    });
+
+    document.querySelectorAll('.cmd').forEach((block) => {
+        const btn = block.querySelector('.copy-btn');
+        const code = block.querySelector('pre');
+        if (!btn || !code) return;
+        btn.addEventListener('click', async () => {
+            const text = code.innerText;
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                const r = document.createRange(); r.selectNode(code);
+                const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+                try { document.execCommand('copy'); } catch (_) {}
+                s.removeAllRanges();
+            }
+            btn.classList.add('copied');
+            btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = '<i class="bi bi-clipboard"></i>';
+            }, 1400);
+        });
+    });
+
+    const tasks = Array.from(document.querySelectorAll('details.task'));
+    const bar = document.getElementById('progressBar');
+    const wrap = bar.closest('.progress');
+    const count = document.getElementById('progressCount');
+
+    const render = () => {
+        const done = tasks.filter(t => t.classList.contains('done')).length;
+        const total = tasks.length;
+        const pct = total ? Math.round(done / total * 100) : 0;
+        bar.style.width = pct + '%';
+        bar.textContent = pct + '%';
+        count.textContent = done + ' / ' + total;
+        wrap.setAttribute('aria-valuenow', pct);
+    };
+
+    tasks.forEach((t) => {
+        const key = STORE + (t.dataset.task || '');
+        const cb = t.querySelector('.task-check');
+        if (!cb) return;
+        let saved = false;
+        try { saved = localStorage.getItem(key) === '1'; } catch (e) {}
+        cb.checked = saved;
+        t.classList.toggle('done', saved);
+        cb.addEventListener('click', (e) => e.stopPropagation());
+        cb.addEventListener('change', () => {
+            t.classList.toggle('done', cb.checked);
+            try { localStorage.setItem(key, cb.checked ? '1' : '0'); } catch (e) {}
+            render();
+        });
+    });
+    render();
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        if (!confirm('Reset all setup progress on this device?')) return;
+        tasks.forEach((t) => {
+            const cb = t.querySelector('.task-check');
+            if (cb) cb.checked = false;
+            t.classList.remove('done');
+            try { localStorage.removeItem(STORE + (t.dataset.task || '')); } catch (e) {}
+        });
+        render();
+    });
+
+    const back = document.getElementById('backTop');
+    const onScroll = () => { back.style.display = window.scrollY > 600 ? 'flex' : 'none'; };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    back.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+})();
+</script>
+</body>
+</html>

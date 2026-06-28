@@ -58,6 +58,7 @@ $categoryMap = [
     'postgresql.html' => 'Software & DevOps',
     'python-for-architects.html' => 'Software & DevOps',
     'scrum.html' => 'Software & DevOps',
+    'ubuntu-linux-for-ai-developers.html' => 'Software & DevOps',
     'versioncontrol.html' => 'Software & DevOps',
 
     // Security & Privacy
