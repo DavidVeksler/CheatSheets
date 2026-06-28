@@ -63,6 +63,7 @@ $categoryMap = [
 
     // Security & Privacy
     'linux-server-hardening.html' => 'Security & Privacy',
+    'personal-cybersecurity.html' => 'Security & Privacy',
     'post-quantum-cryptography.html' => 'Security & Privacy',
     'privacy-data-broker-opt-out.html' => 'Security & Privacy',
 

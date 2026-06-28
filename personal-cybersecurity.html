@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Essential SEO Tags -->
+    <title>Personal Cybersecurity: A Practical Threat-Model Checklist</title>
+    <meta name="description" content="A practical, interactive personal cybersecurity checklist with saved progress: build a threat model, use a password manager, set up phishing-resistant MFA and passkeys, lock down your email and phone, encrypt devices, spot phishing and SIM-swap scams, freeze your credit, and respond to a breach. Reflects NIST SP 800-63B Rev. 4 (2025)."/>
+    <meta name="keywords" content="personal cybersecurity, password manager, passkeys, two-factor authentication, 2FA, MFA, phishing-resistant, SIM swap, NIST password guidelines, credit freeze, device encryption, online safety checklist, threat model, ransomware backup"/>
+    <link rel="canonical" href="https://cheatsheets.davidveksler.com/personal-cybersecurity.html"/>
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Personal Cybersecurity: A Practical Threat-Model Checklist"/>
+    <meta property="og:description" content="Interactive checklist with saved progress: password manager, phishing-resistant MFA and passkeys, email/phone lockdown, device encryption, phishing and SIM-swap defense, credit freeze, and breach response. NIST 800-63B Rev. 4 aligned."/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="https://cheatsheets.davidveksler.com/personal-cybersecurity.html"/>
+    <meta property="og:image" content="images/personal-cybersecurity.png"/>
+    <meta property="og:image:alt" content="Personal Cybersecurity checklist preview"/>
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Personal Cybersecurity: A Practical Threat-Model Checklist"/>
+    <meta name="twitter:description" content="Interactive checklist: password manager, phishing-resistant MFA and passkeys, email/phone lockdown, device encryption, phishing and SIM-swap defense, credit freeze, breach response."/>
+    <meta name="twitter:image" content="images/personal-cybersecurity.png"/>
+    <meta name="twitter:creator" content="@heroiclife"/>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Personal Cybersecurity: A Practical Threat-Model Checklist",
+      "description": "A practical, interactive personal cybersecurity checklist with saved progress covering threat modeling, password managers, phishing-resistant MFA and passkeys, email and phone lockdown, device encryption, phishing and SIM-swap defense, credit freezes, and breach response. Reflects NIST SP 800-63B Rev. 4 (2025).",
+      "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+      "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+      "datePublished": "2026-06-28",
+      "dateModified": "2026-06-28",
+      "keywords": "personal cybersecurity, password manager, passkeys, two-factor authentication, MFA, phishing-resistant, SIM swap, NIST password guidelines, credit freeze, device encryption"
+    }
+    </script>
+
+    <!-- Bootstrap 5.3.8 CSS (SRI-pinned) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Bootstrap Icons (SRI-pinned) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+
+    <style>
+    @layer base, components, utilities;
+
+    @layer base {
+        :root {
+            color-scheme: light dark;
+            --term-bg: #0d1117;
+            --term-border: #30363d;
+            --accent: #22d3ee;          /* cyan */
+            --accent-strong: #0891b2;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --ok: #22c55e;
+        }
+        body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding-bottom: 4rem; scroll-behavior: smooth; }
+        @media (prefers-reduced-motion: reduce) { body, * { scroll-behavior: auto !important; } }
+        h1, h2, h3 { text-wrap: balance; }
+        p, li { text-wrap: pretty; }
+        code { color: var(--accent); }
+        a { text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    }
+
+    @layer components {
+        .masthead { background: linear-gradient(135deg, rgba(34,211,238,0.15), rgba(13,17,23,0.05)); border-bottom: 1px solid var(--bs-border-color); }
+        .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+
+        .progress-wrap { position: sticky; top: 0; z-index: 1020; background: var(--bs-body-bg); border-bottom: 1px solid var(--bs-border-color); padding: .55rem 0; }
+        .progress { height: 1.35rem; }
+        .progress-bar { background: var(--accent-strong) !important; }
+
+        .cmd { position: relative; margin: .65rem 0; border: 1px solid var(--term-border); border-radius: .5rem; overflow: hidden; background: var(--term-bg); }
+        .cmd pre { margin: 0; padding: .85rem 3rem .85rem 1rem; overflow-x: auto; color: #e6edf3; font-size: .855rem; line-height: 1.5; }
+        .cmd pre code { color: #e6edf3; background: none; padding: 0; white-space: pre-wrap; }
+        .cmd .copy-btn { position: absolute; top: .45rem; right: .45rem; border: 1px solid var(--term-border); background: #21262d; color: #c9d1d9; border-radius: .375rem; padding: .15rem .5rem; font-size: .8rem; line-height: 1.4; cursor: pointer; }
+        .cmd .copy-btn:hover { background: #30363d; color: #fff; }
+        .cmd .copy-btn.copied { background: var(--ok); border-color: var(--ok); color: #04210f; }
+        .cmd-label { font-size: .7rem; letter-spacing: .04em; text-transform: uppercase; color: #8b949e; padding: .35rem .9rem; border-bottom: 1px solid var(--term-border); background: #161b22; display: block; }
+
+        details.task, details.ref { border: 1px solid var(--bs-border-color); border-radius: .6rem; margin-bottom: .85rem; background: var(--bs-tertiary-bg); overflow: clip; }
+        details.task > summary, details.ref > summary { list-style: none; cursor: pointer; display: flex; align-items: flex-start; gap: .75rem; padding: .85rem 1rem; }
+        details.task > summary::-webkit-details-marker, details.ref > summary::-webkit-details-marker { display: none; }
+        details.task > summary:hover, details.ref > summary:hover { background: var(--bs-secondary-bg); }
+        details.task[open] > summary, details.ref[open] > summary { border-bottom: 1px solid var(--bs-border-color); }
+        .task-body { padding: .35rem 1rem 1rem; }
+        .task .form-check-input { width: 1.4em; height: 1.4em; margin-top: .15em; flex: 0 0 auto; cursor: pointer; }
+        .task .form-check-input:checked { background-color: var(--accent-strong); border-color: var(--accent-strong); }
+        .task .t-title, .ref .t-title { font-weight: 600; flex: 1 1 auto; }
+        .ref .t-title { color: var(--accent); }
+        .chev { transition: transform .2s ease; color: var(--bs-secondary-color); flex: 0 0 auto; }
+        @media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
+        details[open] .chev { transform: rotate(180deg); }
+        .done .t-title { text-decoration: line-through; color: var(--bs-secondary-color); }
+
+        .callout { border-left: 4px solid var(--bs-border-color); border-radius: 0 .35rem .35rem 0; padding: .7rem 1rem; margin: .75rem 0; background: var(--bs-tertiary-bg); }
+        .callout-warn { border-left-color: var(--warn); background: rgba(245,158,11,.08); }
+        .callout-danger { border-left-color: var(--danger); background: rgba(239,68,68,.08); }
+        .callout-ok { border-left-color: var(--ok); background: rgba(34,197,94,.08); }
+        .callout-info { border-left-color: var(--accent); background: rgba(34,211,238,.10); }
+
+        .phase-tag { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+        .qref td, .qref th { vertical-align: top; }
+        .toc a { display: inline-block; padding: .15rem .1rem; }
+        .tier { font-weight: 700; }
+
+        .theme-toggle { position: fixed; bottom: 20px; right: 20px; z-index: 1030; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+        .backtop { position: fixed; bottom: 20px; right: 78px; z-index: 1030; border-radius: 50%; width: 48px; height: 48px; }
+    }
+
+    @layer utilities {
+        .text-accent { color: var(--accent) !important; }
+        @media print {
+            .no-print { display: none !important; }
+            details.task, details.ref { break-inside: avoid; border: 1px solid #ccc; }
+            details.task > .task-body, details.ref > .task-body { display: block !important; }
+            .cmd { background: #f6f8fa; } .cmd pre, .cmd pre code { color: #111; }
+            a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .8em; color: #555; }
+            body { padding: 0; }
+        }
+    }
+    </style>
+</head>
+<body>
+
+<header class="masthead py-4 mb-3">
+    <div class="container">
+        <div class="row align-items-center g-3">
+            <div class="col-lg-8">
+                <div class="phase-tag text-accent mb-1"><i class="bi bi-shield-lock-fill"></i> Threat-model first &middot; interactive &middot; saved progress</div>
+                <h1 class="display-6 fw-bold mb-1">Personal Cybersecurity</h1>
+                <p class="lead mb-0 text-secondary">A practical checklist to lock down your digital life — <strong>password manager</strong>, <strong>phishing-resistant MFA &amp; passkeys</strong>, email/phone lockdown, device encryption, phishing &amp; SIM-swap defense, credit freeze, and breach response. Ranked by impact, with progress saved on this device.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end no-print">
+                <button id="resetBtn" class="btn btn-outline-danger btn-sm"><i class="bi bi-arrow-counterclockwise"></i> Reset progress</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="progress-wrap no-print">
+    <div class="container d-flex align-items-center gap-3">
+        <span class="text-nowrap small fw-semibold"><i class="bi bi-shield-check text-accent"></i> Security checklist</span>
+        <div class="progress flex-grow-1" role="progressbar" aria-label="Personal security checklist completion" aria-valuemin="0" aria-valuemax="100">
+            <div id="progressBar" class="progress-bar" style="width:0%">0%</div>
+        </div>
+        <span id="progressCount" class="text-nowrap small text-secondary mono">0 / 0</span>
+    </div>
+</div>
+
+<main class="container my-4">
+
+    <div class="callout callout-info">
+        <strong><i class="bi bi-info-circle-fill"></i> How to use this page.</strong> Tick each item as you do it — progress saves in your browser (<code>localStorage</code>). You don't need everything; the list is ordered by impact, so the top few items block the overwhelming majority of real-world attacks (credential reuse, phishing, and account-takeover). Start there.
+    </div>
+    <div class="callout callout-warn">
+        <strong><i class="bi bi-bullseye"></i> Threat-model first.</strong> "Secure enough" depends on what you're protecting and from whom. A journalist, a crypto holder, and a retiree have different risks. Answer the five questions in <a href="#model">Step 0</a> before spending money or effort — most people are defending against <em>opportunistic, automated</em> attacks, not a targeted nation-state.
+    </div>
+
+    <!-- QUICK REFERENCE -->
+    <section id="quickref" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-lightning-charge-fill text-accent"></i> Quick Reference — biggest wins, in order</h2>
+        <div class="table-responsive">
+        <table class="table table-sm table-striped qref align-middle">
+            <thead><tr><th>#</th><th>Action</th><th>Why it matters</th></tr></thead>
+            <tbody>
+                <tr><td>1</td><td><strong>Password manager + unique password per site</strong></td><td>Kills credential stuffing — the #1 way accounts fall. One breach can't cascade.</td></tr>
+                <tr><td>2</td><td><strong>Phishing-resistant MFA</strong> (passkeys / hardware key) on critical accounts</td><td>Stops the password from being enough; passkeys can't be phished.</td></tr>
+                <tr><td>3</td><td><strong>Lock down email + phone</strong> (your recovery roots)</td><td>Whoever owns your email/number can reset everything else.</td></tr>
+                <tr><td>4</td><td><strong>Turn on automatic updates</strong> everywhere</td><td>Most breaches exploit known, already-patched bugs.</td></tr>
+                <tr><td>5</td><td><strong>Full-disk encryption + screen lock</strong> on every device</td><td>A lost/stolen laptop or phone becomes a non-event.</td></tr>
+                <tr><td>6</td><td><strong>Backups: 3-2-1, and test a restore</strong></td><td>The only real defense against ransomware and deletion.</td></tr>
+                <tr><td>7</td><td><strong>Freeze your credit</strong> at all 3 bureaus</td><td>Free; blocks new-account identity fraud. Thaw temporarily when needed.</td></tr>
+                <tr><td>8</td><td><strong>Learn the phishing tells &amp; the callback rule</strong></td><td>The human is the most-attacked layer; verify out-of-band.</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </section>
+
+    <!-- TOC -->
+    <nav class="toc callout callout-info no-print" aria-label="Section navigation">
+        <strong><i class="bi bi-list-ol"></i> Jump to:</strong>
+        <a href="#model">0 · Threat model</a> ·
+        <a href="#passwords">1 · Passwords</a> ·
+        <a href="#mfa">2 · MFA &amp; passkeys</a> ·
+        <a href="#recovery">3 · Email &amp; phone</a> ·
+        <a href="#devices">4 · Devices</a> ·
+        <a href="#network">5 · Network &amp; browsing</a> ·
+        <a href="#phishing">6 · Phishing &amp; scams</a> ·
+        <a href="#backups">7 · Backups</a> ·
+        <a href="#identity">8 · Identity &amp; money</a> ·
+        <a href="#breach">If you're breached</a> ·
+        <a href="#mistakes">Mistakes</a>
+    </nav>
+
+    <!-- STEP 0 — THREAT MODEL -->
+    <section id="model" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Step 0</span><br>Build your threat model</h2>
+        <details class="ref" open>
+            <summary><span class="t-title">The five questions</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <ol class="mb-2">
+                    <li><strong>What do I want to protect?</strong> (Assets: money, email, photos, identity, reputation, location, business data.)</li>
+                    <li><strong>Who do I want to protect it from?</strong> (Adversaries: scammers, an ex, a data broker, an employer, a stalker, organized crime, a government.)</li>
+                    <li><strong>How likely is it I'll need to?</strong> (Realistic risk, not movie scenarios.)</li>
+                    <li><strong>How bad are the consequences if I fail?</strong> (Recoverable annoyance vs. life-altering.)</li>
+                    <li><strong>How much trouble am I willing to go through?</strong> (Security you won't sustain isn't security.)</li>
+                </ol>
+                <div class="callout callout-info mb-0"><strong>Most people's real adversary is automation:</strong> bots replaying leaked passwords, mass phishing, and SIM-swap fraud. Defending against that is cheap and high-leverage. Targeted attacks (a determined human after <em>you</em> specifically) need a different, heavier playbook — know which one you're in. Framework adapted from the EFF's <em>Surveillance Self-Defense</em>.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- PHASE 1 — PASSWORDS -->
+    <section id="passwords" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Step 1</span><br>Passwords &amp; a password manager</h2>
+
+        <details class="task" data-task="c-pwmgr">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Adopt a password manager</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">This is the single highest-leverage move. It generates and remembers a <strong>unique, random password for every site</strong>, so one site's breach can't unlock the others. You only memorize <strong>one</strong> strong master password.</p>
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-2">
+                    <thead><tr><th>Manager</th><th>Cost (as of mid-2026)</th><th>Notes</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Bitwarden</strong></td><td>Free (unlimited, multi-device); Premium ~$10/yr</td><td>Open-source, audited, self-host option. The best default for most people.</td></tr>
+                        <tr><td><strong>1Password</strong></td><td>~$3/mo individual ($35.88/yr); Family ~$4.99/mo</td><td>Most polished UX; Watchtower alerts, Travel Mode. (Raised prices ~33% in Mar 2026.)</td></tr>
+                        <tr><td><strong>Proton Pass</strong></td><td>Free tier; paid bundles with Proton</td><td>Privacy-focused; built-in email aliases.</td></tr>
+                        <tr><td><strong>KeePassXC</strong></td><td>Free, open-source</td><td>Local-only file; you control sync. Maximum control, more manual.</td></tr>
+                        <tr><td>Apple Passwords / Google Password Manager</td><td>Free, built-in</td><td>Fine if you live in one ecosystem; both now do passkeys.</td></tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="callout callout-warn mb-0"><strong>Make the master password strong &amp; unique</strong> — it's the one key to everything. Use a long passphrase (4–6 random words), never reuse it, and protect the manager account itself with MFA (Step 2). Don't store the master password <em>in</em> the manager.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="c-unique">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Make every password unique (kill reuse)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Reused passwords are how one leak becomes ten hacked accounts ("credential stuffing"). Let the manager generate 16+ random characters per site. Prioritize changing reused passwords on your <strong>email, bank, and any account tied to money</strong> first.</p>
+                <div class="callout callout-info mb-0">Use your manager's built-in audit (Bitwarden "Reports," 1Password "Watchtower") to find reused, weak, and breached passwords, then fix them in priority order.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="c-nist">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Follow modern password rules (length &gt; complexity)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">The current standard is <strong>NIST SP 800-63B Revision 4</strong> (finalized July 2025). It overturns the old "change it every 90 days, add symbols" advice:</p>
+                <ul class="mb-0">
+                    <li><strong>Length beats complexity.</strong> A long passphrase (e.g. <code>correct-horse-battery-staple-46</code>) is stronger and more memorable than <code>P@ss1!</code>. NIST recommends ≥15 characters where a password is the only factor; aim long.</li>
+                    <li><strong>No forced periodic rotation.</strong> Change passwords only when there's evidence of compromise — scheduled rotation just produces weaker, patterned passwords.</li>
+                    <li><strong>No arbitrary composition rules.</strong> NIST now says systems "shall not" force special-character/upper-lower mixes.</li>
+                    <li><strong>Screen against breached lists.</strong> Avoid any password that's appeared in a leak — your manager and many sites check this automatically.</li>
+                </ul>
+            </div>
+        </details>
+    </section>
+
+    <!-- PHASE 2 — MFA -->
+    <section id="mfa" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Step 2</span><br>MFA &amp; passkeys — not all factors are equal</h2>
+
+        <details class="ref" open>
+            <summary><span class="t-title">The MFA tier list (use the strongest each site offers)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-2">
+                    <thead><tr><th>Method</th><th>Strength</th><th>Weakness</th></tr></thead>
+                    <tbody>
+                        <tr><td class="tier text-success">Passkey (FIDO2/WebAuthn)</td><td>Best. Phishing-resistant — cryptographically bound to the real site; no shared secret to steal.</td><td>Recovery/sync model varies; still rolling out everywhere.</td></tr>
+                        <tr><td class="tier text-success">Hardware security key (e.g. YubiKey)</td><td>Phishing-resistant; ideal for high-value accounts.</td><td>Costs money; <strong>buy two</strong> (a backup) or you can lock yourself out.</td></tr>
+                        <tr><td class="tier text-warning">Authenticator app (TOTP)</td><td>Good. 6-digit codes from Aegis/Ente/Google Authenticator. No phone-number dependency.</td><td>Phishable in real time (you can be tricked into typing the code into a fake site). Back up the seeds.</td></tr>
+                        <tr><td class="tier text-warning">Push approval</td><td>Convenient; "approve on phone."</td><td>"MFA fatigue" — attackers spam prompts hoping you tap approve. Prefer number-matching.</td></tr>
+                        <tr><td class="tier text-danger">Email code</td><td>Better than nothing.</td><td>Only as strong as your email account.</td></tr>
+                        <tr><td class="tier text-danger">SMS text code</td><td>Weakest MFA — but still better than none.</td><td><strong>SIM-swap</strong> &amp; SS7 interception. FBI IC3 logged 982 SIM-swap complaints and &gt;$26M losses in 2024 alone.</td></tr>
+                    </tbody>
+                </table>
+                </div>
+                <p class="mb-0 small text-secondary">Rule of thumb: turn on the <em>strongest</em> option each account supports, and keep a second factor as backup. Any MFA beats none.</p>
+            </div>
+        </details>
+
+        <details class="task" data-task="c-passkeys">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Set up passkeys / an authenticator app on critical accounts</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Enable the best available factor on your <strong>email, password manager, bank, primary cloud (Apple/Google/Microsoft), and any account holding money</strong>. Passkeys are now broadly supported (Google, Apple, Microsoft, Amazon, and hundreds more); consumer awareness hit ~90% in 2026.</p>
+                <ul class="mb-0">
+                    <li><strong>Passkeys</strong> can sync via your platform or password manager (convenient) or be device-bound (more locked-down).</li>
+                    <li>If passkeys aren't offered, use a <strong>TOTP authenticator app</strong>, not SMS. Pick one that lets you <strong>export/back up the seeds</strong> (Aegis, Ente Auth, 2FAS) so a lost phone isn't a lockout.</li>
+                </ul>
+            </div>
+        </details>
+
+        <details class="task" data-task="c-recoverycodes">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Save backup/recovery codes offline</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-0">When you turn on MFA, each service shows one-time <strong>recovery codes</strong>. Save them somewhere offline you'll actually find later — printed in a drawer, in a fireproof safe, or in an encrypted note <em>separate</em> from the account they unlock. This is the difference between "lost my phone" and "lost the account forever."</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- PHASE 3 — RECOVERY -->
+    <section id="recovery" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Step 3</span><br>Email &amp; phone — the keys to the kingdom</h2>
+
+        <details class="task" data-task="c-email">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Harden your primary email like a vault</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Almost every "forgot password" flow sends to your email — so your inbox is the master key. Give it your <strong>strongest unique password + phishing-resistant MFA</strong>, and review which apps/devices have access.</p>
+                <div class="callout callout-info mb-0">Consider a <strong>separate, secret recovery email</strong> that you never use publicly and that isn't your day-to-day address — so a compromise of one doesn't cascade. Periodically check account "security activity"/sign-in history.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="c-simpin">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Add a carrier PIN / port-out lock (anti-SIM-swap)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">SIM swapping lets a fraudster move your number to their SIM and intercept SMS codes. Call your carrier (or use the app) to set a <strong>port-out PIN / Number Lock / SIM-protection</strong> so your number can't be transferred without it.</p>
+                <div class="callout callout-warn mb-0">Then <strong>stop using SMS as your main 2FA</strong> wherever a better option exists, and don't tie critical recovery to your phone number. Major US carriers all offer some form of port-freeze — turn it on today.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- PHASE 4 — DEVICES -->
+    <section id="devices" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Step 4</span><br>Devices — updates, encryption, locks</h2>
+
+        <details class="task" data-task="c-updates">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Turn on automatic updates everywhere</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-0">OS, browser, apps, and your router/firmware. The vast majority of real-world compromises exploit <strong>known vulnerabilities that were already patched</strong> — auto-update closes that window without willpower. Replace devices that no longer get security updates (out-of-support phones, ancient routers).</p>
+            </div>
+        </details>
+
+        <details class="task" data-task="c-encrypt">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Enable full-disk encryption + a strong screen lock</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Encryption makes a lost or stolen device unreadable. Turn it on and set a real lock (6+ digit PIN or biometric), with a short auto-lock timeout.</p>
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead><tr><th>Platform</th><th>Encryption</th><th>Find/wipe</th></tr></thead>
+                    <tbody>
+                        <tr><td>macOS</td><td>FileVault (on by default on Apple Silicon)</td><td>Find My</td></tr>
+                        <tr><td>Windows</td><td>BitLocker / Device Encryption</td><td>Find My Device</td></tr>
+                        <tr><td>Linux</td><td>LUKS (at install)</td><td>—</td></tr>
+                        <tr><td>iOS / Android</td><td>On by default with a passcode set</td><td>Find My / Find My Device — enable remote wipe</td></tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </details>
+
+        <details class="task" data-task="c-apps">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Prune apps, extensions &amp; permissions</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-0">Install software only from official stores/sources. Periodically review app permissions (location, mic, camera, contacts) and revoke what's unneeded. Browser extensions are a common malware/data-theft vector — keep only ones you trust and use; a sold/hijacked extension can read everything you do.</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- PHASE 5 — NETWORK -->
+    <section id="network" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Step 5</span><br>Network &amp; browsing</h2>
+
+        <details class="task" data-task="c-router">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Secure your home router &amp; Wi-Fi</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <ul class="mb-0">
+                    <li>Change the <strong>default admin password</strong>; update firmware (enable auto-update if available).</li>
+                    <li>Use <strong>WPA3</strong> (or WPA2 at minimum) with a strong Wi-Fi passphrase.</li>
+                    <li>Put IoT/smart-home gadgets and guests on a <strong>separate guest/VLAN network</strong> so a hacked smart bulb can't reach your laptop.</li>
+                    <li>Disable WPS and remote admin from the internet.</li>
+                </ul>
+            </div>
+        </details>
+
+        <details class="task" data-task="c-browse">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Browser hygiene + a tracker/ad blocker</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Keep the browser updated; use a reputable content blocker (e.g. uBlock Origin) — malvertising is a real infection route. Let the password manager autofill (it won't fill a fake domain, which doubles as phishing protection).</p>
+                <div class="callout callout-warn mb-0"><strong>VPN reality check:</strong> a VPN hides your traffic from the local network/ISP and your IP from sites — useful on untrusted Wi-Fi or to shift trust. It does <em>not</em> make you anonymous, stop malware, or replace MFA, and a free VPN often monetizes your data. HTTPS already encrypts the content of nearly all sites. Buy a VPN for a specific reason, not as a magic shield.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- PHASE 6 — PHISHING -->
+    <section id="phishing" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Step 6</span><br>Phishing &amp; social engineering — the human layer</h2>
+
+        <details class="task" data-task="c-phish">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Learn the tells &amp; the callback rule</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">Most successful attacks start with a message, not malware. The common levers are <strong>urgency, fear, authority, and a too-good offer</strong>. Train these reflexes:</p>
+                <ul class="mb-2">
+                    <li><strong>Urgency = slow down.</strong> "Act now or your account is locked" is the oldest trick.</li>
+                    <li><strong>Never click links in unexpected messages.</strong> Navigate to the site yourself or use a saved bookmark.</li>
+                    <li><strong>Verify out-of-band (the callback rule).</strong> "Your bank/CEO/family" calling or texting? Hang up and call the number <em>you</em> have, not the one they gave.</li>
+                    <li><strong>Never read an MFA code to anyone.</strong> No legitimate company asks for your one-time code; that's an account-takeover in progress.</li>
+                    <li><strong>Deny unexpected MFA push prompts</strong> — a prompt you didn't trigger means someone has your password. Deny, then change it.</li>
+                </ul>
+                <div class="callout callout-danger mb-0"><strong>2026 escalation:</strong> AI voice-cloning powers "family emergency" and fake-boss scams — a familiar voice is no longer proof. Agree on a <strong>family code word</strong> for emergencies, and verify money/gift-card/crypto requests through a second channel, always.</div>
+            </div>
+        </details>
+    </section>
+
+    <!-- PHASE 7 — BACKUPS -->
+    <section id="backups" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Step 7</span><br>Backups — your ransomware insurance</h2>
+
+        <details class="task" data-task="c-backup">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Follow 3-2-1 and test a restore</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <div class="callout callout-ok mb-2"><strong>3-2-1 rule:</strong> <strong>3</strong> copies of important data, on <strong>2</strong> different media, with <strong>1</strong> off-site (or offline/immutable). Ransomware and deletion are what backups defend against — and the only thing that truly does.</div>
+                <p class="mb-0">Automate it (Time Machine, File History, Backblaze, or an encrypted cloud), and keep at least one copy the malware can't reach — an unplugged drive or an immutable/object-lock cloud. <strong>A backup you've never restored is a hypothesis</strong>: do a test restore of a few files now. (More in <a href="linux-server-hardening.html">Linux Server Hardening</a> for servers.)</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- PHASE 8 — IDENTITY -->
+    <section id="identity" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag text-accent">Step 8</span><br>Identity &amp; money</h2>
+
+        <details class="task" data-task="c-freeze">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Freeze your credit (free, high-impact)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-1">A credit freeze blocks new lenders from pulling your credit, which stops most new-account identity fraud. In the US it's <strong>free</strong> and you must freeze at <strong>all three bureaus</strong> (Equifax, Experian, TransUnion); thaw temporarily (with a PIN) when you apply for credit.</p>
+                <div class="callout callout-info mb-0">Also turn on transaction alerts at your bank/cards, and consider a freeze for your kids (a common, long-undetected fraud target). Outside the US, check your local credit-reference agencies for the equivalent.</div>
+            </div>
+        </details>
+
+        <details class="task" data-task="c-hibp">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Check for past breaches &amp; set alerts</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-0">Search your emails at <strong>Have I Been Pwned</strong> (haveibeenpwned.com) and subscribe to its alerts. For any hit, change that account's password (and anywhere you reused it) and confirm MFA is on. Your password manager likely flags breached logins too.</p>
+            </div>
+        </details>
+
+        <details class="task" data-task="c-footprint">
+            <summary><input class="form-check-input task-check" type="checkbox"><span class="t-title">Shrink your exposed data footprint</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="task-body">
+                <p class="mb-0">Less public data = fewer answers for "security questions" and social engineering. Lock down social-media privacy, avoid posting answers to common security questions (pet, school, mother's maiden name), and remove yourself from data brokers — see the dedicated <a href="privacy-data-broker-opt-out.html">Data Broker Opt-Out</a> guide. Use email aliases for signups so one leak doesn't expose your real address.</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- IF YOU'RE BREACHED -->
+    <section id="breach" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-exclamation-octagon-fill text-danger"></i> If you've been breached — triage</h2>
+        <p>Work in order; speed limits the damage.</p>
+        <div class="cmd"><span class="cmd-label">incident checklist (copy &amp; work top-down)</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>1. From a CLEAN device, change the password on the affected account + your EMAIL first.
+2. Revoke active sessions / "sign out everywhere," and remove unknown devices & app passwords.
+3. Turn on (or re-issue) MFA; regenerate recovery codes.
+4. Change the password anywhere you reused the old one.
+5. Money involved? Call the bank/card, freeze cards, freeze credit at all 3 bureaus.
+6. Check email forwarding rules & filters (attackers add hidden auto-forwards).
+7. Scan the device for malware; if unsure it's clean, back up data and reinstall the OS.
+8. Document dates/times; report (IC3.gov in the US, your bank, the platform).
+9. Watch statements & credit for 6-12 months; consider an identity-theft report/affidavit.</code></pre></div>
+        <div class="callout callout-warn mb-0"><strong>Why email first:</strong> if the attacker controls your inbox, they can reset every other reset you attempt. Secure the recovery root before chasing individual accounts.</div>
+    </section>
+
+    <!-- MISTAKES -->
+    <section id="mistakes" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-bug-fill text-danger"></i> Common mistakes &amp; anti-patterns</h2>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="callout callout-danger h-100 mb-0"><strong>Reusing one password everywhere.</strong> One breach unlocks everything. Unique + manager.</div></div>
+            <div class="col-md-6"><div class="callout callout-danger h-100 mb-0"><strong>SMS as your only 2FA on critical accounts.</strong> SIM-swappable. Use passkeys/keys/TOTP.</div></div>
+            <div class="col-md-6"><div class="callout callout-danger h-100 mb-0"><strong>Reading an MFA code to a "support agent."</strong> That's the attack. Never share one-time codes.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Approving MFA prompts you didn't start.</strong> Deny + change password — someone has it.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>No backup, or never testing one.</strong> Ransomware/deletion is unrecoverable without it. 3-2-1 + restore test.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Forced 90-day password changes.</strong> Outdated; produces weaker patterns. Change on compromise only.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Treating a VPN as total security.</strong> It's not anonymity or anti-malware. Buy it for a reason.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Clicking links in "urgent" messages.</strong> Navigate yourself; verify out-of-band.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Ignoring updates.</strong> Known, patched bugs are most attackers' entire toolkit.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>No recovery codes saved.</strong> A lost phone becomes a permanent lockout. Store them offline.</div></div>
+        </div>
+    </section>
+
+    <footer class="text-secondary small border-top pt-3">
+        <p class="mb-1"><strong>Last verified: 2026-06-28.</strong> Password guidance reflects NIST SP 800-63B Rev. 4 (final, July 2025). SIM-swap figures: FBI IC3 (2024). Passkey adoption: FIDO Alliance 2026 reporting. Threat-model framing adapted from the EFF's <em>Surveillance Self-Defense</em>. Prices (password managers) are as of mid-2026 and change. Bootstrap 5.3.8.</p>
+        <p class="mb-0">AI-generated reference &middot; educational, not professional security advice &middot; Part of <a href="https://cheatsheets.davidveksler.com/">David Veksler's Cheatsheets</a> &middot; see also <a href="privacy-data-broker-opt-out.html">Data Broker Opt-Out</a> and <a href="linux-server-hardening.html">Linux Server Hardening</a>.</p>
+    </footer>
+</main>
+
+<button class="btn btn-secondary backtop no-print" id="backTop" aria-label="Back to top" title="Back to top"><i class="bi bi-arrow-up"></i></button>
+<button class="btn btn-primary theme-toggle no-print" id="themeToggle" aria-label="Toggle dark mode"><i class="bi bi-moon-stars-fill" id="themeIcon"></i></button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script>
+(function () {
+    'use strict';
+    const STORE = 'pcyber_';
+
+    const html = document.documentElement;
+    const tBtn = document.getElementById('themeToggle');
+    const tIco = document.getElementById('themeIcon');
+    const applyTheme = (t) => {
+        html.setAttribute('data-bs-theme', t);
+        tIco.classList.toggle('bi-sun-fill', t === 'dark');
+        tIco.classList.toggle('bi-moon-stars-fill', t !== 'dark');
+    };
+    try {
+        const saved = localStorage.getItem(STORE + 'theme');
+        const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(saved || (sysDark ? 'dark' : 'light'));
+    } catch (e) { applyTheme('dark'); }
+    tBtn.addEventListener('click', () => {
+        const next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        try { localStorage.setItem(STORE + 'theme', next); } catch (e) {}
+    });
+
+    document.querySelectorAll('.cmd').forEach((block) => {
+        const btn = block.querySelector('.copy-btn');
+        const code = block.querySelector('pre');
+        if (!btn || !code) return;
+        btn.addEventListener('click', async () => {
+            const text = code.innerText;
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                const r = document.createRange(); r.selectNode(code);
+                const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+                try { document.execCommand('copy'); } catch (_) {}
+                s.removeAllRanges();
+            }
+            btn.classList.add('copied');
+            btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = '<i class="bi bi-clipboard"></i>';
+            }, 1400);
+        });
+    });
+
+    const tasks = Array.from(document.querySelectorAll('details.task'));
+    const bar = document.getElementById('progressBar');
+    const wrap = bar.closest('.progress');
+    const count = document.getElementById('progressCount');
+
+    const render = () => {
+        const done = tasks.filter(t => t.classList.contains('done')).length;
+        const total = tasks.length;
+        const pct = total ? Math.round(done / total * 100) : 0;
+        bar.style.width = pct + '%';
+        bar.textContent = pct + '%';
+        count.textContent = done + ' / ' + total;
+        wrap.setAttribute('aria-valuenow', pct);
+    };
+
+    tasks.forEach((t) => {
+        const key = STORE + (t.dataset.task || '');
+        const cb = t.querySelector('.task-check');
+        if (!cb) return;
+        let saved = false;
+        try { saved = localStorage.getItem(key) === '1'; } catch (e) {}
+        cb.checked = saved;
+        t.classList.toggle('done', saved);
+        cb.addEventListener('click', (e) => e.stopPropagation());
+        cb.addEventListener('change', () => {
+            t.classList.toggle('done', cb.checked);
+            try { localStorage.setItem(key, cb.checked ? '1' : '0'); } catch (e) {}
+            render();
+        });
+    });
+    render();
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        if (!confirm('Reset all checklist progress on this device?')) return;
+        tasks.forEach((t) => {
+            const cb = t.querySelector('.task-check');
+            if (cb) cb.checked = false;
+            t.classList.remove('done');
+            try { localStorage.removeItem(STORE + (t.dataset.task || '')); } catch (e) {}
+        });
+        render();
+    });
+
+    const back = document.getElementById('backTop');
+    const onScroll = () => { back.style.display = window.scrollY > 600 ? 'flex' : 'none'; };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    back.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+})();
+</script>
+</body>
+</html>
