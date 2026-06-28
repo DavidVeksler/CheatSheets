@@ -100,6 +100,7 @@ $categoryMap = [
     'human-skeleton.html' => 'Health & Fitness',
     'medical-school-curriculum.html' => 'Health & Fitness',
     'running.html' => 'Health & Fitness',
+    'sleep-optimization.html' => 'Health & Fitness',
     'strength-training.html' => 'Health & Fitness',
     'veterinary-diagnostics.html' => 'Health & Fitness',
     'weight-loss-levers.html' => 'Health & Fitness',
