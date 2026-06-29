@@ -961,6 +961,35 @@ if (is_readable($popularityFile)) {
         const noResultsMessage = document.getElementById('noResults');
         const items = grid ? Array.from(grid.querySelectorAll('.portfolio-item')) : [];
 
+        // --- URL sync helpers ---
+        const SORT_DEFAULT = 'date-desc';
+        function syncToURL() {
+            const params = new URLSearchParams();
+            const q = filterInput ? filterInput.value.trim() : '';
+            const cat = categorySelect ? categorySelect.value : '';
+            const sort = sortSelect ? sortSelect.value : SORT_DEFAULT;
+            if (q)   params.set('q', q);
+            if (cat) params.set('cat', cat);
+            if (sort && sort !== SORT_DEFAULT) params.set('sort', sort);
+            const qs = params.toString();
+            history.replaceState(null, '', qs ? '?' + qs : location.pathname);
+        }
+
+        function initFromURL() {
+            const params = new URLSearchParams(location.search);
+            if (filterInput && params.has('q'))   filterInput.value = params.get('q');
+            if (categorySelect && params.has('cat')) {
+                const opt = Array.from(categorySelect.options).find(o => o.value === params.get('cat'));
+                if (opt) categorySelect.value = params.get('cat');
+            }
+            if (sortSelect && params.has('sort')) {
+                const opt = Array.from(sortSelect.options).find(o => o.value === params.get('sort'));
+                if (opt) sortSelect.value = params.get('sort');
+            }
+        }
+
+        initFromURL();
+
         if (sortSelect && grid && items.length > 0) {
             const sortItems = function() {
                 const mode = sortSelect.value;
@@ -982,8 +1011,11 @@ if (is_readable($popularityFile)) {
                     }
                 });
                 sorted.forEach(item => grid.appendChild(item));
+                syncToURL();
             };
             sortSelect.addEventListener('change', sortItems);
+            // Apply initial sort from URL on load
+            if (sortSelect.value !== SORT_DEFAULT) sortItems();
         }
 
         if (filterInput && grid && items.length > 0) {
@@ -1010,10 +1042,13 @@ if (is_readable($popularityFile)) {
                     }
                 });
                 noResultsMessage.classList.toggle('d-none', itemsVisible > 0);
+                syncToURL();
             };
 
             filterInput.addEventListener('input', applyFilters);
             if (categorySelect) categorySelect.addEventListener('change', applyFilters);
+            // Apply initial filters from URL on load
+            if (filterInput.value || (categorySelect && categorySelect.value)) applyFilters();
         } else if (filterInput) {
              filterInput.disabled = true;
              filterInput.placeholder = "No cheatsheets available to filter.";
