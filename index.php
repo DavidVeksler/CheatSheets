@@ -226,6 +226,19 @@ function extractRawMetadata(string $filepath, int $mtime): array {
     return $raw;
 }
 
+// --- Helper Function: Get the git timestamp when a file was first committed ---
+// Returns 0 if git is unavailable or the file is untracked; caller falls back to mtime.
+// Result is immutable once a file is committed, so it is cached indefinitely.
+function getGitCreationTime(string $filepath): int {
+    $dir = realpath(dirname($filepath)) ?: dirname($filepath);
+    $file = basename($filepath);
+    // --diff-filter=A: only the commit that added the file; --follow: handle renames
+    $cmd = 'git -C ' . escapeshellarg($dir) . ' log --follow --diff-filter=A --format=%ct -- ' . escapeshellarg($file);
+    $output = [];
+    @exec($cmd, $output);
+    return isset($output[0]) && ctype_digit(trim($output[0])) ? (int)$output[0] : 0;
+}
+
 // --- Helper Function: Resolve cached raw metadata into request-specific URLs ---
 function resolveMetadata(array $raw, string $filename): array {
     global $baseUrl, $scheme, $host;
@@ -310,20 +323,30 @@ try {
         $seenFiles[$file] = true;
         $mtime = @filemtime($filePath) ?: 0;
 
+        // Preserve git_ctime across mtime invalidations — it is immutable once committed.
+        $cachedGitCtime = $cache[$file]['git_ctime'] ?? null;
+
         // Reuse cached raw metadata only if the file hasn't changed since it was cached.
         if (isset($cache[$file]) && ($cache[$file]['mtime'] ?? null) === $mtime) {
             $raw = $cache[$file];
         } else {
             $raw = extractRawMetadata($filePath, $mtime);
-            $cache[$file] = $raw;
             $cacheDirty = true;
         }
+
+        // git_ctime: fetch once and keep forever (first commit timestamp).
+        if (!isset($raw['git_ctime'])) {
+            $raw['git_ctime'] = $cachedGitCtime ?? getGitCreationTime($filePath);
+            $cacheDirty = true;
+        }
+        $cache[$file] = $raw;
 
         if (!empty($raw['error'])) {
             $errors[] = $raw['error'];
             continue;
         }
         $meta = resolveMetadata($raw, $file);
+        $meta['git_ctime'] = $raw['git_ctime'] ?? 0;
         $meta['category'] = $categoryMap[$file] ?? 'Other';
         $catStyle = $categoryStyles[$meta['category']] ?? $categoryStyles['Other'];
         $meta['cat_color'] = $catStyle['color'];
@@ -344,8 +367,8 @@ try {
         @file_put_contents($cacheFile, json_encode($cache), LOCK_EX);
     }
 
-    // Sort cheatsheets by newest edit date first by default
-    usort($cheatsheets, fn($a, $b) => $b['mtime'] <=> $a['mtime']);
+    // Sort by git creation date (first commit) newest first by default
+    usort($cheatsheets, fn($a, $b) => ($b['git_ctime'] ?? 0) <=> ($a['git_ctime'] ?? 0));
 
     // Distinct categories for the filter dropdown (alphabetical, "Other" last)
     $categories = array_values(array_unique(array_column($cheatsheets, 'category')));
@@ -769,6 +792,7 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
                         <label class="input-group-text bg-white border-end-0 text-primary" for="sortSelect"><i class="bi bi-sort-down"></i></label>
                         <select id="sortSelect" class="form-select border-start-0" aria-label="Sort cheatsheets">
                             <option value="date-desc" selected>Newest first</option>
+                            <option value="recently-updated">Recently updated</option>
                             <option value="date-asc">Oldest first</option>
                             <option value="title-asc">Title (A–Z)</option>
                             <option value="title-desc">Title (Z–A)</option>
@@ -798,7 +822,7 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
 
             <div id="cheatsheetGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                 <?php foreach ($cheatsheets as $sheet): ?>
-                    <div class="col portfolio-item" data-title="<?php echo htmlspecialchars($sheet['title']); ?>" data-mtime="<?php echo (int)$sheet['mtime']; ?>" data-category="<?php echo htmlspecialchars($sheet['category']); ?>">
+                    <div class="col portfolio-item" data-title="<?php echo htmlspecialchars($sheet['title']); ?>" data-mtime="<?php echo (int)$sheet['mtime']; ?>" data-git-ctime="<?php echo (int)($sheet['git_ctime'] ?? 0); ?>" data-category="<?php echo htmlspecialchars($sheet['category']); ?>">
                         <article class="card shadow-sm" style="--cat-color: <?php echo htmlspecialchars($sheet['cat_color']); ?>; --cat-bg: <?php echo htmlspecialchars($sheet['cat_bg']); ?>;">
                             <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="card-img-top-container" aria-label="Open <?php echo htmlspecialchars($sheet['title']); ?>">
                                 <i class="bi <?php echo htmlspecialchars($sheet['cat_icon']); ?> cat-placeholder-icon" aria-hidden="true"></i>
@@ -924,9 +948,11 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
                         case 'title-desc':
                             return b.dataset.title.localeCompare(a.dataset.title, undefined, { sensitivity: 'base' });
                         case 'date-desc':
-                            return (Number(b.dataset.mtime) || 0) - (Number(a.dataset.mtime) || 0);
+                            return (Number(b.dataset.gitCtime) || 0) - (Number(a.dataset.gitCtime) || 0);
                         case 'date-asc':
-                            return (Number(a.dataset.mtime) || 0) - (Number(b.dataset.mtime) || 0);
+                            return (Number(a.dataset.gitCtime) || 0) - (Number(b.dataset.gitCtime) || 0);
+                        case 'recently-updated':
+                            return (Number(b.dataset.mtime) || 0) - (Number(a.dataset.mtime) || 0);
                         case 'title-asc':
                         default:
                             return a.dataset.title.localeCompare(b.dataset.title, undefined, { sensitivity: 'base' });
