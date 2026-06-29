@@ -347,6 +347,7 @@ try {
         }
         $meta = resolveMetadata($raw, $file);
         $meta['git_ctime'] = $raw['git_ctime'] ?? 0;
+        $meta['filename'] = $file;
         $meta['category'] = $categoryMap[$file] ?? 'Other';
         $catStyle = $categoryStyles[$meta['category']] ?? $categoryStyles['Other'];
         $meta['cat_color'] = $catStyle['color'];
@@ -384,6 +385,18 @@ try {
 
 // Cheatsheets updated within this window are flagged "New" in the grid.
 $newThreshold = time() - 30 * 24 * 60 * 60;
+
+// Popularity scores — generated nightly by fetch-popularity.py via GitHub Actions.
+// Keys are filenames (e.g. "ai-coding-agents-compared.html"), values are
+// 30-day decayed view counts (floats). Falls back to an empty array gracefully.
+$popularityScores = [];
+$popularityFile = rtrim($cheatsheetDir, '/') . '/popularity.json';
+if (is_readable($popularityFile)) {
+    $pd = json_decode((string)@file_get_contents($popularityFile), true);
+    if (is_array($pd) && isset($pd['scores'])) {
+        $popularityScores = $pd['scores'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -793,6 +806,7 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
                         <select id="sortSelect" class="form-select border-start-0" aria-label="Sort cheatsheets">
                             <option value="date-desc" selected>Newest first</option>
                             <option value="recently-updated">Recently updated</option>
+                            <option value="popular">Most popular</option>
                             <option value="date-asc">Oldest first</option>
                             <option value="title-asc">Title (A–Z)</option>
                             <option value="title-desc">Title (Z–A)</option>
@@ -822,7 +836,7 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
 
             <div id="cheatsheetGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                 <?php foreach ($cheatsheets as $sheet): ?>
-                    <div class="col portfolio-item" data-title="<?php echo htmlspecialchars($sheet['title']); ?>" data-mtime="<?php echo (int)$sheet['mtime']; ?>" data-git-ctime="<?php echo (int)($sheet['git_ctime'] ?? 0); ?>" data-category="<?php echo htmlspecialchars($sheet['category']); ?>">
+                    <div class="col portfolio-item" data-title="<?php echo htmlspecialchars($sheet['title']); ?>" data-mtime="<?php echo (int)$sheet['mtime']; ?>" data-git-ctime="<?php echo (int)($sheet['git_ctime'] ?? 0); ?>" data-category="<?php echo htmlspecialchars($sheet['category']); ?>" data-popularity="<?php echo number_format($popularityScores[$sheet['filename']] ?? 0, 4, '.', ''); ?>">
                         <article class="card shadow-sm" style="--cat-color: <?php echo htmlspecialchars($sheet['cat_color']); ?>; --cat-bg: <?php echo htmlspecialchars($sheet['cat_bg']); ?>;">
                             <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="card-img-top-container" aria-label="Open <?php echo htmlspecialchars($sheet['title']); ?>">
                                 <i class="bi <?php echo htmlspecialchars($sheet['cat_icon']); ?> cat-placeholder-icon" aria-hidden="true"></i>
@@ -957,6 +971,8 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
                             return (Number(a.dataset.gitCtime) || 0) - (Number(b.dataset.gitCtime) || 0);
                         case 'recently-updated':
                             return (Number(b.dataset.mtime) || 0) - (Number(a.dataset.mtime) || 0);
+                        case 'popular':
+                            return (Number(b.dataset.popularity) || 0) - (Number(a.dataset.popularity) || 0);
                         case 'title-asc':
                         default:
                             return a.dataset.title.localeCompare(b.dataset.title, undefined, { sensitivity: 'base' });

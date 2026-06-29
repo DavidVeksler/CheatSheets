@@ -1,0 +1,36 @@
+name: Update Popularity Scores
+
+on:
+  schedule:
+    # 02:30 UTC daily — after Cloudflare's day boundary rolls over
+    - cron: '30 2 * * *'
+  workflow_dispatch:   # allow manual trigger from the Actions tab
+
+permissions:
+  contents: write      # needed to commit popularity.json back to main
+
+jobs:
+  update-popularity:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch Cloudflare analytics
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Zone ID for davidveksler.com (cheatsheets subdomain lives here).
+          # If absent the script auto-detects the first zone on the token.
+          CLOUDFLARE_ZONE_ID: 3d96473d69977c5c828b3079d9b9869c
+        run: python3 fetch-popularity.py
+
+      - name: Commit updated scores
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add popularity.json
+          # Only commit if the file actually changed
+          git diff --staged --quiet || \
+            git commit -m "chore: update popularity scores [skip ci]"
+          git push
