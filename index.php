@@ -776,7 +776,7 @@ if (is_readable($popularityFile)) {
                         <a href="how-its-built.html" class="btn btn-light btn-lg fw-semibold">
                             <i class="bi bi-gear-wide-connected me-1"></i>How this site is built
                         </a>
-                        <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-lg">
+                        <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-lg" data-ga-linkedin="hero">
                             <i class="bi bi-linkedin me-1"></i>Connect on LinkedIn
                         </a>
                     </div>
@@ -898,7 +898,7 @@ if (is_readable($popularityFile)) {
                   <a href="how-its-built.html" class="btn btn-primary btn-lg px-4">
                       <i class="bi bi-gear-wide-connected me-2"></i>See how it's built
                   </a>
-                  <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-lg px-4">
+                  <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-lg px-4" data-ga-linkedin="cta">
                       <i class="bi bi-linkedin me-2"></i>Let's talk on LinkedIn
                   </a>
               </div>
@@ -932,7 +932,7 @@ if (is_readable($popularityFile)) {
                 Cheatsheet Portfolio © <?php echo date("Y"); ?> David Veksler. All rights reserved.
             </p>
             <div>
-              <a href="https://www.linkedin.com/in/davidveksler/" title="David Veksler on LinkedIn" target="_blank" rel="noopener noreferrer" class="mx-2 small">
+              <a href="https://www.linkedin.com/in/davidveksler/" title="David Veksler on LinkedIn" target="_blank" rel="noopener noreferrer" class="mx-2 small" data-ga-linkedin="footer">
                 <i class="bi bi-linkedin"></i> LinkedIn
               </a>
               <span class="mx-1 small">|</span>
@@ -1087,6 +1087,17 @@ if (is_readable($popularityFile)) {
                     })
                     .catch(function () { show('Network error — please try again later.', true); })
                     .finally(function () { if (btn) btn.disabled = false; });
+            });
+        });
+
+        // LinkedIn click tracking (gtag injected by Cloudflare)
+        document.querySelectorAll('[data-ga-linkedin]').forEach(function(el) {
+            el.addEventListener('click', function() {
+                if (typeof gtag === 'function') {
+                    gtag('event', 'linkedin_click', {
+                        link_location: el.dataset.gaLinkedin
+                    });
+                }
             });
         });
 
