@@ -758,6 +758,9 @@ if (is_readable($popularityFile)) {
                 <a class="btn btn-sm btn-outline-light" href="<?php echo htmlspecialchars($baseUrl); ?>history.php">
                     <i class="bi bi-clock-history me-1"></i>Change History
                 </a>
+                <a class="btn btn-sm btn-outline-light" href="<?php echo htmlspecialchars($baseUrl); ?>popularity.php">
+                    <i class="bi bi-bar-chart-fill me-1"></i>Popularity
+                </a>
             </div>
         </div>
     </nav>
