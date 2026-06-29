@@ -845,11 +845,15 @@ $newThreshold = time() - 30 * 24 * 60 * 60;
                                 <p class="card-text">
                                     <?php echo htmlspecialchars($sheet['description']); ?>
                                 </p>
-                                <?php if (!empty($sheet['mtime'])): ?>
-                                    <p class="card-date text-muted small mb-0">
-                                        <i class="bi bi-calendar3 me-1"></i>Updated <?php echo htmlspecialchars(date('M j, Y', $sheet['mtime'])); ?>
-                                    </p>
-                                <?php endif; ?>
+                                <div class="card-dates text-muted small mb-0">
+                                    <?php if (!empty($sheet['git_ctime'])): ?>
+                                        <span><i class="bi bi-calendar-plus me-1"></i>Created <?php echo htmlspecialchars(date('M j, Y', $sheet['git_ctime'])); ?></span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($sheet['mtime'])): ?>
+                                        <?php if (!empty($sheet['git_ctime'])): ?><span class="mx-1">·</span><?php endif; ?>
+                                        <span><i class="bi bi-calendar3 me-1"></i>Updated <?php echo htmlspecialchars(date('M j, Y', $sheet['mtime'])); ?></span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             <div class="card-footer">
                                 <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary w-100" style="--bs-btn-color: var(--cat-color); --bs-btn-border-color: var(--cat-color); --bs-btn-hover-bg: var(--cat-color); --bs-btn-hover-border-color: var(--cat-color); --bs-btn-hover-color: #fff; --bs-btn-active-bg: var(--cat-color); --bs-btn-active-border-color: var(--cat-color); --bs-btn-active-color: #fff;">
