@@ -516,16 +516,22 @@ if (is_readable($popularityFile)) {
         .navbar { background-image: linear-gradient(to bottom, #343a40, #2c3034); } /* Darker, less contrast gradient */
         .navbar-brand { font-weight: 500; color: #f8f9fa !important; }
         .card {
-            transition: transform .15s ease-out, box-shadow .15s ease-out; /* Quicker, smoother transition */
-            border: 1px solid rgba(255, 255, 255, .45);
-            border-radius: .3rem; overflow: hidden;
-            background-color: rgba(255, 255, 255, .55); /* Frosted glass */
-            backdrop-filter: blur(10px) saturate(130%);
-            -webkit-backdrop-filter: blur(10px) saturate(130%);
+            transition: transform .15s ease-out, box-shadow .2s ease-out, background-color .2s ease-out;
+            border: 1px solid rgba(255, 255, 255, .5);
+            border-radius: .6rem; overflow: hidden;
+            background-color: rgba(255, 255, 255, .45); /* Frosted glass */
+            background-image: linear-gradient(160deg, rgba(255, 255, 255, .35) 0%, rgba(255, 255, 255, 0) 40%);
+            backdrop-filter: blur(14px) saturate(160%);
+            -webkit-backdrop-filter: blur(14px) saturate(160%);
+            box-shadow: 0 4px 18px rgba(30, 27, 75, .08), inset 0 1px 0 rgba(255, 255, 255, .6);
             display: flex; flex-direction: column;
             border-top: 3px solid var(--cat-color, #dee2e6);
         }
-        .card:hover { transform: translateY(var(--card-lift-height)); box-shadow: 0 0.5rem 1rem var(--card-shadow-intensity); }
+        .card:hover {
+            transform: translateY(var(--card-lift-height));
+            background-color: rgba(255, 255, 255, .6);
+            box-shadow: 0 0.75rem 1.75rem var(--card-shadow-intensity), 0 0 0 1px color-mix(in srgb, var(--cat-color, #dee2e6) 35%, transparent), inset 0 1px 0 rgba(255, 255, 255, .7);
+        }
         .card-img-top-container {
             aspect-ratio: 16 / 9;
             width: 100%;
@@ -686,11 +692,14 @@ if (is_readable($popularityFile)) {
             height: 100%; /* This is critical for making cards in a row the same height */
         }
         .category-badge {
-            background-color: var(--cat-bg, #e7f1ff);
+            background-color: color-mix(in srgb, var(--cat-bg, #e7f1ff) 70%, transparent);
             color: var(--cat-color, #1a508b);
             font-weight: 500;
             font-size: 0.7rem;
             letter-spacing: .02em;
+            border: 1px solid color-mix(in srgb, var(--cat-color, #1a508b) 20%, transparent);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
         .new-badge {
             position: absolute;
@@ -714,11 +723,12 @@ if (is_readable($popularityFile)) {
         }
         /* Graceful fallback where backdrop-filter is unsupported: solid surfaces */
         @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-            .card { background-color: #fff; }
+            .card { background-color: #fff; background-image: none; }
             .hero-glass { background: rgba(30, 27, 75, .55); }
             .filter-toolbar .input-group-text,
             .filter-toolbar .form-control,
             .filter-toolbar .form-select { background-color: #fff !important; }
+            .category-badge { background-color: var(--cat-bg, #e7f1ff) !important; }
         }
         /* Hero call-to-action buttons */
         .hero-cta { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
@@ -842,7 +852,7 @@ if (is_readable($popularityFile)) {
             <div id="cheatsheetGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                 <?php foreach ($cheatsheets as $sheet): ?>
                     <div class="col portfolio-item" data-title="<?php echo htmlspecialchars($sheet['title']); ?>" data-mtime="<?php echo (int)$sheet['mtime']; ?>" data-git-ctime="<?php echo (int)($sheet['git_ctime'] ?? 0); ?>" data-category="<?php echo htmlspecialchars($sheet['category']); ?>" data-popularity="<?php echo number_format($popularityScores[$sheet['filename']] ?? 0, 4, '.', ''); ?>">
-                        <article class="card shadow-sm" style="--cat-color: <?php echo htmlspecialchars($sheet['cat_color']); ?>; --cat-bg: <?php echo htmlspecialchars($sheet['cat_bg']); ?>;">
+                        <article class="card" style="--cat-color: <?php echo htmlspecialchars($sheet['cat_color']); ?>; --cat-bg: <?php echo htmlspecialchars($sheet['cat_bg']); ?>;">
                             <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="card-img-top-container" aria-label="Open <?php echo htmlspecialchars($sheet['title']); ?>">
                                 <i class="bi <?php echo htmlspecialchars($sheet['cat_icon']); ?> cat-placeholder-icon" aria-hidden="true"></i>
                                 <?php if (!empty($sheet['mtime']) && $sheet['mtime'] >= $newThreshold): ?>

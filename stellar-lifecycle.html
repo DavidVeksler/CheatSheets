@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stellar Lifecycle: A Scroll-Driven CSS Animation Journey</title>
-<meta name="description" content="An animated, scroll-driven journey through the life of a star — from molecular cloud to protostar, main sequence, red giant, and the final fork into white dwarf, supernova, neutron star, or black hole. Built with pure CSS scroll-driven animations."/>
+<meta name="description" content="An animated, scroll-driven journey through the life of a star — from molecular cloud to protostar, main sequence, red giant, and the final fork into white dwarf, supernova, neutron star, or black hole. Built with CSS scroll-driven animations, 3D transforms, and a canvas particle engine."/>
 <meta name="keywords" content="stellar evolution, star lifecycle, CSS scroll-driven animation, animation-timeline, nebula, main sequence, red giant, supernova, white dwarf, neutron star, black hole"/>
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/stellar-lifecycle.html"/>
 
@@ -33,7 +33,7 @@
   "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
   "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
   "datePublished": "2026-06-30",
-  "dateModified": "2026-06-30",
+  "dateModified": "2026-07-01",
   "keywords": "stellar evolution, star lifecycle, CSS scroll-driven animation, animation-timeline, nebula, main sequence, red giant, supernova, white dwarf, neutron star, black hole"
 }
 </script>
@@ -151,6 +151,7 @@
   .wrap {
     max-width: 1180px; margin: 0 auto; width: 100%;
     display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: center;
+    perspective: 1600px;  /* fly-ins rotate through real 3D space */
   }
   .stage:nth-of-type(even) .viz { order: -1; }  /* alternate sides */
 
@@ -180,13 +181,16 @@
   .stat .value { font-family: var(--display); font-weight: 600; font-size: clamp(1.05rem, 2.6vw, 1.5rem); color: #fff; }
 
   /* Visualization stage */
-  .viz { display: grid; place-items: center; min-height: min(58vh, 520px); }
-  .scene { position: relative; width: min(78vw, 420px); aspect-ratio: 1; display: grid; place-items: center; }
+  .viz { display: grid; place-items: center; min-height: min(58vh, 520px); perspective: 1100px; }
+  .scene {
+    position: relative; width: min(78vw, 420px); aspect-ratio: 1; display: grid; place-items: center;
+    transform-style: preserve-3d; will-change: transform;  /* JS pointer-tilt + velocity skew */
+  }
 
   /* ============ CSS ART: the stellar objects ============ */
 
-  /* 1 — Molecular cloud / nebula */
-  .nebula { position: absolute; inset: 0; filter: blur(2px); }
+  /* 1 — Molecular cloud / nebula (feTurbulence displacement gives it wispy, gaseous edges) */
+  .nebula { position: absolute; inset: 0; filter: url(#wisp) blur(2px); }
   .blob { position: absolute; border-radius: 50%; mix-blend-mode: screen; filter: blur(26px); }
   .blob.b1 { inset: 8% 20% 40% 8%; background: radial-gradient(circle, var(--purple), transparent 70%); }
   .blob.b2 { inset: 30% 6% 12% 34%; background: radial-gradient(circle, var(--pink), transparent 70%); }
@@ -242,6 +246,7 @@
   }
   .giant-mottle {
     position: absolute; width: 82%; aspect-ratio: 1; border-radius: 50%; mix-blend-mode: overlay;
+    filter: url(#boil);  /* convective-cell texture */
     background: radial-gradient(circle at 30% 30%, rgba(255,220,150,0.5), transparent 22%),
                radial-gradient(circle at 68% 40%, rgba(120,10,0,0.6), transparent 26%),
                radial-gradient(circle at 55% 72%, rgba(255,180,90,0.45), transparent 25%);
@@ -250,7 +255,7 @@
 
   /* 5 — Planetary nebula shells + white dwarf */
   .pneb { position: absolute; inset: 0; display: grid; place-items: center; }
-  .shell { position: absolute; border-radius: 50%; opacity: 0.5; filter: blur(3px); }
+  .shell { position: absolute; border-radius: 50%; opacity: 0.5; filter: url(#wisp) blur(3px); }
   .shell.s1 { width: 60%; aspect-ratio: 1; border: 6px solid var(--cyan); }
   .shell.s2 { width: 80%; aspect-ratio: 1; border: 5px solid var(--purple); }
   .shell.s3 { width: 100%; aspect-ratio: 1; border: 4px solid var(--pink); }
@@ -291,7 +296,7 @@
 
   /* ============ IDLE (time-based) ANIMATIONS — reduced-motion gated ============ */
   @media (prefers-reduced-motion: no-preference) {
-    h1 { animation: hueGlow 6s ease-in-out infinite; }
+    h1 { animation: heroIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) both, hueGlow 6s ease-in-out 1.2s infinite; }
     .scroll-hint .chev { animation: nudge 1.6s ease-in-out infinite; }
     .seed { animation: pulse 3s ease-in-out infinite; }
     .blob { animation: drift 14s ease-in-out infinite alternate; }
@@ -305,6 +310,7 @@
     .accretion { animation: spin 7s linear infinite; }
     .horizon { animation: throb 4s ease-in-out infinite; }
 
+    @keyframes heroIn { from { opacity: 0; translate: 0 46px; scale: 0.9; letter-spacing: 0.22em; } }
     @keyframes hueGlow { 0%,100% { filter: drop-shadow(0 0 30px rgba(120,140,255,0.4)); } 50% { filter: drop-shadow(0 0 46px rgba(180,140,255,0.65)); } }
     @keyframes nudge { 0%,100% { transform: rotate(45deg) translate(0,0); } 50% { transform: rotate(45deg) translate(4px,4px); } }
     @keyframes pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.18); opacity: 1; } }
@@ -327,10 +333,66 @@
       @keyframes fillRail { to { transform: scaleX(1); } }
       @keyframes parallax { to { transform: translateY(calc(var(--shift) * -1)); } }
 
-      /* Copy + viz reveal as each stage scrolls into view (view timeline on the block) */
-      .reveal { opacity: 0; animation: reveal linear both; animation-timeline: view(); animation-range: entry 6% cover 34%; }
-      .viz    { animation: reveal linear both; animation-timeline: view(); animation-range: entry 2% cover 30%; }
+      /* Header: title + lede warp PAST the camera as the hero scrolls away (zoom-out illusion) */
+      h1 {
+        animation: heroIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) both, hueGlow 6s ease-in-out 1.2s infinite, heroWarp linear both;
+        animation-timeline: auto, auto, view();
+        animation-range: normal, normal, exit -10% exit 75%;
+      }
+      header .lede {
+        animation: ledeOut linear both; animation-timeline: view(); animation-range: exit 0% exit 60%;
+      }
+      @keyframes heroWarp { to { scale: 3.4; translate: 0 -14vh; opacity: 0; } }
+      @keyframes ledeOut  { to { scale: 1.8; opacity: 0; filter: blur(6px); } }
+
+      /* Header eyebrow keeps a gentle rise */
+      .reveal { animation: reveal linear both; animation-timeline: view(); animation-range: entry 6% cover 34%; }
       @keyframes reveal { from { opacity: 0; transform: translateY(46px); } to { opacity: 1; transform: translateY(0); } }
+
+      /* ---- BIG ENTRANCES: copy + viz fly in from off-page, scrubbed with overshoot ---- */
+      /* Odd stages: copy on the left flies from the left wing; viz warps in from the right. Even stages mirror. */
+      .stage .copy { opacity: 0; animation: flyInLeft linear both; animation-timeline: view(); animation-range: entry 0% cover 42%; }
+      .stage:nth-of-type(even) .copy { animation-name: flyInRight; }
+      .stage .viz { opacity: 0; animation: warpInRight linear both; animation-timeline: view(); animation-range: entry 0% cover 46%; }
+      .stage:nth-of-type(even) .viz { animation-name: warpInLeft; }
+
+      /* Overshoot keyframes (~80%) sell scroll momentum: the slab swings past center, then settles */
+      @keyframes flyInLeft {
+        0%   { opacity: 0; transform: translateX(-90vw) rotateY(42deg) scale(0.7); filter: blur(10px); }
+        55%  { opacity: 1; filter: blur(0); }
+        80%  { transform: translateX(2.4vw) rotateY(-6deg) scale(1.03); }
+        100% { opacity: 1; transform: none; filter: blur(0); }
+      }
+      @keyframes flyInRight {
+        0%   { opacity: 0; transform: translateX(90vw) rotateY(-42deg) scale(0.7); filter: blur(10px); }
+        55%  { opacity: 1; filter: blur(0); }
+        80%  { transform: translateX(-2.4vw) rotateY(6deg) scale(1.03); }
+        100% { opacity: 1; transform: none; filter: blur(0); }
+      }
+      @keyframes warpInRight {
+        0%   { opacity: 0; transform: translateX(95vw) translateZ(-420px) rotateY(-55deg) scale(1.9); filter: blur(14px); }
+        55%  { opacity: 1; filter: blur(0); }
+        80%  { transform: translateX(-2vw) rotateY(7deg) scale(0.97); }
+        100% { opacity: 1; transform: none; filter: blur(0); }
+      }
+      @keyframes warpInLeft {
+        0%   { opacity: 0; transform: translateX(-95vw) translateZ(-420px) rotateY(55deg) scale(1.9); filter: blur(14px); }
+        55%  { opacity: 1; filter: blur(0); }
+        80%  { transform: translateX(2vw) rotateY(-7deg) scale(0.97); }
+        100% { opacity: 1; transform: none; filter: blur(0); }
+      }
+
+      /* Stat cards pop in staggered, each on its own view timeline */
+      .stat { animation: statPop linear both; animation-timeline: view(); }
+      .stat:nth-child(1) { animation-range: entry 25% cover 40%; }
+      .stat:nth-child(2) { animation-range: entry 31% cover 46%; }
+      .stat:nth-child(3) { animation-range: entry 37% cover 52%; }
+      .stat:nth-child(4) { animation-range: entry 43% cover 58%; }
+      @keyframes statPop { from { opacity: 0; transform: translateY(44px) scale(0.82); } to { opacity: 1; transform: none; } }
+
+      /* Scenes fly PAST the camera on exit — scaling up and blurring like a passing object */
+      .scene { animation: flyPast linear both; animation-timeline: view(); animation-range: exit 0% exit 90%; }
+      @keyframes flyPast { to { scale: 1.55; opacity: 0; filter: blur(8px); } }
 
       /* Per-object scroll SCRUBBING — the object's own transformation tracks scroll position.
          Idle animations above touch other properties (box-shadow/rotate on children) so they coexist. */
@@ -379,8 +441,82 @@
       @keyframes tilt { from { transform: rotateX(30deg) scale(0.7); } to { transform: rotateX(74deg) scale(1); } }
       .horizon { animation: throb 4s ease-in-out infinite, collapseHz linear both; animation-timeline: auto, view(); animation-range: entry 20% cover 60%; }
       @keyframes collapseHz { from { scale: 1.8; } to { scale: 1; } }
+
+      /* ---- ZOOM-OUT FINALE: camera pulls back from 7× to reveal the whole lifecycle ---- */
+      /* The tall .zoomer section publishes a named view-timeline; its sticky child scrubs against it. */
+      .zoom-head { opacity: 0; animation: mapHead linear both; animation-timeline: --zoom; animation-range: contain 8% contain 30%; }
+      @keyframes mapHead { from { opacity: 0; translate: 0 60px; } to { opacity: 1; translate: 0 0; } }
+
+      .map { animation: pullBack linear both; animation-timeline: --zoom; animation-range: contain 0% contain 55%; }
+      @keyframes pullBack {
+        0%   { transform: scale(7) rotateX(38deg) translateY(22%); opacity: 0; }
+        18%  { opacity: 1; }
+        85%  { transform: scale(0.96) rotateX(-3deg) translateY(-1%); }
+        100% { transform: none; opacity: 1; }
+      }
+
+      .map-rail { animation: railDraw linear both; animation-timeline: --zoom; animation-range: contain 14% contain 50%; }
+      @keyframes railDraw { from { scale: 0 1; } to { scale: 1 1; } }
+
+      .map-node { opacity: 0; animation: nodePop linear both; animation-timeline: --zoom; }
+      @keyframes nodePop { from { opacity: 0; translate: 0 46px; scale: 0.5; } to { opacity: 1; translate: 0 0; scale: 1; } }
+      .map-node:nth-of-type(1) { animation-range: contain 18% contain 30%; }
+      .map-node:nth-of-type(2) { animation-range: contain 23% contain 35%; }
+      .map-node:nth-of-type(3) { animation-range: contain 28% contain 40%; }
+      .map-node:nth-of-type(4) { animation-range: contain 33% contain 45%; }
+      .map-node:nth-of-type(5) { animation-range: contain 38% contain 50%; }
+      .map-node:nth-of-type(6) { animation-range: contain 43% contain 55%; }
+      .map-node:nth-of-type(7) { animation-range: contain 48% contain 60%; }
     }
   }
+
+  /* ---------- Zoom-out finale: the whole lifecycle at a glance ---------- */
+  .zoomer { position: relative; height: 240vh; view-timeline: --zoom block; }
+  .zoom-pin {
+    position: sticky; top: 0; height: 100svh; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    gap: clamp(2rem, 7vh, 4.5rem); padding: 2rem 1rem; perspective: 1200px;
+  }
+  .zoom-head { text-align: center; max-width: 62ch; }
+  .zoom-head .sub { color: var(--muted); margin-top: 0.9rem; text-wrap: pretty; }
+  .map {
+    position: relative; display: flex; align-items: flex-start; justify-content: center;
+    gap: clamp(0.4rem, 2.4vw, 1.8rem); width: min(96vw, 1100px);
+    transform-style: preserve-3d; will-change: transform;
+  }
+  .map-rail {
+    position: absolute; top: calc(clamp(38px, 7vw, 64px) / 2); left: 3%; right: 3%; height: 2px;
+    background: linear-gradient(90deg, var(--purple), var(--cyan), var(--gold), var(--red), #bfe0ff, var(--white), var(--purple));
+    opacity: 0.5; transform-origin: 0 50%;
+  }
+  .map-node {
+    position: relative; z-index: 1; flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 0.7rem;
+    text-decoration: none; color: var(--muted); text-align: center;
+    font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase;
+    transition: transform 0.35s cubic-bezier(0.2, 1.6, 0.4, 1), color 0.35s ease;
+  }
+  .map-node:hover, .map-node:focus-visible { transform: translateY(-9px) scale(1.14); color: #fff; }
+  .map-node .dot { width: clamp(38px, 7vw, 64px); aspect-ratio: 1; border-radius: 50%; }
+  .d-cloud { background: radial-gradient(circle at 40% 40%, var(--pink), var(--purple) 58%, transparent 76%); filter: blur(3px); }
+  .d-proto { background: radial-gradient(circle at 45% 40%, #fff, var(--orange) 52%, transparent 72%); box-shadow: 0 0 18px rgba(255,154,86,0.8); }
+  .d-main  { background: radial-gradient(circle at 42% 38%, #fff, var(--gold) 48%, var(--orange) 88%); box-shadow: 0 0 22px rgba(255,213,74,0.8); }
+  .d-giant { background: radial-gradient(circle at 40% 36%, #ffd9a0, var(--red) 68%, #7a1502); box-shadow: 0 0 20px rgba(255,77,46,0.7); }
+  .d-dwarf { background: radial-gradient(circle, #fff 16%, #bfe0ff 20%, transparent 24%), radial-gradient(circle, transparent 52%, rgba(94,231,255,0.85) 56%, transparent 66%); box-shadow: 0 0 14px rgba(94,231,255,0.6); }
+  .d-nova  { background: radial-gradient(circle, #fff 14%, rgba(255,213,74,0.8) 28%, transparent 46%), radial-gradient(circle, transparent 58%, rgba(255,154,86,0.85) 62%, transparent 70%); box-shadow: 0 0 24px rgba(255,213,74,0.55); }
+  .d-bh    { background: radial-gradient(circle, #000 32%, transparent 35%), radial-gradient(circle, transparent 28%, rgba(255,213,74,0.95) 35%, rgba(255,77,46,0.5) 52%, transparent 62%); }
+
+  /* ---------- Particle canvas (JS) + film grain ---------- */
+  #fx { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
+  .grain {
+    position: fixed; inset: -60px; z-index: 90; pointer-events: none;
+    mix-blend-mode: overlay; opacity: 0.08;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .grain { animation: grainJitter 0.9s steps(3) infinite; }
+  }
+  @keyframes grainJitter { 0%, 100% { translate: 0 0; } 33% { translate: -18px 12px; } 66% { translate: 14px -20px; } }
 
   /* ---------- Footer ---------- */
   footer {
@@ -408,6 +544,8 @@
     .viz { order: -1; min-height: 44vh; }
     .scene { width: min(70vw, 320px); }
     .stats { grid-template-columns: 1fr 1fr; }
+    .map-node { font-size: 0.52rem; letter-spacing: 0.1em; }
+    .map-node .lbl { display: none; }
   }
   @media (max-width: 420px) {
     .stats { grid-template-columns: 1fr; }
@@ -416,8 +554,24 @@
 </head>
 <body>
 
+<!-- SVG turbulence filters referenced from CSS (nebula wisps, red-giant convection) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="wisp" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="3" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="70" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="boil" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="turbulence" baseFrequency="0.06" numOctaves="3" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="16" xChannelSelector="R" yChannelSelector="B"/>
+    </filter>
+  </defs>
+</svg>
+
 <div class="progress" aria-hidden="true"></div>
 <div class="stars" aria-hidden="true"><span class="far"></span><span class="mid"></span><span class="near"></span></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
 
 <main>
   <header>
@@ -428,7 +582,7 @@
   </header>
 
   <!-- 1 · Molecular Cloud -->
-  <section class="stage" style="--stage-accent: var(--purple)">
+  <section class="stage" id="cloud" style="--stage-accent: var(--purple)">
     <div class="wrap">
       <div class="copy reveal">
         <p class="kicker"><span class="num">01</span> Molecular Cloud</p>
@@ -451,7 +605,7 @@
   </section>
 
   <!-- 2 · Protostar -->
-  <section class="stage" style="--stage-accent: var(--cyan)">
+  <section class="stage" id="protostar" style="--stage-accent: var(--cyan)">
     <div class="wrap">
       <div class="copy reveal">
         <p class="kicker"><span class="num">02</span> Protostar</p>
@@ -478,7 +632,7 @@
   </section>
 
   <!-- 3 · Main Sequence -->
-  <section class="stage" style="--stage-accent: var(--gold)">
+  <section class="stage" id="main-sequence" style="--stage-accent: var(--gold)">
     <div class="wrap">
       <div class="copy reveal">
         <p class="kicker"><span class="num">03</span> Main Sequence</p>
@@ -504,7 +658,7 @@
   </section>
 
   <!-- 4 · Red Giant -->
-  <section class="stage" style="--stage-accent: var(--orange)">
+  <section class="stage" id="red-giant" style="--stage-accent: var(--orange)">
     <div class="wrap">
       <div class="copy reveal">
         <p class="kicker"><span class="num">04</span> Red Giant</p>
@@ -528,7 +682,7 @@
   </section>
 
   <!-- 5 · Planetary Nebula → White Dwarf (low-mass fate) -->
-  <section class="stage" style="--stage-accent: var(--cyan)">
+  <section class="stage" id="white-dwarf" style="--stage-accent: var(--cyan)">
     <div class="wrap">
       <div class="copy reveal">
         <p class="kicker"><span class="num">05a</span> Low-Mass Fate</p>
@@ -553,7 +707,7 @@
   </section>
 
   <!-- 6 · Supernova (high-mass fate) -->
-  <section class="stage" style="--stage-accent: var(--gold)">
+  <section class="stage" id="supernova" style="--stage-accent: var(--gold)">
     <div class="wrap">
       <div class="copy reveal">
         <p class="kicker"><span class="num">05b</span> High-Mass Fate</p>
@@ -585,7 +739,7 @@
   </section>
 
   <!-- 7 · Black Hole / Neutron Star -->
-  <section class="stage" style="--stage-accent: var(--purple)">
+  <section class="stage" id="remnant" style="--stage-accent: var(--purple)">
     <div class="wrap">
       <div class="copy reveal">
         <p class="kicker"><span class="num">06</span> The Remnant</p>
@@ -609,31 +763,210 @@
       </div>
     </div>
   </section>
+
+  <!-- 8 · Zoom-out finale: camera pull-back over the whole lifecycle -->
+  <section class="zoomer" aria-labelledby="map-title">
+    <div class="zoom-pin">
+      <div class="zoom-head">
+        <p class="kicker" style="--stage-accent: var(--white)"><span class="num">07</span> Zoom Out</p>
+        <h2 id="map-title">One cloud, many endings</h2>
+        <p class="sub">Pull the camera back and the whole story fits on one line. Click any stage to fly back through the journey — every animation rewinds as you go.</p>
+      </div>
+      <nav class="map" aria-label="Stellar lifecycle stages">
+        <span class="map-rail" aria-hidden="true"></span>
+        <a class="map-node" href="#cloud" aria-label="Molecular cloud"><span class="dot d-cloud" aria-hidden="true"></span><span class="lbl">Cloud</span></a>
+        <a class="map-node" href="#protostar" aria-label="Protostar"><span class="dot d-proto" aria-hidden="true"></span><span class="lbl">Protostar</span></a>
+        <a class="map-node" href="#main-sequence" aria-label="Main sequence"><span class="dot d-main" aria-hidden="true"></span><span class="lbl">Main Seq</span></a>
+        <a class="map-node" href="#red-giant" aria-label="Red giant"><span class="dot d-giant" aria-hidden="true"></span><span class="lbl">Red Giant</span></a>
+        <a class="map-node" href="#white-dwarf" aria-label="White dwarf"><span class="dot d-dwarf" aria-hidden="true"></span><span class="lbl">White Dwarf</span></a>
+        <a class="map-node" href="#supernova" aria-label="Supernova"><span class="dot d-nova" aria-hidden="true"></span><span class="lbl">Supernova</span></a>
+        <a class="map-node" href="#remnant" aria-label="Black hole or neutron star"><span class="dot d-bh" aria-hidden="true"></span><span class="lbl">Black Hole</span></a>
+      </nav>
+    </div>
+  </section>
 </main>
 
 <footer>
   <p class="cite">Every atom heavier than helium in your body was forged inside a star and scattered by its death. Stars are not eternal — but in dying, they seed the galaxy with the raw material for new worlds, and the cycle begins again.</p>
   <p class="support-note">Your browser doesn't support CSS scroll-driven animations (<code>animation-timeline</code>), so this page shows the full static journey without scroll-synced motion. Try a recent Chrome, Edge, or Firefox for the animated version.</p>
-  <p class="meta">A pure-CSS scroll-driven animation showcase · <a href="index.php">More cheatsheets</a> · Last verified: 2026-06-30</p>
+  <p class="meta">CSS scroll-driven animations · 3D transforms · canvas particle physics · <a href="index.php">More cheatsheets</a> · Last verified: 2026-07-01</p>
 </footer>
 
 <script>
-  // Progressive fallback: if scroll-driven timelines are unsupported (e.g. some Safari
-  // versions), reveal each section with a one-shot IntersectionObserver so nothing
-  // stays hidden and entrances still feel alive.
   (function () {
+    'use strict';
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var hasTimeline = window.CSS && CSS.supports && CSS.supports('animation-timeline: view()');
-    if (hasTimeline || reduce || !('IntersectionObserver' in window)) return;
 
-    var targets = document.querySelectorAll('.reveal, .viz');
-    targets.forEach(function (el) { el.style.opacity = '0'; el.style.transform = 'translateY(40px)'; el.style.transition = 'opacity .8s ease, transform .8s ease'; });
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'none'; io.unobserve(e.target); }
-      });
-    }, { threshold: 0.15 });
-    targets.forEach(function (el) { io.observe(el); });
+    // Progressive fallback: if scroll-driven timelines are unsupported (e.g. some Safari
+    // versions), reveal each block with a one-shot IntersectionObserver so nothing
+    // stays hidden and entrances still feel alive.
+    if (!hasTimeline && !reduce && 'IntersectionObserver' in window) {
+      var targets = document.querySelectorAll('.reveal, .copy, .viz, .zoom-head, .map-node');
+      targets.forEach(function (el) { el.style.opacity = '0'; el.style.transform = 'translateY(40px)'; el.style.transition = 'opacity .8s ease, transform .8s ease'; });
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'none'; io.unobserve(e.target); }
+        });
+      }, { threshold: 0.15 });
+      targets.forEach(function (el) { io.observe(el); });
+    }
+
+    if (reduce) return; // everything below is pure motion garnish
+
+    /* ================= Physics + particle engine =================
+       One rAF loop drives three effects:
+       1. Scroll velocity  → skewY "inertia smear" on every scene
+       2. Pointer position → 3D tilt (rotateX/rotateY) on every scene
+       3. Canvas particles → depth-parallax dust that streaks with speed,
+          tinted by the active stage's accent, shooting stars, and a
+          one-shot supernova spark burst when that section hits center. */
+
+    var scenes = Array.prototype.slice.call(document.querySelectorAll('.scene'));
+    var nova = document.querySelector('.nova');
+    var canvas = document.getElementById('fx');
+    var ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
+
+    // --- pointer tilt (fine pointers only) ---
+    var tiltX = 0, tiltY = 0, curTX = 0, curTY = 0;
+    if (window.matchMedia('(pointer: fine)').matches) {
+      window.addEventListener('pointermove', function (e) {
+        tiltX = e.clientX / window.innerWidth - 0.5;
+        tiltY = e.clientY / window.innerHeight - 0.5;
+      }, { passive: true });
+    }
+
+    // --- stage accent tracking: particles inherit the color of the section in view ---
+    var col = [154, 166, 212], colT = [154, 166, 212];
+    function parseRGB(s) {
+      var m = /(\d+)[, ]+(\d+)[, ]+(\d+)/.exec(s);
+      return m ? [+m[1], +m[2], +m[3]] : [154, 166, 212];
+    }
+    if ('IntersectionObserver' in window) {
+      var io2 = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          var k = en.target.querySelector('.kicker');
+          if (k) colT = parseRGB(getComputedStyle(k).color);
+        });
+      }, { threshold: 0.35 });
+      document.querySelectorAll('.stage, .zoomer').forEach(function (s) { io2.observe(s); });
+    }
+
+    // --- canvas setup ---
+    var W = 0, H = 0, dust = [], sparks = [], streaks = [];
+    function sizeCanvas() {
+      if (!ctx) return;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      dust.length = 0;
+      var n = Math.round(Math.min(150, W * H / 11000));
+      for (var i = 0; i < n; i++) {
+        dust.push({
+          x: Math.random() * W, y: Math.random() * H,
+          z: 0.25 + Math.random() * 0.75,              // depth → parallax speed + size
+          r: 0.6 + Math.random() * 2.4,
+          p: Math.random() * 6.2832,                   // twinkle phase
+          vx: (Math.random() - 0.5) * 0.14, vy: (Math.random() - 0.5) * 0.1
+        });
+      }
+    }
+    sizeCanvas();
+    window.addEventListener('resize', sizeCanvas);
+
+    var SPARK_COLORS = ['255,213,74', '255,154,86', '255,255,255', '94,231,255'];
+    var lastY = window.scrollY, vel = 0, lastSceneTr = '';
+    var novaArmed = true;
+
+    function frame(ts) {
+      // -- smoothed scroll velocity (the "momentum" signal) --
+      var y = window.scrollY;
+      vel += ((y - lastY) - vel) * 0.12;
+      lastY = y;
+
+      // reads before writes: nova position for the burst trigger
+      var nr = (nova && ctx) ? nova.getBoundingClientRect() : null;
+
+      // -- 1+2: velocity skew + pointer tilt on scenes (composes with CSS scroll animations) --
+      curTX += (tiltX - curTX) * 0.05;
+      curTY += (tiltY - curTY) * 0.05;
+      var sk = Math.max(-6, Math.min(6, vel * 0.09));
+      var tr = 'skewY(' + sk.toFixed(2) + 'deg) rotateY(' + (curTX * 14).toFixed(2) + 'deg) rotateX(' + (-curTY * 10).toFixed(2) + 'deg)';
+      if (tr !== lastSceneTr) {
+        for (var i = 0; i < scenes.length; i++) scenes[i].style.transform = tr;
+        lastSceneTr = tr;
+      }
+
+      if (ctx) {
+        ctx.clearRect(0, 0, W, H);
+
+        // lerp particle tint toward the active stage accent
+        for (var c = 0; c < 3; c++) col[c] += (colT[c] - col[c]) * 0.03;
+        var rgb = Math.round(col[0]) + ',' + Math.round(col[1]) + ',' + Math.round(col[2]);
+
+        // -- 3a: depth-parallax dust; fast scrolling stretches dots into motion streaks --
+        var fast = Math.abs(vel) > 3;
+        for (i = 0; i < dust.length; i++) {
+          var p = dust[i];
+          p.x += p.vx; p.y += p.vy - vel * p.z * 0.55;
+          if (p.y < -30) p.y += H + 60; else if (p.y > H + 30) p.y -= H + 60;
+          if (p.x < -30) p.x += W + 60; else if (p.x > W + 30) p.x -= W + 60;
+          var a = 0.2 + 0.55 * Math.abs(Math.sin(p.p + ts * 0.0011));
+          if (fast) {
+            ctx.strokeStyle = 'rgba(' + rgb + ',' + (a * 0.8).toFixed(3) + ')';
+            ctx.lineWidth = p.r * p.z;
+            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y + vel * p.z * 2.2); ctx.stroke();
+          } else {
+            ctx.fillStyle = 'rgba(' + rgb + ',' + a.toFixed(3) + ')';
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.z, 0, 6.2832); ctx.fill();
+            if (p.r > 2.2 && p.z > 0.7) { // soft bokeh halo on the big near ones
+              ctx.fillStyle = 'rgba(' + rgb + ',' + (a * 0.12).toFixed(3) + ')';
+              ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 4, 0, 6.2832); ctx.fill();
+            }
+          }
+        }
+
+        // -- 3b: occasional shooting star --
+        if (Math.random() < 0.004 && streaks.length < 3) {
+          streaks.push({ x: Math.random() * W, y: -20, vx: (3 + Math.random() * 3) * (Math.random() < 0.5 ? -1 : 1), vy: 4 + Math.random() * 4, life: 1 });
+        }
+        for (i = streaks.length - 1; i >= 0; i--) {
+          var st = streaks[i];
+          st.x += st.vx; st.y += st.vy; st.life -= 0.012;
+          if (st.life <= 0 || st.y > H + 40) { streaks.splice(i, 1); continue; }
+          var g = ctx.createLinearGradient(st.x, st.y, st.x - st.vx * 12, st.y - st.vy * 12);
+          g.addColorStop(0, 'rgba(255,255,255,' + (st.life * 0.9).toFixed(3) + ')');
+          g.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.strokeStyle = g; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.lineTo(st.x - st.vx * 12, st.y - st.vy * 12); ctx.stroke();
+        }
+
+        // -- 3c: supernova detonation — one radial burst as the section reaches center --
+        if (nr) {
+          var cy = nr.top + nr.height / 2, cx = nr.left + nr.width / 2;
+          if (novaArmed && cy > H * 0.28 && cy < H * 0.72) {
+            novaArmed = false;
+            for (var s = 0; s < 110; s++) {
+              var ang = Math.random() * 6.2832, sp = 2 + Math.random() * 9;
+              sparks.push({ x: cx, y: cy, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, life: 1, c: SPARK_COLORS[s % 4], r: 0.8 + Math.random() * 2 });
+            }
+          }
+          if (!novaArmed && (nr.bottom < -H * 0.5 || nr.top > H * 1.5)) novaArmed = true; // re-arm when far away
+        }
+        for (i = sparks.length - 1; i >= 0; i--) {
+          var q = sparks[i];
+          q.x += q.vx; q.y += q.vy - vel * 0.6; q.vx *= 0.985; q.vy *= 0.985; q.life -= 0.008;
+          if (q.life <= 0) { sparks.splice(i, 1); continue; }
+          ctx.fillStyle = 'rgba(' + q.c + ',' + q.life.toFixed(3) + ')';
+          ctx.beginPath(); ctx.arc(q.x, q.y, q.r * (0.5 + q.life), 0, 6.2832); ctx.fill();
+        }
+      }
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
   })();
 </script>
 </body>
