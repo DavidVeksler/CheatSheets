@@ -590,6 +590,7 @@
 <li><strong>Staging Area (Index):</strong> A "holding area" where you prepare (stage) changes before committing them. Use <code class="command">git add</code> to stage.</li>
 <li><strong>Repository (.git directory):</strong> Where Git stores the complete history of your project (commits, branches, tags). Use <code class="command">git commit</code> to save staged changes here.</li>
 </ul>
+<p class="mb-0"><small>Want the mechanics behind these three areas — what the index actually is on disk, why commits are full snapshots rather than diffs? See <a href="git-internals.html#bigidea">Git Internals: the big idea</a>.</small></p>
 </div>
 </div>
 </div>
@@ -628,6 +629,7 @@ vendor/
 .DS_Store
 Thumbs.db</code></pre>
 <p>It's crucial to commit your <code>.gitignore</code> file to the repository so it's shared with collaborators.</p>
+<p class="important-note"><code>.gitignore</code> only affects <em>untracked</em> files — it will not stop already-tracked files from being committed. Untrack them first with <code class="command">git rm --cached &lt;file&gt;</code>; see <a href="git-internals.html#mistakes">this misconception explained</a>.</p>
 <p>For common templates, check <a class="link-primary" href="https://github.com/github/gitignore" rel="noopener noreferrer" target="_blank">GitHub's .gitignore collection</a>.</p>
 </div>
 </div>
@@ -667,6 +669,7 @@ Thumbs.db</code></pre>
 <li>Stage all modified or deleted tracked files and commit: <code class="command">git commit -a -m "Message"</code> (Does NOT add new untracked files)</li>
 <li>Modify the last commit (if not yet pushed): <code class="command">git commit --amend</code> (Opens editor for message, adds currently staged changes) <span class="important-note">Rewrites history!</span></li>
 </ul>
+<p class="mb-0"><small>What <code>add</code> and <code>commit</code> actually do to the object database and refs: see <a href="git-internals.html#mapping">porcelain → plumbing</a> in Git Internals.</small></p>
 </div>
 </div>
 </div>
@@ -734,7 +737,7 @@ Thumbs.db</code></pre>
 <button aria-expanded="false" class="btn btn-outline-primary btn-sm details-toggle" data-bs-target="#collapseGitBranch" data-bs-toggle="collapse" type="button">Details <i class="bi bi-chevron-down"></i></button>
 </div>
 <div class="collapse collapse-content" id="collapseGitBranch">
-<p>Branches are lightweight movable pointers to commits, allowing parallel lines of development.</p>
+<p>Branches are lightweight movable pointers to commits, allowing parallel lines of development. Literally: a branch is a 41-byte file containing a commit SHA — see <a href="git-internals.html#refs">how refs actually work</a>.</p>
 <ul>
 <li>List local branches: <code class="command">git branch</code> (* indicates current branch)</li>
 <li>Create a new branch (does not switch): <code class="command">git branch &lt;branch-name&gt;</code></li>
@@ -783,7 +786,7 @@ Thumbs.db</code></pre>
 <li>Switch to target: <code class="command">git switch main</code></li>
 <li>Merge: <code class="command">git merge feature-branch</code></li>
 </ol>
-<p>May result in a "merge commit" if histories diverged.</p>
+<p>May result in a "merge commit" if histories diverged — Git finds the <a href="git-internals.html#dag">merge base</a> and does a three-way merge.</p>
 <h6>Resolving Merge Conflicts:</h6>
 <p>If Git reports conflicts:
                                     <ol>
@@ -802,7 +805,7 @@ Thumbs.db</code></pre>
 <li>Switch to feature branch: <code class="command">git switch feature</code></li>
 <li>Rebase: <code class="command">git rebase main</code></li>
 </ol>
-<p class="important-note"><strong>Warning:</strong> Do NOT rebase commits that have already been pushed to a shared remote repository and are used by others. It rewrites history and can cause severe problems for collaborators.</p>
+<p class="important-note"><strong>Warning:</strong> Do NOT rebase commits that have already been pushed to a shared remote repository and are used by others. It rewrites history and can cause severe problems for collaborators. See <a href="git-internals.html#mergerebase">why rebase changes every downstream hash</a> for the mechanics behind this warning.</p>
 <p>Conflicts during rebase: Resolve, <code class="command">git add &lt;file&gt;</code>, then <code class="command">git rebase --continue</code>. Abort: <code class="command">git rebase --abort</code>.</p>
 </div>
 </div>
@@ -994,8 +997,9 @@ Thumbs.db</code></pre>
 <li><strong><code>git reset --soft &lt;commit&gt;</code>:</strong> Moves HEAD to <code>&lt;commit&gt;</code>. Staging area and working directory are NOT changed. Commits after <code>&lt;commit&gt;</code> become staged changes. Useful for redoing a series of commits.</li>
 <li><strong><code>git reset --mixed &lt;commit&gt;</code> (Default mode):</strong> Moves HEAD to <code>&lt;commit&gt;</code>. Staging area is updated to match <code>&lt;commit&gt;</code>. Working directory is NOT changed. Changes are now unstaged. Example: <code class="command">git reset HEAD~1</code> (uncommits last commit, changes are unstaged).</li>
 <li><strong><code>git reset --hard &lt;commit&gt;</code>:</strong> Moves HEAD to <code>&lt;commit&gt;</code>. Staging area AND working directory are forcefully updated to match <code>&lt;commit&gt;</code>.
-                                    <span class="important-note">Warning: Discards ALL uncommitted changes in staging and working directory since <code>&lt;commit&gt;</code>. Potentially destructive and can lead to data loss if not used carefully.</span></li>
+                                    <span class="important-note">Warning: Discards ALL uncommitted changes in staging and working directory since <code>&lt;commit&gt;</code>. Potentially destructive and can lead to data loss if not used carefully. (The commits themselves usually aren't gone instantly — see <a href="git-internals.html#lifecycle">reflog recovery</a>.)</span></li>
 </ul>
+<p class="mb-0"><small>For exactly what each mode moves at the ref/index/working-dir level, see the <a href="git-internals.html#mapping"><code>git reset</code> mode table</a> in Git Internals.</small></p>
 <h6><code>git restore</code> (Restores files in Working Dir or Staging Area):</h6>
 <p>A safer, more focused command for discarding changes.</p>
 <ul>
@@ -1027,6 +1031,7 @@ Thumbs.db</code></pre>
 <li><code>&lt;branch&gt;@{N}</code>: Nth prior position of the branch reference (uses the reflog).</li>
 <li><code>:/&lt;text&gt;</code>: Newest commit whose message contains <code>&lt;text&gt;</code>.</li>
 </ul>
+<p class="mb-0"><small>Why <code>~</code> and <code>^</code> behave differently: see <a href="git-internals.html#dag">ancestry shorthand in the commit DAG</a>.</small></p>
 </div>
 </div>
 </div>
@@ -1145,6 +1150,10 @@ Thumbs.db</code></pre>
     <a class="mx-2" href="versioncontrol.html" rel="noopener noreferrer" target="_blank" title="Versioncontrol">
       <i class="bi bi-code"></i>
       Versioncontrol
+    </a>
+    <a class="mx-2" href="git-internals.html" rel="noopener noreferrer" target="_blank" title="Git Internals">
+      <i class="bi bi-code"></i>
+      Git Internals
     </a>
   </div>
   <p class="mb-2">
