@@ -974,6 +974,12 @@ if (is_readable($popularityFile)) {
         const noResultsMessage = document.getElementById('noResults');
         const items = grid ? Array.from(grid.querySelectorAll('.portfolio-item')) : [];
 
+        // --- Title sync ---
+        const BASE_TITLE = document.title;
+        function updateTitle(cat) {
+            document.title = cat ? `${cat} Cheatsheets | David Veksler` : BASE_TITLE;
+        }
+
         // --- URL sync helpers ---
         const SORT_DEFAULT = 'date-desc';
         function syncToURL() {
@@ -999,6 +1005,7 @@ if (is_readable($popularityFile)) {
                 const opt = Array.from(sortSelect.options).find(o => o.value === params.get('sort'));
                 if (opt) sortSelect.value = params.get('sort');
             }
+            updateTitle(categorySelect ? categorySelect.value : '');
         }
 
         initFromURL();
@@ -1055,6 +1062,7 @@ if (is_readable($popularityFile)) {
                     }
                 });
                 noResultsMessage.classList.toggle('d-none', itemsVisible > 0);
+                updateTitle(selectedCategory);
                 syncToURL();
             };
 
