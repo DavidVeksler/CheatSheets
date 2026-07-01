@@ -61,11 +61,41 @@ function rel_time(?string $dateStr): string {
     return 'just now';
 }
 
+function referer_icon(string $host): string {
+    $h = strtolower($host);
+    return match (true) {
+        $h === '(direct)'                         => 'bi-cursor-fill',
+        str_contains($h, 'davidveksler.com')       => 'bi-house-fill',
+        str_contains($h, 'google.')                => 'bi-google',
+        str_contains($h, 'bing.')                  => 'bi-microsoft',
+        str_contains($h, 'duckduckgo')             => 'bi-search',
+        str_contains($h, 'reddit.')                => 'bi-reddit',
+        str_contains($h, 'twitter.') || $h === 'x.com' || $h === 't.co' => 'bi-twitter-x',
+        str_contains($h, 'facebook.')              => 'bi-facebook',
+        str_contains($h, 'linkedin.')              => 'bi-linkedin',
+        str_contains($h, 'github.')                => 'bi-github',
+        str_contains($h, 'youtube.')                => 'bi-youtube',
+        str_contains($h, 'news.ycombinator')       => 'bi-hash',
+        default                                     => 'bi-link-45deg',
+    };
+}
+
 /* ---------- Derived stats ---------- */
 $rankedCount = count($scores);
 $totalScore  = array_sum($scores);
 $maxScore    = $rankedCount > 0 ? (float) reset($scores) : 1.0;
 $lastUpdated = $popData['lastUpdated'];
+
+$scoreVals   = array_values($scores);  // already arsort'd → descending
+$avgScore    = $rankedCount > 0 ? $totalScore / $rankedCount : 0;
+$medianScore = 0;
+if ($rankedCount > 0) {
+    $mid = intdiv($rankedCount, 2);
+    $medianScore = $rankedCount % 2 === 1
+        ? $scoreVals[$mid]
+        : ($scoreVals[$mid - 1] + $scoreVals[$mid]) / 2;
+}
+$top3Share = $totalScore > 0 ? round(array_sum(array_slice($scoreVals, 0, 3)) / $totalScore * 100, 1) : 0;
 
 /* ---------- Build ranked rows ---------- */
 $rows = [];
@@ -76,6 +106,57 @@ foreach ($scores as $filename => $score) {
     $pct   = $totalScore > 0 ? round($score / $totalScore * 100, 1) : 0;
     $bar   = $maxScore > 0   ? round($score / $maxScore * 100, 2) : 0;
     $rows[] = compact('rank', 'filename', 'title', 'score', 'pct', 'bar');
+}
+
+/* ---------- Rising stars: pages published in the last 30 days, ranked by score ---------- */
+$risingCutoff = time() - 30 * 86400;
+$risingStars  = [];
+foreach ($scores as $filename => $score) {
+    $ctime = $metaCache[$filename]['git_ctime'] ?? 0;
+    if ($ctime >= $risingCutoff) {
+        $risingStars[] = [
+            'filename' => $filename,
+            'title'    => $metaCache[$filename]['title'] ?? filename_to_title($filename),
+            'score'    => $score,
+            'ctime'    => $ctime,
+        ];
+    }
+}
+usort($risingStars, fn($a, $b) => $b['score'] <=> $a['score']);
+$risingStarCount = count($risingStars);
+$risingStars      = array_slice($risingStars, 0, 5);
+
+/* ---------- Score distribution histogram ---------- */
+$buckets = [
+    ['label' => '0–1',    'min' => 0.0,  'max' => 1.0],
+    ['label' => '1–5',    'min' => 1.0,  'max' => 5.0],
+    ['label' => '5–20',   'min' => 5.0,  'max' => 20.0],
+    ['label' => '20–50',  'min' => 20.0, 'max' => 50.0],
+    ['label' => '50–200', 'min' => 50.0, 'max' => 200.0],
+    ['label' => '200+',   'min' => 200.0,'max' => INF],
+];
+foreach ($buckets as $i => $b) { $buckets[$i]['count'] = 0; }
+foreach ($scores as $score) {
+    foreach ($buckets as $i => $b) {
+        if ($score >= $b['min'] && $score < $b['max']) { $buckets[$i]['count']++; break; }
+    }
+}
+$maxBucketCount = max(1, max(array_column($buckets, 'count')));
+
+/* ---------- Top referrers ---------- */
+$referers = $popData['referers'] ?? [];
+arsort($referers);
+$totalReferers = array_sum($referers);
+$refererRows   = [];
+$i = 0;
+foreach ($referers as $host => $count) {
+    if (++$i > 10) break;
+    $refererRows[] = [
+        'host'  => $host,
+        'count' => $count,
+        'pct'   => $totalReferers > 0 ? round($count / $totalReferers * 100, 1) : 0,
+        'icon'  => referer_icon($host),
+    ];
 }
 ?>
 <!DOCTYPE html>
@@ -112,14 +193,6 @@ foreach ($scores as $filename => $score) {
           --bronze:    #b45309;
           --top3-bg:   light-dark(#fffbeb, #1c1a0f);
         }
-        body {
-          background: var(--bg); color: var(--text);
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          min-height: 100vh;
-        }
-        a { color: var(--accent); }
-        a:hover { color: var(--accent); }
-
         .navbar { background: light-dark(#2c3034, #0f1216); }
         .navbar-brand, .navbar .nav-link { color: #f1f3f5 !important; }
 
@@ -130,6 +203,47 @@ foreach ($scores as $filename => $score) {
         }
         .stat-box .num { font-size: 1.7rem; font-weight: 700; line-height: 1.1; }
         .stat-box .lbl { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; margin-top: .15rem; }
+
+        /* ---- mini panels (rising stars / distribution / referrers) ---- */
+        .mini-panel {
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: .5rem; padding: 1rem 1.1rem; height: 100%;
+        }
+        .mini-panel h2 {
+          font-size: .95rem; font-weight: 700; margin-bottom: .8rem;
+          display: flex; align-items: center; gap: .4rem;
+        }
+        .mini-row {
+          display: grid;
+          grid-template-columns: 1.3rem 1fr auto;
+          gap: .5rem; align-items: center;
+          padding: .4rem 0;
+        }
+        .mini-row + .mini-row { border-top: 1px dashed var(--border); }
+        .mini-row .mini-icon { color: var(--muted); text-align: center; }
+        .mini-row .mini-label {
+          min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          font-size: .88rem; text-decoration: none; color: var(--text);
+        }
+        .mini-row a.mini-label:hover { color: var(--accent); }
+        .mini-row .mini-value {
+          font-size: .82rem; font-variant-numeric: tabular-nums; color: var(--muted);
+          white-space: nowrap;
+        }
+        .mini-bar-track {
+          grid-column: 2 / 4; height: 5px; border-radius: 3px;
+          background: var(--bar-track); margin-top: .3rem; overflow: hidden;
+        }
+        .mini-bar-fill { height: 100%; border-radius: 3px; background: var(--bar-fill); width: var(--bar-w, 0%); }
+        .mini-empty { color: var(--muted); font-size: .85rem; font-style: italic; }
+        .mini-age { color: var(--muted); font-size: .76rem; }
+
+        /* ---- score distribution ---- */
+        .dist-row { display: grid; grid-template-columns: 3.4rem 1fr 1.6rem; gap: .6rem; align-items: center; padding: .35rem 0; }
+        .dist-row .dist-label { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .dist-row .dist-count { font-size: .8rem; text-align: right; font-variant-numeric: tabular-nums; }
+        .dist-track { height: 10px; border-radius: 3px; background: var(--bar-track); overflow: hidden; }
+        .dist-fill  { height: 100%; border-radius: 3px; background: var(--bar-fill); width: var(--bar-w, 0%); }
 
         /* ---- ranked list ---- */
         .rank-list {
@@ -205,6 +319,17 @@ foreach ($scores as $filename => $score) {
       }
       [data-theme="light"] { color-scheme: light; }
       [data-theme="dark"]  { color-scheme: dark; }
+
+      /* Unlayered on purpose: @layer rules always lose to Bootstrap's unlayered
+         CSS regardless of source order, so body/link overrides must live outside
+         @layer site to actually beat bootstrap.min.css's body/a rules. */
+      body {
+        background: var(--bg); color: var(--text);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+      }
+      a { color: var(--accent); }
+      a:hover { color: var(--accent); }
     </style>
 </head>
 <body>
@@ -267,6 +392,30 @@ foreach ($scores as $filename => $score) {
                     <div class="lbl">Last updated</div>
                 </div>
             </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="num"><?php echo number_format($avgScore, 1); ?></div>
+                    <div class="lbl">Avg score / page</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="num"><?php echo number_format($medianScore, 1); ?></div>
+                    <div class="lbl">Median score</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="num"><?php echo $top3Share; ?>&thinsp;%</div>
+                    <div class="lbl">Top 3 share of views</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="num"><?php echo number_format($risingStarCount); ?></div>
+                    <div class="lbl">Rising stars (&le;30d old)</div>
+                </div>
+            </div>
         </div>
 
         <!-- Explanation callout -->
@@ -275,6 +424,59 @@ foreach ($scores as $filename => $score) {
             Each day's raw view count is added to the score after multiplying existing values by <strong>29/30</strong>.
             After 30 days a single visit contributes ~37 % of its original weight, so this reflects
             <em>consistently popular</em> pages — not one-day spikes. Scores reset to zero over ~3 months of inactivity.
+        </div>
+
+        <!-- Rising stars / Score distribution / Top referrers -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-4">
+                <div class="mini-panel">
+                    <h2><i class="bi bi-rocket-takeoff-fill"></i>Rising Stars <span class="mini-age">(published &le;30d ago)</span></h2>
+                    <?php if (empty($risingStars)): ?>
+                        <p class="mini-empty mb-0">No pages published in the last 30 days.</p>
+                    <?php else: ?>
+                        <?php foreach ($risingStars as $star): ?>
+                        <div class="mini-row">
+                            <span class="mini-icon"><i class="bi bi-star-fill"></i></span>
+                            <a class="mini-label" href="<?php echo h($star['filename']); ?>" target="_blank" rel="noopener" title="<?php echo h($star['title']); ?>">
+                                <?php echo h($star['title']); ?>
+                            </a>
+                            <span class="mini-value"><?php echo number_format($star['score'], 0); ?></span>
+                            <div class="mini-age" style="grid-column: 2 / 4;">published <?php echo rel_time(date('c', $star['ctime'])); ?></div>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="mini-panel">
+                    <h2><i class="bi bi-bar-chart-steps"></i>Score Distribution</h2>
+                    <?php foreach ($buckets as $b): $w = round($b['count'] / $maxBucketCount * 100, 1); ?>
+                    <div class="dist-row">
+                        <span class="dist-label"><?php echo h($b['label']); ?></span>
+                        <div class="dist-track"><div class="dist-fill" style="--bar-w: <?php echo $w; ?>%"></div></div>
+                        <span class="dist-count"><?php echo $b['count']; ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="mini-panel">
+                    <h2><i class="bi bi-signpost-split-fill"></i>Top Referrers</h2>
+                    <?php if (empty($refererRows)): ?>
+                        <p class="mini-empty mb-0">No referrer data yet — populated by the next nightly run.</p>
+                    <?php else: ?>
+                        <?php foreach ($refererRows as $ref): ?>
+                        <div class="mini-row">
+                            <span class="mini-icon"><i class="bi <?php echo h($ref['icon']); ?>"></i></span>
+                            <span class="mini-label" title="<?php echo h($ref['host']); ?>"><?php echo h($ref['host']); ?></span>
+                            <span class="mini-value"><?php echo $ref['pct']; ?>&thinsp;%</span>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
 
         <!-- Ranked list -->
