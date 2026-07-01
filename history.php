@@ -292,12 +292,6 @@ $pageTitle = match ($view) {
           --del-bg:    light-dark(#ffebe9, #2a1416);
           --hunk:      light-dark(#6639ba, #d2a8ff);
         }
-        body {
-          background: var(--bg); color: var(--text);
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          min-height: 100vh;
-        }
-        a { color: var(--accent); }
         .navbar { background: light-dark(#2c3034, #0f1216); }
         .navbar-brand, .navbar .nav-link { color: #f1f3f5 !important; }
         .card, .list-card {
@@ -365,6 +359,16 @@ $pageTitle = match ($view) {
       /* Manual theme override */
       [data-theme="light"] { color-scheme: light; }
       [data-theme="dark"]  { color-scheme: dark; }
+
+      /* Unlayered on purpose: @layer rules always lose to Bootstrap's unlayered
+         CSS regardless of source order, so body/link overrides must live outside
+         @layer site to actually beat bootstrap.min.css's body/a rules. */
+      body {
+        background: var(--bg); color: var(--text);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+      }
+      a { color: var(--accent); }
     </style>
 </head>
 <body>

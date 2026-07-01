@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 """
-Pull yesterday's per-path view counts from Cloudflare GraphQL Analytics and
-accumulate them into popularity.json with 30-day exponential decay.
+Pull yesterday's per-path view counts and referrer-host counts from Cloudflare
+GraphQL Analytics and accumulate them into popularity.json with 30-day
+exponential decay.
 
 Required env vars:
   CLOUDFLARE_API_TOKEN  – Bearer token with Zone Analytics:Read permission
   CLOUDFLARE_ZONE_ID    – Zone ID (optional; auto-detected from first zone if absent)
 
 Run this once a day (e.g. via GitHub Actions). Each run:
-  1. Fetches yesterday's GET request counts grouped by URL path.
-  2. Multiplies every existing score by DECAY_FACTOR (≈ 0.967, 30-day half-life).
-  3. Adds today's raw count on top.
+  1. Fetches yesterday's GET request counts grouped by URL path, and grouped
+     by referrer host (clientRefererHost).
+  2. Multiplies every existing score/referer count by DECAY_FACTOR (≈ 0.967,
+     30-day half-life).
+  3. Adds today's raw counts on top.
   4. Saves result back to popularity.json.
 
 The decay means a page visited 1,000 times today will score ~630 after 15 days,
-~370 after 30 days, ~50 after 90 days – natural "trending" window.
+~370 after 30 days, ~50 after 90 days – natural "trending" window. The same
+decay is applied to referrer counts so "top referrers" reflects recent traffic
+sources rather than an all-time total.
 """
 import json
 import os
@@ -27,6 +32,8 @@ CLOUDFLARE_GQL = "https://api.cloudflare.com/client/v4/graphql"
 CLOUDFLARE_REST = "https://api.cloudflare.com/client/v4"
 POPULARITY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "popularity.json")
 DECAY_FACTOR = 29 / 30   # ≈ 0.9667; score halves roughly every 30 days
+SITE_HOST = "cheatsheets.davidveksler.com"  # exclude internal nav from referer counts
+DIRECT_KEY = "(direct)"                      # bucket for empty/no referer
 
 
 def cf_get(token: str, path: str) -> dict:
@@ -61,17 +68,23 @@ def get_zone_id(token: str) -> str:
     return zones[0]["id"]
 
 
-def fetch_path_counts(token: str, zone_id: str, day: str) -> dict[str, int]:
+def fetch_analytics(token: str, zone_id: str, day: str) -> tuple[dict[str, int], dict[str, int]]:
     """
     Query Cloudflare httpRequestsAdaptiveGroups for GET requests on `day`
-    (ISO date string, e.g. "2026-06-28"), grouped by clientRequestPath.
-    Returns {path: count} for paths that look like top-level HTML files.
+    (ISO date string, e.g. "2026-06-28"), once grouped by clientRequestPath
+    and once grouped by clientRefererHost (via aliases, one HTTP round trip).
+
+    Returns (path_counts, referer_counts):
+      - path_counts: {filename: count} for top-level .html files.
+      - referer_counts: {host: count} for external referrer hosts, with
+        empty referers bucketed under DIRECT_KEY and internal navigation
+        (referer host == SITE_HOST) excluded.
     """
     query = """
     {
       viewer {
         zones(filter: { zoneTag: "%s" }) {
-          httpRequestsAdaptiveGroups(
+          byPath: httpRequestsAdaptiveGroups(
             limit: 5000
             filter: {
               date_geq: "%s"
@@ -85,28 +98,52 @@ def fetch_path_counts(token: str, zone_id: str, day: str) -> dict[str, int]:
               clientRequestPath
             }
           }
+          byReferer: httpRequestsAdaptiveGroups(
+            limit: 5000
+            filter: {
+              date_geq: "%s"
+              date_leq: "%s"
+              requestSource: "eyeball"
+            }
+            orderBy: [count_DESC]
+          ) {
+            count
+            dimensions {
+              clientRefererHost
+            }
+          }
         }
       }
     }
-    """ % (zone_id, day, day)
+    """ % (zone_id, day, day, day, day)
 
     result = cf_gql(token, query)
 
     if "errors" in result and result["errors"]:
         raise RuntimeError(f"Cloudflare GraphQL error: {result['errors']}")
 
-    groups = result["data"]["viewer"]["zones"][0]["httpRequestsAdaptiveGroups"]
+    zone = result["data"]["viewer"]["zones"][0]
 
-    counts: dict[str, int] = {}
-    for g in groups:
+    path_counts: dict[str, int] = {}
+    for g in zone["byPath"]:
         path: str = g["dimensions"]["clientRequestPath"]
         count: int = g["count"]
         # Keep only top-level .html files (no sub-paths, no query strings)
         filename = path.lstrip("/").split("?")[0]
         if filename.endswith(".html") and "/" not in filename and filename:
-            counts[filename] = counts.get(filename, 0) + count
+            path_counts[filename] = path_counts.get(filename, 0) + count
 
-    return counts
+    referer_counts: dict[str, int] = {}
+    for g in zone["byReferer"]:
+        host: str = g["dimensions"]["clientRefererHost"]
+        count: int = g["count"]
+        if not host:
+            host = DIRECT_KEY
+        elif host == SITE_HOST:
+            continue  # internal navigation, not an external referral source
+        referer_counts[host] = referer_counts.get(host, 0) + count
+
+    return path_counts, referer_counts
 
 
 def load_popularity() -> dict:
@@ -116,7 +153,7 @@ def load_popularity() -> dict:
                 return json.load(f)
         except (json.JSONDecodeError, OSError):
             pass
-    return {"lastUpdated": None, "scores": {}}
+    return {"lastUpdated": None, "scores": {}, "referers": {}}
 
 
 def save_popularity(data: dict) -> None:
@@ -143,33 +180,41 @@ def main() -> None:
         print("Already updated today — skipping.")
         return
 
-    print(f"Fetching path analytics for {yesterday}…")
+    print(f"Fetching path + referer analytics for {yesterday}…")
     try:
-        new_counts = fetch_path_counts(token, zone_id, yesterday)
+        new_counts, new_referer_counts = fetch_analytics(token, zone_id, yesterday)
     except (URLError, HTTPError, RuntimeError, KeyError) as exc:
         print(f"ERROR fetching analytics: {exc}", file=sys.stderr)
         sys.exit(1)
 
     print(f"  {sum(new_counts.values())} page views across {len(new_counts)} HTML paths")
+    print(f"  {sum(new_referer_counts.values())} views across {len(new_referer_counts)} referrer hosts")
 
     scores: dict[str, float] = popularity.get("scores", {})
+    referers: dict[str, float] = popularity.get("referers", {})
 
-    # Apply decay to every existing score
+    # Apply decay to every existing score / referer count
     for key in list(scores):
         scores[key] *= DECAY_FACTOR
+    for key in list(referers):
+        referers[key] *= DECAY_FACTOR
 
     # Add yesterday's counts
     for filename, count in new_counts.items():
         scores[filename] = scores.get(filename, 0.0) + count
+    for host, count in new_referer_counts.items():
+        referers[host] = referers.get(host, 0.0) + count
 
     # Prune near-zero entries to keep the file lean
     scores = {k: round(v, 4) for k, v in scores.items() if v >= 0.1}
+    referers = {k: round(v, 4) for k, v in referers.items() if v >= 0.1}
 
     popularity["lastUpdated"] = today
     popularity["scores"] = scores
+    popularity["referers"] = referers
 
     save_popularity(popularity)
-    print(f"Saved {len(scores)} entries to popularity.json — done.")
+    print(f"Saved {len(scores)} page scores and {len(referers)} referrer hosts to popularity.json — done.")
 
 
 if __name__ == "__main__":
