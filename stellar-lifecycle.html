@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stellar Lifecycle: A Scroll-Driven CSS Animation Journey</title>
+<meta name="description" content="An animated, scroll-driven journey through the life of a star — from molecular cloud to protostar, main sequence, red giant, and the final fork into white dwarf, supernova, neutron star, or black hole. Built with pure CSS scroll-driven animations."/>
+<meta name="keywords" content="stellar evolution, star lifecycle, CSS scroll-driven animation, animation-timeline, nebula, main sequence, red giant, supernova, white dwarf, neutron star, black hole"/>
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/stellar-lifecycle.html"/>
+
+<meta property="og:title" content="Stellar Lifecycle: A Scroll-Driven CSS Animation Journey"/>
+<meta property="og:description" content="Scroll through the life of a star — nebula to black hole — animated entirely with modern CSS scroll-driven animations."/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/stellar-lifecycle.html"/>
+<meta property="og:image" content="images/stellar-lifecycle.png"/>
+<meta property="og:image:alt" content="A glowing star against deep space, illustrating stages of stellar evolution"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Stellar Lifecycle: A Scroll-Driven CSS Animation Journey"/>
+<meta name="twitter:description" content="Scroll through the life of a star — nebula to black hole — animated entirely with modern CSS scroll-driven animations."/>
+<meta name="twitter:image" content="images/stellar-lifecycle.png"/>
+<meta name="twitter:creator" content="@heroiclife"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Stellar Lifecycle: A Scroll-Driven CSS Animation Journey",
+  "description": "An animated, scroll-driven journey through stellar evolution — molecular cloud, protostar, main sequence, red giant, and the mass-dependent fork into white dwarf, supernova, neutron star, or black hole — built with pure CSS scroll-driven animations.",
+  "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+  "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+  "datePublished": "2026-06-30",
+  "dateModified": "2026-06-30",
+  "keywords": "stellar evolution, star lifecycle, CSS scroll-driven animation, animation-timeline, nebula, main sequence, red giant, supernova, white dwarf, neutron star, black hole"
+}
+</script>
+
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    color-scheme: dark;
+    --void:        #04050e;
+    --deep:        #080b20;
+    --panel:       rgba(18, 24, 56, 0.42);
+    --ink:         #eaf0ff;
+    --muted:       #9aa6d4;
+
+    --purple:      #c084fc;
+    --pink:        #f472b6;
+    --cyan:        #5ee7ff;
+    --blue:        #4d7cff;
+    --gold:        #ffd54a;
+    --orange:      #ff9a56;
+    --red:         #ff4d2e;
+    --white:       #ffffff;
+
+    --stage-accent: var(--gold);
+    --mono: 'Space Mono', ui-monospace, monospace;
+    --display: 'Orbitron', system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background:
+      radial-gradient(1200px 800px at 15% -10%, rgba(124,58,237,0.16), transparent 60%),
+      radial-gradient(1000px 700px at 90% 110%, rgba(255,77,46,0.12), transparent 55%),
+      linear-gradient(180deg, var(--void) 0%, var(--deep) 45%, #050411 100%);
+    color: var(--ink);
+    font-family: var(--mono);
+    line-height: 1.65;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Parallax starfield (3 depth layers) ---------- */
+  .stars { position: fixed; inset: -20% 0; z-index: 0; pointer-events: none; }
+  .stars span {
+    position: absolute; inset: 0;
+    background-repeat: repeat;
+    will-change: transform;
+  }
+  .stars .far {
+    background-image:
+      radial-gradient(1px 1px at 20px 30px, #cdd6ff, transparent),
+      radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+      radial-gradient(1px 1px at 90px 160px, #b7c4ff, transparent),
+      radial-gradient(1px 1px at 200px 120px, #fff, transparent);
+    background-size: 240px 240px; opacity: 0.45;
+  }
+  .stars .mid {
+    background-image:
+      radial-gradient(1.5px 1.5px at 50px 60px, #fff, transparent),
+      radial-gradient(2px 2px at 180px 30px, #e5ecff, transparent),
+      radial-gradient(1.5px 1.5px at 260px 200px, #fff, transparent);
+    background-size: 320px 320px; opacity: 0.6;
+  }
+  .stars .near {
+    background-image:
+      radial-gradient(2px 2px at 80px 120px, #fff, transparent),
+      radial-gradient(2.5px 2.5px at 300px 260px, #fff, transparent);
+    background-size: 460px 460px; opacity: 0.8;
+  }
+
+  /* ---------- Scroll progress rail ---------- */
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px; width: 100%;
+    transform: scaleX(0); transform-origin: 0 50%;
+    background: linear-gradient(90deg, var(--cyan), var(--purple), var(--gold), var(--orange), var(--red));
+    box-shadow: 0 0 12px rgba(192,132,252,0.8);
+    z-index: 100;
+  }
+
+  /* ---------- Layout ---------- */
+  main { position: relative; z-index: 5; }
+
+  header {
+    min-height: 100svh;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; padding: 2rem; position: relative;
+  }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.5em;
+    text-transform: uppercase; color: var(--cyan); opacity: 0.8; margin-bottom: 1.4rem;
+    padding-left: 0.5em;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 900;
+    font-size: clamp(2.4rem, 9vw, 6.5rem); line-height: 0.95;
+    letter-spacing: 0.04em; text-wrap: balance;
+    background: linear-gradient(180deg, #fff 0%, #cbd6ff 55%, #7c8cff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 34px rgba(120,140,255,0.45));
+  }
+  .lede {
+    margin-top: 1.4rem; max-width: 44ch; color: var(--muted);
+    font-size: clamp(1rem, 2.4vw, 1.25rem); text-wrap: pretty;
+  }
+  .scroll-hint {
+    position: absolute; bottom: 2.2rem; left: 50%; transform: translateX(-50%);
+    color: var(--gold); font-size: 0.8rem; letter-spacing: 0.3em; text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem; opacity: 0.85;
+  }
+  .scroll-hint .chev { width: 12px; height: 12px; border-right: 2px solid var(--gold); border-bottom: 2px solid var(--gold); transform: rotate(45deg); }
+
+  .stage { min-height: 100svh; display: flex; align-items: center; padding: clamp(3rem, 8vh, 7rem) 1.5rem; }
+  .wrap {
+    max-width: 1180px; margin: 0 auto; width: 100%;
+    display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: center;
+  }
+  .stage:nth-of-type(even) .viz { order: -1; }  /* alternate sides */
+
+  /* Copy column */
+  .kicker {
+    font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--stage-accent); display: inline-flex; align-items: center; gap: 0.7rem; margin-bottom: 0.9rem;
+  }
+  .kicker .num {
+    font-family: var(--display); font-weight: 800; font-size: 0.95rem;
+    border: 1px solid color-mix(in srgb, var(--stage-accent) 55%, transparent);
+    border-radius: 999px; padding: 0.15em 0.7em; color: var(--stage-accent);
+  }
+  h2 {
+    font-family: var(--display); font-weight: 800; font-size: clamp(1.7rem, 4.4vw, 2.9rem);
+    line-height: 1.05; letter-spacing: 0.01em; text-wrap: balance; margin-bottom: 1rem;
+    color: #fff; text-shadow: 0 0 30px color-mix(in srgb, var(--stage-accent) 45%, transparent);
+  }
+  .stage p { color: var(--muted); font-size: clamp(0.98rem, 2vw, 1.08rem); max-width: 52ch; text-wrap: pretty; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-top: 1.8rem; }
+  .stat {
+    background: var(--panel); border: 1px solid rgba(255,255,255,0.06);
+    border-left: 3px solid var(--stage-accent);
+    border-radius: 10px; padding: 1rem 1.1rem; backdrop-filter: blur(8px);
+  }
+  .stat .label { font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.35rem; }
+  .stat .value { font-family: var(--display); font-weight: 600; font-size: clamp(1.05rem, 2.6vw, 1.5rem); color: #fff; }
+
+  /* Visualization stage */
+  .viz { display: grid; place-items: center; min-height: min(58vh, 520px); }
+  .scene { position: relative; width: min(78vw, 420px); aspect-ratio: 1; display: grid; place-items: center; }
+
+  /* ============ CSS ART: the stellar objects ============ */
+
+  /* 1 — Molecular cloud / nebula */
+  .nebula { position: absolute; inset: 0; filter: blur(2px); }
+  .blob { position: absolute; border-radius: 50%; mix-blend-mode: screen; filter: blur(26px); }
+  .blob.b1 { inset: 8% 20% 40% 8%; background: radial-gradient(circle, var(--purple), transparent 70%); }
+  .blob.b2 { inset: 30% 6% 12% 34%; background: radial-gradient(circle, var(--pink), transparent 70%); }
+  .blob.b3 { inset: 18% 30% 30% 22%; background: radial-gradient(circle, var(--blue), transparent 70%); }
+  .blob.b4 { inset: 40% 40% 20% 20%; background: radial-gradient(circle, var(--cyan), transparent 72%); }
+  .seed {
+    position: absolute; width: 12px; height: 12px; border-radius: 50%;
+    background: radial-gradient(circle, #fff, var(--gold) 60%, transparent);
+    box-shadow: 0 0 24px var(--gold); left: 50%; top: 50%; translate: -50% -50%;
+    opacity: 0.55;
+  }
+
+  /* 2 — Protostar with accretion disk + bipolar jets */
+  .protostar { position: absolute; inset: 0; display: grid; place-items: center; }
+  .proto-core {
+    width: 24%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #fff, var(--orange) 55%, var(--red) 100%);
+    box-shadow: 0 0 50px var(--orange), 0 0 110px rgba(255,77,46,0.5);
+  }
+  .proto-disk {
+    position: absolute; width: 96%; aspect-ratio: 1 / 0.34; border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent, rgba(255,154,86,0.55), transparent 45%, rgba(94,231,255,0.4), transparent 80%);
+    -webkit-mask: radial-gradient(ellipse 50% 50%, transparent 38%, #000 42%);
+            mask: radial-gradient(ellipse 50% 50%, transparent 38%, #000 42%);
+    filter: blur(1px);
+  }
+  .jet { position: absolute; left: 50%; width: 5px; height: 46%; translate: -50% 0;
+    background: linear-gradient(var(--cyan), transparent); border-radius: 4px; filter: blur(0.5px); opacity: 0.85; }
+  .jet.up { bottom: 50%; }
+  .jet.down { top: 50%; rotate: 180deg; }
+
+  /* 3 — Main sequence star with corona + orbiting planet */
+  .mseq { position: absolute; inset: 0; display: grid; place-items: center; }
+  .corona {
+    position: absolute; width: 70%; aspect-ratio: 1; border-radius: 50%;
+    background: conic-gradient(from 0deg, rgba(255,213,74,0.0), rgba(255,213,74,0.45), rgba(255,154,86,0.15), rgba(255,213,74,0.45), rgba(255,213,74,0.0));
+    filter: blur(10px);
+  }
+  .sun {
+    width: 42%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 42% 38%, #fff 0%, var(--gold) 45%, var(--orange) 78%, #d1490f 100%);
+    box-shadow: 0 0 60px var(--gold), 0 0 130px rgba(255,154,86,0.55), inset -10px -12px 40px rgba(180,60,10,0.6);
+  }
+  .orbit { position: absolute; width: 88%; aspect-ratio: 1; border: 1px dashed rgba(255,255,255,0.14); border-radius: 50%; }
+  .planet { position: absolute; top: -5px; left: 50%; width: 10px; height: 10px; translate: -50% 0; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, var(--cyan), #1b4b7a); box-shadow: 0 0 10px rgba(94,231,255,0.7); }
+
+  /* 4 — Red giant */
+  .giant {
+    width: 82%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 40% 36%, #ffd9a0 0%, var(--orange) 30%, var(--red) 68%, #7a1502 100%);
+    box-shadow: 0 0 70px rgba(255,77,46,0.6), 0 0 160px rgba(255,77,46,0.35), inset -18px -22px 60px rgba(120,10,0,0.7);
+  }
+  .giant-mottle {
+    position: absolute; width: 82%; aspect-ratio: 1; border-radius: 50%; mix-blend-mode: overlay;
+    background: radial-gradient(circle at 30% 30%, rgba(255,220,150,0.5), transparent 22%),
+               radial-gradient(circle at 68% 40%, rgba(120,10,0,0.6), transparent 26%),
+               radial-gradient(circle at 55% 72%, rgba(255,180,90,0.45), transparent 25%);
+  }
+  .giant-relic { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); opacity: 0.6; left: 92%; top: 50%; }
+
+  /* 5 — Planetary nebula shells + white dwarf */
+  .pneb { position: absolute; inset: 0; display: grid; place-items: center; }
+  .shell { position: absolute; border-radius: 50%; opacity: 0.5; filter: blur(3px); }
+  .shell.s1 { width: 60%; aspect-ratio: 1; border: 6px solid var(--cyan); }
+  .shell.s2 { width: 80%; aspect-ratio: 1; border: 5px solid var(--purple); }
+  .shell.s3 { width: 100%; aspect-ratio: 1; border: 4px solid var(--pink); }
+  .dwarf { width: 12%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle, #fff, #bfe0ff 60%, #5ea8ff 100%);
+    box-shadow: 0 0 30px #bfe0ff, 0 0 70px rgba(94,168,255,0.6); }
+
+  /* 6 — Supernova */
+  .nova { position: absolute; inset: 0; display: grid; place-items: center; }
+  .nova-core { width: 16%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, #fff, #fff6d0 60%, transparent);
+    box-shadow: 0 0 60px #fff, 0 0 140px var(--gold); }
+  .flash { position: absolute; width: 100%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.85), rgba(255,213,74,0.25) 40%, transparent 68%); opacity: 0; }
+  .wave { position: absolute; border-radius: 50%; border: 2px solid; opacity: 0; }
+  .wave.w1 { border-color: var(--gold); }
+  .wave.w2 { border-color: var(--orange); }
+  .wave.w3 { border-color: var(--cyan); }
+  .ray { position: absolute; left: 50%; top: 50%; width: 3px; height: 46%; transform-origin: bottom center;
+    background: linear-gradient(var(--orange), transparent); opacity: 0; }
+
+  /* 7 — Black hole */
+  .bh { position: absolute; inset: 0; display: grid; place-items: center; perspective: 700px; }
+  .disk-tilt { position: absolute; width: 100%; aspect-ratio: 1; display: grid; place-items: center; transform: rotateX(66deg); }
+  .accretion {
+    position: absolute; width: 96%; aspect-ratio: 1; border-radius: 50%;
+    background: conic-gradient(from 0deg, #fff, var(--gold), var(--orange), var(--red), #3a0a02, var(--red), var(--orange), var(--gold), #fff);
+    -webkit-mask: radial-gradient(circle, transparent 30%, #000 33%, #000 70%, transparent 73%);
+            mask: radial-gradient(circle, transparent 30%, #000 33%, #000 70%, transparent 73%);
+    filter: blur(1px) saturate(1.2);
+  }
+  .horizon {
+    position: absolute; width: 30%; aspect-ratio: 1; border-radius: 50%; background: #000;
+    box-shadow: 0 0 0 3px rgba(255,220,150,0.9), 0 0 40px 6px rgba(255,180,90,0.55), inset 0 0 20px rgba(0,0,0,1);
+    z-index: 2;
+  }
+  .lens { position: absolute; width: 46%; aspect-ratio: 1; border-radius: 50%;
+    box-shadow: 0 0 26px 3px rgba(255,213,74,0.5); z-index: 1; }
+
+  /* ============ IDLE (time-based) ANIMATIONS — reduced-motion gated ============ */
+  @media (prefers-reduced-motion: no-preference) {
+    h1 { animation: hueGlow 6s ease-in-out infinite; }
+    .scroll-hint .chev { animation: nudge 1.6s ease-in-out infinite; }
+    .seed { animation: pulse 3s ease-in-out infinite; }
+    .blob { animation: drift 14s ease-in-out infinite alternate; }
+    .blob.b2 { animation-delay: -4s; } .blob.b3 { animation-delay: -8s; } .blob.b4 { animation-delay: -2s; }
+    .proto-disk { animation: spin 9s linear infinite; }
+    .proto-core, .nova-core { animation: pulse 2.6s ease-in-out infinite; }
+    .corona { animation: spin 26s linear infinite; }
+    .sun { animation: breathe 5s ease-in-out infinite; }
+    .orbit { animation: spin 12s linear infinite; }
+    .giant-mottle { animation: churn 10s ease-in-out infinite alternate; }
+    .accretion { animation: spin 7s linear infinite; }
+    .horizon { animation: throb 4s ease-in-out infinite; }
+
+    @keyframes hueGlow { 0%,100% { filter: drop-shadow(0 0 30px rgba(120,140,255,0.4)); } 50% { filter: drop-shadow(0 0 46px rgba(180,140,255,0.65)); } }
+    @keyframes nudge { 0%,100% { transform: rotate(45deg) translate(0,0); } 50% { transform: rotate(45deg) translate(4px,4px); } }
+    @keyframes pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.18); opacity: 1; } }
+    @keyframes drift { from { transform: translate(-6px,-4px) scale(1); } to { transform: translate(8px,6px) scale(1.06); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes breathe { 0%,100% { box-shadow: 0 0 60px var(--gold), 0 0 120px rgba(255,154,86,0.5), inset -10px -12px 40px rgba(180,60,10,0.6); } 50% { box-shadow: 0 0 80px var(--gold), 0 0 170px rgba(255,154,86,0.7), inset -10px -12px 40px rgba(180,60,10,0.6); } }
+    @keyframes churn { from { transform: rotate(0) scale(1); } to { transform: rotate(18deg) scale(1.03); } }
+    @keyframes throb { 0%,100% { box-shadow: 0 0 0 3px rgba(255,220,150,0.9), 0 0 40px 6px rgba(255,180,90,0.5), inset 0 0 20px #000; } 50% { box-shadow: 0 0 0 4px rgba(255,235,180,1), 0 0 60px 10px rgba(255,190,110,0.7), inset 0 0 20px #000; } }
+  }
+
+  /* ============ SCROLL-DRIVEN ANIMATIONS (progressive enhancement) ============ */
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+
+      /* progress rail + parallax use the root scroll timeline */
+      .progress { animation: fillRail linear both; animation-timeline: scroll(root); }
+      .stars .far  { animation: parallax linear both; animation-timeline: scroll(root); --shift: 60px; }
+      .stars .mid  { animation: parallax linear both; animation-timeline: scroll(root); --shift: 130px; }
+      .stars .near { animation: parallax linear both; animation-timeline: scroll(root); --shift: 240px; }
+      @keyframes fillRail { to { transform: scaleX(1); } }
+      @keyframes parallax { to { transform: translateY(calc(var(--shift) * -1)); } }
+
+      /* Copy + viz reveal as each stage scrolls into view (view timeline on the block) */
+      .reveal { opacity: 0; animation: reveal linear both; animation-timeline: view(); animation-range: entry 6% cover 34%; }
+      .viz    { animation: reveal linear both; animation-timeline: view(); animation-range: entry 2% cover 30%; }
+      @keyframes reveal { from { opacity: 0; transform: translateY(46px); } to { opacity: 1; transform: translateY(0); } }
+
+      /* Per-object scroll SCRUBBING — the object's own transformation tracks scroll position.
+         Idle animations above touch other properties (box-shadow/rotate on children) so they coexist. */
+
+      /* Nebula collapses toward the seed */
+      .blob   { animation: drift 14s ease-in-out infinite alternate, collapse linear both; animation-timeline: auto, view(); animation-range: entry 20% cover 70%; }
+      @keyframes collapse { to { scale: 0.35; opacity: 0.35; } }
+      .seed   { animation: pulse 3s ease-in-out infinite, ignite linear both; animation-timeline: auto, view(); animation-range: entry 30% cover 80%; }
+      @keyframes ignite { from { scale: 0.4; } to { scale: 2.4; } }
+
+      /* Protostar jets extend & core brightens */
+      .jet    { animation: growJet linear both; animation-timeline: view(); animation-range: entry 25% cover 70%; }
+      @keyframes growJet { from { scale: 1 0.2; opacity: 0.2; } to { scale: 1 1; opacity: 0.9; } }
+
+      /* Main sequence steady swell */
+      .sun    { animation: breathe 5s ease-in-out infinite, swell linear both; animation-timeline: auto, view(); animation-range: entry 20% cover 65%; }
+      @keyframes swell { from { scale: 0.72; } to { scale: 1; } }
+
+      /* Red giant balloons out as you scroll */
+      .giant, .giant-mottle { animation: inflate linear both; animation-timeline: view(); animation-range: entry 12% cover 62%; }
+      .giant-mottle { animation-name: inflateChurn; }
+      @keyframes inflate { from { scale: 0.34; } to { scale: 1; } }
+      @keyframes inflateChurn { from { scale: 0.34; rotate: 0deg; } to { scale: 1; rotate: 16deg; } }
+
+      /* Planetary nebula shells expand outward, dwarf stays */
+      .shell.s1 { animation: expandShell linear both; animation-timeline: view(); animation-range: entry 15% cover 70%; }
+      .shell.s2 { animation: expandShell linear both; animation-timeline: view(); animation-range: entry 20% cover 80%; }
+      .shell.s3 { animation: expandShell linear both; animation-timeline: view(); animation-range: entry 25% cover 90%; }
+      @keyframes expandShell { from { scale: 0.2; opacity: 0.9; } to { scale: 1.15; opacity: 0.12; } }
+      .dwarf { animation: ignite2 linear both; animation-timeline: view(); animation-range: entry 25% cover 60%; }
+      @keyframes ignite2 { from { scale: 0.2; opacity: 0.3; } to { scale: 1; opacity: 1; } }
+
+      /* Supernova detonates through the scroll window */
+      .flash { animation: flashOut linear both; animation-timeline: view(); animation-range: entry 25% cover 45%; }
+      @keyframes flashOut { 0% { opacity: 0; scale: 0.2; } 30% { opacity: 1; } 100% { opacity: 0; scale: 1.2; } }
+      .wave  { animation: blast linear both; animation-timeline: view(); }
+      .wave.w1 { animation-range: entry 25% cover 75%; }
+      .wave.w2 { animation-range: entry 32% cover 82%; }
+      .wave.w3 { animation-range: entry 40% cover 90%; }
+      @keyframes blast { from { width: 0; height: 0; opacity: 1; } to { width: 118%; height: 118%; opacity: 0; } }
+      .ray { animation: shoot linear both; animation-timeline: view(); animation-range: entry 30% cover 70%; }
+      @keyframes shoot { from { opacity: 0; height: 0; } 40% { opacity: 0.9; } to { opacity: 0; height: 60%; } }
+
+      /* Black hole disk tilts flat + intensifies */
+      .disk-tilt { animation: tilt linear both; animation-timeline: view(); animation-range: entry 15% cover 70%; }
+      @keyframes tilt { from { transform: rotateX(30deg) scale(0.7); } to { transform: rotateX(74deg) scale(1); } }
+      .horizon { animation: throb 4s ease-in-out infinite, collapseHz linear both; animation-timeline: auto, view(); animation-range: entry 20% cover 60%; }
+      @keyframes collapseHz { from { scale: 1.8; } to { scale: 1; } }
+    }
+  }
+
+  /* ---------- Footer ---------- */
+  footer {
+    position: relative; z-index: 5; text-align: center; padding: 5rem 1.5rem 3rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, transparent, rgba(124,58,237,0.06));
+  }
+  footer .cite { max-width: 60ch; margin: 0 auto 1.4rem; color: var(--muted); text-wrap: pretty; }
+  footer .meta { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.08em; }
+  footer a { color: var(--cyan); text-decoration: none; }
+  footer a:hover, footer a:focus-visible { text-decoration: underline; }
+
+  .support-note {
+    display: none; max-width: 52ch; margin: 1.4rem auto 0; padding: 0.7rem 1rem;
+    font-size: 0.78rem; color: var(--muted); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px;
+  }
+  @supports not (animation-timeline: view()) { .support-note { display: block; } }
+
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 4px; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 820px) {
+    .wrap { grid-template-columns: 1fr; gap: 2rem; }
+    .stage:nth-of-type(even) .viz { order: 0; }
+    .viz { order: -1; min-height: 44vh; }
+    .scene { width: min(70vw, 320px); }
+    .stats { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 420px) {
+    .stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" aria-hidden="true"></div>
+<div class="stars" aria-hidden="true"><span class="far"></span><span class="mid"></span><span class="near"></span></div>
+
+<main>
+  <header>
+    <p class="eyebrow reveal">Stellar Evolution</p>
+    <h1>Stellar Lifecycle</h1>
+    <p class="lede reveal">The 13-billion-year story of a star, told as you scroll — from a cold cloud of gas to the brilliant, violent, and strange ways stars die.</p>
+    <div class="scroll-hint" aria-hidden="true"><span>Scroll to begin</span><span class="chev"></span></div>
+  </header>
+
+  <!-- 1 · Molecular Cloud -->
+  <section class="stage" style="--stage-accent: var(--purple)">
+    <div class="wrap">
+      <div class="copy reveal">
+        <p class="kicker"><span class="num">01</span> Molecular Cloud</p>
+        <h2>It begins in the cold and dark</h2>
+        <p>Stars are born inside giant molecular clouds — vast, frigid reservoirs of hydrogen and dust. A shockwave or gravitational nudge tips a region past balance, and it begins to collapse, fragmenting into dense knots that will each become a star.</p>
+        <div class="stats">
+          <div class="stat"><div class="label">Temperature</div><div class="value">10–20 K</div></div>
+          <div class="stat"><div class="label">Composition</div><div class="value">~73% H, 25% He</div></div>
+          <div class="stat"><div class="label">Cloud span</div><div class="value">Up to ~600 ly</div></div>
+          <div class="stat"><div class="label">Collapse trigger</div><div class="value">Gravity + shock</div></div>
+        </div>
+      </div>
+      <div class="viz">
+        <div class="scene">
+          <div class="nebula"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span></div>
+          <div class="seed"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · Protostar -->
+  <section class="stage" style="--stage-accent: var(--cyan)">
+    <div class="wrap">
+      <div class="copy reveal">
+        <p class="kicker"><span class="num">02</span> Protostar</p>
+        <h2>A core catches fire</h2>
+        <p>As the knot collapses, it spins up into a flattened disk feeding a hot, glowing core. Infalling material and magnetic fields launch spectacular bipolar jets from the poles. The protostar isn't fusing yet — it glows from the sheer heat of contraction.</p>
+        <div class="stats">
+          <div class="stat"><div class="label">Duration</div><div class="value">~100k–1M yrs</div></div>
+          <div class="stat"><div class="label">Core temp</div><div class="value">Climbing to 10⁷ K</div></div>
+          <div class="stat"><div class="label">Disk</div><div class="value">Protoplanetary</div></div>
+          <div class="stat"><div class="label">Signature</div><div class="value">Bipolar jets</div></div>
+        </div>
+      </div>
+      <div class="viz">
+        <div class="scene">
+          <div class="protostar">
+            <span class="jet up"></span>
+            <span class="proto-disk"></span>
+            <span class="proto-core"></span>
+            <span class="jet down"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · Main Sequence -->
+  <section class="stage" style="--stage-accent: var(--gold)">
+    <div class="wrap">
+      <div class="copy reveal">
+        <p class="kicker"><span class="num">03</span> Main Sequence</p>
+        <h2>The long, steady prime of life</h2>
+        <p>Core temperature crosses ~15 million K and hydrogen fusion ignites for real. Outward radiation pressure balances inward gravity — a stable star is born. This equilibrium lasts almost the entire stellar lifetime; our Sun spends ~90% of its life right here.</p>
+        <div class="stats">
+          <div class="stat"><div class="label">Duration (Sun)</div><div class="value">~10 billion yrs</div></div>
+          <div class="stat"><div class="label">Core temp</div><div class="value">~15 million K</div></div>
+          <div class="stat"><div class="label">Fusion</div><div class="value">H → He</div></div>
+          <div class="stat"><div class="label">Fuel burned/s</div><div class="value">~600M t H</div></div>
+        </div>
+      </div>
+      <div class="viz">
+        <div class="scene">
+          <div class="mseq">
+            <span class="corona"></span>
+            <span class="orbit"><span class="planet"></span></span>
+            <span class="sun"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · Red Giant -->
+  <section class="stage" style="--stage-accent: var(--orange)">
+    <div class="wrap">
+      <div class="copy reveal">
+        <p class="kicker"><span class="num">04</span> Red Giant</p>
+        <h2>The fuel runs low, the star swells</h2>
+        <p>Core hydrogen exhausts. The core contracts and heats while hydrogen ignites in a shell around it — dumping so much energy that the outer layers balloon outward and cool to a deep red. When the Sun does this in ~5 billion years, it may reach Earth's orbit.</p>
+        <div class="stats">
+          <div class="stat"><div class="label">Radius</div><div class="value">100–200× Sun</div></div>
+          <div class="stat"><div class="label">Surface temp</div><div class="value">3,000–5,000 K</div></div>
+          <div class="stat"><div class="label">Core fusion</div><div class="value">He → C, O</div></div>
+          <div class="stat"><div class="label">Example</div><div class="value">Betelgeuse</div></div>
+        </div>
+      </div>
+      <div class="viz">
+        <div class="scene">
+          <div class="giant"></div>
+          <div class="giant-mottle"></div>
+          <div class="giant-relic"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · Planetary Nebula → White Dwarf (low-mass fate) -->
+  <section class="stage" style="--stage-accent: var(--cyan)">
+    <div class="wrap">
+      <div class="copy reveal">
+        <p class="kicker"><span class="num">05a</span> Low-Mass Fate</p>
+        <h2>A gentle exit: white dwarf</h2>
+        <p>Stars below ~8 solar masses never get hot enough to fuse past carbon. They shed their outer layers into a glowing planetary nebula, leaving behind a dense, Earth-sized ember — a white dwarf — that slowly cools over trillions of years. This is the Sun's destiny.</p>
+        <div class="stats">
+          <div class="stat"><div class="label">Progenitor</div><div class="value">&lt; 8 M☉</div></div>
+          <div class="stat"><div class="label">Remnant size</div><div class="value">≈ Earth</div></div>
+          <div class="stat"><div class="label">Density</div><div class="value">~1 t/cm³</div></div>
+          <div class="stat"><div class="label">Fate</div><div class="value">Slow cooling</div></div>
+        </div>
+      </div>
+      <div class="viz">
+        <div class="scene">
+          <div class="pneb">
+            <span class="shell s3"></span><span class="shell s2"></span><span class="shell s1"></span>
+            <span class="dwarf"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Supernova (high-mass fate) -->
+  <section class="stage" style="--stage-accent: var(--gold)">
+    <div class="wrap">
+      <div class="copy reveal">
+        <p class="kicker"><span class="num">05b</span> High-Mass Fate</p>
+        <h2>A violent exit: supernova</h2>
+        <p>Massive stars fuse elements all the way to iron — which costs energy instead of releasing it. Fusion stalls, the core collapses in under a second, and rebounds in a titanic shockwave. For weeks the explosion can outshine an entire galaxy, forging and scattering the heavy elements in your body.</p>
+        <div class="stats">
+          <div class="stat"><div class="label">Progenitor</div><div class="value">&gt; 8 M☉</div></div>
+          <div class="stat"><div class="label">Peak brightness</div><div class="value">~1 billion Suns</div></div>
+          <div class="stat"><div class="label">Ejecta speed</div><div class="value">10,000+ km/s</div></div>
+          <div class="stat"><div class="label">Core collapse</div><div class="value">&lt; 1 second</div></div>
+        </div>
+      </div>
+      <div class="viz">
+        <div class="scene">
+          <div class="nova">
+            <span class="wave w3"></span><span class="wave w2"></span><span class="wave w1"></span>
+            <span class="ray" style="transform:translate(-50%,-100%) rotate(0deg)"></span>
+            <span class="ray" style="transform:translate(-50%,-100%) rotate(60deg)"></span>
+            <span class="ray" style="transform:translate(-50%,-100%) rotate(120deg)"></span>
+            <span class="ray" style="transform:translate(-50%,-100%) rotate(180deg)"></span>
+            <span class="ray" style="transform:translate(-50%,-100%) rotate(240deg)"></span>
+            <span class="ray" style="transform:translate(-50%,-100%) rotate(300deg)"></span>
+            <span class="flash"></span>
+            <span class="nova-core"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Black Hole / Neutron Star -->
+  <section class="stage" style="--stage-accent: var(--purple)">
+    <div class="wrap">
+      <div class="copy reveal">
+        <p class="kicker"><span class="num">06</span> The Remnant</p>
+        <h2>What the collapse leaves behind</h2>
+        <p>If the surviving core is 1.4–~3 solar masses, it becomes a neutron star — a city-sized sphere so dense a teaspoon weighs a billion tonnes. Above ~3 solar masses, nothing halts gravity: the core collapses to a singularity wrapped in an event horizon. A black hole is born.</p>
+        <div class="stats">
+          <div class="stat"><div class="label">Neutron star</div><div class="value">~20 km wide</div></div>
+          <div class="stat"><div class="label">Black hole core</div><div class="value">&gt; ~3 M☉</div></div>
+          <div class="stat"><div class="label">Event horizon</div><div class="value">~3 km / M☉</div></div>
+          <div class="stat"><div class="label">Escape velocity</div><div class="value">&gt; c (light)</div></div>
+        </div>
+      </div>
+      <div class="viz">
+        <div class="scene">
+          <div class="bh">
+            <div class="disk-tilt"><span class="accretion"></span></div>
+            <span class="lens"></span>
+            <span class="horizon"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p class="cite">Every atom heavier than helium in your body was forged inside a star and scattered by its death. Stars are not eternal — but in dying, they seed the galaxy with the raw material for new worlds, and the cycle begins again.</p>
+  <p class="support-note">Your browser doesn't support CSS scroll-driven animations (<code>animation-timeline</code>), so this page shows the full static journey without scroll-synced motion. Try a recent Chrome, Edge, or Firefox for the animated version.</p>
+  <p class="meta">A pure-CSS scroll-driven animation showcase · <a href="index.php">More cheatsheets</a> · Last verified: 2026-06-30</p>
+</footer>
+
+<script>
+  // Progressive fallback: if scroll-driven timelines are unsupported (e.g. some Safari
+  // versions), reveal each section with a one-shot IntersectionObserver so nothing
+  // stays hidden and entrances still feel alive.
+  (function () {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var hasTimeline = window.CSS && CSS.supports && CSS.supports('animation-timeline: view()');
+    if (hasTimeline || reduce || !('IntersectionObserver' in window)) return;
+
+    var targets = document.querySelectorAll('.reveal, .viz');
+    targets.forEach(function (el) { el.style.opacity = '0'; el.style.transform = 'translateY(40px)'; el.style.transition = 'opacity .8s ease, transform .8s ease'; });
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'none'; io.unobserve(e.target); }
+      });
+    }, { threshold: 0.15 });
+    targets.forEach(function (el) { io.observe(el); });
+  })();
+</script>
+</body>
+</html>
