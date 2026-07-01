@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Essential SEO Tags -->
+    <title>Git Internals: How Git Actually Works — Objects, Refs &amp; the DAG</title>
+    <meta name="description" content="Git from first principles: the content-addressable object model (blobs, trees, commits, tags), refs and HEAD, the index, the commit DAG, and how porcelain commands like merge, rebase and reset map to plumbing operations."/>
+    <meta name="keywords" content="git internals, git objects, blob tree commit tag, git plumbing commands, git DAG, merge base, git rebase mechanics, content-addressable storage, git refs, git index, git packfiles, git reflog, git object model, how git works"/>
+    <link rel="canonical" href="https://cheatsheets.davidveksler.com/git-internals.html"/>
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Git Internals: How Git Actually Works — Objects, Refs &amp; the DAG"/>
+    <meta property="og:description" content="Git from first principles: the content-addressable object model, refs and HEAD, the index, the commit DAG, and how everyday commands map to plumbing. Not another command list — the theory underneath it."/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="https://cheatsheets.davidveksler.com/git-internals.html"/>
+    <meta property="og:image" content="images/git-internals.png"/>
+    <meta property="og:image:alt" content="Git Internals cheatsheet preview — object model and commit DAG diagrams"/>
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Git Internals: How Git Actually Works — Objects, Refs &amp; the DAG"/>
+    <meta name="twitter:description" content="The content-addressable object model, refs/HEAD/index, the commit DAG, and how merge/rebase/reset map to plumbing — Git's theory, not just its commands."/>
+    <meta name="twitter:image" content="images/git-internals.png"/>
+    <meta name="twitter:creator" content="@heroiclife"/>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Git Internals: How Git Actually Works — Objects, Refs & the DAG",
+      "description": "A comprehensive interactive explainer of Git's internal data model: content-addressable blobs, trees, commits and tags; refs, HEAD and the index; the commit DAG and merge-base; and how porcelain commands (add, commit, branch, checkout, merge, rebase, reset) map to plumbing operations on that model.",
+      "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+      "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+      "datePublished": "2026-06-30",
+      "dateModified": "2026-06-30",
+      "keywords": "git internals, git objects, blob tree commit tag, git plumbing, git DAG, merge base, git rebase mechanics, content-addressable storage, git refs, git index, packfiles, git reflog"
+    }
+    </script>
+
+    <!-- Bootstrap 5.3.8 CSS (SRI-pinned) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Bootstrap Icons (SRI-pinned) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+
+    <style>
+    @layer base, components, utilities;
+
+    @layer base {
+        :root {
+            color-scheme: light dark;
+            --accent: #f0653b;         /* git orange */
+            --accent-strong: #c9481f;
+            --node-commit: #2563eb;    /* blue */
+            --node-tree: #16a34a;      /* green */
+            --node-blob: #d97706;      /* amber */
+            --node-tag: #9333ea;       /* purple */
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --ok: #22c55e;
+        }
+        body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding-bottom: 4rem; scroll-behavior: smooth; }
+        @media (prefers-reduced-motion: reduce) { body, * { scroll-behavior: auto !important; } }
+        h1, h2, h3 { text-wrap: balance; }
+        p, li { text-wrap: pretty; }
+        code { color: var(--accent); }
+        a { text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    }
+
+    @layer components {
+        .masthead { background: linear-gradient(135deg, rgba(240,101,59,0.16), rgba(13,17,23,0.05)); border-bottom: 1px solid var(--bs-border-color); }
+        .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+
+        .cmd { position: relative; margin: .65rem 0; border: 1px solid #30363d; border-radius: .5rem; overflow: hidden; background: #0d1117; }
+        .cmd pre { margin: 0; padding: .85rem 3rem .85rem 1rem; overflow-x: auto; color: #e6edf3; font-size: .84rem; line-height: 1.55; }
+        .cmd pre code { color: #e6edf3; background: none; padding: 0; white-space: pre-wrap; }
+        .cmd .copy-btn { position: absolute; top: .45rem; right: .45rem; border: 1px solid #30363d; background: #21262d; color: #c9d1d9; border-radius: .375rem; padding: .15rem .5rem; font-size: .8rem; line-height: 1.4; cursor: pointer; }
+        .cmd .copy-btn:hover { background: #30363d; color: #fff; }
+        .cmd .copy-btn.copied { background: var(--ok); border-color: var(--ok); color: #04210f; }
+        .cmd-label { font-size: .7rem; letter-spacing: .04em; text-transform: uppercase; color: #8b949e; padding: .35rem .9rem; border-bottom: 1px solid #30363d; background: #161b22; display: block; }
+
+        details.ref { border: 1px solid var(--bs-border-color); border-radius: .6rem; margin-bottom: .85rem; background: var(--bs-tertiary-bg); overflow: clip; }
+        details.ref > summary { list-style: none; cursor: pointer; display: flex; align-items: flex-start; gap: .75rem; padding: .85rem 1rem; }
+        details.ref > summary::-webkit-details-marker { display: none; }
+        details.ref > summary:hover { background: var(--bs-secondary-bg); }
+        details.ref[open] > summary { border-bottom: 1px solid var(--bs-border-color); }
+        .ref-body { padding: .35rem 1rem 1rem; }
+        .ref .t-title { font-weight: 600; flex: 1 1 auto; color: var(--accent); }
+        .chev { transition: transform .2s ease; color: var(--bs-secondary-color); flex: 0 0 auto; }
+        @media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
+        details[open] .chev { transform: rotate(180deg); }
+
+        .callout { border-left: 4px solid var(--bs-border-color); border-radius: 0 .35rem .35rem 0; padding: .7rem 1rem; margin: .75rem 0; background: var(--bs-tertiary-bg); }
+        .callout-warn { border-left-color: var(--warn); background: rgba(245,158,11,.08); }
+        .callout-danger { border-left-color: var(--danger); background: rgba(239,68,68,.08); }
+        .callout-ok { border-left-color: var(--ok); background: rgba(34,197,94,.08); }
+        .callout-info { border-left-color: var(--accent); background: rgba(240,101,59,.10); }
+
+        .phase-tag { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+        .qref td, .qref th { vertical-align: top; }
+        .toc a { display: inline-block; padding: .15rem .1rem; }
+
+        /* Diagrams */
+        .diagram-wrap { background: var(--bs-tertiary-bg); border: 1px solid var(--bs-border-color); border-radius: .6rem; padding: 1rem; overflow-x: auto; margin: .75rem 0; }
+        .diagram-wrap svg { max-width: 100%; height: auto; display: block; margin: 0 auto; min-width: 560px; }
+        .node-commit rect, .node-commit circle { fill: rgba(37,99,235,.18); stroke: var(--node-commit); stroke-width: 2; }
+        .node-commit text { fill: var(--node-commit); font-weight: 600; }
+        .node-tree rect { fill: rgba(22,163,74,.18); stroke: var(--node-tree); stroke-width: 2; }
+        .node-tree text { fill: var(--node-tree); font-weight: 600; }
+        .node-blob rect { fill: rgba(217,119,6,.18); stroke: var(--node-blob); stroke-width: 2; }
+        .node-blob text { fill: var(--node-blob); font-weight: 600; }
+        .node-tag rect { fill: rgba(147,51,234,.14); stroke: var(--node-tag); stroke-width: 2; stroke-dasharray: 5 3; }
+        .node-tag text { fill: var(--node-tag); font-weight: 600; }
+        .edge { stroke: var(--bs-secondary-color); stroke-width: 1.75; fill: none; }
+        .mergebase-ring { fill: none; stroke: var(--danger); stroke-width: 2.5; stroke-dasharray: 4 3; }
+        .diagram-caption { fill: var(--bs-secondary-color); font-size: 11px; }
+        .legend-swatch { display: inline-block; width: .8em; height: .8em; border-radius: 3px; margin-right: .3em; vertical-align: -1px; }
+
+        /* Rebase hash-cascade chain diagram */
+        .chain-row { display: flex; align-items: center; flex-wrap: wrap; gap: .3rem; margin: .35rem 0; }
+        .chain-label { font-size: .78rem; font-weight: 600; width: 100%; color: var(--bs-secondary-color); margin-top: .5rem; }
+        .chip { border: 2px solid var(--bs-border-color); border-radius: .4rem; padding: .3rem .55rem; font-size: .78rem; text-align: center; line-height: 1.2; }
+        .chip .h { display: block; font-size: .68rem; opacity: .75; }
+        .chip.main { border-color: var(--node-tree); }
+        .chip.old { border-color: var(--bs-secondary-color); opacity: .5; text-decoration: line-through; }
+        .chip.new { border-color: var(--accent); background: rgba(240,101,59,.10); }
+        .chain-arrow { color: var(--bs-secondary-color); font-size: 1.1rem; }
+
+        .theme-toggle { position: fixed; bottom: 20px; right: 20px; z-index: 1030; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+        .backtop { position: fixed; bottom: 20px; right: 78px; z-index: 1030; border-radius: 50%; width: 48px; height: 48px; }
+    }
+
+    @layer utilities {
+        @media print {
+            .no-print { display: none !important; }
+            details.ref { break-inside: avoid; border: 1px solid #ccc; }
+            details.ref > .ref-body { display: block !important; }
+            .cmd { background: #f6f8fa; } .cmd pre, .cmd pre code { color: #111; }
+            a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .8em; color: #555; }
+            body { padding: 0; }
+        }
+    }
+    </style>
+</head>
+<body>
+
+<header class="masthead py-4 mb-3">
+    <div class="container">
+        <div class="row align-items-center g-3">
+            <div class="col-lg-8">
+                <div class="phase-tag mb-1" style="color: var(--accent);"><i class="bi bi-diagram-3-fill"></i> Theory, not command lists</div>
+                <h1 class="display-6 fw-bold mb-1">Git Internals</h1>
+                <p class="lead mb-0 text-secondary">How Git actually works, from the storage layer up: the <strong>content-addressable object model</strong> (blobs, trees, commits, tags), <strong>refs, HEAD &amp; the index</strong>, the <strong>commit DAG</strong>, and exactly how everyday commands like <code>merge</code>, <code>rebase</code>, and <code>reset</code> manipulate that model underneath. For command syntax, see the companion <a href="git-scm.html">Git Cheatsheet</a>.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end no-print">
+                <button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container my-4">
+
+    <div class="callout callout-info">
+        <strong><i class="bi bi-lightbulb-fill"></i> The one-sentence version.</strong> Git is a <strong>content-addressable key-value store</strong> with a version-control UI wrapped around it: every piece of content is named by the hash of its own bytes, commits form a <strong>directed acyclic graph (DAG)</strong> of full snapshots (never diffs), and branches are nothing more than 41-byte files pointing at a commit. Everything else — merge, rebase, stash, reflog — is just orchestrated reads and writes against that one small model.
+    </div>
+
+    <!-- QUICK REFERENCE -->
+    <section id="quickref" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-lightning-charge-fill" style="color: var(--accent);"></i> Quick Reference — the mental model in one table</h2>
+        <div class="table-responsive">
+        <table class="table table-sm table-striped qref align-middle">
+            <thead><tr><th>Concept</th><th>What it really is</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Blob</strong></td><td>Raw bytes of one file's content — no filename, no mode, no history. Identical content = one blob, shared by every file/commit that has it.</td></tr>
+                <tr><td><strong>Tree</strong></td><td>A directory listing: (mode, name) → blob/tree SHA. Nested trees make a nested directory structure.</td></tr>
+                <tr><td><strong>Commit</strong></td><td>A pointer to one tree + zero-or-more parent commits + author/committer/message. A <em>snapshot</em>, never a diff.</td></tr>
+                <tr><td><strong>SHA (object ID)</strong></td><td>The object's address <em>and</em> its integrity check — hash of the object's own bytes. Change one byte anywhere, the hash (and every descendant's hash) changes.</td></tr>
+                <tr><td><strong>Branch</strong></td><td>A 41-byte text file (<code>.git/refs/heads/&lt;name&gt;</code>) holding a commit SHA. Moving a branch is a single file write — no data is copied.</td></tr>
+                <tr><td><strong>HEAD</strong></td><td>Usually a symbolic pointer to the current branch ref. Points directly at a commit SHA instead = "detached HEAD."</td></tr>
+                <tr><td><strong>Index (staging area)</strong></td><td>A separate binary file (<code>.git/index</code>) listing what the <em>next</em> commit's tree will contain — not a commit-in-progress, not the working directory.</td></tr>
+                <tr><td><strong>The DAG</strong></td><td>Commits form a directed acyclic graph via parent pointers. Merges have 2+ parents; the graph can only grow forward because a commit's hash depends on its parent's hash, which must already exist.</td></tr>
+                <tr><td><strong>Merge base</strong></td><td>The best common ancestor of two branch tips in the DAG — the reference point for a three-way merge.</td></tr>
+                <tr><td><strong>Rebase</strong></td><td>Re-apply commits onto a new parent, one at a time. New parent ⇒ new hash for every commit from that point forward, even if the content is identical.</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </section>
+
+    <!-- TOC -->
+    <nav class="toc callout callout-info no-print" aria-label="Section navigation">
+        <strong><i class="bi bi-list-ol"></i> Jump to:</strong>
+        <a href="#bigidea">The big idea</a> ·
+        <a href="#objects">Object model</a> ·
+        <a href="#addressing">Content addressing</a> ·
+        <a href="#refs">Refs, HEAD &amp; index</a> ·
+        <a href="#dag">The commit DAG</a> ·
+        <a href="#mapping">Porcelain → plumbing</a> ·
+        <a href="#mergerebase">Merge &amp; rebase mechanics</a> ·
+        <a href="#lifecycle">Packfiles, GC &amp; reflog</a> ·
+        <a href="#advanced">Edge cases</a> ·
+        <a href="#mistakes">Mistakes</a>
+    </nav>
+
+    <!-- BIG IDEA -->
+    <section id="bigidea" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag" style="color: var(--accent);">§1</span><br>The big idea: a content-addressable filesystem</h2>
+
+        <details class="ref" open>
+            <summary><span class="t-title">Git is a key-value store, not a "diff tracker"</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-1">Linus Torvalds described Git's core as "a stupid content tracker" — and that's the accurate mental model. Underneath the porcelain (<code>add</code>, <code>commit</code>, <code>merge</code>...) sits a tiny key-value database: the <strong>key</strong> is a SHA hash, the <strong>value</strong> is a compressed blob of bytes, and there are exactly four kinds of values (objects). Everything Git does — history, branching, diffing, merging — is built on top of that one primitive.</p>
+                <div class="callout callout-ok mb-0">This is why Git is fast and safe to reason about: nothing is ever <em>edited in place</em>. A "change" is always a brand-new object plus a moved pointer. The old object still exists until something explicitly garbage-collects it (<a href="#lifecycle">§8</a>).</div>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Commits are snapshots, not diffs — a common misconception</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-1">Unlike older centralized VCS tools (CVS, Subversion) that store a file's history as a chain of diffs/deltas, every Git commit points at a <strong>complete tree</strong> — the full state of every file, as it existed at that commit. <code>git diff</code>, <code>git log -p</code>, and friends compute differences on the fly by comparing two full snapshots; nothing is stored as a diff at the object level.</p>
+                <div class="callout callout-info mb-0">Storage efficiency doesn't suffer: unchanged files are unchanged <em>blobs</em> — the tree for commit #50 simply reuses the exact same blob SHA as commit #49 for any file that didn't change. Space savings on top of that come later, from <strong>packfile delta compression</strong> (§8) — a storage-layer optimization, decoupled from the conceptual model.</div>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Three separate areas, three separate jobs</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-1">Every Git command can be understood as copying data between three places:</p>
+                <ul class="mb-0">
+                    <li><strong>Working directory</strong> — the plain files on disk you edit with a normal editor. Not part of the object database at all.</li>
+                    <li><strong>Index / staging area</strong> — a snapshot-in-progress recorded in <code>.git/index</code>. What <code>git commit</code> will turn into a tree.</li>
+                    <li><strong>Repository (object database + refs)</strong> — the immutable object graph plus the mutable pointers (branches, HEAD, tags) into it.</li>
+                </ul>
+            </div>
+        </details>
+    </section>
+
+    <!-- OBJECT MODEL -->
+    <section id="objects" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag" style="color: var(--accent);">§2</span><br>The object model: blobs, trees, commits &amp; tags</h2>
+
+        <div class="diagram-wrap">
+            <svg viewBox="0 0 640 340" role="img" aria-label="Diagram: a commit points to a root tree, which points to blobs and a subdirectory tree, which points to more blobs; an annotated tag points at the commit.">
+                <defs>
+                    <marker id="arrowA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M0,0 L10,5 L0,10 z" fill="var(--bs-secondary-color)"/>
+                    </marker>
+                </defs>
+                <!-- edges -->
+                <g class="edge" marker-end="url(#arrowA)">
+                    <line x1="320" y1="64" x2="320" y2="98"/>
+                    <line x1="300" y1="144" x2="110" y2="188"/>
+                    <line x1="315" y1="144" x2="255" y2="188"/>
+                    <line x1="340" y1="144" x2="450" y2="188"/>
+                    <line x1="440" y1="234" x2="400" y2="268"/>
+                    <line x1="470" y1="234" x2="530" y2="268"/>
+                    <line x1="466" y1="42" x2="392" y2="42"/>
+                </g>
+                <!-- tag -->
+                <g class="node-tag"><rect x="470" y="20" width="150" height="44" rx="8"/><text x="545" y="38" text-anchor="middle" font-size="12">tag v1.0</text><text x="545" y="54" text-anchor="middle" font-size="10">(annotated)</text></g>
+                <!-- commit -->
+                <g class="node-commit"><rect x="250" y="20" width="140" height="44" rx="8"/><text x="320" y="38" text-anchor="middle" font-size="12">commit</text><text x="320" y="54" text-anchor="middle" font-size="10">HEAD → main</text></g>
+                <!-- root tree -->
+                <g class="node-tree"><rect x="250" y="100" width="140" height="44" rx="8"/><text x="320" y="118" text-anchor="middle" font-size="12">tree</text><text x="320" y="134" text-anchor="middle" font-size="10">(project root)</text></g>
+                <!-- blobs row 1 -->
+                <g class="node-blob"><rect x="30" y="190" width="150" height="44" rx="8"/><text x="105" y="208" text-anchor="middle" font-size="12">blob</text><text x="105" y="224" text-anchor="middle" font-size="10">README.md</text></g>
+                <g class="node-blob"><rect x="200" y="190" width="150" height="44" rx="8"/><text x="275" y="208" text-anchor="middle" font-size="12">blob</text><text x="275" y="224" text-anchor="middle" font-size="10">main.py</text></g>
+                <g class="node-tree"><rect x="380" y="190" width="150" height="44" rx="8"/><text x="455" y="208" text-anchor="middle" font-size="12">tree</text><text x="455" y="224" text-anchor="middle" font-size="10">src/</text></g>
+                <!-- blobs row 2 (under src/) -->
+                <g class="node-blob"><rect x="330" y="270" width="140" height="44" rx="8"/><text x="400" y="288" text-anchor="middle" font-size="12">blob</text><text x="400" y="304" text-anchor="middle" font-size="10">src/app.js</text></g>
+                <g class="node-blob"><rect x="480" y="270" width="140" height="44" rx="8"/><text x="550" y="288" text-anchor="middle" font-size="12">blob</text><text x="550" y="304" text-anchor="middle" font-size="10">src/util.js</text></g>
+                <text x="320" y="332" text-anchor="middle" class="diagram-caption">Every arrow is "contains the SHA of." Nothing here is ever mutated — a change writes new objects and re-points the commit ref.</text>
+            </svg>
+        </div>
+
+        <details class="ref" open>
+            <summary><span class="t-title">The four object types — what each one stores</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-2">
+                    <thead><tr><th>Type</th><th>Stores</th><th>Inspect with</th></tr></thead>
+                    <tbody>
+                        <tr><td><span class="legend-swatch" style="background:var(--node-blob)"></span><strong>blob</strong></td><td>Raw file bytes only. No name, no path, no permission bits — those live in the <em>tree</em> that references it.</td><td><code>git cat-file -p &lt;sha&gt;</code></td></tr>
+                        <tr><td><span class="legend-swatch" style="background:var(--node-tree)"></span><strong>tree</strong></td><td>A sorted list of entries: <code>mode name\0&lt;20-byte binary sha&gt;</code> per entry — one directory level. Subdirectories are just entries whose SHA points at another tree.</td><td><code>git ls-tree &lt;sha&gt;</code></td></tr>
+                        <tr><td><span class="legend-swatch" style="background:var(--node-commit)"></span><strong>commit</strong></td><td>One <code>tree</code> SHA, zero-or-more <code>parent</code> SHAs, author, committer, timestamps, and the message. <strong>Never a diff.</strong></td><td><code>git cat-file -p &lt;sha&gt;</code> / <code>git show &lt;sha&gt;</code></td></tr>
+                        <tr><td><span class="legend-swatch" style="background:var(--node-tag)"></span><strong>tag (annotated)</strong></td><td>A target object's type + SHA, tagger identity, message, and optionally a GPG/SSH signature. A durable, first-class object — unlike a lightweight tag.</td><td><code>git cat-file -p &lt;sha&gt;</code></td></tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="callout callout-warn mb-0"><strong>Lightweight tags aren't objects at all.</strong> <code>git tag v1.0</code> (no <code>-a</code>) just writes a ref file at <code>.git/refs/tags/v1.0</code> containing a commit SHA — structurally identical to a branch, except convention says you don't move it. Use annotated tags (<code>git tag -a</code>) for anything you'll ship; they carry metadata and can be signed.</div>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Gitlinks — the quasi-fifth reference (submodules)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0">A tree entry can carry mode <code>160000</code> — a <strong>gitlink</strong> — whose "SHA" is a commit hash in an entirely different repository, not a blob/tree in this one. That's the whole mechanism behind submodules: the parent repo records exactly one pinned commit of the child repo, with no copy of its objects. <code>git submodule update</code> is what actually fetches and checks out that pinned commit into the working directory.</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- CONTENT ADDRESSING -->
+    <section id="addressing" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag" style="color: var(--accent);">§3</span><br>Content addressing &amp; the object database</h2>
+
+        <details class="ref" open>
+            <summary><span class="t-title">How a SHA is actually computed</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-1">An object's ID is the hash of a small header plus its content: <code class="mono">sha1("&lt;type&gt; &lt;byte-length&gt;\0" + content)</code>. The header means a blob containing exactly the same bytes as a commit object (astronomically unlikely, but conceptually) would still hash differently, because the header text differs. This is <strong>why identical file content always produces the identical blob SHA</strong>, regardless of filename, path, or which commit it's in — the hash only ever depends on the bytes.</p>
+                <div class="cmd"><span class="cmd-label">deterministic content addressing, proven</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>$ echo -n "hello git internals" | git hash-object --stdin
+19a3d3d4a52002ac7f7ef476ffc2ba1de1471ec9
+
+$ echo -n "hello git internals" | git hash-object --stdin
+19a3d3d4a52002ac7f7ef476ffc2ba1de1471ec9   # identical input → identical hash, every time</code></pre></div>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">On-disk storage: loose objects vs. packfiles</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-1">A freshly-created object is written as a <strong>loose object</strong>: zlib-deflate-compressed and stored at <code>.git/objects/xx/yyyy…</code>, where <code>xx</code> is the first two hex characters of its SHA (a directory, so no single directory ever needs millions of entries) and the rest is the filename.</p>
+                <p class="mb-0">Loose objects are simple but wasteful — one per object, no cross-object compression. Periodically (or explicitly via <code>git gc</code>), Git collapses many loose objects into a single <code>.pack</code> file plus a <code>.idx</code> index for O(log n) lookup by SHA prefix, using <strong>delta compression</strong>: similar objects (e.g. successive versions of one file) are stored as a small diff against a chosen base object rather than in full. Full detail in <a href="#lifecycle">§8</a>.</p>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Inspecting the object graph with plumbing</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-1">Porcelain commands (<code>log</code>, <code>show</code>, <code>diff</code>) are convenience wrappers. The plumbing commands underneath let you walk the exact same graph a commit points at:</p>
+                <div class="cmd"><span class="cmd-label">walk from a commit down to its files</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>$ git cat-file -p HEAD
+tree 8f3d44b1c9e2a0f5b6d7c8a9b0e1f2a3b4c5d6e7
+parent 1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b
+author  David Veksler &lt;you@example.com&gt; 1782900000 -0700
+committer David Veksler &lt;you@example.com&gt; 1782900000 -0700
+
+Add README
+
+$ git cat-file -p 8f3d44b1c9e2a0f5b6d7c8a9b0e1f2a3b4c5d6e7
+100644 blob 3f2504e04f8964a875e69bfff8c5a4b8b5f2c1f3    README.md
+100644 blob a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e    main.py
+040000 tree 9d0e2f1a2b3c4d5e6f708192a3b4c5d6e7f80912    src
+
+$ git cat-file -p 3f2504e04f8964a875e69bfff8c5a4b8b5f2c1f3
+# Hello, Git
+
+$ git cat-file -t 8f3d44b1c9e2a0f5b6d7c8a9b0e1f2a3b4c5d6e7
+tree</code></pre></div>
+                <p class="mb-0 small text-secondary">Sample hashes above are illustrative; run this against your own repo to see the real graph.</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- REFS, HEAD, INDEX -->
+    <section id="refs" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag" style="color: var(--accent);">§4</span><br>Refs, HEAD &amp; the index — the mutable layer</h2>
+
+        <details class="ref" open>
+            <summary><span class="t-title">A ref is just a file containing a SHA</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-1">Everything in <code>.git/objects</code> is content-addressed and immutable. Branches, HEAD, and tags are the opposite: small, deliberately <strong>mutable</strong> pointers that make the immutable graph usable as version control.</p>
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead><tr><th>Ref</th><th>On disk</th><th>Contents</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>refs/heads/main</code></td><td><code>.git/refs/heads/main</code></td><td>A commit SHA — the branch tip. Moves on every commit to that branch.</td></tr>
+                        <tr><td><code>HEAD</code></td><td><code>.git/HEAD</code></td><td>Normally <code>ref: refs/heads/main</code> (symbolic — "whatever main points at"). A raw SHA instead = <strong>detached HEAD</strong>.</td></tr>
+                        <tr><td><code>refs/tags/v1.0</code></td><td><code>.git/refs/tags/v1.0</code></td><td>A commit (or tag-object) SHA. Immutable by convention only — nothing stops you from moving it.</td></tr>
+                        <tr><td><code>refs/remotes/origin/main</code></td><td><code>.git/refs/remotes/origin/main</code></td><td>Local record of where <code>origin</code>'s <code>main</code> was as of your last fetch/push. Read-only in normal use.</td></tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">The index (staging area) is a file, not a commit-in-progress</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-1"><code>.git/index</code> is a binary file: a header (signature, format version, entry count), then one sorted entry per staged path — mode, file size, mtime cache, and the blob SHA it would commit — followed by a checksum of the file itself. <code>git add</code> doesn't touch the object graph beyond writing a blob; it edits this one file.</p>
+                <div class="callout callout-ok mb-0">This is why staging is fast even on huge repos: <code>git status</code> mostly compares cached stat info in the index against the filesystem, only re-hashing files whose mtime/size actually changed.</div>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Build a commit entirely by hand (no porcelain)</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-1">The clearest way to internalize "porcelain is just choreography" is to do a commit's job yourself with plumbing:</p>
+                <div class="cmd"><span class="cmd-label">what `git add` + `git commit` do, spelled out</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>$ echo "hello" > file.txt
+$ BLOB=$(git hash-object -w file.txt)              # writes a blob object, prints its SHA
+$ git update-index --add --cacheinfo 100644 $BLOB file.txt   # stage it (edit .git/index)
+$ TREE=$(git write-tree)                             # index → tree object
+$ COMMIT=$(git commit-tree $TREE -m "manual commit") # tree (+ parent, if any) → commit object
+$ git update-ref refs/heads/main $COMMIT              # move the branch pointer — that's the "commit"</code></pre></div>
+                <p class="mb-0">Four plumbing calls, one line of pointer-moving at the end. <code>git commit</code> is exactly this sequence, plus reading the previous HEAD as <code>-p &lt;parent&gt;</code> and appending a reflog entry.</p>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Detached HEAD isn't dangerous, it's just unreachable</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0">Checking out a commit or tag directly (<code>git checkout &lt;sha&gt;</code>) puts a raw SHA into <code>.git/HEAD</code> instead of a branch reference. You can commit, build, and test normally — those new commits are entirely valid objects. The only real risk: since no branch ref points at them, switching away leaves them <strong>unreachable</strong> and eligible for garbage collection (§8) unless you first anchor them with <code>git branch &lt;name&gt;</code> or <code>git switch -c &lt;name&gt;</code>.</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- DAG -->
+    <section id="dag" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag" style="color: var(--accent);">§5</span><br>The commit DAG &amp; merge base</h2>
+
+        <details class="ref" open>
+            <summary><span class="t-title">Why the graph can only be acyclic</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0">Each commit stores its parent(s) <em>by hash</em>, and a hash can only be computed after the thing it names already exists. A commit literally cannot reference a descendant, because that descendant's hash — which would have to include this commit as its parent — doesn't exist yet. The acyclic property isn't enforced by a rule Git checks; it falls directly out of hashing being one-directional in time.</p>
+            </div>
+        </details>
+
+        <div class="diagram-wrap">
+            <svg viewBox="0 0 640 260" role="img" aria-label="Diagram: main branch A to B to C, feature branches off B as D-E-F, merge commit M has two parents C and F; B is highlighted as the merge base of C and F.">
+                <defs>
+                    <marker id="arrowB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M0,0 L10,5 L0,10 z" fill="var(--bs-secondary-color)"/>
+                    </marker>
+                </defs>
+                <g class="edge" marker-end="url(#arrowB)">
+                    <line x1="78" y1="60" x2="182" y2="60"/>
+                    <line x1="218" y1="60" x2="322" y2="60"/>
+                    <line x1="358" y1="60" x2="542" y2="60"/>
+                    <line x1="212" y1="72" x2="268" y2="168"/>
+                    <line x1="298" y1="180" x2="382" y2="180"/>
+                    <line x1="418" y1="180" x2="482" y2="180"/>
+                    <line x1="512" y1="168" x2="565" y2="76"/>
+                </g>
+                <circle class="mergebase-ring" cx="200" cy="60" r="26"/>
+                <g class="node-commit"><circle cx="60" cy="60" r="18"/><text x="60" y="65" text-anchor="middle" font-size="12">A</text></g>
+                <g class="node-commit"><circle cx="200" cy="60" r="18"/><text x="200" y="65" text-anchor="middle" font-size="12">B</text></g>
+                <g class="node-commit"><circle cx="340" cy="60" r="18"/><text x="340" y="65" text-anchor="middle" font-size="12">C</text></g>
+                <g class="node-commit"><circle cx="580" cy="60" r="18"/><text x="580" y="65" text-anchor="middle" font-size="12">M</text></g>
+                <g class="node-commit"><circle cx="280" cy="180" r="18"/><text x="280" y="185" text-anchor="middle" font-size="12">D</text></g>
+                <g class="node-commit"><circle cx="400" cy="180" r="18"/><text x="400" y="185" text-anchor="middle" font-size="12">E</text></g>
+                <g class="node-commit"><circle cx="500" cy="180" r="18"/><text x="500" y="185" text-anchor="middle" font-size="12">F</text></g>
+                <text x="340" y="30" text-anchor="middle" class="diagram-caption">main: A → B → C</text>
+                <text x="390" y="210" text-anchor="middle" class="diagram-caption">feature (branched from B): D → E → F</text>
+                <text x="200" y="106" text-anchor="middle" class="diagram-caption">merge-base(C, F) = B</text>
+                <text x="580" y="30" text-anchor="middle" class="diagram-caption">M: parents = [C, F]</text>
+            </svg>
+        </div>
+
+        <details class="ref">
+            <summary><span class="t-title">Merge base: the reference point for a three-way merge</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0">When you run <code>git merge feature</code> from <code>main</code>, Git first walks the DAG backward from both tips to find their <strong>best common ancestor</strong> — in the diagram, that's <code>B</code>. It then diffs <code>base→ours</code> (B→C) and <code>base→theirs</code> (B→F), applies non-overlapping changes automatically, and flags anything both sides touched as a conflict. Inspect it yourself with <code>git merge-base main feature</code>.</p>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Criss-cross merges &amp; the "virtual" merge base</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0">If two branches have merged each other more than once, there can be <strong>multiple</strong> lowest common ancestors with no single "best" one. Git's default <code>recursive</code>/<code>ort</code> strategy handles this by first merging the candidate ancestors <em>with each other</em> to synthesize one virtual base, then doing the normal three-way merge against that. Most people never notice this machinery — until a merge conflicts in a spot that seems to have "nothing to do" with either branch's real changes, which is usually this case.</p>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Ancestry shorthand: <code>~</code> vs. <code>^</code></span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <ul class="mb-0">
+                    <li><code>HEAD~N</code> — walk <strong>N steps back along first parents only</strong>. Meaningful for any commit, since it ignores side branches.</li>
+                    <li><code>HEAD^N</code> — the <strong>Nth parent</strong> of a merge commit. Only meaningful at a merge (which is the only kind of commit with more than one parent); <code>HEAD^1</code> = <code>HEAD^</code> = <code>HEAD~1</code>.</li>
+                    <li><code>HEAD^2</code> on commit <code>M</code> above = <code>F</code> (the second parent, i.e. the branch that got merged in).</li>
+                </ul>
+            </div>
+        </details>
+    </section>
+
+    <!-- PORCELAIN -> PLUMBING -->
+    <section id="mapping" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag" style="color: var(--accent);">§6</span><br>Porcelain → plumbing: what commands really do</h2>
+
+        <details class="ref" open>
+            <summary><span class="t-title">Every command, decoded at the object/ref level</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead><tr><th>Command</th><th>What actually happens</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>git add &lt;file&gt;</code></td><td><code>hash-object</code> writes a blob for the file's current bytes; the index gets a new/updated entry (path, mode, blob SHA). No commit, no tree, yet.</td></tr>
+                        <tr><td><code>git commit</code></td><td><code>write-tree</code> turns the index into a tree object (nested trees for subdirectories) → <code>commit-tree</code> wraps it with the old HEAD as parent → <code>update-ref</code> moves the branch to the new commit → a reflog line is appended.</td></tr>
+                        <tr><td><code>git branch &lt;name&gt;</code></td><td><code>update-ref refs/heads/&lt;name&gt; $(rev-parse HEAD)</code> — one new 41-byte file. Index and working directory are untouched.</td></tr>
+                        <tr><td><code>git switch/checkout &lt;branch&gt;</code></td><td>HEAD becomes a symbolic ref to <code>refs/heads/&lt;branch&gt;</code>; index and working directory are overwritten to match that branch tip's tree.</td></tr>
+                        <tr><td><code>git checkout &lt;commit&gt;</code></td><td>Same tree checkout, but HEAD becomes a <em>raw SHA</em> — detached HEAD (§4).</td></tr>
+                        <tr><td><code>git merge</code> (fast-forward)</td><td>Target is a descendant of current HEAD — the branch ref is simply reassigned forward. <strong>No new commit object is created.</strong></td></tr>
+                        <tr><td><code>git merge</code> (true merge)</td><td>Merge-base found (§5), three-way diff computed, a new commit object is created with <strong>two parents</strong>, branch ref moves to it.</td></tr>
+                        <tr><td><code>git rebase &lt;base&gt;</code></td><td>Each source commit is replayed (cherry-picked) onto the new parent in turn — every one becomes a <strong>brand-new commit object</strong> with a new hash (§7), because the parent changed. Branch ref is moved to the final new commit only at the end.</td></tr>
+                        <tr><td><code>git tag -a</code></td><td>Writes a tag object pointing at the target + a ref file at <code>refs/tags/&lt;name&gt;</code>.</td></tr>
+                        <tr><td><code>git stash</code></td><td>Creates commit objects (working-tree state, and index state) that are <strong>not reachable from any branch</strong> — referenced only via <code>refs/stash</code> and the stash reflog.</td></tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title"><code>git reset</code>'s three modes, precisely</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead><tr><th>Mode</th><th>Moves branch ref</th><th>Resets index</th><th>Resets working dir</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>--soft</code></td><td>✅</td><td>❌</td><td>❌</td></tr>
+                        <tr><td><code>--mixed</code> (default)</td><td>✅</td><td>✅ (unstages)</td><td>❌</td></tr>
+                        <tr><td><code>--hard</code></td><td>✅</td><td>✅</td><td>✅ (discards edits)</td></tr>
+                    </tbody>
+                </table>
+                </div>
+                <p class="mb-0 mt-2 small text-secondary">In every mode the commits you "reset away from" aren't deleted — they simply become unreachable from the branch ref, recoverable via the reflog (§8) until it expires or <code>gc</code> prunes them.</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- MERGE/REBASE MECHANICS -->
+    <section id="mergerebase" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag" style="color: var(--accent);">§7</span><br>Why rebase changes every hash downstream</h2>
+
+        <details class="ref" open>
+            <summary><span class="t-title">A commit's hash is a function of its parent's hash</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-1">A commit object's bytes include the literal text of its parent SHA. Change the parent — even with the tree and message held perfectly identical — and the commit's own hash changes, because the input to the hash function changed. Every commit downstream references <em>this</em> commit's hash as <em>its</em> parent, so the change cascades through the entire remainder of the branch.</p>
+                <div class="chain-row">
+                    <span class="chain-label">Before <code>git rebase main</code> (feature branched from B):</span>
+                    <div class="chip main">A<span class="h">main</span></div><span class="chain-arrow">→</span>
+                    <div class="chip main">B<span class="h">main</span></div><span class="chain-arrow">→</span>
+                    <div class="chip main">C<span class="h">main tip</span></div>
+                </div>
+                <div class="chain-row">
+                    <span class="chain-label" style="margin-top:0;"></span>
+                    <div class="chip old">D<span class="h">abc123</span></div><span class="chain-arrow">→</span>
+                    <div class="chip old">E<span class="h">def456</span></div><span class="chain-label" style="width:auto; margin:0 0 0 .5rem;">feature (parent of D = B)</span>
+                </div>
+                <div class="chain-row">
+                    <span class="chain-label">After <code>git rebase main</code> while on <code>feature</code>:</span>
+                    <div class="chip main">A</div><span class="chain-arrow">→</span>
+                    <div class="chip main">B</div><span class="chain-arrow">→</span>
+                    <div class="chip main">C<span class="h">new parent</span></div><span class="chain-arrow">→</span>
+                    <div class="chip new">D'<span class="h">9f1a2c — new SHA</span></div><span class="chain-arrow">→</span>
+                    <div class="chip new">E'<span class="h">77bb01 — new SHA</span></div>
+                </div>
+                <div class="callout callout-warn mt-2 mb-0"><strong>D and E still exist</strong> as loose objects — unreachable from any ref now that <code>feature</code> points at E' — until reflog expiry / <code>git gc</code> prunes them (§8). This unreachability, multiplied across everyone who already pulled D/E, is exactly why rebasing shared/published history breaks collaborators: their branch's parent chain no longer matches anyone else's.</div>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Fast-forward vs. true merge — a graph-shape decision, not a preference</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0">Git doesn't "choose" to fast-forward stylistically — it's forced whenever the target is a straight-line descendant of the current tip (no divergence to reconcile), and impossible otherwise. <code>git merge --no-ff</code> exists specifically to force a merge commit even when a fast-forward is possible, purely to keep a visible marker of "a branch merged here" in the graph.</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- LIFECYCLE -->
+    <section id="lifecycle" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag" style="color: var(--accent);">§8</span><br>Packfiles, garbage collection &amp; the reflog</h2>
+
+        <details class="ref" open>
+            <summary><span class="t-title">Reachability is the whole GC model</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0">Git never "deletes on undo." An object is kept as long as it's <strong>reachable</strong> — findable by walking parent/tree/blob pointers starting from some ref (a branch, tag, stash, or a reflog entry). Reset, rebase, branch deletion, and amend all just make certain commits unreachable from normal refs; the bytes remain on disk until an explicit collection pass decides otherwise.</p>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title"><code>git gc</code> &amp; pruning — the actual defaults</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <ul class="mb-0">
+                    <li><code>gc.auto</code> = <strong>6700</strong> — once loose objects exceed roughly this count, ordinary commands opportunistically trigger <code>git gc --auto</code> to pack them.</li>
+                    <li><code>gc.autoPackLimit</code> = <strong>50</strong> — once there are more than this many packs, they get consolidated into one.</li>
+                    <li><code>gc.pruneExpire</code> = <strong>"2 weeks ago"</strong> — unreachable loose objects younger than this are kept (as a safety margin) even during an explicit <code>gc</code>.</li>
+                </ul>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">The reflog: your real local undo history</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-1">Every time a ref (HEAD, a branch) moves on your machine, Git appends a line to that ref's <strong>reflog</strong> — a purely local, never-pushed journal of "where this pointer has been." It's the practical safety net under reset/rebase/amend: the old commit is still there, you just need its former reflog position.</p>
+                <ul class="mb-2">
+                    <li><code>gc.reflogExpire</code> = <strong>90 days</strong> for entries still reachable some other way.</li>
+                    <li><code>gc.reflogExpireUnreachable</code> = <strong>30 days</strong> for entries that are <em>not</em> reachable from any current ref (the common case after <code>--amend</code>/rebase).</li>
+                </ul>
+                <div class="cmd"><span class="cmd-label">recover a commit that "disappeared" after reset --hard / a bad rebase</span><button class="copy-btn"><i class="bi bi-clipboard"></i></button><pre><code>$ git reflog                      # find the entry just before the mistake, e.g. HEAD@{2}
+$ git branch recovered HEAD@{2}  # anchor it to a real ref so it survives gc
+# or, if you don't even remember a ref name — search every dangling object directly:
+$ git fsck --no-reflogs --unreachable --full | grep commit
+$ git show &lt;dangling-sha&gt;</code></pre></div>
+            </div>
+        </details>
+    </section>
+
+    <!-- ADVANCED -->
+    <section id="advanced" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><span class="phase-tag" style="color: var(--accent);">§9</span><br>Edge cases &amp; advanced internals</h2>
+
+        <details class="ref">
+            <summary><span class="t-title">SHA-1 → SHA-256: where the transition actually stands</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0">Git has used a <strong>collision-detecting SHA-1</strong> variant (hardened against the 2017 "SHAttered" attack) since 2017, so practical collision forgery against a Git repo isn't a live threat. A parallel <strong>SHA-256 object format</strong> exists (<code>git init --object-format=sha256</code>) and Git 2.51 marked it as the default hash for the planned Git 3.0 — but as of mid-2026, major hosting platforms (GitHub, GitLab) still don't support SHA-256 repositories, so the transition is gated on ecosystem support, not the Git client. SHA-1 and SHA-256 repos are designed to interoperate (a SHA-256 client can push/fetch to a SHA-1 server) once tooling catches up.</p>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Shallow &amp; partial clones deliberately break the graph</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0"><code>git clone --depth N</code> fetches only the most recent N commits and synthesizes a "grafted" boundary — older parents genuinely don't exist locally. Anything that needs to walk past that boundary (full <code>blame</code>, some rebases, <code>bisect</code> across old history) fails or behaves oddly until <code>git fetch --unshallow</code>. <code>--filter=blob:none</code> (partial clone) takes the opposite approach: the full commit/tree graph is present, but blob <em>content</em> is fetched lazily on first access — different trade-off, same principle of deferring part of the object graph.</p>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">What a signature actually covers</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0">Signing a commit or tag (<code>-S</code>, GPG or SSH) signs the object's own canonical serialized bytes — tree/parent/author/message for a commit — everything except the signature field itself, which gets appended. It authenticates <em>that exact snapshot and metadata</em>, not "the diff the author intended"; <code>git verify-commit</code> / <code>git log --show-signature</code> re-derive the object and check the signature against it.</p>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Worktrees: multiple working directories, one object database</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0"><code>git worktree add ../hotfix hotfix-branch</code> creates a second working directory + index, both pointed at the <em>same</em> <code>.git/objects</code> and refs as the original. It solves "I need two branches checked out simultaneously" without the disk/network cost of a second clone — a direct consequence of the working directory being just one of the three separate areas in §1.</p>
+            </div>
+        </details>
+
+        <details class="ref">
+            <summary><span class="t-title">Sparse checkout: the index doesn't have to mirror the whole tree</span><i class="bi bi-chevron-down chev"></i></summary>
+            <div class="ref-body">
+                <p class="mb-0"><code>git sparse-checkout set &lt;patterns&gt;</code> (cone mode) restricts which paths get materialized into the working directory, while the index and full commit history remain complete. Useful on monorepos where checking out every path would be prohibitively slow — the object graph is unaffected, only what gets written to disk for you to see.</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- MISTAKES -->
+    <section id="mistakes" class="mb-4">
+        <h2 class="h4 border-bottom pb-2"><i class="bi bi-bug-fill text-danger"></i> Common misconceptions &amp; anti-patterns</h2>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="callout callout-danger h-100 mb-0"><strong>"Commits store diffs."</strong> They store full tree snapshots; diffs are always computed on the fly for display.</div></div>
+            <div class="col-md-6"><div class="callout callout-danger h-100 mb-0"><strong>Rebasing published/shared history.</strong> Every rebased commit gets a new hash — collaborators who already have the originals now have a diverged, unmergeable history.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Force-pushing without <code>--force-with-lease</code>.</strong> Plain <code>--force</code> blindly overwrites the remote ref; <code>--force-with-lease</code> refuses if the remote moved since your last fetch.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>"<code>.gitignore</code> untracks files."</strong> It only affects <em>untracked</em> files. Already-tracked files need <code>git rm --cached</code> first.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Assuming <code>reset --hard</code> destroys data instantly.</strong> The commits become unreachable loose objects, recoverable via reflog for weeks (§8) — not deleted on the spot.</div></div>
+            <div class="col-md-6"><div class="callout callout-danger h-100 mb-0"><strong>Trying to purge a leaked secret with a normal commit.</strong> It still lives in every prior tree/blob object. Real removal needs history rewriting (<code>git filter-repo</code>/BFG) + force-push + everyone re-clones + rotate the credential.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Confusing <code>fetch</code> and <code>pull</code> at the ref level.</strong> <code>fetch</code> only updates <code>refs/remotes/*</code>; it never touches your branches or working dir. <code>pull</code> = fetch + merge/rebase into your current branch.</div></div>
+            <div class="col-md-6"><div class="callout callout-warn h-100 mb-0"><strong>Treating a shallow clone as a full repository.</strong> Ancestor commits genuinely aren't present locally — blame/bisect/rebase across that boundary fail until <code>git fetch --unshallow</code>.</div></div>
+            <div class="col-md-6"><div class="callout callout-info h-100 mb-0"><strong>Fearing detached HEAD.</strong> It's a perfectly valid state; just anchor new work with <code>git branch &lt;name&gt;</code> before switching away, or it becomes GC-eligible.</div></div>
+            <div class="col-md-6"><div class="callout callout-info h-100 mb-0"><strong>Assuming duplicate files cost double storage.</strong> Content addressing means identical bytes hash to the same blob — stored once, referenced by as many tree entries as need it.</div></div>
+        </div>
+    </section>
+
+    <footer class="text-secondary small border-top pt-3">
+        <p class="mb-1"><strong>Last verified: 2026-06-30.</strong> Current Git release: 2.55.0 (2026-06-29). SHA-256 object format status and Git 3.0 timeline per the Git project's <a href="https://git-scm.com/docs/hash-function-transition" target="_blank" rel="noopener">hash-function-transition documentation</a>. GC/reflog defaults (<code>gc.auto</code>=6700, <code>gc.autoPackLimit</code>=50, <code>gc.pruneExpire</code>="2 weeks ago", <code>gc.reflogExpire</code>=90 days, <code>gc.reflogExpireUnreachable</code>=30 days) per <a href="https://git-scm.com/docs/git-gc" target="_blank" rel="noopener">git-gc</a> and <a href="https://git-scm.com/docs/git-reflog" target="_blank" rel="noopener">git-reflog</a> documentation. Object model per the Pro Git book, <em>Git Internals</em> chapter. Bootstrap 5.3.8.</p>
+        <p class="mb-0">AI-generated reference &middot; Part of <a href="https://cheatsheets.davidveksler.com/">David Veksler's Cheatsheets</a> &middot; for command syntax and workflows see the companion <a href="git-scm.html">Git Cheatsheet</a> and <a href="versioncontrol.html">Version Control &amp; Hosting Platforms</a>.</p>
+    </footer>
+</main>
+
+<button class="btn btn-secondary backtop no-print" id="backTop" aria-label="Back to top" title="Back to top"><i class="bi bi-arrow-up"></i></button>
+<button class="btn btn-primary theme-toggle no-print" id="themeToggle" aria-label="Toggle dark mode"><i class="bi bi-moon-stars-fill" id="themeIcon"></i></button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script>
+(function () {
+    'use strict';
+    const STORE = 'gitinternals_';
+
+    const html = document.documentElement;
+    const tBtn = document.getElementById('themeToggle');
+    const tIco = document.getElementById('themeIcon');
+    const applyTheme = (t) => {
+        html.setAttribute('data-bs-theme', t);
+        tIco.classList.toggle('bi-sun-fill', t === 'dark');
+        tIco.classList.toggle('bi-moon-stars-fill', t !== 'dark');
+    };
+    try {
+        const saved = localStorage.getItem(STORE + 'theme');
+        const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(saved || (sysDark ? 'dark' : 'light'));
+    } catch (e) { applyTheme('dark'); }
+    tBtn.addEventListener('click', () => {
+        const next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        try { localStorage.setItem(STORE + 'theme', next); } catch (e) {}
+    });
+
+    document.querySelectorAll('.cmd').forEach((block) => {
+        const btn = block.querySelector('.copy-btn');
+        const code = block.querySelector('pre');
+        if (!btn || !code) return;
+        btn.addEventListener('click', async () => {
+            const text = code.innerText;
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                const r = document.createRange(); r.selectNode(code);
+                const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+                try { document.execCommand('copy'); } catch (_) {}
+                s.removeAllRanges();
+            }
+            btn.classList.add('copied');
+            btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = '<i class="bi bi-clipboard"></i>';
+            }, 1400);
+        });
+    });
+
+    const back = document.getElementById('backTop');
+    const onScroll = () => { back.style.display = window.scrollY > 600 ? 'flex' : 'none'; };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    back.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+})();
+</script>
+</body>
+</html>

@@ -53,6 +53,7 @@ $categoryMap = [
     'compression-algorithms.html' => 'Software & DevOps',
     'databases.html' => 'Software & DevOps',
     'dotnet-cheatsheet.html' => 'Software & DevOps',
+    'git-internals.html' => 'Software & DevOps',
     'git-scm.html' => 'Software & DevOps',
     'javascript-for-architects.html' => 'Software & DevOps',
     'modern-devops-pipelines.html' => 'Software & DevOps',
