@@ -57,6 +57,7 @@ $categoryMap = [
     'git-internals.html' => 'Software & DevOps',
     'git-scm.html' => 'Software & DevOps',
     'javascript-for-architects.html' => 'Software & DevOps',
+    'microservices.html' => 'Software & DevOps',
     'modern-devops-pipelines.html' => 'Software & DevOps',
     'postgresql.html' => 'Software & DevOps',
     'python-for-architects.html' => 'Software & DevOps',

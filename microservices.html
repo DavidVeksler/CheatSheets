@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Microservices Decisions: An ADR-Lite Cheatsheet</title>
+<!-- SEO Meta Description -->
+<meta content="A decision-oriented microservices cheatsheet: when to use them, service boundaries, sync vs async, event-driven patterns, messaging infrastructure, data patterns (outbox, saga, CQRS), idempotency, failure handling, contract testing, security, and observability — each entry as an ADR-lite Context → Options → Trade-offs → Default → Anti-pattern card." name="description"/>
+<!-- Keywords -->
+<meta content="microservices, distributed systems, service boundaries, DDD bounded context, sync vs async, event-driven architecture, event sourcing, CQRS, outbox pattern, saga pattern, choreography orchestration, Kafka, Azure Service Bus, SQS SNS, idempotency, eventual consistency, circuit breaker, dead letter queue, distributed tracing, contract testing, strangler fig, distributed monolith, ADR" name="keywords"/>
+<!-- Canonical URL -->
+<link href="https://cheatsheets.davidveksler.com/microservices.html" rel="canonical"/>
+<!-- Favicon -->
+<link href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;🧩&lt;/text&gt;&lt;/svg&gt;" rel="icon"/>
+<!-- Social Media Metadata (Open Graph & Twitter) -->
+<meta content="Microservices Decisions: An ADR-Lite Cheatsheet" property="og:title"/>
+<meta content="Not a hype tour — a decision reference. Every microservices concept as a Context → Options → Trade-offs → Default → Anti-pattern card, with the numbers that turn opinion into a rule." property="og:description"/>
+<meta content="website" property="og:type"/>
+<meta content="https://cheatsheets.davidveksler.com/microservices.html" property="og:url"/>
+<meta content="images/microservices.png" property="og:image"/>
+<meta content="Microservices decision cheatsheet preview" property="og:image:alt"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="Microservices Decisions: An ADR-Lite Cheatsheet" name="twitter:title"/>
+<meta content="A decision-oriented microservices reference: boundaries, sync vs async, events, data patterns, idempotency, failure handling, and the anti-patterns that sink teams." name="twitter:description"/>
+<meta content="images/microservices.png" name="twitter:image"/>
+<meta content="@heroiclife" name="twitter:creator"/>
+<!-- Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Microservices Decisions: An ADR-Lite Cheatsheet",
+  "description": "A decision-oriented microservices reference organized as ADR-lite cards. Covers the should-you-adopt call, strangler-fig migration, DDD service boundaries, sync vs async communication, service discovery and gateways, event-driven patterns, messaging infrastructure, database-per-service, outbox and saga, idempotency and eventual consistency, failure handling, contract testing, service-to-service security, distributed tracing, and a canonical anti-pattern catalog.",
+  "image": "https://cheatsheets.davidveksler.com/images/microservices.png",
+  "author": { "@type": "Person", "name": "David Veksler (AI Generated)" },
+  "publisher": { "@type": "Organization", "name": "David Veksler Cheatsheets" },
+  "datePublished": "2026-07-01",
+  "dateModified": "2026-07-01",
+  "keywords": "microservices, distributed systems, service boundaries, DDD, sync vs async, event-driven, CQRS, outbox, saga, Kafka, idempotency, eventual consistency, circuit breaker, distributed tracing, contract testing, strangler fig, distributed monolith"
+}
+</script>
+<!-- Bootstrap 5.3.8 CSS (SRI-pinned) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<!-- Bootstrap Icons 1.13.1 (SRI-pinned) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Roboto+Slab:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<style>
+    :root {
+        --bs-body-bg: #f8f9fa;
+        --bs-primary: #005A9C;
+        --bs-primary-dark: #003E6B;
+        --bs-primary-light: #63A4FF;
+        --card-border-color: #dee2e6;
+        --card-shadow-color: rgba(0, 0, 0, 0.08);
+        --text-color-main: #2a363b;
+        --text-color-secondary: #5a6268;
+        --text-color-headings: #004085;
+        --code-bg-color: #2b303b;
+        --code-text-color: #c0c5ce;
+
+        /* Category Colors */
+        --color-foundational: #6A0DAD;
+        --color-migration: #00695C;
+        --color-boundaries: #2E7D32;
+        --color-communication: #005A9C;
+        --color-edge: #00838F;
+        --color-events: #5E35B1;
+        --color-infra: #E65100;
+        --color-data: #4E342E;
+        --color-consistency: #AD1457;
+        --color-failure: #C62828;
+        --color-contracts: #0277BD;
+        --color-security: #37474F;
+        --color-observability: #1565C0;
+        --color-antipattern: #B71C1C;
+
+        --current-category-color: var(--bs-primary);
+    }
+
+    body {
+        background-color: var(--bs-body-bg);
+        font-family: 'Inter', sans-serif;
+        color: var(--text-color-main);
+        line-height: 1.7;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-primary-dark) 100%),
+                    url('data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22100%22%20height%3D%22100%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cdefs%3E%3Cpattern%20id%3D%22subtleDots%22%20width%3D%2210%22%20height%3D%2210%22%20patternUnits%3D%22userSpaceOnUse%22%3E%3Ccircle%20fill%3D%22rgba(255%2C255%2C255%2C0.05)%22%20cx%3D%225%22%20cy%3D%225%22%20r%3D%221%22/%3E%3C/pattern%3E%3C/defs%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22url(%23subtleDots)%22/%3E%3C/svg%3E');
+        color: #fff;
+        padding: 3rem 1.5rem;
+        text-align: center;
+        border-bottom: 5px solid var(--bs-primary-light);
+        margin-bottom: 2.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .page-header h1 {
+        font-family: 'Roboto Slab', serif;
+        font-weight: 700;
+        font-size: 2.8rem;
+        letter-spacing: 0.5px;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    }
+    .page-header h1 .bi { font-size: 1em; vertical-align: -0.1em; margin-right: 0.5em;}
+    .page-header .lead { font-size: 1.15rem; max-width: 900px; margin: 0.5rem auto 0; opacity: 0.95; }
+    .page-header .text-muted { color: rgba(255,255,255,0.75) !important; font-size: 0.9rem; }
+
+    .global-controls {
+        background-color: #fff;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    /* How-to-read legend */
+    .legend {
+        background: #fff;
+        border: 1px solid var(--card-border-color);
+        border-left: 5px solid var(--bs-primary);
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .legend h2 { font-family: 'Roboto Slab', serif; font-size: 1.3rem; color: var(--text-color-headings); margin-bottom: 0.75rem; }
+    .legend .archetype-row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    .legend .archetype-box { flex: 1 1 320px; background: #fbfcfe; border: 1px solid #e0e6ed; border-radius: 6px; padding: 0.9rem 1.1rem; }
+    .legend .archetype-box p { margin-bottom: 0.35rem; font-size: 0.92rem; }
+
+    .schema-container {
+        background-color: #ffffff;
+        border: 1px solid var(--card-border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        box-shadow: 0 6px 18px var(--card-shadow-color);
+        position: relative;
+        overflow: hidden;
+        scroll-margin-top: 1rem;
+    }
+    .schema-container::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 6px;
+        background-color: var(--current-category-color);
+        border-radius: 11px 11px 0 0;
+    }
+
+    .section-title {
+        font-family: 'Roboto Slab', serif;
+        color: var(--text-color-headings);
+        margin-top: -0.5rem;
+        margin-bottom: 1.75rem;
+        font-weight: 700;
+        font-size: 2rem;
+        padding-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+    .section-title .bi { margin-right: 1rem; font-size: 1.8em; color: var(--current-category-color); opacity: 0.85;}
+    .section-title .sec-num { font-size: 1rem; font-weight: 600; color: var(--current-category-color); background: color-mix(in srgb, var(--current-category-color) 12%, white); border-radius: 999px; padding: 0.1em 0.7em; margin-right: 0.9rem; }
+    .section-intro { color: var(--text-color-secondary); font-size: 1rem; margin-top: -1rem; margin-bottom: 1.75rem; max-width: 900px; }
+
+    .section-foundational { --current-category-color: var(--color-foundational); }
+    .section-migration { --current-category-color: var(--color-migration); }
+    .section-boundaries { --current-category-color: var(--color-boundaries); }
+    .section-communication { --current-category-color: var(--color-communication); }
+    .section-edge { --current-category-color: var(--color-edge); }
+    .section-events { --current-category-color: var(--color-events); }
+    .section-infra { --current-category-color: var(--color-infra); }
+    .section-data { --current-category-color: var(--color-data); }
+    .section-consistency { --current-category-color: var(--color-consistency); }
+    .section-failure { --current-category-color: var(--color-failure); }
+    .section-contracts { --current-category-color: var(--color-contracts); }
+    .section-security { --current-category-color: var(--color-security); }
+    .section-observability { --current-category-color: var(--color-observability); }
+    .section-antipattern { --current-category-color: var(--color-antipattern); }
+
+    .info-card {
+        background: #fff;
+        border: 1px solid #e0e6ed;
+        border-top: 5px solid var(--current-category-color);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 2rem;
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+    .info-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.09);
+    }
+
+    .info-card .card-header {
+        color: var(--current-category-color);
+        background-color: #f8f9fc;
+        font-size: 1.25rem;
+        text-align: left;
+        padding: 1rem 1.25rem;
+        font-weight: 700;
+        font-family: 'Roboto Slab', serif;
+        display: flex; align-items: center; gap: .75rem;
+        border-bottom: 1px solid #e0e6ed;
+        border-radius: 7px 7px 0 0;
+    }
+    .info-card .card-header .bi { font-size: 1.4em; opacity: 0.85; }
+    .info-card .card-header .archetype-chip { margin-left: auto; }
+    .info-card .card-body { padding: 1.5rem; flex-grow: 1; }
+    .info-card p, .info-card ul, .info-card dl { font-size: 0.98rem; color: var(--text-color-secondary); line-height: 1.7; }
+
+    /* Archetype chips */
+    .archetype-chip {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 0.2em 0.6em;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+    .chip-decision { background: #e3f2fd; color: #005A9C; border: 1px solid #90caf9; }
+    .chip-pattern { background: #ede7f6; color: #5E35B1; border: 1px solid #b39ddb; }
+
+    /* ADR-lite field blocks */
+    .adr { margin: 0; }
+    .adr .adr-field { margin-bottom: 0.8rem; }
+    .adr .adr-field:last-child { margin-bottom: 0; }
+    .adr .adr-label {
+        display: inline-block;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--current-category-color);
+        min-width: 96px;
+        vertical-align: top;
+    }
+    .adr .adr-body { display: inline; font-size: 0.96rem; color: var(--text-color-secondary); }
+    .adr .adr-field.default .adr-body { color: var(--text-color-main); font-weight: 500; }
+    .adr .adr-field.default { background: #f1f8f4; border-left: 3px solid #2E7D32; padding: 0.5rem 0.75rem; border-radius: 4px; }
+    .adr .adr-field.antipattern { background: #fdf0f0; border-left: 3px solid var(--color-antipattern); padding: 0.5rem 0.75rem; border-radius: 4px; }
+    .adr .adr-field.antipattern .adr-label { color: var(--color-antipattern); }
+    .adr .adr-field.signals { background: #fff8ec; border-left: 3px solid #E65100; padding: 0.5rem 0.75rem; border-radius: 4px; }
+    .adr .adr-field.signals .adr-label { color: #E65100; }
+    .num { font-weight: 600; color: var(--text-color-main); background: #eef2f7; padding: 0 0.35em; border-radius: 4px; font-variant-numeric: tabular-nums; }
+
+    .details-toggle {
+        font-size: 0.9rem; font-weight: 500;
+        padding: 0.5rem 1rem; color: var(--current-category-color);
+        border: 2px solid var(--current-category-color); background-color: transparent;
+        transition: background-color 0.2s ease, color 0.2s ease;
+        display: inline-flex; align-items: center; gap: 0.4em;
+        border-radius: 6px; margin-top: 1.25rem;
+    }
+    .details-toggle:hover { background-color: var(--current-category-color); color: white; }
+    .details-toggle .bi { transition: transform 0.2s ease-in-out; }
+    .details-toggle[aria-expanded="true"] .bi { transform: rotate(180deg); }
+
+    .collapse-content {
+        font-size: 0.95rem;
+        border-top: 1px solid #e9ecef;
+        padding-top: 1.25rem; margin-top: 1.25rem;
+        background-color: #fbfcfe;
+        padding: 1.25rem; border-radius: 6px;
+    }
+    .collapse-content h6 { font-weight: 700; color: var(--text-color-headings); margin-top: 1rem; margin-bottom: 0.5rem; font-size: 1.02rem; font-family: 'Inter', sans-serif;}
+    .collapse-content h6:first-child { margin-top: 0; }
+    .collapse-content ul { padding-left: 1.5rem; margin-bottom: 1rem; list-style-type: '– '; }
+    .collapse-content li { margin-bottom: 0.5rem; font-size: 0.92rem; padding-left: 0.3rem;}
+    .collapse-content code {
+        font-size: 0.88em;
+        color: #b72e52;
+        background-color: #fceef2;
+        padding: 0.15em 0.4em;
+        border-radius: 4px;
+        font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    .collapse-content pre {
+        background-color: var(--code-bg-color);
+        color: var(--code-text-color);
+        padding: 1.25em;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.88em;
+        line-height: 1.6;
+        border: 1px solid #444;
+        position: relative;
+    }
+    .collapse-content pre code { background-color: transparent; color: inherit; padding: 0; border-radius: 0; font-size: 1em; }
+
+    /* Comparison tables */
+    .cmp-table { font-size: 0.9rem; }
+    .cmp-table thead th { background: color-mix(in srgb, var(--current-category-color) 12%, white); color: var(--text-color-headings); font-family: 'Inter', sans-serif; }
+    .cmp-table td, .cmp-table th { vertical-align: top; }
+
+    .term {
+        font-weight: 600; color: var(--bs-primary);
+        background-color: #e3f2fd;
+        padding: 0.05em 0.4em; border-radius: 4px; cursor: help;
+        border: 1px solid var(--bs-primary-light);
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .term:hover { background-color: var(--bs-primary); color: #fff; }
+
+    .xref { font-weight: 600; }
+    .xref .bi { font-size: 0.85em; }
+
+    a { color: var(--bs-primary); text-decoration: none; font-weight: 500; }
+    a:hover { color: var(--bs-primary-dark); text-decoration: underline; }
+
+    /* Quick nav / TOC */
+    .toc { background:#fff; border:1px solid var(--card-border-color); border-radius:10px; padding:1.25rem 1.5rem; margin-bottom:2.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+    .toc h2 { font-family:'Roboto Slab',serif; font-size:1.15rem; color:var(--text-color-headings); margin-bottom:0.75rem; }
+    .toc ol { columns: 2; column-gap: 2rem; margin:0; padding-left:1.25rem; }
+    .toc li { margin-bottom:0.35rem; font-size:0.93rem; }
+    @media (max-width: 600px){ .toc ol { columns: 1; } }
+
+    footer {
+        text-align: center;
+        padding: 2.5rem 0;
+        margin-top: 3rem;
+        background-color: #e2e6ea;
+        color: var(--text-color-secondary);
+        font-size: 0.9rem;
+        border-top: 1px solid var(--card-border-color);
+    }
+    footer a { color: var(--bs-primary); }
+    footer a:hover { color: var(--bs-primary-dark); }
+
+    @media print {
+        body { font-size: 10pt; background-color: #fff; color: #000; }
+        .page-header, footer, .details-toggle, .global-controls, .toc { display: none; }
+        .schema-container { border: 1px solid #bbb; box-shadow: none; margin-bottom: 1.5rem; padding: 1rem; }
+        .schema-container::before { display: none; }
+        .section-title { font-size: 1.4rem; margin-bottom: 1rem; color: #000 !important; }
+        .section-title .bi { color: #000 !important; }
+        .info-card { box-shadow: none; border: 1px solid #ccc; border-top-width: 3px; margin-bottom: 1rem; page-break-inside: avoid; }
+        .collapse.show { display: block !important; }
+        a { text-decoration: none; color: #000; }
+    }
+</style>
+</head>
+<body>
+<header class="page-header">
+<h1><i class="bi bi-diagram-3-fill"></i> Microservices Decisions</h1>
+<p class="lead">Not a hype tour — a <strong>decision reference</strong>. Every concept below is an ADR-lite card: <em>what you're choosing between, the trade-off, the opinionated default, and the anti-pattern that sinks teams</em> — with the numbers that turn opinion into a rule.</p>
+<p class="text-muted small">Last verified: <span id="lastUpdatedDate">2026-07-01</span> · Pairs with <a href="clean-architecture-dotnet.html" style="color:#cfe3ff;">Clean Architecture in .NET</a></p>
+</header>
+<main class="container">
+
+<div class="global-controls">
+<button class="btn btn-primary btn-sm" id="expandAllBtn"><i class="bi bi-arrows-angle-expand"></i> Expand All</button>
+<button class="btn btn-secondary btn-sm" id="collapseAllBtn"><i class="bi bi-arrows-angle-contract"></i> Collapse All</button>
+</div>
+
+<!-- HOW TO READ -->
+<div class="legend">
+  <h2><i class="bi bi-compass"></i> How to read this sheet</h2>
+  <p class="mb-1">Every entry is one of two archetypes. Both end in an <strong>Anti-pattern</strong>, so you always know what "wrong" looks like.</p>
+  <div class="archetype-row">
+    <div class="archetype-box">
+      <p><span class="archetype-chip chip-decision">Decision</span> — a fork in the road</p>
+      <p class="text-muted mb-0" style="font-size:0.88rem;"><strong>Context</strong> → <strong>Options</strong> → <strong>Trade-offs</strong> → <strong>Default</strong> → <strong>Signals you chose wrong</strong> → <strong>Anti-pattern</strong></p>
+    </div>
+    <div class="archetype-box">
+      <p><span class="archetype-chip chip-pattern">Pattern</span> — a named solution you implement</p>
+      <p class="text-muted mb-0" style="font-size:0.88rem;"><strong>Problem</strong> → <strong>Mechanism</strong> → <strong>When it earns its cost</strong> → <strong>Anti-pattern</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<nav class="toc">
+  <h2><i class="bi bi-list-ol"></i> Contents</h2>
+  <ol>
+    <li><a href="#sec-foundational">Should you? The foundational call</a></li>
+    <li><a href="#sec-migration">Getting there: the strangler fig</a></li>
+    <li><a href="#sec-boundaries">Service boundaries</a></li>
+    <li><a href="#sec-communication">Communication: sync vs async</a></li>
+    <li><a href="#sec-edge">The edge: gateway, discovery &amp; mesh</a></li>
+    <li><a href="#sec-events">Event-driven core patterns</a></li>
+    <li><a href="#sec-infra">Messaging infrastructure</a></li>
+    <li><a href="#sec-data">Data patterns</a></li>
+    <li><a href="#sec-consistency">Consistency &amp; idempotency</a></li>
+    <li><a href="#sec-failure">Failure handling</a></li>
+    <li><a href="#sec-contracts">Contracts &amp; versioning</a></li>
+    <li><a href="#sec-security">Service-to-service security</a></li>
+    <li><a href="#sec-observability">Observability</a></li>
+    <li><a href="#sec-antipattern">Anti-pattern catalog (capstone)</a></li>
+  </ol>
+</nav>
+
+<!-- ===================================================================== -->
+<!-- 1. FOUNDATIONAL CALL -->
+<!-- ===================================================================== -->
+<div class="schema-container section-foundational" id="sec-foundational">
+<h2 class="section-title"><span class="sec-num">01</span><i class="bi bi-signpost-split-fill"></i> Should You? The Foundational Call</h2>
+<p class="section-intro">Microservices are an <em>organizational</em> technology before they are a technical one. The first three cards decide whether you should be on this page at all.</p>
+<div class="row">
+
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-diagram-2-fill"></i> Monolith → Modular Monolith → Microservices <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> You have a system and a team, and someone said "microservices." What granularity actually fits?</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> <strong>Monolith</strong> (one deployable) · <strong>Modular monolith</strong> (one deployable, enforced internal module boundaries) · <strong>Microservices</strong> (many independently deployable services).</span></div>
+          <div class="adr-field"><span class="adr-label">Trade-offs</span><span class="adr-body"> Microservices buy <em>independent deployability</em> and <em>fault isolation</em> and pay for them in network calls, distributed data, and operational surface. A modular monolith gives you ~80% of the boundary discipline at ~10% of the operational cost.</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> Start with a <strong>modular monolith</strong>. Split a module into a service only when a concrete force demands it: a team needs an independent deploy cadence, a component needs to scale or fail independently, or a bounded context has genuinely diverged. Threshold heuristics: more than <span class="num">~2</span> teams stepping on one deploy pipeline, or a single team above the <span class="num">~8</span>-person "two-pizza" line.</span></div>
+          <div class="adr-field signals"><span class="adr-label">Signals you chose wrong</span><span class="adr-body"> You split too early if every feature touches 3+ services and no team can ship alone. You split too late if merge queues and release trains are the bottleneck.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Adopting microservices for résumé/"modern" reasons before the org has more than one deploy cadence. → <a href="#ap-premature" class="xref">catalog</a></span></div>
+        </div>
+        <button aria-controls="d-granularity" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#d-granularity" data-bs-toggle="collapse" type="button">Boundary discipline without the network <i class="bi bi-chevron-down"></i></button>
+        <div class="collapse collapse-content" id="d-granularity">
+          <h6>The modular monolith is the honest middle</h6>
+          <p>A modular monolith enforces the same <span class="term" data-bs-toggle="tooltip" title="A subsystem with its own model, vocabulary, and consistency boundary. See §3.">bounded contexts</span> as microservices — via project references, module visibility, and dependency rules — but keeps a single process and a single deploy. You get testability and clear ownership without correlation IDs, sagas, or a mesh. This is the same dependency discipline described in <a href="clean-architecture-dotnet.html" class="xref"><i class="bi bi-layers-half"></i> Clean Architecture</a>; microservices simply promote a module boundary into a network boundary — and every network boundary you add is a distributed-systems tax you now pay forever.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-people-fill"></i> Conway's Law as a Forcing Function <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> Your architecture will mirror your communication structure whether or not you designed it to.</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> Let the org chart shape the architecture accidentally, or apply the <strong>Inverse Conway Maneuver</strong> — design the team topology you want the architecture to reflect, then let the services follow.</span></div>
+          <div class="adr-field"><span class="adr-label">Trade-offs</span><span class="adr-body"> Service boundaries that cut across team boundaries generate constant cross-team coordination — the exact cost microservices were supposed to remove.</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> One service (or a small cluster of services) owned end-to-end by <strong>one stream-aligned team</strong>. If two teams must coordinate to ship one service, the boundary is wrong.</span></div>
+          <div class="adr-field signals"><span class="adr-label">Signals you chose wrong</span><span class="adr-body"> Cross-team PR approvals on every release; a "shared services" team that becomes everyone's bottleneck.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Drawing service lines on a whiteboard while ignoring who owns what. → <a href="#ap-conway" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-cash-coin"></i> The Microservices Tax <span class="archetype-chip chip-pattern">Reality Check</span></div>
+      <div class="card-body">
+        <p>The honest counterweight to every "microservices scale better" pitch. Before you split, price the bill you're signing up for — it is paid <em>per service, forever</em>.</p>
+        <div class="table-responsive">
+        <table class="table table-bordered table-sm cmp-table">
+          <thead><tr><th>Cost line</th><th>What the monolith gave you free</th><th>What you now build/operate</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Calls</strong></td><td>In-process method call, ~ns, can't fail</td><td>Network hop: latency budget, timeouts, retries, partial failure</td></tr>
+            <tr><td><strong>Data</strong></td><td>ACID transaction across all tables</td><td>Eventual consistency, sagas, outbox, no cross-service JOIN (<a href="#sec-data" class="xref">§8</a>)</td></tr>
+            <tr><td><strong>Debugging</strong></td><td>One stack trace</td><td>Distributed tracing across N hops (<a href="#sec-observability" class="xref">§13</a>)</td></tr>
+            <tr><td><strong>Deploy</strong></td><td>One artifact</td><td>N pipelines, versioned contracts, canary infra (see <a href="modern-devops-pipelines.html" class="xref"><i class="bi bi-arrow-repeat"></i> DevOps Pipelines</a>)</td></tr>
+            <tr><td><strong>On-call</strong></td><td>One thing that's up or down</td><td>N services × dependency graph = combinatorial failure modes</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="mb-0"><strong>Rule of thumb:</strong> if you can't articulate which specific line above you're <em>buying relief from</em>, you're paying the tax for nothing.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 2. MIGRATION -->
+<!-- ===================================================================== -->
+<div class="schema-container section-migration" id="sec-migration">
+<h2 class="section-title"><span class="sec-num">02</span><i class="bi bi-signpost-2-fill"></i> Getting There: The Strangler Fig</h2>
+<p class="section-intro">"Should I?" and "how do I start?" are the same reader's back-to-back questions. You almost never greenfield microservices — you extract them from a monolith incrementally.</p>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-tree-fill"></i> Strangler Fig Migration <span class="archetype-chip chip-pattern">Pattern</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Problem</span><span class="adr-body"> A big-bang rewrite of a monolith into services fails: it freezes feature work for months and lands untested.</span></div>
+          <div class="adr-field"><span class="adr-label">Mechanism</span><span class="adr-body"> Put a routing façade (a gateway or reverse proxy) in front of the monolith. Extract one bounded context at a time into a new service, route just that path to it, and delete the old code once traffic is fully cut over. The monolith shrinks as the "fig" grows around it.</span></div>
+          <div class="adr-field"><span class="adr-label">When it earns its cost</span><span class="adr-body"> Any migration of a system that must keep shipping. Extract by <em>seam</em>: start with a low-risk, read-mostly context (e.g. notifications, reporting) to build the deploy/observability muscle before touching the order pipeline.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> The big-bang rewrite; or extracting a service that still reaches back into the monolith's database. → <a href="#ap-bigbang" class="xref">catalog</a></span></div>
+        </div>
+        <button aria-controls="d-strangler" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#d-strangler" data-bs-toggle="collapse" type="button">Extraction order &amp; the shared-DB trap <i class="bi bi-chevron-down"></i></button>
+        <div class="collapse collapse-content" id="d-strangler">
+          <h6>Sequence</h6>
+          <ul>
+            <li><strong>1. Seam it.</strong> Find a bounded context with few inbound dependencies. Wrap its data access behind an interface inside the monolith first.</li>
+            <li><strong>2. Front it.</strong> Add the gateway/façade so routing is a config change, not a code change.</li>
+            <li><strong>3. Split the data.</strong> The service gets its own store; migrate/replicate data, then cut writes over. This is the hard part, not the code.</li>
+            <li><strong>4. Cut over &amp; delete.</strong> Route 100%, monitor, then delete the monolith's copy. An extraction that never deletes the old path is just a <span class="term" data-bs-toggle="tooltip" title="Services that cannot be deployed independently because they share code, a database, or a release. See §3 and the catalog.">distributed monolith</span> in progress.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-plug-fill"></i> Anti-Corruption Layer <span class="archetype-chip chip-pattern">Pattern</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Problem</span><span class="adr-body"> A new service must talk to the legacy monolith without inheriting its data model and vocabulary.</span></div>
+          <div class="adr-field"><span class="adr-label">Mechanism</span><span class="adr-body"> A translation layer (the <span class="term" data-bs-toggle="tooltip" title="A DDD pattern: an isolating translation layer between two bounded contexts so one model's concepts don't leak into the other.">ACL</span>) at the service edge maps the legacy model to the new domain model in <em>both</em> directions, so the legacy schema never leaks inward.</span></div>
+          <div class="adr-field"><span class="adr-label">When it earns its cost</span><span class="adr-body"> Whenever you integrate with a legacy system or third-party API whose model you don't control. It's the same dependency-inversion instinct as <a href="clean-architecture-dotnet.html" class="xref"><i class="bi bi-layers-half"></i> Clean Architecture's</a> ports &amp; adapters, applied at the service boundary.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Letting the legacy DTOs become your new service's domain model — you've moved the coupling, not removed it.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 3. BOUNDARIES -->
+<!-- ===================================================================== -->
+<div class="schema-container section-boundaries" id="sec-boundaries">
+<h2 class="section-title"><span class="sec-num">03</span><i class="bi bi-bounding-box-circles"></i> Service Boundaries</h2>
+<p class="section-intro">The single most important — and most often botched — decision. Draw boundaries around business capabilities, not database tables.</p>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-diagram-3"></i> DDD Bounded Contexts <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> You need a rule for where one service ends and the next begins.</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> Boundary by <strong>bounded context</strong> (a capability with its own model &amp; language) vs by <strong>technical layer</strong> (an "auth service", a "database service") vs by <strong>entity/table</strong> (one service per noun).</span></div>
+          <div class="adr-field"><span class="adr-label">Trade-offs</span><span class="adr-body"> Context boundaries minimize the chatter that crosses the network because a business operation completes mostly inside one service. Table/layer boundaries maximize it — every use case fans out.</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> One service per <strong>bounded context</strong>, owning its data and its model. A "Customer" means different things to Billing and to Support — that's two contexts, not one shared Customer service.</span></div>
+          <div class="adr-field signals"><span class="adr-label">Signals you chose wrong</span><span class="adr-body"> Most features require synchronized changes to 3+ services; you keep adding fields to a shared model to satisfy one consumer.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> "One service per database table" — nano-services that can't do anything alone. → <a href="#ap-nano" class="xref">catalog</a></span></div>
+        </div>
+        <button aria-controls="d-context" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#d-context" data-bs-toggle="collapse" type="button">Finding seams: aggregates &amp; language <i class="bi bi-chevron-down"></i></button>
+        <div class="collapse collapse-content" id="d-context">
+          <h6>Where the seams actually are</h6>
+          <ul>
+            <li><strong>Ubiquitous language shifts.</strong> When the same word means different things to different people, you've found a context boundary.</li>
+            <li><strong>Aggregate roots</strong> are the unit of consistency; a transaction should never span two aggregates in different services. See the aggregate/entity modelling in <a href="clean-architecture-dotnet.html#detailsDomainLayer" class="xref"><i class="bi bi-layers-half"></i> Clean Architecture</a>.</li>
+            <li><strong>Rate of change.</strong> Things that change together belong together; things that change for different reasons and cadences want to be apart.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-mask"></i> The Distributed Monolith <span class="archetype-chip chip-decision">Anti-Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> The worst of both worlds: microservices' operational cost with the monolith's coupling. It's the default failure mode of a bad split.</span></div>
+          <div class="adr-field"><span class="adr-label">Tells</span><span class="adr-body"> Services that (a) must be deployed together in lockstep, (b) share a database or schema, or (c) share a domain model / DTO library. Any one of these means it's one service wearing a costume.</span></div>
+          <div class="adr-field default"><span class="adr-label">Test</span><span class="adr-body"> Can this service be deployed, on its own, without coordinating a release with any other? If <em>no</em>, it is not a microservice — merge it back or fix the boundary.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> A shared "Common" or "Entities" NuGet/npm package that every service depends on — it recreates lockstep deploys through the back door. → <a href="#ap-distmono" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 4. COMMUNICATION -->
+<!-- ===================================================================== -->
+<div class="schema-container section-communication" id="sec-communication">
+<h2 class="section-title"><span class="sec-num">04</span><i class="bi bi-arrow-left-right"></i> Communication: Sync vs Async</h2>
+<p class="section-intro">Decide this <em>per interaction</em>, not once per system. The wrong default here is what multiplies your outages.</p>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-toggles"></i> Sync (REST/gRPC) vs Async (Messaging) <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> Service A needs something from Service B. Blocking call or message?</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> <strong>Sync</strong> request-response (REST, gRPC) · <strong>Async</strong> fire-and-forget (event/command on a broker) · <strong>Async request-reply</strong> (send command, correlate a reply message).</span></div>
+          <div class="adr-field"><span class="adr-label">Trade-offs</span><span class="adr-body"> Sync is simple and immediate but <em>temporally couples</em> A to B's availability. Async decouples availability and smooths load, at the cost of eventual consistency and harder debugging.</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> <strong>Sync for queries</strong> the caller must have answered now (read a price); <strong>async for commands/notifications</strong> that can complete later (place order → fulfil). Prefer <strong>gRPC</strong> over REST for internal high-volume sync (binary, streaming, ~contract-first).</span></div>
+          <div class="adr-field signals"><span class="adr-label">Signals you chose wrong</span><span class="adr-body"> A user request blocks on a chain of 4 sync calls; a "quick" sync call to a slow dependency is eating your thread pool.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Synchronous call chains A→B→C→D — availability multiplies against you (see next card). → <a href="#ap-syncchain" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-calculator-fill"></i> The Availability Math <span class="archetype-chip chip-pattern">Do the Numbers</span></div>
+      <div class="card-body">
+        <p>Why "just call the other service" is a trap. Availability in a <strong>synchronous chain multiplies</strong>: if each hop is independently up 99.9% of the time, four of them in series is:</p>
+        <p class="text-center" style="font-size:1.15rem;"><span class="num">0.999<sup>4</sup> ≈ 0.9960</span> → <strong>99.6%</strong></p>
+        <div class="table-responsive">
+        <table class="table table-bordered table-sm cmp-table">
+          <thead><tr><th>Topology</th><th>Combined uptime</th><th>Downtime / month (30d)</th></tr></thead>
+          <tbody>
+            <tr><td>1 service @ 99.9%</td><td>99.9%</td><td><span class="num">~43 min</span></td></tr>
+            <tr><td>4 in a sync chain</td><td>99.6%</td><td><span class="num">~173 min</span> (≈ 2.9 hrs)</td></tr>
+            <tr><td>10 in a sync chain</td><td>99.0%</td><td><span class="num">~432 min</span> (≈ 7.2 hrs)</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="mb-0"><strong>Fix:</strong> break the chain with async messaging (the caller's uptime stops depending on the callee's), cache reads, or collapse the chain by fixing the boundary. Every sync hop you remove from the critical path is downtime you delete.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 5. EDGE -->
+<!-- ===================================================================== -->
+<div class="schema-container section-edge" id="sec-edge">
+<h2 class="section-title"><span class="sec-num">05</span><i class="bi bi-hdd-network-fill"></i> The Edge: Gateway, Discovery &amp; Mesh</h2>
+<p class="section-intro">Cross-cutting concerns — auth, routing, retries, mTLS — belong at the edge and in the platform, not copy-pasted into every service.</p>
+<div class="row">
+  <div class="col-lg-4">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-door-open-fill"></i> API Gateway / BFF <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> Where do edge concerns (authn, rate-limit, TLS termination, request aggregation) live?</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> Single <strong>API gateway</strong> · a <strong>Backend-for-Frontend</strong> per client type (web/mobile) · direct-to-service (no edge).</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> A gateway for shared edge concerns; add a <strong>BFF</strong> when web and mobile need genuinely different aggregation/shaping.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Business logic creeping into the gateway — it becomes a new monolith every team must change. → <a href="#ap-fatgw" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-search"></i> Service Discovery <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> How does a sync caller find a healthy instance of the callee when IPs are ephemeral?</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> <strong>Client-side</strong> (registry lookup + client load-balances) · <strong>server-side</strong> (LB/DNS in front) · <strong>platform-native</strong> (Kubernetes Service + DNS).</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> Let the platform do it — <strong>Kubernetes DNS</strong> / cloud service discovery. Don't hand-roll a registry unless you're off-platform.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Hard-coded hostnames/IPs and config files you redeploy to change a route.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-diagram-3-fill"></i> Service Mesh <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> Retries, mTLS, timeouts, and traffic-shaping are needed by <em>every</em> service. Library or infra?</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> <strong>Sidecar mesh</strong> (Istio, Linkerd) moves it to the platform · <strong>in-process libraries</strong> (Polly, resilience4j) · <strong>nothing</strong> (each team reinvents it).</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> Libraries until <span class="num">~10+</span> services; adopt a mesh when uniform mTLS, retries, and traffic policy across many services outweigh the sidecar's latency/complexity cost. Linkerd if you want light; Istio if you want every knob.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Installing Istio for 3 services because it's on the CNCF landscape. → <a href="#ap-premature" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 6. EVENT-DRIVEN -->
+<!-- ===================================================================== -->
+<div class="schema-container section-events" id="sec-events">
+<h2 class="section-title"><span class="sec-num">06</span><i class="bi bi-broadcast-pin"></i> Event-Driven Core Patterns</h2>
+<p class="section-intro">Three "event" things people constantly conflate, plus how work coordinates across services.</p>
+<div class="row">
+  <div class="col-12">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-arrows-angle-expand"></i> Notification vs State Transfer vs Sourcing <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <p>All three are called "events." They are different tools with different coupling and storage implications.</p>
+        <div class="table-responsive">
+        <table class="table table-bordered table-sm cmp-table">
+          <thead><tr><th>Pattern</th><th>What the event carries</th><th>Consumer does</th><th>Use when</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Event Notification</strong></td><td>"OrderPlaced #123" — a bare fact + ID</td><td>Calls back to fetch details if needed</td><td>Low coupling; consumers rarely need the full payload</td></tr>
+            <tr><td><strong>Event-Carried State Transfer</strong></td><td>The full order snapshot</td><td>Keeps a local read replica; no callback</td><td>Consumers need the data and you want to kill sync read chatter</td></tr>
+            <tr><td><strong>Event Sourcing</strong></td><td>Every state change, as the system of record</td><td>Rebuilds state by replaying the log</td><td>You need a full audit log / temporal queries — rarely; high complexity</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <div class="adr">
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> <strong>Event notification</strong> or <strong>state transfer</strong> for integration between services. Reserve <strong>event sourcing</strong> for the few aggregates that genuinely need an audit trail — it is a persistence strategy for <em>one</em> service, not an architecture mandate for all of them.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> "We're event-sourced" as a company-wide decree; conflating event sourcing with pub/sub. → <a href="#ap-esall" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-signpost-split"></i> Pub/Sub vs Point-to-Point Queue <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> Should a message go to <em>everyone</em> interested or to <em>exactly one</em> worker?</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> <strong>Pub/sub (topic)</strong>: one publish, many independent subscribers each get a copy. <strong>Queue (point-to-point)</strong>: many workers <span class="term" data-bs-toggle="tooltip" title="Multiple identical consumers pull from one queue; each message goes to exactly one of them. Scales throughput horizontally.">compete</span>, each message handled once.</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> <strong>Pub/sub for events</strong> ("something happened", N consumers care); <strong>queue for commands/work</strong> ("do this once", scale workers). Add competing consumers to a queue to scale throughput horizontally.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Fanning a command out to a topic so two workers both do it (double-charge); or a queue where you actually needed everyone to react.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-diagram-2"></i> Choreography vs Orchestration (Sagas) <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> A multi-step workflow spans services (order → payment → inventory → shipping). Who drives it?</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> <strong>Choreography</strong>: each service reacts to events, no central brain. <strong>Orchestration</strong>: a saga orchestrator issues commands and tracks the workflow explicitly.</span></div>
+          <div class="adr-field"><span class="adr-label">Trade-offs</span><span class="adr-body"> Choreography is loosely coupled but the workflow is <em>implicit</em> — no one place tells you what happens next. Orchestration is explicit and traceable but the orchestrator is a coupling point.</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> <strong>Orchestration</strong> once a workflow has <span class="num">3+</span> steps or needs compensation/visibility; choreography for simple <span class="num">1–2</span>-hop reactions.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Choreography sprawl — the workflow is implicit across 8 event handlers and no one can trace it. → <a href="#ap-choreo" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 7. INFRA -->
+<!-- ===================================================================== -->
+<div class="schema-container section-infra" id="sec-infra">
+<h2 class="section-title"><span class="sec-num">07</span><i class="bi bi-server"></i> Messaging Infrastructure</h2>
+<p class="section-intro">Log, queue, and push are three different jobs. Pick by delivery/ordering/replay requirements, not by popularity.</p>
+<div class="row">
+  <div class="col-12">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-hdd-stack-fill"></i> Kafka vs Service Bus/SQS-SNS vs SignalR <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="table-responsive">
+        <table class="table table-bordered table-sm cmp-table">
+          <thead><tr><th>Tool</th><th>Model</th><th>Superpower</th><th>Reach for it when</th><th>Not for</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Kafka</strong> (log)</td>
+              <td>Append-only partitioned log; consumers track offsets</td>
+              <td><span class="term" data-bs-toggle="tooltip" title="Consumers can re-read from any past offset because the log retains messages (e.g. 7 days, or forever with compaction).">Replay</span> + high throughput + ordered per partition</td>
+              <td>Event streaming, event sourcing, replay, analytics, &gt;100k msg/s</td>
+              <td>Simple task queues; you'll drown in operational complexity</td>
+            </tr>
+            <tr>
+              <td><strong>Azure Service Bus / SQS+SNS</strong> (queue/broker)</td>
+              <td>Broker-managed queues &amp; topics; broker tracks acks</td>
+              <td>Rich queue semantics: DLQ, dedup, sessions, delayed delivery</td>
+              <td>Commands, work queues, sagas, most business messaging</td>
+              <td>Replaying months of history; ultra-high streaming volume</td>
+            </tr>
+            <tr>
+              <td><strong>SignalR / WebSockets</strong> (push)</td>
+              <td>Server→client real-time push over persistent connections</td>
+              <td>Low-latency push to <em>end users'</em> browsers/apps</td>
+              <td>Live dashboards, notifications, chat, presence</td>
+              <td>Service-to-service integration; durability/replay</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <div class="adr">
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> A managed <strong>broker (Service Bus / SQS+SNS)</strong> covers ~90% of service-to-service messaging with the least ops burden. Add <strong>Kafka</strong> only when you specifically need replay, log retention, or streaming throughput. <strong>SignalR</strong> is a client-facing tool, orthogonal to the other two.</span></div>
+          <div class="adr-field"><span class="adr-label">Design</span><span class="adr-body"> Topic/queue design decides your ordering &amp; scaling: Kafka orders <em>within a partition</em> (key by aggregate ID to keep an entity's events ordered); queues scale via competing consumers but then <em>lose</em> global ordering.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Picking Kafka because it's trendy when you needed a DLQ and delayed retry; picking by popularity instead of delivery/ordering/replay needs. → <a href="#ap-infrapop" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 8. DATA -->
+<!-- ===================================================================== -->
+<div class="schema-container section-data" id="sec-data">
+<h2 class="section-title"><span class="sec-num">08</span><i class="bi bi-database-fill-lock"></i> Data Patterns</h2>
+<p class="section-intro">This is where microservices are won or lost. See also the <a href="databases.html" class="xref"><i class="bi bi-database"></i> Databases</a> cheatsheet for storage-engine choices.</p>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-hdd-fill"></i> Database-per-Service <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> Can services share a database?</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> <strong>Database-per-service</strong> (private store, accessed only via the owning service's API) vs <strong>shared database</strong> (multiple services read/write the same schema).</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> <strong>Database-per-service, non-negotiable.</strong> A shared database is the fastest route to a distributed monolith: it couples deploys through the schema and lets one service's migration break three others.</span></div>
+          <div class="adr-field signals"><span class="adr-label">Signals you chose wrong</span><span class="adr-body"> You're writing cross-service JOINs in a reporting shim; a schema migration requires a cross-team change freeze.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Two services reaching into the same tables "just for this one query." → <a href="#ap-shareddb" class="xref">catalog</a></span></div>
+        </div>
+        <button aria-controls="d-dbps" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#d-dbps" data-bs-toggle="collapse" type="button">"But I need to JOIN across services" <i class="bi bi-chevron-down"></i></button>
+        <div class="collapse collapse-content" id="d-dbps">
+          <h6>You don't JOIN — you replicate or compose</h6>
+          <ul>
+            <li><strong>API composition:</strong> the caller queries each service and joins in memory (fine for small result sets).</li>
+            <li><strong>Read replica via events:</strong> event-carried state transfer (<a href="#sec-events" class="xref">§6</a>) builds a local denormalized copy of what you need — this is CQRS on the read side.</li>
+            <li><strong>Reporting/analytics:</strong> stream all services' events into a warehouse/lake; do cross-domain JOINs <em>there</em>, never in the operational path.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-box-arrow-in-down-right"></i> Outbox Pattern <span class="archetype-chip chip-pattern">Pattern</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Problem</span><span class="adr-body"> The <span class="term" data-bs-toggle="tooltip" title="You must update your DB and publish an event. If they're separate operations, a crash between them leaves the two out of sync — you can't wrap a DB and a broker in one atomic transaction.">dual-write problem</span>: commit to the DB <em>and</em> publish an event, atomically. A crash between them loses the event or fakes one.</span></div>
+          <div class="adr-field"><span class="adr-label">Mechanism</span><span class="adr-body"> Write the event into an <code>outbox</code> table <em>in the same DB transaction</em> as the business change. A separate relay (CDC or a poller) reads the outbox and publishes to the broker, marking rows sent.</span></div>
+          <div class="adr-field"><span class="adr-label">When it earns its cost</span><span class="adr-body"> Any time a state change must reliably produce an event — i.e. almost every command handler in an event-driven system. Delivery is <span class="term" data-bs-toggle="tooltip" title="The message is delivered one or more times, never zero. Consumers must be idempotent (§9).">at-least-once</span>, so consumers must be idempotent (<a href="#sec-consistency" class="xref">§9</a>).</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> "Commit DB, then publish" in two steps and hoping — the classic dual-write bug. → <a href="#ap-dualwrite" class="xref">catalog</a></span></div>
+        </div>
+        <button aria-controls="d-outbox" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#d-outbox" data-bs-toggle="collapse" type="button">Shape of the outbox <i class="bi bi-chevron-down"></i></button>
+        <div class="collapse collapse-content" id="d-outbox">
+<pre><code>-- one transaction, two writes, zero dual-write risk
+BEGIN;
+  UPDATE orders SET status='PLACED' WHERE id = 123;
+  INSERT INTO outbox (id, aggregate_id, type, payload, created_at, sent_at)
+  VALUES (gen_random_uuid(), 123, 'OrderPlaced',
+          '{"orderId":123,"total":4999}', now(), NULL);
+COMMIT;
+-- relay: SELECT * FROM outbox WHERE sent_at IS NULL ORDER BY created_at;
+--        publish → mark sent_at = now()  (retries are safe: consumer dedups)</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-arrow-repeat"></i> Saga (Compensating Transactions) <span class="archetype-chip chip-pattern">Pattern</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Problem</span><span class="adr-body"> A business transaction spans services, but there's no distributed ACID transaction to roll them all back.</span></div>
+          <div class="adr-field"><span class="adr-label">Mechanism</span><span class="adr-body"> Model the workflow as a sequence of local transactions; if step N fails, run <strong>compensating actions</strong> to semantically undo steps N-1…1 (refund the payment, release the inventory). Driven by an orchestrator or by choreography (<a href="#sec-events" class="xref">§6</a>).</span></div>
+          <div class="adr-field"><span class="adr-label">When it earns its cost</span><span class="adr-body"> Any multi-service workflow needing all-or-nothing <em>business</em> outcome — checkout, booking, onboarding. Compensations are business logic ("refund"), not technical rollbacks.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Reaching for two-phase commit (2PC) across service boundaries — it locks resources across the network and doesn't scale. → <a href="#ap-2pc" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-layout-split"></i> CQRS <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> Should reads and writes use the same model?</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> <strong>Single model</strong> for both vs <strong>CQRS</strong> — separate write model (commands, invariants) and read model(s) (denormalized, query-shaped), often kept in sync by events.</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> <strong>Don't</strong> — start with one model. Adopt CQRS only for the specific aggregates where read and write shapes have genuinely diverged (complex queries, very different read/write scale). This is <em>usually later than people think.</em></span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> CQRS + event sourcing on every entity by default because a conference talk said so — you've tripled the code for a CRUD form. → <a href="#ap-cqrs" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 9. CONSISTENCY & IDEMPOTENCY -->
+<!-- ===================================================================== -->
+<div class="schema-container section-consistency" id="sec-consistency">
+<h2 class="section-title"><span class="sec-num">09</span><i class="bi bi-shuffle"></i> Consistency &amp; Idempotency</h2>
+<p class="section-intro">Distributed systems trade instant consistency for availability. Design for it explicitly — and communicate it to non-engineers.</p>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-hourglass-split"></i> Eventual Consistency as the Contract <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> Once data lives in many services, "the instant everyone agrees" no longer exists for free.</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> <strong>Strong consistency</strong> (coordinate on every read/write — expensive, limits availability) vs <strong>eventual consistency</strong> (replicas converge after a short lag).</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> <strong>Eventual consistency</strong> between services; reserve strong consistency for <em>within</em> a single aggregate/service. Make the lag a stated product contract ("inventory reflects orders within seconds"), not a silent surprise.</span></div>
+          <div class="adr-field signals"><span class="adr-label">Communicate it</span><span class="adr-body"> Give product/support the language: "the dashboard is a few seconds behind, and that's by design." Show pending/optimistic UI states rather than pretending it's instant.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Assuming reads are instantly consistent across services and building UX that lies about it. → <a href="#ap-strongassume" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-key-fill"></i> Idempotency Keys <span class="archetype-chip chip-pattern">Pattern</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Problem</span><span class="adr-body"> At-least-once delivery means <em>every</em> message can arrive twice. Without protection, "charge card" runs twice.</span></div>
+          <div class="adr-field"><span class="adr-label">Mechanism</span><span class="adr-body"> The producer stamps each message/request with a unique <strong>idempotency key</strong>. The consumer records processed keys and short-circuits duplicates, so re-processing is a no-op. Keep a dedupe window (e.g. <span class="num">24–72h</span>) sized to your max retry horizon.</span></div>
+          <div class="adr-field"><span class="adr-label">When it earns its cost</span><span class="adr-body"> <strong>Everything at-least-once — i.e. everything.</strong> Any message consumer, any retried API call (payments, especially). Mandatory, not optional.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Assuming "exactly-once delivery" exists at the transport layer and skipping dedup. It doesn't; you get exactly-once <em>processing</em> only by making handlers idempotent. → <a href="#ap-exactlyonce" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 10. FAILURE HANDLING -->
+<!-- ===================================================================== -->
+<div class="schema-container section-failure" id="sec-failure">
+<h2 class="section-title"><span class="sec-num">10</span><i class="bi bi-exclamation-octagon-fill"></i> Failure Handling</h2>
+<p class="section-intro">In a monolith a dependency call can't half-fail. Across the network, partial failure is the normal case — design for it.</p>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-arrow-clockwise"></i> Retry, Backoff &amp; Circuit Breakers <span class="archetype-chip chip-pattern">Pattern</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Problem</span><span class="adr-body"> Transient failures (blips, timeouts) should be retried; a genuinely down dependency should <em>not</em> be hammered.</span></div>
+          <div class="adr-field"><span class="adr-label">Mechanism</span><span class="adr-body"> <strong>Retry with exponential backoff + jitter</strong> (e.g. <span class="num">3</span> attempts, capped ~<span class="num">30s</span>) for transient errors. Wrap the call in a <strong>circuit breaker</strong>: after a failure threshold (e.g. <span class="num">50%</span> of calls in a <span class="num">10s</span> window) it <em>opens</em> and fails fast; after a cool-down (~<span class="num">30s</span>) it <em>half-opens</em> to probe recovery.</span></div>
+          <div class="adr-field"><span class="adr-label">When it earns its cost</span><span class="adr-body"> Every synchronous cross-service call. Add a <strong>bulkhead</strong> (isolated connection/thread pool per dependency) so one slow callee can't exhaust your whole thread pool.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Retrying non-idempotent calls without an idempotency key; infinite retries with no cap — you turn a blip into a <span class="term" data-bs-toggle="tooltip" title="Synchronized retries from many clients pile onto a recovering service and knock it down again.">retry storm</span>. → <a href="#ap-retrystorm" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-inboxes-fill"></i> Dead-Letter &amp; Poison Messages <span class="archetype-chip chip-pattern">Pattern</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Problem</span><span class="adr-body"> A message that can never be processed (bad schema, referenced entity gone) will retry forever and block the queue behind it.</span></div>
+          <div class="adr-field"><span class="adr-label">Mechanism</span><span class="adr-body"> After <span class="num">N</span> failed deliveries (e.g. <span class="num">5</span>), the broker moves the <span class="term" data-bs-toggle="tooltip" title="A message that repeatedly fails processing and would otherwise block or loop forever.">poison message</span> to a <strong>dead-letter queue (DLQ)</strong> — off the hot path, retained for inspection and manual/automated replay.</span></div>
+          <div class="adr-field"><span class="adr-label">When it earns its cost</span><span class="adr-body"> Every durable queue/topic. Alert on DLQ depth &gt; 0 — a filling DLQ is a bug, not a shrug. Redrive after fixing the cause.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Infinite retry with no DLQ, silently eating failures; or a DLQ nobody ever looks at. → <a href="#ap-nodlq" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 11. CONTRACTS -->
+<!-- ===================================================================== -->
+<div class="schema-container section-contracts" id="sec-contracts">
+<h2 class="section-title"><span class="sec-num">11</span><i class="bi bi-file-earmark-check-fill"></i> Contracts &amp; Versioning</h2>
+<p class="section-intro">Independent deployability is a promise you can only keep if changing your API/events can't silently break a consumer.</p>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-clipboard2-check-fill"></i> Consumer-Driven Contract Testing <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> How do you know a change to your service won't break its consumers <em>before</em> you deploy?</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> Full <strong>end-to-end integration tests</strong> (slow, flaky, need everything running) vs <strong>consumer-driven contracts</strong> (Pact): each consumer publishes the shape it depends on; the provider's CI verifies it still satisfies every consumer's contract.</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> <strong>Contract tests</strong> as the deployability gate; keep a <em>thin</em> layer of true end-to-end tests for critical journeys only. The test pyramid inverts in microservices — lots of unit + contract, few E2E.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> A giant shared E2E suite that must pass before anyone ships — you've re-coupled all your deploys. → <a href="#ap-e2e" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-arrow-up-right-circle-fill"></i> Schema Evolution <span class="archetype-chip chip-pattern">Pattern</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Problem</span><span class="adr-body"> Events and APIs must evolve without a synchronized "everyone upgrade at once" deploy.</span></div>
+          <div class="adr-field"><span class="adr-label">Mechanism</span><span class="adr-body"> Change <strong>additively</strong>: new fields are optional with defaults; never remove or repurpose a field in place. Consumers apply <span class="term" data-bs-toggle="tooltip" title="Ignore unknown fields; tolerate missing optional ones. Lets producers and consumers deploy on independent schedules.">tolerant reading</span> (ignore unknown fields). For breaking changes, version the message type and run old + new in parallel until consumers migrate.</span></div>
+          <div class="adr-field"><span class="adr-label">When it earns its cost</span><span class="adr-body"> Every published event and public API. A <strong>schema registry</strong> (e.g. for Kafka/Avro) can enforce backward compatibility in CI.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Renaming/removing a field and deploying — every lagging consumer breaks at once. → <a href="#ap-breakingschema" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 12. SECURITY -->
+<!-- ===================================================================== -->
+<div class="schema-container section-security" id="sec-security">
+<h2 class="section-title"><span class="sec-num">12</span><i class="bi bi-shield-lock-fill"></i> Service-to-Service Security</h2>
+<p class="section-intro">The network between services is not trusted. "Inside the firewall" is not an authorization model.</p>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-shield-check"></i> Zero-Trust: mTLS + Token Propagation <span class="archetype-chip chip-decision">Decision</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Context</span><span class="adr-body"> How does service B know the caller is really service A, and on whose behalf it's acting?</span></div>
+          <div class="adr-field"><span class="adr-label">Options</span><span class="adr-body"> <strong>Network trust</strong> ("it's in the VPC") vs <strong>zero-trust</strong>: <span class="term" data-bs-toggle="tooltip" title="Mutual TLS: both client and server present certificates, so each cryptographically verifies the other's identity.">mTLS</span> for service identity + a propagated, signed user token (JWT) carrying the end-user's authorization.</span></div>
+          <div class="adr-field default"><span class="adr-label">Default</span><span class="adr-body"> <strong>Zero-trust.</strong> mTLS between every service (a mesh, <a href="#sec-edge" class="xref">§5</a>, automates this); the gateway validates the user token at the edge and each service re-validates and propagates it — never re-issues trust from thin air.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> "The network is internal so no auth needed" — one compromised pod then owns everything. → <a href="#ap-notrust" class="xref">catalog</a></span></div>
+        </div>
+        <button aria-controls="d-sec" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#d-sec" data-bs-toggle="collapse" type="button">Secrets &amp; the confused deputy <i class="bi bi-chevron-down"></i></button>
+        <div class="collapse collapse-content" id="d-sec">
+          <ul>
+            <li><strong>Secrets:</strong> per-service secrets from a vault (Key Vault / Secrets Manager), rotated; never baked into images or shared across services.</li>
+            <li><strong>Confused deputy:</strong> propagate the <em>user's</em> token so downstream services enforce the user's permissions — don't let a service act with its own god-mode identity on a user's behalf.</li>
+            <li>See the broader posture in <a href="linux-server-hardening.html" class="xref"><i class="bi bi-hdd-network"></i> Linux Server Hardening</a>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-eye-slash-fill"></i> Blast-Radius Containment <span class="archetype-chip chip-pattern">Pattern</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Problem</span><span class="adr-body"> A compromised or misbehaving service shouldn't be able to reach everything.</span></div>
+          <div class="adr-field"><span class="adr-label">Mechanism</span><span class="adr-body"> Least-privilege network policies (default-deny east-west traffic; allow only declared dependencies), scoped tokens with narrow audiences, and per-service data access. The mesh or K8s NetworkPolicy enforces the graph.</span></div>
+          <div class="adr-field"><span class="adr-label">When it earns its cost</span><span class="adr-body"> Any multi-tenant or regulated system; really, any production system past a handful of services.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Flat network where every service can call every other and read every DB.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 13. OBSERVABILITY -->
+<!-- ===================================================================== -->
+<div class="schema-container section-observability" id="sec-observability">
+<h2 class="section-title"><span class="sec-num">13</span><i class="bi bi-activity"></i> Observability</h2>
+<p class="section-intro">You cannot attach a debugger to a distributed system. Observability is how you replace the single stack trace you gave up.</p>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-bezier2"></i> Correlation IDs &amp; Distributed Tracing <span class="archetype-chip chip-pattern">Pattern</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Problem</span><span class="adr-body"> A single user action touches N services. When it's slow or broken, which hop?</span></div>
+          <div class="adr-field"><span class="adr-label">Mechanism</span><span class="adr-body"> Propagate a <strong>correlation ID</strong> (the whole request's trace) and <strong>causation ID</strong> (which message caused this one) across <em>every</em> hop and log line — via <span class="term" data-bs-toggle="tooltip" title="Open standard for propagating trace context (traceparent header) and emitting spans, traces, metrics, logs across services and vendors.">W3C Trace Context / OpenTelemetry</span>. A tracing backend (Jaeger, Tempo, Datadog) stitches the spans into one waterfall.</span></div>
+          <div class="adr-field"><span class="adr-label">When it earns its cost</span><span class="adr-body"> <strong>Mandatory once you're past ~<span class="num">3</span> services</strong> — not a nice-to-have. Emit the three pillars: traces (where), metrics (how much), logs (what), all tagged with the correlation ID.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Debugging a saga by grepping five log files by hand and eyeballing timestamps. → <a href="#ap-grep" class="xref">catalog</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="info-card">
+      <div class="card-header"><i class="bi bi-heart-pulse-fill"></i> Health, SLOs &amp; the Golden Signals <span class="archetype-chip chip-pattern">Pattern</span></div>
+      <div class="card-body">
+        <div class="adr">
+          <div class="adr-field"><span class="adr-label">Problem</span><span class="adr-body"> With many services, "is it healthy?" needs a machine-checkable answer for routing and alerting.</span></div>
+          <div class="adr-field"><span class="adr-label">Mechanism</span><span class="adr-body"> Each service exposes <strong>liveness</strong> (am I running?) and <strong>readiness</strong> (can I take traffic?) probes. Alert on the <strong>four golden signals</strong> — latency, traffic, errors, saturation — against SLOs, not on raw CPU.</span></div>
+          <div class="adr-field"><span class="adr-label">When it earns its cost</span><span class="adr-body"> Every service. Readiness gates rollouts and load-balancer membership; SLO burn-rate alerts page humans only when user impact is real.</span></div>
+          <div class="adr-field antipattern"><span class="adr-label">Anti-pattern</span><span class="adr-body"> Alerting on every CPU spike (alert fatigue) while no alert fires when the user-facing error rate triples.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 14. ANTI-PATTERN CATALOG (CAPSTONE) -->
+<!-- ===================================================================== -->
+<div class="schema-container section-antipattern" id="sec-antipattern">
+<h2 class="section-title"><span class="sec-num">14</span><i class="bi bi-fire"></i> Anti-Pattern Catalog</h2>
+<p class="section-intro">The canonical, full treatment of every anti-pattern flagged above — this is the single source of truth; the inline mentions are teasers that link here. Each row: the <strong>smell</strong> that precedes it → <strong>why</strong> it happens → the <strong>fix</strong>.</p>
+<div class="row"><div class="col-12">
+<div class="info-card">
+<div class="card-body">
+<div class="table-responsive">
+<table class="table table-striped table-bordered cmp-table">
+<thead><tr><th style="min-width:180px;">Anti-pattern</th><th>Smell (leading indicator)</th><th>Why it happens</th><th>Fix</th></tr></thead>
+<tbody>
+  <tr id="ap-premature"><td><strong>Premature / résumé-driven microservices</strong></td><td>Splitting before there's more than one deploy cadence; installing a mesh for 3 services.</td><td>"Microservices are modern"; tech-résumé incentives.</td><td>Start with a modular monolith (<a href="#sec-foundational" class="xref">§1</a>); split only against a concrete force.</td></tr>
+  <tr id="ap-conway"><td><strong>Ignoring Conway's Law</strong></td><td>Cross-team approvals on every release; a boundary that two teams both own.</td><td>Architecture drawn without regard to team topology.</td><td>One service = one stream-aligned team; use the Inverse Conway Maneuver (<a href="#sec-foundational" class="xref">§1</a>).</td></tr>
+  <tr id="ap-bigbang"><td><strong>Big-bang rewrite</strong></td><td>A months-long "v2" branch; feature freeze on the monolith.</td><td>Belief that a clean rewrite is faster than incremental extraction.</td><td>Strangler fig — extract one context at a time behind a façade (<a href="#sec-migration" class="xref">§2</a>).</td></tr>
+  <tr id="ap-nano"><td><strong>Nano-services (one per table)</strong></td><td>Every use case fans out to 3+ services; services that can't do anything alone.</td><td>Boundaries drawn by data schema, not business capability.</td><td>Boundary by bounded context / aggregate (<a href="#sec-boundaries" class="xref">§3</a>).</td></tr>
+  <tr id="ap-distmono"><td><strong>Distributed monolith</strong></td><td>Services deploy in lockstep; a shared "Common"/"Entities" package.</td><td>A split that shared DB, model, or release.</td><td>Kill shared DB &amp; model libs; enforce "deployable alone" (<a href="#sec-boundaries" class="xref">§3</a>).</td></tr>
+  <tr id="ap-syncchain"><td><strong>Synchronous call chains</strong></td><td>One user request blocks on A→B→C→D; thread pools exhausting.</td><td>Reaching for a sync call because it's the obvious tool.</td><td>Async messaging, caching, or fix the boundary — do the availability math (<a href="#sec-communication" class="xref">§4</a>).</td></tr>
+  <tr id="ap-fatgw"><td><strong>Fat gateway</strong></td><td>Every team must edit the gateway to ship; business rules in routing config.</td><td>The gateway is the easy place to "just add this."</td><td>Keep edge concerns only; push logic into services (<a href="#sec-edge" class="xref">§5</a>).</td></tr>
+  <tr id="ap-esall"><td><strong>Event sourcing everywhere</strong></td><td>"We're event-sourced" as a decree; CRUD entities modelled as event streams.</td><td>Conflating event sourcing with pub/sub; conference-driven design.</td><td>Event sourcing is per-aggregate persistence, used rarely; integrate with notification/state-transfer (<a href="#sec-events" class="xref">§6</a>).</td></tr>
+  <tr id="ap-choreo"><td><strong>Choreography sprawl</strong></td><td>No one can answer "what happens after OrderPlaced?"; logic spread across 8 handlers.</td><td>Choreography chosen for decoupling, past its complexity limit.</td><td>Orchestrate workflows with 3+ steps; make the saga explicit (<a href="#sec-events" class="xref">§6</a>).</td></tr>
+  <tr id="ap-infrapop"><td><strong>Infra-by-popularity</strong></td><td>Kafka adopted, but what you use is a DLQ and delayed retry.</td><td>Choosing the trendy tool over the requirement.</td><td>Pick by delivery/ordering/replay needs (<a href="#sec-infra" class="xref">§7</a>).</td></tr>
+  <tr id="ap-shareddb"><td><strong>Shared database</strong></td><td>Two services querying the same tables; migrations need a change freeze.</td><td>"Just this one JOIN" convenience.</td><td>Database-per-service; compose or replicate via events (<a href="#sec-data" class="xref">§8</a>).</td></tr>
+  <tr id="ap-dualwrite"><td><strong>Dual write</strong></td><td>"Save to DB, then publish event" in two steps; occasional missing events.</td><td>No atomic transaction spans DB + broker.</td><td>Outbox pattern — event and state in one transaction (<a href="#sec-data" class="xref">§8</a>).</td></tr>
+  <tr id="ap-2pc"><td><strong>2PC across services</strong></td><td>Distributed locks held across network calls; throughput collapses under load.</td><td>Wanting ACID semantics across service boundaries.</td><td>Saga with compensating transactions (<a href="#sec-data" class="xref">§8</a>).</td></tr>
+  <tr id="ap-cqrs"><td><strong>CQRS by default</strong></td><td>Separate read/write models + event store on a simple CRUD form.</td><td>Cargo-culting a pattern beyond its niche.</td><td>One model first; CQRS only where read/write genuinely diverge (<a href="#sec-data" class="xref">§8</a>).</td></tr>
+  <tr id="ap-strongassume"><td><strong>Assuming strong consistency</strong></td><td>UX that shows stale data as if live; "why isn't it updated yet?" bug reports.</td><td>Carrying monolith mental models into a distributed system.</td><td>Design for eventual consistency; state the lag as a contract (<a href="#sec-consistency" class="xref">§9</a>).</td></tr>
+  <tr id="ap-exactlyonce"><td><strong>Believing in exactly-once delivery</strong></td><td>No dedup logic; duplicate charges/emails under retry.</td><td>Transport marketing ("exactly-once") taken literally.</td><td>At-least-once + idempotency keys = exactly-once <em>processing</em> (<a href="#sec-consistency" class="xref">§9</a>).</td></tr>
+  <tr id="ap-retrystorm"><td><strong>Retry storm</strong></td><td>A recovering service gets knocked back down; synchronized retry spikes.</td><td>Fixed-interval, uncapped retries with no jitter or breaker.</td><td>Exponential backoff + jitter + circuit breaker + bulkhead (<a href="#sec-failure" class="xref">§10</a>).</td></tr>
+  <tr id="ap-nodlq"><td><strong>No DLQ / silent failure</strong></td><td>A poison message loops forever; failures vanish with no trace.</td><td>Happy-path-only consumer design.</td><td>Dead-letter after N tries; alert on DLQ depth &gt; 0 (<a href="#sec-failure" class="xref">§10</a>).</td></tr>
+  <tr id="ap-e2e"><td><strong>Giant shared E2E gate</strong></td><td>Nobody can deploy until one flaky suite with everything running goes green.</td><td>Testing a distributed system like a monolith.</td><td>Consumer-driven contract tests as the gate; thin E2E (<a href="#sec-contracts" class="xref">§11</a>).</td></tr>
+  <tr id="ap-breakingschema"><td><strong>Breaking schema change</strong></td><td>A field renamed/removed; lagging consumers break on deploy.</td><td>Treating events/APIs as internal, mutable structures.</td><td>Additive-only + tolerant reader + versioned parallel run (<a href="#sec-contracts" class="xref">§11</a>).</td></tr>
+  <tr id="ap-notrust"><td><strong>Trusted internal network</strong></td><td>No service-to-service auth; flat, any-to-any connectivity.</td><td>"It's behind the firewall" as an authz model.</td><td>Zero-trust: mTLS + propagated user tokens + network policy (<a href="#sec-security" class="xref">§12</a>).</td></tr>
+  <tr id="ap-grep"><td><strong>Grep-the-logs debugging</strong></td><td>Incidents diagnosed by hand-correlating five log files.</td><td>Tracing treated as optional infra.</td><td>Correlation IDs + OpenTelemetry distributed tracing from ~3 services on (<a href="#sec-observability" class="xref">§13</a>).</td></tr>
+</tbody>
+</table>
+</div>
+<p class="text-muted mb-0" style="font-size:0.9rem;"><i class="bi bi-info-circle"></i> If you read only one section, read this one — it's the most-linked page for a reason.</p>
+</div>
+</div>
+</div></div>
+</div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (el) {
+            return new bootstrap.Tooltip(el, { customClass: 'ms-tooltip', trigger: 'hover focus' });
+        });
+
+        // Chevron state + expand/collapse all
+        const allCollapseElements = document.querySelectorAll('.collapse');
+        const expandAllBtn = document.getElementById('expandAllBtn');
+        const collapseAllBtn = document.getElementById('collapseAllBtn');
+
+        allCollapseElements.forEach(collapseEl => {
+            const button = document.querySelector(`.details-toggle[data-bs-target="#${collapseEl.id}"]`);
+            if (button) {
+                const iconEl = button.querySelector('.bi');
+                const updateIconState = () => {
+                    const shown = collapseEl.classList.contains('show');
+                    iconEl.classList.toggle('bi-chevron-down', !shown);
+                    iconEl.classList.toggle('bi-chevron-up', shown);
+                    button.setAttribute('aria-expanded', shown ? 'true' : 'false');
+                };
+                updateIconState();
+                collapseEl.addEventListener('shown.bs.collapse', updateIconState);
+                collapseEl.addEventListener('hidden.bs.collapse', updateIconState);
+            }
+        });
+
+        if (expandAllBtn) {
+            expandAllBtn.addEventListener('click', () => {
+                allCollapseElements.forEach(el => {
+                    let bsCollapse = bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el, { toggle: false });
+                    bsCollapse.show();
+                });
+            });
+        }
+        if (collapseAllBtn) {
+            collapseAllBtn.addEventListener('click', () => {
+                allCollapseElements.forEach(el => {
+                    let bsCollapse = bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el, { toggle: false });
+                    bsCollapse.hide();
+                });
+            });
+        }
+    });
+</script>
+<footer class="container-fluid text-center pb-3">
+  <div class="mb-3">
+    <a class="mx-2" href="clean-architecture-dotnet.html" rel="noopener noreferrer" target="_blank" title="Clean Architecture in .NET"><i class="bi bi-layers-half"></i> Clean Architecture</a>
+    <a class="mx-2" href="modern-devops-pipelines.html" rel="noopener noreferrer" target="_blank" title="Modern DevOps Pipelines"><i class="bi bi-arrow-repeat"></i> DevOps Pipelines</a>
+    <a class="mx-2" href="databases.html" rel="noopener noreferrer" target="_blank" title="Databases"><i class="bi bi-database"></i> Databases</a>
+    <a class="mx-2" href="dotnet-cheatsheet.html" rel="noopener noreferrer" target="_blank" title="Dotnet Cheatsheet"><i class="bi bi-code"></i> .NET Cheatsheet</a>
+  </div>
+  <p class="mb-2">© 2026 David Veksler · A decision reference distilled from DDD, the Reactive/enterprise-integration patterns, and hard-won distributed-systems lessons. <span class="text-muted">Last verified 2026-07-01.</span></p>
+  <div>
+    <a class="mx-2 link-secondary" href="https://www.linkedin.com/in/davidveksler/" target="_blank" title="David Veksler on LinkedIn"><i class="bi bi-linkedin"></i> LinkedIn</a>
+    <a class="mx-2 link-secondary" href="https://cheatsheets.davidveksler.com/" title="Browse All Cheatsheets"><i class="bi bi-collection"></i> All Cheatsheets</a>
+  </div>
+</footer>
+</body>
+</html>
