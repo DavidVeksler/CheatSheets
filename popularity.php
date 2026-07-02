@@ -63,25 +63,6 @@ function rel_time(?string $dateStr): string {
     return 'just now';
 }
 
-function referer_icon(string $host): string {
-    $h = strtolower($host);
-    return match (true) {
-        $h === '(direct)'                         => 'bi-cursor-fill',
-        str_contains($h, 'davidveksler.com')       => 'bi-house-fill',
-        str_contains($h, 'google.')                => 'bi-google',
-        str_contains($h, 'bing.')                  => 'bi-microsoft',
-        str_contains($h, 'duckduckgo')             => 'bi-search',
-        str_contains($h, 'reddit.')                => 'bi-reddit',
-        str_contains($h, 'twitter.') || $h === 'x.com' || $h === 't.co' => 'bi-twitter-x',
-        str_contains($h, 'facebook.')              => 'bi-facebook',
-        str_contains($h, 'linkedin.')              => 'bi-linkedin',
-        str_contains($h, 'github.')                => 'bi-github',
-        str_contains($h, 'youtube.')                => 'bi-youtube',
-        str_contains($h, 'news.ycombinator')       => 'bi-hash',
-        default                                     => 'bi-link-45deg',
-    };
-}
-
 /* ---------- Derived stats ---------- */
 $rankedCount = count($scores);
 $totalScore  = array_sum($scores);
@@ -145,19 +126,19 @@ foreach ($scores as $score) {
 }
 $maxBucketCount = max(1, max(array_column($buckets, 'count')));
 
-/* ---------- Top referrers ---------- */
-$referers = $popData['referers'] ?? [];
-arsort($referers);
-$totalReferers = array_sum($referers);
-$refererRows   = [];
+/* ---------- Last 24 hours (raw, undecayed view counts) ---------- */
+$dailyViews = $popData['dailyViews'] ?? [];
+arsort($dailyViews);
+$totalDailyViews = array_sum($dailyViews);
+$dailyRows = [];
 $i = 0;
-foreach ($referers as $host => $count) {
-    if (++$i > 10) break;
-    $refererRows[] = [
-        'host'  => $host,
-        'count' => $count,
-        'pct'   => $totalReferers > 0 ? round($count / $totalReferers * 100, 1) : 0,
-        'icon'  => referer_icon($host),
+foreach ($dailyViews as $filename => $count) {
+    if (++$i > 5) break;
+    $dailyRows[] = [
+        'filename' => $filename,
+        'title'    => $metaCache[$filename]['title'] ?? filename_to_title($filename),
+        'count'    => $count,
+        'pct'      => $totalDailyViews > 0 ? round($count / $totalDailyViews * 100, 1) : 0,
     ];
 }
 ?>
@@ -466,15 +447,17 @@ foreach ($referers as $host => $count) {
 
             <div class="col-12 col-lg-4">
                 <div class="mini-panel">
-                    <h2><i class="bi bi-signpost-split-fill"></i>Top Referrers</h2>
-                    <?php if (empty($refererRows)): ?>
-                        <p class="mini-empty mb-0">No referrer data yet — populated by the next nightly run.</p>
+                    <h2><i class="bi bi-clock-history"></i>Last 24 Hours</h2>
+                    <?php if (empty($dailyRows)): ?>
+                        <p class="mini-empty mb-0">No daily view data yet — populated by the next nightly run.</p>
                     <?php else: ?>
-                        <?php foreach ($refererRows as $ref): ?>
+                        <?php foreach ($dailyRows as $day): ?>
                         <div class="mini-row">
-                            <span class="mini-icon"><i class="bi <?php echo h($ref['icon']); ?>"></i></span>
-                            <span class="mini-label" title="<?php echo h($ref['host']); ?>"><?php echo h($ref['host']); ?></span>
-                            <span class="mini-value"><?php echo $ref['pct']; ?>&thinsp;%</span>
+                            <span class="mini-icon"><i class="bi bi-eye-fill"></i></span>
+                            <a class="mini-label" href="<?php echo h($day['filename']); ?>" target="_blank" rel="noopener" title="<?php echo h($day['title']); ?>">
+                                <?php echo h($day['title']); ?>
+                            </a>
+                            <span class="mini-value"><?php echo number_format($day['count']); ?></span>
                         </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
