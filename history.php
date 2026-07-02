@@ -374,9 +374,9 @@ $pageTitle = match ($view) {
 <body>
     <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-semibold" href="index.php"><i class="bi bi-journal-richtext me-2"></i>Cheatsheet Portfolio</a>
+            <a class="navbar-brand fw-semibold" href="index.php"><i class="bi bi-journal-richtext me-2"></i>David Veksler's Cheatsheet Portfolio</a>
             <div class="d-flex align-items-center gap-3">
-                <a class="nav-link d-none d-sm-inline" href="history.php"><i class="bi bi-clock-history me-1"></i>Change History</a>
+                <a class="nav-link d-none d-sm-inline" href="how-its-built.html"><i class="bi bi-gear-wide-connected me-1"></i>How it's built</a>
                 <a class="nav-link d-none d-sm-inline" href="popularity.php"><i class="bi bi-bar-chart-fill me-1"></i>Popularity</a>
                 <button id="themeToggle" type="button" aria-label="Toggle colour theme" title="Toggle theme"><i class="bi bi-circle-half"></i></button>
             </div>
