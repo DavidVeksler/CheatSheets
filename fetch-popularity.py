@@ -68,23 +68,18 @@ def get_zone_id(token: str) -> str:
     return zones[0]["id"]
 
 
-def fetch_analytics(token: str, zone_id: str, day: str) -> tuple[dict[str, int], dict[str, int]]:
+def fetch_path_counts(token: str, zone_id: str, day: str) -> dict[str, int]:
     """
     Query Cloudflare httpRequestsAdaptiveGroups for GET requests on `day`
-    (ISO date string, e.g. "2026-06-28"), once grouped by clientRequestPath
-    and once grouped by clientRefererHost (via aliases, one HTTP round trip).
+    (ISO date string, e.g. "2026-06-28"), grouped by clientRequestPath.
 
-    Returns (path_counts, referer_counts):
-      - path_counts: {filename: count} for top-level .html files.
-      - referer_counts: {host: count} for external referrer hosts, with
-        empty referers bucketed under DIRECT_KEY and internal navigation
-        (referer host == SITE_HOST) excluded.
+    Returns path_counts: {filename: count} for top-level .html files.
     """
     query = """
     {
       viewer {
         zones(filter: { zoneTag: "%s" }) {
-          byPath: httpRequestsAdaptiveGroups(
+          httpRequestsAdaptiveGroups(
             limit: 5000
             filter: {
               date_geq: "%s"
@@ -98,7 +93,46 @@ def fetch_analytics(token: str, zone_id: str, day: str) -> tuple[dict[str, int],
               clientRequestPath
             }
           }
-          byReferer: httpRequestsAdaptiveGroups(
+        }
+      }
+    }
+    """ % (zone_id, day, day)
+
+    result = cf_gql(token, query)
+
+    if "errors" in result and result["errors"]:
+        raise RuntimeError(f"Cloudflare GraphQL error: {result['errors']}")
+
+    zone = result["data"]["viewer"]["zones"][0]
+
+    path_counts: dict[str, int] = {}
+    for g in zone["httpRequestsAdaptiveGroups"]:
+        path: str = g["dimensions"]["clientRequestPath"]
+        count: int = g["count"]
+        # Keep only top-level .html files (no sub-paths, no query strings)
+        filename = path.lstrip("/").split("?")[0]
+        if filename.endswith(".html") and "/" not in filename and filename:
+            path_counts[filename] = path_counts.get(filename, 0) + count
+
+    return path_counts
+
+
+def fetch_referer_counts(token: str, zone_id: str, day: str) -> dict[str, int]:
+    """
+    Query Cloudflare httpRequestsAdaptiveGroups for GET requests on `day`,
+    grouped by clientRefererHost. Kept separate from fetch_path_counts()
+    because clientRefererHost isn't available on every zone/token
+    entitlement — a failure here shouldn't block the page-view scores.
+
+    Returns referer_counts: {host: count} for external referrer hosts, with
+    empty referers bucketed under DIRECT_KEY and internal navigation
+    (referer host == SITE_HOST) excluded.
+    """
+    query = """
+    {
+      viewer {
+        zones(filter: { zoneTag: "%s" }) {
+          httpRequestsAdaptiveGroups(
             limit: 5000
             filter: {
               date_geq: "%s"
@@ -115,7 +149,7 @@ def fetch_analytics(token: str, zone_id: str, day: str) -> tuple[dict[str, int],
         }
       }
     }
-    """ % (zone_id, day, day, day, day)
+    """ % (zone_id, day, day)
 
     result = cf_gql(token, query)
 
@@ -124,17 +158,8 @@ def fetch_analytics(token: str, zone_id: str, day: str) -> tuple[dict[str, int],
 
     zone = result["data"]["viewer"]["zones"][0]
 
-    path_counts: dict[str, int] = {}
-    for g in zone["byPath"]:
-        path: str = g["dimensions"]["clientRequestPath"]
-        count: int = g["count"]
-        # Keep only top-level .html files (no sub-paths, no query strings)
-        filename = path.lstrip("/").split("?")[0]
-        if filename.endswith(".html") and "/" not in filename and filename:
-            path_counts[filename] = path_counts.get(filename, 0) + count
-
     referer_counts: dict[str, int] = {}
-    for g in zone["byReferer"]:
+    for g in zone["httpRequestsAdaptiveGroups"]:
         host: str = g["dimensions"]["clientRefererHost"]
         count: int = g["count"]
         if not host:
@@ -143,7 +168,7 @@ def fetch_analytics(token: str, zone_id: str, day: str) -> tuple[dict[str, int],
             continue  # internal navigation, not an external referral source
         referer_counts[host] = referer_counts.get(host, 0) + count
 
-    return path_counts, referer_counts
+    return referer_counts
 
 
 def load_popularity() -> dict:
@@ -180,12 +205,22 @@ def main() -> None:
         print("Already updated today — skipping.")
         return
 
-    print(f"Fetching path + referer analytics for {yesterday}…")
+    print(f"Fetching path analytics for {yesterday}…")
     try:
-        new_counts, new_referer_counts = fetch_analytics(token, zone_id, yesterday)
+        new_counts = fetch_path_counts(token, zone_id, yesterday)
     except (URLError, HTTPError, RuntimeError, KeyError) as exc:
-        print(f"ERROR fetching analytics: {exc}", file=sys.stderr)
+        print(f"ERROR fetching path analytics: {exc}", file=sys.stderr)
         sys.exit(1)
+
+    print(f"Fetching referer analytics for {yesterday}…")
+    try:
+        new_referer_counts = fetch_referer_counts(token, zone_id, yesterday)
+    except (URLError, HTTPError, RuntimeError, KeyError) as exc:
+        # Referer data may be unavailable on this zone/token's entitlement
+        # (e.g. clientRefererHost access denied) — don't let that block the
+        # page-view scores, which are the primary purpose of this script.
+        print(f"WARNING: referer analytics unavailable, skipping: {exc}", file=sys.stderr)
+        new_referer_counts = {}
 
     print(f"  {sum(new_counts.values())} page views across {len(new_counts)} HTML paths")
     print(f"  {sum(new_referer_counts.values())} views across {len(new_referer_counts)} referrer hosts")
