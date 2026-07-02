@@ -110,9 +110,19 @@
         .use-do  { color: var(--ok); }
         .use-dont{ color: var(--danger); }
         .ladder { display: grid; gap: .4rem; }
-        .rung { display: flex; align-items: baseline; gap: .6rem; padding: .5rem .7rem; border: 1px solid var(--bs-border-color); border-radius: .5rem; background: var(--bs-body-bg); }
+        .rung { display: flex; flex-wrap: wrap; align-items: baseline; gap: .6rem; padding: .5rem .7rem; border: 1px solid var(--bs-border-color); border-radius: .5rem; background: var(--bs-body-bg); }
         .rung .r-name { font-weight: 700; min-width: 8.5rem; }
         .rung .r-cost { font-size: .78rem; color: var(--bs-secondary-color); margin-left: auto; white-space: nowrap; }
+        /* Relative-cost meter: one shared linear scale across both vendors (100% = GPT-5.5 Pro, the priciest). */
+        .rung .cost-bar { flex: 1 0 100%; display: flex; height: 9px; margin-top: .35rem; border-radius: 4px; overflow: hidden; background: var(--bs-tertiary-bg); box-shadow: inset 0 0 0 1px var(--bs-border-color); }
+        .rung .cost-bar .seg { min-width: 2px; }
+        .rung .cost-bar .seg-in  { background: currentColor; }
+        .rung .cost-bar .seg-out { background: currentColor; opacity: .38; }
+        .ladder.anthropic .cost-bar { color: var(--anthropic); }
+        .ladder.openai    .cost-bar { color: var(--openai); }
+        .cost-key { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; }
+        .cost-swatch { width: .8rem; height: .8rem; border-radius: 2px; display: inline-block; background: var(--bs-secondary-color); }
+        .cost-swatch.swatch-out { opacity: .38; }
 
         .theme-toggle { position: fixed; bottom: 20px; right: 20px; z-index: 1030; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
         .backtop { position: fixed; bottom: 20px; right: 78px; z-index: 1030; border-radius: 50%; width: 48px; height: 48px; }
@@ -486,24 +496,29 @@
     <section id="ladders" class="mb-4">
         <h2 class="h4 border-bottom pb-2"><i class="bi bi-cash-stack text-accent"></i> Cost &amp; context ladders (at a glance)</h2>
         <p class="text-secondary small">Per 1M tokens, input&nbsp;/&nbsp;output, <em>(as of mid-2026 — verify)</em>. The ladders line up tier-for-tier, which is the easiest way to translate a habit from one vendor to the other.</p>
+        <div class="d-flex align-items-center gap-3 small text-secondary mb-3 flex-wrap">
+            <span><i class="bi bi-bar-chart-fill"></i> Bars show <strong>total cost</strong> (input&nbsp;+&nbsp;output per&nbsp;1M) on <strong>one shared scale</strong> — longer&nbsp;=&nbsp;pricier; full width&nbsp;=&nbsp;GPT-5.5&nbsp;Pro, the most expensive:</span>
+            <span class="cost-key"><span class="cost-swatch swatch-in"></span> input</span>
+            <span class="cost-key"><span class="cost-swatch swatch-out"></span> output</span>
+        </div>
         <div class="row g-4">
             <div class="col-lg-6">
                 <h3 class="h6 text-anthropic mb-2">Anthropic</h3>
-                <div class="ladder">
-                    <div class="rung"><span class="r-name">Haiku 4.5</span><span class="pill pill-a">volume</span><span class="r-cost">$1 / $5 · 200K</span></div>
-                    <div class="rung"><span class="r-name">Sonnet 5</span><span class="pill pill-a">workhorse</span><span class="r-cost">$3 / $15 · 1M</span></div>
-                    <div class="rung"><span class="r-name">Opus 4.8</span><span class="pill pill-a">reasoning</span><span class="r-cost">$5 / $25 · 1M</span></div>
-                    <div class="rung"><span class="r-name">Fable 5</span><span class="pill pill-a">frontier</span><span class="r-cost">$10 / $50 · 1M</span></div>
+                <div class="ladder anthropic">
+                    <div class="rung"><span class="r-name">Haiku 4.5</span><span class="pill pill-a">volume</span><span class="r-cost">$1 / $5 · 200K</span><span class="cost-bar" role="img" aria-label="Total cost $6 per 1M — 3% of the priciest model" title="$6 total per 1M tokens"><span class="seg seg-in" style="width:0.5%"></span><span class="seg seg-out" style="width:2.4%"></span></span></div>
+                    <div class="rung"><span class="r-name">Sonnet 5</span><span class="pill pill-a">workhorse</span><span class="r-cost">$3 / $15 · 1M</span><span class="cost-bar" role="img" aria-label="Total cost $18 per 1M — 9% of the priciest model" title="$18 total per 1M tokens"><span class="seg seg-in" style="width:1.4%"></span><span class="seg seg-out" style="width:7.1%"></span></span></div>
+                    <div class="rung"><span class="r-name">Opus 4.8</span><span class="pill pill-a">reasoning</span><span class="r-cost">$5 / $25 · 1M</span><span class="cost-bar" role="img" aria-label="Total cost $30 per 1M — 14% of the priciest model" title="$30 total per 1M tokens"><span class="seg seg-in" style="width:2.4%"></span><span class="seg seg-out" style="width:11.9%"></span></span></div>
+                    <div class="rung"><span class="r-name">Fable 5</span><span class="pill pill-a">frontier</span><span class="r-cost">$10 / $50 · 1M</span><span class="cost-bar" role="img" aria-label="Total cost $60 per 1M — 29% of the priciest model" title="$60 total per 1M tokens"><span class="seg seg-in" style="width:4.8%"></span><span class="seg seg-out" style="width:23.8%"></span></span></div>
                 </div>
             </div>
             <div class="col-lg-6">
                 <h3 class="h6 text-openai mb-2">OpenAI</h3>
-                <div class="ladder">
-                    <div class="rung"><span class="r-name">GPT-5.4 nano</span><span class="pill pill-o">volume</span><span class="r-cost">$0.20 / $1.25</span></div>
-                    <div class="rung"><span class="r-name">GPT-5.4 mini</span><span class="pill pill-o">fast</span><span class="r-cost">$0.75 / $4.50 · 400K</span></div>
-                    <div class="rung"><span class="r-name">GPT-5.4</span><span class="pill pill-o">value</span><span class="r-cost">$2.50 / $15 · 1M</span></div>
-                    <div class="rung"><span class="r-name">GPT-5.5</span><span class="pill pill-o">flagship</span><span class="r-cost">$5 / $30 · 1M</span></div>
-                    <div class="rung"><span class="r-name">GPT-5.5 Pro</span><span class="pill pill-o">frontier</span><span class="r-cost">$30 / $180 · 1M</span></div>
+                <div class="ladder openai">
+                    <div class="rung"><span class="r-name">GPT-5.4 nano</span><span class="pill pill-o">volume</span><span class="r-cost">$0.20 / $1.25</span><span class="cost-bar" role="img" aria-label="Total cost $1.45 per 1M — under 1% of the priciest model" title="$1.45 total per 1M tokens"><span class="seg seg-in" style="width:0.1%"></span><span class="seg seg-out" style="width:0.6%"></span></span></div>
+                    <div class="rung"><span class="r-name">GPT-5.4 mini</span><span class="pill pill-o">fast</span><span class="r-cost">$0.75 / $4.50 · 400K</span><span class="cost-bar" role="img" aria-label="Total cost $5.25 per 1M — 3% of the priciest model" title="$5.25 total per 1M tokens"><span class="seg seg-in" style="width:0.4%"></span><span class="seg seg-out" style="width:2.1%"></span></span></div>
+                    <div class="rung"><span class="r-name">GPT-5.4</span><span class="pill pill-o">value</span><span class="r-cost">$2.50 / $15 · 1M</span><span class="cost-bar" role="img" aria-label="Total cost $17.50 per 1M — 8% of the priciest model" title="$17.50 total per 1M tokens"><span class="seg seg-in" style="width:1.2%"></span><span class="seg seg-out" style="width:7.1%"></span></span></div>
+                    <div class="rung"><span class="r-name">GPT-5.5</span><span class="pill pill-o">flagship</span><span class="r-cost">$5 / $30 · 1M</span><span class="cost-bar" role="img" aria-label="Total cost $35 per 1M — 17% of the priciest model" title="$35 total per 1M tokens"><span class="seg seg-in" style="width:2.4%"></span><span class="seg seg-out" style="width:14.3%"></span></span></div>
+                    <div class="rung"><span class="r-name">GPT-5.5 Pro</span><span class="pill pill-o">frontier</span><span class="r-cost">$30 / $180 · 1M</span><span class="cost-bar" role="img" aria-label="Total cost $210 per 1M — the most expensive model, full scale" title="$210 total per 1M tokens"><span class="seg seg-in" style="width:14.3%"></span><span class="seg seg-out" style="width:85.7%"></span></span></div>
                 </div>
             </div>
         </div>
