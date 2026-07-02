@@ -139,6 +139,32 @@ The consumption model has shifted. Optimize for both classic search and AI answe
 - **`how-its-built.html`** — the "How this site is built" engineering exhibit. Describes this very pipeline (spec, generation, self-verification gate, governance, tech choices) from real repo facts; cross-links `governing-agentic-ai.html` and `history.php`. Keep it in sync if the pipeline materially changes.
 - No build step. Static-hosting friendly. 47+ cheatsheets; recent additions include `lifestyle-calculator.html`, `clean-architecture-dotnet.html`.
 
+## Server Configuration (nginx)
+
+The site is plain PHP + static HTML with **no client-side routing and no pretty-URL rewriting** — every real route is a literal file (`index.php`, `history.php`, `popularity.php`, `sitemap.php`, `subscribe.php`, `robots.txt`, or a `topic.html` cheatsheet). There is no legitimate reason for the server to fall back to `index.php` for a request that doesn't match a real file.
+
+**Known misconfiguration to check for:** requests for nonexistent paths (including `/robots.txt` before it existed as a real file) were observed returning `HTTP 200` with the homepage HTML instead of a `404`. This is almost always one of:
+- an overly broad `try_files $uri $uri/ /index.php;` fallback (correct for SPA/front-controller frameworks, wrong here — nothing needs a catch-all front controller), or
+- an `error_page 404 = /index.php;` directive rewriting 404s into 200s.
+
+**Fix** — in the nginx server block for `cheatsheets.davidveksler.com` (Plesk: Hosting Settings → Apache & nginx Settings → Additional nginx directives; otherwise the vhost file directly):
+
+```nginx
+location / {
+    try_files $uri $uri/ =404;
+}
+```
+
+Remove any `error_page 404 = /index.php;` (or similar) override. PHP files still route through the existing `location ~ \.php$ { ... }` fastcgi block — this only changes what happens when `$uri` matches no real file or directory.
+
+**Verify after reloading** (`nginx -t && systemctl reload nginx`):
+```bash
+curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/robots.txt        # expect 200, text/plain
+curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/no-such-page-xyz   # expect 404
+```
+
+`robots.txt` is a real static file at the repo root (`Allow: /` + a `Sitemap:` pointer to `sitemap.php`) — no server rule is needed to generate it, only to stop swallowing its request into the PHP fallback.
+
 ## Email signup endpoint
 
 The homepage (`index.php`) and `how-its-built.html` carry a lightweight, privacy-respecting email signup (one field + submit, no tracking scripts, no cookies, no third-party services). Both forms POST to **`subscribe.php`**, a same-origin native-PHP handler.
