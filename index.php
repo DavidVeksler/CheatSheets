@@ -1,6 +1,9 @@
 <?php
 // Set content type and encoding
 header('Content-Type: text/html; charset=utf-8');
+// Short edge/browser cache: content changes whenever a cheatsheet is added/updated,
+// but a 5-minute TTL lets Cloudflare absorb repeat hits without staling the grid noticeably.
+header('Cache-Control: public, max-age=300');
 
 // --- Configuration ---
 $excludedItems = [

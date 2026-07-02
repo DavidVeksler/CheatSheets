@@ -14,6 +14,9 @@
  */
 
 header('Content-Type: text/html; charset=utf-8');
+// The list view changes on every commit; individual commit/file views are effectively
+// immutable once written. A short shared TTL is a safe default for both.
+header('Cache-Control: public, max-age=300');
 
 $REPO = __DIR__;
 $PER_PAGE = 25;

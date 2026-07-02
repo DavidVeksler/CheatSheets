@@ -18,6 +18,8 @@
  */
 
 // ---------------------------------------------------------------- Config ----
+header('Cache-Control: no-store'); // form-submission endpoint; never cache the response
+
 $NOTIFY_EMAIL = getenv('CHEATSHEET_NOTIFY_EMAIL') ?: '';   // set in the server environment
 $STORE_FILE   = __DIR__ . '/.subscribers.jsonl';           // gitignored; the source of truth
 $HONEYPOT     = 'website';                                 // must stay empty

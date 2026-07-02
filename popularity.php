@@ -10,6 +10,8 @@
  */
 
 header('Content-Type: text/html; charset=utf-8');
+// popularity.json only updates once nightly (fetch-popularity.py), so an hour of caching is safe.
+header('Cache-Control: public, max-age=3600');
 
 $dataFile  = __DIR__ . '/popularity.json';
 $cacheFile = __DIR__ . '/.metadata-cache.json';

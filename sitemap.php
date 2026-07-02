@@ -1,6 +1,8 @@
 <?php
 // Set content type for XML sitemap
 header('Content-Type: text/xml; charset=utf-8');
+// Crawlers re-fetch infrequently; an hour of caching is plenty and cuts origin load.
+header('Cache-Control: public, max-age=3600');
 
 // Configuration - reuse from index.php
 $excludedItems = [

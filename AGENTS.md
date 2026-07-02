@@ -165,6 +165,28 @@ curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/no-su
 
 `robots.txt` is a real static file at the repo root (`Allow: /` + a `Sitemap:` pointer to `sitemap.php`) — no server rule is needed to generate it, only to stop swallowing its request into the PHP fallback.
 
+### Caching headers for static files
+
+The dynamic PHP endpoints (`index.php`, `sitemap.php`, `popularity.php`, `history.php`) send their own `Cache-Control` via `header()` in source. But every cheatsheet is a **literal static `.html` file** served directly by nginx, plus the `images/*.png` previews and any CSS/JS — none of those get a `Cache-Control` header from PHP, so as observed they were going out with only `Last-Modified` and `cf-cache-status: DYNAMIC`. Add explicit caching in the nginx server block (same location as the 404 fix above):
+
+```nginx
+location ~* \.(html)$ {
+    add_header Cache-Control "public, max-age=1800";
+}
+location ~* \.(png|jpe?g|gif|webp|svg|ico|css|js)$ {
+    add_header Cache-Control "public, max-age=604800, immutable";
+}
+```
+
+- Cheatsheet HTML gets a 30-minute TTL — edits land within a reasonable window without every page-load hitting the origin.
+- Images/CSS/JS get a 7-day `immutable` TTL — filenames don't change on edit (see [[public-repo-no-personal-data]]-adjacent note: there's no cache-busting query string in this repo), so if you edit an existing `images/{filename}.png` in place, force a refresh by renaming or bumping a query string, or accept a stale image for up to a week.
+
+**Verify after reloading:**
+```bash
+curl -sI https://cheatsheets.davidveksler.com/microservices.html | grep -i cache-control   # expect public, max-age=1800
+curl -sI https://cheatsheets.davidveksler.com/images/ai-frontier.png | grep -i cache-control  # expect public, max-age=604800, immutable
+```
+
 ## Email signup endpoint
 
 The homepage (`index.php`) and `how-its-built.html` carry a lightweight, privacy-respecting email signup (one field + submit, no tracking scripts, no cookies, no third-party services). Both forms POST to **`subscribe.php`**, a same-origin native-PHP handler.
