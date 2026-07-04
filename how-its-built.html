@@ -4,12 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <script>
-  /* Set theme before paint so Bootstrap (data-bs-theme) stays in sync with our light-dark() tokens — no flash. */
+  /* Set theme before paint so light-dark() tokens resolve without a flash. */
   (function(){ try {
     var s = localStorage.getItem("hib-theme");
     if (s === "light" || s === "dark") document.documentElement.setAttribute("data-theme", s);
-    var dark = s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-    document.documentElement.setAttribute("data-bs-theme", dark ? "dark" : "light");
   } catch(e){} })();
 </script>
 <title>How This Site Is Built: A Governed Agentic-AI Pipeline</title>
@@ -34,8 +32,9 @@
 <meta name="twitter:image:alt" content="How this site is built — the governed agentic-AI pipeline behind the cheatsheet collection." />
 <meta name="twitter:creator" content="@heroiclife" />
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com" rel="preconnect" />
+<link href="https://fonts.gstatic.com" rel="preconnect" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
 
 <script type="application/ld+json">
 {
@@ -52,27 +51,40 @@
 </script>
 
 <style>
-@layer tokens, base, components, utilities;
+/* ============================================================================
+   THE BUILD LOG — the same audit-dossier register used on governing-agentic-ai.html,
+   applied here: this page documents the very pipeline, spec, and merge gate that
+   produced it. Paper grain, ledger rules, rubber stamps, § numbering.
+   ============================================================================ */
+@layer tokens, base, layout, components, utilities;
 
 @layer tokens {
   :root {
     color-scheme: light dark;
-    --accent:      light-dark(#2456d6, #7aa2ff);   /* pipeline blue */
-    --accent-2:    light-dark(#0f7d8f, #4fd0e3);   /* teal */
-    --accent-soft: light-dark(#e3ecfb, #1a2540);
-    --good:  light-dark(#1f7a4d, #4fd693);
-    --warn:  light-dark(#9a6b04, #f3c149);
-    --bad:   light-dark(#bb2d20, #ff7b6e);
-    --bg:      light-dark(#f1f3f8, #0e1016);
-    --panel:   light-dark(#ffffff, #181b24);
-    --panel-2: light-dark(#f3f5fb, #1f2330);
-    --ink:     light-dark(#191c24, #e7eaf2);
-    --ink-soft:light-dark(#54596b, #9aa4bc);
-    --line:    light-dark(#e1e5f0, #2a2f3e);
-    --chip:    light-dark(#eceff8, #242938);
-    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-    --hero: linear-gradient(135deg, #131a3a 0%, #1f2d6b 48%, #0f4a55 100%);
+
+    /* paper & ink */
+    --bg:          light-dark(#efe9da, #161310);
+    --panel:       light-dark(#f7f3e7, #1e1a15);
+    --panel-2:     light-dark(#eae2cd, #262117);
+    --chip:        light-dark(#e6ddc5, #2b251a);
+    --ink:         light-dark(#211d15, #e8dfc9);
+    --ink-soft:    light-dark(#6e6650, #9d9179);
+    --line:        light-dark(#d6cbaf, #38321f);
+    --line-strong: light-dark(#b3a780, #564e38);
+
+    /* stamps & seals */
+    --accent:      light-dark(#9c2f1f, #d96a4f);   /* sealing-wax red */
+    --blue:        light-dark(#274468, #8fb3dd);   /* archive ink blue */
+    --good:        light-dark(#2c6e4f, #62b98d);   /* merged / passed */
+    --warn:        light-dark(#8a6210, #d3ab45);   /* exception noted */
+    --bad:         light-dark(#a1301f, #e0705a);   /* gate failure */
+
+    --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+    interpolate-size: allow-keywords;
   }
   [data-theme="light"] { color-scheme: light; }
   [data-theme="dark"]  { color-scheme: dark; }
@@ -80,243 +92,514 @@
 
 @layer base {
   * { box-sizing: border-box; min-width: 0; }
+  html { scrollbar-gutter: stable; }
   body {
-    font-family: var(--sans);
     margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-optical-sizing: auto;
+    font-size: 1.03rem;
+    line-height: 1.68;
     padding-bottom: 4rem;
-    line-height: 1.55;
   }
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: 2147483647;
+    pointer-events: none; background: var(--grain); background-size: 240px;
+    opacity: .05; mix-blend-mode: multiply;
+  }
+  [data-theme="dark"] body::after { mix-blend-mode: screen; opacity: .045; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme]) body::after { mix-blend-mode: screen; opacity: .045; } }
+
   img, svg, table, pre, video { max-width: 100%; }
-  h1,h2,h3,h4 { text-wrap: balance; line-height: 1.2; }
+  h1,h2,h3,h4 { text-wrap: balance; line-height: 1.15; font-weight: 600; }
   p, li { text-wrap: pretty; }
-  section { scroll-margin-top: 4.2rem; }
-  code, kbd { font-family: var(--mono); }
-  :focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; border-radius: 4px; }
+  section { scroll-margin-top: 4.6rem; }
+  code, kbd { font-family: var(--mono); font-size: .86em; }
+  a { color: var(--blue); text-decoration-color: color-mix(in srgb, var(--blue) 45%, transparent); text-underline-offset: 3px; transition: text-decoration-color .15s; }
+  a:hover { text-decoration-color: currentColor; }
+  strong { font-weight: 640; }
+  ::selection { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 2px; }
+}
+
+@layer layout {
+  .readbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 90;
+    background: var(--accent); transform-origin: 0 50%; transform: scaleX(0);
+  }
+  @supports (animation-timeline: scroll()) {
+    .readbar { animation: readgrow linear both; animation-timeline: scroll(root); }
+    @keyframes readgrow { to { transform: scaleX(1); } }
+  }
+
+  .page {
+    max-width: 1220px; margin: 0 auto;
+    padding: 0 clamp(1rem, 4vw, 2.6rem);
+    display: grid; grid-template-columns: 200px minmax(0, 1fr);
+    gap: clamp(1.5rem, 4vw, 3.2rem);
+    align-items: start;
+  }
+  main { max-width: 82ch; position: relative; }
+  main::before {
+    content: ""; position: absolute; left: -1.4rem; top: 0; bottom: 0; width: 1px;
+    background: color-mix(in srgb, var(--accent) 38%, transparent);
+  }
+
+  @media (max-width: 1099px) {
+    .page { display: block; }
+    main::before { display: none; }
+  }
 }
 
 @layer components {
-  .hero {
-    background: var(--hero);
-    color: #f3f0ff;
-    padding: 2.8rem 1.25rem 2.2rem;
-    text-align: center;
-    border-bottom: 4px solid var(--accent);
+  /* ---------- classification band ---------- */
+  .band {
+    background: var(--accent); color: light-dark(#f3ead9, #1c130f);
+    font: 500 .68rem/1 var(--mono); letter-spacing: .22em; text-transform: uppercase;
+    padding: .55rem 1rem; text-align: center; white-space: nowrap; overflow: hidden;
   }
-  .hero h1 { font-weight: 800; font-size: clamp(1.8rem, 4.3vw, 2.9rem); margin: 0 0 .6rem; letter-spacing: .2px; }
-  .hero h1 .bi { color: #aec5ff; }
-  .hero p.lead { max-width: 800px; margin: 0 auto 1.3rem; font-size: 1.05rem; color: #e2e6f7; }
-  .hero .badge-row { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; }
-  .hero .badge-row span {
-    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25);
-    border-radius: 50rem; padding: .25rem .7rem; font-size: .78rem; backdrop-filter: blur(3px);
+  .band b { font-weight: 600; }
+  .band .sep { opacity: .55; margin: 0 1.1ch; }
+  @media (max-width: 760px) { .band .band-extra { display: none; } }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    max-width: 1220px; margin: 0 auto; padding: clamp(2.2rem,6vw,4.2rem) clamp(1rem,4vw,2.6rem) 2.2rem;
+    position: relative;
+    background: repeating-linear-gradient(to bottom, transparent 0 calc(2.2rem - 1px), color-mix(in srgb, var(--line) 55%, transparent) calc(2.2rem - 1px) 2.2rem);
+  }
+  .doc-meta {
+    display: flex; flex-wrap: wrap; gap: .4rem 2.2rem;
+    font: 500 .7rem/1.5 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-soft); border-bottom: 1px solid var(--line-strong); padding-bottom: .8rem;
+  }
+  .doc-meta b { color: var(--ink); font-weight: 600; }
+  .masthead h1 {
+    margin: 1.6rem 0 0; font-weight: 780; letter-spacing: -.015em;
+    font-size: clamp(2.5rem, 6.6vw, 4.7rem); line-height: .98;
+    font-variation-settings: "opsz" 144;
+  }
+  .masthead h1 em { font-style: italic; font-weight: 420; color: var(--accent); }
+  .masthead .lede {
+    max-width: 68ch; margin: 1.5rem 0 0; font-size: clamp(1.02rem, 1.6vw, 1.16rem);
+    color: color-mix(in srgb, var(--ink) 82%, var(--ink-soft));
+  }
+  .masthead .stamp-box { position: absolute; top: clamp(1.8rem,5vw,3.4rem); right: clamp(1rem,4vw,2.6rem); display: grid; gap: 1rem; justify-items: end; }
+  @media (max-width: 820px) { .masthead .stamp-box { position: static; margin-top: 1.4rem; justify-items: start; } }
+
+  /* ---------- rubber stamps ---------- */
+  .stamp {
+    display: inline-block;
+    font: 600 .72rem/1.15 var(--mono); letter-spacing: .2em; text-transform: uppercase;
+    color: var(--stamp, var(--accent));
+    border: 3px double currentColor; border-radius: 3px;
+    padding: .5em .85em .45em; text-align: center;
+    rotate: var(--tilt, -3.5deg);
+    mask-image: var(--grain); mask-size: 130px;
+    mix-blend-mode: multiply;
+  }
+  [data-theme="dark"] .stamp { mix-blend-mode: screen; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme]) .stamp { mix-blend-mode: screen; } }
+  .stamp small { display: block; font-size: .72em; letter-spacing: .28em; opacity: .8; margin-top: .25em; }
+  .stamp.blue { --stamp: var(--blue); }
+  .stamp.good { --stamp: var(--good); }
+
+  .pill {
+    display: inline-block; font: 600 .66rem/1 var(--mono); letter-spacing: .13em; text-transform: uppercase;
+    border: 1.5px solid currentColor; border-radius: 2px; padding: .3em .55em .26em;
+    rotate: -1.5deg; mask-image: var(--grain); mask-size: 110px;
+  }
+  .pill.good { color: var(--good); }
+  .pill.warn { color: var(--warn); }
+  .pill.bad  { color: var(--bad); }
+  .pill.info { color: var(--blue); }
+
+  /* ---------- register of controls (quick-ref ledger) ---------- */
+  .register {
+    max-width: 1220px; margin: 0 auto; padding: 0 clamp(1rem,4vw,2.6rem) 2.4rem;
+  }
+  .register .frame {
+    border: 1px solid var(--line-strong); background: var(--panel);
+    box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px var(--line);
+    padding: 1.3rem clamp(1rem, 3vw, 2rem) 1.5rem;
+  }
+  .register .frame > .rt {
+    font: 600 .72rem/1 var(--mono); letter-spacing: .26em; text-transform: uppercase;
+    color: var(--ink-soft); text-align: center; margin-bottom: 1.1rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .register .frame > .rt::before, .register .frame > .rt::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+  .reg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); column-gap: 3rem; row-gap: .35rem; }
+  .lrow { display: flex; align-items: baseline; gap: .8ch; font-size: .92rem; }
+  .lrow .k { font: 500 .68rem/1.6 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); flex: none; }
+  .lrow .dots { flex: 1; min-width: 2ch; border-bottom: 2px dotted var(--line-strong); translate: 0 -.4em; }
+  .lrow .v { font-weight: 640; flex: none; text-align: right; }
+  .lrow .v small { display: block; font-weight: 400; font-size: .76rem; color: var(--ink-soft); font-style: italic; }
+
+  /* ---------- index rail ---------- */
+  .rail { position: sticky; top: 1.4rem; max-height: calc(100dvh - 3rem); overflow-y: auto; scrollbar-width: thin; padding-bottom: 1rem; }
+  .rail .rail-head { font: 600 .68rem/1 var(--mono); letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); border-bottom: 2px solid var(--ink); padding-bottom: .55rem; margin-bottom: .35rem; }
+  .rail a {
+    display: flex; gap: .9ch; align-items: baseline; text-decoration: none; color: var(--ink-soft);
+    font-size: .86rem; padding: .28rem .3rem .28rem 0; border-bottom: 1px solid var(--line);
+  }
+  .rail a .n { font: 500 .68rem/1 var(--mono); color: var(--line-strong); translate: 0 -.05em; }
+  .rail a:hover { color: var(--ink); }
+  .rail a.active { color: var(--accent); font-weight: 640; }
+  .rail a.active .n { color: var(--accent); }
+  @media (max-width: 1099px) {
+    .rail {
+      position: sticky; top: 0; z-index: 80; max-height: none; overflow-x: auto; overflow-y: hidden;
+      display: flex; gap: .2rem; white-space: nowrap; align-items: center;
+      background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--line-strong); padding: .45rem clamp(1rem,4vw,2.6rem); margin: 0 calc(clamp(1rem,4vw,2.6rem) * -1);
+    }
+    .rail .rail-head { display: none; }
+    .rail a { border-bottom: none; padding: .25rem .55rem; flex: none; }
   }
 
-  .quick-ref { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7rem; max-width: 1080px; margin: 1.6rem auto 0; padding: 0 1rem; }
-  .qr {
-    background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent);
-    border-radius: 8px; padding: .7rem .85rem;
+  /* ---------- sections ---------- */
+  main { counter-reset: sec; }
+  section[data-sec] { counter-increment: sec; position: relative; margin-top: 4.6rem; }
+  section[data-sec]:first-of-type { margin-top: 2.8rem; }
+  section[data-sec]::before {
+    content: counter(sec, decimal-leading-zero);
+    position: absolute; top: -3.1rem; right: -.4rem; z-index: -1;
+    font: 700 clamp(4.6rem, 10vw, 7.6rem)/1 var(--serif); font-variation-settings: "opsz" 144;
+    color: transparent; -webkit-text-stroke: 1.5px color-mix(in srgb, var(--ink) 20%, transparent);
+    pointer-events: none; user-select: none;
   }
-  .qr .k { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-soft); font-weight: 600; }
-  .qr .v { font-size: 1.12rem; font-weight: 800; color: var(--accent); line-height: 1.18; }
-  .qr .s { font-size: .76rem; color: var(--ink-soft); }
-
-  .section-nav {
-    position: sticky; top: 0; z-index: 50;
-    background: color-mix(in srgb, var(--panel) 92%, transparent);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--line);
-    overflow-x: auto; white-space: nowrap;
-    padding: .45rem .5rem; scrollbar-width: thin;
+  section[data-sec] > h2 { margin: 0 0 .4rem; font-size: clamp(1.55rem, 3vw, 2.05rem); font-weight: 700; letter-spacing: -.01em; border-bottom: 3px double var(--line-strong); padding-bottom: .55rem; }
+  section[data-sec] > h2::before {
+    content: "§ " counter(sec, decimal-leading-zero) " · " attr(data-kick);
+    display: block; font: 500 .7rem/1 var(--mono); letter-spacing: .24em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: .7rem;
   }
-  .section-nav a {
-    display: inline-block; color: var(--ink-soft); text-decoration: none;
-    font-size: .82rem; font-weight: 600; padding: .3rem .65rem; border-radius: 6px;
+  .sec-intro { color: color-mix(in srgb, var(--ink) 76%, var(--ink-soft)); margin: .9rem 0 1.5rem; max-width: 72ch; }
+
+  #why > .sec-intro::first-letter {
+    initial-letter: 3 2; -webkit-initial-letter: 3 2;
+    font-weight: 700; color: var(--accent); padding-right: .12em;
+    font-variation-settings: "opsz" 144;
   }
-  .section-nav a:hover { background: var(--accent-soft); color: var(--accent); }
 
-  main { max-width: 1080px; margin: 0 auto; padding: 0 1rem; }
-
-  section > h2 {
-    font-size: 1.5rem; font-weight: 800; margin: 2.4rem 0 .35rem;
-    display: flex; align-items: center; gap: .55rem;
-  }
-  section > h2 .bi { color: var(--accent); }
-  section > .sec-intro { color: var(--ink-soft); margin: 0 0 1.1rem; max-width: 74ch; }
-
+  /* ---------- cards as filed notes ---------- */
   .card2 {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-    padding: 1.1rem 1.15rem; margin-bottom: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    background: var(--panel); border: 1px solid var(--line);
+    border-top: 3px solid var(--line-strong);
+    padding: 1.1rem 1.2rem 1rem; margin-bottom: 1rem;
+    box-shadow: 0 1px 0 var(--line);
   }
-  .card2 h3 { font-size: 1.06rem; font-weight: 700; margin: 0 0 .55rem; }
-  .card2 h3 .bi { color: var(--accent); margin-right: .3rem; }
+  .card2 h3 { font-size: 1.04rem; font-weight: 680; margin: 0 0 .45rem; }
   .grid2 { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-  .grid3 { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .grid3 { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
 
-  .tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 1rem; }
-  table.ct { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 560px; }
-  table.ct th, table.ct td { padding: .55rem .7rem; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
-  table.ct thead th { background: var(--panel-2); font-weight: 700; position: sticky; top: 0; }
-  table.ct tbody tr:nth-child(even) { background: color-mix(in srgb, var(--panel-2) 55%, transparent); }
-  table.ct td code, table.ct th code { background: var(--chip); padding: .05rem .35rem; border-radius: 4px; font-size: .85em; }
-
-  .pill { display:inline-block; font-size:.72rem; font-weight:700; padding:.12rem .5rem; border-radius:50rem; }
-  .pill.good { background: color-mix(in srgb, var(--good) 22%, transparent); color: var(--good); }
-  .pill.info { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
-
-  /* Flow strip (pipeline) */
-  .flow { display:flex; flex-wrap:wrap; align-items:stretch; gap:.5rem; margin:.4rem 0 1rem; }
-  .flow .step { flex:1 1 150px; background: var(--panel); border:1px solid var(--line); border-top:3px solid var(--accent); border-radius:10px; padding:.7rem .8rem; }
-  .flow .step .n { font-size:.7rem; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.5px; }
-  .flow .step .t { font-weight:800; color:var(--accent); margin:.1rem 0; }
-  .flow .step .d { font-size:.8rem; color:var(--ink-soft); }
-
-  .cmd { background: var(--panel-2); border:1px solid var(--line); border-radius:10px; margin-bottom:1rem; overflow:hidden; }
-  .cmd .cmd-label { display:flex; align-items:center; gap:.4rem; font-size:.76rem; font-weight:700; color:var(--ink-soft); padding:.5rem .8rem; border-bottom:1px solid var(--line); background: color-mix(in srgb, var(--panel) 60%, transparent); }
-  .cmd pre { margin:0; padding:.85rem .9rem; overflow-x:auto; }
-  .cmd code { font-family: var(--mono); font-size:.84rem; line-height:1.5; color: var(--ink); }
-  .cmd .c { color: var(--ink-soft); }
-  .cmd .key { color: var(--accent); font-weight:600; }
-
-  .callout { border-radius: 10px; padding: .85rem 1rem; margin: 1rem 0; border: 1px solid var(--line); border-left: 4px solid var(--accent); background: var(--panel-2); }
-  .callout.good { border-left-color: var(--good); }
-  .callout .h { font-weight: 800; display:flex; align-items:center; gap:.45rem; margin-bottom:.25rem; }
-
-  blockquote.golden {
-    margin: 1rem 0; padding: 1.1rem 1.25rem; border-radius: 12px;
-    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--panel)), var(--panel));
-    border: 1px solid var(--line); border-left: 5px solid var(--accent);
-    font-size: 1.18rem; font-weight: 700; line-height: 1.35; text-wrap: balance;
+  .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.7rem; height: 1.7rem; border: 1.5px solid var(--accent); border-radius: 50%;
+    color: var(--accent); font: 600 .8rem/1 var(--mono); margin-right: .55rem; flex: none;
+    rotate: -4deg; mask-image: var(--grain); mask-size: 110px; translate: 0 -.05em;
   }
 
-  details.acc {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-    margin-bottom: .6rem; overflow: hidden;
+  /* ---------- tables as ledgers ---------- */
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--line-strong); background: var(--panel); margin-bottom: 1.1rem; }
+  table.ct { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 560px; counter-reset: row; }
+  table.ct th, table.ct td { padding: .55rem .8rem; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.ct tbody tr:last-child td { border-bottom: none; }
+  table.ct thead th {
+    font: 600 .66rem/1.5 var(--mono); letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-soft); border-bottom: 2px solid var(--line-strong); background: var(--panel-2);
   }
+  table.ct tbody tr { counter-increment: row; }
+  table.ct tbody td:first-child::before {
+    content: counter(row, decimal-leading-zero); font: 400 .66rem/1 var(--mono);
+    color: var(--line-strong); margin-right: .7ch;
+  }
+  table.ct td code { background: var(--chip); padding: .08rem .35rem; border-radius: 2px; }
+  table.ct tbody tr:hover { background: color-mix(in srgb, var(--chip) 55%, transparent); }
+
+  /* ---------- accordion files ---------- */
+  details.acc { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--line-strong); margin-bottom: .5rem; }
   details.acc > summary {
-    cursor: pointer; padding: .8rem 1rem; font-weight: 700; list-style: none;
-    display: flex; align-items: center; gap: .6rem;
+    cursor: pointer; padding: .8rem 1.05rem; font-weight: 640; list-style: none;
+    display: flex; align-items: center; gap: .7rem; font-size: .98rem;
   }
   details.acc > summary::-webkit-details-marker { display: none; }
-  details.acc > summary::after { content: "\F282"; font-family: "bootstrap-icons"; margin-left: auto; color: var(--ink-soft); transition: transform .2s; font-weight: 400; }
-  details.acc[open] > summary::after { transform: rotate(180deg); }
-  details.acc .acc-body { padding: 0 1rem 1rem; color: var(--ink-soft); }
-  details.acc .acc-body ul { margin: .3rem 0 .6rem 0; padding-left: 1.2rem; }
-  details.acc .acc-body li { margin-bottom: .28rem; }
+  details.acc > summary .stepno { font: 600 .7rem/1 var(--mono); color: var(--accent); border-bottom: 2px solid currentColor; padding-bottom: .15em; flex: none; }
+  details.acc > summary::after {
+    content: "+"; font: 400 1.1rem/1 var(--mono); margin-left: auto; color: var(--ink-soft);
+    transition: rotate .25s;
+  }
+  details.acc[open] > summary::after { rotate: 45deg; }
+  details.acc > summary .lift-tag { font: 400 .7rem/1.4 var(--mono); color: var(--ink-soft); background: var(--chip); padding: .12rem .55rem; letter-spacing: .02em; }
+  details.acc .acc-body { padding: 0 1.05rem 1rem 2.9rem; color: color-mix(in srgb, var(--ink) 85%, var(--ink-soft)); }
+  details.acc .acc-body ul { margin: .5rem 0 .3rem 0; padding-left: 1.1rem; }
+  details.acc .acc-body li { margin-bottom: .4rem; }
+  details::details-content {
+    block-size: 0; overflow: clip;
+    transition: block-size .3s ease, content-visibility .3s allow-discrete;
+  }
+  details[open]::details-content { block-size: auto; }
 
-  /* Email signup */
-  .signup {
-    background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent-2);
-    border-radius: 12px; padding: 1.15rem 1.2rem; margin: 1rem 0 0; max-width: 560px;
+  /* ---------- routing slip (pipeline flow) ---------- */
+  .flow { display: flex; flex-wrap: wrap; gap: .55rem; margin: 1rem 0 1.3rem; counter-reset: flowstep; }
+  .flow .step {
+    flex: 1 1 150px; counter-increment: flowstep; position: relative;
+    background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--accent);
+    padding: .75rem .85rem .7rem;
   }
-  .signup h3 { font-size: 1.05rem; font-weight: 800; margin: 0 0 .3rem; }
-  .signup p.sub { font-size: .85rem; color: var(--ink-soft); margin: 0 0 .7rem; }
-  .signup form { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .flow .step::before {
+    content: counter(flowstep, decimal-leading-zero); position: absolute; top: -.85rem; left: .6rem;
+    background: var(--bg); padding: 0 .5ch;
+    font: 600 .72rem/1.6 var(--mono); color: var(--accent); letter-spacing: .08em;
+  }
+  .flow .step .n { font: 500 .62rem/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); }
+  .flow .step .t { font-weight: 680; margin: .1rem 0; }
+  .flow .step .d { font-size: .82rem; color: var(--ink-soft); line-height: 1.5; }
+
+  /* ---------- exhibits (code) ---------- */
+  .cmd { background: var(--panel); border: 1px solid var(--line-strong); margin: 1.1rem 0; position: relative; }
+  .cmd .cmd-label {
+    display: flex; align-items: center; gap: .8ch;
+    font: 600 .68rem/1.5 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-soft); padding: .5rem .95rem; border-bottom: 1px dashed var(--line-strong);
+  }
+  .cmd .cmd-label b { color: var(--accent); font-weight: 600; }
+  .cmd pre { margin: 0; padding: 1rem 1.1rem; overflow-x: auto; }
+  .cmd code { font-family: var(--mono); font-size: .82rem; line-height: 1.65; color: var(--ink); }
+  .cmd .c { color: var(--ink-soft); font-style: italic; }
+  .cmd .key { color: var(--accent); font-weight: 600; }
+
+  /* ---------- callouts as filed memos ---------- */
+  .callout { position: relative; border: 1px solid var(--line-strong); background: var(--panel); padding: 1.35rem 1.15rem .9rem; margin: 1.6rem 0 1.1rem; }
+  .callout .h {
+    position: absolute; top: -.85rem; left: .85rem; background: var(--bg);
+    padding: 0 .8ch; display: flex; gap: .8ch; align-items: baseline;
+    font: 600 .7rem/1.7 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--blue);
+  }
+  .callout .h::before { content: "¶"; }
+  .callout.warn { border-color: color-mix(in srgb, var(--warn) 55%, var(--line-strong)); }
+  .callout.warn .h { color: var(--warn); } .callout.warn .h::before { content: "⚠"; }
+  .callout.bad { border-color: color-mix(in srgb, var(--bad) 55%, var(--line-strong)); }
+  .callout.bad .h { color: var(--bad); } .callout.bad .h::before { content: "⊘"; }
+  .callout.good { border-color: color-mix(in srgb, var(--good) 55%, var(--line-strong)); }
+  .callout.good .h { color: var(--good); } .callout.good .h::before { content: "✓"; }
+  .callout p:last-child { margin-bottom: .2rem; }
+
+  /* ---------- the pipeline's certificate ---------- */
+  .golden {
+    position: relative; margin: 1.8rem 0; padding: clamp(1.6rem, 4vw, 2.6rem) clamp(1.2rem, 5vw, 3rem);
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    box-shadow: inset 0 0 0 5px var(--panel), inset 0 0 0 6px var(--line-strong),
+                0 1px 0 var(--line);
+    text-align: center; font-size: clamp(1.15rem, 2.3vw, 1.5rem); font-weight: 500;
+    line-height: 1.45; text-wrap: balance; font-style: italic;
+  }
+  .golden::before {
+    content: "the thesis"; display: block; font: 600 .68rem/1 var(--mono);
+    font-style: normal; letter-spacing: .34em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.1rem;
+  }
+  .golden .by { display: block; font: 400 .8rem/1.6 var(--mono); font-style: normal; color: var(--ink-soft); margin-top: 1.1rem; letter-spacing: .02em; }
+  .golden .seal {
+    position: absolute; right: clamp(.6rem, 3vw, 1.8rem); bottom: -1.5rem;
+    width: 4.4rem; height: 4.4rem; rotate: -12deg;
+    border-radius: 46% 54% 52% 48% / 52% 47% 53% 48%;
+    background: radial-gradient(circle at 34% 30%, color-mix(in srgb, var(--accent) 70%, #fff) 0%, var(--accent) 42%, color-mix(in srgb, var(--accent) 68%, #000) 100%);
+    box-shadow: inset 0 2px 5px rgba(255,255,255,.28), inset 0 -3px 6px rgba(0,0,0,.32), 0 3px 7px rgba(0,0,0,.28);
+    display: grid; place-items: center;
+    color: light-dark(#f3e8d8, #2a1510); font: 600 1.6rem/1 var(--serif); font-style: normal;
+  }
+  .golden .seal::before { content: ""; position: absolute; inset: .5rem; border: 1.5px solid color-mix(in srgb, currentColor 55%, transparent); border-radius: inherit; }
+
+  /* ---------- registry cells ---------- */
+  .qr { background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--blue); padding: .8rem .95rem; }
+  .qr .k { font: 500 .64rem/1.7 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); }
+  .qr .v { font-size: 1.5rem; font-weight: 720; line-height: 1.15; margin: .05rem 0; font-variation-settings: "opsz" 60; }
+  .qr .s { font-size: .78rem; color: var(--ink-soft); font-style: italic; }
+
+  /* ---------- intake form (email signup, ledger-styled) ---------- */
+  .signup { background: var(--panel); border: 1px solid var(--line-strong); border-top: 3px solid var(--blue); padding: 1.3rem 1.35rem 1.15rem; margin: 1.4rem 0 0; max-width: 560px; }
+  .signup h3 { font: 600 .7rem/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--blue); margin: 0 0 .55rem; }
+  .signup p.sub { font-size: .86rem; color: var(--ink-soft); margin: 0 0 1rem; }
+  .signup form { display: flex; flex-wrap: wrap; gap: .9rem .7rem; align-items: flex-end; }
+  .signup label.field-label { display: block; font: 500 .62rem/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); }
   .signup input[type=email] {
-    flex: 1 1 220px; padding: .55rem .7rem; border-radius: 8px;
-    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); font-size: .95rem;
+    flex: 1 1 220px; padding: .3rem .1rem; border: none; border-bottom: 2px dotted var(--line-strong);
+    background: transparent; color: var(--ink); font: 1rem/1.4 var(--serif); font-style: italic;
   }
+  .signup input[type=email]:focus { outline: none; border-bottom-style: solid; border-bottom-color: var(--blue); }
   .signup button {
-    padding: .55rem 1.1rem; border-radius: 8px; border: 1px solid var(--accent);
-    background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; font-size: .95rem;
+    font: 600 .7rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+    padding: .55em 1em; border: 1.5px solid var(--ink); background: none; color: var(--ink); cursor: pointer;
   }
-  .signup button:hover { filter: brightness(1.06); }
-  .signup .note { font-size: .76rem; color: var(--ink-soft); margin: .55rem 0 0; }
-  .signup .status { font-size: .88rem; font-weight: 600; margin: .55rem 0 0; color: var(--good); }
+  .signup button:hover { border-color: var(--accent); color: var(--accent); }
+  .signup .note { font-size: .76rem; color: var(--ink-soft); margin: .7rem 0 0; flex-basis: 100%; }
+  .signup .status { font-size: .88rem; font-weight: 600; margin: .4rem 0 0; color: var(--good); flex-basis: 100%; }
   .signup .status.is-error { color: var(--bad); }
 
-  footer { max-width: 1080px; margin: 2.5rem auto 0; padding: 1.4rem 1rem; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: .86rem; }
-  .verified { display:inline-flex; align-items:center; gap:.4rem; background: var(--panel-2); border:1px solid var(--line); border-radius:50rem; padding:.25rem .7rem; font-weight:600; }
+  /* ---------- footer ---------- */
+  footer { max-width: 1220px; margin: 4rem auto 0; padding: 0 clamp(1rem,4vw,2.6rem); }
+  footer .sig {
+    border-top: 2px solid var(--ink); padding-top: 1.2rem;
+    display: flex; flex-wrap: wrap; gap: 1.5rem 3rem; align-items: flex-end; justify-content: space-between;
+  }
+  footer .sigline { flex: 1 1 240px; }
+  footer .sigline .rule { border-bottom: 1px solid var(--line-strong); height: 2.1rem; font-style: italic; font-size: 1.25rem; padding: 0 .4rem; font-weight: 420; }
+  footer .sigline .cap { font: 500 .62rem/2.4 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); }
+  footer .fineprint { font-size: .85rem; color: var(--ink-soft); margin-top: 1.6rem; max-width: 90ch; }
+  footer .links { font: 500 .78rem/2 var(--mono); letter-spacing: .06em; margin-top: .6rem; }
 
-  .fab { position: fixed; right: 1rem; z-index: 60; width: 2.7rem; height: 2.7rem; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 2px 8px rgba(0,0,0,.18); font-size: 1.1rem; }
+  /* ---------- floating controls ---------- */
+  .fab {
+    position: fixed; right: 1rem; z-index: 85; width: 2.7rem; height: 2.7rem;
+    border-radius: 50%; border: 1.5px solid var(--line-strong); background: var(--panel); color: var(--ink);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18); font: 500 1.05rem/1 var(--mono);
+  }
+  .fab:hover { border-color: var(--accent); color: var(--accent); }
   #themeToggle { bottom: 4.6rem; } #backTop { bottom: 1rem; }
+
+  /* ---------- scroll-driven entrances ---------- */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      section[data-sec] > * {
+        animation: rise .6s both; animation-timeline: view();
+        animation-range: entry 0% entry 22%;
+      }
+      section[data-sec]::before { animation: rise .6s both; animation-timeline: view(); animation-range: entry 0% entry 18%; }
+    }
+  }
+  @keyframes rise { from { opacity: 0; translate: 0 22px; } to { opacity: 1; translate: 0 0; } }
 }
 
 @layer utilities {
   .muted { color: var(--ink-soft); }
-  .small { font-size: .85rem; }
+  .small { font-size: .875rem; }
+  .mb-0 { margin-bottom: 0; }
   .mono { font-family: var(--mono); }
   .visually-hidden { position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   @media print {
-    .section-nav, .fab, .signup { display: none !important; }
-    details.acc .acc-body { display: block !important; }
-    details.acc > summary::after { display: none; }
+    .rail, .fab, .readbar, .band, .signup { display: none !important; }
+    body::after { display: none; }
+    .page { display: block; }
+    main::before { display: none; }
+    details .acc-body { display: block !important; }
+    details > summary::after { display: none !important; }
     body { background: #fff; color: #000; }
   }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  }
 }
-
-/* Unlayered overrides — must beat Bootstrap Reboot's unlayered body/a{} (it sets its own
-   background/color/underline on both; layered rules always lose to unlayered ones regardless
-   of specificity). */
-body { background-color: var(--bg); color: var(--ink); }
-a { color: var(--accent-2); text-underline-offset: 2px; }
 </style>
 </head>
 <body>
 
-<header class="hero">
-  <h1><i class="bi bi-gear-wide-connected"></i> How This Site Is Built</h1>
-  <p class="lead">This collection isn't hand-authored one page at a time. It's the output of a <strong>governed agentic-AI pipeline</strong>: an AI coding agent (Claude Code) working against a version-controlled specification that functions as binding acceptance criteria, gated by a self-verification checklist and a human review before every commit. This page is the exhibit — the architecture, the spec, the governance, and the deliberate engineering choices, with rationale.</p>
-  <div class="badge-row">
-    <span>80+ interactive references</span><span>Spec-as-acceptance-criteria</span><span>Self-verification gate</span>
-    <span>SRI-pinned dependencies</span><span>Public git audit trail</span><span>No build step</span>
-  </div>
-</header>
+<div class="readbar" aria-hidden="true"></div>
 
-<div class="quick-ref" aria-label="Quick reference">
-  <div class="qr"><div class="k">Author</div><div class="v">Claude Code</div><div class="s">Opus 4.8, effort = high</div></div>
-  <div class="qr"><div class="k">Spec</div><div class="v">AGENTS.md</div><div class="s">one standard, every agent</div></div>
-  <div class="qr"><div class="k">Merge gate</div><div class="v">Checklist + human</div><div class="s">never the agent alone</div></div>
-  <div class="qr"><div class="k">Audit trail</div><div class="v">Git, public</div><div class="s">every commit &amp; diff browsable</div></div>
-  <div class="qr"><div class="k">Framework</div><div class="v">Bootstrap 5.3.8</div><div class="s">pinned + SRI on every asset</div></div>
-  <div class="qr"><div class="k">Build step</div><div class="v">None</div><div class="s">standalone static HTML</div></div>
-  <div class="qr"><div class="k">Theming</div><div class="v">light-dark()</div><div class="s">native, no dual stylesheet</div></div>
-  <div class="qr"><div class="k">Collapsibles</div><div class="v">&lt;details&gt;</div><div class="s">zero-JS, works unpowered</div></div>
+<div class="band" role="note">
+  <b>Build log HIB-26</b><span class="sep">·</span>Claude Code<span class="band-extra"><span class="sep">·</span>human-reviewed before merge<span class="sep">·</span>audit trail: public</span>
 </div>
 
-<nav class="section-nav" aria-label="Section navigation">
-  <a href="#why">Why It Exists</a>
-  <a href="#pipeline">The Pipeline</a>
-  <a href="#spec">The Spec</a>
-  <a href="#governance">Governance</a>
-  <a href="#choices">Tech Choices</a>
-  <a href="#numbers">What It Demonstrates</a>
-  <a href="#related">Related</a>
+<header class="masthead">
+  <div class="doc-meta">
+    <span>Doc&nbsp;Nº <b>HIB-26-07</b></span>
+    <span>Class <b>Engineering Exhibit</b></span>
+    <span>Agent <b>Claude Code · Opus 4.8</b></span>
+    <span>Last verified <b>2026-06-25</b></span>
+  </div>
+  <div class="stamp-box" aria-hidden="true">
+    <span class="stamp">Human-reviewed<small>before every commit</small></span>
+    <span class="stamp good" style="--tilt: 2.5deg;">Audit trail: public</span>
+  </div>
+  <h1>How This Site<br />Is Built<br /><em>the build log</em></h1>
+  <p class="lede">This collection isn't hand-authored one page at a time. It's the output of a <strong>governed agentic-AI pipeline</strong>: an AI coding agent (Claude Code) working against a version-controlled specification that functions as binding acceptance criteria, gated by a self-verification checklist and a human review before every commit. This page is the exhibit — the architecture, the spec, the governance, and the deliberate engineering choices, with rationale.</p>
+</header>
+
+<div class="register" aria-label="Quick reference">
+  <div class="frame">
+    <div class="rt">Register of controls</div>
+    <div class="reg-grid">
+      <div class="lrow"><span class="k">Scope</span><span class="dots"></span><span class="v">80+ pages<small>one shared spec, one gate</small></span></div>
+      <div class="lrow"><span class="k">Author</span><span class="dots"></span><span class="v">Claude Code<small>Opus 4.8, effort = high</small></span></div>
+      <div class="lrow"><span class="k">Spec</span><span class="dots"></span><span class="v">AGENTS.md<small>one standard, every agent</small></span></div>
+      <div class="lrow"><span class="k">Merge gate</span><span class="dots"></span><span class="v">Checklist + human<small>never the agent alone</small></span></div>
+      <div class="lrow"><span class="k">Audit trail</span><span class="dots"></span><span class="v">Git, public<small>every commit &amp; diff browsable</small></span></div>
+      <div class="lrow"><span class="k">Framework</span><span class="dots"></span><span class="v">Bootstrap 5.3.8<small>pinned + SRI on every asset</small></span></div>
+      <div class="lrow"><span class="k">Build step</span><span class="dots"></span><span class="v">None<small>standalone static HTML</small></span></div>
+      <div class="lrow"><span class="k">Theming</span><span class="dots"></span><span class="v">light-dark()<small>native, no dual stylesheet</small></span></div>
+      <div class="lrow"><span class="k">Collapsibles</span><span class="dots"></span><span class="v">&lt;details&gt;<small>zero-JS, works unpowered</small></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<nav class="rail" aria-label="Section index" id="railNav">
+  <div class="rail-head">Index</div>
+  <a href="#why"><span class="n">01</span> Why It Exists</a>
+  <a href="#pipeline"><span class="n">02</span> The Pipeline</a>
+  <a href="#spec"><span class="n">03</span> The Spec</a>
+  <a href="#governance"><span class="n">04</span> Governance</a>
+  <a href="#choices"><span class="n">05</span> Tech Choices</a>
+  <a href="#numbers"><span class="n">06</span> What It Demonstrates</a>
+  <a href="#related"><span class="n">07</span> Related</a>
 </nav>
 
 <main>
 
 <!-- ============ WHY ============ -->
-<section id="why">
-  <h2><i class="bi bi-bullseye"></i> Why This Page Exists</h2>
+<section id="why" data-sec data-kick="the motivation">
+  <h2>Why This Page Exists</h2>
   <p class="sec-intro">Anyone can prompt a model into one good-looking page. The hard part — the part worth showing — is doing it <strong>repeatably, safely, and at scale</strong>: dozens of pages held to the same accuracy and accessibility bar, with the rules written down, enforced, and auditable. That's an engineering problem, not a prompting trick.</p>
-  <blockquote class="golden">The interesting artifact isn't any single cheatsheet. It's the pipeline that makes the next one cheap, consistent, and trustworthy.</blockquote>
+  <blockquote class="golden">
+    The interesting artifact isn't any single cheatsheet. It's the pipeline that makes the next one cheap, consistent, and trustworthy.
+    <span class="seal" aria-hidden="true">⚙</span>
+  </blockquote>
   <div class="grid3">
-    <div class="card2"><h3><i class="bi bi-diagram-3"></i> A repeatable process</h3><p class="small">Each page runs through the same Generation Protocol — research, outline to three depths, fill to a density floor, then self-verify. The quality comes from the spec, not from a lucky prompt.</p></div>
-    <div class="card2"><h3><i class="bi bi-shield-check"></i> Governed, not vibes</h3><p class="small">The agent has wide latitude to write, but a written acceptance standard and a human reviewer stand between its output and <code>main</code>. Autonomy is bounded by design.</p></div>
-    <div class="card2"><h3><i class="bi bi-eye"></i> Fully auditable</h3><p class="small">Every change is a commit. The full history — messages, diffs, per-file revisions — is rendered straight from git on the <a href="history.php">change-history page</a>. Nothing is hidden.</p></div>
+    <div class="card2"><h3>A repeatable process</h3><p class="small">Each page runs through the same Generation Protocol — research, outline to three depths, fill to a density floor, then self-verify. The quality comes from the spec, not from a lucky prompt.</p></div>
+    <div class="card2"><h3>Governed, not vibes</h3><p class="small">The agent has wide latitude to write, but a written acceptance standard and a human reviewer stand between its output and <code>main</code>. Autonomy is bounded by design.</p></div>
+    <div class="card2"><h3>Fully auditable</h3><p class="small">Every change is a commit. The full history — messages, diffs, per-file revisions — is rendered straight from git on the <a href="history.php">change-history page</a>. Nothing is hidden.</p></div>
   </div>
 </section>
 
 <!-- ============ PIPELINE ============ -->
-<section id="pipeline">
-  <h2><i class="bi bi-arrow-left-right"></i> The Generation Pipeline</h2>
+<section id="pipeline" data-sec data-kick="six gates, one path">
+  <h2>The Generation Pipeline</h2>
   <p class="sec-intro">A new reference moves through a fixed sequence. The first four steps are the agent's; the last two are the gate. No page reaches <code>main</code> without clearing all six.</p>
   <div class="flow">
-    <div class="step"><div class="n">Step 1</div><div class="t">Research</div><div class="d">Verify version-sensitive facts against primary sources before writing — close the hallucination gap up front.</div></div>
-    <div class="step"><div class="n">Step 2</div><div class="t">Outline ×3</div><div class="d">Outline to three depths — fundamentals, working knowledge, edge/advanced — before any prose.</div></div>
-    <div class="step"><div class="n">Step 3</div><div class="t">Fill to floor</div><div class="d">Populate every section to the density floor: ~20+ substantive entries, no hollow stubs.</div></div>
-    <div class="step"><div class="n">Step 4</div><div class="t">Self-verify</div><div class="d">Run the page against the Testing Checklist — coverage, accuracy, platform, a11y — and fix gaps.</div></div>
-    <div class="step"><div class="n">Step 5</div><div class="t">Browser verify</div><div class="d">Serve locally, confirm a clean console, prove the CDN assets actually loaded under SRI, exercise the interactive bits.</div></div>
-    <div class="step"><div class="n">Step 6</div><div class="t">Review &amp; commit</div><div class="d">A human reviews, then it ships to <code>main</code> as one commit bundling the page and its preview image.</div></div>
+    <div class="step"><div class="n">Research</div><div class="t">Verify first</div><div class="d">Check version-sensitive facts against primary sources before writing — close the hallucination gap up front.</div></div>
+    <div class="step"><div class="n">Outline ×3</div><div class="t">Three depths</div><div class="d">Outline fundamentals, working knowledge, edge/advanced — before any prose.</div></div>
+    <div class="step"><div class="n">Fill to floor</div><div class="t">Density</div><div class="d">Populate every section to the density floor: ~20+ substantive entries, no hollow stubs.</div></div>
+    <div class="step"><div class="n">Self-verify</div><div class="t">Checklist</div><div class="d">Run the page against the Testing Checklist — coverage, accuracy, platform, a11y — and fix gaps.</div></div>
+    <div class="step"><div class="n">Browser verify</div><div class="t">Prove it loads</div><div class="d">Serve locally, confirm a clean console, prove the CDN assets actually loaded under SRI.</div></div>
+    <div class="step"><div class="n">Review &amp; commit</div><div class="t">Human gate</div><div class="d">A human reviews, then it ships to <code>main</code> as one commit bundling the page and its preview image.</div></div>
   </div>
-  <div class="callout"><div class="h"><i class="bi bi-cpu"></i> The agent</div><p class="small mb-0">Pages are generated with <strong>Claude Code</strong> running Claude Opus 4.8 at high reasoning effort. The spec is explicit that comprehensiveness comes from the standard, not from cranking the effort dial — if a draft is thin, the fix is to apply the standard harder, not to spend more tokens.</p></div>
+  <div class="callout"><div class="h">The agent</div><p class="small mb-0">Pages are generated with <strong>Claude Code</strong> running Claude Opus 4.8 at high reasoning effort. The spec is explicit that comprehensiveness comes from the standard, not from cranking the effort dial — if a draft is thin, the fix is to apply the standard harder, not to spend more tokens.</p></div>
 </section>
 
 <!-- ============ SPEC ============ -->
-<section id="spec">
-  <h2><i class="bi bi-file-earmark-ruled"></i> The Spec: <span class="mono">AGENTS.md</span> as Acceptance Criteria</h2>
+<section id="spec" data-sec data-kick="acceptance criteria">
+  <h2>The Spec: <span class="mono">AGENTS.md</span> as Acceptance Criteria</h2>
   <p class="sec-intro">The pipeline's center of gravity is a single checked-in file, <code>AGENTS.md</code>. It's deliberately cross-agent: <code>CLAUDE.md</code> and <code>.github/copilot-instructions.md</code> both point back to it, so Claude Code, Codex, and Cursor build to one standard instead of three divergent house styles. Its rules are treated as binding acceptance criteria — a page that violates them is not done, regardless of polish.</p>
+
+  <div class="cmd">
+    <div class="cmd-label"><b>Excerpt</b> — AGENTS.md § Atomic entry rule</div>
+<pre><code><span class="c"># verbatim, from the checked-in spec</span>
+Every entry (concept, command, pattern, term, technique) MUST include:
+- A precise one-line definition or statement of purpose.
+- At least one <span class="key">concrete</span> example with realistic values
+  &mdash; never <span class="c">foo</span>/<span class="c">bar</span> when a real value teaches more.
+- Where applicable, a gotcha, pitfall, or explicit "when NOT to use this."
+
+<span class="c">## Quantify everything quantifiable.</span>
+"Fast" &rarr; "~O(log n), sub-ms for n &lt; 10^6."
+"Expensive" &rarr; the actual price/token figure.
+"Large" &rarr; the actual cutoff.</code></pre>
+  </div>
+
   <div class="tbl-wrap">
   <table class="ct">
     <thead><tr><th>What the spec enforces</th><th>The concrete rule</th></tr></thead>
@@ -335,25 +618,27 @@ a { color: var(--accent-2); text-underline-offset: 2px; }
 </section>
 
 <!-- ============ GOVERNANCE ============ -->
-<section id="governance">
-  <h2><i class="bi bi-shield-lock"></i> The Governance Model</h2>
+<section id="governance" data-sec data-kick="four mechanisms">
+  <h2>The Governance Model</h2>
   <p class="sec-intro">"Governed" means specific, checkable things — not a vibe. The agent writes; four mechanisms bound what it can ship and keep the result accountable after the fact.</p>
   <div class="grid2">
-    <div class="card2"><h3><i class="bi bi-check2-square"></i> A merge gate that isn't the agent</h3><p class="small">The Testing Checklist (comprehensiveness, accuracy, platform, accessibility) plus a human reviewer sit between generated output and <code>main</code>. The model proposes; a person merges. The gate produces a report, never the final verdict.</p></div>
-    <div class="card2"><h3><i class="bi bi-clock-history"></i> A public, immutable audit trail</h3><p class="small">Every page is shipped as a version-controlled commit with a descriptive message and an authorship trailer. The <a href="history.php">change-history page</a> renders the entire git log — commits, diffs, and per-file revisions — read-only, straight from the repository.</p></div>
-    <div class="card2"><h3><i class="bi bi-lock"></i> Supply-chain integrity by default</h3><p class="small">Every CDN <code>&lt;link&gt;</code>/<code>&lt;script&gt;</code> carries a <code>sha384</code> Subresource Integrity hash plus <code>crossorigin</code>. Hashes are computed from the real CDN bytes and pinned in a table in <code>CLAUDE.md</code>; a tampered or swapped asset simply won't execute.</p></div>
-    <div class="card2"><h3><i class="bi bi-github"></i> The agent in the loop</h3><p class="small">A GitHub Actions workflow (<code>claude.yml</code>) wires the same agent into the repo: an <code>@claude</code> mention on an issue or pull-request review invokes Claude Code in CI — so the system that authors pages can also participate in their review.</p></div>
+    <div class="card2"><h3><span class="num">1</span>A merge gate that isn't the agent</h3><p class="small">The Testing Checklist (comprehensiveness, accuracy, platform, accessibility) plus a human reviewer sit between generated output and <code>main</code>. The model proposes; a person merges. The gate produces a report, never the final verdict.</p></div>
+    <div class="card2"><h3><span class="num">2</span>A public, immutable audit trail</h3><p class="small">Every page is shipped as a version-controlled commit with a descriptive message and an authorship trailer. The <a href="history.php">change-history page</a> renders the entire git log — commits, diffs, and per-file revisions — read-only, straight from the repository.</p></div>
+    <div class="card2"><h3><span class="num">3</span>Supply-chain integrity by default</h3><p class="small">Every CDN <code>&lt;link&gt;</code>/<code>&lt;script&gt;</code> carries a <code>sha384</code> Subresource Integrity hash plus <code>crossorigin</code>. Hashes are computed from the real CDN bytes and pinned in a table in <code>CLAUDE.md</code>; a tampered or swapped asset simply won't execute.</p></div>
+    <div class="card2"><h3><span class="num">4</span>The agent in the loop</h3><p class="small">A GitHub Actions workflow (<code>claude.yml</code>) wires the same agent into the repo: an <code>@claude</code> mention on an issue or pull-request review invokes Claude Code in CI — so the system that authors pages can also participate in their review.</p></div>
   </div>
-  <div class="callout good"><div class="h"><i class="bi bi-signpost-split"></i> The model, generalized</div><p class="small mb-0">This site is a concrete instance of a broader pattern: turning ad-hoc AI use into a reviewed, versioned capability with declared safety posture. That pattern is written up in detail in <a href="governing-agentic-ai.html"><strong>Governing Agentic AI: A Field Guide</strong></a> — the substrate-not-the-agent bet, the Golden Rule, four safety invariants, and a reviewed-skill lifecycle.</p></div>
+  <div class="callout good"><div class="h">The model, generalized</div><p class="small mb-0">This site is a concrete instance of a broader pattern: turning ad-hoc AI use into a reviewed, versioned capability with declared safety posture. That pattern is written up in detail in <a href="governing-agentic-ai.html"><strong>Governing Agentic AI: A Field Guide</strong></a> — the substrate-not-the-agent bet, the Golden Rule, four safety invariants, and a reviewed-skill lifecycle.</p></div>
 </section>
 
 <!-- ============ TECH CHOICES ============ -->
-<section id="choices">
-  <h2><i class="bi bi-sliders"></i> Deliberate Tech Choices</h2>
+<section id="choices" data-sec data-kick="trade-offs, made on purpose">
+  <h2>Deliberate Tech Choices</h2>
   <p class="sec-intro">Every platform decision here is a trade made on purpose. Expand each for the rationale — what it buys, and what it deliberately gives up.</p>
 
+  <div class="callout warn"><div class="h">One documented exception</div><p class="small mb-0">This exhibit page is the one deliberate departure from the baseline below: it swaps Bootstrap for a bespoke, dependency-light stylesheet — a paper-ledger motif built from CSS custom properties, cascade layers, and scroll-driven animation, no framework — to demonstrate the raw-CSS techniques directly. Every other reference in the collection, including the 80+ cheatsheets this page describes, still runs on the pinned Bootstrap baseline documented in the first item below.</p></div>
+
   <details class="acc" open>
-    <summary><i class="bi bi-bootstrap"></i> Bootstrap 5.3.8, pinned, with Subresource Integrity</summary>
+    <summary><span class="stepno">01</span> Bootstrap 5.3.8, pinned, with Subresource Integrity <span class="lift-tag">SRI on every asset</span></summary>
     <div class="acc-body">
       <p>An exact version (5.3.8) is pinned across every page for visual consistency, and Bootstrap 6 is explicitly <em>not</em> targeted until it's stable. Each CDN tag carries an <code>integrity</code> hash and <code>crossorigin</code>; JS loads with <code>defer</code>.</p>
       <ul>
@@ -364,7 +649,7 @@ a { color: var(--accent-2); text-underline-offset: 2px; }
   </details>
 
   <details class="acc">
-    <summary><i class="bi bi-circle-half"></i> Native <span class="mono">light-dark()</span> theming</summary>
+    <summary><span class="stepno">02</span> Native <span class="mono">light-dark()</span> theming <span class="lift-tag">one token set, both themes</span></summary>
     <div class="acc-body">
       <p>Light and dark are expressed with the CSS <code>light-dark()</code> function plus <code>color-scheme</code>, honoring <code>prefers-color-scheme</code> automatically, with an optional manual override via <code>[data-theme]</code> and a tiny pre-paint script to avoid a flash.</p>
       <ul>
@@ -375,7 +660,7 @@ a { color: var(--accent-2); text-underline-offset: 2px; }
   </details>
 
   <details class="acc">
-    <summary><i class="bi bi-chevron-bar-expand"></i> Native <span class="mono">&lt;details&gt;</span> for collapsibles</summary>
+    <summary><span class="stepno">03</span> Native <span class="mono">&lt;details&gt;</span> for collapsibles <span class="lift-tag">zero-JS accordions</span></summary>
     <div class="acc-body">
       <p>Accordions and task cards use the native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> element (with <code>name</code> for exclusive groups) instead of a JS collapse component.</p>
       <ul>
@@ -386,7 +671,7 @@ a { color: var(--accent-2); text-underline-offset: 2px; }
   </details>
 
   <details class="acc">
-    <summary><i class="bi bi-braces"></i> JSON-LD structured data on every page</summary>
+    <summary><span class="stepno">04</span> JSON-LD structured data on every page <span class="lift-tag">schema must match content</span></summary>
     <div class="acc-body">
       <p>Each page ships <code>TechArticle</code> JSON-LD whose fields must match the visible content. No <code>FAQPage</code>/<code>HowTo</code> schema is bolted on to chase deprecated rich results.</p>
       <ul>
@@ -397,7 +682,7 @@ a { color: var(--accent-2); text-underline-offset: 2px; }
   </details>
 
   <details class="acc">
-    <summary><i class="bi bi-filetype-html"></i> No build step — standalone static HTML</summary>
+    <summary><span class="stepno">05</span> No build step — standalone static HTML <span class="lift-tag">one file per page</span></summary>
     <div class="acc-body">
       <p>Each cheatsheet is a single self-contained HTML file with embedded CSS and JS. A small amount of PHP (<code>index.php</code>, <code>sitemap.php</code>, <code>history.php</code>) auto-discovers files and renders the gallery, sitemap, and git history at request time.</p>
       <ul>
@@ -408,7 +693,7 @@ a { color: var(--accent-2); text-underline-offset: 2px; }
   </details>
 
   <details class="acc">
-    <summary><i class="bi bi-layers"></i> CSS <span class="mono">@layer</span>, container queries, and reduced-motion gating</summary>
+    <summary><span class="stepno">06</span> CSS <span class="mono">@layer</span>, container queries, reduced-motion gating <span class="lift-tag">predictable cascade</span></summary>
     <div class="acc-body">
       <p>Custom CSS is wrapped in <code>@layer</code> so it sits cleanly above Bootstrap without <code>!important</code> wars; the card grid uses CSS Grid; all motion is gated behind <code>@media (prefers-reduced-motion)</code>.</p>
       <ul>
@@ -420,27 +705,29 @@ a { color: var(--accent-2); text-underline-offset: 2px; }
 </section>
 
 <!-- ============ NUMBERS ============ -->
-<section id="numbers">
-  <h2><i class="bi bi-graph-up-arrow"></i> What This Demonstrates</h2>
+<section id="numbers" data-sec data-kick="read as a credential">
+  <h2>What This Demonstrates</h2>
   <p class="sec-intro">Read as a credential, the relevant skills are visible in the artifact itself, not just claimed.</p>
   <div class="grid3">
-    <div class="card2"><h3><i class="bi bi-collection"></i> Scale with consistency</h3><p class="small">80+ pages spanning AI safety, software, finance, security, and more — all holding the same accuracy, accessibility, and metadata bar because the bar is written down and enforced.</p></div>
-    <div class="card2"><h3><i class="bi bi-diagram-2"></i> Agentic-AI architecture</h3><p class="small">Designing the spec, the gate, and the audit trail that let an AI agent do real work safely — the substrate, not just the prompt.</p></div>
-    <div class="card2"><h3><i class="bi bi-rulers"></i> Information design</h3><p class="small">Turning dense, version-sensitive material into scannable, self-contained references that a practitioner can actually work from.</p></div>
+    <div class="card2"><h3>Scale with consistency</h3><p class="small">80+ pages spanning AI safety, software, finance, security, and more — all holding the same accuracy, accessibility, and metadata bar because the bar is written down and enforced.</p></div>
+    <div class="card2"><h3>Agentic-AI architecture</h3><p class="small">Designing the spec, the gate, and the audit trail that let an AI agent do real work safely — the substrate, not just the prompt.</p></div>
+    <div class="card2"><h3>Information design</h3><p class="small">Turning dense, version-sensitive material into scannable, self-contained references that a practitioner can actually work from.</p></div>
   </div>
   <div class="signup" id="signup">
-    <h3><i class="bi bi-envelope-paper"></i> Get new references &amp; build notes</h3>
+    <h3>Get new references &amp; build notes</h3>
     <p class="sub">Occasional email when a new reference ships or the pipeline changes. No spam, no tracking, unsubscribe anytime.</p>
     <!-- Posts to subscribe.php (same-origin native-PHP handler). Degrades gracefully
          without JS; JS enhances to an inline confirmation. See AGENTS.md → "Email signup endpoint". -->
     <form action="subscribe.php" method="post" class="email-signup">
-      <label class="visually-hidden" for="emailField">Email address</label>
-      <div class="visually-hidden" aria-hidden="true">
-        <label for="website-hp">Leave this field empty</label>
-        <input type="text" id="website-hp" name="website" tabindex="-1" autocomplete="off" />
+      <div>
+        <label class="field-label" for="emailField">Email address</label>
+        <div class="visually-hidden" aria-hidden="true">
+          <label for="website-hp">Leave this field empty</label>
+          <input type="text" id="website-hp" name="website" tabindex="-1" autocomplete="off" />
+        </div>
+        <input type="email" id="emailField" name="email" required autocomplete="email" inputmode="email" placeholder="you@example.com" />
       </div>
-      <input type="email" id="emailField" name="email" required autocomplete="email" inputmode="email" placeholder="you@example.com" />
-      <button type="submit"><i class="bi bi-bell me-1"></i>Notify me</button>
+      <button type="submit">Notify me</button>
       <p class="note">A single field, no third-party scripts. Falls back to a plain form post without JavaScript.</p>
       <p class="status" role="status" aria-live="polite" hidden></p>
     </form>
@@ -448,54 +735,85 @@ a { color: var(--accent-2); text-underline-offset: 2px; }
 </section>
 
 <!-- ============ RELATED ============ -->
-<section id="related">
-  <h2><i class="bi bi-link-45deg"></i> Related</h2>
+<section id="related" data-sec data-kick="cross-references">
+  <h2>Related</h2>
   <div class="grid2">
-    <div class="card2"><h3><i class="bi bi-shield-shaded"></i> <a href="governing-agentic-ai.html">Governing Agentic AI: A Field Guide</a></h3><p class="small">The generalized version of this site's governance model — how to turn scattered, private AI use into a shared, reviewed capability without risking systems of record.</p></div>
-    <div class="card2"><h3><i class="bi bi-clock-history"></i> <a href="history.php">Change History</a></h3><p class="small">The live audit trail: every commit, diff, and per-file revision in this repository, rendered read-only straight from git.</p></div>
-    <div class="card2"><h3><i class="bi bi-collection-fill"></i> <a href="index.php">The full collection</a></h3><p class="small">Browse all 80+ references — the output the pipeline on this page produces.</p></div>
-    <div class="card2"><h3><i class="bi bi-diagram-3"></i> <a href="modern-devops-pipelines.html">Modern DevOps Pipelines</a></h3><p class="small">The CI/CD machinery that a review gate and governed deploy run on, written up as its own reference.</p></div>
+    <div class="card2"><h3><a href="governing-agentic-ai.html">Governing Agentic AI: A Field Guide</a></h3><p class="small">The generalized version of this site's governance model — how to turn scattered, private AI use into a shared, reviewed capability without risking systems of record.</p></div>
+    <div class="card2"><h3><a href="history.php">Change History</a></h3><p class="small">The live audit trail: every commit, diff, and per-file revision in this repository, rendered read-only straight from git.</p></div>
+    <div class="card2"><h3><a href="index.php">The full collection</a></h3><p class="small">Browse all 80+ references — the output the pipeline on this page produces.</p></div>
+    <div class="card2"><h3><a href="modern-devops-pipelines.html">Modern DevOps Pipelines</a></h3><p class="small">The CI/CD machinery that a review gate and governed deploy run on, written up as its own reference.</p></div>
   </div>
 </section>
 
 </main>
+</div>
 
 <footer>
-  <p><span class="verified"><i class="bi bi-shield-check"></i> Last verified: 2026-06-25</span></p>
-  <p class="small">An engineering exhibit describing this repository's own pipeline as of June 2026. Page counts, tool versions, and the agent model are current at that date and drift over time — see the <a href="history.php">change history</a> for the authoritative record.</p>
-  <p class="small muted">Part of the David Veksler Cheatsheets collection · Generated by a governed Claude Code pipeline, human-reviewed.</p>
-  <p class="small" style="margin-top:.6rem;">
+  <div class="sig">
+    <div class="sigline">
+      <div class="rule">David Veksler</div>
+      <div class="cap">Prepared by</div>
+    </div>
+    <div class="sigline">
+      <div class="rule"></div>
+      <div class="cap">Reviewed &amp; merged by</div>
+    </div>
+    <div><span class="stamp blue" style="--tilt: 3deg;">Last verified<small>2026-06-25</small></span></div>
+  </div>
+  <p class="fineprint">An engineering exhibit describing this repository's own pipeline as of June 2026. Page counts, tool versions, and the agent model are current at that date and drift over time — see the <a href="history.php">change history</a> for the authoritative record.</p>
+  <p class="fineprint">This pipeline is the personal-scale version of an approach taken into production: David Veksler founded the AI delivery function at a regulated commercial lender, with the same governance shape (binding spec, self-verification gate, human review, audit trail). Full case study, honestly measured: <a href="https://davidveksler.com/david/ai-strategy.html?ref=cheatsheets">Founding the AI Delivery Function at a Regulated Lender</a>. The deterministic half of that governance gate is open source: <a href="https://github.com/DavidVeksler/skill-lint" target="_blank" rel="noopener">skill-lint</a>, a CI linter for agent skills.</p>
+  <p class="fineprint muted">Part of the David Veksler Cheatsheets collection · Generated by a governed Claude Code pipeline, human-reviewed.</p>
+  <p class="links">
     <a href="index.php" title="Browse all cheatsheets"><i class="bi bi-collection"></i> All Cheatsheets</a>
     &nbsp;·&nbsp;
-    <a href="governing-agentic-ai.html" title="Governing Agentic AI field guide"><i class="bi bi-shield-shaded"></i> Governance Field Guide</a>
+    <a href="governing-agentic-ai.html" title="Governing Agentic AI field guide">Governance Field Guide</a>
     &nbsp;·&nbsp;
-    <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener" title="David Veksler on LinkedIn"><i class="bi bi-linkedin"></i> LinkedIn</a>
+    <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener" title="David Veksler on LinkedIn">in/davidveksler</a>
   </p>
 </footer>
 
-<button id="themeToggle" class="fab" aria-label="Toggle light/dark theme" title="Toggle theme"><i class="bi bi-circle-half"></i></button>
-<button id="backTop" class="fab" aria-label="Back to top" title="Back to top"><i class="bi bi-arrow-up"></i></button>
+<button id="themeToggle" class="fab" aria-label="Toggle light/dark theme" title="Toggle theme">◐</button>
+<button id="backTop" class="fab" aria-label="Back to top" title="Back to top">↑</button>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
 <script defer>
   document.addEventListener("DOMContentLoaded", function () {
-    /* ---- Theme toggle ---- */
+    /* ---- Theme toggle (with view-transition crossfade where supported) ---- */
     var root = document.documentElement;
     var toggle = document.getElementById("themeToggle");
-    function currentDark(){ return root.getAttribute("data-bs-theme") === "dark"; }
+    function currentDark() {
+      var s = root.getAttribute("data-theme");
+      if (s) return s === "dark";
+      return matchMedia("(prefers-color-scheme: dark)").matches;
+    }
     toggle.addEventListener("click", function () {
       var dark = !currentDark();
-      root.setAttribute("data-theme", dark ? "dark" : "light");
-      root.setAttribute("data-bs-theme", dark ? "dark" : "light");
+      var apply = function () { root.setAttribute("data-theme", dark ? "dark" : "light"); };
+      var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (document.startViewTransition && !reduce) document.startViewTransition(apply); else apply();
       try { localStorage.setItem("hib-theme", dark ? "dark" : "light"); } catch (e) {}
     });
 
     /* ---- Back to top (honor prefers-reduced-motion) ---- */
-    var backTop = document.getElementById("backTop");
-    backTop.addEventListener("click", function () {
+    document.getElementById("backTop").addEventListener("click", function () {
       var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
     });
+
+    /* ---- Index rail scroll-spy ---- */
+    var links = Array.prototype.slice.call(document.querySelectorAll("#railNav a"));
+    var byId = {};
+    links.forEach(function (a) { byId[a.getAttribute("href").slice(1)] = a; });
+    var current = null;
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          if (current) current.classList.remove("active");
+          current = byId[en.target.id];
+          if (current) current.classList.add("active");
+        }
+      });
+    }, { rootMargin: "-15% 0px -70% 0px" });
+    document.querySelectorAll("main section[id]").forEach(function (s) { spy.observe(s); });
 
     /* ---- Expand all <details> for printing, restore afterward ---- */
     var printOpened = [];
