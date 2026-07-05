@@ -158,6 +158,9 @@ $categoryMap = [
     'hot-tub-treatment.html' => 'Home & Lifestyle',
     'living-richly-guide.html' => 'Home & Lifestyle',
     'samsung-bespoke-oven-guide.html' => 'Home & Lifestyle',
+
+    // Life Admin & Consumer Defense
+    'death-logistics.html' => 'Life Admin & Consumer Defense',
 ];
 
 // --- Category Styles ---
@@ -174,6 +177,7 @@ $categoryStyles = [
     'Philosophy & Religion'   => ['color' => '#6b21a8', 'bg' => '#f3e8ff', 'icon' => 'bi-yin-yang'],
     'Engineering & Science'   => ['color' => '#0c4a6e', 'bg' => '#e0f2fe', 'icon' => 'bi-gear-fill'],
     'Home & Lifestyle'        => ['color' => '#0f766e', 'bg' => '#ccfbf1', 'icon' => 'bi-house-heart-fill'],
+    'Life Admin & Consumer Defense' => ['color' => '#4b5563', 'bg' => '#f1f5f9', 'icon' => 'bi-clipboard2-check-fill'],
     'Other'                   => ['color' => '#374151', 'bg' => '#f3f4f6', 'icon' => 'bi-file-earmark-text'],
 ];
 
