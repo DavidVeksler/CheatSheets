@@ -154,6 +154,7 @@ $categoryMap = [
     // Home & Lifestyle
     'command-deck.html' => 'Home & Lifestyle',
     'cooking-guide.html' => 'Home & Lifestyle',
+    'air-water-filtration.html' => 'Home & Lifestyle',
     'global_cuisine_guide.html' => 'Home & Lifestyle',
     'home-maintenance-guide.html' => 'Home & Lifestyle',
     'hot-tub-treatment.html' => 'Home & Lifestyle',
