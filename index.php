@@ -109,6 +109,7 @@ $categoryMap = [
     'er-triage.html' => 'Health & Fitness',
     'human-skeleton.html' => 'Health & Fitness',
     'medical-school-curriculum.html' => 'Health & Fitness',
+    'reassurance-tables.html' => 'Health & Fitness',
     'running.html' => 'Health & Fitness',
     'sleep-optimization.html' => 'Health & Fitness',
     'strength-training.html' => 'Health & Fitness',
