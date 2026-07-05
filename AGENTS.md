@@ -8,6 +8,24 @@ A collection of interactive, standalone HTML cheatsheets covering technology, fi
 
 The defining quality bar is **comprehensiveness plus accuracy**. A cheatsheet here is a *terminal reference*: a competent practitioner should be able to do real work from a single page for the topic's common cases without opening another tab. Density and correctness win over brevity. The Content Comprehensiveness Standard and the Accuracy & Freshness Protocol below are hard acceptance criteria, not style suggestions.
 
+## Repository documents (what governs what)
+
+This file owns the quality bar. The other Markdown docs divide the workflows — use the right one for the task:
+
+| Document | Use it when |
+|---|---|
+| [`CLAUDE.md`](CLAUDE.md) | Entry point → this file; also holds the **precomputed SRI hash table** for pinned CDN assets. |
+| [`TODO/README.md`](TODO/README.md) | **Building a cheatsheet from a spec** in `TODO/` — binding implementation rules (numbers-are-anchors, outline-first, definition of done, design execution). |
+| `TODO/<topic>.md` | One spec per planned cheatsheet (content angle, sections, visual identity). Deleted after the build ships. |
+| [`TODO/SPEC-AUDIT.md`](TODO/SPEC-AUDIT.md) | **Writing or reviewing a spec** — spec-completeness criteria (search targeting, reader outcome, staleness register, etc.). |
+| [`TODO/CHEATSHEET-AUDIT.md`](TODO/CHEATSHEET-AUDIT.md) | **Reviewing an existing/shipped cheatsheet** — run this per-file conformance audit (metadata, SRI, content depth, site integration), with severity tiers, fix policy, and the corpus defect baseline. |
+| [`weekly-freshness-update.md`](weekly-freshness-update.md) | The scheduled **fact-drift job** — worker instructions for refreshing one dated cheatsheet per run. Owns fact verification; the audit above only checks the freshness *machinery* exists. |
+| [`Device Cheat Sheet Generator.md`](Device%20Cheat%20Sheet%20Generator.md) | Standalone generator prompt for hardware/device guides (radios, appliances, tools). Predates this file — where they conflict, this file wins. |
+| [`README.md`](README.md) | Public repo readme (minimal). |
+| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | GitHub Copilot's summary of this repo. Duplicates rather than points here, so it drifts (e.g. it still says Bootstrap 5.3.3) — treat this file as authoritative; sync that one when touching it. |
+
+Non-Markdown but load-bearing: `SEO_PROMPT.txt` (footer cross-linking procedure), `PROMPT2.txt` (legacy generator prompt).
+
 ## Generation Protocol (read first)
 
 1. **Effort = High** (the Opus 4.8 default). Comprehensiveness comes from the spec in this file, not the effort dial — do not rely on Extra/Max to add coverage the spec already mandates. If a draft is thin, apply the standard harder.
