@@ -46,8 +46,6 @@ A page is done when all of these hold, in addition to the AGENTS.md testing chec
   polished thing on the page.
 - The page renders correctly at 375 px wide and prints sanely (the celestial and nuclear
   pages REQUIRE a deliberate print stylesheet; for the rest, sane defaults suffice).
-- Zero external dependencies: no CDN scripts, no chart libraries, no web fonts that
-  break offline. Inline SVG and vanilla JS only.
 
 ## Rule 4: Anti-goals — what NOT to include
 

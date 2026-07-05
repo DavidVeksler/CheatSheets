@@ -106,6 +106,7 @@ $categoryMap = [
 
     // Health & Fitness
     'cycling.html' => 'Health & Fitness',
+    'er-triage.html' => 'Health & Fitness',
     'human-skeleton.html' => 'Health & Fitness',
     'medical-school-curriculum.html' => 'Health & Fitness',
     'running.html' => 'Health & Fitness',
