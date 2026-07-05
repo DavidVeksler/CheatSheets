@@ -116,26 +116,37 @@ $categoryMap = [
     'weightloss-cheatsheet.html' => 'Health & Fitness',
 
     // Philosophy & Religion
+    'anatta-not-self.html' => 'Philosophy & Religion',
     'anapanasati-mindfulness-of-breathing.html' => 'Philosophy & Religion',
+    'anger-buddhist-cognitive-debugging.html' => 'Philosophy & Religion',
+    'buddhism-core-principles.html' => 'Philosophy & Religion',
     'buddhism.html' => 'Philosophy & Religion',
+    'buddhist-work-leadership.html' => 'Philosophy & Religion',
     'capitalism.html' => 'Philosophy & Religion',
     'conscious-leadership-contexts.html' => 'Philosophy & Religion',
+    'craving-desire-habit-loops.html' => 'Philosophy & Religion',
+    'etz-chaim-tree-of-life.html' => 'Philosophy & Religion',
+    'five-hindrances-debugger.html' => 'Philosophy & Religion',
     'islam.html' => 'Philosophy & Religion',
     'israel-history.html' => 'Philosophy & Religion',
     'judaism.html' => 'Philosophy & Religion',
     'leadership.html' => 'Philosophy & Religion',
     'objectivism.html' => 'Philosophy & Religion',
+    'right-speech-modern-life.html' => 'Philosophy & Religion',
+    'satipatthana-four-foundations.html' => 'Philosophy & Religion',
     'shabbat-services-cheatsheet.html' => 'Philosophy & Religion',
 
     // Engineering & Science
     'automotive-innovation-timeline.html' => 'Engineering & Science',
     'boom-supersonic.html' => 'Engineering & Science',
+    'data-center-myths.html' => 'Engineering & Science',
     'engineering-materials-future.html' => 'Engineering & Science',
     'engineering-metals-selection.html' => 'Engineering & Science',
     'geoengineering-approaches.html' => 'Engineering & Science',
     'human-evolution.html' => 'Engineering & Science',
     'humanoid-robots.html' => 'Engineering & Science',
     'orbital-rockets-comparison.html' => 'Engineering & Science',
+    'stellar-lifecycle.html' => 'Engineering & Science',
     'tesla-products.html' => 'Engineering & Science',
 
     // Home & Lifestyle
