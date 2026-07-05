@@ -74,6 +74,9 @@ $categoryMap = [
     'post-quantum-cryptography.html' => 'Security & Privacy',
     'privacy-data-broker-opt-out.html' => 'Security & Privacy',
 
+    // Risk & Preparedness
+    'actual-risk-dashboard.html' => 'Risk & Preparedness',
+
     // Bitcoin & Finance
     'bitcoin-exchanges-cards.html' => 'Bitcoin & Finance',
     'bitcoin-self-custody-guide.html' => 'Bitcoin & Finance',
@@ -160,6 +163,7 @@ $categoryMap = [
     'hot-tub-treatment.html' => 'Home & Lifestyle',
     'living-richly-guide.html' => 'Home & Lifestyle',
     'samsung-bespoke-oven-guide.html' => 'Home & Lifestyle',
+    'the-household-numbers.html' => 'Home & Lifestyle',
 
     // Life Admin & Consumer Defense
     'auto-repair-decoder.html' => 'Life Admin & Consumer Defense',
@@ -174,6 +178,7 @@ $categoryStyles = [
     'AI & Safety'             => ['color' => '#0891b2', 'bg' => '#cffafe', 'icon' => 'bi-robot'],
     'Software & DevOps'       => ['color' => '#4338ca', 'bg' => '#e0e7ff', 'icon' => 'bi-terminal-fill'],
     'Security & Privacy'      => ['color' => '#dc2626', 'bg' => '#fee2e2', 'icon' => 'bi-shield-lock-fill'],
+    'Risk & Preparedness'     => ['color' => '#0f766e', 'bg' => '#ccfbf1', 'icon' => 'bi-activity'],
     'Bitcoin & Finance'       => ['color' => '#d97706', 'bg' => '#fef3c7', 'icon' => 'bi-currency-bitcoin'],
     'Martial Arts & Strategy' => ['color' => '#9f1239', 'bg' => '#ffe4e6', 'icon' => 'bi-person-arms-up'],
     'Firearms & Military'     => ['color' => '#3f6212', 'bg' => '#ecfccb', 'icon' => 'bi-crosshair2'],

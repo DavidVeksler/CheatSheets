@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Actual Risk Dashboard: What Kills People, in Micromorts</title>
+  <meta name="description" content="Everyday risk in micromorts on one dashboard: driving, skydiving, childbirth, anesthesia, what actually kills people by age, and the gap between real risks and headlines.">
+  <meta name="keywords" content="micromort, microlife, odds of dying, mortality risk, leading causes of death, risk perception, CDC WISQARS, NSC Injury Facts">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/actual-risk-dashboard.html">
+
+  <meta property="og:title" content="The Actual Risk Dashboard: What Kills People, in Micromorts">
+  <meta property="og:description" content="Rank everyday mortality risks in seconds, then compare them with what actually kills people at each age.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/actual-risk-dashboard.html">
+  <meta property="og:image" content="images/actual-risk-dashboard.png">
+  <meta property="og:image:alt" content="Dark log-scale micromort dashboard comparing everyday risks from commercial flight to base jumping.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Actual Risk Dashboard: What Kills People, in Micromorts">
+  <meta name="twitter:description" content="Everyday risk in micromorts, age-specific leading causes, chronic microlives, and perception gaps on one dashboard.">
+  <meta name="twitter:image" content="images/actual-risk-dashboard.png">
+  <meta name="twitter:creator" content="@heroiclife">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "The Actual Risk Dashboard: What Kills People, in Micromorts",
+    "description": "A decision-support dashboard for comparing everyday mortality risks in micromorts, chronic risks in microlives, leading causes of death by age, and the gap between real risk and media attention.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-05",
+    "dateModified": "2026-07-05",
+    "keywords": "micromort, microlife, odds of dying, mortality risk, leading causes of death, risk perception, CDC WISQARS"
+  }
+  </script>
+
+  <style>
+    @layer base, components, utilities;
+
+    @layer base {
+      :root {
+        color-scheme: dark light;
+        --bg: #071115;
+        --bg-top: #071115;
+        --glow: rgba(29, 214, 201, .22);
+        --panel: #0e1b22;
+        --panel-2: #13262f;
+        --text: #eaf7fb;
+        --muted: #9eb2bc;
+        --line: #28434e;
+        --link: #76f7df;
+        --teal: #1dd6c9;
+        --teal-2: #76f7df;
+        --red: #ff5b6e;
+        --amber: #ffcc66;
+        --violet: #a78bfa;
+        --green: #78df8e;
+        --blue: #64b5ff;
+        --shadow: 0 22px 70px rgba(0, 0, 0, .32);
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      [data-theme="light"] {
+        color-scheme: light;
+        --bg: #f4f8fb;
+        --bg-top: #eef7fa;
+        --glow: rgba(29, 214, 201, .18);
+        --panel: #ffffff;
+        --panel-2: #eef5f8;
+        --text: #101820;
+        --muted: #51606a;
+        --line: #cad8df;
+        --link: #006f78;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        --bs-body-color: var(--text);
+        --bs-heading-color: var(--text);
+        --bs-body-bg: var(--bg);
+        margin: 0;
+        background:
+          radial-gradient(circle at 18% 0%, var(--glow), transparent 34rem),
+          linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 42rem);
+        color: var(--text);
+        font-family: var(--sans);
+        text-wrap: pretty;
+      }
+
+      a {
+        color: var(--link);
+      }
+
+      h1, h2, h3 {
+        text-wrap: balance;
+        letter-spacing: 0;
+        color: var(--text);
+      }
+
+      h2 {
+        font-size: clamp(1.55rem, 1.1rem + 1.1vw, 2.25rem);
+      }
+
+      h3 {
+        font-size: 1.08rem;
+      }
+
+      table {
+        min-width: 760px;
+      }
+
+      th {
+        color: var(--text);
+        white-space: nowrap;
+      }
+
+      td {
+        color: var(--text);
+        vertical-align: top;
+      }
+
+      ::selection {
+        background: rgba(29, 214, 201, .35);
+      }
+    }
+
+    @layer components {
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        backdrop-filter: blur(16px);
+        background: color-mix(in oklab, var(--bg) 82%, transparent);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .nav-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: .45rem .72rem;
+        text-decoration: none;
+        color: var(--text);
+        background: color-mix(in oklab, var(--panel) 78%, transparent);
+        font-size: .9rem;
+      }
+
+      .hero {
+        padding: clamp(2rem, 4vw, 4.7rem) 0 2rem;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        gap: .55rem;
+        align-items: center;
+        color: var(--teal-2);
+        border: 1px solid color-mix(in oklab, var(--teal) 40%, var(--line));
+        background: color-mix(in oklab, var(--panel) 82%, transparent);
+        border-radius: 999px;
+        padding: .42rem .72rem;
+        font-size: .86rem;
+        font-weight: 700;
+      }
+
+      .hero-title {
+        max-width: 980px;
+        font-size: clamp(2.15rem, 1.05rem + 4vw, 5rem);
+        line-height: .98;
+        margin: 1.1rem 0 1rem;
+      }
+
+      .hero-title span {
+        color: var(--teal-2);
+      }
+
+      .hero-copy {
+        max-width: 860px;
+        color: var(--muted);
+        font-size: clamp(1.02rem, .9rem + .45vw, 1.3rem);
+      }
+
+      .stat-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: .75rem;
+        margin: 1.5rem 0;
+      }
+
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: .85rem;
+        background: color-mix(in oklab, var(--panel) 92%, transparent);
+      }
+
+      .stat strong {
+        display: block;
+        font-family: var(--mono);
+        font-size: 1.15rem;
+        color: var(--teal-2);
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: .82rem;
+      }
+
+      .dashboard-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: color-mix(in oklab, var(--panel) 94%, transparent);
+        box-shadow: var(--shadow);
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: color-mix(in oklab, var(--panel) 96%, transparent);
+        padding: clamp(1rem, 2vw, 1.4rem);
+      }
+
+      .chart-shell {
+        padding: 1.1rem;
+        overflow: hidden;
+      }
+
+      .axis {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        font-family: var(--mono);
+        font-size: .72rem;
+        color: var(--muted);
+        margin: .4rem 0 .8rem;
+      }
+
+      .risk-row {
+        display: grid;
+        grid-template-columns: minmax(8rem, 16rem) minmax(14rem, 1fr) 6.8rem;
+        gap: .75rem;
+        align-items: center;
+        min-height: 2.4rem;
+        border-top: 1px solid color-mix(in oklab, var(--line) 70%, transparent);
+        padding: .35rem 0;
+      }
+
+      .risk-name {
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .track {
+        position: relative;
+        height: 14px;
+        border-radius: 999px;
+        background: repeating-linear-gradient(90deg, color-mix(in oklab, var(--line) 55%, transparent), color-mix(in oklab, var(--line) 55%, transparent) 1px, transparent 1px, transparent 20%);
+        overflow: hidden;
+      }
+
+      .fill {
+        width: var(--w);
+        min-width: 2px;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--teal), var(--amber), var(--red));
+        box-shadow: 0 0 18px color-mix(in oklab, var(--teal) 45%, transparent);
+      }
+
+      .unit {
+        display: inline-flex;
+        align-items: center;
+        gap: .22rem;
+        border: 1px solid color-mix(in oklab, var(--teal) 45%, var(--line));
+        border-radius: 999px;
+        padding: .12rem .42rem;
+        background: color-mix(in oklab, var(--teal) 10%, var(--panel));
+        color: var(--teal-2);
+        font-family: var(--mono);
+        font-size: .82rem;
+        white-space: nowrap;
+      }
+
+      .risk-value {
+        font-family: var(--mono);
+        color: var(--text);
+        text-align: right;
+      }
+
+      .section {
+        padding: clamp(2rem, 4vw, 4.2rem) 0;
+      }
+
+      .section-kicker {
+        color: var(--teal-2);
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        font-size: .78rem;
+      }
+
+      .table-wrap {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow-x: auto;
+        background: var(--panel);
+      }
+
+      .risk-table {
+        margin: 0;
+        font-size: .92rem;
+      }
+
+      .risk-table thead th {
+        background: color-mix(in oklab, var(--panel-2) 90%, transparent);
+        border-bottom-color: var(--line);
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      .risk-table tbody tr:hover {
+        background: color-mix(in oklab, var(--teal) 8%, transparent);
+      }
+
+      .sort-btn {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        padding: 0;
+        font: inherit;
+        font-weight: 800;
+      }
+
+      .source-note {
+        color: var(--muted);
+        font-size: .86rem;
+      }
+
+      .heatmap {
+        min-width: 980px;
+        border-collapse: separate;
+        border-spacing: 3px;
+        font-size: .78rem;
+      }
+
+      .heatmap th,
+      .heatmap td {
+        border: 0;
+        padding: .45rem .35rem;
+      }
+
+      .heatmap thead th {
+        text-align: center;
+        background: color-mix(in oklab, var(--panel-2) 92%, transparent);
+      }
+
+      .cause-label {
+        width: 11rem;
+        font-weight: 800;
+        background: color-mix(in oklab, var(--panel-2) 92%, transparent);
+      }
+
+      .hm-cell {
+        text-align: center;
+        border-radius: 5px;
+        color: #061114;
+        font-family: var(--mono);
+        min-width: 4.9rem;
+      }
+
+      .r1 { background: #1dd6c9; }
+      .r2 { background: #64e2c6; }
+      .r3 { background: #a4e5a8; }
+      .r4 { background: #ffcc66; }
+      .r5 { background: #ff9f70; }
+      .r0 { background: color-mix(in oklab, var(--line) 28%, transparent); color: var(--muted); }
+      .age-focus {
+        outline: 2px solid var(--violet);
+        outline-offset: -2px;
+      }
+
+      .gap-row {
+        display: grid;
+        grid-template-columns: minmax(8rem, 13rem) 1fr 1fr;
+        gap: .75rem;
+        align-items: center;
+        border-top: 1px solid var(--line);
+        padding: .55rem 0;
+      }
+
+      .gap-bars {
+        display: grid;
+        gap: .28rem;
+      }
+
+      .gap-bar {
+        display: grid;
+        grid-template-columns: 4.3rem 1fr 3.5rem;
+        gap: .4rem;
+        align-items: center;
+        font-family: var(--mono);
+        font-size: .78rem;
+      }
+
+      .bar-track {
+        height: 10px;
+        border-radius: 999px;
+        background: color-mix(in oklab, var(--line) 45%, transparent);
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        height: 100%;
+        width: var(--w);
+        border-radius: 999px;
+      }
+
+      .real { background: var(--teal); }
+      .coverage { background: var(--red); }
+
+      .lever-list {
+        display: grid;
+        gap: .8rem;
+      }
+
+      .lever {
+        display: grid;
+        grid-template-columns: 3.5rem 1fr;
+        gap: .85rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: .9rem;
+        background: color-mix(in oklab, var(--panel) 92%, transparent);
+      }
+
+      .lever-rank {
+        font-family: var(--mono);
+        font-weight: 900;
+        color: var(--teal-2);
+        font-size: 1.2rem;
+      }
+
+      details {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: .9rem 1rem;
+        background: color-mix(in oklab, var(--panel) 94%, transparent);
+      }
+
+      details + details {
+        margin-top: .75rem;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      .source-list li {
+        margin-bottom: .55rem;
+      }
+
+      .theme-toggle {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--panel);
+        color: var(--text);
+        padding: .45rem .65rem;
+      }
+    }
+
+    @layer utilities {
+      .text-muted-2 { color: var(--muted); }
+      .mono { font-family: var(--mono); }
+      .border-line { border-color: var(--line) !important; }
+      .print-only { display: none; }
+    }
+
+    @media (max-width: 760px) {
+      .stat-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .risk-row {
+        grid-template-columns: 1fr;
+        gap: .25rem;
+      }
+
+      .risk-value {
+        text-align: left;
+      }
+
+      .gap-row {
+        grid-template-columns: 1fr;
+      }
+
+      .lever {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        color: #111;
+      }
+
+      .topbar, .theme-toggle {
+        display: none !important;
+      }
+
+      .dashboard-card, .panel, details {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+
+      details {
+        display: block;
+      }
+
+      details > * {
+        display: block;
+      }
+
+      .print-only {
+        display: block;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .fill, .bar-fill, .nav-pill, .theme-toggle {
+        transition: width .25s ease, transform .2s ease, border-color .2s ease;
+      }
+
+      .nav-pill:hover,
+      .theme-toggle:hover {
+        transform: translateY(-1px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="topbar py-2" aria-label="Page navigation">
+    <div class="container d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <a class="nav-pill" href="index.php"><i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i> All cheatsheets</a>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="nav-pill" href="#activity-table">Activities</a>
+        <a class="nav-pill" href="#age-map">Age map</a>
+        <a class="nav-pill" href="#perception-gap">Perception gap</a>
+        <a class="nav-pill" href="#levers">Levers</a>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle color theme"><i class="bi bi-moon-stars" aria-hidden="true"></i></button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="container">
+        <div class="eyebrow"><i class="bi bi-activity" aria-hidden="true"></i> US mortality dashboard · Last verified: 2026-07-05</div>
+        <h1 class="hero-title">The Actual Risk Dashboard <span>— Everyday Risk in Micromorts</span></h1>
+        <p class="hero-copy">A micromort is a one-in-a-million chance of death. This page converts the risks people argue about into one unit, then checks them against what actually kills Americans by age.</p>
+
+        <div class="stat-strip" aria-label="Micromort mental model">
+          <div class="stat"><strong>1 µ☠</strong><span>one chance in 1,000,000 of death</span></div>
+          <div class="stat"><strong>~12 µ☠</strong><span>1,000 US road miles at the 2024 national fatality rate</span></div>
+          <div class="stat"><strong>4.6 µ☠</strong><span>one US skydive in the 2025 USPA aggregate</span></div>
+          <div class="stat"><strong>30 min</strong><span>one microlife: life expectancy gained or lost</span></div>
+        </div>
+
+        <section class="dashboard-card chart-shell" aria-labelledby="chart-title">
+          <div class="d-flex flex-wrap justify-content-between gap-2 align-items-end">
+            <div>
+              <p class="section-kicker mb-1">Signature chart</p>
+              <h2 id="chart-title" class="h3 mb-1">Log-scale micromorts per exposure</h2>
+              <p class="source-note mb-0">Axis is logarithmic from 0.1 to 10,000 micromorts. A bar twice as wide is not twice the danger; it is much more.</p>
+            </div>
+            <span class="unit" aria-label="Micromorts unit">µ☠ micromorts</span>
+          </div>
+          <div class="axis" aria-hidden="true"><span>0.1</span><span>1</span><span>10</span><span>100</span><span>1,000</span><span>10,000</span></div>
+          <div class="risk-row">
+            <div class="risk-name">Commercial flight, 1,000 mi</div>
+            <div class="track"><div class="fill" style="--w: 12%;"></div></div>
+            <div class="risk-value">0.1</div>
+          </div>
+          <div class="risk-row">
+            <div class="risk-name">Driving, 1,000 mi</div>
+            <div class="track"><div class="fill" style="--w: 42%;"></div></div>
+            <div class="risk-value">12</div>
+          </div>
+          <div class="risk-row">
+            <div class="risk-name">Skydiving, 1 jump</div>
+            <div class="track"><div class="fill" style="--w: 33%;"></div></div>
+            <div class="risk-value">4.6</div>
+          </div>
+          <div class="risk-row">
+            <div class="risk-name">General anesthesia, operation</div>
+            <div class="track"><div class="fill" style="--w: 40%;"></div></div>
+            <div class="risk-value">10</div>
+          </div>
+          <div class="risk-row">
+            <div class="risk-name">Childbirth, US live birth</div>
+            <div class="track"><div class="fill" style="--w: 52%;"></div></div>
+            <div class="risk-value">18.6</div>
+          </div>
+          <div class="risk-row">
+            <div class="risk-name">Motorcycle, 1,000 mi</div>
+            <div class="track"><div class="fill" style="--w: 68%;"></div></div>
+            <div class="risk-value">~250</div>
+          </div>
+          <div class="risk-row">
+            <div class="risk-name">Base jump, 1 jump</div>
+            <div class="track"><div class="fill" style="--w: 73%;"></div></div>
+            <div class="risk-value">~430</div>
+          </div>
+        </section>
+      </div>
+    </header>
+
+    <section class="section pt-2" id="activity-table">
+      <div class="container">
+        <div class="row g-4 align-items-end mb-3">
+          <div class="col-lg-8">
+            <p class="section-kicker mb-1">Quick reference</p>
+            <h2>Everyday activities ranked in micromorts</h2>
+            <p class="text-muted-2 mb-0">Use this table to compare orders of magnitude. Travel risks are usually per distance; adventure risks are usually per event. Mixing those frames is how headlines mislead.</p>
+          </div>
+          <div class="col-lg-4">
+            <div class="panel">
+              <strong>Decision rule:</strong> compare the same unit first. Per-trip risk answers “Should I do this once?” Per-mile risk answers “Should this be my routine transport mode?”
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table table-dark table-hover risk-table sortable-table" id="riskTable">
+            <thead>
+              <tr>
+                <th><button class="sort-btn" type="button" data-sort="text">Activity</button></th>
+                <th><button class="sort-btn" type="button" data-sort="number">µ☠</button></th>
+                <th>Unit</th>
+                <th>Source year</th>
+                <th>Gotcha / when not to use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Commercial flight</td><td data-value="0.1"><span class="unit">0.1</span></td><td>per 1,000 passenger miles</td><td>IATA/NTSB, 2024; order of magnitude</td><td>Airport driving usually dominates the trip risk for short flights.</td></tr>
+              <tr><td>Lightning strike in the US</td><td data-value="0.06"><span class="unit">0.06</span></td><td>per person-year</td><td>NOAA 2014-2023 average</td><td>Annual averages hide weather exposure; leave ridgelines, fields, and water during storms.</td></tr>
+              <tr><td>Living, all US ages</td><td data-value="25"><span class="unit">~25</span></td><td>per day</td><td>NCHS/CDC 2024 crude mortality</td><td>Age dominates baseline: a healthy 25-year-old and an 85-year-old are not near this average.</td></tr>
+              <tr><td>Driving / riding in a motor vehicle</td><td data-value="12"><span class="unit">~12</span></td><td>per 1,000 vehicle miles</td><td>NHTSA 2024 fatality rate, 1.20 deaths / 100M VMT</td><td>Risk rises with speed, impairment, night driving, small vehicles, and rural roads.</td></tr>
+              <tr><td>Motorcycling</td><td data-value="250"><span class="unit">~250</span></td><td>per 1,000 motorcycle miles</td><td>NHTSA/NSC recent US rates</td><td>This is the standout everyday voluntary risk; helmet use changes injury severity, not the exposure base.</td></tr>
+              <tr><td>Walking near traffic</td><td data-value="40"><span class="unit">~40</span></td><td>per 1,000 miles walked</td><td>US pedestrian deaths and exposure estimates, 2020s</td><td>Useful for city design, not for a park walk; night arterial roads are a different risk class.</td></tr>
+              <tr><td>Cycling near traffic</td><td data-value="30"><span class="unit">~30</span></td><td>per 1,000 miles cycled</td><td>US cyclist deaths and exposure estimates, 2020s</td><td>Protected lanes and route choice move the number more than helmet debates do.</td></tr>
+              <tr><td>General aviation</td><td data-value="80"><span class="unit">~80</span></td><td>per 1,000 flight miles</td><td>NTSB general aviation accident data, recent decade</td><td>Private/piston operations are not comparable to scheduled airlines.</td></tr>
+              <tr><td>Skydiving</td><td data-value="4.6"><span class="unit">4.6</span></td><td>per jump</td><td>USPA 2025: 16 deaths / 3.47M jumps</td><td>Tandem, student, wingsuit, and canopy-piloting risks differ; this is the aggregate USPA rate.</td></tr>
+              <tr><td>Scuba diving</td><td data-value="5"><span class="unit">~5</span></td><td>per dive</td><td>DAN/Spiegelhalter historical estimates</td><td>Training, depth, solo diving, overhead environments, and cardiac risk change the denominator.</td></tr>
+              <tr><td>Base jumping</td><td data-value="430"><span class="unit">~430</span></td><td>per jump</td><td>BASE fatality studies, historical estimates</td><td>Small sample, strong selection effects, and site difficulty make precise averages fragile.</td></tr>
+              <tr><td>Marathon running</td><td data-value="7"><span class="unit">~7</span></td><td>per race</td><td>Spiegelhalter/large marathon registries</td><td>Deaths are rare, usually cardiac; training status matters more than the event label.</td></tr>
+              <tr><td>Downhill skiing / snowboarding</td><td data-value="0.7"><span class="unit">~0.7</span></td><td>per day</td><td>NSAA/Spiegelhalter historical estimates</td><td>Collision, tree wells, avalanche terrain, and speed shift risk more than resort averages show.</td></tr>
+              <tr><td>Horse riding</td><td data-value="0.5"><span class="unit">~0.5</span></td><td>per ride</td><td>Nutt “Equasy” comparison, 2009</td><td>The point is comparison: familiar risks can exceed stigmatized ones.</td></tr>
+              <tr><td>MDMA/ecstasy</td><td data-value="0.5"><span class="unit">~0.5</span></td><td>per use episode</td><td>Nutt drug-harm comparison, 2009</td><td>Purity, dose, overheating, mixing drugs, and medical vulnerability make the average unreliable for an individual.</td></tr>
+              <tr><td>US childbirth, maternal death</td><td data-value="18.6"><span class="unit">18.6</span></td><td>per live birth</td><td>CDC/NCHS 2023 maternal mortality rate</td><td>Age, race, chronic disease, access to care, and definition windows matter; this is population-level decision support.</td></tr>
+              <tr><td>General anesthesia</td><td data-value="10"><span class="unit">~10</span></td><td>per anesthetic</td><td>Modern anesthesia safety literature, order of magnitude</td><td>Surgical risk is often much larger than anesthesia-only risk; emergency and frail-patient cases are different.</td></tr>
+              <tr><td>Ladder work at home</td><td data-value="2"><span class="unit">~2</span></td><td>per serious ladder session</td><td>NSC/CDC fall injury data, rough conversion</td><td>For older adults, roof and ladder falls are not “minor household chores.”</td></tr>
+              <tr><td>Bathing / bathtub drowning</td><td data-value="0.4"><span class="unit">~0.4</span></td><td>per year for average adult</td><td>CDC WONDER/NSC drowning data, recent years</td><td>Risk concentrates in toddlers, older adults, intoxication, and seizure/syncope history.</td></tr>
+              <tr><td>Heat exposure</td><td data-value="5"><span class="unit">~5</span></td><td>per hot-season year for high-risk people</td><td>CDC heat mortality, 2020s</td><td>Average annual risk is small; heat waves make risk local, acute, and unequal.</td></tr>
+              <tr><td>Fire / smoke at home</td><td data-value="9"><span class="unit">~9</span></td><td>per US person-year</td><td>NSC Injury Facts, recent years</td><td>Working smoke alarms and not smoking indoors are the large levers.</td></tr>
+              <tr><td>Firearm homicide exposure</td><td data-value="55"><span class="unit">~55</span></td><td>per US person-year</td><td>CDC 2024 homicide/firearm mortality context</td><td>Not evenly distributed: geography, relationships, age, and violence exposure dominate.</td></tr>
+              <tr><td>Drug poisoning / overdose exposure</td><td data-value="270"><span class="unit">~270</span></td><td>per US person-year in peak-risk adult groups</td><td>CDC 2024 preventable injury pattern</td><td>A population average is misleading; opioid/stimulant exposure is the risk switch.</td></tr>
+              <tr><td>Backcountry hiking</td><td data-value="1"><span class="unit">~1</span></td><td>per long day</td><td>Search-and-rescue / park-service order of magnitude</td><td>Weather, terrain, water crossings, solo travel, and navigation errors drive most risk.</td></tr>
+              <tr><td>Seasonal influenza infection</td><td data-value="100"><span class="unit">~100</span></td><td>per infection for older/high-risk adult</td><td>CDC flu burden ranges, recent seasons</td><td>Age and comorbidity matter; this is not a healthy-child estimate.</td></tr>
+              <tr><td>COVID-19 infection</td><td data-value="20"><span class="unit">variable</span></td><td>per infection, age/vaccine dependent</td><td>CDC surveillance, current-era framing</td><td>Do not use a single number across ages; vaccination, prior infection, and variant period dominate.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="source-note mt-2">Values are rounded to comparison precision. “~” means the source supports the order of magnitude better than a stable universal rate.</p>
+      </div>
+    </section>
+
+    <section class="section" id="age-map">
+      <div class="container">
+        <div class="row g-4 mb-3">
+          <div class="col-lg-8">
+            <p class="section-kicker mb-1">Base rates</p>
+            <h2>What actually kills people, by age bracket</h2>
+            <p class="text-muted-2 mb-0">CDC/NSC 2024 leading-cause rankings show the lifecycle pattern: congenital causes and injury early, suicide/homicide/overdose in youth and midlife, then cancer, heart disease, stroke, Alzheimer’s, and respiratory disease later.</p>
+          </div>
+          <div class="col-lg-4">
+            <label class="form-label fw-bold" for="ageSelector">Highlight age bracket</label>
+            <select class="form-select" id="ageSelector">
+              <option value="">None</option>
+              <option value="age-0">0-1</option>
+              <option value="age-1">1-4</option>
+              <option value="age-5">5-9</option>
+              <option value="age-10">10-14</option>
+              <option value="age-15">15-24</option>
+              <option value="age-25">25-34</option>
+              <option value="age-35">35-44</option>
+              <option value="age-45">45-54</option>
+              <option value="age-55">55-64</option>
+              <option value="age-65">65-74</option>
+              <option value="age-75">75-84</option>
+              <option value="age-85">85+</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="heatmap" aria-describedby="age-map-note">
+            <thead>
+              <tr><th>Cause</th><th class="age-0">0-1</th><th class="age-1">1-4</th><th class="age-5">5-9</th><th class="age-10">10-14</th><th class="age-15">15-24</th><th class="age-25">25-34</th><th class="age-35">35-44</th><th class="age-45">45-54</th><th class="age-55">55-64</th><th class="age-65">65-74</th><th class="age-75">75-84</th><th class="age-85">85+</th></tr>
+            </thead>
+            <tbody>
+              <tr><th class="cause-label">Preventable injury</th><td class="hm-cell r4 age-0">4</td><td class="hm-cell r1 age-1">1</td><td class="hm-cell r1 age-5">1</td><td class="hm-cell r1 age-10">1</td><td class="hm-cell r1 age-15">1</td><td class="hm-cell r1 age-25">1</td><td class="hm-cell r1 age-35">1</td><td class="hm-cell r3 age-45">3</td><td class="hm-cell r3 age-55">3</td><td class="hm-cell r0 age-65">—</td><td class="hm-cell r0 age-75">—</td><td class="hm-cell r0 age-85">—</td></tr>
+              <tr><th class="cause-label">Congenital anomalies</th><td class="hm-cell r1 age-0">1</td><td class="hm-cell r2 age-1">2</td><td class="hm-cell r3 age-5">3</td><td class="hm-cell r5 age-10">5</td><td class="hm-cell r0 age-15">—</td><td class="hm-cell r0 age-25">—</td><td class="hm-cell r0 age-35">—</td><td class="hm-cell r0 age-45">—</td><td class="hm-cell r0 age-55">—</td><td class="hm-cell r0 age-65">—</td><td class="hm-cell r0 age-75">—</td><td class="hm-cell r0 age-85">—</td></tr>
+              <tr><th class="cause-label">Short gestation / low birth weight</th><td class="hm-cell r2 age-0">2</td><td class="hm-cell r0 age-1">—</td><td class="hm-cell r0 age-5">—</td><td class="hm-cell r0 age-10">—</td><td class="hm-cell r0 age-15">—</td><td class="hm-cell r0 age-25">—</td><td class="hm-cell r0 age-35">—</td><td class="hm-cell r0 age-45">—</td><td class="hm-cell r0 age-55">—</td><td class="hm-cell r0 age-65">—</td><td class="hm-cell r0 age-75">—</td><td class="hm-cell r0 age-85">—</td></tr>
+              <tr><th class="cause-label">SIDS</th><td class="hm-cell r3 age-0">3</td><td class="hm-cell r0 age-1">—</td><td class="hm-cell r0 age-5">—</td><td class="hm-cell r0 age-10">—</td><td class="hm-cell r0 age-15">—</td><td class="hm-cell r0 age-25">—</td><td class="hm-cell r0 age-35">—</td><td class="hm-cell r0 age-45">—</td><td class="hm-cell r0 age-55">—</td><td class="hm-cell r0 age-65">—</td><td class="hm-cell r0 age-75">—</td><td class="hm-cell r0 age-85">—</td></tr>
+              <tr><th class="cause-label">Maternal pregnancy complications</th><td class="hm-cell r5 age-0">5</td><td class="hm-cell r0 age-1">—</td><td class="hm-cell r0 age-5">—</td><td class="hm-cell r0 age-10">—</td><td class="hm-cell r0 age-15">—</td><td class="hm-cell r0 age-25">—</td><td class="hm-cell r0 age-35">—</td><td class="hm-cell r0 age-45">—</td><td class="hm-cell r0 age-55">—</td><td class="hm-cell r0 age-65">—</td><td class="hm-cell r0 age-75">—</td><td class="hm-cell r0 age-85">—</td></tr>
+              <tr><th class="cause-label">Cancer</th><td class="hm-cell r0 age-0">—</td><td class="hm-cell r3 age-1">3</td><td class="hm-cell r2 age-5">2</td><td class="hm-cell r3 age-10">3</td><td class="hm-cell r4 age-15">4</td><td class="hm-cell r4 age-25">4</td><td class="hm-cell r3 age-35">3</td><td class="hm-cell r1 age-45">1</td><td class="hm-cell r1 age-55">1</td><td class="hm-cell r1 age-65">1</td><td class="hm-cell r1 age-75">1</td><td class="hm-cell r2 age-85">2</td></tr>
+              <tr><th class="cause-label">Homicide</th><td class="hm-cell r0 age-0">—</td><td class="hm-cell r4 age-1">4</td><td class="hm-cell r4 age-5">4</td><td class="hm-cell r4 age-10">4</td><td class="hm-cell r3 age-15">3</td><td class="hm-cell r3 age-25">3</td><td class="hm-cell r0 age-35">—</td><td class="hm-cell r0 age-45">—</td><td class="hm-cell r0 age-55">—</td><td class="hm-cell r0 age-65">—</td><td class="hm-cell r0 age-75">—</td><td class="hm-cell r0 age-85">—</td></tr>
+              <tr><th class="cause-label">Heart disease</th><td class="hm-cell r0 age-0">—</td><td class="hm-cell r5 age-1">5</td><td class="hm-cell r0 age-5">—</td><td class="hm-cell r0 age-10">—</td><td class="hm-cell r5 age-15">5</td><td class="hm-cell r5 age-25">5</td><td class="hm-cell r2 age-35">2</td><td class="hm-cell r2 age-45">2</td><td class="hm-cell r2 age-55">2</td><td class="hm-cell r2 age-65">2</td><td class="hm-cell r2 age-75">2</td><td class="hm-cell r1 age-85">1</td></tr>
+              <tr><th class="cause-label">Influenza / pneumonia</th><td class="hm-cell r0 age-0">—</td><td class="hm-cell r0 age-1">—</td><td class="hm-cell r5 age-5">5</td><td class="hm-cell r0 age-10">—</td><td class="hm-cell r0 age-15">—</td><td class="hm-cell r0 age-25">—</td><td class="hm-cell r0 age-35">—</td><td class="hm-cell r0 age-45">—</td><td class="hm-cell r0 age-55">—</td><td class="hm-cell r0 age-65">—</td><td class="hm-cell r0 age-75">—</td><td class="hm-cell r0 age-85">—</td></tr>
+              <tr><th class="cause-label">Suicide</th><td class="hm-cell r0 age-0">—</td><td class="hm-cell r0 age-1">—</td><td class="hm-cell r0 age-5">—</td><td class="hm-cell r2 age-10">2</td><td class="hm-cell r2 age-15">2</td><td class="hm-cell r2 age-25">2</td><td class="hm-cell r4 age-35">4</td><td class="hm-cell r5 age-45">5</td><td class="hm-cell r0 age-55">—</td><td class="hm-cell r0 age-65">—</td><td class="hm-cell r0 age-75">—</td><td class="hm-cell r0 age-85">—</td></tr>
+              <tr><th class="cause-label">Liver disease</th><td class="hm-cell r0 age-0">—</td><td class="hm-cell r0 age-1">—</td><td class="hm-cell r0 age-5">—</td><td class="hm-cell r0 age-10">—</td><td class="hm-cell r0 age-15">—</td><td class="hm-cell r0 age-25">—</td><td class="hm-cell r5 age-35">5</td><td class="hm-cell r4 age-45">4</td><td class="hm-cell r0 age-55">—</td><td class="hm-cell r0 age-65">—</td><td class="hm-cell r0 age-75">—</td><td class="hm-cell r0 age-85">—</td></tr>
+              <tr><th class="cause-label">Diabetes</th><td class="hm-cell r0 age-0">—</td><td class="hm-cell r0 age-1">—</td><td class="hm-cell r0 age-5">—</td><td class="hm-cell r0 age-10">—</td><td class="hm-cell r0 age-15">—</td><td class="hm-cell r0 age-25">—</td><td class="hm-cell r0 age-35">—</td><td class="hm-cell r0 age-45">—</td><td class="hm-cell r4 age-55">4</td><td class="hm-cell r5 age-65">5</td><td class="hm-cell r0 age-75">—</td><td class="hm-cell r0 age-85">—</td></tr>
+              <tr><th class="cause-label">Chronic lower respiratory disease</th><td class="hm-cell r0 age-0">—</td><td class="hm-cell r0 age-1">—</td><td class="hm-cell r0 age-5">—</td><td class="hm-cell r0 age-10">—</td><td class="hm-cell r0 age-15">—</td><td class="hm-cell r0 age-25">—</td><td class="hm-cell r0 age-35">—</td><td class="hm-cell r0 age-45">—</td><td class="hm-cell r5 age-55">5</td><td class="hm-cell r3 age-65">3</td><td class="hm-cell r3 age-75">3</td><td class="hm-cell r5 age-85">5</td></tr>
+              <tr><th class="cause-label">Stroke</th><td class="hm-cell r0 age-0">—</td><td class="hm-cell r0 age-1">—</td><td class="hm-cell r0 age-5">—</td><td class="hm-cell r0 age-10">—</td><td class="hm-cell r0 age-15">—</td><td class="hm-cell r0 age-25">—</td><td class="hm-cell r0 age-35">—</td><td class="hm-cell r0 age-45">—</td><td class="hm-cell r0 age-55">—</td><td class="hm-cell r4 age-65">4</td><td class="hm-cell r4 age-75">4</td><td class="hm-cell r3 age-85">3</td></tr>
+              <tr><th class="cause-label">Alzheimer's disease</th><td class="hm-cell r0 age-0">—</td><td class="hm-cell r0 age-1">—</td><td class="hm-cell r0 age-5">—</td><td class="hm-cell r0 age-10">—</td><td class="hm-cell r0 age-15">—</td><td class="hm-cell r0 age-25">—</td><td class="hm-cell r0 age-35">—</td><td class="hm-cell r0 age-45">—</td><td class="hm-cell r0 age-55">—</td><td class="hm-cell r0 age-65">—</td><td class="hm-cell r5 age-75">5</td><td class="hm-cell r4 age-85">4</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="source-note mt-2" id="age-map-note">Rank numbers are CDC/NSC WISQARS-style 2024 rankings; “preventable injury” includes drug poisoning, motor-vehicle, falls, drowning, and other external causes. Falls become one of the dominant preventable-injury mechanisms after 65 even when all-cause tables are led by chronic disease.</p>
+      </div>
+    </section>
+
+    <section class="section" id="perception-gap">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <p class="section-kicker mb-1">Perception vs. reality</p>
+            <h2>The headline filter reverses the risk ranking</h2>
+            <p class="text-muted-2">Our World in Data summarized a media-coverage study comparing actual US deaths with attention in news and search. Violent, intentional, rare, and vivid causes dominate attention; chronic and mundane causes dominate death.</p>
+            <div class="panel">
+              <strong>Interpretation:</strong> do not read coverage share as current media share. It is a study snapshot that demonstrates direction and magnitude of bias, not this week’s news diet.
+            </div>
+          </div>
+          <div class="col-lg-7">
+            <div class="dashboard-card p-3">
+              <div class="gap-row fw-bold"><div>Cause</div><div>Actual US death share</div><div>News/search attention share</div></div>
+              <div class="gap-row"><div>Heart disease</div><div class="gap-bar"><span>real</span><span class="bar-track"><span class="bar-fill real" style="--w: 30%;"></span></span><span>~30%</span></div><div class="gap-bar"><span>attention</span><span class="bar-track"><span class="bar-fill coverage" style="--w: 3%;"></span></span><span>low</span></div></div>
+              <div class="gap-row"><div>Cancer</div><div class="gap-bar"><span>real</span><span class="bar-track"><span class="bar-fill real" style="--w: 29%;"></span></span><span>~29%</span></div><div class="gap-bar"><span>attention</span><span class="bar-track"><span class="bar-fill coverage" style="--w: 14%;"></span></span><span>med</span></div></div>
+              <div class="gap-row"><div>Stroke</div><div class="gap-bar"><span>real</span><span class="bar-track"><span class="bar-fill real" style="--w: 7%;"></span></span><span>~7%</span></div><div class="gap-bar"><span>attention</span><span class="bar-track"><span class="bar-fill coverage" style="--w: 1%;"></span></span><span>low</span></div></div>
+              <div class="gap-row"><div>Drug poisoning</div><div class="gap-bar"><span>real</span><span class="bar-track"><span class="bar-fill real" style="--w: 5%;"></span></span><span>high</span></div><div class="gap-bar"><span>attention</span><span class="bar-track"><span class="bar-fill coverage" style="--w: 3%;"></span></span><span>var.</span></div></div>
+              <div class="gap-row"><div>Falls</div><div class="gap-bar"><span>real</span><span class="bar-track"><span class="bar-fill real" style="--w: 4%;"></span></span><span>high</span></div><div class="gap-bar"><span>attention</span><span class="bar-track"><span class="bar-fill coverage" style="--w: 1%;"></span></span><span>low</span></div></div>
+              <div class="gap-row"><div>Drowning</div><div class="gap-bar"><span>real</span><span class="bar-track"><span class="bar-fill real" style="--w: 1%;"></span></span><span>low</span></div><div class="gap-bar"><span>attention</span><span class="bar-track"><span class="bar-fill coverage" style="--w: 2%;"></span></span><span>low</span></div></div>
+              <div class="gap-row"><div>Homicide</div><div class="gap-bar"><span>real</span><span class="bar-track"><span class="bar-fill real" style="--w: 1%;"></span></span><span>~1%</span></div><div class="gap-bar"><span>attention</span><span class="bar-track"><span class="bar-fill coverage" style="--w: 24%;"></span></span><span>high</span></div></div>
+              <div class="gap-row"><div>Terrorism</div><div class="gap-bar"><span>real</span><span class="bar-track"><span class="bar-fill real" style="--w: .2%;"></span></span><span>tiny</span></div><div class="gap-bar"><span>attention</span><span class="bar-track"><span class="bar-fill coverage" style="--w: 34%;"></span></span><span>huge</span></div></div>
+              <div class="gap-row"><div>Air crashes</div><div class="gap-bar"><span>real</span><span class="bar-track"><span class="bar-fill real" style="--w: .2%;"></span></span><span>tiny</span></div><div class="gap-bar"><span>attention</span><span class="bar-track"><span class="bar-fill coverage" style="--w: 5%;"></span></span><span>salient</span></div></div>
+              <div class="gap-row"><div>Sharks</div><div class="gap-bar"><span>real</span><span class="bar-track"><span class="bar-fill real" style="--w: .1%;"></span></span><span>near 0</span></div><div class="gap-bar"><span>attention</span><span class="bar-track"><span class="bar-fill coverage" style="--w: 2%;"></span></span><span>memetic</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="microlives">
+      <div class="container">
+        <div class="row g-4 align-items-start">
+          <div class="col-lg-4">
+            <p class="section-kicker mb-1">Chronic risk</p>
+            <h2>Microlives: 30-minute chunks of life expectancy</h2>
+            <p class="text-muted-2">Micromorts fit acute events. Microlives fit chronic habits. They are population averages, not destiny for a single person.</p>
+          </div>
+          <div class="col-lg-8">
+            <div class="table-wrap">
+              <table class="table table-dark risk-table">
+                <thead><tr><th>Habit or exposure</th><th>Microlife estimate</th><th>Example</th><th>Gotcha</th></tr></thead>
+                <tbody>
+                  <tr><td>Smoking</td><td>−1 per 2 cigarettes</td><td>A 10-cigarette day is roughly −5 microlives, about 2.5 hours of life expectancy.</td><td>Quitting benefits start quickly, but lifetime pack-years still matter.</td></tr>
+                  <tr><td>Alcohol</td><td>small negative above low intake</td><td>One drink is no longer framed as clearly protective; heavy intake compounds cancer, liver, injury, and sleep risk.</td><td>The old J-curve is disputed because of confounding and “sick quitter” bias.</td></tr>
+                  <tr><td>Sedentary time</td><td>−1 to −2 per long sitting day</td><td>Ten seated hours with no exercise is meaningfully worse than a day with movement breaks.</td><td>Exercise helps but may not fully erase extreme sitting.</td></tr>
+                  <tr><td>Processed meat</td><td>negative, dose dependent</td><td>Daily processed meat shifts colorectal and cardiovascular risk over years.</td><td>Do not convert a sandwich into a precise death probability.</td></tr>
+                  <tr><td>PM2.5 air pollution</td><td>negative per chronic µg/m³</td><td>A long-term move from 5 to 15 µg/m³ annual PM2.5 meaningfully raises cardiopulmonary risk.</td><td>Short wildfire spikes and chronic annual averages are different exposure frames.</td></tr>
+                  <tr><td>Obesity</td><td>negative at high BMI / central adiposity</td><td>Waist circumference plus metabolic markers is more informative than BMI alone.</td><td>Fitness, age, disease, and weight history change individual risk.</td></tr>
+                  <tr><td>Loneliness / isolation</td><td>negative, similar scale to familiar chronic risks</td><td>A socially isolated older adult has higher mortality risk even after many health adjustments.</td><td>Measurement is noisy; loneliness is not the same as solitude.</td></tr>
+                  <tr><td>Exercise</td><td>positive, strongest from none to some</td><td>Moving from inactive to brisk walking most days can add multiple microlives per day.</td><td>The marginal benefit shrinks at high training volumes.</td></tr>
+                  <tr><td>Sleep 7-8 hours</td><td>positive vs. chronic short sleep</td><td>Consistent 5-hour nights raise metabolic, cardiovascular, accident, and mood risks.</td><td>Sleep quality and apnea matter; time in bed is not the same as sleep.</td></tr>
+                  <tr><td>Statins for high-risk groups</td><td>positive when baseline cardiovascular risk is high</td><td>A person with prior heart attack has a much larger absolute benefit than a low-risk 30-year-old.</td><td>This is not prescribing advice; absolute risk and side effects decide the case.</td></tr>
+                  <tr><td>Blood pressure control</td><td>positive at sustained hypertension</td><td>Lowering persistently high systolic pressure reduces stroke and heart-failure risk.</td><td>Low-risk people with normal BP cannot get the same benefit.</td></tr>
+                  <tr><td>Vaccination in high-risk groups</td><td>positive, event-prevention framed</td><td>Influenza/COVID vaccination mainly matters by preventing infection complications in older or high-risk adults.</td><td>Use current CDC schedules; risk-benefit depends on age and immune status.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="source-note mt-2">Microlife framing follows Spiegelhalter’s BMJ work; examples are rounded decision-support translations, not clinical instructions.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="levers">
+      <div class="container">
+        <p class="section-kicker mb-1">Payoff</p>
+        <h2>The levers ranked: what should you actually do?</h2>
+        <p class="text-muted-2 col-lg-9">This is not medical advice. It is a base-rate checklist: prioritize high-exposure, high-mortality, controllable risks before rare vivid fears.</p>
+        <div class="lever-list mt-3">
+          <div class="lever"><div class="lever-rank">01</div><div><h3>Do not make motorcycles your routine transport.</h3><p class="mb-0 text-muted-2">Replacing 10,000 motorcycle miles with ordinary car miles can save thousands of micromorts per year. This dwarfs most risks people debate.</p></div></div>
+          <div class="lever"><div class="lever-rank">02</div><div><h3>Cut impaired, distracted, late-night, and high-speed driving.</h3><p class="mb-0 text-muted-2">The national per-mile rate is an average; the tails are dominated by behavior, speed, road type, and vehicle crashworthiness.</p></div></div>
+          <div class="lever"><div class="lever-rank">03</div><div><h3>After 60, treat falls like a real hazard.</h3><p class="mb-0 text-muted-2">Ladders, roofs, stairs, bathtubs, sedatives, poor lighting, and weak legs are mundane but high-yield targets.</p></div></div>
+          <div class="lever"><div class="lever-rank">04</div><div><h3>Do not smoke; if you do, reduce and quit.</h3><p class="mb-0 text-muted-2">Microlives make the compounding visible: small daily losses accumulate into years.</p></div></div>
+          <div class="lever"><div class="lever-rank">05</div><div><h3>Fix sleep apnea and chronic short sleep.</h3><p class="mb-0 text-muted-2">This hits cardiovascular risk, crash risk, mood, and metabolic health at once.</p></div></div>
+          <div class="lever"><div class="lever-rank">06</div><div><h3>Know your cardiovascular baseline.</h3><p class="mb-0 text-muted-2">Blood pressure, lipids, diabetes, kidney disease, and prior events determine whether interventions have large absolute benefit.</p></div></div>
+          <div class="lever"><div class="lever-rank">07</div><div><h3>Move from inactive to active.</h3><p class="mb-0 text-muted-2">The first 150 minutes/week of moderate activity beats almost every supplement and many elaborate optimization rituals.</p></div></div>
+          <div class="lever"><div class="lever-rank">08</div><div><h3>Use boring layers: smoke alarms, seat belts, helmets, naloxone where relevant.</h3><p class="mb-0 text-muted-2">The best risk controls are often cheap, passive, and unglamorous.</p></div></div>
+          <div class="lever"><div class="lever-rank">09</div><div><h3>Respect heat, water, and drugs more than strangers and sharks.</h3><p class="mb-0 text-muted-2">Heat waves, pools, opioids, alcohol, and familiar settings kill more Americans than cinematic threats.</p></div></div>
+          <div class="lever"><div class="lever-rank">10</div><div><h3>Buy insurance for ruin, not for fear.</h3><p class="mb-0 text-muted-2">Risk in dollars is not the same as risk in micromorts, but the logic matches: insure catastrophic loss; self-insure annoyances.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="mistakes">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <p class="section-kicker mb-1">Common mistakes</p>
+            <h2>Risk traps that make smart people wrong</h2>
+          </div>
+          <div class="col-lg-8">
+            <details name="mistakes" open>
+              <summary>Relative risk without absolute risk</summary>
+              <p class="mb-0 text-muted-2 mt-2">“Doubles your risk” is meaningless until you know whether the baseline is 1 in 10 or 1 in 10,000,000. Convert to micromorts or annual absolute risk before reacting.</p>
+            </details>
+            <details name="mistakes">
+              <summary>Per-trip vs. per-mile framing</summary>
+              <p class="mb-0 text-muted-2 mt-2">Flights look terrifying per event and safe per mile. Walking looks safe per trip and less safe beside fast traffic per mile. Pick the frame that matches the decision.</p>
+            </details>
+            <details name="mistakes">
+              <summary>Base-rate neglect</summary>
+              <p class="mb-0 text-muted-2 mt-2">The question is not “Can this happen?” It is “How often does this happen in the exposed population compared with the alternatives?”</p>
+            </details>
+            <details name="mistakes">
+              <summary>Dread risk beats chronic risk emotionally</summary>
+              <p class="mb-0 text-muted-2 mt-2">Terrorism, air crashes, kidnapping, and sharks are vivid. Heart disease, falls, overdose, heat, and routine driving are statistically larger.</p>
+            </details>
+            <details name="mistakes">
+              <summary>Averaging away who is exposed</summary>
+              <p class="mb-0 text-muted-2 mt-2">Population averages are bad personal forecasts when exposure is concentrated: opioid users, motorcyclists, frail elders, pilots, and backcountry travelers are not average.</p>
+            </details>
+            <details name="mistakes">
+              <summary>Confusing decision support with medical advice</summary>
+              <p class="mb-0 text-muted-2 mt-2">A microlife estimate can show where the large effects live. It cannot decide a treatment, pregnancy, procedure, or medication for a specific person.</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="sources">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <p class="section-kicker mb-1">Freshness and sources</p>
+            <h2>Primary sources used for volatile facts</h2>
+            <ul class="source-list text-muted-2">
+              <li>CDC/NCHS and NSC WISQARS-style CSV export, “Ranking of leading causes of deaths and death rates by age group and year, 1999-2024, United States,” used for the 2024 age-bracket heatmap.</li>
+              <li>NHTSA 2024 traffic fatality rate, 1.20 deaths per 100 million vehicle miles traveled, used for the road-mile micromort conversion.</li>
+              <li>USPA Safety FAQ, 2025: 16 civilian skydiving fatalities in 3.47 million jumps, 0.46 deaths per 100,000 jumps.</li>
+              <li>CDC/NCHS maternal mortality reporting, 2023 US maternal mortality rate of 18.6 deaths per 100,000 live births.</li>
+              <li>David Spiegelhalter’s micromort and microlife work, plus BMJ microlife framing, used for historical adventure-sport and chronic-risk translation.</li>
+              <li>Our World in Data summary of Shen et al. media-coverage comparisons, used for the perception-gap section.</li>
+            </ul>
+          </div>
+          <div class="col-lg-4">
+            <div class="panel">
+              <h3>Related cheatsheets</h3>
+              <ul class="mb-0">
+                <li><a href="er-triage.html">ER Triage Cheatsheet</a></li>
+                <li><a href="reassurance-tables.html">Reassurance Tables</a></li>
+                <li><a href="p-doom-calculator.html">P(doom) Calculator</a></li>
+                <li><a href="personal-cybersecurity.html">Personal Cybersecurity</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-top border-line py-4">
+    <div class="container d-flex flex-wrap justify-content-between gap-2">
+      <span class="text-muted-2">Last verified: 2026-07-05 · US-focused mortality data; ratios generalize better than absolute rates.</span>
+      <span class="text-muted-2">© David Veksler Cheatsheets</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const root = document.documentElement;
+      const themeToggle = document.querySelector('#themeToggle');
+      const storedTheme = localStorage.getItem('actual-risk-theme');
+      if (storedTheme) root.dataset.theme = storedTheme;
+
+      themeToggle?.addEventListener('click', () => {
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        localStorage.setItem('actual-risk-theme', next);
+      });
+
+      document.querySelectorAll('.sortable-table th .sort-btn').forEach((button, index) => {
+        button.addEventListener('click', () => {
+          const table = button.closest('table');
+          const tbody = table.querySelector('tbody');
+          const type = button.dataset.sort;
+          const direction = button.dataset.direction === 'asc' ? 'desc' : 'asc';
+          button.dataset.direction = direction;
+          const rows = Array.from(tbody.querySelectorAll('tr'));
+          rows.sort((a, b) => {
+            const aCell = a.children[index];
+            const bCell = b.children[index];
+            const aValue = type === 'number' ? Number(aCell.dataset.value || aCell.textContent.replace(/[^0-9.]/g, '')) : aCell.textContent.trim().toLowerCase();
+            const bValue = type === 'number' ? Number(bCell.dataset.value || bCell.textContent.replace(/[^0-9.]/g, '')) : bCell.textContent.trim().toLowerCase();
+            if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+            return 0;
+          });
+          rows.forEach(row => tbody.appendChild(row));
+        });
+      });
+
+      const selector = document.querySelector('#ageSelector');
+      selector?.addEventListener('change', () => {
+        document.querySelectorAll('.age-focus').forEach(cell => cell.classList.remove('age-focus'));
+        if (!selector.value) return;
+        document.querySelectorAll(`.${selector.value}`).forEach(cell => cell.classList.add('age-focus'));
+      });
+    });
+  </script>
+</body>
+</html>
