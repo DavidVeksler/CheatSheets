@@ -1,0 +1,61 @@
+# Spec: Estate Documents — Which Instrument, When, and the Failure Modes
+
+**Target file:** `estate-documents.html`
+
+**Why this topic:** Lawyers charge $2–5k for estate packages that are 80% boilerplate; template sites sell the boilerplate but strip out the actual value — the *decision layer* (which instrument fits which situation) and the *failure-mode layer* (why professionally drafted plans still fail: unfunded trusts, stale beneficiaries, documents nobody can find). This page competes on exactly those two layers rather than re-explaining what a will is. Sequel to death-logistics.html (that page: the survivor's side; this one: planning your own).
+
+## Targeting
+
+- **Primary query:** "will vs trust" — research mode. The reader is planning ahead, not grieving; they'll tolerate depth but arrive with the wrong mental model (will = master document). Secondary queries: "does a will override beneficiary designations" (the page's core answer: no), "do I need a living trust or just a will", "transfer on death deed states", "durable power of attorney for elderly parent", "how to avoid probate". Question-shaped H2s should match these verbatim — §2 and §3's document blocks are natural homes.
+- **Title:** `Estate Documents: Will vs. Trust, Beneficiaries & Why Plans Fail` (65 chars). **H1:** "Which Estate Documents You Actually Need — and Why Plans Fail Anyway." **Meta description:** "Will vs. living trust vs. beneficiary designations: which documents your situation actually needs, honest DIY-vs-lawyer boundaries, and the failure modes that sink even professional plans." (~189 chars)
+- **Reader outcome:** After reading, the reader can name the exact document set their life situation requires from the instrument-picker, run a complete beneficiary-designation audit on every account they own, and state which pieces are DIY-safe versus lawyer-territory — with the trigger reasons.
+- **Success metric:** Organic entries on the "will vs trust" query family, plus bookmark/return traffic to the instrument-picker and estate-binder checklist (this is a save-and-revisit page — the 3-year review triggers are the return hook).
+- **Volatile-facts register:** Federal estate exemption + sunset status — VOLATILE (adjusts annually for inflation, statute-dependent; re-verify against the current IRS Rev. Proc. each pass). State TOD-deed adoption list — SLOW-DRIFT (~1–2 states/yr; re-verify against Uniform Law Commission RETODA enactment tracking). RUFADAA adoption — SLOW-DRIFT (near-universal; annual check). Flat-fee cost anchors ($1,500–5,000) — SLOW-DRIFT (recheck every ~2 yrs). Transfer-mechanism hierarchy, *Egelhoff*/*Kennedy* preemption, failure modes — STABLE. **Overall: SLOW-DRIFT**, with the exemption paragraph flagged as the page's one VOLATILE section for the weekly freshness workflow.
+- **Index category:** Life Admin & Consumer Defense (new category, decided once for the legal-consumer batch; builder adds it to index.php's `$categoryMap`).
+- **Jurisdiction scope:** US-only. State variance (TOD deeds, statutory forms, community property, revocation-on-divorce) handled with dated state lists and one "verify for your state" line per affected section; a non-US reader gets the transfer-mechanism mental model (§2) and the operational layer (§6), and the page says so in one line up top.
+- **Reading conditions:** Laptop/tablet at a desk or couch, evening, calm but procrastination-prone; readers 35–70, or an adult child nudging parents. Derived priorities: print stylesheet for the estate-binder checklist and instrument-picker (this page gets handed to a spouse on paper); mobile must render the matrix legibly but crisis-grade one-handed use is NOT a requirement here; standard dark mode.
+- **Cross-link map:** ↔ `death-logistics.html` — the before/after-death pair, the strongest link on the site: link it prominently in the intro and §6 (letter of instruction), not just a Related footer, and reciprocally from that page's pre-need block. ↔ `insurance-worth-it.html` (its "naming your estate as beneficiary" mistake ↔ this page's beneficiary audit). ↔ `scam-defense-for-parents.html` (its POA escalation ladder ↔ this page's Financial POA block). ↔ `index-investing-tax-advantaged.html` (existing page — beneficiary designations on retirement accounts; add the reciprocal link there). → `bitcoin-self-custody-guide.html` (seed-phrase succession, §4). Related-footer siblings: `contract-red-flags`, `small-claims-court`, `hiring-a-contractor` (shared Life Admin & Consumer Defense cluster).
+
+## Content approach
+
+Differentiation strategy — three things template guides don't do:
+(a) lead with **beneficiary-designation supremacy** (the #1 lay misconception: your will does NOT control your 401k/IRA/life insurance/TOD accounts — designations override wills, and most estates transfer mostly through them);
+(b) treat the **trust as a tool with failure modes**, not an upsell;
+(c) cover the **operational layer** — where documents live, who can find them, when they go stale.
+
+Sections:
+
+1. **Quick reference: the instrument-picker decision table.** Rows = life situations (single/no kids, married + minor kids, blended family, unmarried partner, own a business, own property in 2+ states, special-needs dependent, estate near the federal exemption, simple estate + adult kids). Columns = what you need (will, RLT, POA, AHCD, beneficiary audit, guardianship nomination) with REQUIRED / RECOMMENDED / SKIP verdicts. This table is the page. Density target: 9–12 situation rows × 6 instrument columns — 54+ verdict cells, every cell filled (no blank = SKIP ambiguity).
+2. **The transfer-mechanism hierarchy.** The mental model that reframes everything: assets transfer by (1) title (joint tenancy/JTWROS, community property), (2) contract (beneficiary designations, POD/TOD), (3) trust, and only then (4) will-through-probate. Your will is the *residual* mechanism, not the primary one. Worked example: a typical $800k estate (house, 401k, IRA, checking, car) showing that ~90% can pass outside the will entirely — and the horror-story inverse: ex-spouse still named on the 401k beats the will every time (ERISA preemption; cite *Egelhoff*/*Kennedy* in one line).
+3. **The document stack, one block each** (definition, what it actually does, DIY-safe?, cost range, gotchas — six certificate blocks, all five fields populated in every block, no thin cards):
+   - **Will** — guardianship nomination for minors (the part with no substitute), executor choice (the real criteria: organized + solvent + willing, not "oldest child"), self-proving affidavit, why holographic wills fail.
+   - **Revocable living trust** — what it actually buys (probate avoidance, incapacity management, privacy, multi-state property) and what it doesn't (NO tax savings for estates under the exemption, NO asset protection from your creditors — the two lies trust mills tell).
+   - **Financial POA** — durable vs. springing (springing sounds safer, works worse — banks balk at "prove incapacity"), why banks reject stale POAs (>2–3 yrs old, folklore-true), institution-specific forms (Schwab/Fidelity want their own).
+   - **Advance directive + healthcare proxy** — living will vs. proxy distinction, POLST is a different thing (for the already-seriously-ill), state form registries (free — list where).
+   - **HIPAA authorization** — the cheap document that unlocks the others.
+   - **Beneficiary designations & TOD/POD** — the audit checklist: every retirement account, life policy, brokerage (TOD registration), bank (POD), and **TOD deeds for real estate** (available in ~30 states — the probate-avoidance tool template guides barely mention; state list, dated).
+4. **The failure-mode gallery — why plans fail.** The page's signature section; each with frequency and fix. Density target: 8–10 case-file strips — the seven below are the floor, not the list:
+   - **The unfunded trust** (the #1 professional-plan failure: trust drafted, house never retitled into it → probate anyway; the funding checklist: deed, accounts, but NOT retirement accounts — never retitle an IRA into a trust).
+   - Stale beneficiaries after divorce/death (and why some states' revocation-on-divorce statutes don't save federal-preempted accounts).
+   - The vanished original will (courts want the original; where to keep it — not the bank safe-deposit box your executor can't open).
+   - Per stirpes vs. per capita silently disinheriting grandchildren.
+   - Simultaneous-death and no-contingent-beneficiary gaps.
+   - Adding a kid to the deed "to keep it simple" (gift tax + basis destruction + their creditors — the classic).
+   - Digital assets: RUFADAA authorization language, password manager emergency access, the 2FA-locked-phone problem (fits the site's crypto pages: seed phrase succession in one paragraph, cross-link bitcoin-self-custody-guide).
+5. **DIY vs. lawyer — the honest boundary.** DIY-safe: simple will (statutory forms exist in several states — list), AHCD/POA from state bar forms, beneficiary audits, TOD deeds in most cases. Lawyer-worth-it triggers: blended family, special-needs dependent (an inheritance can destroy SSI/Medicaid eligibility — SNT required), business ownership, estate near federal exemption (state the current number + sunset status, dated), non-citizen spouse (QDOT), expected contest, Medicaid planning (5-yr lookback). Cost anchors: flat-fee packages $1,500–5,000; what "trust mill" seminars actually sell (one-size RLT + annuity pitch — named as the scam it is).
+6. **The operational layer.** The "estate binder" contents list, the letter of instruction (non-binding but the most-used document in practice: passwords locations, advisor contacts, funeral wishes — cross-link death-logistics.html), telling your executor where things are *now*, the 3-year review trigger list (marriage, divorce, birth, death, move states, business sale, tax-law change).
+7. **Common mistakes:** believing the will controls everything (recap of §2), never funding the trust, naming minors as direct beneficiaries (court-supervised custodianship until 18 — use UTMA or trust provisions), co-executors "to be fair" (dual-signature paralysis), secrecy until death (the fights are pre-ventable with one conversation), copying another state's forms after moving.
+
+Research: state TOD-deed adoption list (Uniform RETODA tracking, dated), current federal estate exemption + sunset status (dated — volatile), state statutory will/AHCD forms, RUFADAA adoption. Legal-information-not-advice disclaimer.
+
+## Visual design
+
+**Vault-and-flow aesthetic** — engraved-certificate gravitas for the documents, modern flow-diagram clarity for the transfer mechanics.
+
+- Palette: deep green + gold-tan on cream (banknote/certificate cues), fine double-rule borders on document blocks; a restrained engraved-style rosette per document header (pure CSS/SVG, no clipart).
+- **Hero: the transfer-mechanism flow diagram** — one SVG showing an estate's assets flowing through four channels (title / contract / trust / will→probate) as proportional streams (Sankey-lite), with the will's stream visibly the thinnest. This diagram *is* the mental model.
+- **The instrument-picker (section 1) as an interactive matrix:** pick your life-situation row → the needed documents light up gold; static table fallback without JS.
+- Each document block styled as a **certificate card**: double-ruled border, small-caps title, a "DIY-SAFE / LAWYER" seal in the corner (echoing but distinct from insurance-worth-it's stamps — engraved seal, not rubber stamp).
+- **Failure-mode gallery as "case file" strips:** dark-on-light inverted bands, each with a one-line story, frequency tag, and fix — visually the cautionary counterweight to the certificate elegance.
+- The 3-year review triggers as a compact timeline ribbon. Print stylesheet for the estate-binder checklist section.
+- **og:image / shareable artifact:** the 1200×630 social card is a crop of the transfer-mechanism flow diagram — the four proportional streams with the will's visibly thinnest read at thumbnail size and carry the page's whole argument. The "screenshot this" block is the instrument-picker matrix in a lit-up state (one situation row selected, its documents gold). Build both to survive small renderings.

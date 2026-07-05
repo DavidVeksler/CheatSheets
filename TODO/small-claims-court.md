@@ -1,0 +1,57 @@
+# Spec: Small Claims Court — Offense, Defense, and Collections
+
+**Target file:** `small-claims-court.html`
+
+**Why this topic:** "How to file" guides are commodity; the three phases that decide outcomes are not. (1) The pre-court escalation ladder where most disputes actually resolve, (2) the arbitration loophole — nearly every consumer arbitration clause exempts small claims, making it the one venue where an individual can still haul a corporation before a judge (and corporations often no-show), and (3) collections, the post-judgment phase every guide skips because court self-help offices stop at the verdict. Plus defense, which commodity guides ignore entirely.
+
+## Targeting
+
+- **Primary query:** "how to sue someone in small claims court". Secondary: "small claims court limits by state", "how to collect a small claims judgment", "being sued in small claims court what to do", "small claims demand letter template", "can I sue a company in small claims court". **Crisis mode** — the searcher has a live dispute (owed money, or a summons on the kitchen table). Lead the title and H1 with the action phrase, and give the crisis variants question-shaped H2s ("What do I do if I've been served?", "How do I actually collect after winning?").
+- **Title:** `Small Claims Court: How to Sue, Defend, and Actually Collect` (61 chars). **H1:** "Small Claims Court — Sue, Defend, and Actually Collect the Money" (the "actually collect" hook is the differentiator; keep it in both).
+- **Meta description:** "Demand letter template, the arbitration loophole for suing corporations, 50-state claim limits, a defense playbook, and the collections toolkit filing guides skip — from dispute to money in hand." (~195 chars)
+- **Reader outcome:** The reader can run the EV worksheet on their dispute, send a statute-citing demand letter the same day, and — if they file and win — pick the right collection tool instead of framing the judgment.
+- **Success metric:** Organic entries on the sue/served/collect queries — this is a search-first page, so the investment goes into question-shaped H2s and the 50-state matrix. Secondary signals: demand-letter copy events and state-matrix engagement.
+- **Volatile-facts register:** The 50-state matrix (claim limits, filing fees, demand-letter-required states, garnishment rules) is the fastest-rotting block — legislative; re-verify annually against each state court's self-help pages and date the matrix header. CFPB 15-day company-response requirement — SLOW-DRIFT; verify at consumerfinance.gov. Federal garnishment cap (CCPA Title III, 25% of disposable income) — STABLE, statutory. Statute-of-limitations table — SLOW-DRIFT, annual. Judgment lifetimes/renewal periods by state — SLOW-DRIFT. Escalation ladder, EV framework, evidence-pack mechanics — STABLE. **Overall: SLOW-DRIFT**, with the 50-state matrix flagged for annual re-verification at minimum.
+- **Index category:** Life Admin & Consumer Defense (new category for the legal-consumer batch; builder adds it to `index.php`'s `$categoryMap`).
+- **Jurisdiction scope:** US-only — say so in the intro. State variance is this page's first-class feature (the 50-state matrix plus one "verify for your state" line per section where it matters, per README Rule 4). Non-US readers get the escalation-ladder logic, which travels; acknowledge that in one line.
+- **Reading conditions:** Split by track. The plaintiff reads on a laptop in research bursts; the defendant reads on a phone within 72 hours of being served, stressed, often at night. Derived priorities: the defense track must be flawless at 375 px one-handed; the matrix lives in an `overflow-x` wrapper; print matters — the demand-letter template and evidence-pack checklist go to court on paper; dark mode standard.
+- **Cross-link map:** Outbound → `contract-red-flags.html` (the disputes/arbitration clause; breach as the classic claim), `hiring-a-contractor.html` (contractor disputes: licensing-board complaint and bond claim before/alongside filing), `flight-disruption-playbook.html` (suing airlines in small claims — the arbitration exemption in action), `insurance-worth-it.html` (the insurance-commissioner rung of the ladder). Inbound ← `contract-red-flags.html` (governing-law & disputes section), `hiring-a-contractor.html` (its "when it goes wrong" ladder), `flight-disruption-playbook.html` (add the reciprocal link to that existing page when this ships).
+
+## Content approach
+
+Organize by the lifecycle: Decide → Escalate → File → Win → Collect, with Defense as its own parallel track. Recurring device: **EV math** — treat suing as an investment decision throughout.
+
+Sections:
+
+1. **Quick reference: should you even sue?** The expected-value worksheet: claim size × win probability × collection probability − (filing fee + service + your hours × your rate). The brutal folklore fact up front: **a judgment is not money** — collection rates on contested judgments are poor, and a judgment-proof defendant (no wages, no bank account, no non-exempt assets) makes winning worthless. Decision table: strong documentation + solvent defendant = go; he-said-she-said + broke defendant = write it off.
+2. **The escalation ladder (where 80% of disputes end).** Rungs with scripts/templates:
+   - Direct complaint done right (ask for a specific remedy, deadline, in writing).
+   - **The demand letter** — the full anatomy: facts, legal basis (cite the actual statute: state consumer protection act, security-deposit statute with its 2–3× damages multiplier, Magnuson-Moss for warranties), specific amount, deadline, "I am prepared to file in small claims court on [date]." Include a complete fill-in template. Note: some states *require* a demand letter first (list them in the state table).
+   - Regulator leverage (expect 6–8 regulator entries, each with what it covers and why companies respond): CFPB (companies must respond in 15 days — works absurdly well for banks/lenders), state AG consumer division, DOT for airlines, state insurance commissioner, licensing boards for contractors, chargebacks (60-day window, real dispute reasons).
+   - Filing as the last rung — and how the *served complaint* itself triggers settlement calls.
+3. **The arbitration loophole — suing corporations.** The headline section. How to check the clause (search the ToS PDF for "small claims"), finding and serving the **registered agent** (every state's Secretary of State has a free lookup — walk through it), what happens when the corporation no-shows (default judgment — common, because $400/hr counsel > your $3,000 claim), and the corporate playbook when they do respond (removal attempts, settlement at the courthouse door). Real-world use cases: airline refunds, security deposits from corporate landlords, telecom overbilling, warranty denials.
+4. **Filing and the hearing — offense.** Compressed (this is the commodity part, keep it tight): naming the defendant correctly (the #1 fatal error — sue the LLC exactly as registered, not the DBA; how to find the legal name), venue rules, service methods ranked by reliability, then **the evidence pack**: judges decide on paper — chronological exhibit binder ×3 copies, texts/emails printed with dates visible, photos timestamped, repair estimates in writing, witnesses vs. written statements (many small claims courts accept letters). The 5-minute case presentation structure: what happened, what the agreement was, what they owe, here's proof — practice the 90-second version.
+5. **Defense — when you're the one served.** The missing half:
+   - First 72 hours: read the claim, calendar the deadline (default = automatic loss), don't call the plaintiff angry.
+   - The settle-vs-fight math (same EV framework, reversed — factor the judgment's credit/lien consequences).
+   - Real defenses (6+ entries; the SoL table alone should carry 8–10 claim types): statute of limitations table (by claim type — the silent killer of stale claims), wrong defendant/wrong venue, payment already made (bring proof), failure to mitigate, the contract actually says X.
+   - **Counterclaims** — turning defense into offense in the same case, same filing.
+   - Showing up prepared beats most pro-se plaintiffs: they carry the burden of proof; make them meet it.
+6. **Collections — the part nobody writes.** The full toolkit — 8 tool cards — with realistic difficulty ratings: information subpoena / debtor's exam (court-ordered asset disclosure), wage garnishment (limits: 25% of disposable income federal cap, some states less/none — flag TX/PA/NC/SC oddities), bank levy (you need the account info — this is why you photograph their check during settlement talks), property liens (passive but durable — collects when they sell/refinance), till taps/keeper for businesses, judgment renewal (they last 5–20 yrs by state and can outwait a broke defendant), selling the judgment (pennies on the dollar, last resort). And the folklore move: **the post-judgment settlement discount** — offering 70¢ on the dollar for immediate payment often beats 100¢ never.
+7. **The 50-state matrix.** All 50 states + DC, six columns: claim limits ($2,500 KY → $25,000 TN spread), filing fees, lawyers allowed?, appeal rights (some states: defendant only), demand-letter-required states, garnishment allowed. Date it — limits change legislatively.
+8. **Common mistakes:** suing the storefront name instead of the legal entity, blowing the SoL while negotiating, no proof of service, over-suing past the cap instead of waiving the excess, winning then doing nothing (judgments don't self-execute), emotional testimony instead of chronology, ignoring a summons because "it's only small claims."
+
+Research: state court self-help sites for the matrix, CFPB complaint data, federal garnishment limits (CCPA Title III), Nolo for baseline cross-checking. Legal-information-not-advice disclaimer per site norms.
+
+## Visual design
+
+**Case-file aesthetic** — the page as a well-organized litigation folder, offense and defense as two sides of the file.
+
+- Palette: legal-pad yellow as accent on white, ink-blue text, red for the defense track; typographic feel of court documents (a crisp serif for headings, numbered-paragraph styling ¶1.1 style for the lifecycle sections).
+- **Lifecycle as a docket-stamp progress bar** across the top: DECIDE → ESCALATE → FILE → WIN → COLLECT, each a stamped oval; sticky nav that highlights your phase.
+- **Offense vs. defense as folder tabs:** the defense section visually flips — red-accented, right-aligned tab, "RESPONDENT'S COPY" watermark — so the two tracks are unmistakable.
+- The demand letter template as a **typewriter-styled document block** with fill-in blanks highlighted yellow, plus a copy button.
+- EV worksheet as a working mini-calculator (claim, win %, collect %, fees, hours → verdict line: "SUE" / "SETTLE" / "WALK AWAY" in stamp styling).
+- 50-state matrix as the standard sortable dense table, but with a "your state" row-pinning interaction.
+- Collections toolkit as **difficulty-rated cards** (⚖ 1–5 gavel icons for effort, $ for yield).
+- **og:image / shareable artifact:** the 1200×630 social card is the **docket-stamp lifecycle bar** (DECIDE → ESCALATE → FILE → WIN → COLLECT) — the page's signature element, and it reads at thumbnail size. The "screenshot this" artifact is the **demand-letter template block** — the piece readers save, print, and send to friends with a dispute.
