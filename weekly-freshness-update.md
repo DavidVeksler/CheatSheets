@@ -60,11 +60,8 @@ If `TODAY` is not supplied, get the current date before doing anything else.
 3. **Be surgical and conservative.** Preserve the page's structure, tone, voice, layout, HTML
    classes, and formatting. Change only what is genuinely stale, wrong, or newly important.
    Do **not** rewrite sections, restructure, or redesign.
-4. **Stay in scope (CONTENT freshness only).** Do **NOT** change Bootstrap/CDN versions, add or
-   alter SRI hashes, or do design/platform refactors. (Those are a separate task; touching them
-   here risks silently breaking the page.)
-5. **One file only.** Never create or modify any other file.
-6. **Structured data must match visible content.** Only set a `dateModified` / "Last verified"
+4. **One file only.** Never create or modify any other file.
+5. **Structured data must match visible content.** Only set a `dateModified` / "Last verified"
    stamp to `TODAY` **because you actually reviewed the content this run** (which you always do).
    Never bump the date without reviewing.
 
@@ -187,7 +184,7 @@ or the in-file `dateModified`, oldest first.
 
 - [ ] Every changed fact was confirmed against a primary source (or left + flagged).
 - [ ] No fabricated specifics.
-- [ ] Edits are surgical; structure/tone/classes intact; no design/Bootstrap/SRI changes.
+- [ ] Edits are surgical; structure/tone/classes intact;
 - [ ] Exactly one "Last verified" line (= `TODAY`); exactly one `dateModified` (= `TODAY`);
       `datePublished` untouched; copyright = `YEAR`.
 - [ ] Only `FILE` was modified.
