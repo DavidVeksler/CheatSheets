@@ -162,6 +162,7 @@ $categoryMap = [
 
     // Life Admin & Consumer Defense
     'death-logistics.html' => 'Life Admin & Consumer Defense',
+    'flight-disruption-playbook.html' => 'Life Admin & Consumer Defense',
 ];
 
 // --- Category Styles ---
