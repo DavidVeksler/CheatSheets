@@ -21,12 +21,32 @@
 <!-- Twitter Card Meta Tags (for Virality & Social Sharing) -->
 <meta content="summary_large_image" name="twitter:card"/>
 <meta content="@heroiclife" name="twitter:creator"/>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "PostgreSQL Power User Cheatsheet - Advanced Guide for DBAs & Developers",
+  "description": "Master PostgreSQL with the  cheatsheet for DBAs & Developers! Unlock advanced features, performance tuning, indexing, security, replication, SQL tricks, and must-know Postgres quirks. Your definitive go-to resource.",
+  "author": {
+    "@type": "Person",
+    "name": "David Veksler (AI Generated)"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "David Veksler Cheatsheets"
+  },
+  "datePublished": "2025-04-28",
+  "dateModified": "2026-07-05",
+  "keywords": "PostgreSQL, Postgres, cheatsheet, DBA, developer, SQL, database, performance tuning, indexing, replication, security, architecture, psql, pg_dump, MVCC, JSONB, WAL, pg_stat_statements, EXPLAIN"
+}
+</script>
 <meta content="🐘 PostgreSQL Power User Cheatsheet: The Guide for DBAs &amp; Developers" name="twitter:title"/>
 <meta content="🚀 Supercharge your PostgreSQL skills! This cheatsheet covers architecture, performance tuning, advanced SQL, JSONB, MVCC, security, replication &amp; essential commands. A must-have for DBAs &amp; Developers looking to master Postgres." name="twitter:description"/>
 <meta content="images/postgresql.png" name="twitter:image"/>
 <meta content="A visual overview of the PostgreSQL Power User Cheatsheet, highlighting key sections like performance, indexing, and SQL with the PostgreSQL elephant logo." name="twitter:image:alt"/>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous" rel="stylesheet"/>
 <style>
         :root {
             --bs-body-bg: #eef3f8; /* Lighter blue-gray background */
@@ -316,6 +336,24 @@
 <p class="lead">A practical guide for Developers and DBAs working with PostgreSQL.</p>
 </header>
 <div class="container" id="main-container">
+<div class="schema-container cat-tools" data-section-id="section-quick-ref">
+<h2 class="section-title" id="title-quick-ref">Quick Reference: Daily Postgres Commands</h2>
+<div class="table-responsive">
+<table class="table table-sm table-striped align-middle">
+<thead><tr><th>Task</th><th>Command / Query</th><th>Use / Gotcha</th></tr></thead>
+<tbody>
+<tr><td>Connect</td><td><code>psql -h db.internal -U app_user -d billing</code></td><td>Use service files or env vars for repeat use; avoid putting passwords in shell history.</td></tr>
+<tr><td>Describe schema</td><td><code>\dt public.*</code>, <code>\d+ invoices</code>, <code>\df+ public.*</code></td><td><code>\d+</code> includes size and storage details; it is a psql command, not SQL.</td></tr>
+<tr><td>Explain a slow query</td><td><code>EXPLAIN (ANALYZE, BUFFERS) SELECT ...;</code></td><td>Runs the query. Wrap writes in <code>BEGIN</code>/<code>ROLLBACK</code> if you need execution stats safely.</td></tr>
+<tr><td>Find active queries</td><td><code>SELECT pid, state, wait_event_type, now()-query_start AS age, query FROM pg_stat_activity WHERE state &lt;&gt; 'idle' ORDER BY age DESC;</code></td><td>Check blockers before killing sessions; terminating the wrong backend can roll back real work.</td></tr>
+<tr><td>Cancel vs terminate</td><td><code>SELECT pg_cancel_backend(12345);</code> / <code>SELECT pg_terminate_backend(12345);</code></td><td>Cancel asks the current query to stop; terminate drops the whole connection.</td></tr>
+<tr><td>Vacuum status</td><td><code>SELECT relname, n_dead_tup, last_autovacuum FROM pg_stat_user_tables ORDER BY n_dead_tup DESC LIMIT 10;</code></td><td>High dead tuples plus old autovacuum means bloat or blocked cleanup; do not disable autovacuum globally.</td></tr>
+<tr><td>Create practical index</td><td><code>CREATE INDEX CONCURRENTLY idx_orders_customer_created ON orders (customer_id, created_at DESC);</code></td><td><code>CONCURRENTLY</code> avoids blocking writes but cannot run inside a transaction block.</td></tr>
+<tr><td>Logical backup</td><td><code>pg_dump -Fc -d billing -f billing-2026-07-05.dump</code></td><td>Custom format supports parallel restore; test restores, not just dump creation.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
 <!-- 1. ARCHITECTURE & CORE CONCEPTS -->
 <div class="schema-container cat-concept" data-section-id="section-concepts">
 <h2 class="section-title" id="title-concepts">Architecture &amp; Core Concepts</h2>
@@ -2545,7 +2583,7 @@ GRANT EXECUTE ON FUNCTION log_action(integer, text) TO app_user;</code></pre>
 </div> <!-- /.schema-container -->
 </div> <!-- /container -->
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
 <script>
 // Final Script incorporating fixes for hover and collapse toggle
 document.addEventListener('DOMContentLoaded', () => {
