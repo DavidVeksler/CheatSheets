@@ -162,6 +162,7 @@ $categoryMap = [
     'samsung-bespoke-oven-guide.html' => 'Home & Lifestyle',
 
     // Life Admin & Consumer Defense
+    'auto-repair-decoder.html' => 'Life Admin & Consumer Defense',
     'death-logistics.html' => 'Life Admin & Consumer Defense',
     'flight-disruption-playbook.html' => 'Life Admin & Consumer Defense',
     'scam-defense-for-parents.html' => 'Life Admin & Consumer Defense',
