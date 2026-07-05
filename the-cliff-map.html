@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Cliff Map: IRMAA, ACA, and Every Income Threshold That Bites</title>
+  <meta name="description" content="Every US income cliff on one page: IRMAA Medicare surcharges, ACA subsidies, Social Security taxation, credit phase-outs, FAFSA, and MAGI traps for 2026.">
+  <meta name="keywords" content="IRMAA brackets 2026, ACA subsidy cliff 2026, Social Security taxation, tax cliffs, MAGI, Roth conversion Medicare premium increase, capital gains 0% bracket, EITC phaseout, FAFSA SAI">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/the-cliff-map.html">
+
+  <meta property="og:title" content="The Cliff Map: IRMAA, ACA, and Every Income Threshold That Bites">
+  <meta property="og:description" content="A 2026 map of US federal tax and benefit cliffs: IRMAA, ACA, Social Security taxation, credits, Roth/IRA limits, FAFSA, and the MAGI definitions that trip people.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/the-cliff-map.html">
+  <meta property="og:image" content="images/the-cliff-map.png">
+  <meta property="og:image:alt" content="Topographic income profile showing IRMAA, ACA, Social Security, and capital gains tax cliffs">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Cliff Map: IRMAA, ACA, and Every Income Threshold That Bites">
+  <meta name="twitter:description" content="Find the 2026 income thresholds where one more dollar changes Medicare premiums, ACA subsidies, Social Security taxation, credits, and deductions.">
+  <meta name="twitter:image" content="images/the-cliff-map.png">
+  <meta name="twitter:creator" content="@heroiclife">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "The Cliff Map: 2026 IRMAA, ACA, and US Federal Income Thresholds",
+    "description": "A comprehensive 2026 US federal reference for income cliffs and phase-outs, including IRMAA Medicare surcharges, ACA premium tax credits, Social Security taxation, capital-gains brackets, refundable credits, education credits, retirement-account limits, FAFSA SAI mechanics, and MAGI definitions.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-05",
+    "dateModified": "2026-07-05",
+    "keywords": "IRMAA brackets 2026, ACA subsidy cliff, Social Security taxation, tax cliffs, MAGI, capital gains 0% bracket, Roth IRA phaseout, EITC phaseout, FAFSA SAI"
+  }
+  </script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+  <style>
+    @layer cliffmap {
+      :root {
+        color-scheme: light dark;
+        --paper: light-dark(#f6efd9, #151714);
+        --paper-2: light-dark(#fff8e3, #1f211c);
+        --ink: light-dark(#2e2a22, #eee7d5);
+        --muted: light-dark(#6d6250, #c0b69f);
+        --line: light-dark(#d4c6a5, #4a4234);
+        --contour: light-dark(#8a6d3b, #b89657);
+        --green: light-dark(#d8e6b6, #25351f);
+        --tan: light-dark(#e5c98f, #493922);
+        --rust: light-dark(#bc6d3b, #8b472b);
+        --cliff: light-dark(#b42318, #ff7b69);
+        --slope: light-dark(#65717a, #aab4bb);
+        --water: light-dark(#2d6f88, #82d7f7);
+        --card: light-dark(#fffaf0, #22231f);
+        --shadow: light-dark(0 12px 35px rgba(71, 49, 18, .14), 0 18px 40px rgba(0, 0, 0, .45));
+      }
+      :root[data-theme="light"] { color-scheme: light; }
+      :root[data-theme="dark"] { color-scheme: dark; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 16px 16px, color-mix(in srgb, var(--contour) 16%, transparent) 1px, transparent 2px) 0 0 / 42px 42px,
+          linear-gradient(180deg, var(--paper), color-mix(in srgb, var(--paper) 78%, var(--green)));
+        color: var(--ink);
+        font: 18px/1.56 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      h1, h2, h3, h4 { text-wrap: balance; letter-spacing: 0; }
+      p, li { text-wrap: pretty; }
+      a { color: var(--water); }
+      .topo-hero {
+        border-bottom: 1px solid var(--line);
+        background:
+          linear-gradient(120deg, color-mix(in srgb, var(--green) 70%, transparent), transparent 36%),
+          linear-gradient(160deg, transparent 45%, color-mix(in srgb, var(--tan) 70%, transparent) 45% 66%, color-mix(in srgb, var(--rust) 45%, transparent)),
+          var(--paper);
+      }
+      .stamp {
+        display: inline-flex;
+        gap: .45rem;
+        align-items: center;
+        border: 2px solid var(--cliff);
+        color: var(--cliff);
+        font-weight: 800;
+        letter-spacing: .08em;
+        transform: rotate(-1deg);
+        padding: .35rem .55rem;
+        background: color-mix(in srgb, var(--paper-2) 80%, transparent);
+      }
+      .map-card, details.inset, .legend, .quick-table, .profile-panel {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+      .profile-panel { overflow: hidden; }
+      .profile-wrap { background: linear-gradient(180deg, var(--paper-2), color-mix(in srgb, var(--green) 35%, var(--paper-2))); }
+      .terrain-svg { display: block; width: 100%; height: auto; min-height: 320px; }
+      .mode-btn {
+        border: 1px solid var(--line);
+        color: var(--ink);
+        background: var(--paper-2);
+        min-width: 5rem;
+      }
+      .mode-btn.active { background: var(--cliff); border-color: var(--cliff); color: #fff; }
+      .glyph {
+        display: inline-grid;
+        place-items: center;
+        width: 1.7rem;
+        height: 1.7rem;
+        border-radius: 50%;
+        font-weight: 900;
+        color: #fff;
+      }
+      .glyph.cliff { background: var(--cliff); }
+      .glyph.slope { background: var(--slope); }
+      .chip {
+        display: inline-block;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: .12rem .5rem;
+        background: var(--paper-2);
+        font-weight: 700;
+        font-size: .78rem;
+        white-space: nowrap;
+      }
+      .chip.agi { color: light-dark(#5f4a16, #d8c177); }
+      .chip.magi { color: light-dark(#7b2f16, #ff9d70); }
+      .chip.prov { color: light-dark(#24614f, #7fe3c5); }
+      .chip.fpl { color: light-dark(#255b7c, #8ed9ff); }
+      .table-wrap { overflow-x: auto; border-radius: 8px; }
+      table { min-width: 1180px; }
+      .table > :not(caption) > * > * { background: transparent; color: var(--ink); border-bottom-color: var(--line); }
+      thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--card) !important;
+        color: var(--muted) !important;
+        font-size: .78rem;
+        text-transform: uppercase;
+      }
+      tbody th:first-child, thead th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 3;
+        background: var(--card) !important;
+        min-width: 15rem;
+      }
+      button.sort {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        padding: 0;
+        font: inherit;
+        text-transform: inherit;
+      }
+      .deep-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); }
+      details.inset { overflow: hidden; }
+      details.inset > summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 1rem 1.1rem;
+        font-weight: 800;
+        display: flex;
+        gap: .65rem;
+        align-items: center;
+      }
+      details.inset > summary::-webkit-details-marker { display: none; }
+      details.inset > summary::after {
+        content: "\F282";
+        font-family: "bootstrap-icons";
+        margin-left: auto;
+        color: var(--muted);
+      }
+      details.inset[open] > summary::after { transform: rotate(90deg); }
+      .inset-body { border-top: 1px solid var(--line); padding: 1rem 1.1rem 1.15rem; }
+      .numberline {
+        min-height: 5.5rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background:
+          repeating-linear-gradient(90deg, transparent 0 9%, color-mix(in srgb, var(--contour) 20%, transparent) 9% 9.25%, transparent 9.25% 18%),
+          linear-gradient(90deg, var(--green), var(--tan), color-mix(in srgb, var(--cliff) 34%, var(--paper-2)));
+        position: relative;
+        overflow: hidden;
+      }
+      .marker {
+        position: absolute;
+        top: .7rem;
+        translate: -50% 0;
+        text-align: center;
+        font-size: .72rem;
+        font-weight: 800;
+        color: var(--ink);
+      }
+      .marker::before {
+        content: "▲";
+        display: block;
+        color: var(--cliff);
+        font-size: 1.05rem;
+        line-height: 1;
+      }
+      .move, .mistake {
+        border-left: 4px solid var(--contour);
+        background: color-mix(in srgb, var(--paper-2) 75%, transparent);
+        padding: .8rem .9rem;
+        border-radius: 0 8px 8px 0;
+        height: 100%;
+      }
+      .mistake { border-left-color: var(--cliff); }
+      .route {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper-2);
+        padding: 1rem;
+      }
+      .route-bar {
+        height: 7rem;
+        border-radius: 8px;
+        background: linear-gradient(180deg, transparent 0 42%, var(--slope) 42% 48%, transparent 48%),
+          linear-gradient(90deg, var(--green), var(--tan) 55%, color-mix(in srgb, var(--cliff) 42%, var(--rust)));
+        position: relative;
+        overflow: hidden;
+      }
+      .route-bar span {
+        position: absolute;
+        bottom: 0;
+        width: .7rem;
+        background: var(--cliff);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--cliff) 30%, transparent);
+      }
+      .source-list li { margin-bottom: .35rem; }
+      .theme-toggle {
+        position: fixed;
+        right: 1rem;
+        bottom: 1rem;
+        z-index: 20;
+        border: 1px solid var(--line);
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 999px;
+        padding: .45rem .8rem;
+        box-shadow: var(--shadow);
+      }
+      .sr-only-focusable:not(:focus) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0,0,0,0);
+        white-space: nowrap;
+        border: 0;
+      }
+      :focus-visible { outline: 3px solid var(--water); outline-offset: 3px; }
+      @media (max-width: 575.98px) {
+        body { font-size: 17px; }
+        .display-4 { font-size: 2.2rem; }
+        .stamp { font-size: .75rem; }
+        .terrain-svg { min-height: 260px; }
+      }
+      @media print {
+        body { background: #fff; color: #000; font-size: 11pt; }
+        .theme-toggle, .mode-btn, nav { display: none !important; }
+        .map-card, details.inset, .quick-table, .profile-panel, .legend { box-shadow: none; break-inside: avoid; }
+        details.inset { display: block; }
+        details.inset:not([open]) > .inset-body { display: block; }
+        a { color: #000; text-decoration: underline; }
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main" class="sr-only-focusable btn btn-light m-2">Skip to content</a>
+  <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme"><i class="bi bi-circle-half"></i> <span id="themeLabel">Auto</span></button>
+
+  <header class="topo-hero py-4 py-lg-5">
+    <div class="container">
+      <nav class="d-flex justify-content-between align-items-center mb-4" aria-label="Page navigation">
+        <a class="fw-bold text-decoration-none" href="index.php"><i class="bi bi-map"></i> Cheatsheets</a>
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="#master" class="btn btn-sm mode-btn">Table</a>
+          <a href="#deep-dives" class="btn btn-sm mode-btn">Deep dives</a>
+          <a href="#toolkit" class="btn btn-sm mode-btn">Toolkit</a>
+        </div>
+      </nav>
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-6">
+          <div class="stamp mb-3">2026 EDITION · SURVEYED JUL 2026</div>
+          <h1 class="display-4 fw-black mb-3">The Cliff Map &mdash; Where One More Dollar of Income Costs Real Money.</h1>
+          <p class="lead mb-3">Phase-outs are slopes. True cliffs are ledges. This map shows both, because a $1 Roth conversion can reprice a whole Medicare year while an ordinary tax bracket merely taxes the next dollar.</p>
+          <p class="mb-0"><strong>Scope:</strong> US federal rules only. State tax credits, property-tax relief, Medicaid expansion choices, and state marketplace subsidies add cliffs of their own.</p>
+        </div>
+        <div class="col-lg-6">
+          <section class="profile-panel" aria-labelledby="profileTitle">
+            <div class="d-flex justify-content-between align-items-center gap-2 p-3 border-bottom" style="border-color: var(--line) !important;">
+              <h2 id="profileTitle" class="h5 mb-0">Income terrain profile</h2>
+              <div class="btn-group btn-group-sm" role="group" aria-label="Filing profile">
+                <button type="button" class="mode-btn active" data-profile="joint">MFJ</button>
+                <button type="button" class="mode-btn" data-profile="single">Single</button>
+              </div>
+            </div>
+            <div class="profile-wrap">
+              <svg id="terrainProfile" class="terrain-svg" viewBox="0 0 760 370" role="img" aria-labelledby="terrainTitle terrainDesc">
+                <title id="terrainTitle">Income cliff profile</title>
+                <desc id="terrainDesc">A stylized terrain chart of effective marginal-rate pressure from income thresholds.</desc>
+              </svg>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="container my-5">
+    <section class="legend p-3 p-lg-4 mb-4" aria-labelledby="legendTitle">
+      <h2 id="legendTitle" class="h4 mb-3">Read the map before moving income</h2>
+      <div class="row g-3">
+        <div class="col-md-6 col-lg-3"><span class="glyph cliff me-2">┃</span><strong>True cliff:</strong> crossing the line reprices a benefit or surcharge all at once. Manage to the dollar.</div>
+        <div class="col-md-6 col-lg-3"><span class="glyph slope me-2">╱</span><strong>Slope:</strong> each extra dollar loses part of a credit or deduction. Usually do not refuse income.</div>
+        <div class="col-md-6 col-lg-3"><span class="chip agi">AGI</span> <span class="chip magi">MAGI</span> <span class="chip prov">PROV</span> <span class="chip fpl">FPL</span><br><small>Income definitions vary. This is where mistakes happen.</small></div>
+        <div class="col-md-6 col-lg-3"><strong>Lookback:</strong> IRMAA is the classic trap: 2026 Medicare premiums use 2024 MAGI unless SSA grants a life-changing-event appeal.</div>
+      </div>
+    </section>
+
+    <section id="master" class="quick-table p-3 p-lg-4 mb-5" aria-labelledby="masterTitle">
+      <div class="d-flex justify-content-between gap-3 flex-wrap align-items-end mb-3">
+        <div>
+          <h2 id="masterTitle" class="mb-1">Quick reference: 2026 federal cliff table</h2>
+          <p class="mb-0 text-secondary">Click a column heading to sort. Dollar values are 2026 tax year unless the row states a different coverage or lookback year.</p>
+        </div>
+        <span class="chip">Last verified: 2026-07-05</span>
+      </div>
+      <div class="table-wrap">
+        <table id="cliffTable" class="table align-middle">
+          <thead>
+            <tr>
+              <th><button class="sort" data-sort="name">Cliff / phase-out</button></th>
+              <th><button class="sort" data-sort="single">Single / individual</button></th>
+              <th><button class="sort" data-sort="joint">MFJ / household</button></th>
+              <th>What changes when crossed</th>
+              <th>Cost of crossing by $1</th>
+              <th><button class="sort" data-sort="kind">Kind</button></th>
+              <th>Income definition</th>
+              <th>Lookback / timing</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-name="Social Security taxation 50" data-single="25000" data-joint="32000" data-kind="slope"><th>Social Security taxation: first tier</th><td>$25,000</td><td>$32,000</td><td>Up to 50% of benefits become taxable as provisional income rises.</td><td>Can add 50 cents of taxable income per extra $1 before the 85% tier.</td><td><span class="glyph slope">╱</span></td><td><span class="chip prov">PROV</span> AGI + tax-exempt interest + 1/2 SS</td><td>Current tax year; thresholds are unindexed.</td></tr>
+            <tr data-name="Social Security taxation 85" data-single="34000" data-joint="44000" data-kind="slope"><th>Social Security taxation: 85% tier</th><td>$34,000</td><td>$44,000</td><td>Up to 85% of benefits can become taxable.</td><td>Often adds 85 cents of taxable income per extra $1 until capped.</td><td><span class="glyph slope">╱</span></td><td><span class="chip prov">PROV</span></td><td>Current tax year; thresholds are unindexed since 1983/1993 law.</td></tr>
+            <tr data-name="Saver credit 50" data-single="24250" data-joint="48500" data-kind="cliff"><th>Saver's Credit: 50% to 20%</th><td>$24,250</td><td>$48,500</td><td>Credit rate falls from 50% to 20% of eligible retirement contributions.</td><td>For a $2,000 contribution, a $1 crossing can lose $600 of credit.</td><td><span class="glyph cliff">┃</span></td><td><span class="chip agi">AGI</span></td><td>Current tax year.</td></tr>
+            <tr data-name="Saver credit 20" data-single="26250" data-joint="52500" data-kind="cliff"><th>Saver's Credit: 20% to 10%</th><td>$26,250</td><td>$52,500</td><td>Credit rate falls from 20% to 10%.</td><td>For a $2,000 contribution, crossing can lose $200 of credit.</td><td><span class="glyph cliff">┃</span></td><td><span class="chip agi">AGI</span></td><td>Current tax year.</td></tr>
+            <tr data-name="Saver credit ends" data-single="40250" data-joint="80500" data-kind="cliff"><th>Saver's Credit: 10% to 0%</th><td>$40,250</td><td>$80,500</td><td>Credit disappears above the upper limit.</td><td>For a $2,000 contribution, crossing can lose $200 of credit.</td><td><span class="glyph cliff">┃</span></td><td><span class="chip agi">AGI</span></td><td>Current tax year.</td></tr>
+            <tr data-name="Capital gains zero" data-single="49450" data-joint="98900" data-kind="positive"><th>Capital gains 0% bracket</th><td>$49,450 taxable income</td><td>$98,900 taxable income</td><td>Long-term gains/qualified dividends above the line enter the 15% band.</td><td>Positive cliff: fill the 0% band; the next $1 of gain costs $0.15.</td><td><span class="glyph slope">+</span></td><td>Taxable income after ordinary-income stacking</td><td>Current tax year.</td></tr>
+            <tr data-name="ACA premium tax credit" data-single="63840" data-joint="132000" data-kind="cliff"><th>ACA premium tax credit 400% FPL cliff</th><td>$63,840 household size 1</td><td>$132,000 household size 4</td><td>Above 400% FPL, no federal PTC under current 2026 law.</td><td>Varies by age/ZIP; can be the full subsidy. A $24,000 benchmark for a family of four would lose about $10,853 at $132,001.</td><td><span class="glyph cliff">┃</span></td><td><span class="chip fpl">FPL</span> household income MAGI variant</td><td>2026 coverage; reconciled on Form 8962.</td></tr>
+            <tr data-name="Senior deduction" data-single="75000" data-joint="150000" data-kind="slope"><th>Enhanced senior deduction</th><td>$75,000 MAGI</td><td>$150,000 MAGI</td><td>2025-2028 extra $6,000 per age-65+ taxpayer phases down.</td><td>6% deduction loss per extra $1; tax cost depends on bracket.</td><td><span class="glyph slope">╱</span></td><td><span class="chip magi">MAGI</span></td><td>Current tax year; temporary through 2028.</td></tr>
+            <tr data-name="Education credits" data-single="80000" data-joint="160000" data-kind="slope"><th>AOTC / Lifetime Learning Credit phase-out</th><td>$80,000-$90,000</td><td>$160,000-$180,000</td><td>Education credits phase out over the range.</td><td>AOTC can lose up to $2,500 per eligible student across a $10k/$20k band.</td><td><span class="glyph slope">╱</span></td><td><span class="chip magi">MAGI</span></td><td>Current tax year.</td></tr>
+            <tr data-name="Student loan interest" data-single="85000" data-joint="175000" data-kind="slope"><th>Student-loan interest deduction</th><td>$85,000-$100,000</td><td>$175,000-$205,000</td><td>Up to $2,500 deduction phases out.</td><td>Deduction shrinks roughly $0.167 per $1 single, $0.083 per $1 MFJ.</td><td><span class="glyph slope">╱</span></td><td><span class="chip magi">MAGI</span></td><td>Current tax year.</td></tr>
+            <tr data-name="IRMAA 1" data-single="109000" data-joint="218000" data-kind="cliff"><th>IRMAA I: Medicare B + D</th><td>&gt; $109,000</td><td>&gt; $218,000</td><td>Adds Part B $81.20/mo + Part D $14.50/mo per person.</td><td>$1 over costs $1,148.40/yr per person; $2,296.80/yr for two Medicare spouses.</td><td><span class="glyph cliff">┃</span></td><td><span class="chip magi">MAGI</span> AGI + tax-exempt interest</td><td>Two-year lookback: 2026 uses 2024 MAGI.</td></tr>
+            <tr data-name="IRMAA 2" data-single="137000" data-joint="274000" data-kind="cliff"><th>IRMAA II</th><td>&gt; $137,000</td><td>&gt; $274,000</td><td>Part B IRMAA rises to $202.90/mo; Part D to $37.50/mo.</td><td>Incremental $1,736.40/yr per person versus tier I.</td><td><span class="glyph cliff">┃</span></td><td><span class="chip magi">MAGI</span></td><td>Two-year lookback.</td></tr>
+            <tr data-name="Roth IRA" data-single="153000" data-joint="242000" data-kind="slope"><th>Roth IRA direct contribution phase-out</th><td>$153,000-$168,000</td><td>$242,000-$252,000</td><td>Direct Roth contribution limit phases out.</td><td>Usually not a tax cost if backdoor Roth is clean; watch pro-rata IRA balances.</td><td><span class="glyph slope">╱</span></td><td><span class="chip magi">MAGI</span> Roth IRA MAGI</td><td>Current tax year.</td></tr>
+            <tr data-name="Traditional IRA" data-single="81000" data-joint="129000" data-kind="slope"><th>Traditional IRA deduction: active participant</th><td>$81,000-$91,000</td><td>$129,000-$149,000</td><td>Deductible IRA contribution phases out when covered by a workplace plan.</td><td>Deduction loss depends on bracket; backdoor strategy may be cleaner.</td><td><span class="glyph slope">╱</span></td><td><span class="chip magi">MAGI</span> IRA MAGI</td><td>Current tax year.</td></tr>
+            <tr data-name="Savings bond education" data-single="101800" data-joint="152650" data-kind="slope"><th>EE/I savings-bond education exclusion</th><td>$101,800-$116,800</td><td>$152,650-$182,650</td><td>Interest exclusion for qualified higher education phases out.</td><td>Cost is excluded interest becoming taxable over the range.</td><td><span class="glyph slope">╱</span></td><td><span class="chip magi">MAGI</span></td><td>Current tax year.</td></tr>
+            <tr data-name="Additional Medicare" data-single="200000" data-joint="250000" data-kind="slope"><th>Additional Medicare Tax</th><td>$200,000</td><td>$250,000</td><td>0.9% extra Medicare tax on wages/self-employment above threshold.</td><td>$0.009 per extra wage dollar.</td><td><span class="glyph slope">╱</span></td><td>Medicare wages / SE income</td><td>Current tax year; employer withholds above $200k wages regardless of filing status.</td></tr>
+            <tr data-name="NIIT" data-single="200000" data-joint="250000" data-kind="slope"><th>Net Investment Income Tax</th><td>$200,000</td><td>$250,000</td><td>3.8% tax on lesser of net investment income or MAGI above threshold.</td><td>Up to $0.038 per extra investment-income dollar.</td><td><span class="glyph slope">╱</span></td><td><span class="chip magi">MAGI</span></td><td>Current tax year; thresholds are statutory, not indexed.</td></tr>
+            <tr data-name="QBI" data-single="201750" data-joint="403500" data-kind="slope"><th>Qualified Business Income 199A thresholds</th><td>$201,750-$276,750</td><td>$403,500-$553,500</td><td>Wage/property limits and SSTB restrictions phase in.</td><td>Can reduce or erase the 20% QBI deduction; varies by business facts.</td><td><span class="glyph slope">╱</span></td><td>Taxable income before QBI deduction</td><td>Current tax year.</td></tr>
+            <tr data-name="Child Tax Credit" data-single="200000" data-joint="400000" data-kind="slope"><th>Child Tax Credit / ODC phase-out</th><td>$200,000</td><td>$400,000</td><td>$2,200 CTC per child and $500 ODC reduce by $50 per $1,000 or fraction over threshold.</td><td>A $1 crossing can lose $50 because the rule rounds up to the next $1,000.</td><td><span class="glyph cliff">┃</span></td><td><span class="chip magi">MAGI</span></td><td>Current tax year.</td></tr>
+            <tr data-name="IRMAA 3" data-single="171000" data-joint="342000" data-kind="cliff"><th>IRMAA III</th><td>&gt; $171,000</td><td>&gt; $342,000</td><td>Part B IRMAA rises to $324.60/mo; Part D to $60.40/mo.</td><td>Incremental $1,735.20/yr per person versus tier II.</td><td><span class="glyph cliff">┃</span></td><td><span class="chip magi">MAGI</span></td><td>Two-year lookback.</td></tr>
+            <tr data-name="IRMAA 4" data-single="205000" data-joint="410000" data-kind="cliff"><th>IRMAA IV</th><td>&gt; $205,000</td><td>&gt; $410,000</td><td>Part B IRMAA rises to $446.30/mo; Part D to $83.30/mo.</td><td>Incremental $1,735.20/yr per person versus tier III.</td><td><span class="glyph cliff">┃</span></td><td><span class="chip magi">MAGI</span></td><td>Two-year lookback.</td></tr>
+            <tr data-name="Adoption" data-single="265080" data-joint="265080" data-kind="slope"><th>Adoption credit / assistance</th><td>$265,080-$305,080</td><td>$265,080-$305,080</td><td>$17,670 credit/exclusion phases out.</td><td>Up to $17,670 lost over a $40,000 band.</td><td><span class="glyph slope">╱</span></td><td><span class="chip magi">MAGI</span></td><td>Current tax year.</td></tr>
+            <tr data-name="IRMAA 5" data-single="500000" data-joint="750000" data-kind="cliff"><th>IRMAA V</th><td>&ge; $500,000</td><td>&ge; $750,000</td><td>Part B IRMAA rises to $487.00/mo; Part D to $91.00/mo.</td><td>Incremental $580.80/yr per person versus tier IV.</td><td><span class="glyph cliff">┃</span></td><td><span class="chip magi">MAGI</span></td><td>Two-year lookback.</td></tr>
+            <tr data-name="EITC" data-single="23890" data-joint="31160" data-kind="slope"><th>Earned Income Tax Credit taper</th><td>Phase-out often starts $23,890</td><td>Phase-out starts $31,160 for 1+ kids</td><td>Maximum 2026 credit: $664 no children, $4,427 one, $7,316 two, $8,231 three+.</td><td>For MFJ with two children, losing $7,316 over $31,160-$65,899 is about 21.1% before payroll/ACA effects.</td><td><span class="glyph slope">╱</span></td><td>AGI or earned income, whichever is greater</td><td>Current tax year.</td></tr>
+            <tr data-name="Social Security earnings test" data-single="24480" data-joint="24480" data-kind="slope"><th>Social Security earnings test before FRA</th><td>$24,480</td><td>Per worker</td><td>Before FRA, benefits withheld $1 per $2 above limit; FRA year has $65,160 limit and $1 per $3 rule.</td><td>Not a permanent tax: benefits are recomputed at FRA, but cash flow drops now.</td><td><span class="glyph slope">╱</span></td><td>Wages / net self-employment earnings</td><td>2026 earnings before full retirement age.</td></tr>
+            <tr data-name="FAFSA SAI" data-single="22600" data-joint="22600" data-kind="slope"><th>FAFSA SAI assessment bands</th><td>Parent AAI bands begin around -$8,900 and $22,600</td><td>Family-size dependent</td><td>Parent adjusted available income is assessed from 22% to 47%; student income often 50%; student assets 20%.</td><td>Not a tax bill, but aid eligibility can fall sharply where income/assets are assessed.</td><td><span class="glyph slope">╱</span></td><td>FAFSA formula income/assets</td><td>2027-28 aid year uses prior-prior tax data.</td></tr>
+            <tr data-name="Medicaid CHIP" data-single="0" data-joint="0" data-kind="cliff"><th>Medicaid / CHIP eligibility cliffs</th><td>State and category specific</td><td>State and category specific</td><td>Federal structure, state thresholds, expansion status, and child/adult categories determine eligibility.</td><td>Can be a full coverage loss; must check state rules.</td><td><span class="glyph cliff">┃</span></td><td><span class="chip fpl">FPL</span> program-specific MAGI</td><td>Coverage year; state rules change.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="deep-dives" class="mb-5" aria-labelledby="divesTitle">
+      <h2 id="divesTitle" class="mb-3">The five cliffs that move real money</h2>
+      <div class="deep-grid">
+        <details class="inset" open>
+          <summary><span class="glyph cliff">┃</span> IRMAA brackets: the $1-over Medicare surcharge</summary>
+          <div class="inset-body">
+            <div class="numberline mb-3">
+              <span class="marker" style="left:24%">$218k</span><span class="marker" style="left:38%">$274k</span><span class="marker" style="left:55%">$342k</span><span class="marker" style="left:72%">$410k</span><span class="marker" style="left:91%">$750k</span>
+            </div>
+            <p><strong>Definition:</strong> IRMAA is an income-related monthly adjustment amount added to Medicare Part B and Part D premiums when modified AGI crosses statutory brackets.</p>
+            <p><strong>Worked example:</strong> A married couple on Medicare has 2024 MAGI of $218,001 after a December Roth conversion. In 2026, both spouses enter IRMAA tier I: ($81.20 Part B + $14.50 Part D) x 12 x 2 = <strong>$2,296.80</strong> of extra annual premium for crossing by $1.</p>
+            <p><strong>Moves:</strong> size Roth conversions to the bracket edge; use QCDs after age 70 1/2 for charity; keep muni interest in the IRMAA MAGI add-back; file SSA-44 after retirement, marriage, divorce, death of spouse, work reduction, or employer-pension loss.</p>
+            <p class="mb-0"><strong>Gotcha:</strong> the bill arrives two years later. The first Medicare year can be priced by income from the last working years.</p>
+          </div>
+        </details>
+        <details class="inset" open>
+          <summary><span class="glyph cliff">┃</span> ACA subsidy cliff: 400% FPL is back for 2026</summary>
+          <div class="inset-body">
+            <div class="numberline mb-3"><span class="marker" style="left:39%">$63,840<br>1 person</span><span class="marker" style="left:79%">$132,000<br>family 4</span></div>
+            <p><strong>Definition:</strong> the premium tax credit uses household income as a percentage of FPL. For 2026, IRS guidance again caps eligibility at not more than 400% FPL.</p>
+            <p><strong>Worked example:</strong> A 48-state family of four has 2026 FPL of $33,000, so 400% FPL is $132,000. At 400%, the expected contribution can be 9.96%, or $13,147.20. If their benchmark plan is $24,000/year, the PTC is $10,852.80; at $132,001, the PTC is $0.</p>
+            <p><strong>Moves:</strong> HSA contributions, pre-tax retirement contributions, timing freelance invoices, and realizing gains in a different year can protect the line. Tax-loss harvesting helps only if it lowers MAGI in the coverage year.</p>
+            <p class="mb-0"><strong>Gotcha:</strong> reconciliation happens on Form 8962. An optimistic income estimate can become a full repayment problem at filing time.</p>
+          </div>
+        </details>
+        <details class="inset" open>
+          <summary><span class="glyph slope">╱</span> Social Security tax torpedo</summary>
+          <div class="inset-body">
+            <div class="numberline mb-3"><span class="marker" style="left:28%">$32k</span><span class="marker" style="left:48%">$44k</span><span class="marker" style="left:76%">85% cap</span></div>
+            <p><strong>Definition:</strong> Social Security taxation uses provisional income, not AGI: AGI plus tax-exempt interest plus half of Social Security benefits.</p>
+            <p><strong>Worked example:</strong> A couple receives $48,000 of Social Security and withdraws $30,000 from an IRA. Provisional income is $54,000. Taxable SS is $6,000 + 85% x ($54,000 - $44,000) = <strong>$14,500</strong>. Another $1,000 IRA withdrawal can add $1,850 to taxable income before the cap, so a 12% bracket behaves like 22.2%.</p>
+            <p><strong>Moves:</strong> fill low brackets before benefits start, use Roth assets to bridge high-torpedo years, and model QCDs once eligible.</p>
+            <p class="mb-0"><strong>Gotcha:</strong> municipal-bond interest is tax-free for ordinary income but still counts in provisional income and IRMAA MAGI.</p>
+          </div>
+        </details>
+        <details class="inset" open>
+          <summary><span class="glyph slope">+</span> Capital gains 0% bracket: the good cliff</summary>
+          <div class="inset-body">
+            <div class="numberline mb-3"><span class="marker" style="left:27%">$49,450</span><span class="marker" style="left:55%">$98,900</span><span class="marker" style="left:84%">15%</span></div>
+            <p><strong>Definition:</strong> long-term capital gains stack on top of ordinary taxable income; the 0% rate applies only until taxable income reaches the 0% ceiling.</p>
+            <p><strong>Worked example:</strong> A married couple has $60,000 ordinary income and takes the $32,200 standard deduction. Ordinary taxable income is $27,800. They can harvest $98,900 - $27,800 = <strong>$71,100</strong> of long-term gains at 0% federal tax.</p>
+            <p><strong>Moves:</strong> harvest gains in sabbatical, early-retirement, or low-income years; coordinate with ACA and IRMAA before selling.</p>
+            <p class="mb-0"><strong>Gotcha:</strong> 0% capital gains still increase AGI/MAGI and can poison ACA subsidies, IRMAA, FAFSA, and credit phase-outs.</p>
+          </div>
+        </details>
+        <details class="inset" open>
+          <summary><span class="glyph slope">╱</span> EITC and stacked benefit tapers</summary>
+          <div class="inset-body">
+            <div class="numberline mb-3"><span class="marker" style="left:35%">$31,160</span><span class="marker" style="left:74%">$65,899</span></div>
+            <p><strong>Definition:</strong> the Earned Income Tax Credit rises, plateaus, then tapers using AGI or earned income, whichever is greater.</p>
+            <p><strong>Worked example:</strong> For a 2026 married couple with two qualifying children, EITC is $7,316 and phases out from $31,160 to $65,899. The taper is $7,316 / $34,739 = <strong>21.1%</strong>. Add 7.65% employee payroll tax and a 12% bracket, and the visible marginal rate can exceed 40% before ACA, SNAP, childcare, or housing effects.</p>
+            <p><strong>Moves:</strong> claim every above-the-line deduction you actually qualify for; avoid end-of-year surprises; use VITA/free filing help for refundable-credit accuracy.</p>
+            <p class="mb-0"><strong>Gotcha:</strong> investment income over $12,200 disqualifies EITC for 2026, even if earned income is otherwise eligible.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section id="toolkit" class="mb-5" aria-labelledby="toolkitTitle">
+      <h2 id="toolkitTitle" class="mb-3">The toolkit: manage MAGI without managing your life around pennies</h2>
+      <div class="row g-3">
+        <div class="col-md-6 col-lg-4"><div class="move"><strong>Fill, don't spill Roth conversions.</strong><br>Convert up to the next bracket or IRMAA line, then stop. Example: if 2024 MFJ IRMAA buffer is $9,400, convert $9,300, not "about $10k."</div></div>
+        <div class="col-md-6 col-lg-4"><div class="move"><strong>Use QCDs after 70 1/2.</strong><br>A qualified charitable distribution can satisfy charitable intent without increasing AGI, making it cleaner for IRMAA than an itemized cash gift.</div></div>
+        <div class="col-md-6 col-lg-4"><div class="move"><strong>Prefer HSA and pre-tax levers when near ACA.</strong><br>2026 HSA limits are $4,400 self-only and $8,750 family, plus $1,000 catch-up at 55+; these can lower ACA MAGI.</div></div>
+        <div class="col-md-6 col-lg-4"><div class="move"><strong>Time income across tax years.</strong><br>Bonuses, RSU sales, freelance invoices, and capital gains often have timing flexibility. Use it near true cliffs.</div></div>
+        <div class="col-md-6 col-lg-4"><div class="move"><strong>Harvest gains and losses by bracket position.</strong><br>Gain harvesting is excellent under the 0% line, dangerous near ACA/IRMAA. Loss harvesting helps if it lowers current-year AGI.</div></div>
+        <div class="col-md-6 col-lg-4"><div class="move"><strong>Know what deductions do not touch.</strong><br>Itemized charitable deductions can reduce taxable income but usually do not reduce AGI/MAGI. They do not save an IRMAA crossing.</div></div>
+      </div>
+      <div class="map-card p-3 p-lg-4 mt-4">
+        <h3 class="h5">Anti-moves</h3>
+        <div class="row g-3">
+          <div class="col-md-4"><div class="mistake"><strong>Do not refuse a raise.</strong><br>Ordinary tax brackets are slopes. Only the next dollar is taxed at the higher rate.</div></div>
+          <div class="col-md-4"><div class="mistake"><strong>Do not chase tiny cliffs.</strong><br>Spending $1,000 of planning effort to avoid a $50 phase-out is a bad trade.</div></div>
+          <div class="col-md-4"><div class="mistake"><strong>Do not trust last year's numbers.</strong><br>IRMAA, FPL, EITC, capital-gain brackets, IRA limits, and credit thresholds change annually.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="stacking" class="mb-5" aria-labelledby="stackTitle">
+      <h2 id="stackTitle" class="mb-3">Where slopes pile up</h2>
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="route">
+            <h3 class="h5">Route A: 67-year-old couple, SS + IRA</h3>
+            <div class="route-bar my-3"><span style="left:22%; height:40%"></span><span style="left:55%; height:78%"></span><span style="left:84%; height:96%"></span></div>
+            <p class="mb-0">The statutory 12% or 22% bracket understates the lived rate when each $1 of IRA income also makes more Social Security taxable and then hits IRMAA two years later.</p>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="route">
+            <h3 class="h5">Route B: family of four, EITC + CTC + ACA</h3>
+            <div class="route-bar my-3"><span style="left:19%; height:72%"></span><span style="left:39%; height:56%"></span><span style="left:78%; height:100%"></span></div>
+            <p class="mb-0">Payroll tax, EITC taper, child-credit rounding, ACA reconciliation, and state benefits can stack. This is a planning case, not a reason to reject durable income gains.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="mistakes" class="mb-5" aria-labelledby="mistakesTitle">
+      <h2 id="mistakesTitle" class="mb-3">Common mistakes</h2>
+      <div class="row g-3">
+        <div class="col-md-6 col-lg-4"><div class="mistake"><strong>Confusing MAGIs.</strong><br>IRMAA adds tax-exempt interest. ACA adds untaxed Social Security, tax-exempt interest, and foreign excluded income. Education credits have their own add-backs.</div></div>
+        <div class="col-md-6 col-lg-4"><div class="mistake"><strong>Forgetting the IRMAA lookback.</strong><br>A 2024 conversion can raise 2026 Medicare premiums. The appeal exists, but ordinary investment income is not a life-changing event.</div></div>
+        <div class="col-md-6 col-lg-4"><div class="mistake"><strong>December conversions without a target.</strong><br>"Convert a round number" is how people cross a cliff. Compute the bracket edge first.</div></div>
+        <div class="col-md-6 col-lg-4"><div class="mistake"><strong>Harvesting 0% gains into ACA trouble.</strong><br>The tax rate can be 0% while the subsidy cost is thousands.</div></div>
+        <div class="col-md-6 col-lg-4"><div class="mistake"><strong>Calling brackets cliffs.</strong><br>A raise does not make all income taxed at the higher ordinary bracket. Real cliffs are less common and more dangerous.</div></div>
+        <div class="col-md-6 col-lg-4"><div class="mistake"><strong>Treating a year-tagged page as evergreen.</strong><br>This map is a 2026 edition. Recheck before acting in any later tax year.</div></div>
+      </div>
+    </section>
+
+    <section class="map-card p-3 p-lg-4 mb-5" aria-labelledby="sourcesTitle">
+      <h2 id="sourcesTitle" class="h4">Primary sources used</h2>
+      <ul class="source-list mb-0">
+        <li><a href="https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles">CMS: 2026 Medicare Parts A &amp; B Premiums and Deductibles; Part D IRMAA</a></li>
+        <li><a href="https://www.irs.gov/pub/irs-drop/rp-25-32.pdf">IRS Rev. Proc. 2025-32: 2026 tax inflation adjustments</a></li>
+        <li><a href="https://www.irs.gov/pub/irs-drop/n-25-67.pdf">IRS Notice 2025-67: 2026 retirement-plan and IRA limits</a></li>
+        <li><a href="https://www.irs.gov/pub/irs-drop/rp-25-25.pdf">IRS Rev. Proc. 2025-25: 2026 premium tax credit applicable percentages</a></li>
+        <li><a href="https://www.irs.gov/credits-deductions/premium-tax-credit-ptc-overview">IRS Premium Tax Credit overview</a> and <a href="https://www.irs.gov/affordable-care-act/individuals-and-families/premium-tax-credit-claiming-the-credit-and-reconciling-advance-credit-payments">APTC reconciliation rules</a></li>
+        <li><a href="https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines">HHS/ASPE 2026 poverty guidelines</a></li>
+        <li><a href="https://www.ssa.gov/benefits/retirement/planner/whileworking.html">SSA: 2026 retirement earnings test</a> and <a href="https://www.ssa.gov/pubs/EN-05-10035.pdf">SSA retirement benefits publication</a></li>
+        <li><a href="https://fsapartners.ed.gov/knowledge-center/library/handbooks-manuals-or-guides/2026-06-30/2027-28-student-aid-index-sai-and-pell-grant-eligibility-guide">Federal Student Aid: 2027-28 SAI and Pell Grant Eligibility Guide</a></li>
+        <li><a href="https://www.irs.gov/newsroom/check-your-eligibility-for-the-new-enhanced-deduction-for-seniors">IRS: enhanced senior deduction</a>, <a href="https://www.irs.gov/taxtopics/tc559">NIIT</a>, <a href="https://www.irs.gov/taxtopics/tc560">Additional Medicare Tax</a>, and <a href="https://www.irs.gov/credits-deductions/individuals/education-credits-aotc-and-llc">education credits</a></li>
+      </ul>
+    </section>
+
+    <footer class="text-center small pb-5">
+      <div class="mb-3">
+        <strong>Related Bitcoin &amp; Finance:</strong><br>
+        <a class="mx-2" href="index-investing-tax-advantaged.html" title="Index investing and account limits"><i class="bi bi-graph-up-arrow"></i> Tax-Advantaged Investing</a>
+        <a class="mx-2" href="lifestyle-calculator.html" title="Lifestyle and income planning calculator"><i class="bi bi-calculator"></i> Lifestyle Calculator</a>
+        <a class="mx-2" href="housing-comparison.html" title="Housing cost comparison"><i class="bi bi-house"></i> Housing Comparison</a>
+      </div>
+      <p class="mb-1"><strong>Last verified: 2026-07-05.</strong> Educational reference, not tax, legal, investment, or benefit-eligibility advice. Verify current-year rules and state programs before acting.</p>
+      <p class="mb-0">David Veksler Cheatsheets · AI generated · Bootstrap 5.3.8 and Bootstrap Icons 1.13.1 via jsDelivr with SRI.</p>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+  <script>
+    (function () {
+      "use strict";
+      const $ = (s, root = document) => root.querySelector(s);
+      const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
+
+      const modes = ["auto", "light", "dark"];
+      let mode = localStorage.getItem("cliffmap-theme") || "auto";
+      const media = window.matchMedia("(prefers-color-scheme: dark)");
+      function applyTheme() {
+        document.documentElement.dataset.theme = mode;
+        document.documentElement.dataset.bsTheme = mode === "auto" ? (media.matches ? "dark" : "light") : mode;
+        $("#themeLabel").textContent = mode[0].toUpperCase() + mode.slice(1);
+        $("#themeToggle i").className = "bi " + (mode === "dark" ? "bi-moon-stars" : mode === "light" ? "bi-sun" : "bi-circle-half");
+        drawProfile(currentProfile);
+      }
+      $("#themeToggle").addEventListener("click", () => {
+        mode = modes[(modes.indexOf(mode) + 1) % modes.length];
+        localStorage.setItem("cliffmap-theme", mode);
+        applyTheme();
+      });
+      media.addEventListener("change", applyTheme);
+
+      const profiles = {
+        joint: [
+          {x: 44, y: 205, label: "SS 85%", type: "slope"},
+          {x: 80.5, y: 185, label: "Saver ends", type: "cliff"},
+          {x: 98.9, y: 150, label: "0% LTCG", type: "good"},
+          {x: 132, y: 245, label: "ACA", type: "cliff"},
+          {x: 150, y: 170, label: "Senior", type: "slope"},
+          {x: 218, y: 300, label: "IRMAA I", type: "cliff"},
+          {x: 250, y: 220, label: "NIIT", type: "slope"},
+          {x: 400, y: 230, label: "CTC", type: "cliff"},
+          {x: 410, y: 330, label: "IRMAA IV", type: "cliff"},
+          {x: 750, y: 345, label: "IRMAA V", type: "cliff"}
+        ],
+        single: [
+          {x: 34, y: 205, label: "SS 85%", type: "slope"},
+          {x: 40.25, y: 185, label: "Saver ends", type: "cliff"},
+          {x: 49.45, y: 150, label: "0% LTCG", type: "good"},
+          {x: 63.84, y: 245, label: "ACA", type: "cliff"},
+          {x: 75, y: 170, label: "Senior", type: "slope"},
+          {x: 109, y: 300, label: "IRMAA I", type: "cliff"},
+          {x: 200, y: 225, label: "NIIT", type: "slope"},
+          {x: 200.1, y: 232, label: "CTC", type: "cliff"},
+          {x: 205, y: 330, label: "IRMAA IV", type: "cliff"},
+          {x: 500, y: 345, label: "IRMAA V", type: "cliff"}
+        ]
+      };
+      let currentProfile = "joint";
+      function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+      function drawProfile(profile) {
+        const svg = $("#terrainProfile");
+        const data = profiles[profile];
+        const max = profile === "joint" ? 800 : 540;
+        const sx = x => 48 + (x / max) * 660;
+        const cliff = cssVar("--cliff"), slope = cssVar("--slope"), contour = cssVar("--contour"), ink = cssVar("--ink"), paper = cssVar("--paper-2"), green = cssVar("--green"), tan = cssVar("--tan"), rust = cssVar("--rust");
+        const points = [[48, 300], [95, 275], [150, 255], [210, 245], [280, 230], [350, 218], [425, 235], [500, 210], [570, 205], [650, 220], [708, 190]];
+        svg.innerHTML = `
+          <defs>
+            <linearGradient id="land" x1="0" x2="1"><stop offset="0" stop-color="${green}"/><stop offset=".55" stop-color="${tan}"/><stop offset="1" stop-color="${rust}"/></linearGradient>
+            <pattern id="hachure" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="8" stroke="${cliff}" stroke-width="2"/></pattern>
+          </defs>
+          <rect width="760" height="370" fill="${paper}"/>
+          <g stroke="${contour}" stroke-opacity=".34" fill="none">
+            <path d="M20 70 C140 35 220 88 330 55 S565 45 735 82"/>
+            <path d="M15 105 C170 72 245 130 380 96 S560 98 742 122"/>
+            <path d="M18 146 C160 116 278 174 405 137 S594 142 742 170"/>
+            <path d="M15 188 C180 160 294 211 430 181 S626 185 745 218"/>
+          </g>
+          <line x1="48" y1="314" x2="708" y2="314" stroke="${ink}" stroke-opacity=".5"/>
+          <text x="48" y="344" fill="${ink}" font-size="13">$0</text>
+          <text x="676" y="344" fill="${ink}" font-size="13">$${profile === "joint" ? "800k" : "540k"}+</text>
+          <path d="M48 300 ${points.slice(1).map(p => `L${p[0]} ${p[1]}`).join(" ")} L708 314 L48 314 Z" fill="url(#land)" opacity=".9"/>
+          <path d="M48 300 ${points.slice(1).map(p => `L${p[0]} ${p[1]}`).join(" ")}" fill="none" stroke="${ink}" stroke-width="3"/>
+          ${data.map(d => {
+            const x = sx(d.x), color = d.type === "cliff" ? cliff : d.type === "good" ? "#1f8a4c" : slope;
+            const hY = Math.min(d.y, 314) - 6;
+            const hH = Math.abs(314 - d.y) + 6;
+            const face = d.type === "cliff" ? `<rect x="${x - 4}" y="${hY}" width="8" height="${hH}" fill="url(#hachure)" opacity=".9"/>` : "";
+            return `${face}<line x1="${x}" y1="${d.y}" x2="${x}" y2="314" stroke="${color}" stroke-width="${d.type === "cliff" ? 3 : 2}" stroke-dasharray="${d.type === "slope" ? "5 4" : "0"}"/>
+              <circle cx="${x}" cy="${d.y}" r="5" fill="${color}"/>
+              <text x="${x}" y="${Math.max(22, d.y - 12)}" fill="${ink}" font-size="12" font-weight="700" text-anchor="middle">${d.label}</text>`;
+          }).join("")}
+          <text x="58" y="28" fill="${ink}" font-size="14" font-weight="800">${profile === "joint" ? "Married filing jointly profile" : "Single filer profile"}</text>
+          <text x="58" y="48" fill="${ink}" font-size="12">Height means planning pressure, not a literal tax rate. Red vertical faces are true cliffs.</text>
+        `;
+      }
+      $$("[data-profile]").forEach(btn => btn.addEventListener("click", () => {
+        currentProfile = btn.dataset.profile;
+        $$("[data-profile]").forEach(b => b.classList.toggle("active", b === btn));
+        drawProfile(currentProfile);
+      }));
+
+      const tbody = $("#cliffTable tbody");
+      $$("button.sort").forEach(btn => btn.addEventListener("click", () => {
+        const key = btn.dataset.sort;
+        const rows = $$("tr", tbody);
+        const numeric = key === "single" || key === "joint";
+        const dir = btn.dataset.dir === "asc" ? -1 : 1;
+        btn.dataset.dir = dir === 1 ? "asc" : "desc";
+        rows.sort((a, b) => {
+          const av = a.dataset[key] || "", bv = b.dataset[key] || "";
+          return numeric ? (Number(av) - Number(bv)) * dir : av.localeCompare(bv) * dir;
+        }).forEach(row => tbody.appendChild(row));
+      }));
+
+      applyTheme();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1086 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Is That Actually Dangerous? The Security Theater Audit</title>
+  <meta name="description" content="Juice jacking, RFID skimming, listening phones, hotel safes, public Wi-Fi - each fear graded REAL, EDGE CASE, or THEATER by documented victim counts, plus the boring threats worth your attention.">
+  <meta name="keywords" content="security theater, juice jacking real, RFID wallet necessary, phone listening ads, hotel safe security, public Wi-Fi danger, card skimmers, SIM swap, phishing, AirTag stalking, security risk audit">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/security-theater-audit.html">
+  <meta property="og:title" content="Is That Actually Dangerous? The Security Theater Audit">
+  <meta property="og:description" content="Every viral security fear graded REAL, EDGE CASE, MISDIRECTED, or THEATER by documented victim scale and mitigation cost.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/security-theater-audit.html">
+  <meta property="og:image" content="images/security-theater-audit.png">
+  <meta property="og:image:alt" content="Marquee verdict board comparing theatrical security fears with boring real threats">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Is That Actually Dangerous? The Security Theater Audit">
+  <meta name="twitter:description" content="Juice jacking, RFID wallets, listening phones, hotel safes, public Wi-Fi, skimmers, SIM swaps, and phishing graded by evidence.">
+  <meta name="twitter:image" content="images/security-theater-audit.png">
+  <meta name="twitter:creator" content="@heroiclife">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Is That Actually Dangerous? The Security Theater Audit",
+    "description": "A security-risk calibration cheatsheet grading viral security fears as REAL, EDGE CASE, MISDIRECTED, or THEATER by technical possibility, documented victim scale, and mitigation cost.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-05",
+    "dateModified": "2026-07-05",
+    "keywords": "security theater, risk calibration, juice jacking, RFID skimming, public Wi-Fi, SIM swap, phishing, card skimmers, AirTag stalking"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is juice jacking real?", "acceptedAnswer": {"@type": "Answer", "text": "Technically possible, but the public evidence base is thin: as of 2026-07-05 this audit found agency warnings and lab demonstrations, not a public victim-count source showing a widespread real-world campaign."}},
+      {"@type": "Question", "name": "Do I need an RFID-blocking wallet?", "acceptedAnswer": {"@type": "Answer", "text": "Usually no for modern contactless payment cards: EMV contactless payments generate a one-time security code, so the walk-by clone story is mostly theater; physical skimmers and e-skimming are the real card threats."}},
+      {"@type": "Question", "name": "Is my phone listening to conversations for ads?", "acceptedAnswer": {"@type": "Answer", "text": "Large app studies found no microphone eavesdropping in tested apps, but data brokers, location data, app permissions, and ad-targeting graphs are real and actionable privacy problems."}},
+      {"@type": "Question", "name": "Is public Wi-Fi dangerous?", "acceptedAnswer": {"@type": "Answer", "text": "Less dangerous than the 2010s warning implies because HTTPS is widespread, but fake hotspots, captive-portal phishing, and non-HTTPS traffic remain edge-case risks."}},
+      {"@type": "Question", "name": "Are card skimmers real?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The FBI estimates skimming costs financial institutions and consumers more than $1 billion each year; inspect terminals and prefer tap or chip over swipe."}},
+      {"@type": "Question", "name": "Are SIM swaps real?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. IC3 recorded 971 SIM-swap complaints and $17.4 million in losses in 2025, making it rare for the average person but serious for crypto holders and high-value accounts."}},
+      {"@type": "Question", "name": "Are AirTag stalking cases real?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Bluetooth trackers have documented stalking misuse, and Apple and Google now support cross-platform unwanted-tracker alerts."}}
+    ]
+  }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+  <style>
+    @layer base, components, utilities;
+    @layer base {
+      :root {
+        color-scheme: dark;
+        --stage: #08070a;
+        --stage-2: #121018;
+        --paper: #f9f2df;
+        --paper-ink: #15110c;
+        --ink: #fff3dc;
+        --muted: #bda98d;
+        --line: #44301f;
+        --curtain: #861b25;
+        --curtain-2: #b22234;
+        --gold: #f4c95d;
+        --gold-2: #f7df9a;
+        --green: #2f8f67;
+        --green-soft: #10241a;
+        --blue: #3f7cac;
+        --blue-soft: #102435;
+        --red-soft: #321116;
+        --shadow: 0 24px 70px rgba(0, 0, 0, .35);
+        --radius: 8px;
+      }
+      [data-theme="light"] {
+        color-scheme: light;
+        --stage: #fff9ef;
+        --stage-2: #f6ead8;
+        --ink: #1b1720;
+        --muted: #665d52;
+        --line: #d4b995;
+        --green-soft: #dff4e7;
+        --blue-soft: #e2eff8;
+        --red-soft: #fde4e4;
+        --shadow: 0 24px 70px rgba(70, 35, 10, .18);
+      }
+      [data-theme="dark"] { color-scheme: dark; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 50% 2rem, color-mix(in srgb, var(--gold) 22%, transparent), transparent 22rem),
+          linear-gradient(90deg, color-mix(in srgb, var(--curtain) 30%, transparent) 0 1px, transparent 1px 36px) 0 0 / 72px 100%,
+          var(--stage);
+        color: var(--ink);
+        font: 18px/1.58 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        text-wrap: pretty;
+      }
+      a { color: #ffd979; text-decoration-thickness: .08em; text-underline-offset: .16em; }
+      [data-theme="light"] a { color: #7b1d28; }
+      h1, h2, h3, h4 { text-wrap: balance; letter-spacing: 0; }
+      h1, .playbill, .marquee-title {
+        font-family: Impact, Haettenschweiler, "Arial Narrow Bold", "Roboto Condensed", system-ui, sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0;
+      }
+      h1 { font-size: clamp(2.4rem, 6vw, 5.9rem); line-height: .88; }
+      h2 { font-size: clamp(1.65rem, 3vw, 2.55rem); }
+      h3 { font-size: clamp(1.2rem, 2vw, 1.6rem); }
+      .container-xl { max-width: 1200px; }
+      :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+      .btn, .card, .form-control, .form-select, .alert { border-radius: var(--radius); }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: .001ms !important; scroll-behavior: auto !important; transition-duration: .001ms !important; }
+      }
+    }
+
+    @layer components {
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: color-mix(in srgb, var(--stage) 88%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
+        backdrop-filter: blur(14px);
+      }
+      .skip-link { position: absolute; left: -999px; top: .75rem; z-index: 40; }
+      .skip-link:focus { left: .75rem; background: var(--paper); color: var(--paper-ink); padding: .5rem .75rem; border: 2px solid var(--gold); }
+      .brand-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        color: var(--gold-2);
+        text-transform: uppercase;
+        font-weight: 800;
+        font-size: .82rem;
+      }
+      .hero {
+        position: relative;
+        overflow: clip;
+        min-height: 680px;
+        padding: 4rem 0 2.5rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
+      }
+      .hero::before,
+      .hero::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: min(6vw, 72px);
+        background:
+          repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 8px, transparent 8px 26px),
+          linear-gradient(180deg, #4e0e16, var(--curtain), #4e0e16);
+        opacity: .95;
+        z-index: -1;
+      }
+      .hero::before { left: 0; }
+      .hero::after { right: 0; }
+      .spotlight {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 50% 18%, color-mix(in srgb, var(--gold) 34%, transparent), transparent 38rem);
+        pointer-events: none;
+        z-index: -1;
+      }
+      .hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .35rem .7rem;
+        border: 1px solid color-mix(in srgb, var(--gold) 65%, transparent);
+        background: rgba(0, 0, 0, .28);
+        color: var(--gold-2);
+        text-transform: uppercase;
+        font-weight: 800;
+        font-size: .82rem;
+      }
+      [data-theme="light"] .hero-kicker { background: #fff4d1; color: #4d171d; }
+      .hero-copy {
+        max-width: 790px;
+      }
+      .method-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .75rem;
+      }
+      .method-card {
+        border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+        background: color-mix(in srgb, var(--stage-2) 88%, transparent);
+        padding: 1rem;
+      }
+      .method-card strong {
+        display: block;
+        color: var(--gold-2);
+        font-size: .9rem;
+        text-transform: uppercase;
+      }
+      [data-theme="light"] .method-card strong { color: #861b25; }
+      .marquee {
+        position: relative;
+        border: 5px solid var(--gold);
+        background:
+          radial-gradient(circle, rgba(255,255,255,.72) 0 2px, transparent 3px) 0 0 / 30px 30px,
+          linear-gradient(180deg, #2b1418, #0e0c0f);
+        box-shadow: var(--shadow);
+        color: #fff2d2;
+        padding: 1.25rem;
+      }
+      .marquee-title {
+        color: var(--gold-2);
+        font-size: clamp(1.5rem, 3vw, 2.3rem);
+        line-height: 1;
+      }
+      .marquee-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .75rem;
+        align-items: center;
+        padding: .7rem;
+        margin-top: .55rem;
+        background: rgba(0,0,0,.46);
+        border: 1px solid rgba(244,201,93,.35);
+      }
+      .marquee-row > span:nth-of-type(2),
+      .marquee-row > span:nth-of-type(3) {
+        grid-column: 1 / -1;
+      }
+      .seat-scale {
+        white-space: nowrap;
+        color: var(--gold);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .verdict {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 7.5rem;
+        padding: .35rem .62rem;
+        border: 2px solid currentColor;
+        border-radius: 999px;
+        font-weight: 900;
+        line-height: 1;
+        text-transform: uppercase;
+        font-size: .78rem;
+        letter-spacing: 0;
+        white-space: nowrap;
+      }
+      .verdict.real { color: #15110c; background: var(--gold); box-shadow: 0 0 18px rgba(244,201,93,.45); }
+      .verdict.edge { color: #1d3557; background: #a8d8ff; }
+      .verdict.theater { color: #c9b18a; background: #141013; border-color: #5b4b3b; }
+      .verdict.misdirected { color: #111b18; background: #7de0b2; }
+      .section-shell {
+        padding: 3.5rem 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+      }
+      .section-label {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        color: var(--gold-2);
+        font-size: .82rem;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+      [data-theme="light"] .section-label { color: #861b25; }
+      .board-controls {
+        display: grid;
+        grid-template-columns: minmax(180px, 1fr) 180px 180px;
+        gap: .75rem;
+      }
+      .board-wrap {
+        border: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
+        box-shadow: var(--shadow);
+        overflow-x: auto;
+        background: color-mix(in srgb, var(--stage-2) 95%, transparent);
+      }
+      .verdict-board {
+        min-width: 980px;
+        margin: 0;
+      }
+      .verdict-board th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #1c1115;
+        color: var(--gold-2);
+        border-color: rgba(244,201,93,.25);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      [data-theme="light"] .verdict-board th { background: #fff2cd; color: #4d171d; }
+      .verdict-board td {
+        vertical-align: top;
+        border-color: color-mix(in srgb, var(--line) 55%, transparent);
+      }
+      .victims {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: .88rem;
+        white-space: nowrap;
+      }
+      .playbill-card {
+        display: grid;
+        grid-template-columns: minmax(220px, .9fr) minmax(0, 1.65fr);
+        gap: 0;
+        background: var(--paper);
+        color: var(--paper-ink);
+        border: 1px solid #d8bd8a;
+        box-shadow: var(--shadow);
+        margin-bottom: 1.1rem;
+      }
+      .playbill-side {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.06), transparent),
+          #1b1013;
+        color: #fff2d2;
+        padding: 1.1rem;
+        border-right: 6px double var(--gold);
+      }
+      .playbill-side .playbill {
+        color: var(--gold-2);
+        font-size: clamp(1.45rem, 3vw, 2.3rem);
+        line-height: .95;
+      }
+      .playbill-body {
+        padding: 1.1rem;
+        background:
+          linear-gradient(90deg, rgba(0,0,0,.035) 1px, transparent 1px) 0 0 / 18px 18px,
+          var(--paper);
+      }
+      .audit-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .75rem;
+      }
+      .evidence-box {
+        border-left: 4px solid var(--line);
+        padding: .75rem .85rem;
+        background: rgba(255,255,255,.58);
+      }
+      .evidence-box strong {
+        display: block;
+        font-size: .78rem;
+        text-transform: uppercase;
+        color: #654514;
+      }
+      .action-box {
+        border: 2px solid #15110c;
+        padding: .85rem;
+        background: #fff6d8;
+      }
+      .audit-meta {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: .78rem;
+        color: #6f6251;
+      }
+      .source-link {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        margin: .1rem .35rem .1rem 0;
+        font-size: .84rem;
+      }
+      .real-list {
+        background: light-dark(#f7f7f3, #f2f0ea);
+        color: #171717;
+        border: 1px solid #cac6ba;
+        padding: 1.25rem;
+      }
+      .real-list h2,
+      .real-list h3 { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; text-transform: none; }
+      .plain-table th { background: #e8e4d8; }
+      .heuristic-card,
+      .mistake-card,
+      .source-card {
+        height: 100%;
+        padding: 1rem;
+        border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+        background: color-mix(in srgb, var(--stage-2) 92%, transparent);
+      }
+      .heuristic-card .num {
+        display: inline-grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        border: 1px solid var(--gold);
+        color: var(--gold-2);
+        font-weight: 900;
+        margin-bottom: .6rem;
+      }
+      .theme-toggle {
+        position: fixed;
+        right: 1rem;
+        bottom: 1rem;
+        z-index: 30;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        display: inline-grid;
+        place-items: center;
+        box-shadow: var(--shadow);
+      }
+    }
+
+    @layer utilities {
+      .text-gold { color: var(--gold-2) !important; }
+      .muted { color: var(--muted); }
+      .nowrap { white-space: nowrap; }
+      .print-only { display: none; }
+      @media (max-width: 900px) {
+        .hero { min-height: auto; padding-top: 2.75rem; }
+        .hero::before, .hero::after { width: 22px; }
+        .method-grid, .board-controls, .audit-grid { grid-template-columns: 1fr; }
+        .playbill-card { grid-template-columns: 1fr; }
+        .playbill-side { border-right: 0; border-bottom: 6px double var(--gold); }
+        .marquee-row { grid-template-columns: 1fr; }
+      }
+      @media print {
+        body { background: #fff; color: #111; font-size: 12pt; }
+        .topbar, .theme-toggle, .board-controls, .no-print, .spotlight { display: none !important; }
+        .hero, .section-shell { padding: 1.2rem 0; border-bottom: 1px solid #aaa; }
+        .hero::before, .hero::after { display: none; }
+        .playbill-card, .board-wrap, .real-list, .heuristic-card, .mistake-card, .source-card { break-inside: avoid; box-shadow: none; }
+        .playbill-card { border: 1px solid #999; }
+        .playbill-side { background: #f4f4f4; color: #111; border-color: #777; }
+        .playbill-side .playbill, .section-label, .text-gold { color: #111 !important; }
+        .print-only { display: block; }
+        a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .75em; }
+      }
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 50% 2rem, color-mix(in srgb, var(--gold) 22%, transparent), transparent 22rem),
+        linear-gradient(90deg, color-mix(in srgb, var(--curtain) 30%, transparent) 0 1px, transparent 1px 36px) 0 0 / 72px 100%,
+        var(--stage) !important;
+      color: var(--ink) !important;
+    }
+    a { color: #ffd979; }
+    [data-theme="light"] a { color: #7b1d28; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <nav class="topbar py-2 no-print" aria-label="Page navigation">
+    <div class="container-xl d-flex align-items-center justify-content-between gap-3">
+      <a class="brand-chip text-decoration-none" href="index.php"><i class="bi bi-brightness-high-fill"></i> Verdict Board</a>
+      <div class="d-flex flex-wrap gap-2 small">
+        <a href="#board">Board</a>
+        <a href="#audits">Audits</a>
+        <a href="#real-list">Real list</a>
+        <a href="#heuristics">Heuristics</a>
+        <a href="#sources">Sources</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="spotlight"></div>
+    <div class="container-xl">
+      <div class="row g-4 align-items-end">
+        <div class="col-lg-7 hero-copy">
+          <span class="hero-kicker"><i class="bi bi-ticket-perforated-fill"></i> Last verified: 2026-07-05</span>
+          <h1 class="mt-3 mb-3">Is That Actually Dangerous? The Security Theater Audit</h1>
+          <p class="lead mb-4">Viral warnings are graded by the question most warnings skip: not "can a demo be made?" but "how many people are getting hurt in the wild?" The U.S. counts below come from IC3, FTC, law-enforcement sources, platform docs, and original security research where available; threat mechanics generalize more widely than the U.S. victim counts.</p>
+          <div class="method-grid" aria-label="Three-axis grading method">
+            <div class="method-card">
+              <strong>1. Possible?</strong>
+              <span>Lab demos matter, but only as the first gate. A DEF CON talk proves feasibility, not prevalence.</span>
+            </div>
+            <div class="method-card">
+              <strong>2. In the wild?</strong>
+              <span>The main axis: public victim counts, enforcement cases, annual reports, and repeated field reports.</span>
+            </div>
+            <div class="method-card">
+              <strong>3. Cost to mitigate?</strong>
+              <span>Cheap fixes can be rational even for low odds; expensive fear-products need stronger evidence.</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="marquee" id="share-card" aria-label="Security theater marquee preview">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+              <div>
+                <div class="marquee-title">Now Showing</div>
+                <p class="mb-0 small text-gold">Fear vs. documented harm</p>
+              </div>
+              <span class="verdict theater">THEATER</span>
+            </div>
+            <div class="marquee-row">
+              <strong>Juice jacking</strong>
+              <span class="verdict theater">THEATER</span>
+              <span>Warnings exist; public victim-scale evidence is not there.</span>
+              <span class="seat-scale">[----]</span>
+            </div>
+            <div class="marquee-row">
+              <strong>Phishing</strong>
+              <span class="verdict real">REAL</span>
+              <span>IC3: 191,561 phishing/spoofing complaints in 2025.</span>
+              <span class="seat-scale">[####]</span>
+            </div>
+            <div class="marquee-row">
+              <strong>Card skimmers</strong>
+              <span class="verdict real">REAL</span>
+              <span>FBI estimates more than $1B/year in skimming cost.</span>
+              <span class="seat-scale">[###-]</span>
+            </div>
+            <div class="marquee-row">
+              <strong>RFID wallet panic</strong>
+              <span class="verdict misdirected">MISDIRECTED</span>
+              <span>Contactless EMV is not the skimmer you should fear.</span>
+              <span class="seat-scale">[----]</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="board" class="section-shell">
+      <div class="container-xl">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+          <div>
+            <span class="section-label"><i class="bi bi-grid-3x3-gap-fill"></i> Quick reference</span>
+            <h2 class="mb-1">The verdict board</h2>
+            <p class="mb-0 muted">Victim scale uses a 0-4 filled-seat shorthand: [----] means no public victim-count source found; [####] means mass-scale, routine harm.</p>
+          </div>
+          <button class="btn btn-outline-warning btn-sm no-print" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+        </div>
+        <div class="board-controls mb-3">
+          <label class="visually-hidden" for="boardSearch">Search verdict board</label>
+          <input class="form-control" id="boardSearch" type="search" placeholder="Search fear, verdict, mitigation">
+          <label class="visually-hidden" for="verdictFilter">Filter verdict</label>
+          <select class="form-select" id="verdictFilter">
+            <option value="">All verdicts</option>
+            <option value="THEATER">THEATER</option>
+            <option value="MISDIRECTED">MISDIRECTED</option>
+            <option value="EDGE CASE">EDGE CASE</option>
+            <option value="REAL">REAL</option>
+          </select>
+          <label class="visually-hidden" for="scaleFilter">Filter victim scale</label>
+          <select class="form-select" id="scaleFilter">
+            <option value="">All scales</option>
+            <option value="0">[----] near-zero public count</option>
+            <option value="1">[#---] rare</option>
+            <option value="2">[##--] modest/rising</option>
+            <option value="3">[###-] common</option>
+            <option value="4">[####] mass scale</option>
+          </select>
+        </div>
+        <div class="board-wrap">
+          <table class="table table-dark table-hover verdict-board" id="verdictTable">
+            <thead>
+              <tr>
+                <th data-sort="threat">Threat</th>
+                <th data-sort="verdict">Verdict</th>
+                <th data-sort="scale">Victim scale</th>
+                <th>One-line reality</th>
+                <th>Mitigation and cost</th>
+                <th data-sort="audited">Last audited</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-verdict="THEATER" data-scale="0"><td><a href="#juice-jacking">Juice jacking</a></td><td><span class="verdict theater">THEATER</span></td><td class="victims">[----] agency warnings, no public campaign count found</td><td>Possible through USB data paths, but modern phones prompt or block data trust and public evidence is thin.</td><td>Use an AC outlet, battery pack, or data blocker if convenient; do not spend worry-hours here.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="THEATER" data-scale="0"><td><a href="#hotel-keycards">Hotel key cards store credit cards</a></td><td><span class="verdict theater">THEATER</span></td><td class="victims">[----] urban legend</td><td>Room keys typically encode room/access/time data, not payment-card details.</td><td>Return, toss, or keep the card; protect the payment card in the hotel system instead.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="THEATER" data-scale="0"><td><a href="#house-symbols">House symbols and zip ties</a></td><td><span class="verdict theater">THEATER</span></td><td class="victims">[----] viral folklore</td><td>Rumors spread because they are vivid; opportunistic burglary is more boring.</td><td>Lock doors, improve lighting, and know neighbors; skip symbol decoding.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="MISDIRECTED" data-scale="0"><td><a href="#rfid-wallets">RFID/NFC walk-by card skimming</a></td><td><span class="verdict misdirected">MISDIRECTED</span></td><td class="victims">[----] near-zero public evidence for walk-by EMV clone</td><td>Contactless EMV creates a one-time security code; physical skimmers and e-skimming are the real card risks.</td><td>Skip payment-card RFID panic; use tap/chip and watch statements.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="MISDIRECTED" data-scale="0"><td><a href="#phone-listening">Phone listening for ads</a></td><td><span class="verdict misdirected">MISDIRECTED</span></td><td class="victims">[----] no mic leaks in the cited app study</td><td>The creepy targeting usually comes from location, purchase, social, and broker data.</td><td>Audit permissions; restrict ad IDs and data brokers.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="EDGE CASE" data-scale="1"><td><a href="#hotel-safes">Hotel room safes</a></td><td><span class="verdict edge">EDGE CASE</span></td><td class="victims">[#---] real bypass mechanics, unclear victim scale</td><td>Master codes and override keys are real; the safe is for opportunists, not hotel staff.</td><td>Use it, but test obvious default codes and keep irreplaceables on you or at front desk.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="EDGE CASE" data-scale="1"><td><a href="#public-wifi">Public Wi-Fi sniffing</a></td><td><span class="verdict edge">EDGE CASE</span></td><td class="victims">[#---] remaining risk is targeted/fake-login, not bulk sniffing</td><td>HTTPS killed most passive sniffing; evil twins and fake captive portals remain.</td><td>Use HTTPS, app/site directly, and VPN for untrusted networks or privacy from network operators.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="EDGE CASE" data-scale="1"><td><a href="#usb-drops">USB drops in parking lots</a></td><td><span class="verdict edge">EDGE CASE</span></td><td class="victims">[#---] real in organizations; consumer mass scale not shown</td><td>Original research found 45-98% success when 297 drives were dropped on campus.</td><td>Personal: do not plug it in. Employer: treat as real social engineering.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="EDGE CASE" data-scale="1"><td><a href="#bluetooth-airdrop">Bluetooth and AirDrop attacks</a></td><td><span class="verdict edge">EDGE CASE</span></td><td class="victims">[#---] proximity and version dependent</td><td>Real bugs appear, but mass exploitation usually needs old software or targeted proximity.</td><td>Update OS; set AirDrop/Quick Share to contacts or off.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="EDGE CASE" data-scale="2"><td><a href="#qr-stickers">QR-code sticker scams</a></td><td><span class="verdict edge">EDGE CASE</span></td><td class="victims">[##--] documented and rising</td><td>Fake QR codes route to spoofed payment/login pages, especially parking meters and fake tickets.</td><td>Inspect URL; use official apps/sites; avoid sticker QR codes on public payment signs.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="EDGE CASE" data-scale="2"><td><a href="#car-key-relay">Car key relay</a></td><td><span class="verdict edge">EDGE CASE</span></td><td class="victims">[##--] real for keyless vehicles</td><td>Relay theft targets specific car models and parking setups, not every driver equally.</td><td>Use manufacturer sleep-mode keys, garage/steering lock, or pouch if your model is targeted.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="REAL" data-scale="2"><td><a href="#webcam-spying">Webcam spying</a></td><td><span class="verdict real">REAL</span></td><td class="victims">[##--] documented cases</td><td>RATs and insecure cameras are real; the cover is cheap enough to end the debate.</td><td>$0 tape or $2 slider; remember microphones are the uncovered gap.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="REAL" data-scale="2"><td><a href="#sim-swap">SIM swap</a></td><td><span class="verdict real">REAL</span></td><td class="victims">[##--] IC3 2025: 971 complaints, $17.4M loss</td><td>Rare for the average person, severe for crypto, creator, and high-value finance accounts.</td><td>Carrier port-out PIN; app/passkey MFA; remove SMS recovery where possible.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="REAL" data-scale="2"><td><a href="#airtag-stalking">AirTag and tracker stalking</a></td><td><span class="verdict real">REAL</span></td><td class="victims">[##--] documented cases and platform countermeasures</td><td>Small population, serious stakes; cross-platform alerts now exist.</td><td>Enable Bluetooth/location alerts; follow platform steps; involve law enforcement if safety is at risk.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="REAL" data-scale="3"><td><a href="#card-skimmers">ATM and pump card skimmers</a></td><td><span class="verdict real">REAL</span></td><td class="victims">[###-] FBI: more than $1B/year cost</td><td>Physical skimmers capture magstripe/PIN data at pumps, ATMs, POS terminals.</td><td>Tap &gt; chip &gt; swipe; inspect seals/readers; shield PIN; use bank ATMs.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="REAL" data-scale="3"><td><a href="#shoulder-surfing">Shoulder-surfed phone PIN theft</a></td><td><span class="verdict real">REAL</span></td><td class="victims">[###-] pattern documented; platform mitigations added</td><td>Thief sees passcode, steals phone, changes account/payment settings.</td><td>Use biometrics in public; turn on iPhone Stolen Device Protection and Android theft protections.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="REAL" data-scale="4"><td><a href="#phishing">Phishing and smishing</a></td><td><span class="verdict real">REAL</span></td><td class="victims">[####] IC3 2025: 191,561 phishing/spoofing complaints</td><td>The boring inbound-message attack dwarfs most viral scares.</td><td>Never act from the message; open the app/site yourself; use passkeys or phishing-resistant MFA.</td><td>2026-07-05</td></tr>
+              <tr data-verdict="REAL" data-scale="4"><td><a href="#data-brokers">Data-broker exposure</a></td><td><span class="verdict real">REAL</span></td><td class="victims">[####] FTC: hundreds of millions of ad IDs in one case</td><td>Your location and identity graph explains many "my phone heard me" moments.</td><td>Opt out where possible; restrict app permissions and ad tracking.</td><td>2026-07-05</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="audits" class="section-shell">
+      <div class="container-xl">
+        <span class="section-label"><i class="bi bi-search"></i> The audits</span>
+        <h2 class="mb-4">One fear at a time</h2>
+
+        <article class="playbill-card" id="juice-jacking">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Juice Jacker</div>
+            <p class="mb-3">The public USB port steals your data while your phone charges.</p>
+            <span class="verdict theater">THEATER</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Is juice jacking real?</h3>
+            <p><strong>Direct answer:</strong> Technically possible, but not a normal consumer threat. As of 2026-07-05, this audit found agency warnings and lab demonstrations, not a public victim-count source showing a widespread real-world public-charger campaign.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Yes. USB can carry power and data, and malicious cables/hosts can attempt a data session.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> Public evidence is thin. The FBI Denver warning and FCC page warn on possibility; they are not victim-count reports.</div>
+              <div class="evidence-box"><strong>Gotcha</strong> The warning is not false physics. It is weak prevalence evidence. A targeted attacker with access to your cable is different from an airport epidemic.</div>
+              <div class="action-box"><strong>What to do:</strong> Use an AC outlet, your own charger, a battery pack, or a data blocker if easy. Do not skip password-manager setup to shop for USB anxiety gear.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. Sources: FBI Denver public warning via contemporaneous reports; FCC juice-jacking warning; platform USB trust prompts.</p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="rfid-wallets">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Walk-By Card Clone</div>
+            <p class="mb-3">A stranger brushes past and clones your card through your pocket.</p>
+            <span class="verdict misdirected">MISDIRECTED</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Do I need an RFID-blocking wallet?</h3>
+            <p><strong>Direct answer:</strong> Usually no for modern payment cards. EMVCo says contactless transactions generate a one-time security code for each transaction; that is not a reusable magstripe clone.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Short-range reads are possible under lab or controlled conditions.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> This audit found no mass victim-count source for walk-by contactless EMV cloning. The real card-theft sources are physical skimmers, e-commerce breaches, and phishing.</div>
+              <div class="evidence-box"><strong>When not to use this fear</strong> Do not let RFID-wallet shopping replace statement alerts, tap/chip preference, and terminal inspection.</div>
+              <div class="action-box"><strong>What to do:</strong> If you like the wallet, fine. For security ROI, use tap-to-pay, avoid swipe, monitor accounts, and lock cards quickly after alerts.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://www.emvco.com/emv-technologies/emv-contactless-chip/" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> EMVCo contactless security</a></p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="phone-listening">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Listening Phone</div>
+            <p class="mb-3">You mentioned shoes at lunch; now every ad is shoes.</p>
+            <span class="verdict misdirected">MISDIRECTED</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Is my phone listening to my conversations for ads?</h3>
+            <p><strong>Direct answer:</strong> The best public app-study evidence points away from routine microphone eavesdropping and toward something more ordinary: screen capture risks, location trails, third-party app permissions, and data-broker/ad graphs.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Malware or permission-abusing apps can record audio if granted access or exploited.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> Northeastern researchers analyzed more than 17,000 Android apps and reported no audio leaks in the tested set; they did find screen recording/leakage behavior.</div>
+              <div class="evidence-box"><strong>Real adjacent threat</strong> FTC actions against data brokers show precise location and advertising identifiers moving through markets at massive scale.</div>
+              <div class="action-box"><strong>What to do:</strong> Review microphone/camera/location permissions, reset or restrict ad IDs, turn off unnecessary app tracking, and use the <a href="privacy-data-broker-opt-out.html">data broker opt-out guide</a>.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://news.northeastern.edu/2018/07/06/is-your-smartphone-spying-on-you/" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Northeastern app study</a> <a class="source-link" href="https://www.ftc.gov/news-events/news/press-releases/2024/12/ftc-takes-action-against-mobilewalla-collecting-selling-sensitive-location-data" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> FTC Mobilewalla</a></p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="hotel-keycards">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Credit Card Key</div>
+            <p class="mb-3">Your hotel room card supposedly contains your payment card.</p>
+            <span class="verdict theater">THEATER</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Do hotel key cards store your credit card?</h3>
+            <p><strong>Direct answer:</strong> Treat this as an urban legend. Hotel key systems typically need only access credentials such as room reference, validity dates, and permissions; there is no operational reason to encode the payment card on the room key.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Magnetic stripes can store arbitrary data, but "possible storage" is not "hotel practice."</div>
+              <div class="evidence-box"><strong>In the wild?</strong> No credible public victim-count source appears for identity theft from returned room keys.</div>
+              <div class="evidence-box"><strong>Real adjacent threat</strong> The hotel property-management/payment system is where payment data risk lives, not the disposable access key.</div>
+              <div class="action-box"><strong>What to do:</strong> Do not worry about returning the key. Use a credit card rather than debit for travel, monitor charges, and dispute fraud promptly.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. Source: hotel key-card industry explanations and absence of public victim-count reports.</p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="hotel-safes">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Magic Safe Code</div>
+            <p class="mb-3">The room safe opens with a master code or staff override.</p>
+            <span class="verdict edge">EDGE CASE</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Can hotel staff open the room safe?</h3>
+            <p><strong>Direct answer:</strong> Yes, often by design. The honest framing is that the in-room safe protects against opportunists and casual theft, not against authorized staff, bad defaults, or someone with the override key/code.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> A safe manual checked during build documents master-code and mechanical-key opening; its factory master code is listed as 000000.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> The bypass mechanism is real; the public victim scale is unclear and likely far smaller than routine travel theft.</div>
+              <div class="evidence-box"><strong>Gotcha</strong> "The safe can be opened" does not mean "never use it." It may still be the best in-room option.</div>
+              <div class="action-box"><strong>What to do:</strong> Lock it, test obvious default codes before trusting it, hide valuables from casual view, use front-desk safe deposit for irreplaceables, and keep passport/phone-critical items on you when practical.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. Source: SFH-1182 safe manual extracted during build; it recommends changing the master code immediately and documents factory default 000000.</p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="public-wifi">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Coffee-Shop Sniffer</div>
+            <p class="mb-3">Everyone on airport Wi-Fi can read your bank password.</p>
+            <span class="verdict edge">EDGE CASE</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Is public Wi-Fi dangerous?</h3>
+            <p><strong>Direct answer:</strong> Less than old warnings imply. Passive sniffing of ordinary browsing is largely blunted by HTTPS, which Google says reached roughly 95-99% of Chrome navigations around 2020 and is now the default path for public sites.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Yes: fake hotspots, captive-portal phishing, device sharing services, DNS tricks, and old non-HTTPS apps still matter.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> Public Wi-Fi attacks exist, but the mass "anyone can read all your passwords" story is stale for mainstream HTTPS sites.</div>
+              <div class="evidence-box"><strong>Who profits?</strong> VPN ads often sell 2010-era Wi-Fi fear. A VPN hides traffic from the local network operator; it does not make phishing sites safe or fix malware.</div>
+              <div class="action-box"><strong>What to do:</strong> Use HTTPS, do not install certificates/profiles from captive portals, turn off file sharing, prefer your cellular hotspot for sensitive work, and use a reputable VPN when the network operator itself is the privacy concern.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://blog.google/security/https-by-defau/" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Google HTTPS by default</a></p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="webcam-spying">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Watching Laptop</div>
+            <p class="mb-3">Someone is looking through your webcam.</p>
+            <span class="verdict real">REAL</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Is webcam spying real?</h3>
+            <p><strong>Direct answer:</strong> Yes, though not usually in the "random stranger watches you all day" form. Insecure cameras, remote-access malware, and abusive institutional monitoring have documented cases; a cheap cover is rational because it ends the visual channel.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Yes. Malware and misconfigured camera systems can expose feeds or activate cameras.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> The FTC's TRENDnet case alleged hundreds of private camera feeds were made public after poor security.</div>
+              <div class="evidence-box"><strong>Gotcha</strong> Webcam covers do nothing for microphones. For sensitive conversations, control the device or use a separate room.</div>
+              <div class="action-box"><strong>What to do:</strong> Use a sliding cover or tape, keep OS/apps updated, remove unknown remote-access tools, and harden smart cameras with unique passwords and updates.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://www.ftc.gov/news-events/news/press-releases/2013/09/marketer-internet-connected-home-security-video-cameras-settles-ftc-charges-it-failed-protect" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> FTC TRENDnet</a></p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="usb-drops">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Parking-Lot USB</div>
+            <p class="mb-3">A found flash drive compromises the machine it touches.</p>
+            <span class="verdict edge">EDGE CASE</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Are USB drops a real attack?</h3>
+            <p><strong>Direct answer:</strong> Real for organizations, mostly theater for ordinary consumers. The attack works because helpful people plug in found drives; the question is whether you are a valuable path into an employer or institution.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Yes. USB devices can carry files, emulate keyboards, exploit old autorun habits, or deliver malicious payloads.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> In a controlled study, researchers dropped 297 flash drives and estimated 45-98% attack success, with the first drive connected in under six minutes.</div>
+              <div class="evidence-box"><strong>Profile split</strong> You personally: usually not worth panic. Your employer: real social-engineering vector.</div>
+              <div class="action-box"><strong>What to do:</strong> Do not plug found drives into personal or work machines. Give them to facilities/security. Employers should disable USB where warranted and train without shaming helpfulness.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://research.google/pubs/users-really-do-plug-in-usb-drives-they-find/" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Google/USENIX USB-drop study</a></p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="card-skimmers">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Real Skimmer</div>
+            <p class="mb-3">An ATM or pump captures your card and PIN.</p>
+            <span class="verdict real">REAL</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Are ATM and gas-pump card skimmers real?</h3>
+            <p><strong>Direct answer:</strong> Yes. This is the card threat that deserves your attention. The FBI estimates skimming costs financial institutions and consumers more than $1 billion each year.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Yes. Skimmers on or inside ATMs, POS terminals, and fuel pumps capture magstripe data and sometimes PINs.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> FBI and Secret Service enforcement operations keep finding devices; one 2025 Secret Service program removed 411 devices after inspecting nearly 60,000 terminals.</div>
+              <div class="evidence-box"><strong>Gotcha</strong> The useful hierarchy is tap &gt; chip &gt; swipe. Swiping feeds the easiest copy path.</div>
+              <div class="action-box"><strong>What to do:</strong> Wiggle the reader, check pump security seals, use bank/inside ATMs, shield PIN, prefer credit over debit at pumps, and enable transaction alerts.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://www.fbi.gov/how-we-can-help-you/scams-and-safety/common-frauds-and-scams/skimming" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> FBI skimming</a> <a class="source-link" href="https://consumer.ftc.gov/consumer-alerts/2018/08/watch-out-card-skimming-gas-pump" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> FTC pump skimmers</a> <a class="source-link" href="https://www.secretservice.gov/newsroom/releases/2026/01/secret-service-card-skimming-operations-prevent-more-400-million-fraud" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Secret Service 2025 operations</a></p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="sim-swap">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Stolen Number</div>
+            <p class="mb-3">A carrier moves your phone number to the attacker.</p>
+            <span class="verdict real">REAL</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Is SIM swap a real threat?</h3>
+            <p><strong>Direct answer:</strong> Yes, especially if SMS can reset valuable accounts. IC3 recorded 971 SIM-swap complaints and $17,366,758 in losses in 2025; 2021 had 1,611 complaints and more than $68 million in losses.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Yes. Attackers social-engineer or compromise carrier processes to port or reassign the number.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> IC3 tracks it as its own crime type; FCC rules require stronger carrier steps and customer notification for SIM changes/port-outs.</div>
+              <div class="evidence-box"><strong>Profile split</strong> Average user: modest probability. Crypto holder, public figure, creator, finance admin: serious.</div>
+              <div class="action-box"><strong>What to do:</strong> Add carrier port-out/SIM PINs, remove SMS from email/bank recovery where possible, use app/passkey/security-key MFA, and keep recovery codes offline.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> IC3 2025 report</a> <a class="source-link" href="https://www.ic3.gov/PSA/2022/PSA220208" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> IC3 SIM swap PSA</a> <a class="source-link" href="https://www.fcc.gov/document/fcc-adopts-rules-protect-consumers-cell-phone-accounts-0" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> FCC SIM-swap rules</a></p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="phishing">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Package Text</div>
+            <p class="mb-3">Your package, toll, bank, tax refund, or account is "urgent."</p>
+            <span class="verdict real">REAL</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Are phishing and smishing the real threat?</h3>
+            <p><strong>Direct answer:</strong> Yes. IC3's 2025 report lists phishing/spoofing as the top complaint-count crime type with 191,561 complaints and $215.8 million in reported losses.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Trivial. The attacker sends messages at scale and waits for credentials, payment, or malware install.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> Massive. FTC 2025 data also says people reported about $16 billion in all fraud losses and nearly one in three fraud reports involved imposter scams.</div>
+              <div class="evidence-box"><strong>Gotcha</strong> Perfectly spelling-checked messages and caller ID are not proof. AI improves scripts; spoofing improves delivery.</div>
+              <div class="action-box"><strong>What to do:</strong> Never act from inbound contact. Open the app/site yourself, call a known number, use passkeys or phishing-resistant MFA, and teach family recovery scripts from <a href="scam-defense-for-parents.html">Scam Defense for Parents</a>.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> IC3 2025 report</a> <a class="source-link" href="https://www.ftc.gov/news-events/news/press-releases/2026/06/ftc-data-show-people-reported-losing-3-point-5-billion-imposter-scams-2025" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> FTC 2025 fraud release</a></p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="qr-stickers">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Sticker Portal</div>
+            <p class="mb-3">A QR code on a meter or ticket sends you to a fake payment site.</p>
+            <span class="verdict edge">EDGE CASE</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Are QR-code sticker scams real?</h3>
+            <p><strong>Direct answer:</strong> Yes, but still modest compared with broad phishing. The FTC warns that QR codes can route to spoofed sites or malware, and NYC DOT issued a 2025 parking-meter sticker advisory.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Easy. A sticker can cover a legitimate payment code, or a fake ticket can route to a convincing domain.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> Documented by consumer agencies and municipalities, especially parking meters, tickets, restaurant signs, and package scams.</div>
+              <div class="evidence-box"><strong>Gotcha</strong> The QR code is not magic; the danger is the link and the form behind it.</div>
+              <div class="action-box"><strong>What to do:</strong> Inspect the URL before entering data, avoid unexpected QR codes in emails/texts, prefer official apps typed or downloaded from app stores, and report sticker codes to the venue/city.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://consumer.ftc.gov/consumer-alerts/2023/12/scammers-hide-harmful-links-qr-codes-steal-your-information" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> FTC QR scams</a> <a class="source-link" href="https://www.nyc.gov/html/dot/html/pr2025/nyc-dot-issues-parking-meter-scam-advisory.shtml" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> NYC DOT advisory</a></p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="airtag-stalking">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Hidden Tracker</div>
+            <p class="mb-3">A Bluetooth tracker follows a person, not a suitcase.</p>
+            <span class="verdict real">REAL</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Is AirTag or Bluetooth tracker stalking real?</h3>
+            <p><strong>Direct answer:</strong> Yes. It is not mass-fraud scale, but it is real, personal, and high-consequence for stalking and abuse victims. Apple and Google now support unwanted-tracker alerts across iOS and Android.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Yes. Small Bluetooth trackers can be hidden in cars, bags, clothing, or belongings.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> DOJ cases and civil lawsuits document misuse; Apple and Google created a cross-platform industry specification in 2024.</div>
+              <div class="evidence-box"><strong>Gotcha</strong> Alerts reduce risk but are not instant physical safety. Treat a tracker alert as evidence to preserve, not just a nuisance to silence.</div>
+              <div class="action-box"><strong>What to do:</strong> Keep phone OS updated, keep Bluetooth/location services needed for alerts enabled, follow Apple/Google steps to locate and identify the tracker, and contact law enforcement if safety is at risk.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://security.googleblog.com/2024/05/google-and-apple-deliver-support-for.html" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Google/Apple tracker alerts</a> <a class="source-link" href="https://support.apple.com/guide/personal-safety/detect-unwanted-trackers-ips139b15fd9/web" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Apple tracker safety</a> <a class="source-link" href="https://www.justice.gov/usao-wdtn/pr/federal-grand-jury-indicts-man-attempted-kidnapping-and-stalking-memphis-mayor" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> DOJ AirTag case</a></p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="house-symbols">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Secret Burglar Code</div>
+            <p class="mb-3">A chalk mark, zip tie, or mirror tag means traffickers or burglars picked you.</p>
+            <span class="verdict theater">THEATER</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Do thieves mark houses with symbols?</h3>
+            <p><strong>Direct answer:</strong> Treat viral symbol-code lists as security folklore unless your local police issue a specific current alert for your area. The general rumor class has a recurring pattern: vivid signs, weak sourcing, and no repeatable victim-count base.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> A criminal could mark anything. That does not make a viral codebook real.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> This audit found no credible public victim-scale source showing broad symbol-code deployment.</div>
+              <div class="evidence-box"><strong>Why it spreads</strong> It gives a visible object to fear. That feels actionable even when the real prevention is mundane.</div>
+              <div class="action-box"><strong>What to do:</strong> Remove odd tags if you want, but spend the effort on locks, lighting, packages, visibility, and not advertising absence.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. Source: public-law-enforcement alert pattern review; no national victim-count source found.</p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="bluetooth-airdrop">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Nearby Hacker</div>
+            <p class="mb-3">Bluetooth, AirDrop, or nearby sharing gets you hacked on the train.</p>
+            <span class="verdict edge">EDGE CASE</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Are Bluetooth and AirDrop attacks real?</h3>
+            <p><strong>Direct answer:</strong> Real bugs and harassment modes exist, but proximity attacks usually need a vulnerable version, permissive settings, or a targeted attacker. They are not the same scale as phishing.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Yes. Wireless stacks have had exploitable bugs, and open sharing settings invite unwanted files/contact attempts.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> Mostly episodic and version-dependent, with platform patches changing risk quickly.</div>
+              <div class="evidence-box"><strong>Gotcha</strong> Turning Bluetooth off forever breaks tracker alerts, wearables, car systems, and usability. Settings matter more than blanket fear.</div>
+              <div class="action-box"><strong>What to do:</strong> Keep OS current, set AirDrop/Quick Share to contacts-only or off in public, reject unexpected prompts, and use Lockdown Mode only for high-risk targeted profiles.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. Source: Apple Personal Safety guide and platform update model.</p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="car-key-relay">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Relay Van</div>
+            <p class="mb-3">A relay device extends your keyless fob from inside the house.</p>
+            <span class="verdict edge">EDGE CASE</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Is car key relay theft real?</h3>
+            <p><strong>Direct answer:</strong> Yes for some keyless-entry vehicles and neighborhoods, but it is model- and location-dependent. Do not universalize a car-theft tactic into a household panic.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Yes. Relay tools can extend a key signal if the vehicle/fob design allows it.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> Documented by police and insurers in some regions; risk varies sharply by vehicle model, immobilizer behavior, and theft market.</div>
+              <div class="evidence-box"><strong>Gotcha</strong> A Faraday pouch with holes, gaps, or bad habits gives false confidence.</div>
+              <div class="action-box"><strong>What to do:</strong> Check if your fob has sleep/motion mode, keep keys away from exterior walls, test any pouch, and use a steering lock or garage for highly targeted models.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. Source: current general auto-theft guidance; model-specific checks required.</p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="shoulder-surfing">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Stolen Passcode</div>
+            <p class="mb-3">The thief sees your PIN, steals the phone, then takes the account.</p>
+            <span class="verdict real">REAL</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Is shoulder-surfed phone PIN theft real?</h3>
+            <p><strong>Direct answer:</strong> Yes, and it is underrated because it looks like a simple phone theft. The dangerous part is the account takeover after the thief knows the passcode.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Yes. A passcode can unlock password vaults, payment apps, email, and account settings if platform protections are weak or disabled.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> Platform vendors added protections aimed at exactly this scenario: Apple Stolen Device Protection and Android Theft Protection.</div>
+              <div class="evidence-box"><strong>Gotcha</strong> Biometrics are not only convenience. In public, Face ID/Touch ID/fingerprint reduces visible passcode entry.</div>
+              <div class="action-box"><strong>What to do:</strong> Use a longer alphanumeric passcode if tolerable, use biometrics in public, turn on iPhone Stolen Device Protection and choose "Always" delay for stronger protection, enable Android Theft Detection/Offline/Failed Authentication/Remote Lock where supported.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://support.apple.com/en-us/120340" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Apple Stolen Device Protection</a> <a class="source-link" href="https://support.google.com/android/answer/15146908?hl=en" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Android theft protection</a></p>
+          </div>
+        </article>
+
+        <article class="playbill-card" id="data-brokers">
+          <div class="playbill-side">
+            <div class="playbill">Tonight: The Invisible Audience Graph</div>
+            <p class="mb-3">The boring surveillance market behind uncanny targeting.</p>
+            <span class="verdict real">REAL</span>
+          </div>
+          <div class="playbill-body">
+            <h3>Is data-broker exposure a real security risk?</h3>
+            <p><strong>Direct answer:</strong> Yes. It is less cinematic than a microphone conspiracy and more useful to scammers, stalkers, advertisers, and social engineers.</p>
+            <div class="audit-grid">
+              <div class="evidence-box"><strong>Possible?</strong> Routine. Apps, ad auctions, public records, breached data, loyalty programs, and brokers assemble identity/location graphs.</div>
+              <div class="evidence-box"><strong>In the wild?</strong> In one 2024 FTC matter, Mobilewalla allegedly collected more than 500 million unique advertising identifiers paired with precise location data.</div>
+              <div class="evidence-box"><strong>Gotcha</strong> Opt-outs reduce exposure; they do not erase every copy or future broker.</div>
+              <div class="action-box"><strong>What to do:</strong> Follow <a href="privacy-data-broker-opt-out.html">Privacy Data Broker Opt-Out</a>, restrict location permissions, use email aliases, and reduce public answers to security-question prompts.</div>
+            </div>
+            <p class="audit-meta mb-0 mt-3">Last audited: 2026-07-05. <a class="source-link" href="https://www.ftc.gov/news-events/news/press-releases/2024/12/ftc-takes-action-against-mobilewalla-collecting-selling-sensitive-location-data" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> FTC Mobilewalla</a></p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="real-list" class="section-shell">
+      <div class="container-xl">
+        <div class="real-list">
+          <span class="section-label" style="color:#333"><i class="bi bi-clipboard-check"></i> No costumes here</span>
+          <h2 class="mb-3">The boring REAL list - where attention should go</h2>
+          <p class="lead">Security attention is zero-sum. The biggest wins are dull, repeatable, and rarely sponsor breathless news segments.</p>
+          <div class="table-responsive">
+            <table class="table plain-table align-middle">
+              <thead><tr><th>Boring real threat</th><th>Scale signal</th><th>The theatrical fear stealing attention</th><th>Do this instead</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Password reuse + credential stuffing</strong></td><td>Mass automated account takeover after breaches</td><td>Juice jacking, Bluetooth proximity hacks</td><td>Password manager; unique passwords; passkeys where supported.</td></tr>
+                <tr><td><strong>Phishing/smishing</strong></td><td>IC3 2025: 191,561 phishing/spoofing complaints</td><td>Hotel key cards, secret house marks</td><td>Never act on inbound contact; open the app/site yourself.</td></tr>
+                <tr><td><strong>No MFA on email</strong></td><td>Email is the reset key for banks, cloud files, stores, and work</td><td>RFID-blocking wallets</td><td>Use passkeys/security keys/app MFA; protect recovery codes.</td></tr>
+                <tr><td><strong>Unpatched routers and devices</strong></td><td>Botnets and credential attacks target old firmware</td><td>Public Wi-Fi panic</td><td>Auto-update, replace EOL routers, unique admin password.</td></tr>
+                <tr><td><strong>Data-broker exposure</strong></td><td>FTC cases show large-scale location/ad-ID markets</td><td>Phone-listening conspiracy</td><td>Opt out, restrict permissions, reduce public personal data.</td></tr>
+                <tr><td><strong>Physical card skimmers</strong></td><td>FBI: more than $1B/year cost</td><td>Walk-by RFID skimming</td><td>Tap/chip, inspect terminals, shield PIN, alerts.</td></tr>
+                <tr><td><strong>No backups</strong></td><td>Ransomware and accidental deletion turn into permanent loss</td><td>Webcam panic without device hygiene</td><td>3-2-1 backups; test restore; keep one offline/cloud-versioned copy.</td></tr>
+                <tr><td><strong>Unlocked doors and exposed routines</strong></td><td>Opportunity beats elaborate burglar folklore</td><td>Chalk marks and zip-tie rumors</td><td>Lock doors/windows, lighting, package handling, neighbor awareness.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="mb-0 small">For the personal digital baseline, use <a href="personal-cybersecurity.html">Personal Cybersecurity</a>. For family scam scripts, use <a href="scam-defense-for-parents.html">Scam Defense for Parents</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="heuristics" class="section-shell">
+      <div class="container-xl">
+        <span class="section-label"><i class="bi bi-sliders"></i> Calibration heuristics</span>
+        <h2 class="mb-4">Grade the next viral scare yourself</h2>
+        <div class="row g-3">
+          <div class="col-md-6 col-lg-4"><div class="heuristic-card"><span class="num">1</span><h3>Demo is not deployment</h3><p>A conference demo proves possibility. It does not prove criminals can scale it, monetize it, and repeat it against strangers.</p><p class="small mb-0"><strong>Example:</strong> a malicious charging cable demo is possible; IC3 phishing counts show what is actually industrialized.</p></div></div>
+          <div class="col-md-6 col-lg-4"><div class="heuristic-card"><span class="num">2</span><h3>Ask who profits</h3><p>If the loudest warnings are paid for by the mitigation category, raise the evidence bar.</p><p class="small mb-0"><strong>Example:</strong> VPNs can be useful, but "public Wi-Fi means instant password theft" is often marketing residue.</p></div></div>
+          <div class="col-md-6 col-lg-4"><div class="heuristic-card"><span class="num">3</span><h3>Look for scale mechanics</h3><p>Remote, automated attacks become epidemics. Physical-proximity attacks usually stay rare unless the payoff is high and target selection is easy.</p><p class="small mb-0"><strong>Example:</strong> package-text phishing scales globally; a walk-by RFID attack does not.</p></div></div>
+          <div class="col-md-6 col-lg-4"><div class="heuristic-card"><span class="num">4</span><h3>Cheap fixes can win</h3><p>Probability debates are not worth much when mitigation costs almost nothing and has no downside.</p><p class="small mb-0"><strong>Example:</strong> a webcam cover is rational; a drawer full of RFID sleeves is usually not.</p></div></div>
+          <div class="col-md-6 col-lg-4"><div class="heuristic-card"><span class="num">5</span><h3>Agency logo is not prevalence</h3><p>Agencies warn about possible tactics. Their warnings are not always ranked by victim count or expected value.</p><p class="small mb-0"><strong>Example:</strong> the FCC/FBI can advise against public USB ports while phishing remains the much larger day-to-day risk.</p></div></div>
+          <div class="col-md-6 col-lg-4"><div class="heuristic-card"><span class="num">6</span><h3>Match your profile</h3><p>An EDGE CASE can become REAL for you if you fit the target profile.</p><p class="small mb-0"><strong>Example:</strong> SIM swap is not everyone-same-risk; it matters more for crypto, creators, and high-value email accounts.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="mistakes" class="section-shell">
+      <div class="container-xl">
+        <span class="section-label"><i class="bi bi-exclamation-triangle-fill"></i> Common mistakes</span>
+        <h2 class="mb-4">How people misallocate security attention</h2>
+        <div class="row g-3">
+          <div class="col-md-6"><div class="mistake-card"><h3>Buying products for THEATER while leaving email weak</h3><p>RFID wallets, Faraday bags, and USB blockers are not substitutes for unique passwords and strong MFA on email, bank, carrier, and cloud accounts.</p></div></div>
+          <div class="col-md-6"><div class="mistake-card"><h3>Treating all warnings as equal</h3><p>An agency warning may mean "possible and avoidable," not "common." Rank by documented victim scale before ranking by dread.</p></div></div>
+          <div class="col-md-6"><div class="mistake-card"><h3>Dismissing edge cases that match you</h3><p>Crypto holders, stalking victims, executives, journalists, and system administrators should not use average-person verdicts as permission to ignore targeted risk.</p></div></div>
+          <div class="col-md-6"><div class="mistake-card"><h3>Letting debunking turn into cynicism</h3><p>"Juice jacking is mostly theater" does not mean "security warnings are fake." The phishing, skimming, SIM-swap, data-broker, and stolen-phone rows are real.</p></div></div>
+          <div class="col-md-6"><div class="mistake-card"><h3>Confusing privacy, security, and anonymity</h3><p>A VPN may hide traffic from a coffee-shop network, but it does not stop phishing, malware, account reuse, malicious browser extensions, or data brokers that already have your data.</p></div></div>
+          <div class="col-md-6"><div class="mistake-card"><h3>Counting only money</h3><p>Some low-count threats, especially stalking and intimate abuse, are worth action because the consequence is severe even if national complaint counts are modest.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources" class="section-shell">
+      <div class="container-xl">
+        <span class="section-label"><i class="bi bi-journal-text"></i> Sources</span>
+        <h2 class="mb-4">Receipts checked during build</h2>
+        <div class="row g-3">
+          <div class="col-md-6 col-lg-4"><div class="source-card"><h3>Fraud scale</h3><p>IC3 2025 Annual Report; FTC 2025 imposter-scam release; FTC Consumer Sentinel 2024 Data Book.</p><a href="https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf" target="_blank" rel="noopener noreferrer">IC3 2025</a> · <a href="https://www.ftc.gov/news-events/news/press-releases/2026/06/ftc-data-show-people-reported-losing-3-point-5-billion-imposter-scams-2025" target="_blank" rel="noopener noreferrer">FTC 2025</a> · <a href="https://www.ftc.gov/system/files/ftc_gov/pdf/csn-annual-data-book-2024.pdf" target="_blank" rel="noopener noreferrer">Sentinel 2024</a></div></div>
+          <div class="col-md-6 col-lg-4"><div class="source-card"><h3>Payments and skimmers</h3><p>EMVCo contactless chip security; FBI skimming overview; FTC pump-skimmer advice; Secret Service 2025 skimmer operations.</p><a href="https://www.emvco.com/emv-technologies/emv-contactless-chip/" target="_blank" rel="noopener noreferrer">EMVCo</a> · <a href="https://www.fbi.gov/how-we-can-help-you/scams-and-safety/common-frauds-and-scams/skimming" target="_blank" rel="noopener noreferrer">FBI</a> · <a href="https://consumer.ftc.gov/consumer-alerts/2018/08/watch-out-card-skimming-gas-pump" target="_blank" rel="noopener noreferrer">FTC</a></div></div>
+          <div class="col-md-6 col-lg-4"><div class="source-card"><h3>Phones and platforms</h3><p>Apple Stolen Device Protection, Android Theft Protection, Apple/Google unwanted tracker alerts, Apple Personal Safety guide.</p><a href="https://support.apple.com/en-us/120340" target="_blank" rel="noopener noreferrer">Apple theft</a> · <a href="https://support.google.com/android/answer/15146908?hl=en" target="_blank" rel="noopener noreferrer">Android theft</a> · <a href="https://security.googleblog.com/2024/05/google-and-apple-deliver-support-for.html" target="_blank" rel="noopener noreferrer">Tracker alerts</a></div></div>
+          <div class="col-md-6 col-lg-4"><div class="source-card"><h3>Privacy and tracking</h3><p>Northeastern Android app study; FTC Mobilewalla sensitive-location-data action.</p><a href="https://news.northeastern.edu/2018/07/06/is-your-smartphone-spying-on-you/" target="_blank" rel="noopener noreferrer">Northeastern</a> · <a href="https://www.ftc.gov/news-events/news/press-releases/2024/12/ftc-takes-action-against-mobilewalla-collecting-selling-sensitive-location-data" target="_blank" rel="noopener noreferrer">FTC Mobilewalla</a></div></div>
+          <div class="col-md-6 col-lg-4"><div class="source-card"><h3>Public Wi-Fi and QR</h3><p>Google HTTPS-by-default post; FTC QR-code scam advice; NYC DOT parking-meter scam advisory.</p><a href="https://blog.google/security/https-by-defau/" target="_blank" rel="noopener noreferrer">Google HTTPS</a> · <a href="https://consumer.ftc.gov/consumer-alerts/2023/12/scammers-hide-harmful-links-qr-codes-steal-your-information" target="_blank" rel="noopener noreferrer">FTC QR</a> · <a href="https://www.nyc.gov/html/dot/html/pr2025/nyc-dot-issues-parking-meter-scam-advisory.shtml" target="_blank" rel="noopener noreferrer">NYC DOT</a></div></div>
+          <div class="col-md-6 col-lg-4"><div class="source-card"><h3>Research and devices</h3><p>Google/USENIX USB-drop study; FTC TRENDnet camera case; SFH-1182 safe manual extracted during build.</p><a href="https://research.google/pubs/users-really-do-plug-in-usb-drives-they-find/" target="_blank" rel="noopener noreferrer">USB study</a> · <a href="https://www.ftc.gov/news-events/news/press-releases/2013/09/marketer-internet-connected-home-security-video-cameras-settles-ftc-charges-it-failed-protect" target="_blank" rel="noopener noreferrer">FTC camera case</a></div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-4">
+    <div class="container-xl small muted">
+      <p class="mb-2"><strong>Last verified: 2026-07-05.</strong> Volatile rows should be refreshed when IC3/FTC annual data, OS anti-theft features, payment standards, or documented-theater verdicts change. Counts are U.S.-sourced unless stated; mechanics can generalize globally.</p>
+      <p class="mb-0">AI-generated reference for security risk calibration, not legal, law-enforcement, or professional security advice. Related: <a href="personal-cybersecurity.html">Personal Cybersecurity</a>, <a href="privacy-data-broker-opt-out.html">Data Broker Opt-Out</a>, and <a href="scam-defense-for-parents.html">Scam Defense for Parents</a>.</p>
+    </div>
+  </footer>
+
+  <button class="btn btn-warning theme-toggle no-print" id="themeToggle" type="button" aria-label="Toggle theme" title="Toggle theme"><i class="bi bi-moon-stars-fill"></i></button>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const root = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const storedTheme = localStorage.getItem('security-theater-theme');
+      if (storedTheme === 'light' || storedTheme === 'dark') root.dataset.theme = storedTheme;
+      const updateThemeIcon = () => {
+        const icon = themeToggle.querySelector('i');
+        icon.className = root.dataset.theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+      };
+      updateThemeIcon();
+      themeToggle.addEventListener('click', () => {
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('security-theater-theme', root.dataset.theme);
+        updateThemeIcon();
+      });
+
+      const table = document.getElementById('verdictTable');
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const search = document.getElementById('boardSearch');
+      const verdictFilter = document.getElementById('verdictFilter');
+      const scaleFilter = document.getElementById('scaleFilter');
+      const applyFilters = () => {
+        const q = search.value.trim().toLowerCase();
+        const verdict = verdictFilter.value;
+        const scale = scaleFilter.value;
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          const show = (!q || text.includes(q)) &&
+            (!verdict || row.dataset.verdict === verdict) &&
+            (!scale || row.dataset.scale === scale);
+          row.hidden = !show;
+        });
+      };
+      [search, verdictFilter, scaleFilter].forEach(el => el.addEventListener('input', applyFilters));
+
+      const verdictOrder = { 'THEATER': 0, 'MISDIRECTED': 1, 'EDGE CASE': 2, 'REAL': 3 };
+      let currentSort = { key: null, dir: 1 };
+      table.querySelectorAll('th[data-sort]').forEach((th, index) => {
+        th.addEventListener('click', () => {
+          const key = th.dataset.sort;
+          currentSort.dir = currentSort.key === key ? currentSort.dir * -1 : 1;
+          currentSort.key = key;
+          const sorted = rows.slice().sort((a, b) => {
+            let av;
+            let bv;
+            if (key === 'scale') {
+              av = Number(a.dataset.scale);
+              bv = Number(b.dataset.scale);
+            } else if (key === 'verdict') {
+              av = verdictOrder[a.dataset.verdict] ?? 9;
+              bv = verdictOrder[b.dataset.verdict] ?? 9;
+            } else {
+              av = a.children[index].textContent.trim().toLowerCase();
+              bv = b.children[index].textContent.trim().toLowerCase();
+            }
+            if (av < bv) return -1 * currentSort.dir;
+            if (av > bv) return 1 * currentSort.dir;
+            return 0;
+          });
+          sorted.forEach(row => tbody.appendChild(row));
+        });
+      });
+    });
+  </script>
+</body>
+</html>

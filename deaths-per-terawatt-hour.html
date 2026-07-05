@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script>
+  (function(){ try {
+    var s = localStorage.getItem("dptwh-theme");
+    if (s === "light" || s === "dark") document.documentElement.setAttribute("data-theme", s);
+    var dark = s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-bs-theme", dark ? "dark" : "light");
+  } catch(e){} })();
+</script>
+<title>Deaths per Terawatt-Hour: Every Energy Source, Ranked</title>
+<meta name="description" content="Coal, oil, gas, hydro, wind, solar, nuclear: mortality per unit of energy, why the ranking inverts intuition, and the honest accounting of Chernobyl, Fukushima, and Banqiao." />
+<meta name="keywords" content="deaths per TWh, energy safety, nuclear safety, coal air pollution deaths, Fukushima deaths, Chernobyl deaths, Banqiao dam, deaths per terawatt hour, wind solar safety, Our World in Data energy" />
+<meta name="author" content="David Veksler" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/deaths-per-terawatt-hour.html" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%23080d12'/%3E%3Cpath d='M18 74h64M26 65h9M39 55h9M52 39h9M65 22h9' stroke='%23ffb23d' stroke-width='8' stroke-linecap='round'/%3E%3Cpath d='M18 74 74 22' stroke='%2332d2ff' stroke-width='3' fill='none'/%3E%3C/svg%3E" />
+
+<meta property="og:title" content="Deaths per Terawatt-Hour: Every Energy Source, Ranked" />
+<meta property="og:description" content="Coal, oil, gas, hydro, wind, solar, nuclear: mortality per unit of energy, why the ranking inverts intuition, and honest accident accounting." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/deaths-per-terawatt-hour.html" />
+<meta property="og:image" content="images/deaths-per-terawatt-hour.png" />
+<meta property="og:image:alt" content="Log-scale deaths per terawatt-hour chart ranking fossil fuels, hydro, wind, nuclear, and solar with visible uncertainty notes." />
+<meta property="og:site_name" content="David Veksler Cheatsheets" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Deaths per Terawatt-Hour: Every Energy Source, Ranked" />
+<meta name="twitter:description" content="The energy mortality table with receipts: coal, oil, gas, hydro, wind, solar, nuclear, Chernobyl, Fukushima, and Banqiao." />
+<meta name="twitter:image" content="images/deaths-per-terawatt-hour.png" />
+<meta name="twitter:image:alt" content="Control-room style log-scale chart comparing deaths per TWh by energy source." />
+<meta name="twitter:creator" content="@heroiclife" />
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Deaths per Terawatt-Hour: Every Energy Source, Ranked",
+  "description": "A sourced deaths-per-terawatt-hour reference comparing coal, oil, gas, biomass, hydropower, wind, nuclear, and solar. Explains air-pollution mortality, accident accounting, Chernobyl, Fukushima, Banqiao, uncertainty ranges, objections, and common mistakes.",
+  "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+  "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+  "datePublished": "2026-07-05",
+  "dateModified": "2026-07-05",
+  "keywords": "deaths per TWh, deaths per terawatt-hour, energy safety, nuclear safety, coal air pollution, Fukushima deaths, Chernobyl deaths, Banqiao dam"
+}
+</script>
+
+<style>
+@layer tokens, base, components, utilities;
+
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --bg: light-dark(#f4f6f1, #080d12);
+    --panel: light-dark(#ffffff, #111922);
+    --panel-2: light-dark(#eef2e9, #172331);
+    --panel-3: light-dark(#e3e9dc, #0d151d);
+    --ink: light-dark(#17212b, #e9f1f4);
+    --muted: light-dark(#56636b, #9badb7);
+    --line: light-dark(#ced8c7, #263747);
+    --grid: light-dark(#d7dfd0, #203140);
+    --amber: light-dark(#9a5f00, #ffb23d);
+    --amber-2: light-dark(#d08a00, #ffd46f);
+    --cyan: light-dark(#006a84, #32d2ff);
+    --green: light-dark(#237047, #61d69a);
+    --red: light-dark(#a33428, #ff786b);
+    --blue: light-dark(#235a9d, #77adff);
+    --shadow: 0 18px 40px rgba(0,0,0,.22);
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  [data-theme="light"] { color-scheme: light; }
+  [data-theme="dark"] { color-scheme: dark; }
+}
+
+@layer base {
+  * { box-sizing: border-box; min-width: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--grid) 46%, transparent) 1px, transparent 1px),
+      linear-gradient(180deg, color-mix(in srgb, var(--grid) 46%, transparent) 1px, transparent 1px),
+      radial-gradient(circle at 78% 10%, color-mix(in srgb, var(--amber) 16%, transparent), transparent 22rem),
+      var(--bg);
+    background-size: 42px 42px, 42px 42px, auto, auto;
+    line-height: 1.55;
+  }
+  h1, h2, h3, h4 { line-height: 1.16; text-wrap: balance; letter-spacing: 0; }
+  p, li { text-wrap: pretty; }
+  a { color: var(--cyan); }
+  table { font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; border-radius: 5px; }
+  section { scroll-margin-top: 5rem; }
+}
+
+@layer components {
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    backdrop-filter: blur(14px);
+  }
+  .topbar .inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: .45rem .85rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .brand-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 800;
+    margin-right: .35rem;
+  }
+  .brand-chip i { color: var(--amber); }
+  .topbar nav a {
+    display: inline-block;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: .82rem;
+    font-weight: 700;
+    padding: .35rem .58rem;
+    border-radius: 6px;
+  }
+  .topbar nav a:hover { color: var(--ink); background: var(--panel-2); }
+  .theme-btn {
+    margin-left: auto;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--ink);
+    border-radius: 7px;
+    width: 2.1rem;
+    height: 2.1rem;
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .hero {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--panel-3) 84%, transparent), transparent 55%),
+      radial-gradient(circle at 13% 25%, color-mix(in srgb, var(--cyan) 16%, transparent), transparent 18rem);
+    pointer-events: none;
+  }
+  .hero-inner {
+    position: relative;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 2.25rem .95rem 1.45rem;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--cyan);
+    font: 800 .74rem/1 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    border: 1px solid color-mix(in srgb, var(--cyan) 45%, var(--line));
+    border-radius: 999px;
+    padding: .35rem .65rem;
+    background: color-mix(in srgb, var(--panel) 72%, transparent);
+  }
+  .hero h1 {
+    max-width: 980px;
+    margin: .8rem 0 .55rem;
+    font-size: clamp(2rem, 5vw, 4.45rem);
+    font-weight: 900;
+  }
+  .hero .lead {
+    max-width: 820px;
+    color: var(--muted);
+    font-size: clamp(1.02rem, 1.6vw, 1.22rem);
+  }
+  .verified {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    margin: .9rem 0 1.1rem;
+  }
+  .verified span {
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--panel) 80%, transparent);
+    border-radius: 999px;
+    padding: .28rem .64rem;
+    color: var(--muted);
+    font: 700 .78rem/1.2 var(--mono);
+  }
+  .verified strong { color: var(--ink); }
+
+  .chart-shell {
+    border: 1px solid color-mix(in srgb, var(--amber) 42%, var(--line));
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--grid) 36%, transparent) 1px, transparent 1px),
+      linear-gradient(180deg, color-mix(in srgb, var(--grid) 36%, transparent) 1px, transparent 1px),
+      linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, transparent), var(--panel-3));
+    background-size: 48px 48px, 48px 48px, auto;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: .95rem;
+  }
+  .chart-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: .7rem;
+    margin-bottom: .75rem;
+  }
+  .chart-title {
+    margin: 0;
+    font: 900 clamp(1.05rem, 2vw, 1.45rem)/1.12 var(--sans);
+  }
+  .chart-title small {
+    display: block;
+    margin-top: .22rem;
+    color: var(--muted);
+    font: 700 .74rem/1.25 var(--mono);
+  }
+  .chart-note {
+    color: var(--muted);
+    font: 700 .72rem/1.25 var(--mono);
+    text-align: right;
+  }
+  .log-chart {
+    --label: 10.5rem;
+    --axis: 1fr;
+    display: grid;
+    grid-template-columns: var(--label) var(--axis) 7rem;
+    gap: .45rem .65rem;
+    align-items: center;
+  }
+  .axis-row {
+    grid-column: 2 / 3;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    color: var(--muted);
+    font: 700 .72rem/1 var(--mono);
+  }
+  .axis-row span {
+    border-left: 1px solid var(--line);
+    padding-left: .28rem;
+  }
+  .src {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-weight: 800;
+  }
+  .glyph {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--cyan) 50%, var(--line));
+    color: var(--cyan);
+    border-radius: 50%;
+    background: var(--panel-3);
+  }
+  .bartrack {
+    position: relative;
+    height: 1.45rem;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    background:
+      linear-gradient(90deg,
+        transparent 0 calc(25% - 1px), color-mix(in srgb, var(--line) 70%, transparent) calc(25% - 1px) 25%, transparent 25% calc(50% - 1px), color-mix(in srgb, var(--line) 70%, transparent) calc(50% - 1px) 50%, transparent 50% calc(75% - 1px), color-mix(in srgb, var(--line) 70%, transparent) calc(75% - 1px) 75%, transparent 75%);
+  }
+  .bar {
+    position: absolute;
+    top: .33rem;
+    left: var(--start);
+    width: calc(var(--end) - var(--start));
+    min-width: 4px;
+    height: .78rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--amber), var(--amber-2));
+    box-shadow: 0 0 16px color-mix(in srgb, var(--amber) 48%, transparent);
+  }
+  .whisker {
+    position: absolute;
+    top: .17rem;
+    left: var(--low);
+    width: calc(var(--high) - var(--low));
+    height: 1.1rem;
+    border-left: 2px solid var(--cyan);
+    border-right: 2px solid var(--cyan);
+  }
+  .whisker::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    border-top: 2px solid var(--cyan);
+  }
+  .value {
+    color: var(--ink);
+    font: 900 .88rem/1 var(--mono);
+  }
+  .value small {
+    display: block;
+    color: var(--muted);
+    font: 700 .68rem/1.1 var(--mono);
+    margin-top: .18rem;
+  }
+  .hydro-brace {
+    grid-column: 1 / 4;
+    color: var(--cyan);
+    font: 800 .72rem/1.2 var(--mono);
+    border-left: 2px solid var(--cyan);
+    padding-left: .5rem;
+    margin-left: .85rem;
+  }
+
+  .quick-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .75rem;
+    margin: 1rem 0 0;
+  }
+  .quick-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--panel) 86%, transparent);
+    padding: .75rem .8rem;
+  }
+  .quick-card .k {
+    color: var(--muted);
+    font: 800 .68rem/1.1 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .quick-card .v {
+    color: var(--amber);
+    font: 900 1.45rem/1.05 var(--mono);
+    margin: .25rem 0;
+  }
+  .quick-card p {
+    color: var(--muted);
+    font-size: .82rem;
+    margin: 0;
+  }
+
+  main {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 .95rem 4rem;
+  }
+  section h2 {
+    margin: 2.5rem 0 .45rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .55rem;
+  }
+  section h2 i { color: var(--amber); }
+  .section-intro {
+    max-width: 82ch;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+  .depth-tag {
+    display: inline-block;
+    color: var(--cyan);
+    background: color-mix(in srgb, var(--cyan) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--cyan) 30%, var(--line));
+    border-radius: 999px;
+    padding: .18rem .5rem;
+    font: 800 .62rem/1 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    white-space: nowrap;
+  }
+  .panel {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    padding: 1rem;
+  }
+  .panel h3 {
+    font-size: 1.08rem;
+    font-weight: 850;
+    margin: 0 0 .5rem;
+  }
+  .grid-2, .grid-3 {
+    display: grid;
+    gap: .85rem;
+  }
+  .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+  }
+  table.ref {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+    font-size: .9rem;
+  }
+  .ref th, .ref td {
+    padding: .72rem .75rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .ref thead th {
+    background: var(--panel-2);
+    color: var(--ink);
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .ref tbody tr:nth-child(even) { background: color-mix(in srgb, var(--panel-2) 50%, transparent); }
+  .num { font-family: var(--mono); font-weight: 900; white-space: nowrap; }
+  .receipt {
+    display: inline-block;
+    color: var(--cyan);
+    border: 1px solid color-mix(in srgb, var(--cyan) 40%, var(--line));
+    border-radius: 999px;
+    padding: .12rem .45rem;
+    font: 800 .72rem/1.2 var(--mono);
+    text-decoration: none;
+    margin: .06rem .05rem .06rem 0;
+  }
+  .receipt:hover { background: color-mix(in srgb, var(--cyan) 14%, transparent); }
+  .callout {
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--amber);
+    border-radius: 8px;
+    background: var(--panel-2);
+    padding: .9rem 1rem;
+    margin: 1rem 0;
+  }
+  .callout h3, .callout h4 {
+    margin: 0 0 .35rem;
+    font-size: 1rem;
+    font-weight: 850;
+  }
+  .callout.cyan { border-left-color: var(--cyan); }
+  .callout.red { border-left-color: var(--red); }
+  .callout.green { border-left-color: var(--green); }
+  .meter {
+    display: grid;
+    grid-template-columns: 8.5rem 1fr;
+    gap: .45rem .75rem;
+    align-items: center;
+    margin-top: .65rem;
+  }
+  .meter .label {
+    font: 850 .75rem/1.15 var(--mono);
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .meter .readout {
+    border: 1px solid var(--line);
+    background: var(--panel-3);
+    border-radius: 6px;
+    padding: .42rem .55rem;
+    font: 900 .95rem/1.2 var(--mono);
+    color: var(--amber);
+  }
+  details.probe {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    margin: .75rem 0;
+    overflow: clip;
+  }
+  details.probe summary {
+    cursor: pointer;
+    list-style: none;
+    padding: .8rem .95rem;
+    font-weight: 850;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+  }
+  details.probe summary::-webkit-details-marker { display: none; }
+  details.probe summary::before {
+    content: "TP";
+    color: var(--cyan);
+    font: 900 .68rem/1 var(--mono);
+    border: 1px solid var(--cyan);
+    border-radius: 4px;
+    padding: .18rem .25rem;
+  }
+  details.probe[open] summary { border-bottom: 1px solid var(--line); background: var(--panel-2); }
+  details.probe .answer { padding: .9rem .95rem; }
+  .mistakes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+  }
+  .mistake {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    overflow: clip;
+  }
+  .mistake .wrong {
+    padding: .75rem .85rem;
+    background: color-mix(in srgb, var(--red) 13%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  .mistake .right { padding: .75rem .85rem; }
+  .mistake .tag {
+    display: block;
+    font: 900 .66rem/1 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .3rem;
+  }
+  .wrong .tag { color: var(--red); }
+  .right .tag { color: var(--green); }
+  .related {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .85rem;
+  }
+  .related a {
+    display: block;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    padding: .9rem;
+    color: var(--ink);
+  }
+  .related a strong { color: var(--cyan); display: block; margin-bottom: .25rem; }
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: 3rem;
+    padding: 1.2rem 0 0;
+    color: var(--muted);
+    font-size: .9rem;
+  }
+  .source-list li { margin-bottom: .35rem; }
+  .backtop {
+    position: fixed;
+    right: .85rem;
+    bottom: .85rem;
+    width: 2.35rem;
+    height: 2.35rem;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(0,0,0,.22);
+  }
+}
+
+@layer utilities {
+  .muted { color: var(--muted); }
+  .mono { font-family: var(--mono); }
+  .amber { color: var(--amber); }
+  .cyan { color: var(--cyan); }
+  .mb-tight { margin-bottom: .45rem; }
+  .smallish { font-size: .9rem; }
+}
+
+@media (max-width: 780px) {
+  .log-chart {
+    --label: 1fr;
+    grid-template-columns: 1fr 5.8rem;
+  }
+  .axis-row { grid-column: 1 / 3; }
+  .src { grid-column: 1 / 3; margin-top: .3rem; }
+  .bartrack { grid-column: 1 / 2; }
+  .value { grid-column: 2 / 3; }
+  .hydro-brace { grid-column: 1 / 3; margin-left: 0; }
+  .quick-grid, .grid-2, .grid-3, .mistakes, .related { grid-template-columns: 1fr; }
+  .chart-head { align-items: start; flex-direction: column; }
+  .chart-note { text-align: left; }
+  .meter { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 420px) {
+  .hero-inner { padding-top: 1.7rem; }
+  .chart-shell { padding: .65rem; }
+  .log-chart { gap: .35rem .45rem; }
+  .value { font-size: .78rem; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bar { transition: filter .2s ease; }
+  .chart-shell:hover .bar { filter: saturate(1.15); }
+}
+
+@media print {
+  :root { color-scheme: light; }
+  body { background: #fff; color: #111; font-size: 10pt; }
+  .topbar, .theme-btn, .backtop { display: none !important; }
+  .hero-inner, main { max-width: none; padding-left: 0; padding-right: 0; }
+  .chart-shell, .panel, .callout, details.probe, .mistake, .related a { box-shadow: none; break-inside: avoid; }
+  a { color: #064f60; text-decoration: none; }
+  details.probe { page-break-inside: avoid; }
+  details.probe .answer { display: block; }
+}
+</style>
+</head>
+<body>
+<header class="topbar" aria-label="Page navigation">
+  <div class="inner">
+    <a class="brand-chip" href="index.php"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i> Cheatsheets</a>
+    <nav aria-label="Sections">
+      <a href="#ranking">Ranking</a>
+      <a href="#mechanism">Mechanism</a>
+      <a href="#accidents">Accidents</a>
+      <a href="#objections">Objections</a>
+      <a href="#context">Context</a>
+      <a href="#mistakes">Mistakes</a>
+      <a href="#sources">Sources</a>
+    </nav>
+    <button class="theme-btn" type="button" id="themeToggle" aria-label="Toggle color theme"><i class="bi bi-circle-half" aria-hidden="true"></i></button>
+  </div>
+</header>
+
+<div class="hero" id="top">
+  <div class="hero-inner">
+    <span class="eyebrow"><i class="bi bi-activity" aria-hidden="true"></i> Mortality accounting, not energy-team rhetoric</span>
+    <h1>Deaths per Terawatt-Hour: the Energy Risk Table, With Receipts.</h1>
+    <p class="lead">Public fear ranks energy sources by vivid disasters. The denominator ranks them by statistical deaths per unit of useful electricity. Those are different arguments.</p>
+    <div class="verified" aria-label="Freshness and scope">
+      <span><strong>Last verified:</strong> 2026-07-05</span>
+      <span><strong>Unit:</strong> deaths per TWh of electricity</span>
+      <span><strong>Scope:</strong> global reference values, accident + air-pollution mortality</span>
+    </div>
+
+    <figure class="chart-shell" aria-labelledby="chart-title">
+      <div class="chart-head">
+        <div>
+          <h2 class="chart-title" id="chart-title">Deaths per TWh, log scale <small>central values from OWID 2021 synthesis; fossil values likely conservative globally</small></h2>
+        </div>
+        <div class="chart-note">Axis: 0.01 -> 0.1 -> 1 -> 10 -> 100 deaths/TWh<br />One city-year = 1 TWh for ~150,000 EU residents</div>
+      </div>
+      <div class="log-chart" role="img" aria-label="Log-scale chart ranking energy sources by deaths per terawatt-hour. Brown coal is 32.72, coal 24.62, oil 18.43, biomass 4.63, gas 2.821, hydropower with Banqiao 1.3, hydropower without Banqiao about 0.04, wind 0.035, nuclear 0.03, solar 0.019.">
+        <div></div>
+        <div class="axis-row" aria-hidden="true"><span>0.01</span><span>0.1</span><span>1</span><span>10</span><span>100</span></div>
+        <div></div>
+
+        <div class="src"><span class="glyph"><i class="bi bi-fire" aria-hidden="true"></i></span>Brown coal</div>
+        <div class="bartrack"><span class="bar" style="--start:0%;--end:87.9%"></span></div>
+        <div class="value">32.72<small>lignite</small></div>
+
+        <div class="src"><span class="glyph"><i class="bi bi-fire" aria-hidden="true"></i></span>Coal</div>
+        <div class="bartrack"><span class="bar" style="--start:0%;--end:84.8%"></span><span class="whisker" style="--low:84.8%;--high:100%" aria-hidden="true"></span></div>
+        <div class="value">24.62<small>central</small></div>
+
+        <div class="src"><span class="glyph"><i class="bi bi-fuel-pump" aria-hidden="true"></i></span>Oil</div>
+        <div class="bartrack"><span class="bar" style="--start:0%;--end:81.6%"></span></div>
+        <div class="value">18.43</div>
+
+        <div class="src"><span class="glyph"><i class="bi bi-tree" aria-hidden="true"></i></span>Biomass</div>
+        <div class="bartrack"><span class="bar" style="--start:0%;--end:66.6%"></span></div>
+        <div class="value">4.63</div>
+
+        <div class="src"><span class="glyph"><i class="bi bi-flame" aria-hidden="true"></i></span>Gas</div>
+        <div class="bartrack"><span class="bar" style="--start:0%;--end:61.3%"></span></div>
+        <div class="value">2.821</div>
+
+        <div class="src"><span class="glyph"><i class="bi bi-water" aria-hidden="true"></i></span>Hydro, all</div>
+        <div class="bartrack"><span class="bar" style="--start:0%;--end:52.9%"></span></div>
+        <div class="value">1.3<small>Banqiao included</small></div>
+        <div class="hydro-brace">Hydro is two stories: routine hydro is near wind/nuclear/solar; one catastrophic dam failure dominates the all-history row.</div>
+
+        <div class="src"><span class="glyph"><i class="bi bi-water" aria-hidden="true"></i></span>Hydro, no Banqiao</div>
+        <div class="bartrack"><span class="bar" style="--start:0%;--end:15.1%"></span></div>
+        <div class="value">~0.04</div>
+
+        <div class="src"><span class="glyph"><i class="bi bi-wind" aria-hidden="true"></i></span>Wind</div>
+        <div class="bartrack"><span class="bar" style="--start:0%;--end:13.6%"></span></div>
+        <div class="value">0.035</div>
+
+        <div class="src"><span class="glyph"><i class="bi bi-radioactive" aria-hidden="true"></i></span>Nuclear</div>
+        <div class="bartrack"><span class="bar" style="--start:0%;--end:11.9%"></span><span class="whisker" style="--low:11.9%;--high:65.3%" aria-hidden="true"></span></div>
+        <div class="value">0.03<small>central; high estimates still low</small></div>
+
+        <div class="src"><span class="glyph"><i class="bi bi-sun" aria-hidden="true"></i></span>Solar</div>
+        <div class="bartrack"><span class="bar" style="--start:0%;--end:7%"></span></div>
+        <div class="value">0.019</div>
+      </div>
+    </figure>
+
+    <div class="quick-grid" aria-label="Quick reference">
+      <div class="quick-card"><div class="k">Highest central value</div><div class="v">32.72</div><p>Brown coal deaths/TWh in OWID's 2021 synthesis.</p></div>
+      <div class="quick-card"><div class="k">Coal vs nuclear</div><div class="v">~820x</div><p>24.62 divided by 0.03. The exact ratio shifts; the order-of-magnitude gap does not.</p></div>
+      <div class="quick-card"><div class="k">Fukushima answer</div><div class="v">0-1 / 2,350</div><p>Radiation-attributed deaths versus Fukushima Prefecture's disaster-related deaths as of Feb. 1, 2026.</p></div>
+      <div class="quick-card"><div class="k">Bottom cluster</div><div class="v">0.019-0.04</div><p>Solar, nuclear, wind, and hydro excluding Banqiao overlap at chart precision.</p></div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <section id="ranking">
+    <h2><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Quick Reference: the Ranking Table <span class="depth-tag">fundamentals</span></h2>
+    <p class="section-intro">A terawatt-hour is 1,000,000,000 kWh. OWID uses the helpful translation that this is about the annual electricity use of 150,000 EU residents, using 2021 EU per-capita electricity consumption of about 6,400 kWh. The table below keeps every bar's value in text, because screenshots travel farther than footnotes.</p>
+    <div class="table-wrap">
+      <table class="ref">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Source</th>
+            <th>Deaths/TWh</th>
+            <th>Dominant death mechanism</th>
+            <th>One statistical death per...</th>
+            <th>Receipts</th>
+            <th>Gotcha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>Brown coal</strong></td>
+            <td class="num">32.72</td>
+            <td>Combustion air pollution; lignite has lower energy density and high emissions per kWh.</td>
+            <td class="num">0.031 TWh; ~11 city-days</td>
+            <td><a class="receipt" href="https://ourworldindata.org/grapher/death-rates-from-energy-production-per-twh">OWID 2021</a></td>
+            <td>Not every table separates lignite from hard coal; when merged, use the coal row.</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>Coal</strong></td>
+            <td class="num">24.62</td>
+            <td>Fine particulate pollution and other combustion products; mining and transport accidents are smaller than the chronic air-pollution burden.</td>
+            <td class="num">0.041 TWh; ~15 city-days</td>
+            <td><a class="receipt" href="https://ourworldindata.org/safest-sources-of-energy">OWID 2022 update</a> <a class="receipt" href="https://www.thelancet.com/article/S0140-6736(07)61253-7/abstract">Markandya 2007</a></td>
+            <td>OWID says fossil values are likely conservative globally because the underlying rows use older European-control estimates.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>Oil</strong></td>
+            <td class="num">18.43</td>
+            <td>Combustion pollution plus extraction, refinery, and transport accidents.</td>
+            <td class="num">0.054 TWh; ~20 city-days</td>
+            <td><a class="receipt" href="https://ourworldindata.org/grapher/death-rates-from-energy-production-per-twh">OWID 2021</a> <a class="receipt" href="https://www.thelancet.com/article/S0140-6736(07)61253-7/abstract">Markandya 2007</a></td>
+            <td>Oil is a small electricity source in many rich-country grids, but per-unit mortality is still high.</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>Biomass</strong></td>
+            <td class="num">4.63</td>
+            <td>Combustion pollution from burning organic material; not zero-carbon or zero-pollution at the stack.</td>
+            <td class="num">0.216 TWh; ~79 city-days</td>
+            <td><a class="receipt" href="https://ourworldindata.org/grapher/death-rates-from-energy-production-per-twh">OWID 2021</a></td>
+            <td>Biomass can be renewable in a carbon-cycle sense and still harmful in a human-health sense.</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><strong>Gas</strong></td>
+            <td class="num">2.821</td>
+            <td>Lower particulate burden than coal, but still combustion pollution plus explosions, extraction, and pipeline accidents.</td>
+            <td class="num">0.354 TWh; ~129 city-days</td>
+            <td><a class="receipt" href="https://ourworldindata.org/grapher/death-rates-from-energy-production-per-twh">OWID 2021</a> <a class="receipt" href="https://www.thelancet.com/article/S0140-6736(07)61253-7/abstract">Markandya 2007</a></td>
+            <td>Gas looks clean only relative to coal; it is not in the wind/solar/nuclear safety cluster.</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><strong>Hydropower, including Banqiao</strong></td>
+            <td class="num">1.3</td>
+            <td>Rare dam-failure tail risk; OWID's all-history row is dominated by the 1975 Banqiao failure.</td>
+            <td class="num">0.769 TWh; ~281 city-days</td>
+            <td><a class="receipt" href="https://ourworldindata.org/safest-sources-of-energy">OWID hydro method</a> <a class="receipt" href="https://www.sciencedirect.com/science/article/pii/S0959652615009877">Sovacool 2016</a></td>
+            <td>If you omit Banqiao without saying so, you understate hydro's historical tail risk.</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td><strong>Hydropower, excluding Banqiao</strong></td>
+            <td class="num">~0.04</td>
+            <td>Routine hydropower accidents, excluding the dominant outlier.</td>
+            <td class="num">25 TWh; ~25 city-years</td>
+            <td><a class="receipt" href="https://ourworldindata.org/safest-sources-of-energy">OWID 2022 update</a></td>
+            <td>This row is useful for normal-operation intuition, not for erasing dam-collapse risk.</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td><strong>Wind</strong></td>
+            <td class="num">0.035</td>
+            <td>Supply-chain, construction, maintenance, helicopter, fire, and offshore-work accidents.</td>
+            <td class="num">28.6 TWh; ~29 city-years</td>
+            <td><a class="receipt" href="https://ourworldindata.org/grapher/death-rates-from-energy-production-per-twh">OWID 2021</a> <a class="receipt" href="https://www.sciencedirect.com/science/article/pii/S0959652615009877">Sovacool 2016</a></td>
+            <td>Wind is not literally risk-free; the risk is mostly occupational and construction-related.</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td><strong>Nuclear, central accounting</strong></td>
+            <td class="num">0.03</td>
+            <td>Severe accidents plus very low routine-operation mortality in commercial power generation.</td>
+            <td class="num">33.3 TWh; ~33 city-years</td>
+            <td><a class="receipt" href="https://ourworldindata.org/safest-sources-of-energy">OWID method</a> <a class="receipt" href="https://www.unscear.org/unscear/en/areas-of-work/chernobyl.html">UNSCEAR</a></td>
+            <td>Do not sell this as "nuclear killed nobody." The honest claim is lower deaths per unit than fossil fuels.</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td><strong>Solar</strong></td>
+            <td class="num">0.019</td>
+            <td>Construction, manufacturing, electrical, and rooftop-installation accidents.</td>
+            <td class="num">52.6 TWh; ~53 city-years</td>
+            <td><a class="receipt" href="https://ourworldindata.org/grapher/death-rates-from-energy-production-per-twh">OWID 2021</a> <a class="receipt" href="https://www.sciencedirect.com/science/article/pii/S0959652615009877">Sovacool 2016</a></td>
+            <td>Rooftop work is the small-print risk; utility-scale and rooftop mixes differ.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout cyan">
+      <h3>How to cite the ranking without overclaiming</h3>
+      <p>Use the central table for the base-rate correction, then add: "The low-carbon sources overlap at the bottom; fossil rows are probably conservative globally; hydro changes sharply depending on whether Banqiao is included."</p>
+    </div>
+  </section>
+
+  <section id="mechanism">
+    <h2><i class="bi bi-cpu" aria-hidden="true"></i> Why Intuition Inverts <span class="depth-tag">working knowledge</span></h2>
+    <p class="section-intro">People remember named accidents. The death ledger is mostly unnamed chronic exposure. That is the whole inversion.</p>
+    <div class="grid-3">
+      <article class="panel">
+        <h3>Air pollution is the invisible bulk</h3>
+        <p><strong>Definition:</strong> air-pollution mortality counts premature deaths attributable to exposure, mainly fine particulate matter, using exposure-response epidemiology rather than death certificates that say "coal plant."</p>
+        <p><strong>Concrete example:</strong> WHO's October 2024 fact sheet estimates ambient outdoor air pollution caused <span class="num">4.2 million</span> premature deaths worldwide in 2019; combined ambient and household air pollution is associated with <span class="num">6.7 million</span> deaths annually.</p>
+        <p><strong>Gotcha:</strong> these are statistical deaths, not imaginary deaths. The uncertainty is in attribution and dose-response shape, not whether PM2.5 damages hearts and lungs.</p>
+      </article>
+      <article class="panel">
+        <h3>Dread risk beats base rates</h3>
+        <p><strong>Definition:</strong> dread risk is the human tendency to overweight involuntary, catastrophic, unfamiliar, contamination-like hazards relative to routine distributed hazards.</p>
+        <p><strong>Concrete example:</strong> Fukushima and Chernobyl dominate nuclear fear because they are named events with images. Coal mortality is a background flow spread across millions of homes, hospitals, and death certificates.</p>
+        <p><strong>When not to use it:</strong> dread risk does not prove a hazard is fake. It explains why perceived risk and measured deaths/TWh diverge.</p>
+      </article>
+      <article class="panel">
+        <h3>Denominator blindness</h3>
+        <p><strong>Definition:</strong> denominator blindness is comparing incidents without dividing by the amount of service produced.</p>
+        <p><strong>Concrete example:</strong> "a dam failure killed tens of thousands" and "hydro usually has low routine deaths" can both be true. Deaths/TWh asks how much electricity was produced for the historical death record.</p>
+        <p><strong>Gotcha:</strong> per-TWh is not the whole policy spreadsheet. It is the mortality column, not cost, speed, land use, dispatchability, or political feasibility.</p>
+      </article>
+    </div>
+    <div class="callout">
+      <h3>The arithmetic that changes the conversation</h3>
+      <p>At <span class="num">24.62 deaths/TWh</span>, coal statistically produces one death for every <span class="num">0.041 TWh</span>. At <span class="num">0.03 deaths/TWh</span>, nuclear produces one death for every <span class="num">33.3 TWh</span> under OWID's central accident accounting. A 1 TWh/year city gets one coal-linked statistical death about every 15 days; the same city on nuclear reaches one statistical death after about 33 years.</p>
+    </div>
+  </section>
+
+  <section id="accidents">
+    <h2><i class="bi bi-clipboard2-pulse" aria-hidden="true"></i> The Accidents, Honestly <span class="depth-tag">edge cases</span></h2>
+    <p class="section-intro">This is where the page earns trust. The correct answer is neither "nothing happened" nor "every modeled cancer is a confirmed corpse." It is an accounting split.</p>
+    <div class="grid-2">
+      <article class="panel">
+        <h3>Chernobyl, 1986</h3>
+        <p><strong>Purpose of the block:</strong> separate confirmed acute effects from modeled long-term cancer projections.</p>
+        <div class="meter">
+          <span class="label">Acute radiation syndrome</span><span class="readout">134 high-dose workers; 28 died in first 3 months</span>
+          <span class="label">Other early deaths</span><span class="readout">2 workers in explosion; common shorthand: 30 early deaths</span>
+          <span class="label">Thyroid cancer</span><span class="readout">&gt;6,000 diagnosed by 2005 in exposed youth; many attributable</span>
+          <span class="label">Modeled projection</span><span class="readout">WHO/Forum: up to ~4,000 eventual radiation-related deaths</span>
+        </div>
+        <p class="smallish muted mt-3">UNSCEAR says 28 ARS deaths occurred in the first three months and another 19 ARS survivors died later from causes not necessarily linked to radiation. WHO's 2005 Chernobyl Forum release gives the often-cited "up to 4,000" eventual projection for higher-exposed groups.</p>
+        <p><strong>Gotcha:</strong> long-term estimates diverge because low-dose cancer models extrapolate small risk over very large populations. That is not the same evidentiary status as the acute toll.</p>
+      </article>
+      <article class="panel">
+        <h3>Fukushima Daiichi, 2011</h3>
+        <p><strong>Purpose of the block:</strong> answer the two different death questions separately.</p>
+        <div class="meter">
+          <span class="label">Radiation deaths</span><span class="readout">0 documented population deaths; 1 worker compensation case often counted</span>
+          <span class="label">Detectable public effects</span><span class="readout">UNSCEAR: no documented resident health effects directly attributable to radiation</span>
+          <span class="label">Disaster-related deaths</span><span class="readout">2,350 in Fukushima Prefecture as of Feb. 1, 2026</span>
+          <span class="label">Forced evacuation</span><span class="readout">&gt;160,000 residents initially forced to evacuate</span>
+        </div>
+        <p class="smallish muted mt-3">The uncomfortable lesson is that response design can be a health hazard. Evacuation saved exposure, but prolonged displacement, interrupted care, and stress killed people too, especially older and medically fragile residents.</p>
+        <p><strong>Gotcha:</strong> saying "Fukushima killed nobody" hides evacuation harm. Saying "Fukushima killed thousands by radiation" is also wrong.</p>
+      </article>
+      <article class="panel">
+        <h3>Banqiao Dam, 1975</h3>
+        <p><strong>Definition:</strong> Banqiao is the dominant hydropower tail event in OWID's all-history hydro row.</p>
+        <div class="meter">
+          <span class="label">OWID accident count</span><span class="readout">~171,000 deaths attributed to Banqiao</span>
+          <span class="label">Hydro total used</span><span class="readout">~176,000 hydro accident deaths, 1965-2021</span>
+          <span class="label">Hydro denominator</span><span class="readout">138,175 TWh cumulative hydro electricity, 1965-2021</span>
+          <span class="label">Result</span><span class="readout">1.3 deaths/TWh with Banqiao; ~0.04 without</span>
+        </div>
+        <p><strong>Gotcha:</strong> the honest hydro row is a pair. Excluding Banqiao explains normal operation; including it respects historical tail risk.</p>
+      </article>
+      <article class="panel">
+        <h3>The fossil ledger</h3>
+        <p><strong>Definition:</strong> fossil death accounting is mostly routine exposure, not a single disaster list.</p>
+        <div class="meter">
+          <span class="label">Air pollution</span><span class="readout">WHO: 4.2M ambient deaths in 2019</span>
+          <span class="label">Current global context</span><span class="readout">State of Global Air 2025 covers 2023 health impacts</span>
+          <span class="label">Power-sector caveat</span><span class="readout">Not all air-pollution deaths are from electricity</span>
+          <span class="label">Acute events</span><span class="readout">Mining, explosions, refinery, oil-train, and pipeline deaths are extra, smaller rows</span>
+        </div>
+        <p><strong>Gotcha:</strong> if your intuition requires a named event, fossil fuels look safer than they are.</p>
+      </article>
+    </div>
+    <div class="callout green">
+      <h3>Chernobyl high-end sensitivity</h3>
+      <p>If you force a conservative sensitivity check by adding <span class="num">4,000</span> modeled Chernobyl deaths to OWID's central nuclear accident count, then divide by OWID's <span class="num">96,876 TWh</span> cumulative nuclear generation through 2021, the added term is about <span class="num">0.041 deaths/TWh</span>. Nuclear moves from <span class="num">0.03</span> to roughly <span class="num">0.07</span>, still below gas by about <span class="num">40x</span> and coal by about <span class="num">350x</span>. The ranking changes inside the bottom cluster, not between fossil and low-carbon sources.</p>
+    </div>
+  </section>
+
+  <section id="objections">
+    <h2><i class="bi bi-record-circle" aria-hidden="true"></i> Objections, Steel-Manned <span class="depth-tag">advanced</span></h2>
+    <p class="section-intro">A strong table survives strong objections. These are the test points to check before using the chart as a receipt in an argument.</p>
+    <details class="probe" open>
+      <summary>The nuclear numbers exclude waste.</summary>
+      <div class="answer">
+        <p><strong>Best version of the objection:</strong> long-lived waste creates deep-time risk that cannot be measured by historical deaths/TWh.</p>
+        <p><strong>Answer:</strong> correct that historical deaths/TWh is record-based, not a prophecy. But stored civilian nuclear waste has caused approximately no public deaths to date in the record used for this table, and waste is engineered as a concentrated, monitored hazard rather than a dispersed inhalation stream. The right caveat is "record-based, not infinite-future proof," not "therefore coal is safer."</p>
+      </div>
+    </details>
+    <details class="probe" open>
+      <summary>LNT means all low-dose radiation numbers are guesses.</summary>
+      <div class="answer">
+        <p><strong>Best version of the objection:</strong> linear-no-threshold modeling extrapolates below directly observable risk and can turn tiny individual risks into large population counts.</p>
+        <p><strong>Answer:</strong> yes. That is why Chernobyl has confirmed deaths, attributable disease, and modeled projections as separate bins. The high-end sensitivity check above deliberately grants the projection and still leaves the fossil versus nuclear gap enormous.</p>
+      </div>
+    </details>
+    <details class="probe" open>
+      <summary>Per-TWh ignores catastrophe potential.</summary>
+      <div class="answer">
+        <p><strong>Best version of the objection:</strong> a table of realized deaths can miss fat-tail risks that have not occurred yet or were narrowly avoided.</p>
+        <p><strong>Answer:</strong> true. Per-TWh is a realized-mortality metric. Use it for the record, then add separate columns for worst-case envelope, governance, proliferation, plant age, and design. The same discipline exposes hydro's Banqiao tail instead of hiding it.</p>
+      </div>
+    </details>
+    <details class="probe" open>
+      <summary>Air-pollution deaths are statistical fiction.</summary>
+      <div class="answer">
+        <p><strong>Best version of the objection:</strong> no doctor writes "coal electricity" as the cause of death on a certificate.</p>
+        <p><strong>Answer:</strong> epidemiology routinely attributes deaths to risk factors: smoking, hypertension, heat, occupational exposure, and PM2.5. To make coal rank near nuclear, the fossil air-pollution burden would need to be wrong by hundreds of times, not by the usual uncertainty band.</p>
+      </div>
+    </details>
+    <details class="probe" open>
+      <summary>The real comparison is system-level.</summary>
+      <div class="answer">
+        <p><strong>Best version of the objection:</strong> electricity systems need reliability, capacity, transmission, storage, fuel security, cost control, and build speed.</p>
+        <p><strong>Answer:</strong> agreed. This page is the mortality column. It does not settle the grid-design spreadsheet. It prevents one common mistake: ranking energy sources by fear while ignoring deaths per unit of service.</p>
+      </div>
+    </details>
+  </section>
+
+  <section id="context">
+    <h2><i class="bi bi-signpost-split" aria-hidden="true"></i> Context Blocks <span class="depth-tag">working knowledge</span></h2>
+    <div class="grid-3">
+      <article class="panel">
+        <h3>Nuclear deaths averted</h3>
+        <p>Kharecha and Hansen estimated in 2013 that historical nuclear power prevented about <span class="num">1.84 million</span> air-pollution deaths and <span class="num">64 GtCO2-eq</span> emissions by displacing fossil generation.</p>
+        <p><strong>Gotcha:</strong> this is a counterfactual model, not a body count. Cite it as an estimate.</p>
+      </article>
+      <article class="panel">
+        <h3>No banana-dose theater</h3>
+        <p>This page avoids cute radiation comparisons. Dose analogies can be useful, but they often distract from the accounting question: deaths per unit of electricity.</p>
+        <p><strong>When to use dose tables:</strong> emergency sheltering, exposure-rate decisions, and radiological preparedness, not this ranking table.</p>
+      </article>
+      <article class="panel">
+        <h3>Trend line</h3>
+        <p>Energy production generally gets safer as safety engineering, pollution controls, occupational rules, and monitoring improve. The table is not a license to freeze old plants or old practices in place.</p>
+        <p><strong>Gotcha:</strong> a cleaner future grid is not just a fuel swap; it is better engineering plus better siting plus better emergency response.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="mistakes">
+    <h2><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Common Mistakes <span class="depth-tag">anti-patterns</span></h2>
+    <div class="mistakes">
+      <div class="mistake">
+        <div class="wrong"><span class="tag">Mistake</span>Citing the table as exact point truth.</div>
+        <div class="right"><span class="tag">Correction</span>Say the low-carbon bottom cluster overlaps and that fossil values are likely conservative globally.</div>
+      </div>
+      <div class="mistake">
+        <div class="wrong"><span class="tag">Mistake</span>Comparing every reactor to Chernobyl's RBMK design.</div>
+        <div class="right"><span class="tag">Correction</span>Use Chernobyl as a real accident in the record, not as a generic model of the modern fleet.</div>
+      </div>
+      <div class="mistake">
+        <div class="wrong"><span class="tag">Mistake</span>Using mortality as an energy-policy argument-ender.</div>
+        <div class="right"><span class="tag">Correction</span>Mortality is one column. Cost, speed, land, reliability, security, and emissions are separate columns.</div>
+      </div>
+      <div class="mistake">
+        <div class="wrong"><span class="tag">Mistake</span>Quoting Fukushima's radiation toll without the evacuation toll.</div>
+        <div class="right"><span class="tag">Correction</span>Keep the split visible: radiation-attributed deaths are 0-1; disaster-related evacuee deaths are over 2,000.</div>
+      </div>
+      <div class="mistake">
+        <div class="wrong"><span class="tag">Mistake</span>Forgetting hydro's two-row honesty.</div>
+        <div class="right"><span class="tag">Correction</span>Show hydro with Banqiao for historical tail risk and without Banqiao for normal-operation intuition.</div>
+      </div>
+      <div class="mistake">
+        <div class="wrong"><span class="tag">Mistake</span>Treating air-pollution deaths as unreal because they are statistical.</div>
+        <div class="right"><span class="tag">Correction</span>Risk-factor attribution is how public health measures smoking, heat, PM2.5, and occupational hazards.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="related">
+    <h2><i class="bi bi-diagram-3" aria-hidden="true"></i> Related Reference Pages</h2>
+    <div class="related">
+      <a href="data-center-myths.html"><strong>Data Center Myths</strong>Numbers versus vibes in another energy argument.</a>
+      <a href="geoengineering-approaches.html"><strong>Geoengineering Approaches</strong>Risk accounting for climate interventions.</a>
+      <a href="stellar-lifecycle.html"><strong>Stellar Lifecycle</strong>Engineering and science cluster reference.</a>
+    </div>
+  </section>
+
+  <section id="sources">
+    <h2><i class="bi bi-journal-text" aria-hidden="true"></i> Source Map</h2>
+    <p class="section-intro">These links are visible by design. The page is useful only if each controversial number has a receipt.</p>
+    <ul class="source-list">
+      <li><a href="https://ourworldindata.org/grapher/death-rates-from-energy-production-per-twh">Our World in Data grapher CSV</a>: death rates per TWh, 2021 values.</li>
+      <li><a href="https://ourworldindata.org/safest-sources-of-energy">Our World in Data, "What are the safest and cleanest sources of energy?"</a>: methodology, caveats, hydro and nuclear calculations, last safety update July 2022 with carbon-intensity update March 2024.</li>
+      <li><a href="https://www.thelancet.com/article/S0140-6736(07)61253-7/abstract">Markandya &amp; Wilkinson, The Lancet, 2007</a>: fossil and biomass electricity-health source used by OWID.</li>
+      <li><a href="https://www.sciencedirect.com/science/article/pii/S0959652615009877">Sovacool et al., Journal of Cleaner Production, 2016</a>: accident database for modern low-carbon energy systems used by OWID.</li>
+      <li><a href="https://www.unscear.org/unscear/en/areas-of-work/chernobyl.html">UNSCEAR Chornobyl assessment page</a>: acute radiation syndrome, thyroid cancer, and long-term health-effect summary.</li>
+      <li><a href="https://www.who.int/news/item/05-09-2005-chernobyl-the-true-scale-of-the-accident">WHO, Chernobyl Forum release, 2005</a>: up-to-4,000 projected radiation-related deaths in higher-exposed groups.</li>
+      <li><a href="https://www.unscear.org/unscear/en/areas-of-work/fukushima-report-faq.html">UNSCEAR Fukushima 2020/2021 FAQ</a>: no documented radiation-attributable health effects among residents, exposure findings, and Chernobyl comparison.</li>
+      <li><a href="https://www.pref.fukushima.lg.jp/site/portal-english/en-1-1-1.html">Fukushima Prefecture damage portal</a>: 4,181 deaths as of Feb. 1, 2026, including 2,350 disaster-related deaths due to indirect causes including stress and health decline while living as evacuees.</li>
+      <li><a href="https://www.who.int/news-room/fact-sheets/detail/ambient-%28outdoor%29-air-quality-and-health">WHO ambient outdoor air-pollution fact sheet</a>: 2019 global premature-death estimates, updated October 24, 2024.</li>
+      <li><a href="https://www.stateofglobalair.org/">State of Global Air 2025</a>: current global air-quality and health-impact report for 2023.</li>
+      <li><a href="https://pubmed.ncbi.nlm.nih.gov/23495839/">Kharecha &amp; Hansen, Environmental Science &amp; Technology, 2013</a>: estimated avoided mortality and greenhouse-gas emissions from historical nuclear power.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p><strong>Last verified:</strong> 2026-07-05. Values are deaths per terawatt-hour of electricity unless otherwise stated. Fossil-fuel rows are central reference values from OWID's maintained synthesis and are likely conservative for the global fleet. Structured data on this page describes only visible content.</p>
+  </footer>
+</main>
+
+<a class="backtop" href="#top" aria-label="Back to top"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+<script defer>
+window.addEventListener("DOMContentLoaded", function () {
+  var btn = document.getElementById("themeToggle");
+  if (!btn) return;
+  btn.addEventListener("click", function () {
+    var current = document.documentElement.getAttribute("data-theme");
+    var next = current === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    document.documentElement.setAttribute("data-bs-theme", next);
+    try { localStorage.setItem("dptwh-theme", next); } catch(e) {}
+  });
+});
+</script>
+</body>
+</html>
