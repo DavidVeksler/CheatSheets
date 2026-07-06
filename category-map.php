@@ -160,6 +160,7 @@ return [
     'first-employee-checklist.html' => 'Life Admin & Consumer Defense',
     'flight-disruption-playbook.html' => 'Life Admin & Consumer Defense',
     'hiring-a-contractor.html' => 'Life Admin & Consumer Defense',
+    'insurance-worth-it.html' => 'Life Admin & Consumer Defense',
     'scam-defense-for-parents.html' => 'Life Admin & Consumer Defense',
     'small-business-scams.html' => 'Life Admin & Consumer Defense',
     'small-claims-court.html' => 'Life Admin & Consumer Defense',
