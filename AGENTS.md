@@ -251,7 +251,7 @@ Concrete steps from past builds that make a cheatsheet correct on the first pass
   ```
   Load `http://127.0.0.1:8765/<file>.html` and assert: console is clean (a `favicon.ico` 404 is the only acceptable error); Bootstrap actually loaded (`typeof window.bootstrap !== 'undefined'`) so a bad SRI hash can't pass silently; CSS custom props resolve.
 - **Exercise the interactive bits.** For checklist/progress pages, toggle checkboxes via `dispatchEvent(new Event('change'))` and confirm the progress count + `localStorage` keys update; confirm copy buttons map 1:1 to command blocks. Check both light and dark themes.
-- **Generate the preview image yourself at 1200×630** (matches `og:image`/`twitter:image`): resize viewport to 1200×630, pick the theme that flatters the topic (dark for tech), hide floating controls (e.g. `themeToggle`, `backTop`), scroll to top, screenshot to `images/{filename}.png`. `generate-image-previews.py` remains the batch fallback.
+- **Generate and optimize the preview image yourself at 1200×630** (matches `og:image`/`twitter:image`): resize viewport to 1200×630, pick the theme that flatters the topic (dark for tech), hide floating controls (e.g. `themeToggle`, `backTop`), scroll to top, screenshot to `images/{filename}.png`, then run ImageOptim on that PNG before finishing. `generate-image-previews.py` remains the batch fallback.
 - **Clean up** stray screenshots and kill the `http.server` before committing.
 
 ### Reusable interactive patterns
