@@ -1,850 +1,1258 @@
 <!DOCTYPE html>
-
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Bitcoin Whitepaper Explained: Technical Blueprint &amp; Evolution</title>
-<link href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;📜&lt;/text&gt;&lt;/svg&gt;" rel="icon"/>
-<meta content="A technically enhanced blueprint guide to Satoshi Nakamoto's Bitcoin whitepaper. Includes core concepts, data structures, consensus formulas, algorithm details, protocol evolution (SegWit, Taproot), and modern context relevant for implementation." name="description"/>
-<!-- CORRECTED Canonical URL -->
-<link href="https://cheatsheets.davidveksler.com/bitcoin-whitepaper.html" rel="canonical"/>
-<!-- Social Media Metadata (Updated URL) -->
-<meta content="Bitcoin Whitepaper Explained: Technical Blueprint &amp; Evolution" property="og:title"/>
-<meta content="A technically enhanced guide to the Bitcoin whitepaper, covering the original design, algorithms, formulas, and key protocol changes since 2008." property="og:description"/>
-<meta content="website" property="og:type"/>
-<meta content="https://cheatsheets.davidveksler.com/bitcoin-whitepaper.html" property="og:url"/>
-<!-- <meta property="og:image:alt" content="Diagram illustrating Bitcoin whitepaper concepts." /> -->
-<meta content="summary_large_image" name="twitter:card"/>
-<meta content="@heroiclife" name="twitter:creator"/>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bitcoin Whitepaper Explained: Technical Blueprint &amp; Evolution</title>
+  <meta name="description" content="A technical Bitcoin whitepaper reference covering transactions, proof-of-work, SPV, incentives, privacy, security math, and modern protocol context.">
+  <meta name="keywords" content="Bitcoin whitepaper, Satoshi Nakamoto, proof of work, blockchain, UTXO, SPV, Merkle tree, Bitcoin consensus, Taproot, SegWit">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/bitcoin-whitepaper.html">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.88em' font-size='88'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Bitcoin Whitepaper Explained: Technical Blueprint & Evolution",
-  "description": "A technically enhanced blueprint guide to Satoshi Nakamoto's Bitcoin whitepaper. Includes core concepts, data structures, consensus formulas, algorithm details, protocol evolution (SegWit, Taproot), and modern context relevant for implementation.",
-  "author": {
-    "@type": "Person",
-    "name": "David Veksler (AI Generated)"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "David Veksler Cheatsheets"
-  },
-  "datePublished": "2025-05-02",
-  "dateModified": "2026-07-05"
-}
-</script>
-<meta content="Bitcoin Whitepaper Explained: Technical Blueprint &amp; Evolution" name="twitter:title">
-<meta content="A technically enhanced guide to the Bitcoin whitepaper." name="twitter:description"/>
-<!-- <meta name="twitter:image:alt" content="Diagram illustrating Bitcoin whitepaper concepts." /> -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" rel="stylesheet"/>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&amp;family=Fira+Code:wght@400;600&amp;family=Roboto+Condensed:wght@400;700&amp;display=swap" rel="stylesheet"/>
-<style>
-      /* --- CSS Styles: Blueprint Theme (Final Version) --- */
-       @keyframes subtlePulse { 0% { transform: scale(1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } 50% { transform: scale(1.01); box-shadow: 0 4px 10px rgba(0,0,0,0.3); } 100% { transform: scale(1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } }
+  <meta property="og:title" content="Bitcoin Whitepaper Explained: Technical Blueprint &amp; Evolution">
+  <meta property="og:description" content="A technical Bitcoin whitepaper reference covering transactions, proof-of-work, SPV, incentives, privacy, security math, and modern protocol context.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/bitcoin-whitepaper.html">
+  <meta property="og:image" content="images/bitcoin-whitepaper.png">
+  <meta property="og:image:alt" content="Bitcoin whitepaper technical blueprint with proof-of-work, transactions, and consensus concepts">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bitcoin Whitepaper Explained: Technical Blueprint &amp; Evolution">
+  <meta name="twitter:description" content="A technical Bitcoin whitepaper reference covering transactions, proof-of-work, SPV, incentives, privacy, security math, and modern protocol context.">
+  <meta name="twitter:image" content="images/bitcoin-whitepaper.png">
+  <meta name="twitter:creator" content="@heroiclife">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Bitcoin Whitepaper Explained: Technical Blueprint & Evolution",
+    "description": "A technical Bitcoin whitepaper reference covering transactions, proof-of-work, SPV, incentives, privacy, security math, and modern protocol context.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2025-05-02",
+    "dateModified": "2026-07-06",
+    "keywords": "Bitcoin whitepaper, Satoshi Nakamoto, proof of work, blockchain, UTXO, SPV, Merkle tree, Bitcoin consensus, Taproot, SegWit"
+  }
+  </script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous" rel="stylesheet">
+
+  <style>
+    @layer base, components, utilities;
+
+    @layer base {
       :root {
-        --bp-bg-main: #0F172A; --bp-bg-container: #1E293B; --bp-bg-card: #334155; --bp-bg-card-content: #475569;
-        --bp-text-primary: #E2E8F0; --bp-text-secondary: #94A3B8; --bp-text-heading: #F8FAFC; --bp-border-color: #475569;
-        --bp-accent-primary: #60A5FA; --bp-accent-primary-dark: #3B82F6; --bp-highlight: #FBBF24; --bp-critical-color: #F7931A;
-        --bp-rule-border-color: var(--bp-critical-color); --bp-rule-bg-color: rgba(247, 147, 26, 0.1);
-        --bg-main: var(--bp-bg-main); --bg-container: var(--bp-bg-container); --bg-card: var(--bp-bg-card); --bg-card-content: var(--bp-bg-card-content);
-        --text-primary: var(--bp-text-primary); --text-secondary: var(--bp-text-secondary); --text-heading: var(--bp-text-heading); --border-color: var(--bp-border-color);
-        --accent-primary: var(--bp-accent-primary); --accent-primary-dark: var(--bp-accent-primary-dark); --critical-color: var(--bp-critical-color);
-        --rule-border-color: var(--bp-rule-border-color); --rule-bg-color: var(--bp-rule-bg-color); --btc-orange: var(--bp-critical-color);
-        --cat-color-intro: var(--bp-highlight); --cat-color-problem: var(--bp-critical-color); --cat-color-solution: var(--bp-accent-primary);
-        --cat-color-mechanism: var(--bp-accent-primary-dark); --cat-color-technical: #A5B4FC; --cat-color-security: #F472B6; --cat-color-summary: #94A3B8;
-        --cat-color-resources: var(--bp-accent-primary); --cat-color-evolution: #34D399; /* Emerald/Green */
-        --category-color: var(--cat-color-summary); color-scheme: dark;
+        color-scheme: dark light;
+        --ink: light-dark(#1b160c, #f8f3e7);
+        --muted: light-dark(#665c4a, #b9ad96);
+        --page: light-dark(#f7f0df, #11100d);
+        --surface: light-dark(#fff9eb, #1b1812);
+        --surface-strong: light-dark(#fff3cf, #272116);
+        --line: light-dark(#e2c886, #4a3b1f);
+        --line-strong: light-dark(#b7791f, #f2a529);
+        --orange: #f7931a;
+        --gold: #f4c46c;
+        --blue: #63a9ff;
+        --green: #5ed697;
+        --red: #ff7b7b;
+        --violet: #bd9cff;
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.26);
+        --radius: 8px;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
-      body { background-color: var(--bg-main); background-image: linear-gradient(rgba(96, 165, 250, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(96, 165, 250, 0.08) 1px, transparent 1px); background-size: 30px 30px; color: var(--text-primary); font-family: "Inter", sans-serif; padding-bottom: 3rem; font-size: 15px; box-sizing: border-box; line-height: 1.65; }
-      *, *::before, *::after { box-sizing: inherit; }
-      .page-header { background: linear-gradient(rgba(30, 41, 59, 0.8), rgba(30, 41, 59, 0.95)), var(--bg-container); padding: 2.5rem 1.5rem; text-align: center; border-bottom: 2px solid var(--accent-primary-dark); margin-bottom: 3rem; position: relative; z-index: 10; box-shadow: 0 3px 10px rgba(0,0,0,0.3), inset 0 0 8px rgba(0,0,0,0.2); }
-      .page-header::before, .page-header::after { content: ''; position: absolute; width: 15px; height: 15px; border-color: var(--accent-primary); border-style: solid; opacity: 0.8; transition: all 0.3s ease; }
-      .page-header::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; } .page-header::after { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
-      .page-header:hover::before { top: 8px; left: 8px; width: 18px; height: 18px; } .page-header:hover::after { bottom: 8px; right: 8px; width: 18px; height: 18px; }
-      .page-header h1 { color: var(--text-heading); font-family: 'Roboto Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; margin-bottom: 0.5rem; font-size: 2.4rem; text-shadow: none; }
-      .page-header h1 .bi { color: var(--bp-highlight); vertical-align: -0.05em; margin-right: 0.3em; font-size: 0.95em; }
-      .page-header .lead { color: var(--text-secondary); font-size: 1.1rem; max-width: 750px; margin: 0.5rem auto 0 auto; text-shadow: none; }
-      .page-header a.btn { border-color: var(--bp-highlight); color: var(--bp-highlight); } .page-header a.btn:hover { background-color: var(--bp-highlight); color: var(--bg-main); border-color: var(--bp-highlight); }
-      .schema-container { padding: 0 1rem 0.5rem 1rem; margin-bottom: 3rem; position: relative; }
-      .section-title { color: var(--category-color); margin: 0 0 1.5rem 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); padding: 0.4rem 0; display: block; position: relative; z-index: 15; font-family: 'Roboto Condensed', sans-serif; text-shadow: none; }
-      .section-title .bi { margin-right: 0.5em; font-size: 1.1em; vertical-align: -0.1em;}
-      .cat-intro > .section-title { --category-color: var(--cat-color-intro); } .cat-problem > .section-title { --category-color: var(--cat-color-problem); } .cat-solution > .section-title { --category-color: var(--cat-color-solution); } .cat-mechanism > .section-title { --category-color: var(--cat-color-mechanism); } .cat-technical > .section-title { --category-color: var(--cat-color-technical); } .cat-security > .section-title { --category-color: var(--cat-color-security); } .cat-summary > .section-title { --category-color: var(--cat-color-summary); } .cat-resources > .section-title { --category-color: var(--cat-color-resources); }
-      .cat-evolution > .section-title { --category-color: var(--cat-color-evolution); }
 
-      .info-card { background-color: var(--bg-card); border: 1px solid var(--bp-border-color); border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2), inset 0 1px 2px rgba(0,0,0,0.1); height: 100%; display: flex; flex-direction: column; transition: border-color 0.3s ease, transform 0.2s ease; position: relative; z-index: 5; overflow: hidden; --category-color: var(--cat-color-summary); }
-      .info-card.wp-type-intro { --category-color: var(--cat-color-intro); border-left: 3px solid var(--category-color); } .info-card.wp-type-problem { --category-color: var(--cat-color-problem); border-left: 3px solid var(--category-color); } .info-card.wp-type-solution { --category-color: var(--cat-color-solution); border-left: 3px solid var(--category-color); } .info-card.wp-type-mechanism { --category-color: var(--cat-color-mechanism); border-left: 3px solid var(--category-color); } .info-card.wp-type-technical { --category-color: var(--cat-color-technical); border-left: 3px solid var(--category-color); } .info-card.wp-type-security { --category-color: var(--cat-color-security); border-left: 3px solid var(--category-color); } .info-card.wp-type-summary { --category-color: var(--cat-color-summary); border-left: 3px solid var(--category-color); } .info-card.wp-type-resource { --category-color: var(--cat-color-resources); border-left: 3px solid var(--category-color); }
-      .info-card.wp-type-evolution { --category-color: var(--cat-color-evolution); border-left: 3px solid var(--category-color); }
+      html {
+        scroll-behavior: smooth;
+      }
 
-      .info-card:hover { border-color: var(--category-color); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 2px rgba(0,0,0,0.1); }
-      .info-card .card-body { padding: 0; flex-grow: 1; display: flex; flex-direction: column; }
-      .info-card h5 { color: var(--text-heading); background-color: color-mix(in srgb, var(--bg-card) 70%, black 30%); font-size: 0.8rem; text-align: left; margin: 0; padding: 0.6rem 1rem; font-weight: 700; display: flex; justify-content: flex-start; align-items: center; gap: 0.6rem; font-family: 'Roboto Condensed', sans-serif; border-bottom: 1px solid var(--bp-border-color); border-radius: 3px 3px 0 0; text-transform: uppercase; letter-spacing: 0.8px; text-shadow: none; }
-      .info-card h5 .bi { font-size: 1.1em; color: var(--category-color); opacity: 0.9; }
-      .card-content-wrapper { padding: 1rem 1.1rem; flex-grow: 1; display: flex; flex-direction: column; }
-      .info-card p.summary { font-size: 0.88rem; color: var(--text-primary); margin-bottom: 1rem; flex-grow: 1; line-height: 1.6; }
-      .collapse-content { font-size: 0.85rem; border-top: 1px dashed var(--bp-border-color); padding: 1rem 1.2rem; margin: 0; background-color: var(--bp-bg-card-content); border-radius: 0 0 3px 3px; color: var(--bp-text-primary); }
-      .collapse-content h6 { font-weight: 700; color: var(--bp-accent-primary); margin: 0.8rem 0 0.4rem 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Roboto Condensed', sans-serif; }
-      .collapse-content ul { padding-left: 0; margin-bottom: 1rem; list-style-type: none; }
-      .collapse-content li { margin-bottom: 0.5rem; font-size: 0.85rem; line-height: 1.6; padding-left: 1.4em; position: relative; }
-      .collapse-content li::before { content: '-'; display: block; position: absolute; left: 0.3em; top: 0.1em; font-weight: bold; color: var(--bp-accent-primary); font-size: 1.2em; }
-      .collapse-content code { font-size: 0.8rem; color: var(--bp-highlight); background-color: var(--bp-bg-main); padding: 0.2em 0.4em; border-radius: 3px; font-family: "Fira Code", monospace; border: 1px solid var(--bp-border-color); }
-      .collapse-content pre { display: block; padding: 0.8em; margin: 0.8em 0; background-color: var(--bp-bg-main); border: 1px solid var(--bp-border-color); border-radius: 3px; overflow-x: auto; line-height: 1.5; font-size: 0.8rem;}
-      .collapse-content pre code { padding: 0; border: none; background: none; font-size: inherit; } /* Reset code style within pre */
-      .collapse-content dl dt { font-weight: 700; margin-top: 0.6em; color: var(--bp-text-heading); font-family: 'Roboto Condensed', sans-serif; }
-      .collapse-content dl dd { margin-left: 1.2em; margin-bottom: 0.4em; color: var(--bp-text-secondary); }
-      .row > * { margin-bottom: 1.8rem; }
-      footer { padding: 2rem 1rem 1rem 1rem; font-size: 0.75rem; color: var(--bp-text-secondary); text-align: center; border-top: 1px solid var(--bp-border-color); margin-top: 2rem; }
-      .details-toggle { font-size: 0.65rem; margin-top: auto; align-self: flex-start; padding: 0.3rem 0.7rem; color: var(--bp-accent-primary); border: 1px solid var(--bp-accent-primary); background-color: transparent; border-radius: 3px; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.4em; text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; font-family: 'Roboto Condensed', sans-serif; }
-      .details-toggle:hover { background-color: var(--bp-accent-primary); color: var(--bg-main); border-color: var(--bp-accent-primary); transform: scale(1.03); }
-      .details-toggle .bi { transition: transform 0.2s ease-in-out; font-size: 1.1em;}
-      .details-toggle[aria-expanded="true"] .bi { transform: rotate(180deg); }
-      .term { font-weight: 600; color: var(--bp-text-heading); background-color: color-mix(in srgb, var(--bp-accent-primary) 15%, transparent); border-bottom: 1px solid var(--bp-accent-primary); padding: 0.05em 0.2em; border-radius: 2px; font-family: "Fira Code", monospace; font-size: 0.9em; }
-      .critical { color: var(--bp-critical-color); font-weight: 600; border-bottom: 1px dotted var(--bp-critical-color); }
-      .rule { color: var(--bp-text-primary); font-weight: 500; display: block; margin: 0.8em 0; border: 1px solid var(--rule-border-color); border-left-width: 4px; padding: 0.7em 1em; background-color: var(--rule-bg-color); border-radius: 3px; font-size: 0.85rem; box-shadow: none; }
-      .pros::before { content: "[+] "; color: var(--bp-accent-primary); font-weight: bold; }
-      .cons::before { content: "[-] "; color: var(--bp-critical-color); font-weight: bold; }
-      .pros, .cons { display: block; margin-left: 0; padding-left: 0; }
-      a { color: var(--bp-accent-primary); text-decoration: none; transition: color 0.2s ease, border-bottom 0.2s ease; border-bottom: 1px solid transparent; }
-      a:hover { color: var(--bp-text-heading); text-decoration: none; border-bottom: 1px solid var(--bp-accent-primary); }
-      .collapse-content a { color: var(--bp-accent-primary); } .collapse-content a:hover { color: var(--bp-text-heading); }
-      .row + .row { border-top: 1px dashed var(--bp-border-color); margin-top: 1.8rem; padding-top: 1.8rem; }
-      .abstract-text { font-style: normal; color: var(--bp-text-secondary); border-left: 2px solid var(--bp-highlight); padding-left: 1rem; margin: 1rem 0; font-size: 0.9rem; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 12% 6%, color-mix(in srgb, var(--orange) 20%, transparent), transparent 30rem),
+          linear-gradient(135deg, color-mix(in srgb, var(--line) 16%, transparent) 1px, transparent 1px),
+          var(--page);
+        background-size: auto, 28px 28px, auto;
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.62;
+        text-wrap: pretty;
+      }
 
-      /* Improved formula display */
-      .formula {
-        font-family: "Fira Code", monospace;
-        color: var(--bp-text-primary);
-        background-color: color-mix(in srgb, var(--bp-bg-main) 80%, black);
-        padding: 1em;
-        border-radius: 4px;
-        border: 1px solid var(--bp-border-color);
+      a {
+        color: light-dark(#8a4d00, #ffbe55);
+        text-decoration-thickness: 0.08em;
+        text-underline-offset: 0.2em;
+      }
+
+      a:hover {
+        color: light-dark(#5f3600, #ffe0a0);
+      }
+
+      code,
+      pre {
+        font-family: var(--mono);
+      }
+
+      :focus-visible {
+        outline: 3px solid var(--blue);
+        outline-offset: 3px;
+      }
+
+      ::selection {
+        background: color-mix(in srgb, var(--orange) 45%, transparent);
+      }
+    }
+
+    @layer components {
+      .hero {
+        position: relative;
+        overflow: clip;
+        border-bottom: 1px solid var(--line);
+        background:
+          linear-gradient(135deg, rgba(0, 0, 0, 0.18), transparent 45%),
+          linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 82%, transparent), color-mix(in srgb, var(--surface) 92%, transparent));
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, transparent 49%, color-mix(in srgb, var(--line-strong) 24%, transparent) 50%, transparent 51%),
+          linear-gradient(0deg, transparent 49%, color-mix(in srgb, var(--line-strong) 18%, transparent) 50%, transparent 51%);
+        background-size: 84px 84px;
+        mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+        opacity: 0.45;
+        pointer-events: none;
+      }
+
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+        gap: clamp(1.5rem, 4vw, 4rem);
+        align-items: center;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: clamp(2.5rem, 6vw, 5.5rem) 1rem clamp(2rem, 5vw, 4rem);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        gap: 0.55rem;
+        align-items: center;
+        width: fit-content;
+        margin-bottom: 1rem;
+        padding: 0.35rem 0.65rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 980px;
+        margin: 0;
+        font-size: clamp(2.3rem, 6vw, 5.4rem);
+        font-weight: 850;
+        line-height: 0.98;
+        letter-spacing: 0;
+        text-wrap: balance;
+      }
+
+      .hero-title-mark {
+        color: var(--orange);
+      }
+
+      .hero-copy {
+        max-width: 760px;
+        margin: 1.25rem 0 0;
+        color: var(--muted);
+        font-size: clamp(1.05rem, 1.7vw, 1.28rem);
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+      }
+
+      .hero-actions .btn {
+        border-radius: 999px;
+        font-weight: 750;
+      }
+
+      .paper-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--surface) 94%, transparent);
+        box-shadow: var(--shadow);
+      }
+
+      .paper-card .paper-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1rem 0.8rem;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.78rem;
+      }
+
+      .paper-card blockquote {
+        margin: 0;
+        padding: 1.1rem 1rem 1.2rem;
+        color: var(--ink);
+        font-size: 1rem;
+      }
+
+      .paper-card cite {
+        display: block;
+        margin-top: 0.9rem;
+        color: var(--muted);
+        font-style: normal;
+        font-size: 0.86rem;
+      }
+
+      .nav-strip {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-block: 1px solid var(--line);
+        background: color-mix(in srgb, var(--surface) 92%, transparent);
+        backdrop-filter: blur(18px);
+      }
+
+      .nav-strip .container-xl {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
         overflow-x: auto;
-        line-height: 1.6;
-        font-size: 0.85rem;
-        margin: 1em 0;
+        padding-block: 0.7rem;
       }
-      .formula .comment { color: var(--bp-text-secondary); font-style: italic;}
-      .formula .var { color: var(--bp-highlight); } /* Highlight variables */
-      .formula .op { color: var(--bp-accent-primary); } /* Highlight operators */
-      .formula .num { color: #A5B4FC; } /* Number color */
 
-      /* --- End CSS --- */
-    </style>
-<meta property="og:image:alt" content="Bitcoin Whitepaper Explained: Technical Blueprint &amp; Evolution">
-</link><meta content="images/bitcoin-whitepaper.png" property="og:image"/><meta content="images/bitcoin-whitepaper.png" name="twitter:image"/></meta></head>
+      .nav-pill {
+        flex: 0 0 auto;
+        padding: 0.4rem 0.68rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--ink);
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-decoration: none;
+        background: color-mix(in srgb, var(--surface-strong) 65%, transparent);
+      }
+
+      .section-block {
+        margin-block: clamp(2rem, 4vw, 3.75rem);
+      }
+
+      .section-heading {
+        display: flex;
+        gap: 0.85rem;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-size: clamp(1.45rem, 2.4vw, 2.15rem);
+        font-weight: 830;
+        text-wrap: balance;
+      }
+
+      .section-heading .bi {
+        display: grid;
+        place-items: center;
+        width: 2.4rem;
+        height: 2.4rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--orange) 18%, var(--surface));
+        color: var(--orange);
+      }
+
+      .quick-grid,
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+        gap: 1rem;
+      }
+
+      .quick-card,
+      .info-card,
+      .table-panel,
+      .tool-panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--surface) 94%, transparent);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+      }
+
+      .quick-card {
+        padding: 1rem;
+      }
+
+      .quick-card strong {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: var(--orange);
+        font-family: var(--mono);
+        font-size: 0.82rem;
+      }
+
+      .quick-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .tool-panel {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) auto;
+        gap: 0.8rem;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0.85rem;
+      }
+
+      .search-box {
+        position: relative;
+      }
+
+      .search-box .bi {
+        position: absolute;
+        top: 50%;
+        left: 0.85rem;
+        transform: translateY(-50%);
+        color: var(--muted);
+      }
+
+      .search-box input {
+        width: 100%;
+        min-height: 2.75rem;
+        padding-left: 2.45rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--page);
+        color: var(--ink);
+      }
+
+      .filter-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        justify-content: flex-end;
+      }
+
+      .filter-chip {
+        min-height: 2.35rem;
+        padding-inline: 0.8rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--surface-strong) 70%, transparent);
+        color: var(--ink);
+        font-weight: 740;
+        font-size: 0.82rem;
+      }
+
+      .filter-chip[aria-pressed="true"] {
+        border-color: var(--orange);
+        background: var(--orange);
+        color: #170f02;
+      }
+
+      .result-count {
+        margin: 0 0 0.75rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .info-card {
+        display: flex;
+        flex-direction: column;
+        overflow: clip;
+        border-top: 4px solid var(--accent, var(--orange));
+      }
+
+      .info-card[data-section="problem"] { --accent: var(--red); }
+      .info-card[data-section="mechanism"] { --accent: var(--blue); }
+      .info-card[data-section="rules"] { --accent: var(--gold); }
+      .info-card[data-section="security"] { --accent: var(--violet); }
+      .info-card[data-section="evolution"] { --accent: var(--green); }
+      .info-card[data-section="resources"] { --accent: var(--muted); }
+
+      .card-main {
+        padding: 1rem;
+      }
+
+      .card-kicker {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.55rem;
+        color: var(--accent, var(--orange));
+        font-family: var(--mono);
+        font-size: 0.77rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .info-card h3 {
+        margin: 0 0 0.55rem;
+        font-size: 1.05rem;
+        font-weight: 820;
+        line-height: 1.25;
+      }
+
+      .info-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .term {
+        color: var(--ink);
+        font-family: var(--mono);
+        font-size: 0.9em;
+        font-weight: 780;
+        background: color-mix(in srgb, var(--orange) 16%, transparent);
+        border: 1px solid color-mix(in srgb, var(--orange) 32%, transparent);
+        border-radius: 5px;
+        padding: 0.05em 0.24em;
+      }
+
+      .detail-block {
+        border-top: 1px solid var(--line);
+        background: color-mix(in srgb, var(--surface-strong) 62%, transparent);
+      }
+
+      details.detail-block > summary {
+        display: flex;
+        gap: 0.55rem;
+        align-items: center;
+        min-height: 2.8rem;
+        padding: 0.72rem 1rem;
+        color: var(--ink);
+        cursor: pointer;
+        font-weight: 790;
+        list-style: none;
+      }
+
+      details.detail-block > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details.detail-block > summary::after {
+        content: "+";
+        margin-left: auto;
+        color: var(--accent, var(--orange));
+        font-family: var(--mono);
+        font-size: 1.1rem;
+      }
+
+      details.detail-block[open] > summary::after {
+        content: "-";
+      }
+
+      .detail-content {
+        padding: 0 1rem 1rem;
+      }
+
+      .detail-content h4 {
+        margin: 1rem 0 0.45rem;
+        color: var(--accent, var(--orange));
+        font-size: 0.82rem;
+        font-weight: 850;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .detail-content ul,
+      .detail-content ol {
+        margin-bottom: 0.85rem;
+        padding-left: 1.25rem;
+        color: var(--muted);
+      }
+
+      .detail-content li + li {
+        margin-top: 0.35rem;
+      }
+
+      .code-panel,
+      .formula {
+        margin: 0.75rem 0;
+        padding: 0.9rem;
+        border: 1px solid color-mix(in srgb, var(--line) 84%, transparent);
+        border-radius: 8px;
+        background: light-dark(#1f180f, #0b0a08);
+        color: #f8e6bd;
+        overflow-x: auto;
+        font-size: 0.82rem;
+        line-height: 1.55;
+      }
+
+      .formula .comment { color: #a99d87; }
+      .formula .var { color: #f4c46c; }
+      .formula .op { color: #8bc8ff; }
+      .formula .num { color: #a8e6bd; }
+
+      .table-panel {
+        overflow-x: auto;
+      }
+
+      .table-panel table {
+        min-width: 760px;
+        margin: 0;
+        color: var(--ink);
+      }
+
+      .table-panel th {
+        color: var(--orange);
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+      }
+
+      .table-panel td,
+      .table-panel th {
+        border-color: var(--line);
+        padding: 0.85rem;
+        vertical-align: top;
+      }
+
+      .callout {
+        border: 1px solid color-mix(in srgb, var(--orange) 45%, var(--line));
+        border-left: 4px solid var(--orange);
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--orange) 12%, var(--surface));
+        padding: 1rem;
+      }
+
+      .callout p:last-child {
+        margin-bottom: 0;
+      }
+
+      footer {
+        border-top: 1px solid var(--line);
+        margin-top: 4rem;
+        padding: 2rem 1rem;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
+        justify-content: center;
+        margin-bottom: 1rem;
+      }
+    }
+
+    @layer utilities {
+      .visually-hidden-focusable:not(:focus):not(:focus-within) {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      @media (max-width: 860px) {
+        .hero-inner,
+        .tool-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .filter-group {
+          justify-content: flex-start;
+        }
+
+        .nav-strip {
+          position: static;
+        }
+      }
+
+      @media print {
+        body {
+          background: #fff;
+          color: #111;
+        }
+
+        .nav-strip,
+        .tool-panel,
+        .hero-actions {
+          display: none;
+        }
+
+        .info-card,
+        .quick-card,
+        .table-panel {
+          box-shadow: none;
+          break-inside: avoid;
+        }
+
+        details.detail-block {
+          display: block;
+        }
+
+        details.detail-block > summary::after {
+          content: "";
+        }
+      }
+    }
+  </style>
+</head>
+
 <body>
-<header class="page-header">
-<h1 class="display-5">
-<i class="bi bi-vector-pen"></i> Bitcoin Whitepaper :: Technical Blueprint &amp; Evolution
-      </h1>
-<p class="lead">
-        Deconstructing Satoshi Nakamoto's original design and exploring key protocol developments since 2008.
-      </p>
-<a class="btn btn-outline-warning btn-sm mt-3" href="https://bitcoin.org/bitcoin.pdf" rel="noopener noreferrer" target="_blank">
-<i class="bi bi-box-arrow-up-right"></i> View Original Specification (PDF)
-        </a>
-</header>
-<div class="container" id="main-container">
-<!-- ========================== -->
-<!-- SECTION 0: Abstract & Intro -->
-<!-- ========================== -->
-<div class="schema-container cat-intro" data-section-id="section-intro">
-<h2 class="section-title" id="section-intro">
-<i class="bi bi-journal-text"></i> // 0. Introduction &amp; Problem Statement
-        </h2>
-<div class="row">
-<!-- Abstract -->
-<div class="col-md-12">
-<div class="info-card wp-type-intro" id="card-abstract">
-<div class="card-body">
-<h5><i class="bi bi-card-text"></i> Abstract: Core Proposal</h5>
-<div class="card-content-wrapper">
-<p class="summary abstract-text">
-                      A purely peer-to-peer electronic cash system is proposed, enabling direct online payments without financial intermediaries. Digital signatures provide ownership, but the double-spending problem is addressed using a P2P network that timestamps transactions into a hash-based Proof-of-Work chain. This chain forms an immutable record, with the longest chain representing the consensus view, secured by majority CPU power.
-                    </p>
-</div>
-</div>
-</div>
-</div>
-<!-- The Problem -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-problem" id="card-problem">
-<div class="card-body">
-<h5><i class="bi bi-diagram-2"></i> The Problem: Trust-Based Model Limitations</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Current internet commerce relies on <span class="term">trusted third parties</span>. This model prevents truly non-reversible transactions, adds mediation costs hindering small payments, burdens merchants with trust/fraud concerns, and lacks the finality of physical cash.
-                   </p>
-<button aria-controls="collapseProblem" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseProblem" data-bs-toggle="collapse" type="button">
-                     Weaknesses <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseProblem">
-<h6>Trust Model Drawbacks:</h6>
-<ul>
-<li><strong class="cons">Reversibility &amp; Cost</strong></li>
-<li><strong class="cons">Microtransaction Barrier</strong></li>
-<li><strong class="cons">Trust Burden</strong></li>
-<li><strong class="cons">Lack of Finality</strong></li>
-</ul>
-</div>
-</div>
-</div>
-<!-- The Goal -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-solution" id="card-goal">
-<div class="card-body">
-<h5><i class="bi bi-lightbulb"></i> The Solution: Cryptographic Proof System</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     The goal is an electronic payment system based on <span class="term">cryptographic proof</span>, not trust. Enabling direct P2P transactions, using computational proof to prevent double-spending and make reversals impractical.
-                   </p>
-<button aria-controls="collapseGoal" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseGoal" data-bs-toggle="collapse" type="button">
-                      Design Goals <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseGoal">
-<h6>System Design Goals:</h6>
-<ul>
-<li><strong class="pros">Peer-to-Peer</strong></li>
-<li><strong class="pros">Trustless Operation</strong></li>
-<li><strong class="pros">Double-Spending Prevention</strong></li>
-<li><strong class="pros">Computational Irreversibility</strong></li>
-<li><strong class="pros">Public Transaction Order Proof</strong></li>
-<li><strong class="pros">Majority CPU Power Security</strong></li>
-</ul>
-</div>
-</div>
-</div>
-</div><!-- /.row -->
-</div><!-- /.schema-container -->
-<!-- ================================================== -->
-<!-- SECTION I: Core Technical Components -->
-<!-- ================================================== -->
-<div class="schema-container cat-mechanism" data-section-id="section-mechanism">
-<h2 class="section-title" id="section-mechanism">
-<i class="bi bi-motherboard"></i> // I. Core Technical Components
-        </h2>
-<div class="row">
-<!-- Transactions -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-mechanism" id="card-transactions">
-<div class="card-body">
-<h5><i class="bi bi-pen"></i> Spec §2: Transactions (Ownership &amp; Structure)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Coin = chain of <span class="term">digital signatures</span>. Owner signs hash(prev_TX) + next_owner_pubkey. Payee verifies chain. Uses <span class="term">ECDSA</span> signatures (secp256k1). Basic structure: Inputs (prev_out, scriptSig), Outputs (value, scriptPubKey). Solves ownership, but not <span class="term">double-spending</span>.
-                   </p>
-<button aria-controls="collapseTransactions" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseTransactions" data-bs-toggle="collapse" type="button">
-                      Details &amp; Algorithms <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseTransactions">
-<h6>Ownership &amp; Verification:</h6>
-<ul>
-<li><strong>Signature Algorithm:</strong> <span class="term">ECDSA</span> over <code class="term">secp256k1</code> curve (*Standardized post-whitepaper*).</li>
-<li>Signatures prove private key authorization for spending inputs.</li>
-</ul>
-<h6>Basic Transaction Structure (Conceptual):</h6>
-<pre class="formula"><code><span class="comment">// Simplified Transaction Structure</span>
-Transaction {
-  <span class="var">Version</span>         <span class="comment">// uint32_t</span>
-  <span class="var">Inputs</span>[] {        <span class="comment">// List of inputs</span>
-    <span class="var">PrevTxHash</span>      <span class="comment">// 32-byte hash</span>
-    <span class="var">PrevOutputIndex</span> <span class="comment">// uint32_t</span>
-    <span class="var">ScriptSig</span>       <span class="comment">// Variable length unlocking script</span>
+  <a class="visually-hidden-focusable" href="#main">Skip to main content</a>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow"><span class="bi bi-file-earmark-binary" aria-hidden="true">&nbsp;</span> Whitepaper technical map</div>
+        <h1><span class="hero-title-mark">Bitcoin</span> Whitepaper Explained</h1>
+        <p class="hero-copy">A dense reference for Satoshi Nakamoto's 2008 design: transaction ownership, proof-of-work timestamping, network consensus, incentives, privacy limits, SPV, and the protocol changes that filled in implementation gaps.</p>
+        <div class="hero-actions" aria-label="Primary links">
+          <a class="btn btn-warning" href="https://bitcoin.org/bitcoin.pdf" rel="noopener noreferrer" target="_blank">
+            <span class="bi bi-filetype-pdf" aria-hidden="true">&nbsp;</span> Original PDF
+          </a>
+          <a class="btn btn-outline-warning" href="#cards">
+            <span class="bi bi-grid-3x3-gap" aria-hidden="true">&nbsp;</span> Explore cards
+          </a>
+        </div>
+      </div>
+
+      <aside class="paper-card" aria-label="Whitepaper abstract excerpt">
+        <div class="paper-top">
+          <span>bitcoin.pdf</span>
+          <span>2008-10-31</span>
+        </div>
+        <blockquote>
+          A peer-to-peer electronic cash system uses digital signatures for ownership and a proof-of-work chain to agree on transaction order without a trusted intermediary.
+          <cite>Paraphrase of the whitepaper abstract and Sections 1-4.</cite>
+        </blockquote>
+      </aside>
+    </div>
+  </header>
+
+  <nav class="nav-strip" aria-label="Page sections">
+    <div class="container-xl">
+      <a class="nav-pill" href="#quick">Quick Reference</a>
+      <a class="nav-pill" href="#model">Mental Model</a>
+      <a class="nav-pill" href="#cards">Technical Cards</a>
+      <a class="nav-pill" href="#comparison">Design Matrix</a>
+      <a class="nav-pill" href="#mistakes">Common Mistakes</a>
+      <a class="nav-pill" href="#resources">Resources</a>
+    </div>
+  </nav>
+
+  <main id="main" class="container-xl">
+    <section class="section-block" id="quick" aria-labelledby="quick-title">
+      <div class="section-heading">
+        <span class="bi bi-lightning-charge" aria-hidden="true">&nbsp;</span>
+        <h2 id="quick-title">Quick Reference</h2>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-card"><strong>Core problem</strong><p>Digital signatures prove ownership, but do not by themselves prevent spending the same output twice.</p></div>
+        <div class="quick-card"><strong>Consensus object</strong><p>The network accepts the valid chain with the most cumulative proof-of-work, commonly described in the paper as the longest chain.</p></div>
+        <div class="quick-card"><strong>Block proof</strong><p>Miners vary nonce and related header fields until <code>SHA256(SHA256(header)) &lt; target</code>.</p></div>
+        <div class="quick-card"><strong>Retarget cadence</strong><p>Difficulty adjusts every 2,016 blocks toward a 10-minute average block interval.</p></div>
+        <div class="quick-card"><strong>Issuance rule</strong><p>The initial 50 BTC subsidy halves every 210,000 blocks; fees become the long-run incentive.</p></div>
+        <div class="quick-card"><strong>Privacy baseline</strong><p>Bitcoin is pseudonymous, not anonymous; address reuse and multi-input transactions leak linkage.</p></div>
+      </div>
+    </section>
+
+    <section class="section-block" id="model" aria-labelledby="model-title">
+      <div class="section-heading">
+        <span class="bi bi-diagram-3" aria-hidden="true">&nbsp;</span>
+        <h2 id="model-title">Mental Model: What the Paper Actually Builds</h2>
+      </div>
+      <div class="table-panel">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Layer</th>
+              <th>Whitepaper mechanism</th>
+              <th>Concrete example</th>
+              <th>Gotcha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Ownership</td>
+              <td>A coin is represented by a chain of digital signatures.</td>
+              <td>Alice signs a transaction spending one prior output to Bob's public-key hash.</td>
+              <td>Ownership proof does not tell Bob whether Alice already spent the same output elsewhere.</td>
+            </tr>
+            <tr>
+              <td>Ordering</td>
+              <td>Blocks timestamp batches of transactions and include the previous block hash.</td>
+              <td>Block 800001 commits to block 800000 through <code>prev_block_hash</code>.</td>
+              <td>Wall-clock timestamps are secondary; proof-of-work ordering is the security primitive.</td>
+            </tr>
+            <tr>
+              <td>Consensus</td>
+              <td>Nodes extend the valid chain with the most accumulated proof-of-work.</td>
+              <td>A one-block fork resolves when one branch receives the next valid block first.</td>
+              <td>"Longest" means most work, not necessarily the greatest number of block headers.</td>
+            </tr>
+            <tr>
+              <td>Incentives</td>
+              <td>Coinbase subsidy and transaction fees reward honest block production.</td>
+              <td>A miner claims the block subsidy plus the sum of input values minus output values.</td>
+              <td>The whitepaper sketches incentives; modern consensus enforces many additional coinbase rules.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-block" id="cards" aria-labelledby="cards-title">
+      <div class="section-heading">
+        <span class="bi bi-grid-3x3-gap" aria-hidden="true">&nbsp;</span>
+        <h2 id="cards-title">Technical Cards</h2>
+      </div>
+
+      <div class="tool-panel" aria-label="Card search and filters">
+        <label class="search-box" for="cardSearch">
+          <span class="bi bi-search" aria-hidden="true">&nbsp;</span>
+          <input id="cardSearch" type="search" autocomplete="off" placeholder="Search transactions, proof-of-work, SPV, Taproot...">
+        </label>
+        <div class="filter-group" aria-label="Filter cards">
+          <button class="filter-chip" type="button" data-filter="all" aria-pressed="true">All</button>
+          <button class="filter-chip" type="button" data-filter="problem" aria-pressed="false">Problem</button>
+          <button class="filter-chip" type="button" data-filter="mechanism" aria-pressed="false">Mechanism</button>
+          <button class="filter-chip" type="button" data-filter="rules" aria-pressed="false">Rules</button>
+          <button class="filter-chip" type="button" data-filter="security" aria-pressed="false">Security</button>
+          <button class="filter-chip" type="button" data-filter="evolution" aria-pressed="false">Evolution</button>
+        </div>
+      </div>
+      <p class="result-count" id="resultCount" aria-live="polite"></p>
+
+      <div class="card-grid" id="cardGrid">
+        <article class="info-card" data-section="problem" data-search="abstract peer to peer cash intermediary double spending trusted third party finality">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-journal-text" aria-hidden="true">&nbsp;</span> Abstract and Section 1</div>
+            <h3>Core Proposal</h3>
+            <p>A purely peer-to-peer electronic cash system lets parties transact directly, replacing trusted dispute mediation with public ordering and computational proof.</p>
+          </div>
+          <details class="detail-block" name="problem-details" open>
+            <summary>What it solves</summary>
+            <div class="detail-content">
+              <h4>Definition</h4>
+              <p>The paper targets the double-spending problem for online cash without relying on a mint, bank, or payment processor.</p>
+              <h4>Example</h4>
+              <ul>
+                <li>Without a shared ordering system, Alice can sign two valid-looking transactions that spend the same output to Bob and Carol.</li>
+                <li>Bitcoin resolves this by making the network converge on one ordered history of transactions.</li>
+              </ul>
+              <h4>Do not overread</h4>
+              <p>The whitepaper is not a full node implementation spec; it leaves networking, serialization, script details, and many consensus limits to later software and BIPs.</p>
+            </div>
+          </details>
+        </article>
+
+        <article class="info-card" data-section="problem" data-search="trusted third parties reversibility mediation microtransactions fraud cash finality">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-bank" aria-hidden="true">&nbsp;</span> Problem</div>
+            <h3>Trust-Based Commerce Costs</h3>
+            <p>Intermediated payments can be reversed, require dispute handling, and make very small payments uneconomical because mediation has a real operational cost.</p>
+          </div>
+          <details class="detail-block" name="problem-details">
+            <summary>Weaknesses</summary>
+            <div class="detail-content">
+              <ul>
+                <li><strong>Reversibility:</strong> merchants must price in fraud and chargebacks.</li>
+                <li><strong>Minimum practical size:</strong> mediation overhead makes tiny payments hard.</li>
+                <li><strong>Trust burden:</strong> buyers and sellers depend on a third party to adjudicate finality.</li>
+              </ul>
+              <p><strong>When not to use this model:</strong> If a transaction intentionally needs consumer dispute resolution, trusted mediation may be a feature rather than a defect.</p>
+            </div>
+          </details>
+        </article>
+
+        <article class="info-card" data-section="mechanism" data-search="transactions signatures ownership ECDSA secp256k1 UTXO inputs outputs script">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-pen" aria-hidden="true">&nbsp;</span> Section 2</div>
+            <h3>Transactions: Ownership by Signature Chain</h3>
+            <p>A coin is modeled as a chain of signatures: each owner signs the previous transaction hash and the next owner's public key.</p>
+          </div>
+          <details class="detail-block" name="mechanism-details">
+            <summary>Structure and gotchas</summary>
+            <div class="detail-content">
+              <h4>Conceptual modern transaction</h4>
+              <pre class="formula"><code>Transaction {
+  <span class="var">version</span>         <span class="comment">// 4 bytes</span>
+  <span class="var">inputs</span>[] {
+    <span class="var">prev_txid</span>     <span class="comment">// 32-byte previous transaction hash</span>
+    <span class="var">vout</span>          <span class="comment">// output index being spent</span>
+    <span class="var">script_sig</span>    <span class="comment">// unlocking data for legacy inputs</span>
+    <span class="var">sequence</span>
   }
-  <span class="var">Outputs</span>[] {       <span class="comment">// List of outputs</span>
-    <span class="var">Value</span>           <span class="comment">// uint64_t (Satoshis)</span>
-    <span class="var">ScriptPubKey</span>    <span class="comment">// Variable length locking script</span>
+  <span class="var">outputs</span>[] {
+    <span class="var">value</span>         <span class="comment">// satoshis</span>
+    <span class="var">script_pubkey</span> <span class="comment">// locking condition</span>
   }
-  <span class="var">Locktime</span>        <span class="comment">// uint32_t</span>
+  <span class="var">locktime</span>
 }</code></pre>
-<h6>Hashing:</h6>
-<ul>
-<li><strong>TXID:</strong> <code class="term">SHA256(SHA256(serialized_transaction))</code>.</li>
-<li><strong>Address Hash (P2PKH):</strong> <code class="term">RIPEMD160(SHA256(PublicKey))</code>.</li>
-</ul>
-<h6><strong class="critical">Still Needs Double-Spend Prevention</strong></h6>
-</div>
-</div>
-</div>
-<!-- Timestamp Server -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-mechanism" id="card-timestamp">
-<div class="card-body">
-<h5><i class="bi bi-clock"></i> Spec §3: Timestamp Server (Ordering Concept)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Concept: Distributed server timestamps blocks by hashing them. Each timestamp hash includes the previous timestamp hash, creating a reinforcing chain for chronological ordering.
-                   </p>
-</div>
-</div>
-</div>
-</div>
-<!-- Proof-of-Work -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-mechanism" id="card-pow">
-<div class="card-body">
-<h5><i class="bi bi-cpu"></i> Spec §4: Proof-of-Work (Implementation)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     P2P timestamping via <span class="term">PoW</span>. Nodes vary <span class="term">Nonce</span> in block header until hash is below <span class="term">Target</span>: <code class="term">SHA256(SHA256(header)) &lt; Target</code>. Makes chain immutable; longest chain = consensus.
-                   </p>
-<button aria-controls="collapsePoW" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapsePoW" data-bs-toggle="collapse" type="button">
-                      Header &amp; Algorithm <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapsePoW">
-<h6>Proof-of-Work Algorithm:</h6>
-<pre class="formula"><code><span class="comment">// Find Nonce such that:</span>
-<span class="op">SHA256</span>(<span class="op">SHA256</span>(<span class="var">BlockHeader</span>)) <span class="op">&lt;</span> <span class="var">CurrentTarget</span></code></pre>
-<h6>Block Header Structure (Core Fields - Approx 80 bytes):</h6>
-<pre class="formula"><code>BlockHeader {
-  <span class="var">Version</span>        <span class="comment">// int32_t</span>
-  <span class="var">PrevBlockHash</span>  <span class="comment">// uint256 (32 bytes)</span>
-  <span class="var">MerkleRoot</span>     <span class="comment">// uint256 (32 bytes)</span>
-  <span class="var">Timestamp</span>      <span class="comment">// uint32_t (Unix epoch)</span>
-  <span class="var">Bits</span>           <span class="comment">// uint32_t (Encoded Target)</span>
-  <span class="var">Nonce</span>          <span class="comment">// uint32_t</span>
+              <ul>
+                <li><strong>Example:</strong> a 0.015 BTC UTXO can be spent into one 0.010 BTC payment output and one change output, minus the miner fee.</li>
+                <li><strong>Gotcha:</strong> the whitepaper does not specify today's full Script system, SegWit witness data, or Taproot spending paths.</li>
+              </ul>
+            </div>
+          </details>
+        </article>
+
+        <article class="info-card" data-section="mechanism" data-search="timestamp server block previous hash chronological ordering hash chain">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-clock-history" aria-hidden="true">&nbsp;</span> Section 3</div>
+            <h3>Timestamp Server</h3>
+            <p>Transactions are grouped into blocks; each block commits to the previous block hash, creating an ordered hash chain.</p>
+          </div>
+          <details class="detail-block" name="mechanism-details">
+            <summary>Ordering model</summary>
+            <div class="detail-content">
+              <ul>
+                <li><strong>Definition:</strong> a timestamp proves that the block data existed before the next block was created.</li>
+                <li><strong>Example:</strong> changing a transaction in block N changes its Merkle root, which changes block N's hash and invalidates every descendant hash link.</li>
+                <li><strong>Gotcha:</strong> Bitcoin timestamps are not trusted clock records; nodes enforce validity windows, while proof-of-work establishes ordering.</li>
+              </ul>
+            </div>
+          </details>
+        </article>
+
+        <article class="info-card" data-section="mechanism" data-search="proof of work pow nonce target double sha256 block header mining longest chain">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-cpu" aria-hidden="true">&nbsp;</span> Section 4</div>
+            <h3>Proof-of-Work</h3>
+            <p>Miners search for a block header hash below the current target; redoing history requires redoing that work and catching up to honest miners.</p>
+          </div>
+          <details class="detail-block" name="mechanism-details">
+            <summary>Header and algorithm</summary>
+            <div class="detail-content">
+              <pre class="formula"><code><span class="comment">// Valid block condition</span>
+<span class="op">SHA256</span>(<span class="op">SHA256</span>(<span class="var">block_header</span>)) <span class="op">&lt;</span> <span class="var">current_target</span></code></pre>
+              <pre class="formula"><code>BlockHeader {
+  <span class="var">version</span>        <span class="comment">// 4 bytes</span>
+  <span class="var">prev_block</span>     <span class="comment">// 32 bytes</span>
+  <span class="var">merkle_root</span>    <span class="comment">// 32 bytes</span>
+  <span class="var">time</span>           <span class="comment">// 4 bytes</span>
+  <span class="var">bits</span>           <span class="comment">// compact target</span>
+  <span class="var">nonce</span>          <span class="comment">// 4 bytes</span>
 }</code></pre>
-<h6>Consensus &amp; Immutability:</h6>
-<ul>
-<li>Finding valid nonce is computationally expensive.</li>
-<li>Changing past block requires re-doing PoW for it and all successors.</li>
-<li>Longest chain (most cumulative PoW) is the accepted history.</li>
-</ul>
-</div>
-</div>
-</div>
-<!-- Network -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-mechanism" id="card-network">
-<div class="card-body">
-<h5><i class="bi bi-diagram-3"></i> Spec §5: Network (Operation Principles)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Nodes broadcast TXs &amp; blocks. Validate received data. Build on longest valid chain. Minimal structure. <strong class="critical">*Network message protocol implementation-defined.*</strong>
-</p>
-<button aria-controls="collapseNetwork" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseNetwork" data-bs-toggle="collapse" type="button">
-                      Operational Steps <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseNetwork">
-<h6>Operational Flow Principles:</h6>
-<ol>
-<li>Broadcast valid TXs.</li>
-<li>Collect TXs into blocks.</li>
-<li>Find PoW.</li>
-<li>Broadcast valid block.</li>
-<li>Validate received block &amp; TXs.</li>
-<li>Accept valid block &amp; build on it.</li>
-</ol>
-<h6>Consensus Dynamics:</h6>
-<ul><li>Always extend the longest valid chain. Resolve forks via subsequent blocks.</li></ul>
-</div>
-</div>
-</div>
-</div><!-- /.row -->
-</div><!-- /.schema-container -->
-<!-- ============================== -->
-<!-- SECTION II: Economic & Consensus Rules -->
-<!-- ============================== -->
-<div class="schema-container cat-technical" data-section-id="section-rules">
-<h2 class="section-title" id="section-rules">
-<i class="bi bi-bank"></i> // II. Economic &amp; Consensus Rules
-        </h2>
-<div class="row">
-<!-- Incentive Mechanism -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-technical" id="card-incentive">
-<div class="card-body">
-<h5><i class="bi bi-award"></i> Spec §6: Incentive Model &amp; Issuance</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Incentives: <span class="term">Block Reward</span> (Coinbase) + <span class="term">Transaction Fees</span>. Initial reward: 50 BTC, halves every 210,000 blocks (~4 yrs). Max supply: ~21 Million BTC.
-                   </p>
-<button aria-controls="collapseIncentive" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseIncentive" data-bs-toggle="collapse" type="button">
-                      Coinbase Schedule <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseIncentive">
-<h6>Coin Issuance (Coinbase Reward Schedule):</h6>
-<div class="formula">
-<pre><code><span class="var">INITIAL_REWARD</span> <span class="op">=</span> <span class="num">50</span> <span class="op">*</span> <span class="num">100_000_000</span><span class="comment">; // Satoshis (50 BTC)</span>
-<span class="var">HALVING_INTERVAL</span> <span class="op">=</span> <span class="num">210_000</span><span class="comment">;        // Blocks</span>
+              <p><strong>Gotcha:</strong> miners also vary transaction selection and extra nonce data in the coinbase transaction because the 32-bit header nonce alone can be exhausted.</p>
+            </div>
+          </details>
+        </article>
 
-<span class="comment">// Function to calculate reward for a given block height</span>
-function calculate_reward(<span class="var">height</span>) {
-  <span class="var">halvings</span> <span class="op">=</span> <span class="var">height</span> <span class="op">/</span> <span class="var">HALVING_INTERVAL</span><span class="op">;</span>
-  if (<span class="var">halvings</span> <span class="op">&gt;=</span> <span class="num">64</span>) return <span class="num">0</span><span class="op">;</span> <span class="comment">// Reward becomes 0 after 64 halvings</span>
-  <span class="var">reward</span> <span class="op">=</span> <span class="var">INITIAL_REWARD</span> <span class="op">&gt;&gt;</span> <span class="var">halvings</span><span class="op">;</span> <span class="comment">// Right-shift is equivalent to dividing by 2^halvings</span>
-  return <span class="var">reward</span><span class="op">;</span>
-}
+        <article class="info-card" data-section="mechanism" data-search="network broadcast validate nodes blocks transactions forks orphan propagation">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-broadcast" aria-hidden="true">&nbsp;</span> Section 5</div>
+            <h3>Network Operation</h3>
+            <p>Nodes broadcast transactions and blocks, validate what they receive, and extend the valid branch with the most cumulative work.</p>
+          </div>
+          <details class="detail-block" name="mechanism-details">
+            <summary>Operational loop</summary>
+            <div class="detail-content">
+              <ol>
+                <li>New transactions are broadcast to nodes.</li>
+                <li>Nodes collect valid transactions into a candidate block.</li>
+                <li>Miners search for proof-of-work.</li>
+                <li>A valid block is broadcast to the network.</li>
+                <li>Nodes accept it only if all included transactions are valid and unspent.</li>
+                <li>Nodes express acceptance by building the next block on top of it.</li>
+              </ol>
+              <p><strong>Gotcha:</strong> network messages, peer discovery, mempool policy, compact block relay, and DoS limits are implementation details beyond the paper.</p>
+            </div>
+          </details>
+        </article>
 
-<span class="comment">// Example Heights:</span>
-<span class="comment">// Height 0:       Reward = 50 BTC</span>
-<span class="comment">// Height 210,000: Reward = 25 BTC</span>
-<span class="comment">// Height 420,000: Reward = 12.5 BTC</span>
-<span class="comment">// ...</span>
-<span class="comment">// Total Supply converges towards 21 Million BTC</span></code></pre>
-</div>
-<h6>Transaction Fees:</h6>
-<ul><li>Fee = `Sum(Input Values) - Sum(Output Values)`</li></ul>
-</div>
-</div>
-</div>
-<!-- Difficulty Adjustment -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-technical" id="card-difficulty">
-<div class="card-body">
-<h5><i class="bi bi-speedometer2"></i> Consensus Rule: Difficulty Adjustment</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     PoW <span class="term">Target</span> adjusts every <span class="term">2016 blocks</span> (~2 weeks) aiming for 10 min block time. Uses ratio of actual vs target time for last interval, clamped to 0.25x - 4x change.
-                   </p>
-<button aria-controls="collapseDifficulty" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseDifficulty" data-bs-toggle="collapse" type="button">
-                      Adjustment Formula <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseDifficulty">
-<h6>Difficulty Adjustment Logic (Conceptual):</h6>
-<div class="formula">
-<pre><code><span class="comment">// Constants</span>
-<span class="var">TARGET_TIMESPAN</span>      <span class="op">=</span> <span class="num">14</span> <span class="op">*</span> <span class="num">24</span> <span class="op">*</span> <span class="num">60</span> <span class="op">*</span> <span class="num">60</span><span class="op">;</span> <span class="comment">// 2 weeks in seconds</span>
-<span class="var">INTERVAL</span>           <span class="op">=</span> <span class="num">2016</span><span class="op">;</span>              <span class="comment">// Blocks</span>
-<span class="var">MIN_ADJUST_FACTOR</span>  <span class="op">=</span> <span class="num">0.25</span><span class="op">;</span>
-<span class="var">MAX_ADJUST_FACTOR</span>  <span class="op">=</span> <span class="num">4.0</span><span class="op">;</span>
+        <article class="info-card" data-section="rules" data-search="incentive coinbase subsidy reward fees halving 210000 50 BTC supply">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-award" aria-hidden="true">&nbsp;</span> Section 6</div>
+            <h3>Incentives and Issuance</h3>
+            <p>Block producers receive a coinbase subsidy plus transaction fees, aligning miner revenue with extending the valid chain.</p>
+          </div>
+          <details class="detail-block" name="rules-details">
+            <summary>Reward schedule</summary>
+            <div class="detail-content">
+              <pre class="formula"><code><span class="var">initial_subsidy</span> <span class="op">=</span> <span class="num">50</span> BTC
+<span class="var">halving_interval</span> <span class="op">=</span> <span class="num">210000</span> blocks
+<span class="var">subsidy(height)</span> <span class="op">=</span> <span class="var">initial_subsidy</span> <span class="op">/</span> <span class="num">2</span><span class="op">^</span>floor(<span class="var">height</span> / <span class="var">halving_interval</span>)
+<span class="var">fee</span> <span class="op">=</span> sum(<span class="var">input_values</span>) <span class="op">-</span> sum(<span class="var">output_values</span>)</code></pre>
+              <ul>
+                <li><strong>Example:</strong> height 0 pays 50 BTC; height 210,000 pays 25 BTC; height 420,000 pays 12.5 BTC.</li>
+                <li><strong>Gotcha:</strong> miners cannot claim arbitrary fees; full nodes reject blocks whose coinbase output exceeds allowed subsidy plus actual fees.</li>
+              </ul>
+            </div>
+          </details>
+        </article>
 
-<span class="comment">// At block height H divisible by INTERVAL:</span>
-<span class="var">current_block</span> <span class="op">=</span> get_block(<span class="var">H</span> <span class="op">-</span> <span class="num">1</span>)<span class="op">;</span>
-<span class="var">first_block</span>   <span class="op">=</span> get_block(<span class="var">H</span> <span class="op">-</span> <span class="var">INTERVAL</span>)<span class="op">;</span>
+        <article class="info-card" data-section="rules" data-search="difficulty adjustment retarget 2016 blocks target bits two weeks ten minutes">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-speedometer2" aria-hidden="true">&nbsp;</span> Consensus Rule</div>
+            <h3>Difficulty Adjustment</h3>
+            <p>The target adjusts every 2,016 blocks to keep average block production near 10 minutes despite changing hash rate.</p>
+          </div>
+          <details class="detail-block" name="rules-details">
+            <summary>Formula</summary>
+            <div class="detail-content">
+              <pre class="formula"><code><span class="var">target_timespan</span> <span class="op">=</span> <span class="num">14</span> * <span class="num">24</span> * <span class="num">60</span> * <span class="num">60</span> seconds
+<span class="var">interval</span> <span class="op">=</span> <span class="num">2016</span> blocks
+<span class="var">actual_timespan</span> <span class="op">=</span> last_block_time <span class="op">-</span> first_block_time
+<span class="var">clamped</span> <span class="op">=</span> clamp(<span class="var">actual_timespan</span>, <span class="var">target_timespan</span> / <span class="num">4</span>, <span class="var">target_timespan</span> * <span class="num">4</span>)
+<span class="var">new_target</span> <span class="op">=</span> old_target * <span class="var">clamped</span> / <span class="var">target_timespan</span></code></pre>
+              <p><strong>Gotcha:</strong> this is a consensus-critical calculation; real implementations must match integer arithmetic and compact target encoding exactly.</p>
+            </div>
+          </details>
+        </article>
 
-<span class="var">actual_timespan</span> <span class="op">=</span> <span class="var">current_block.timestamp</span> <span class="op">-</span> <span class="var">first_block.timestamp</span><span class="op">;</span>
+        <article class="info-card" data-section="mechanism" data-search="merkle tree root branch pruning disk space SPV transaction inclusion proof">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-hdd" aria-hidden="true">&nbsp;</span> Section 7</div>
+            <h3>Merkle Trees and Pruning</h3>
+            <p>Transactions are summarized by a Merkle root in the block header, enabling compact inclusion proofs and pruning of spent transaction data.</p>
+          </div>
+          <details class="detail-block" name="mechanism-details">
+            <summary>Tree construction</summary>
+            <div class="detail-content">
+              <ul>
+                <li><strong>Definition:</strong> leaf hashes are transaction IDs; parent hashes combine pairs until one root remains.</li>
+                <li><strong>Example:</strong> a wallet can verify a transaction is in a block using a branch of sibling hashes plus the block header.</li>
+                <li><strong>Gotcha:</strong> Merkle inclusion proves a transaction is in a block, not that the block itself obeys every consensus rule.</li>
+              </ul>
+            </div>
+          </details>
+        </article>
 
-<span class="comment">// Clamp actual_timespan to avoid extreme adjustments</span>
-<span class="var">clamped_timespan</span> <span class="op">=</span> <span class="op">max</span>(<span class="var">TARGET_TIMESPAN</span> <span class="op">*</span> <span class="var">MIN_ADJUST_FACTOR</span>,
-                   <span class="op">min</span>(<span class="var">actual_timespan</span>, <span class="var">TARGET_TIMESPAN</span> <span class="op">*</span> <span class="var">MAX_ADJUST_FACTOR</span>))<span class="op">;</span>
+        <article class="info-card" data-section="security" data-search="SPV simplified payment verification headers merkle proof lightweight client security tradeoff">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-search" aria-hidden="true">&nbsp;</span> Section 8</div>
+            <h3>Simplified Payment Verification</h3>
+            <p>SPV clients verify proof-of-work headers and Merkle inclusion instead of downloading and validating every transaction.</p>
+          </div>
+          <details class="detail-block" name="security-details">
+            <summary>Process and limits</summary>
+            <div class="detail-content">
+              <ol>
+                <li>Download the chain of block headers.</li>
+                <li>Request a Merkle branch for the transaction of interest.</li>
+                <li>Check that the branch commits to the header's Merkle root.</li>
+                <li>Wait for enough confirmations for the payment value and risk profile.</li>
+              </ol>
+              <p><strong>When not to rely on SPV:</strong> high-value validation, policy-sensitive receiving, and adversarial environments call for full validation.</p>
+            </div>
+          </details>
+        </article>
 
-<span class="comment">// Calculate new target</span>
-<span class="var">old_target</span> <span class="op">=</span> decode_target_from_bits(<span class="var">current_block.bits</span>)<span class="op">;</span>
-<span class="var">new_target</span> <span class="op">=</span> (<span class="var">old_target</span> <span class="op">*</span> <span class="var">clamped_timespan</span>) <span class="op">/</span> <span class="var">TARGET_TIMESPAN</span><span class="op">;</span>
+        <article class="info-card" data-section="mechanism" data-search="UTXO combining splitting value inputs outputs change coin selection">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-plus-slash-minus" aria-hidden="true">&nbsp;</span> Section 9</div>
+            <h3>Combining and Splitting Value</h3>
+            <p>Bitcoin spends discrete unspent transaction outputs; a transaction can consume multiple inputs and create payment and change outputs.</p>
+          </div>
+          <details class="detail-block" name="mechanism-details">
+            <summary>UTXO example</summary>
+            <div class="detail-content">
+              <ul>
+                <li><strong>Example:</strong> to pay 0.30 BTC, a wallet might spend 0.18 BTC and 0.14 BTC UTXOs, create a 0.30 BTC recipient output, and return the remainder as change after fees.</li>
+                <li><strong>Gotcha:</strong> combining inputs often links them to the same wallet owner, reducing privacy.</li>
+                <li><strong>Decision guidance:</strong> use fewer inputs for lower fees; use careful coin selection when privacy matters more than fee minimization.</li>
+              </ul>
+            </div>
+          </details>
+        </article>
 
-<span class="comment">// Ensure new_target does not exceed maximum possible target</span>
-<span class="var">new_target</span> <span class="op">=</span> <span class="op">min</span>(<span class="var">new_target</span>, <span class="var">MAX_TARGET</span>)<span class="op">;</span>
+        <article class="info-card" data-section="security" data-search="privacy pseudonymity address reuse public key hash P2PKH Base58Check chain analysis">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-eye-slash" aria-hidden="true">&nbsp;</span> Section 10</div>
+            <h3>Privacy: Pseudonymity, Not Anonymity</h3>
+            <p>The public sees transaction flows between keys or scripts; privacy depends on avoiding address reuse and minimizing linkable behavior.</p>
+          </div>
+          <details class="detail-block" name="security-details">
+            <summary>Address flow and limits</summary>
+            <div class="detail-content">
+              <pre class="formula"><code><span class="var">private_key</span> <span class="op">-&gt;</span> <span class="var">public_key</span>
+<span class="var">hash160</span> <span class="op">=</span> RIPEMD160(SHA256(<span class="var">public_key</span>))
+<span class="var">legacy_address</span> <span class="op">=</span> Base58Check(<span class="var">version_byte</span> + <span class="var">hash160</span>)</code></pre>
+              <ul>
+                <li><strong>Example:</strong> reusing one donation address makes every inbound payment to that address publicly clusterable.</li>
+                <li><strong>Gotcha:</strong> SegWit and Taproot use different address encodings, but they do not erase transaction graph analysis.</li>
+              </ul>
+            </div>
+          </details>
+        </article>
 
-<span class="var">new_bits</span> <span class="op">=</span> encode_target_to_bits(<span class="var">new_target</span>)<span class="op">;</span>
-<span class="comment">// Use new_bits in the header for the next INTERVAL blocks</span></code></pre>
-</div>
-<ul><li>Maintains ~10 minute average block time despite hashrate fluctuations.</li></ul>
-</div>
-</div>
-</div>
-</div><!-- /.row -->
-</div><!-- /.schema-container -->
-<!-- ================================== -->
-<!-- SECTION III: Optimizations & Usage Patterns -->
-<!-- ================================== -->
-<div class="schema-container cat-technical" data-section-id="section-details">
-<h2 class="section-title" id="section-details-cont">
-<i class="bi bi-rulers"></i> // III. Optimizations &amp; Usage Patterns
-        </h2>
-<div class="row">
-<!-- Reclaiming Disk Space -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-technical" id="card-diskspace">
-<div class="card-body">
-<h5><i class="bi bi-hdd"></i> Spec §7: Reclaiming Disk Space (Merkle Trees)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Allows pruning old spent TXs via <span class="term">Merkle Tree</span>. Only <span class="term">Merkle Root</span> in header. Uses <code class="term">SHA256(SHA256(...))</code> tree hashing. Enables SPV and reduces storage.
-                   </p>
-<button aria-controls="collapseDiskSpace" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseDiskSpace" data-bs-toggle="collapse" type="button">
-                      Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseDiskSpace">
-<h6>Merkle Tree Construction &amp; Pruning:</h6>
-<ul>
-<li>TXIDs form leaves. Pairs hashed iteratively (<code class="term">SHA256(SHA256(L+R))</code>) to get root.</li>
-<li>Root stored in header proves TX inclusion with minimal data (Merkle branch).</li>
-<li>Allows full nodes to discard old, fully spent transaction data ("prune").</li>
-</ul>
-</div>
-</div>
-</div>
-<!-- SPV -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-technical" id="card-spv">
-<div class="card-body">
-<h5><i class="bi bi-search"></i> Spec §8: Simplified Payment Verification (SPV)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Verify payments without full node. <span class="term">SPV</span> clients get headers, request <span class="term">Merkle branch</span> to prove TX inclusion. Efficient but less secure (trusts longest chain validity).
-                   </p>
-<button aria-controls="collapseSPV" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseSPV" data-bs-toggle="collapse" type="button">
-                      Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseSPV">
-<h6>Lightweight Verification Process:</h6>
-<ol>
-<li>Get longest chain of headers.</li>
-<li>Request Merkle proof for specific TXID.</li>
-<li>Verify proof against header's Merkle Root.</li>
-</ol>
-<ul>
-<li><strong class="cons">Security Tradeoff:</strong> Vulnerable to 51% attacks providing fake history. Doesn't validate all rules.</li>
-</ul>
-</div>
-</div>
-</div>
-<!-- Combining Value -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-technical" id="card-combine">
-<div class="card-body">
-<h5><i class="bi bi-plus-slash-minus"></i> Spec §9: Combining/Splitting Value (UTXOs)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Transactions use multiple <span class="term">inputs</span> (spending UTXOs) and create multiple <span class="term">outputs</span> (new UTXOs). Efficiently manages value flow like digital cash/change.
-                   </p>
-</div>
-</div>
-</div>
-</div>
-<!-- Privacy -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-technical" id="card-privacy">
-<div class="card-body">
-<h5><i class="bi bi-eye-slash"></i> Spec §10: Privacy (Pseudonymity &amp; Address Gen.)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Privacy via anonymous public keys (<span class="term">pseudonymity</span>). Public sees TXs between addresses. Use new keys per TX. Address (P2PKH): <code class="term">Base58Check(RIPEMD160(SHA256(pubkey)))</code>.
-                   </p>
-<button aria-controls="collapsePrivacy" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapsePrivacy" data-bs-toggle="collapse" type="button">
-                      Address Generation &amp; Limits <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapsePrivacy">
-<h6>Address Generation (Conceptual P2PKH Flow):</h6>
-<div class="formula">
-<pre><code><span class="var">PrivateKey</span> <span class="op">--ECDSA(secp256k1)--&gt;</span> <span class="var">PublicKey</span>
-<span class="var">Hash160</span> <span class="op">=</span> <span class="op">RIPEMD160</span>(<span class="op">SHA256</span>(<span class="var">PublicKey</span>))
-<span class="var">Address</span> <span class="op">=</span> <span class="op">Base58CheckEncode</span>(<span class="var">VersionByte</span> <span class="op">+</span> <span class="var">Hash160</span>)</code></pre>
-</div>
-<ul>
-<li>*Note: SegWit/Taproot use different address formats/derivations.*</li>
-</ul>
-<h6><strong class="cons">Privacy Limitations:</strong></h6>
-<ul><li>Multi-input TXs link ownership. Address reuse harms privacy. External linking (KYC) possible.</li></ul>
-</div>
-</div>
-</div>
-</div><!-- /.row -->
-</div><!-- /.schema-container -->
-<!-- ==================================== -->
-<!-- SECTION IV: Security Calculations -->
-<!-- ==================================== -->
-<div class="schema-container cat-security" data-section-id="section-security">
-<h2 class="section-title" id="section-security">
-<i class="bi bi-shield-check"></i> // IV. Security Calculations
-        </h2>
-<div class="row">
-<div class="col-md-12">
-<div class="info-card wp-type-security" id="card-calculations">
-<div class="card-body">
-<h5><i class="bi bi-graph-up"></i> Spec §11: Calculations (Attacker Success Probability)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Analyzes attacker probability (<span class="term">q</span> = attacker hash power fraction) of reversing a TX from <span class="term">z</span> confirmations behind. Modeled as Gambler's Ruin. Probability drops exponentially with <span class="term">z</span> if <span class="term">p &gt; q</span> (honest majority).
-                   </p>
-<button aria-controls="collapseCalculations" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseCalculations" data-bs-toggle="collapse" type="button">
-                      Probability Analysis <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseCalculations">
-<h6>Double-Spend Attack Analysis (Gambler's Ruin):</h6>
-<div class="formula">
-<pre><code><span class="var">p</span> <span class="op">=</span> probability honest network finds next block
-<span class="var">q</span> <span class="op">=</span> probability attacker finds next block (hash power fraction)
-<span class="var">z</span> <span class="op">=</span> number of confirmations attacker is behind
+        <article class="info-card" data-section="security" data-search="calculations attacker probability confirmations q p z poisson gambler ruin double spend">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-graph-up" aria-hidden="true">&nbsp;</span> Section 11</div>
+            <h3>Attacker Success Probability</h3>
+            <p>If honest hash power exceeds attacker hash power, the probability of catching up falls exponentially as confirmations accumulate.</p>
+          </div>
+          <details class="detail-block" name="security-details">
+            <summary>Security math</summary>
+            <div class="detail-content">
+              <pre class="formula"><code><span class="var">p</span> <span class="op">=</span> honest probability of finding next block
+<span class="var">q</span> <span class="op">=</span> attacker probability of finding next block
+<span class="var">z</span> <span class="op">=</span> confirmations the attacker is behind
 
-<span class="comment">// Prob. attacker *ever* catches up from z blocks behind</span>
-<span class="var">P_catchup</span> <span class="op">=</span> (<span class="var">q</span> <span class="op">/</span> <span class="var">p</span>)<span class="op">**</span><span class="var">z</span><span class="op">;</span>             <span class="comment">// If p &gt; q</span>
-<span class="var">P_catchup</span> <span class="op">=</span> <span class="num">1</span><span class="op">;</span>                   <span class="comment">// If p &lt;= q</span>
+if <span class="var">p</span> <span class="op">&gt;</span> <span class="var">q</span>:
+  <span class="var">P_catchup</span> <span class="op">=</span> (<span class="var">q</span> / <span class="var">p</span>)<span class="op">^</span><span class="var">z</span>
+else:
+  <span class="var">P_catchup</span> <span class="op">=</span> <span class="num">1</span></code></pre>
+              <p><strong>Gotcha:</strong> confirmations are probabilistic risk reduction, not absolute finality. Risk depends on attacker hash share, network conditions, and payment value.</p>
+            </div>
+          </details>
+        </article>
 
-<span class="comment">// Probability attacker succeeds after recipient waits for z blocks</span>
-<span class="comment">// Involves Poisson distribution for attacker progress during wait time</span>
-<span class="var">lambda</span> <span class="op">=</span> <span class="var">z</span> <span class="op">*</span> (<span class="var">q</span> <span class="op">/</span> <span class="var">p</span>)<span class="op">;</span>  <span class="comment">// Expected attacker blocks during wait</span>
-<span class="var">P_success</span> <span class="op">=</span> Sum[<span class="var">k</span><span class="op">=</span><span class="num">0</span> to <span class="op">infinity</span>] ( <span class="comment">// Sum over possible attacker progress k</span>
-             (<span class="op">exp</span>(<span class="op">-</span><span class="var">lambda</span>) <span class="op">*</span> <span class="var">lambda</span><span class="op">**</span><span class="var">k</span> <span class="op">/</span> <span class="var">k</span>!) <span class="op">*</span> <span class="comment">// Poisson probability of k blocks</span>
-             (<span class="op">min</span>(<span class="num">1</span>, (<span class="var">q</span><span class="op">/</span><span class="var">p</span>)<span class="op">**</span>(<span class="var">z</span><span class="op">-</span><span class="var">k</span>)) )   <span class="comment">// Prob. catching up from remaining deficit</span>
-           )<span class="op">;</span> <span class="comment">// Simplified - see paper for exact calculation/rearrangement</span>
-</code></pre>
-</div>
-<ul><li>Shows strong probabilistic security increasing with confirmations.</li></ul>
-</div>
-</div>
-</div>
-</div><!-- /.row -->
-</div><!-- /.schema-container -->
-<!-- ==================================== -->
-<!-- SECTION V: Protocol Evolution & Modern Context -->
-<!-- ==================================== -->
-<div class="schema-container cat-evolution" data-section-id="section-evolution">
-<h2 class="section-title" id="section-evolution">
-<i class="bi bi-git"></i> // V. Protocol Evolution &amp; Modern Context
-        </h2>
-<div class="row">
-<!-- Major Upgrades -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-evolution" id="card-upgrades">
-<div class="card-body">
-<h5><i class="bi bi-graph-up-arrow"></i> Major Protocol Upgrades (Soft Forks)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Bitcoin evolves via backwards-compatible <span class="term">Soft Forks</span>. Key upgrades: <span class="term">P2SH</span> (BIP 16) for script hashes, <span class="term">SegWit</span> (BIPs 141-144) for efficiency &amp; malleability fix, <span class="term">Taproot</span> (BIPs 340-342) for Schnorr sigs &amp; script improvements.
-                   </p>
-<button aria-controls="collapseUpgrades" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseUpgrades" data-bs-toggle="collapse" type="button">
-                      Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseUpgrades">
-<h6>Significant Soft Forks:</h6>
-<ul>
-<li><strong>P2SH (2012):</strong> Simplified complex scripts (like multisig).</li>
-<li><strong>SegWit (2017):</strong> Increased effective block space (via block weight), fixed malleability, enabled Lightning Network scaling.</li>
-<li><strong>Taproot (2021):</strong> Introduced Schnorr signatures (efficiency, privacy potential), MAST (complex scripts look simple), Tapscript (future scripting flexibility).</li>
-</ul>
-</div>
-</div>
-</div>
-<!-- Consensus Rule Changes -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-evolution" id="card-consensus-changes">
-<div class="card-body">
-<h5><i class="bi bi-check-all"></i> Other Consensus Rule Changes</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Key consensus rules added/changed: Formalized <span class="term">Block Size Limit</span> (later <span class="term">Block Weight</span> with SegWit), added script <span class="term">Timelocks</span> (CLTV - BIP 65, CSV - BIP 112) enabling payment channels.
-                   </p>
-</div>
-</div>
-</div>
-</div>
-<!-- Change Mechanisms -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-evolution" id="card-change-mech">
-<div class="card-body">
-<h5><i class="bi bi-bezier2"></i> Change Mechanisms (BIPs &amp; Forks)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Changes proposed via <span class="term">BIPs</span>, activated via <span class="term">Soft Forks</span> (backwards-compatible, opt-in for new rules). <span class="term">Hard Forks</span> (non-backwards-compatible) generally require near-universal consensus and are rare/contentious.
-                   </p>
-</div>
-</div>
-</div>
-</div>
-<!-- Layer 2 Scaling -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-evolution" id="card-layer2">
-<div class="card-body">
-<h5><i class="bi bi-lightning-charge-fill"></i> Layer 2 Scaling (Lightning Network)</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-<span class="term">Lightning Network</span> built on Bitcoin enables fast, cheap, off-chain payments via channels, settling net results on-chain. Addresses base layer transaction throughput limitations. Enabled largely by SegWit and Timelocks.
-                   </p>
-</div>
-</div>
-</div>
-</div>
-<!-- Mining Hardware -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-evolution" id="card-mining-hw">
-<div class="card-body">
-<h5><i class="bi bi-memory"></i> Mining Hardware Evolution</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Mining evolved: CPU -&gt; GPU -&gt; FPGA -&gt; <span class="term">ASIC</span>. ASICs dominate, massively increasing network hashrate and security cost, but centralizing hardware production and raising entry barriers.
-                   </p>
-</div>
-</div>
-</div>
-</div>
-<!-- Privacy Context -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-evolution" id="card-privacy-context">
-<div class="card-body">
-<h5><i class="bi bi-person-bounding-box"></i> Privacy Context: Pseudonymity Reality</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Bitcoin offers <span class="term">pseudonymity</span>, not anonymity. Address reuse, multi-input linking, and external data (KYC) allow <span class="term">chain analysis</span>. Advanced techniques (CoinJoin, Taproot benefits) aim to improve privacy but are not foolproof.
-                   </p>
-</div>
-</div>
-</div>
-</div>
-</div><!-- /.row -->
-</div><!-- /.schema-container -->
-<!-- ======================= -->
-<!-- SECTION VI: Conclusion, Gaps & Resources -->
-<!-- ======================= -->
-<div class="schema-container cat-summary" data-section-id="section-conclusion">
-<h2 class="section-title" id="section-conclusion">
-<i class="bi bi-check2-square"></i> // VI. Conclusion, Implementation Gaps &amp; Resources
-        </h2>
-<div class="row">
-<!-- Conclusion -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-summary" id="card-conclusion">
-<div class="card-body">
-<h5><i class="bi bi-flag"></i> Spec §12: Conclusion</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Satoshi proposed a trustless P2P electronic cash system using digital signatures and PoW consensus (longest chain) to prevent double-spending. Relies on simple rules, incentives, and majority CPU power.
-                   </p>
-</div>
-</div>
-</div>
-</div>
-<!-- Implementation Gaps -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-problem" id="card-gaps">
-<div class="card-body">
-<h5><i class="bi bi-puzzle"></i> Implementation Gaps in Whitepaper</h5>
-<div class="card-content-wrapper">
-<p class="summary">
-                     Whitepaper provides concepts. <strong class="critical">Implementation requires details NOT specified:</strong> P2P protocol, Script opcodes/limits, Full Consensus Rules (block weight, etc.), Serialization, Fork Activation mechanisms.
-                   </p>
-<button aria-controls="collapseGaps" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseGaps" data-bs-toggle="collapse" type="button">
-                      Key Missing Specs <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseGaps">
-<h6>Areas Requiring External Specification / Implementation Choices:</h6>
-<ul>
-<li><strong class="cons">P2P Network Protocol &amp; Messages</strong></li>
-<li><strong class="cons">Scripting System Details &amp; Opcodes</strong></li>
-<li><strong class="cons">Full Consensus Rules (Block Weight, Coinbase Maturity, etc.)</strong></li>
-<li><strong class="cons">Data Serialization Formats</strong></li>
-<li><strong class="cons">ECDSA Curve (`secp256k1`)</strong></li>
-<li><strong class="term">Resources:</strong> <a href="https://developer.bitcoin.org/devguide/" rel="noopener noreferrer" target="_blank">Dev Guide</a>, <a href="https://en.bitcoin.it/wiki/Main_Page" rel="noopener noreferrer" target="_blank">Wiki</a>, <a href="https://github.com/bitcoin/bips" rel="noopener noreferrer" target="_blank">BIPs Repo</a>.</li>
-</ul>
-</div>
-</div>
-</div>
-<!-- Glossary -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-summary" id="card-glossary-wp">
-<div class="card-body">
-<h5><i class="bi bi-book"></i> Whitepaper Key Terms</h5>
-<div class="card-content-wrapper">
-<p class="summary">Quick definitions of core concepts from the paper.</p>
-<button aria-controls="collapseGlossaryWp" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseGlossaryWp" data-bs-toggle="collapse" type="button">
-                      View Glossary <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseGlossaryWp">
-<dl><dt>Block</dt><dd>Timestamped collection of TXs secured by PoW.</dd><dt>Blockchain</dt><dd>Chain of blocks; public ledger.</dd><dt>Difficulty</dt><dd>Measure of how hard it is to find PoW hash.</dd><dt>Digital Signature</dt><dd>Proof of ownership via private key (ECDSA).</dd><dt>Double-Spending</dt><dd>Spending same money twice.</dd><dt>Hash</dt><dd>Cryptographic fingerprint (SHA256, RIPEMD160).</dd><dt>Incentive</dt><dd>Block reward + TX fees.</dd><dt>Longest Chain</dt><dd>Chain with most PoW; consensus history.</dd><dt>Merkle Tree</dt><dd>Hash tree summarizing TXs in a block.</dd><dt>Nonce</dt><dd>Value varied in header to find PoW.</dd><dt>Proof-of-Work (PoW)</dt><dd>Consensus mechanism requiring CPU effort.</dd><dt>SPV</dt><dd>Simplified Payment Verification.</dd><dt>Target</dt><dd>Threshold hash value must be below for PoW.</dd><dt>UTXO</dt><dd>Unspent Transaction Output (spendable coin).</dd></dl>
-</div>
-</div>
-</div>
-<!-- Resources -->
-<div class="col-lg-6 col-md-12">
-<div class="info-card wp-type-resource" id="card-resources-wp">
-<div class="card-body">
-<h5><i class="bi bi-link-45deg"></i> Foundational &amp; Developer Resources</h5> <!-- Title Updated -->
-<div class="card-content-wrapper">
-<p class="summary">
-                     Links to the original paper, essential developer resources, and practical Bitcoin tools.
-                   </p>
-<button aria-controls="collapseResourcesWp" aria-expanded="false" class="btn btn-sm details-toggle" data-bs-target="#collapseResourcesWp" data-bs-toggle="collapse" type="button">
-                      View Links <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseResourcesWp">
-<h6>Essential Links:</h6>
-<ul>
-<li><i class="bi bi-file-pdf-fill"></i> Original Whitepaper: <a href="https://bitcoin.org/bitcoin.pdf" rel="noopener noreferrer" target="_blank">bitcoin.pdf</a></li>
-<li><i class="bi bi-code-slash"></i> Bitcoin Dev Guide: <a href="https://developer.bitcoin.org/devguide/" rel="noopener noreferrer" target="_blank">developer.bitcoin.org</a></li>
-<li><i class="bi bi-book-fill"></i> Bitcoin Wiki: <a href="https://en.bitcoin.it/wiki/Main_Page" rel="noopener noreferrer" target="_blank">en.bitcoin.it/wiki</a></li>
-<li><i class="bi bi-github"></i> Bitcoin Core Source: <a href="https://github.com/bitcoin/bitcoin" rel="noopener noreferrer" target="_blank">github.com/bitcoin/bitcoin</a></li>
-<li><i class="bi bi-card-list"></i> BIPs Repository: <a href="https://github.com/bitcoin/bips" rel="noopener noreferrer" target="_blank">github.com/bitcoin/bips</a></li>
-<li><i class="bi bi-wallet"></i> Bitcoin Wallet Guide: <a href="bitcoin-wallet.html" rel="noopener noreferrer" target="_blank">Practical Wallet Security</a></li>
-</ul>
-<h6>Cited Precursors/Concepts:</h6>
-<ul><li>Hashcash Paper</li><li>B-money Paper</li><li>Timestamping (Haber/Stornetta Refs [3,4])</li><li>Merkle Trees (Merkle Ref [7])</li></ul>
-</div>
-</div>
-</div>
-</div><!-- /.row -->
-</div><!-- /.schema-container -->
-</div> <!-- /container -->
+        <article class="info-card" data-section="evolution" data-search="P2SH SegWit Taproot BIP soft fork Schnorr MAST malleability block weight">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-git" aria-hidden="true">&nbsp;</span> Protocol Evolution</div>
+            <h3>Major Soft Forks</h3>
+            <p>P2SH, SegWit, and Taproot extended the original design with script hashes, witness data, Schnorr signatures, and more flexible spending paths.</p>
+          </div>
+          <details class="detail-block" name="evolution-details">
+            <summary>What changed</summary>
+            <div class="detail-content">
+              <ul>
+                <li><strong>P2SH / BIP 16:</strong> moves complex script conditions behind a script hash, simplifying receiving addresses.</li>
+                <li><strong>SegWit / BIPs 141-144:</strong> separates witness data, fixes third-party transaction malleability, and introduces block weight accounting.</li>
+                <li><strong>Taproot / BIPs 340-342:</strong> adds Schnorr signatures and taproot script paths for better efficiency and privacy properties.</li>
+              </ul>
+              <p><strong>Gotcha:</strong> these are not in the 2008 paper; they are later consensus changes layered onto the base design.</p>
+            </div>
+          </details>
+        </article>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
-<script>
-      // JS for collapse toggle icons (from template)
-      document.addEventListener("DOMContentLoaded", () => {
-        const collapseElements = document.querySelectorAll(".collapse");
-        collapseElements.forEach((collapseEl) => {
-          const button = document.querySelector(
-            `.details-toggle[data-bs-target="#${collapseEl.id}"]`
-          );
-          const icon = button ? button.querySelector(".bi") : null;
-          if (button && icon) {
-            const updateIcon = (isShown) => {
-              icon.classList.toggle("bi-chevron-up", isShown);
-              icon.classList.toggle("bi-chevron-down", !isShown);
-            };
-            updateIcon(collapseEl.classList.contains("show"));
-            collapseEl.addEventListener("show.bs.collapse", () => updateIcon(true));
-            collapseEl.addEventListener("hide.bs.collapse", () => updateIcon(false));
-          }
+        <article class="info-card" data-section="evolution" data-search="BIP soft fork hard fork activation consensus change mechanism deployment">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-bezier2" aria-hidden="true">&nbsp;</span> Change Process</div>
+            <h3>BIPs, Soft Forks, and Hard Forks</h3>
+            <p>Protocol changes are documented as BIPs and deployed only when software, miners, businesses, and users converge on the rules they will enforce.</p>
+          </div>
+          <details class="detail-block" name="evolution-details">
+            <summary>Decision guidance</summary>
+            <div class="detail-content">
+              <ul>
+                <li><strong>Soft fork:</strong> restricts valid behavior, so upgraded and non-upgraded nodes can remain on one chain if activation succeeds.</li>
+                <li><strong>Hard fork:</strong> expands or changes validity rules in a way old nodes reject, requiring broad explicit migration.</li>
+                <li><strong>Gotcha:</strong> activation mechanisms are social and technical; the whitepaper does not define governance.</li>
+              </ul>
+            </div>
+          </details>
+        </article>
+
+        <article class="info-card" data-section="evolution" data-search="Lightning Network payment channels timelocks CLTV CSV layer 2 scaling">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-lightning-charge-fill" aria-hidden="true">&nbsp;</span> Layer 2</div>
+            <h3>Payment Channels and Lightning</h3>
+            <p>Lightning moves repeated payments off-chain into channels, then settles channel state back to Bitcoin when needed.</p>
+          </div>
+          <details class="detail-block" name="evolution-details">
+            <summary>How it relates</summary>
+            <div class="detail-content">
+              <ul>
+                <li><strong>Dependencies:</strong> practical channels depend on timelocks, multisig-style conditions, and malleability fixes.</li>
+                <li><strong>Example:</strong> two parties can update a channel balance many times while broadcasting only opening and closing transactions on-chain.</li>
+                <li><strong>Gotcha:</strong> Lightning changes payment workflow, not Bitcoin's base-layer consensus mechanism.</li>
+              </ul>
+            </div>
+          </details>
+        </article>
+
+        <article class="info-card" data-section="evolution" data-search="mining hardware CPU GPU FPGA ASIC hash rate centralization energy security">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-memory" aria-hidden="true">&nbsp;</span> Mining Hardware</div>
+            <h3>CPU to ASIC Specialization</h3>
+            <p>The paper describes CPU power, but mining specialized from CPUs to GPUs, FPGAs, and ASICs as SHA-256 hashing became industrialized.</p>
+          </div>
+          <details class="detail-block" name="evolution-details">
+            <summary>Security implications</summary>
+            <div class="detail-content">
+              <ul>
+                <li><strong>Benefit:</strong> specialized hardware raises the capital cost of attacking accumulated proof-of-work.</li>
+                <li><strong>Tradeoff:</strong> ASIC supply chains and cheap power access can centralize mining advantages.</li>
+                <li><strong>Gotcha:</strong> "one CPU, one vote" is the whitepaper framing; modern Bitcoin is better described as one unit of hash work, one probabilistic chance to extend the chain.</li>
+              </ul>
+            </div>
+          </details>
+        </article>
+
+        <article class="info-card" data-section="resources" data-search="implementation gaps script opcodes p2p serialization consensus rules block weight coinbase maturity">
+          <div class="card-main">
+            <div class="card-kicker"><span class="bi bi-puzzle" aria-hidden="true">&nbsp;</span> Implementation Gaps</div>
+            <h3>What the Paper Does Not Specify</h3>
+            <p>The whitepaper is a conceptual blueprint; production Bitcoin also needs exact consensus, serialization, networking, and script rules.</p>
+          </div>
+          <details class="detail-block" name="resources-details">
+            <summary>Missing specs</summary>
+            <div class="detail-content">
+              <ul>
+                <li>P2P message formats, peer discovery, inv/getdata behavior, and relay policy.</li>
+                <li>Script opcodes, standardness policy, sighash modes, witness serialization, and Taproot validation.</li>
+                <li>Consensus limits such as block weight, coinbase maturity, locktime semantics, and difficulty edge cases.</li>
+                <li>Fork activation rules and operational deployment process.</li>
+              </ul>
+              <p><strong>Practical rule:</strong> implement from Bitcoin Core consensus behavior and BIPs, not from the whitepaper alone.</p>
+            </div>
+          </details>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-block" id="comparison" aria-labelledby="comparison-title">
+      <div class="section-heading">
+        <span class="bi bi-columns-gap" aria-hidden="true">&nbsp;</span>
+        <h2 id="comparison-title">Design Matrix</h2>
+      </div>
+      <div class="table-panel">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Need</th>
+              <th>Whitepaper answer</th>
+              <th>Use when</th>
+              <th>When not enough</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Direct online payment</td>
+              <td>Peer-to-peer transactions secured by digital signatures.</td>
+              <td>You need authorization without a payment processor signing every transfer.</td>
+              <td>You still need network consensus to reject conflicting spends.</td>
+            </tr>
+            <tr>
+              <td>Transaction ordering</td>
+              <td>Proof-of-work timestamp chain.</td>
+              <td>You need a public, costly-to-rewrite ordering of events.</td>
+              <td>You need instant deterministic finality; Bitcoin gives probabilistic settlement.</td>
+            </tr>
+            <tr>
+              <td>Lightweight verification</td>
+              <td>SPV with headers and Merkle branches.</td>
+              <td>Low-resource wallets need inclusion checks without storing the full chain.</td>
+              <td>You need to enforce all consensus rules yourself.</td>
+            </tr>
+            <tr>
+              <td>Scaling payments</td>
+              <td>Base-layer broadcast and block inclusion.</td>
+              <td>Settlement, cold storage movement, and high-assurance transfers.</td>
+              <td>High-frequency small payments; use channel or other layer-2 designs where appropriate.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-block" id="mistakes" aria-labelledby="mistakes-title">
+      <div class="section-heading">
+        <span class="bi bi-exclamation-triangle" aria-hidden="true">&nbsp;</span>
+        <h2 id="mistakes-title">Common Mistakes and Anti-Patterns</h2>
+      </div>
+      <div class="quick-grid">
+        <div class="callout">
+          <h3 class="h5">Treating the whitepaper as a complete implementation spec</h3>
+          <p>It omits many consensus-critical details. Use it to understand the design, then use Bitcoin Core behavior, BIPs, and developer documentation for exact implementation.</p>
+        </div>
+        <div class="callout">
+          <h3 class="h5">Reading "longest chain" literally</h3>
+          <p>The operative rule is most cumulative proof-of-work. A branch with more headers but less work is not the stronger history.</p>
+        </div>
+        <div class="callout">
+          <h3 class="h5">Assuming confirmations are absolute finality</h3>
+          <p>Confirmations reduce double-spend probability. They do not make reversal mathematically impossible, especially if an attacker controls large hash power.</p>
+        </div>
+        <div class="callout">
+          <h3 class="h5">Confusing pseudonymity with anonymity</h3>
+          <p>Public transaction graphs leak patterns. Address reuse, multi-input spends, and KYC-linked transactions can connect activity to people.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block" id="resources" aria-labelledby="resources-title">
+      <div class="section-heading">
+        <span class="bi bi-link-45deg" aria-hidden="true">&nbsp;</span>
+        <h2 id="resources-title">Foundational and Developer Resources</h2>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-card"><strong>Original paper</strong><p><a href="https://bitcoin.org/bitcoin.pdf" rel="noopener noreferrer" target="_blank">Bitcoin: A Peer-to-Peer Electronic Cash System</a></p></div>
+        <div class="quick-card"><strong>Developer guide</strong><p><a href="https://developer.bitcoin.org/devguide/" rel="noopener noreferrer" target="_blank">Bitcoin Developer Guide</a></p></div>
+        <div class="quick-card"><strong>BIPs</strong><p><a href="https://github.com/bitcoin/bips" rel="noopener noreferrer" target="_blank">Bitcoin Improvement Proposals repository</a></p></div>
+        <div class="quick-card"><strong>Reference implementation</strong><p><a href="https://github.com/bitcoin/bitcoin" rel="noopener noreferrer" target="_blank">Bitcoin Core source code</a></p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container-xl">
+    <div class="footer-links">
+      <a href="bitcoin-self-custody-guide.html" rel="noopener noreferrer" target="_blank"><span class="bi bi-coin" aria-hidden="true">&nbsp;</span> Bitcoin Self Custody Guide</a>
+      <a href="bitcoin-wallet.html" rel="noopener noreferrer" target="_blank"><span class="bi bi-wallet2" aria-hidden="true">&nbsp;</span> Bitcoin Wallet Guide</a>
+      <a href="https://www.linkedin.com/in/davidveksler/" rel="noopener noreferrer" target="_blank"><span class="bi bi-linkedin" aria-hidden="true">&nbsp;</span> LinkedIn</a>
+      <a href="https://cheatsheets.davidveksler.com/"><span class="bi bi-collection" aria-hidden="true">&nbsp;</span> All Cheatsheets</a>
+    </div>
+    <p class="mb-2 small">Last verified: 2026-07-06. Metadata, CDN dependencies, primary whitepaper link, and internal links reviewed against repository audit standards.</p>
+    <p class="mb-0 small">&copy; 2025 David Veksler. Compiled and expanded from Satoshi Nakamoto's Bitcoin whitepaper (2008) and Bitcoin developer references.</p>
+  </footer>
+
+  <script>
+    (() => {
+      const search = document.querySelector("#cardSearch");
+      const cards = Array.from(document.querySelectorAll(".info-card"));
+      const chips = Array.from(document.querySelectorAll(".filter-chip"));
+      const resultCount = document.querySelector("#resultCount");
+      let activeFilter = "all";
+
+      const searchableText = (card) => [
+        card.dataset.search || "",
+        card.textContent || ""
+      ].join(" ").toLowerCase();
+
+      const update = () => {
+        const query = (search?.value || "").trim().toLowerCase();
+        let visible = 0;
+
+        cards.forEach((card) => {
+          const sectionMatch = activeFilter === "all" || card.dataset.section === activeFilter;
+          const queryMatch = !query || searchableText(card).includes(query);
+          const show = sectionMatch && queryMatch;
+          card.hidden = !show;
+          if (show) visible += 1;
+        });
+
+        if (resultCount) {
+          resultCount.textContent = `${visible} of ${cards.length} cards shown`;
+        }
+      };
+
+      chips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+          activeFilter = chip.dataset.filter || "all";
+          chips.forEach((item) => item.setAttribute("aria-pressed", String(item === chip)));
+          update();
         });
       });
-    </script>
-  <footer class="container text-center pb-3">
-  <div class="mb-3">
-    <a class="mx-2" href="bitcoin-self-custody-guide.html" rel="noopener noreferrer" target="_blank" title="Bitcoin Self Custody Guide">
-      <i class="bi bi-coin"></i>
-      Bitcoin Self Custody Guide
-    </a>
-  </div>
-  <p class="mb-2 text-muted small">Last verified: 2026-07-05. Metadata, CDN dependencies, and internal links reviewed against repository audit standards.</p>
 
-  <p class="mb-2">
-    © 2025 David Veksler · Compiled &amp; expanded based on Satoshi Nakamoto's Bitcoin whitepaper (2008) and cryptocurrency research.
-  </p>
-  <div>
-    <a class="mx-2 link-secondary" href="https://www.linkedin.com/in/davidveksler/" target="_blank" title="David Veksler on LinkedIn">
-      <i class="bi bi-linkedin"></i>
-      LinkedIn
-    </a>
-    <a class="mx-2 link-secondary" href="https://cheatsheets.davidveksler.com/" title="Browse All Cheatsheets">
-      <i class="bi bi-collection"></i>
-      All Cheatsheets
-    </a>
-  </div>
-  </footer>
+      search?.addEventListener("input", update);
+      update();
+    })();
+  </script>
 </body>
 </html>
