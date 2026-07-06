@@ -396,8 +396,14 @@
 </main>
 <script crossorigin="anonymous" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-    document.getElementById('lastUpdatedDate').textContent = `Last Updated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+    const currentYearEl = document.getElementById('currentYear');
+    if (currentYearEl) {
+        currentYearEl.textContent = new Date().getFullYear();
+    }
+    const lastUpdatedEl = document.getElementById('lastUpdatedDate');
+    if (lastUpdatedEl) {
+        lastUpdatedEl.textContent = `Last Updated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+    }
 
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -431,10 +437,13 @@
     let raycaster, mouse;
     let autoRotate = false;
     const treeGroup = new THREE.Group();
-    const minZoom = 8;
-    const maxZoom = 35;
+    const minZoom = 18;
+    const maxZoom = 42;
     let daatLines = [];
     let starParticles;
+    let isDragging = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
 
     const sefirotLayoutData = [
         { id: 'keter',    name_he: 'כתר', name_en: 'Keter',    pos: [0, 10, 0],    color: 0xffffff, isDaat: false },
@@ -471,7 +480,7 @@
         scene.background = new THREE.Color(0x0A0A10);
         scene.fog = new THREE.FogExp2(0x0A0A10, 0.035);
         camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 100);
-        camera.position.set(0, 0, 20);
+        camera.position.set(0, 0, 27);
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
@@ -547,7 +556,6 @@
         window.addEventListener('resize', onWindowResize, false);
         const toggleBtn = document.getElementById('toggleRotationBtn');
         toggleBtn.addEventListener('click', () => { autoRotate = !autoRotate; toggleBtn.classList.toggle('active', autoRotate); container.style.cursor = autoRotate ? 'default' : 'grab';});
-        let isDragging = false; let lastMouseX = 0, lastMouseY = 0;
         renderer.domElement.addEventListener('mousedown', (event) => { if (autoRotate) return; isDragging = true; lastMouseX = event.clientX; lastMouseY = event.clientY; container.style.cursor = 'grabbing'; });
         document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; if (!autoRotate) container.style.cursor = 'grab'; } });
         document.addEventListener('mousemove', (event) => { if (!isDragging || autoRotate) return; const dX = event.clientX-lastMouseX; const dY = event.clientY-lastMouseY; treeGroup.rotation.y+=dX*0.005; treeGroup.rotation.x+=dY*0.005; treeGroup.rotation.x=Math.max(-Math.PI/2, Math.min(Math.PI/2, treeGroup.rotation.x)); lastMouseX=event.clientX; lastMouseY=event.clientY; });
@@ -556,9 +564,13 @@
     }
 
     let INTERSECTED;
-    function onCanvasMouseMove(event) {
+    function updateMouseFromEvent(event) {
         const container = document.getElementById('threejs-canvas-container'); const rect = container.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1; mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    }
+    function onCanvasMouseMove(event) {
+        updateMouseFromEvent(event);
+        const container = document.getElementById('threejs-canvas-container');
         if (isDragging || autoRotate) { if (INTERSECTED) INTERSECTED.material.emissiveIntensity = INTERSECTED.userData.baseEmissive; INTERSECTED = null; return; }
         raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObjects(sefirotSpheres);
         if (intersects.length > 0) {
@@ -567,6 +579,7 @@
         } else { if (INTERSECTED) INTERSECTED.material.emissiveIntensity = INTERSECTED.userData.baseEmissive; INTERSECTED = null; if (!autoRotate) container.style.cursor = 'grab'; }
     }
     function onCanvasClick(event) {
+        updateMouseFromEvent(event);
         raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObjects(sefirotSpheres);
         if (intersects.length > 0) { const c = intersects[0].object; if (c.userData.id) { handleSefirahInteraction(c.userData.id); } }
     }
