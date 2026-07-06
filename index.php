@@ -425,7 +425,7 @@ if (is_readable($popularityFile)) {
             box-shadow: 0 0.75rem 1.75rem var(--card-shadow-intensity), 0 0 0 1px color-mix(in srgb, var(--cat-color, #dee2e6) 35%, transparent), inset 0 1px 0 rgba(255, 255, 255, .7);
         }
         .card-img-top-container {
-            aspect-ratio: 16 / 9;
+            aspect-ratio: 40 / 21;
             width: 100%;
             overflow: hidden;
             background: linear-gradient(135deg, var(--cat-bg, #e9ecef) 0%, #fff 100%);
@@ -434,7 +434,7 @@ if (is_readable($popularityFile)) {
             display: flex; align-items: center; justify-content: center;
         }
         .card-img-top-container img {
-            width: 100%; height: 100%; object-fit: cover; display: block;
+            width: 100%; height: 100%; object-fit: contain; object-position: center; display: block;
             position: relative; z-index: 1; /* Cover the ::before placeholder icon */
         }
         .card-img-top-container img.error { display: none; } /* Reveal ::before icon on broken image */
