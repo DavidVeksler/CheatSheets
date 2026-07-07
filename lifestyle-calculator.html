@@ -1,4 +1,4 @@
-`<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -47,7 +47,7 @@
         "@type": "Person",
         "name": "David Veksler"
       },
-      "dateModified": "2026-07-04",
+      "dateModified": "2026-07-06",
       "keywords": "lifestyle calculator, income lifestyle, family budget, what can I afford, salary lifestyle, finance, cost of living, financial planning"
     }
     </script>
@@ -58,7 +58,7 @@
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Slab:wght@700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Roboto+Slab:wght@700&amp;display=swap"
         rel="stylesheet" />
     <script crossorigin="anonymous" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" defer></script>
     <style>
@@ -826,9 +826,346 @@
                 transform: translateY(0);
             }
         }
+
+        /* Progressive income-stage redesign */
+        :root {
+            --stage-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --stage-glow: rgba(13, 110, 253, 0.18);
+            --stage-border: rgba(13, 110, 253, 0.22);
+            --stage-rail-fill: linear-gradient(90deg, #64748b, #0d6efd);
+            --stage-ornament-opacity: 0.12;
+            --stage-card-radius: 0.9rem;
+            --stage-card-spacing: 1.25rem;
+        }
+
+        body {
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+
+        body.stage-survival {
+            --stage-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --stage-glow: rgba(71, 85, 105, 0.16);
+            --stage-border: rgba(100, 116, 139, 0.24);
+            --stage-rail-fill: linear-gradient(90deg, #64748b, #2563eb);
+            --stage-ornament-opacity: 0.08;
+            --stage-card-radius: 0.65rem;
+            --stage-card-spacing: 0.9rem;
+        }
+
+        body.stage-stability {
+            --stage-gradient: linear-gradient(135deg, #ecfeff 0%, #dbeafe 100%);
+            --stage-glow: rgba(14, 165, 233, 0.18);
+            --stage-border: rgba(14, 165, 233, 0.28);
+            --stage-rail-fill: linear-gradient(90deg, #06b6d4, #2563eb);
+            --stage-ornament-opacity: 0.11;
+            --stage-card-radius: 0.8rem;
+            --stage-card-spacing: 1rem;
+        }
+
+        body.stage-comfort {
+            --stage-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 45%, #fef3c7 100%);
+            --stage-glow: rgba(22, 163, 74, 0.18);
+            --stage-border: rgba(22, 163, 74, 0.26);
+            --stage-rail-fill: linear-gradient(90deg, #16a34a, #f59e0b);
+            --stage-ornament-opacity: 0.14;
+            --stage-card-radius: 1rem;
+            --stage-card-spacing: 1.15rem;
+        }
+
+        body.stage-affluent {
+            --stage-gradient: linear-gradient(135deg, #fff7ed 0%, #ffedd5 48%, #fef9c3 100%);
+            --stage-glow: rgba(217, 119, 6, 0.22);
+            --stage-border: rgba(217, 119, 6, 0.32);
+            --stage-rail-fill: linear-gradient(90deg, #f97316, #d97706);
+            --stage-ornament-opacity: 0.18;
+            --stage-card-radius: 1.15rem;
+            --stage-card-spacing: 1.3rem;
+        }
+
+        body.stage-wealth {
+            --stage-gradient: linear-gradient(135deg, #fff8dc 0%, #f5deb3 44%, #d6a94f 100%);
+            --stage-glow: rgba(184, 134, 11, 0.34);
+            --stage-border: rgba(184, 134, 11, 0.42);
+            --stage-rail-fill: linear-gradient(90deg, #b8860b, #f5c542);
+            --stage-ornament-opacity: 0.24;
+            --stage-card-radius: 1.25rem;
+            --stage-card-spacing: 1.45rem;
+        }
+
+        body.stage-ultra {
+            --stage-gradient: linear-gradient(135deg, #050816 0%, #0f2142 48%, #062f4f 100%);
+            --stage-glow: rgba(0, 169, 224, 0.34);
+            --stage-border: rgba(0, 169, 224, 0.42);
+            --stage-rail-fill: linear-gradient(90deg, #00a9e0, #9ee7ff);
+            --stage-ornament-opacity: 0.34;
+            --stage-card-radius: 1.35rem;
+            --stage-card-spacing: 1.55rem;
+        }
+
+        .main-container {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--stage-border);
+        }
+
+        .main-container::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            opacity: var(--stage-ornament-opacity);
+            background:
+                radial-gradient(circle at 18% 8%, var(--primary-color), transparent 26rem),
+                radial-gradient(circle at 86% 4%, #ffffff, transparent 20rem),
+                var(--stage-gradient);
+            transition: opacity 1.2s ease, background 1.2s ease;
+        }
+
+        .page-title {
+            font-size: clamp(2.2rem, 5vw, 4.8rem);
+            line-height: 1.02;
+        }
+
+        .page-subtitle {
+            max-width: 760px;
+            margin-inline: auto;
+            text-wrap: balance;
+        }
+
+        .design-progression-panel {
+            display: grid;
+            grid-template-columns: minmax(0, 0.92fr) minmax(280px, 1.08fr);
+            gap: 1rem;
+            align-items: stretch;
+            margin: 1.4rem 0 1.6rem;
+            padding: 1rem;
+            border: 1px solid var(--stage-border);
+            border-radius: var(--stage-card-radius);
+            background: color-mix(in srgb, var(--light-color) 88%, transparent);
+            box-shadow: 0 16px 42px var(--stage-glow);
+            transition: border-color 1.2s ease, border-radius 1.2s ease, box-shadow 1.2s ease, background-color 1.2s ease;
+        }
+
+        .stage-copy {
+            padding: 0.8rem;
+        }
+
+        .stage-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.75rem;
+            border: 1px solid var(--stage-border);
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+            color: var(--primary-color);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .stage-title {
+            margin: 0.85rem 0 0.35rem;
+            color: var(--dark-color);
+            font-family: var(--page-title-font-family);
+            font-size: clamp(1.45rem, 3vw, 2.45rem);
+            line-height: 1.08;
+        }
+
+        .stage-text {
+            margin: 0;
+            color: var(--item-description-color);
+            font-size: 0.98rem;
+        }
+
+        .design-traits {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-top: 0.9rem;
+        }
+
+        .design-traits span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.32rem 0.58rem;
+            border: 1px solid var(--category-item-border-color);
+            border-radius: 999px;
+            color: var(--dark-color);
+            background: color-mix(in srgb, var(--main-container-bg) 76%, transparent);
+            font-size: 0.78rem;
+            font-weight: 650;
+        }
+
+        .income-elevation-rail {
+            padding: 1rem;
+            border-radius: calc(var(--stage-card-radius) * 0.82);
+            background:
+                linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 12%, transparent), transparent),
+                color-mix(in srgb, var(--main-container-bg) 86%, transparent);
+            border: 1px solid var(--category-item-border-color);
+        }
+
+        .rail-topline,
+        .rail-status {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: center;
+            color: var(--secondary-color);
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .rail-track {
+            display: grid;
+            grid-template-columns: repeat(15, minmax(0, 1fr));
+            gap: 0.35rem;
+            position: relative;
+            margin: 1rem 0 0.75rem;
+            padding: 0.28rem;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--category-item-border-color) 72%, transparent);
+        }
+
+        .rail-track::before {
+            content: "";
+            position: absolute;
+            inset: 0.28rem auto 0.28rem 0.28rem;
+            width: var(--rail-fill-width, 16%);
+            border-radius: 999px;
+            background: var(--stage-rail-fill);
+            transition: width 0.8s cubic-bezier(.2, .8, .2, 1), background 1.2s ease;
+        }
+
+        .rail-step {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            aspect-ratio: 1;
+            min-height: 1.85rem;
+            border: 1px solid color-mix(in srgb, var(--main-container-bg) 75%, transparent);
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--light-color) 82%, transparent);
+            color: var(--secondary-color);
+            font-size: 0.72rem;
+            font-weight: 800;
+            transition: transform 0.2s ease, background 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+        }
+
+        .rail-step.is-active,
+        .rail-step.is-passed {
+            color: var(--light-color);
+            background: color-mix(in srgb, var(--primary-color) 82%, black);
+            border-color: color-mix(in srgb, var(--primary-color) 72%, white);
+        }
+
+        .rail-step.is-active {
+            transform: scale(1.18);
+            box-shadow: 0 0 0 4px var(--stage-glow);
+        }
+
+        body.stage-wealth .main-container,
+        body.stage-ultra .main-container {
+            border-width: 2px;
+        }
+
+        body.stage-wealth .page-title,
+        body.stage-ultra .page-title {
+            letter-spacing: 0.04em;
+        }
+
+        body.stage-ultra .main-container {
+            backdrop-filter: blur(18px);
+        }
+
+        body.stage-ultra .design-progression-panel,
+        body.stage-ultra .controls-container,
+        body.stage-ultra .lifestyle-category,
+        body.stage-ultra .info-card {
+            border-color: rgba(0, 169, 224, 0.36);
+        }
+
+        .controls-container,
+        .lifestyle-category,
+        .info-card,
+        .category-item {
+            border-radius: var(--stage-card-radius);
+        }
+
+        .lifestyle-category {
+            padding: clamp(1rem, 1.6vw, var(--stage-card-spacing));
+            background: color-mix(in srgb, var(--main-container-bg) 88%, var(--light-color));
+            border-top: 1px solid var(--stage-border);
+            border-right: 1px solid var(--stage-border);
+            border-bottom: 1px solid var(--stage-border);
+            box-shadow: 0 12px 32px var(--stage-glow);
+        }
+
+        .category-item {
+            background:
+                linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 5%, transparent), transparent),
+                var(--light-color);
+        }
+
+        .slider {
+            height: 16px;
+            padding: 2px;
+            background: linear-gradient(90deg, #64748b 0%, #0ea5e9 22%, #22c55e 42%, #f59e0b 62%, #b8860b 78%, #00a9e0 100%);
+            box-shadow: inset 0 0 0 1px var(--category-item-border-color);
+        }
+
+        .slider::-webkit-slider-thumb {
+            width: 34px;
+            height: 34px;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 34px;
+            height: 34px;
+        }
+
+        @media (max-width: 992px) {
+            .design-progression-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .rail-track {
+                gap: 0.22rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            body {
+                padding-top: 0.75rem;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+
+            .rail-step {
+                min-height: 1.35rem;
+                font-size: 0;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
-    <meta content="images/lifestyle-calculator.png" property="og:image" />
-    <meta content="images/lifestyle-calculator.png" name="twitter:image" />
 </head>
 
 <body>
@@ -843,9 +1180,34 @@
                 <h1 class="page-title">💰 Lifestyle Calculator</h1>
                 <p class="page-subtitle">Slide to see what your income *really* affords for your family!</p>
                 <p class="calculator-note"><i class="bi bi-info-circle-fill"></i> This calculator estimates lifestyle
-                    based on **annual family budget**, not net worth. Cost of Living (COLA) adjustment provides regional
+                    based on <strong>annual family budget</strong>, not net worth. Cost of Living (COLA) adjustment provides regional
                     context.</p>
             </div>
+
+            <section class="design-progression-panel" aria-label="Income-responsive design progression">
+                <div class="stage-copy">
+                    <div class="stage-pill" id="designModeLabel"><i class="bi bi-layers-fill"></i> Budget Mode</div>
+                    <h2 class="stage-title" id="designModeTitle">Every dollar has a job.</h2>
+                    <p class="stage-text" id="designModeText">The interface starts practical and compact because the lifestyle choices are mostly tradeoffs: essentials, stability, and small wins.</p>
+                    <div class="design-traits" aria-label="Current design traits">
+                        <span id="designTraitOne"><i class="bi bi-grid-1x2"></i> compact cards</span>
+                        <span id="designTraitTwo"><i class="bi bi-palette"></i> utility palette</span>
+                        <span id="designTraitThree"><i class="bi bi-currency-dollar"></i> cashflow first</span>
+                    </div>
+                </div>
+                <div class="income-elevation-rail">
+                    <div class="rail-topline">
+                        <span>Income elevation</span>
+                        <span id="railPercentText">0%</span>
+                    </div>
+                    <div class="rail-track" id="incomeRail" aria-label="Income bracket progression"></div>
+                    <div class="rail-status">
+                        <span>$20K essentials</span>
+                        <span id="railStatusText">Foundation tier</span>
+                        <span>$25M legacy</span>
+                    </div>
+                </div>
+            </section>
 
             <div class="controls-container">
                 <div class="row align-items-center">
@@ -1003,6 +1365,63 @@
 
         const HNW_THRESHOLD_INDEX = 9; // "Ultra High Net Worth" Corresponds to incomeBrackets[9]
         const UHNW_THRESHOLD_INDEX = 12; // "Ultra Wealthy" Corresponds to incomeBrackets[12]
+        const STAGE_CLASS_NAMES = ['stage-survival', 'stage-stability', 'stage-comfort', 'stage-affluent', 'stage-wealth', 'stage-ultra'];
+        const DESIGN_STAGES = [
+            {
+                max: 1,
+                className: 'stage-survival',
+                label: 'Budget Mode',
+                title: 'Every dollar has a job.',
+                text: 'The design stays practical and compact because the lifestyle choices are mostly essentials, stability, and small wins.',
+                status: 'Foundation tier',
+                traits: ['compact cards', 'utility palette', 'cashflow first']
+            },
+            {
+                max: 3,
+                className: 'stage-stability',
+                label: 'Stability Mode',
+                title: 'Breathing room starts to show.',
+                text: 'The page opens up with cooler color and softer panels as reliable choices replace constant triage.',
+                status: 'Stability tier',
+                traits: ['clearer hierarchy', 'calmer blue', 'planning horizon']
+            },
+            {
+                max: 5,
+                className: 'stage-comfort',
+                label: 'Comfort Mode',
+                title: 'Lifestyle becomes a portfolio.',
+                text: 'Greens and warm highlights enter as savings, travel, education, and health become simultaneous decisions.',
+                status: 'Comfort tier',
+                traits: ['roomier cards', 'growth colors', 'choice density']
+            },
+            {
+                max: 8,
+                className: 'stage-affluent',
+                label: 'Premium Mode',
+                title: 'Convenience and quality become defaults.',
+                text: 'The design gets warmer and more dimensional because the tradeoff shifts from survival to preference, time, and quality.',
+                status: 'Premium tier',
+                traits: ['deeper shadows', 'warmer palette', 'service layer']
+            },
+            {
+                max: 11,
+                className: 'stage-wealth',
+                label: 'Private Wealth Mode',
+                title: 'Access becomes part of the lifestyle.',
+                text: 'Gold tones, bigger radius, and richer panel depth reflect bespoke services, advisors, and capital allocation.',
+                status: 'Wealth tier',
+                traits: ['gold accents', 'private-client feel', 'asset focus']
+            },
+            {
+                max: 99,
+                className: 'stage-ultra',
+                label: 'Legacy Mode',
+                title: 'Design shifts from spending to stewardship.',
+                text: 'The interface turns darker and more cinematic as the lifestyle framing changes to legacy, philanthropy, influence, and optionality.',
+                status: 'Legacy tier',
+                traits: ['dark luxury', 'legacy lens', 'global optionality']
+            }
+        ];
 
         // Store default style values
         const defaultStyles = {
@@ -1046,6 +1465,17 @@
         const incomeBracketDescEl = document.getElementById('incomeBracketDescription');
         const colaSelectorEl = document.getElementById('colaSelector');
         const familySizeSelectorEl = document.getElementById('familySizeSelector');
+        const designModeLabelEl = document.getElementById('designModeLabel');
+        const designModeTitleEl = document.getElementById('designModeTitle');
+        const designModeTextEl = document.getElementById('designModeText');
+        const designTraitEls = [
+            document.getElementById('designTraitOne'),
+            document.getElementById('designTraitTwo'),
+            document.getElementById('designTraitThree')
+        ];
+        const incomeRailEl = document.getElementById('incomeRail');
+        const railPercentTextEl = document.getElementById('railPercentText');
+        const railStatusTextEl = document.getElementById('railStatusText');
         const rootStyle = document.documentElement.style;
 
         const bgLayer1 = document.getElementById('background-layer-1');
@@ -1083,6 +1513,60 @@
             document.documentElement.style.setProperty('--primary-color-rgb', rgbString);
         }
 
+        function getDesignStage(bracketIndex) {
+            return DESIGN_STAGES.find(stage => bracketIndex <= stage.max) || DESIGN_STAGES[DESIGN_STAGES.length - 1];
+        }
+
+        function buildIncomeRail() {
+            if (!incomeRailEl || !incomeBrackets.length) return;
+            incomeRailEl.innerHTML = incomeBrackets.map((bracket, index) => `
+                <button class="rail-step" type="button" data-index="${index}" aria-label="${formatIncome(bracket.income)} ${bracket.label}" title="${formatIncome(bracket.income)} - ${bracket.label}">
+                    ${index + 1}
+                </button>
+            `).join('');
+
+            incomeRailEl.querySelectorAll('.rail-step').forEach(step => {
+                step.addEventListener('click', () => {
+                    slider.value = step.dataset.index;
+                    updateLifestyle();
+                });
+            });
+        }
+
+        function updateIncomeRail(bracketIndex) {
+            const max = Math.max(incomeBrackets.length - 1, 1);
+            const percent = Math.round((bracketIndex / max) * 100);
+            document.documentElement.style.setProperty('--rail-fill-width', `${Math.max(6, percent)}%`);
+            if (railPercentTextEl) railPercentTextEl.textContent = `${percent}%`;
+
+            incomeRailEl?.querySelectorAll('.rail-step').forEach(step => {
+                const stepIndex = parseInt(step.dataset.index, 10);
+                step.classList.toggle('is-active', stepIndex === bracketIndex);
+                step.classList.toggle('is-passed', stepIndex < bracketIndex);
+                step.setAttribute('aria-current', stepIndex === bracketIndex ? 'step' : 'false');
+            });
+        }
+
+        function updateDesignStage(bracketIndex) {
+            const stage = getDesignStage(bracketIndex);
+            document.body.classList.remove(...STAGE_CLASS_NAMES);
+            document.body.classList.add(stage.className);
+
+            if (designModeLabelEl) {
+                designModeLabelEl.innerHTML = `<i class="bi bi-layers-fill"></i> ${stage.label}`;
+            }
+            if (designModeTitleEl) designModeTitleEl.textContent = stage.title;
+            if (designModeTextEl) designModeTextEl.textContent = stage.text;
+            if (railStatusTextEl) railStatusTextEl.textContent = stage.status;
+
+            stage.traits.forEach((trait, index) => {
+                if (!designTraitEls[index]) return;
+                const icons = ['bi-grid-1x2', 'bi-palette', 'bi-currency-dollar'];
+                designTraitEls[index].innerHTML = `<i class="bi ${icons[index]}"></i> ${trait}`;
+            });
+            updateIncomeRail(bracketIndex);
+        }
+
 
 
         function updateThemeStyling(bracketIndex) {
@@ -1090,6 +1574,7 @@
             const body = document.body;
 
             body.classList.remove('hnw-theme-active', 'uhnw-theme-active');
+            updateDesignStage(bracketIndex);
 
             if (bracketIndex >= UHNW_THRESHOLD_INDEX) { // UHNW Theme
                 body.classList.add('uhnw-theme-active');
@@ -1567,6 +2052,7 @@
             });
 
             lastSliderValue = parseInt(slider.value);
+            buildIncomeRail();
             updateLifestyle();
 
             slider.addEventListener('input', updateLifestyle);
@@ -1603,8 +2089,6 @@
         });
 
     </script>
-    <script crossorigin="anonymous" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" defer></script>
   <footer class="container text-center pb-3">
   <div class="mb-3">
     <a class="mx-2" href="living-richly-guide.html" rel="noopener noreferrer" target="_blank" title="Living Richly Guide">
@@ -1620,7 +2104,7 @@
     © 2026 David Veksler · Compiled &amp; expanded based on publicly available economic data and lifestyle expense research.
   </p>
   <p class="mb-2 text-muted" style="font-size:0.8rem;">
-    Last verified: 2026-07-04
+    Last verified: 2026-07-06
   </p>
   <div>
     <a class="mx-2 link-secondary" href="https://www.linkedin.com/in/davidveksler/" target="_blank" title="David Veksler on LinkedIn">
