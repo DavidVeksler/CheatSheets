@@ -122,9 +122,71 @@
 
 @layer components {
   .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
     border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, transparent), transparent);
-    backdrop-filter: blur(12px);
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    backdrop-filter: blur(14px) saturate(1.2);
+  }
+
+  .topbar-inner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 3.25rem;
+  }
+
+  .topbar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .topbar-brand i {
+    color: var(--cyan);
+    font-size: 1.05rem;
+  }
+
+  .topbar-links {
+    display: flex;
+    align-items: center;
+    gap: .15rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    margin-left: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .topbar-links::-webkit-scrollbar { height: 0; }
+
+  .topbar-links a {
+    position: relative;
+    padding: .4rem .6rem;
+    border-radius: .55rem;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: .86rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color .15s ease, background-color .15s ease;
+  }
+
+  .topbar-links a:hover,
+  .topbar-links a:focus-visible {
+    color: var(--text);
+    background: color-mix(in srgb, var(--surface-2) 90%, transparent);
+  }
+
+  .topbar-links a.is-active {
+    color: var(--cyan);
+    background: color-mix(in srgb, var(--cyan) 12%, transparent);
   }
 
   .hero {
@@ -345,6 +407,7 @@
     overflow: clip;
     min-width: 0;
     width: 100%;
+    scroll-margin-top: 4.25rem;
   }
 
   .section-panel > summary {
@@ -579,12 +642,93 @@
     font-size: .9rem;
     color: var(--muted);
   }
+
+  .section-tools {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .5rem;
+    margin-bottom: -.5rem;
+  }
+
+  .btn-ghost {
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    color: var(--muted);
+    font-size: .84rem;
+  }
+
+  .btn-ghost:hover,
+  .btn-ghost:focus-visible {
+    background: color-mix(in srgb, var(--surface-2) 90%, transparent);
+    color: var(--text);
+  }
+
+  .back-top {
+    position: fixed;
+    right: 1.1rem;
+    bottom: 1.1rem;
+    z-index: 1020;
+    width: 2.8rem;
+    height: 2.8rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    transform: translateY(.5rem) scale(.9);
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+
+  .back-top.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .back-top:hover,
+  .back-top:focus-visible {
+    color: var(--cyan);
+    border-color: color-mix(in srgb, var(--cyan) 45%, var(--border));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 @layer utilities {
   .text-accent { color: var(--accent); }
   .bg-surface { background: var(--surface); }
 }
+
+/* Unlayered: Bootstrap's own :root/link rules are unlayered and therefore beat
+   the page's @layer base overrides. Re-assert the theme-driven values here so
+   default-colored text (h1, strong, table cells) follows the active theme. */
+:root {
+  --bs-body-color: var(--text);
+  --bs-heading-color: var(--text);
+  --bs-emphasis-color: var(--text);
+  --bs-body-bg: var(--page-bg);
+}
+
+/* Unlayered: win over Bootstrap's unlayered link defaults (underline/color). */
+.topbar-brand { color: var(--text); text-decoration: none; }
+.topbar-brand:hover { color: var(--text); }
+.topbar-links a { color: var(--muted); text-decoration: none; }
+.topbar-links a:hover,
+.topbar-links a:focus-visible { color: var(--text); }
+.topbar-links a.is-active { color: var(--cyan); }
+.back-top { color: var(--text); text-decoration: none; }
+.back-top:hover,
+.back-top:focus-visible { color: var(--cyan); }
 
 @media (max-width: 991.98px) {
   .router-grid {
@@ -633,6 +777,8 @@
 
   .topbar,
   .hero-actions,
+  .section-tools,
+  .back-top,
   .footer-links .btn,
   .section-panel > summary .chev,
   .btn-theme,
@@ -680,7 +826,23 @@
 }
 </style>
 </head>
-<body>
+<body id="top">
+<nav class="topbar" aria-label="Section navigation">
+  <div class="container topbar-inner">
+    <a class="topbar-brand" href="#top"><i class="bi bi-diagram-3-fill"></i><span>API Design</span></a>
+    <div class="topbar-links">
+      <a href="#quick">Quick ref</a>
+      <a href="#choose">Decision</a>
+      <a href="#primitives">Primitives</a>
+      <a href="#rest">REST</a>
+      <a href="#graphql">GraphQL</a>
+      <a href="#grpc">gRPC</a>
+      <a href="#webhooks">Webhooks</a>
+      <a href="#security">Security</a>
+      <a href="#mistakes">Mistakes</a>
+    </div>
+  </div>
+</nav>
 <header class="hero">
   <div class="container hero-shell py-4 py-lg-5">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
@@ -746,7 +908,12 @@
 
 <main class="container py-4 py-lg-5">
   <section class="section-wrap">
-    <details class="section-panel section-quick" open>
+    <div class="section-tools">
+      <button type="button" class="btn btn-sm btn-ghost" data-toggle-all aria-pressed="false">
+        <i class="bi bi-arrows-collapse me-1"></i><span data-toggle-all-label>Collapse all</span>
+      </button>
+    </div>
+    <details class="section-panel section-quick" open id="quick">
       <summary>
         <div class="summary-icon"><i class="bi bi-lightning-charge-fill"></i></div>
         <div class="summary-copy">
@@ -822,7 +989,7 @@
       </div>
     </details>
 
-    <details class="section-panel section-choose" open>
+    <details class="section-panel section-choose" open id="choose">
       <summary>
         <div class="summary-icon"><i class="bi bi-signpost-split"></i></div>
         <div class="summary-copy">
@@ -886,7 +1053,7 @@
       </div>
     </details>
 
-    <details class="section-panel section-primitives" open>
+    <details class="section-panel section-primitives" open id="primitives">
       <summary>
         <div class="summary-icon"><i class="bi bi-shuffle"></i></div>
         <div class="summary-copy">
@@ -1551,6 +1718,8 @@ Content-Type: application/json
   </section>
 </main>
 
+<a class="back-top" href="#top" aria-label="Back to top"><i class="bi bi-arrow-up"></i></a>
+
 <footer class="footer-links mt-4">
   <div class="container py-4">
     <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
@@ -1612,6 +1781,69 @@ Content-Type: application/json
         apply('auto');
       }
     });
+  }
+
+  // Scrollspy: highlight the nav link for the section in view.
+  const navLinks = Array.from(document.querySelectorAll('.topbar-links a'));
+  const linkById = new Map(navLinks.map((a) => [a.getAttribute('href').slice(1), a]));
+  const sections = navLinks
+    .map((a) => document.getElementById(a.getAttribute('href').slice(1)))
+    .filter(Boolean);
+
+  if (sections.length && 'IntersectionObserver' in window) {
+    let activeId = null;
+    const setActive = (id) => {
+      if (id === activeId) return;
+      activeId = id;
+      navLinks.forEach((a) => a.classList.remove('is-active'));
+      const link = linkById.get(id);
+      if (link) {
+        link.classList.add('is-active');
+        link.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    };
+    const visible = new Set();
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) visible.add(entry.target.id);
+        else visible.delete(entry.target.id);
+      });
+      // Choose the topmost visible section.
+      const topmost = sections.find((s) => visible.has(s.id));
+      if (topmost) setActive(topmost.id);
+    }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+    sections.forEach((s) => spy.observe(s));
+  }
+
+  // Back-to-top visibility.
+  const backTop = document.querySelector('.back-top');
+  if (backTop) {
+    const onScroll = () => {
+      backTop.classList.toggle('is-visible', window.scrollY > 600);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  // Expand / collapse all section panels.
+  const toggleAll = document.querySelector('[data-toggle-all]');
+  const toggleAllLabel = document.querySelector('[data-toggle-all-label]');
+  const panels = Array.from(document.querySelectorAll('.section-panel'));
+  if (toggleAll && panels.length) {
+    const syncButton = () => {
+      const anyOpen = panels.some((p) => p.open);
+      toggleAll.setAttribute('aria-pressed', String(!anyOpen));
+      if (toggleAllLabel) toggleAllLabel.textContent = anyOpen ? 'Collapse all' : 'Expand all';
+      const icon = toggleAll.querySelector('i');
+      if (icon) icon.className = (anyOpen ? 'bi bi-arrows-collapse' : 'bi bi-arrows-expand') + ' me-1';
+    };
+    toggleAll.addEventListener('click', () => {
+      const anyOpen = panels.some((p) => p.open);
+      panels.forEach((p) => { p.open = !anyOpen; });
+      syncButton();
+    });
+    panels.forEach((p) => p.addEventListener('toggle', syncButton));
+    syncButton();
   }
 })();
 </script>
