@@ -1,0 +1,1204 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('obs-theme');
+        var theme = stored === 'light' || stored === 'dark' ? stored : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-bs-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+
+  <title>Observability: Logs, Metrics, Traces, SLOs, Datadog &amp; New Relic</title>
+  <meta name="description" content="A vendor-neutral observability field guide: when to use logs, metrics, traces, SLOs, and OpenTelemetry; how to avoid cardinality and alert-fatigue traps; and where Datadog and New Relic fit." />
+  <meta name="keywords" content="observability, logs, metrics, traces, SLOs, OpenTelemetry, Prometheus, Datadog, New Relic, alert fatigue, RED metrics, USE metrics, distributed tracing" />
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/observability-logs-metrics-traces-slos.html">
+  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;📡&lt;/text&gt;&lt;/svg&gt;">
+
+  <meta property="og:title" content="Observability: Logs, Metrics, Traces, SLOs, Datadog &amp; New Relic">
+  <meta property="og:description" content="Vendor-neutral observability reference for deciding what to collect, how to instrument it, how to write SLO-based alerts, and where OpenTelemetry, Datadog, and New Relic fit." />
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/observability-logs-metrics-traces-slos.html">
+  <meta property="og:image" content="images/observability-logs-metrics-traces-slos.png">
+  <meta property="og:image:alt" content="Observability mission-control map from symptom to metrics, traces, logs, and runbook">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Observability: Logs, Metrics, Traces, SLOs, Datadog &amp; New Relic">
+  <meta name="twitter:description" content="A practical observability guide for logs, metrics, traces, SLOs, alerting, OpenTelemetry, Prometheus, Datadog, and New Relic." />
+  <meta name="twitter:image" content="images/observability-logs-metrics-traces-slos.png">
+  <meta name="twitter:creator" content="@heroiclife">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Observability: Logs, Metrics, Traces, SLOs, Datadog & New Relic",
+    "description": "A vendor-neutral observability reference that explains when to use logs, metrics, traces, profiles, events, synthetic checks, RUM, and SLOs; how to instrument services with stable identity and correlation fields; how to avoid cardinality, sampling, and histogram traps; and where OpenTelemetry, Prometheus, Datadog, and New Relic fit in the stack.",
+    "image": "https://cheatsheets.davidveksler.com/images/observability-logs-metrics-traces-slos.png",
+    "author": { "@type": "Person", "name": "David Veksler (AI Generated)" },
+    "publisher": { "@type": "Organization", "name": "David Veksler Cheatsheets" },
+    "datePublished": "2026-07-07",
+    "dateModified": "2026-07-07",
+    "keywords": "observability, logs, metrics, traces, SLOs, OpenTelemetry, Prometheus, Datadog, New Relic, alert fatigue, RED metrics, USE metrics"
+  }
+  </script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+
+  <style>
+    @layer base, layout, components, utilities;
+
+    @layer base {
+      :root {
+        color-scheme: light dark;
+        --bg: light-dark(#f5f8fc, #07131c);
+        --panel: light-dark(#ffffff, #0b1722);
+        --panel-2: light-dark(#edf4fb, #102130);
+        --ink: light-dark(#102033, #dbe7f5);
+        --muted: light-dark(#536579, #98a9bd);
+        --line: light-dark(#cdd9e8, #223245);
+        --line-strong: light-dark(#aebfd2, #35506d);
+        --accent: #2dd4bf;
+        --blue: #60a5fa;
+        --green: #34d399;
+        --amber: #f59e0b;
+        --rose: #fb7185;
+        --violet: #8b5cf6;
+        --teal: #14b8a6;
+        --shadow: 0 18px 45px rgba(0, 0, 0, .24);
+        --radius: 16px;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      }
+      html, body { min-height: 100%; }
+      body {
+        margin: 0;
+        background:
+          linear-gradient(rgba(255,255,255,.025), rgba(255,255,255,0)) 0 0 / 100% 100%,
+          radial-gradient(circle at top right, color-mix(in srgb, var(--blue) 12%, transparent), transparent 30%),
+          radial-gradient(circle at left top, color-mix(in srgb, var(--teal) 10%, transparent), transparent 24%),
+          var(--bg);
+        color: var(--ink);
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        line-height: 1.62;
+        padding-bottom: 3rem;
+      }
+      * { box-sizing: border-box; }
+      h1, h2, h3, h4 { text-wrap: balance; line-height: 1.12; }
+      p, li { text-wrap: pretty; }
+      a { color: color-mix(in srgb, var(--blue) 88%, white); text-decoration-color: color-mix(in srgb, var(--blue) 42%, transparent); text-underline-offset: .16em; }
+      a:hover { text-decoration-color: currentColor; }
+      code, pre, .mono { font-family: var(--mono); }
+      code { color: color-mix(in srgb, var(--accent) 92%, white); }
+      :focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 70%, white); outline-offset: 2px; }
+      ::selection { background: color-mix(in srgb, var(--accent) 24%, transparent); }
+      .smallcaps {
+        font-size: .73rem;
+        font-weight: 700;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+      }
+    }
+
+    @layer layout {
+      .page-shell { max-width: 1240px; margin: 0 auto; padding: 0 clamp(1rem, 3.8vw, 2.5rem); }
+      .band {
+        background: linear-gradient(90deg, color-mix(in srgb, var(--teal) 78%, black), color-mix(in srgb, var(--blue) 75%, black));
+        color: #03111a;
+        font-size: .73rem;
+        font-weight: 800;
+        letter-spacing: .22em;
+        text-transform: uppercase;
+        padding: .55rem 1rem;
+      }
+      .hero {
+        padding: clamp(1.5rem, 4vw, 2.6rem) 0 1rem;
+        border-bottom: 1px solid var(--line);
+        background:
+          linear-gradient(135deg, color-mix(in srgb, var(--accent) 13%, transparent), transparent 42%),
+          linear-gradient(to bottom, color-mix(in srgb, var(--panel) 86%, transparent), transparent);
+      }
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.7fr) minmax(260px, .95fr);
+        gap: 1.1rem;
+        align-items: start;
+      }
+      @media (max-width: 991px) {
+        .hero-grid { grid-template-columns: 1fr; }
+      }
+      .hero h1 {
+        margin: .15rem 0 .6rem;
+        font-size: clamp(2.2rem, 4.3vw, 4.4rem);
+        font-weight: 800;
+        letter-spacing: -.02em;
+      }
+      .lede {
+        font-size: clamp(1.02rem, 1.3vw, 1.16rem);
+        color: color-mix(in srgb, var(--ink) 82%, var(--muted));
+        max-width: 68ch;
+      }
+      .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem .8rem;
+        align-items: center;
+        color: var(--muted);
+        margin-bottom: .5rem;
+      }
+      .meta-pill {
+        display: inline-flex;
+        gap: .45rem;
+        align-items: center;
+        padding: .3rem .7rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--panel) 70%, transparent);
+        font-size: .82rem;
+      }
+      .control-stack {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: .5rem;
+      }
+      .theme-btn {
+        border: 1px solid var(--line);
+        background: color-mix(in srgb, var(--panel) 88%, transparent);
+        color: var(--ink);
+        border-radius: 999px;
+        padding: .45rem .8rem;
+        font-size: .82rem;
+      }
+      .theme-btn:hover { border-color: var(--line-strong); }
+      .hero-card {
+        background: color-mix(in srgb, var(--panel) 84%, transparent);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1rem;
+      }
+      .hero-card .mini-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .65rem;
+      }
+      .hero-card .mini {
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 85%, transparent), transparent);
+        padding: .8rem .85rem;
+      }
+      .hero-card .mini b { display: block; margin-bottom: .1rem; }
+      .section {
+        padding: 1.15rem 0 0;
+      }
+      .section h2 {
+        margin: 0 0 .75rem;
+        font-size: clamp(1.45rem, 2.1vw, 2rem);
+        font-weight: 800;
+      }
+      .section h3 {
+        margin: 1rem 0 .55rem;
+        font-size: 1.08rem;
+        font-weight: 700;
+      }
+      .section-lede { color: var(--muted); max-width: 80ch; margin-bottom: .85rem; }
+      .frame {
+        border: 1px solid var(--line);
+        background: color-mix(in srgb, var(--panel) 96%, transparent);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+      .frame.pad { padding: 1rem; }
+      .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .sticky-top-gap { top: .75rem; }
+      .signature-map {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: .75rem;
+      }
+      @media (max-width: 1199px) {
+        .signature-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      @media (max-width: 575px) {
+        .signature-map { grid-template-columns: 1fr; }
+      }
+      .signal-card {
+        min-height: 100%;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background:
+          linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 84%, transparent), transparent 100%),
+          var(--panel);
+        padding: .95rem .95rem .9rem;
+        position: relative;
+      }
+      .signal-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto auto 0;
+        width: 100%;
+        height: 4px;
+        border-radius: 16px 16px 0 0;
+        background: var(--card-accent, var(--accent));
+      }
+      .signal-card h3 {
+        margin: 0 0 .45rem;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+      }
+      .signal-card p { margin: 0 0 .45rem; color: var(--muted); font-size: .92rem; }
+      .signal-card ul { margin: 0; padding-left: 1.1rem; color: var(--ink); font-size: .9rem; }
+      .signal-card li + li { margin-top: .28rem; }
+      .sig-symptom { --card-accent: var(--rose); }
+      .sig-metric { --card-accent: var(--blue); }
+      .sig-trace { --card-accent: var(--teal); }
+      .sig-log { --card-accent: var(--amber); }
+      .sig-slo { --card-accent: var(--green); }
+      .sig-runbook { --card-accent: var(--violet); }
+      .eyebrow {
+        display: inline-flex;
+        gap: .45rem;
+        align-items: center;
+        margin-bottom: .35rem;
+        color: var(--muted);
+      }
+      .table thead th {
+        position: sticky;
+        top: 0;
+        background: color-mix(in srgb, var(--panel) 92%, black);
+        z-index: 1;
+      }
+      .table {
+        --bs-table-bg: transparent;
+        --bs-table-color: var(--ink);
+        --bs-table-border-color: var(--line);
+        --bs-table-striped-bg: color-mix(in srgb, var(--panel-2) 70%, transparent);
+        margin-bottom: 0;
+      }
+      .table td, .table th { vertical-align: top; }
+      .table code { white-space: nowrap; }
+      .table-responsive { border-radius: var(--radius); }
+      .subgrid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .9rem;
+      }
+      @media (max-width: 991px) {
+        .subgrid { grid-template-columns: 1fr; }
+      }
+      .mini-card {
+        border: 1px solid var(--line);
+        background: color-mix(in srgb, var(--panel) 92%, transparent);
+        border-radius: 14px;
+        padding: 1rem;
+      }
+      .mini-card h4 {
+        margin: 0 0 .5rem;
+        font-size: 1.02rem;
+      }
+      .mini-card p { margin: 0; color: var(--muted); }
+      .callout {
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--accent);
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--panel) 88%, transparent);
+        padding: .9rem 1rem;
+      }
+      .callout + .callout { margin-top: .75rem; }
+      .callout strong { color: var(--ink); }
+      .callout-info { border-left-color: var(--blue); }
+      .callout-warn { border-left-color: var(--amber); }
+      .callout-danger { border-left-color: var(--rose); }
+      .callout-good { border-left-color: var(--green); }
+      .pipeline {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: .75rem;
+      }
+      @media (max-width: 991px) {
+        .pipeline { grid-template-columns: 1fr; }
+      }
+      .step {
+        position: relative;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        padding: .9rem .95rem;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 80%, transparent), transparent);
+      }
+      .step .num {
+        display: inline-flex;
+        width: 1.7rem;
+        height: 1.7rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        margin-bottom: .65rem;
+        font-size: .8rem;
+        font-weight: 800;
+        color: #04111a;
+        background: var(--accent);
+      }
+      .step h3 { margin: 0 0 .35rem; font-size: 1rem; }
+      .step p { margin: 0; color: var(--muted); font-size: .92rem; }
+      .step ul { margin: .55rem 0 0; padding-left: 1.1rem; font-size: .9rem; }
+      .step li + li { margin-top: .22rem; }
+      .footer {
+        margin-top: 1.6rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+      }
+    }
+
+    @layer utilities {
+      .no-print {}
+      .text-muted2 { color: var(--muted) !important; }
+      .border-line { border-color: var(--line) !important; }
+      .bg-panel { background: var(--panel) !important; }
+      .bg-panel-2 { background: var(--panel-2) !important; }
+
+      @media print {
+        :root { color-scheme: light; }
+        body { background: #fff !important; color: #111 !important; padding-bottom: 0; }
+        .band, .no-print { display: none !important; }
+        .hero, .frame, .signal-card, .mini-card, .callout, .step {
+          box-shadow: none !important;
+          background: #fff !important;
+          color: #111 !important;
+        }
+        .hero { border-bottom: 1px solid #bbb; }
+        .table { color: #111 !important; }
+        .table thead th { background: #f4f4f4 !important; color: #111 !important; }
+        .table-striped > tbody > tr:nth-of-type(odd) > * { background: #fafafa !important; }
+        .page-shell { max-width: none; padding: 0 0.8rem; }
+        a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .82em; color: #444; }
+        .frame, .signal-card, .mini-card, .callout, .step { border-color: #bbb !important; }
+        .signature-map, .subgrid, .pipeline { grid-template-columns: 1fr !important; }
+        .scroll-x { overflow: visible; }
+        details { break-inside: avoid; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="band">
+    <div class="page-shell d-flex flex-wrap justify-content-between gap-2">
+      <span><i class="bi bi-activity"></i> Observability field guide</span>
+      <span>Software &amp; DevOps · incident prep · vendor-aware</span>
+    </div>
+  </div>
+
+  <header class="hero">
+    <div class="page-shell hero-grid">
+      <div>
+        <div class="meta-row smallcaps">
+          <span class="meta-pill"><i class="bi bi-calendar3"></i> Last verified: 2026-07-07</span>
+          <span class="meta-pill"><i class="bi bi-kanban"></i> Research mode</span>
+          <span class="meta-pill"><i class="bi bi-globe2"></i> Global technical content</span>
+        </div>
+        <h1>Observability Field Guide</h1>
+        <p class="lede">
+          A vendor-neutral reference for deciding what to collect, how to name it, when to page on it, and where OpenTelemetry, Prometheus, Datadog, and New Relic fit without becoming the architecture.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          <span class="badge text-bg-info"><i class="bi bi-chat-square-text"></i> logs</span>
+          <span class="badge text-bg-primary"><i class="bi bi-graph-up-arrow"></i> metrics</span>
+          <span class="badge text-bg-success"><i class="bi bi-diagram-3"></i> traces</span>
+          <span class="badge text-bg-warning"><i class="bi bi-bullseye"></i> SLOs</span>
+          <span class="badge text-bg-secondary"><i class="bi bi-boxes"></i> OpenTelemetry</span>
+        </div>
+      </div>
+      <div class="hero-card no-print">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+          <div>
+            <div class="smallcaps text-muted2">View</div>
+            <div class="fw-semibold">Theme control</div>
+          </div>
+          <div class="control-stack" role="group" aria-label="Theme controls">
+            <button class="theme-btn" type="button" data-theme-set="dark"><i class="bi bi-moon-stars"></i> Dark</button>
+            <button class="theme-btn" type="button" data-theme-set="light"><i class="bi bi-sun"></i> Light</button>
+          </div>
+        </div>
+        <div class="mini-grid">
+          <div class="mini">
+            <b>Definition of working</b>
+            Instrument a service, choose the right signal for the question, and page on an SLO instead of noise.
+          </div>
+          <div class="mini">
+            <b>Primary search hook</b>
+            Logs vs metrics vs traces, SLOs, alert fatigue, OpenTelemetry, Datadog, New Relic.
+          </div>
+          <div class="mini">
+            <b>Signature artifact</b>
+            The symptom-to-cause map above the fold, sized to screenshot cleanly at 1200×630.
+          </div>
+          <div class="mini">
+            <b>Scope</b>
+            Service and platform observability. No vendor pricing, no product endorsement, no cloud lock-in sermon.
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="section" id="signal-map">
+      <div class="eyebrow smallcaps"><i class="bi bi-signpost-split"></i> Signature map</div>
+      <h2>Symptom to cause</h2>
+      <p class="section-lede">
+        Start with the thing the user feels, then move through the signals that narrow the search. The page is built around this flow because that is how incidents actually get solved.
+      </p>
+      <div class="signature-map">
+        <article class="signal-card sig-symptom">
+          <h3><i class="bi bi-emoji-expressionless"></i> Symptom</h3>
+          <p>What the user or on-call sees first.</p>
+          <ul>
+            <li>"Checkout is spinning"</li>
+            <li>"API is timing out"</li>
+            <li>Black-box checks fail</li>
+          </ul>
+        </article>
+        <article class="signal-card sig-metric">
+          <h3><i class="bi bi-graph-up-arrow"></i> Metrics</h3>
+          <p>Trend, rate, and saturation at low cost.</p>
+          <ul>
+            <li>Request rate, error rate, latency</li>
+            <li>Queue depth, CPU, memory, disk</li>
+            <li>Alert on symptoms, not just causes</li>
+          </ul>
+        </article>
+        <article class="signal-card sig-trace">
+          <h3><i class="bi bi-diagram-3"></i> Traces</h3>
+          <p>Follow the request path across service boundaries.</p>
+          <ul>
+            <li>Root span to child spans</li>
+            <li>Async, DB, and external calls</li>
+            <li>Context propagation is the glue</li>
+          </ul>
+        </article>
+        <article class="signal-card sig-log">
+          <h3><i class="bi bi-chat-square-text"></i> Logs</h3>
+          <p>Exact facts, stack traces, and event payloads.</p>
+          <ul>
+            <li>Structured JSON, not opaque strings</li>
+            <li>Include trace_id and span_id</li>
+            <li>Great for one-off debugging</li>
+          </ul>
+        </article>
+        <article class="signal-card sig-slo">
+          <h3><i class="bi bi-bullseye"></i> SLO</h3>
+          <p>The reliability contract that decides paging.</p>
+          <ul>
+            <li>SLI + target + window</li>
+            <li>Burn-rate alert when budget burns fast</li>
+            <li>Pages should tell you what broke for users</li>
+          </ul>
+        </article>
+        <article class="signal-card sig-runbook">
+          <h3><i class="bi bi-journal-check"></i> Runbook</h3>
+          <p>The next move once the signal points at a cause.</p>
+          <ul>
+            <li>Mitigate, verify, then write up</li>
+            <li>Use dashboards for diagnosis, not decoration</li>
+            <li>Keep the fix path close to the alert</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="quick-reference">
+      <div class="eyebrow smallcaps"><i class="bi bi-lightning-charge-fill"></i> Quick reference</div>
+      <h2>What to reach for first</h2>
+      <div class="scroll-x frame">
+        <table class="table table-striped table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Signal</th>
+              <th>Use it when</th>
+              <th>Do not use it when</th>
+              <th>Gotcha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Logs</strong></td>
+              <td>You need the exact event payload, stack trace, or audit trail.</td>
+              <td>You are trying to trend latency or page on aggregate health.</td>
+              <td>Unstructured strings are hard to query; make them JSON with stable keys.</td>
+            </tr>
+            <tr>
+              <td><strong>Metrics</strong></td>
+              <td>You need a cheap time series for rates, errors, latency, or saturation.</td>
+              <td>You need the full story of one request or a precise per-user payload.</td>
+              <td>Every label combination is a new time series; cardinality is a budget.</td>
+            </tr>
+            <tr>
+              <td><strong>Traces</strong></td>
+              <td>You need the causal path across services, queues, or async hops.</td>
+              <td>You want a permanent archive of every request without sampling.</td>
+              <td>Broken context propagation turns a trace into disconnected spans.</td>
+            </tr>
+            <tr>
+              <td><strong>Profiles</strong></td>
+              <td>You need to find hot code paths, CPU burn, or memory pressure.</td>
+              <td>You need business semantics or exact request sequencing.</td>
+              <td>Profiles are usually sampled, so they are best for hotspots, not proof.</td>
+            </tr>
+            <tr>
+              <td><strong>Events</strong></td>
+              <td>You need discrete state changes: deploys, failovers, feature flag flips.</td>
+              <td>You want a continuously aggregated trend.</td>
+              <td>Events need shared IDs and timestamps to line up with the other signals.</td>
+            </tr>
+            <tr>
+              <td><strong>Synthetics</strong></td>
+              <td>You want a scripted, repeatable check of a user journey or endpoint.</td>
+              <td>You need to debug a server-side code path directly.</td>
+              <td>Synthetics only prove what the scripted path can see.</td>
+            </tr>
+            <tr>
+              <td><strong>RUM</strong></td>
+              <td>You need frontend latency, browser errors, or user experience.</td>
+              <td>You need backend-only internals.</td>
+              <td>Frontend sessions are useful only if you can tie them back to backend IDs.</td>
+            </tr>
+            <tr>
+              <td><strong>SLOs</strong></td>
+              <td>You need to decide when to page and when to hold the line.</td>
+              <td>You are still arguing about whether the service is worth protecting.</td>
+              <td>Page on symptom burn; route cause details to a dashboard or ticket.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="fundamentals">
+      <div class="eyebrow smallcaps"><i class="bi bi-braces"></i> Fundamentals</div>
+      <h2>What observability is, and what it is not</h2>
+      <p class="section-lede">
+        OpenTelemetry defines observability as the ability to understand behavior from outside the system by using correlated telemetry. The practical rule is simpler: use logs for detail, metrics for trend, traces for causality, and SLOs for the paging contract.
+      </p>
+      <div class="subgrid">
+        <article class="mini-card">
+          <h4>Observability</h4>
+          <p>A way to ask new questions about a system without first changing code for every question. Example: "Which deploy made checkout slower?" Gotcha: dashboards alone do not create observability if the underlying signals are uncorrelated.</p>
+        </article>
+        <article class="mini-card">
+          <h4>White-box monitoring</h4>
+          <p>Monitoring based on internals like counters, logs, and runtime stats. Example: a latency histogram and a queue-depth metric. Gotcha: if you only watch black-box uptime, you miss which dependency degraded first.</p>
+        </article>
+        <article class="mini-card">
+          <h4>Black-box monitoring</h4>
+          <p>External checks that answer "is the service usable?" Example: a synthetic login probe. Gotcha: external success does not tell you where the failure is, only that the symptom exists.</p>
+        </article>
+      </div>
+
+      <h3>Signal taxonomy</h3>
+      <div class="scroll-x frame">
+        <table class="table table-striped table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Signal</th>
+              <th>Definition</th>
+              <th>Example</th>
+              <th>Primary gotcha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Logs</strong></td>
+              <td>Timestamped records of discrete events, ideally structured.</td>
+              <td><code>{"level":"error","service":"checkout","trace_id":"4bf92f..."}</code></td>
+              <td>They get expensive and noisy fast if you log everything at info level.</td>
+            </tr>
+            <tr>
+              <td><strong>Metrics</strong></td>
+              <td>Measurements captured over time and aggregated into time series.</td>
+              <td><code>http_requests_total</code>, <code>http_request_duration_seconds_bucket</code></td>
+              <td>Averages hide the long tail; cardinality can blow up storage and query cost.</td>
+            </tr>
+            <tr>
+              <td><strong>Traces</strong></td>
+              <td>A causality graph showing the path of one request or workflow.</td>
+              <td>Gateway span -> DB span -> downstream API span</td>
+              <td>Sampling too aggressively can erase the rare failure you needed to keep.</td>
+            </tr>
+            <tr>
+              <td><strong>Profiles</strong></td>
+              <td>Samples of CPU, wall time, or memory usage that show hot paths.</td>
+              <td>60-second CPU profile showing JSON encoding at the top</td>
+              <td>Great for optimization, weak for business context.</td>
+            </tr>
+            <tr>
+              <td><strong>Events</strong></td>
+              <td>State transitions or discrete occurrences with a timestamp.</td>
+              <td>Deploy started, deploy finished, feature flag toggled</td>
+              <td>Events without stable service and version tags are hard to correlate.</td>
+            </tr>
+            <tr>
+              <td><strong>Synthetics</strong></td>
+              <td>Scripted outside-in checks that mimic a user path.</td>
+              <td>POST /login and then load /account</td>
+              <td>They only test what the script covers, not the whole production surface.</td>
+            </tr>
+            <tr>
+              <td><strong>RUM</strong></td>
+              <td>Browser-side telemetry about real user experience.</td>
+              <td>Largest Contentful Paint, JavaScript errors, client-side latency</td>
+              <td>Frontend data is not a substitute for backend tracing.</td>
+            </tr>
+            <tr>
+              <td><strong>SLOs</strong></td>
+              <td>A target for a service-level indicator over a time window.</td>
+              <td>99.9% successful checkout requests over 30 days</td>
+              <td>Without an error budget, the target is just a slogan.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info mt-3">
+        <strong>Decision rule:</strong> choose the signal with the shortest path to truth. If the question is "what happened?" start with logs; if it is "is it getting worse?" start with metrics; if it is "where did the time go?" start with traces; if it is "should we page?" use the SLO.
+      </div>
+    </section>
+
+    <section class="section" id="instrumentation">
+      <div class="eyebrow smallcaps"><i class="bi bi-diagram-2"></i> Working knowledge</div>
+      <h2>Instrumentation checklist</h2>
+      <p class="section-lede">
+        The best observability data is boringly consistent: stable service identity, a shared set of resource fields, and enough context to join logs, metrics, and traces without inventing ad hoc keys in every service.
+      </p>
+
+      <h3>Identity and correlation fields</h3>
+      <div class="scroll-x frame">
+        <table class="table table-striped table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Definition</th>
+              <th>Example</th>
+              <th>Gotcha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>service.name</code></td><td>Stable logical service name used across telemetry.</td><td><code>checkout-api</code></td><td>Do not use pod names or hostnames; they change too often.</td></tr>
+            <tr><td><code>deployment.environment</code></td><td>Environment label such as dev, staging, prod.</td><td><code>prod</code></td><td>Keep the vocabulary small or dashboards splinter.</td></tr>
+            <tr><td><code>service.version</code></td><td>The build or release version of the service.</td><td><code>2026.07.07-4f2c1d1</code></td><td>Without version, deploy markers cannot explain regressions.</td></tr>
+            <tr><td><code>cloud.region</code></td><td>Where the workload runs.</td><td><code>us-west-2</code></td><td>Region is a common culprit in partial outages, so make it explicit.</td></tr>
+            <tr><td><code>trace_id</code></td><td>Trace-wide identifier that lets logs and spans join.</td><td><code>4bf92f3577b34da6a3ce929d0e0e4736</code></td><td>If logs drop it, correlation breaks at the exact moment you need it.</td></tr>
+            <tr><td><code>span_id</code></td><td>Identifier for one unit of work inside a trace.</td><td><code>00f067aa0ba902b7</code></td><td>Use it to pin one log line to one span, not as a business identifier.</td></tr>
+            <tr><td><code>request_id</code> / <code>correlation_id</code></td><td>Request-scoped identifier used by your app and gateway.</td><td><code>req_01J0ZQ6A1B8P2</code></td><td>Prefer one canonical ID per request, not three competing ones.</td></tr>
+            <tr><td><code>severity</code></td><td>Log urgency such as debug/info/warn/error.</td><td><code>error</code></td><td>Do not make every failed validation an error if users can recover.</td></tr>
+            <tr><td><code>error.type</code> / code</td><td>Structured error class or status code.</td><td><code>SQLTimeoutError</code>, <code>HTTP 503</code></td><td>Human text alone is hard to group or alert on.</td></tr>
+            <tr><td><code>resource.attrs</code></td><td>Shared resource context attached everywhere.</td><td><code>host.name</code>, <code>k8s.pod.name</code></td><td>Attach through the Collector so logs, traces, and metrics match exactly.</td></tr>
+            <tr><td><code>deploy.marker</code></td><td>Event showing when a version rolled out.</td><td><code>checkout-api 2026.07.07-4f2c1d1 deployed</code></td><td>No marker means you will guess at causality from a chart gap.</td></tr>
+            <tr><td><code>user/session</code></td><td>Anonymous identifier for a user or session.</td><td><code>user_7f9a...</code></td><td>Hash or pseudonymize; do not put raw email or account IDs in broad labels.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Context and payload discipline</h3>
+      <div class="subgrid">
+        <article class="mini-card">
+          <h4>Structured logs</h4>
+          <p>Emit JSON fields that machines can query. Example: <code>{"msg":"payment failed","order_id":"ord_1287","trace_id":"..."}</code>. Gotcha: plain text makes correlation and dashboards brittle.</p>
+        </article>
+        <article class="mini-card">
+          <h4>Histogram buckets</h4>
+          <p>Choose buckets that reflect user experience and SLO thresholds. Example: latency buckets around 50 ms, 100 ms, 250 ms, 500 ms, 1 s, 2 s. Gotcha: buckets that are too coarse hide the tail; buckets that are too dense increase cost.</p>
+        </article>
+        <article class="mini-card">
+          <h4>Exemplars</h4>
+          <p>Attach a trace sample to a metric point so the graph can jump to an example request. Example: a latency spike annotated with a trace ID. Gotcha: exemplars are most useful when trace sampling still keeps enough rare paths.</p>
+        </article>
+      </div>
+
+      <div class="callout callout-warn mt-3">
+        <strong>Collector discipline:</strong> OpenTelemetry Collector pipelines can enrich and scrub telemetry before export. Use that place to normalize resource attributes and remove personal data, not a dozen different app-specific hacks.
+      </div>
+    </section>
+
+    <section class="section" id="metrics">
+      <div class="eyebrow smallcaps"><i class="bi bi-speedometer2"></i> Metrics</div>
+      <h2>Metrics that matter</h2>
+      <p class="section-lede">
+        Metrics are for trend and alerting. The right metric answers "is the system healthy enough right now?" and the right graph tells you whether the answer is stable, worsening, or already out of budget.
+      </p>
+
+      <h3>Service and resource patterns</h3>
+      <div class="scroll-x frame">
+        <table class="table table-striped table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Pattern</th>
+              <th>Definition</th>
+              <th>Example</th>
+              <th>Anti-pattern</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>RED</strong></td>
+              <td>Rate, errors, duration for request-driven services.</td>
+              <td><code>http_requests_total</code>, <code>http_request_errors_total</code>, <code>http_request_duration_seconds</code></td>
+              <td>Monitoring CPU first and user latency second.</td>
+            </tr>
+            <tr>
+              <td><strong>USE</strong></td>
+              <td>Utilization, saturation, errors for resources.</td>
+              <td>CPU busy, disk queue depth, memory pressure</td>
+              <td>Assuming utilization alone predicts customer pain.</td>
+            </tr>
+            <tr>
+              <td><strong>Golden Signals</strong></td>
+              <td>Latency, traffic, errors, saturation for service health.</td>
+              <td>p95 latency + RPS + 5xx rate + queue depth</td>
+              <td>Building dashboards with no owner or decision attached.</td>
+            </tr>
+            <tr>
+              <td><strong>Business metrics</strong></td>
+              <td>User-visible or revenue-visible outcomes.</td>
+              <td>Checkout completion rate, signups, order failures</td>
+              <td>Confusing a healthy infra chart with a healthy product.</td>
+            </tr>
+            <tr>
+              <td><strong>Backlog and queue depth</strong></td>
+              <td>How much asynchronous work is waiting.</td>
+              <td><code>queue_depth</code> or oldest message age</td>
+              <td>Queues can look fine until age starts increasing faster than drain.</td>
+            </tr>
+            <tr>
+              <td><strong>Availability ratio</strong></td>
+              <td>Good events divided by total events.</td>
+              <td>99.9% successful requests over 30 days</td>
+              <td>Counting only 2xx responses if the user still sees a broken page.</td>
+            </tr>
+            <tr>
+              <td><strong>Latency percentiles</strong></td>
+              <td>Tail measurements of user experience.</td>
+              <td>p50, p95, p99 from a histogram</td>
+              <td>Averages hide a painful tail and make regressions look smaller than they are.</td>
+            </tr>
+            <tr>
+              <td><strong>Histogram</strong></td>
+              <td>Bucketed distribution that supports percentiles and SLO math.</td>
+              <td><code>histogram_quantile(0.95, sum by (le) (...))</code></td>
+              <td>Choose bucket boundaries with the SLO in mind or the graph misleads you.</td>
+            </tr>
+            <tr>
+              <td><strong>Counter rate</strong></td>
+              <td>Monotonic count turned into a rate with a window.</td>
+              <td><code>rate(http_requests_total[5m])</code></td>
+              <td>Do not store a percentage when a pair of counters would be safer and more composable.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>What Prometheus-style guidance is really saying</h3>
+      <div class="subgrid">
+        <article class="mini-card">
+          <h4>Keep labels small</h4>
+          <p>Prometheus warns that every unique label set is a new time series. Example: `user_id` as a label is a bad idea because the cardinality is unbounded. Gotcha: a "helpful" label can become the most expensive field in the system.</p>
+        </article>
+        <article class="mini-card">
+          <h4>Use base units</h4>
+          <p>Store seconds, bytes, and counts, then convert in the query or chart. Example: `request_duration_seconds`. Gotcha: encoding milliseconds in the metric name locks you into one unit and makes cross-service comparisons harder.</p>
+        </article>
+        <article class="mini-card">
+          <h4>Prefer counters for rates</h4>
+          <p>Monotonic counters are easy to roll up into rates and burn calculations. Example: `errors_total` over a 5-minute window. Gotcha: a gauge of "requests this minute" is less robust than a counter plus `rate()`.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="traces">
+      <div class="eyebrow smallcaps"><i class="bi bi-diagram-3"></i> Traces</div>
+      <h2>Tracing and correlation</h2>
+      <p class="section-lede">
+        Traces show causality: one request, one path, many spans. The point is not to collect more spans; it is to keep enough structure that a weird latency spike can be followed across services, databases, queues, and external APIs.
+      </p>
+
+      <h3>Span design</h3>
+      <div class="scroll-x frame">
+        <table class="table table-striped table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Definition</th>
+              <th>Example</th>
+              <th>Gotcha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Root span</strong></td><td>The top-level span for the request or job.</td><td><code>GET /checkout</code></td><td>If the root is missing, the whole trace loses shape.</td></tr>
+            <tr><td><strong>Child span</strong></td><td>A nested unit of work inside the parent path.</td><td><code>SELECT order by id</code></td><td>Do not create a span for every tiny helper call.</td></tr>
+            <tr><td><strong>Async boundary</strong></td><td>A hop across queues, tasks, or callbacks where context must be propagated.</td><td>Publish event -> consume event</td><td>If context drops here, tracing stops exactly where incidents get interesting.</td></tr>
+            <tr><td><strong>DB span</strong></td><td>A span around a datastore operation.</td><td><code>mysql.query SELECT * FROM orders</code></td><td>Include the operation and resource, but avoid dumping full query text if it exposes secrets.</td></tr>
+            <tr><td><strong>External call span</strong></td><td>A span for HTTP, RPC, or third-party dependency work.</td><td><code>POST https://api.stripe.com/v1/payment_intents</code></td><td>Keep service and peer attributes consistent or service maps drift.</td></tr>
+            <tr><td><strong>Baggage</strong></td><td>Cross-process key/value context carried alongside the trace.</td><td><code>tenant_id=acme</code></td><td>Baggage is for propagation, not a dumping ground for every app attribute.</td></tr>
+            <tr><td><strong>Span attributes</strong></td><td>Structured metadata about one span.</td><td><code>http.status_code=503</code></td><td>Use attributes for facts about the span, not a second log record.</td></tr>
+            <tr><td><strong>Events in spans</strong></td><td>Timestamped annotations inside one span.</td><td><code>exception</code>, <code>retry</code>, <code>cache_miss</code></td><td>Do not rely on events if the parent context never arrives.</td></tr>
+            <tr><td><strong>Exemplars</strong></td><td>A trace reference attached to a metric sample.</td><td>Latency bucket with one trace ID</td><td>Without enough trace samples, the jump from graph to trace is hit-or-miss.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Sampling and propagation</h3>
+      <div class="subgrid">
+        <article class="mini-card">
+          <h4>Head sampling</h4>
+          <p>Decide at trace start whether to keep it. Example: keep 10% of requests. Gotcha: head sampling can miss a rare error if the signal only appears later in the request.</p>
+        </article>
+        <article class="mini-card">
+          <h4>Tail sampling</h4>
+          <p>Decide after the trace is complete, often based on latency or errors. Example: retain slow traces and failed traces. Gotcha: it costs more to operate, but it is often better for incident diagnosis.</p>
+        </article>
+        <article class="mini-card">
+          <h4>Context propagation</h4>
+          <p>The mechanism that keeps the trace connected across service boundaries. Example: inject and extract trace context on every HTTP hop. Gotcha: one missing propagation point can make logs, metrics, and traces look unrelated when they are not.</p>
+        </article>
+      </div>
+
+      <div class="callout callout-good mt-3">
+        <strong>OpenTelemetry Collector note:</strong> the Collector is vendor-agnostic and can receive, process, and export traces, metrics, and logs. That makes it the right place to normalize metadata, batch, sample, and transform before data reaches a backend.
+      </div>
+    </section>
+
+    <section class="section" id="slos">
+      <div class="eyebrow smallcaps"><i class="bi bi-bullseye"></i> SLOs and alerting</div>
+      <h2>SLOs turn noise into a budget</h2>
+      <p class="section-lede">
+        Google’s SRE guidance is clear: the error budget is the difference between perfect and the SLO. That budget should steer alerting, release pace, and where the team spends its attention.
+      </p>
+
+      <h3>Core terms</h3>
+      <div class="scroll-x frame">
+        <table class="table table-striped table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Term</th>
+              <th>Definition</th>
+              <th>Example</th>
+              <th>Gotcha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>SLI</strong></td>
+              <td>A measured signal that reflects user experience.</td>
+              <td>Successful checkout requests / total checkout requests</td>
+              <td>If the SLI is not user-facing, the SLO can reward the wrong thing.</td>
+            </tr>
+            <tr>
+              <td><strong>SLO</strong></td>
+              <td>The target value for an SLI over a window.</td>
+              <td>99.9% success over 30 days</td>
+              <td>A target without an error budget is not operationally actionable.</td>
+            </tr>
+            <tr>
+              <td><strong>Error budget</strong></td>
+              <td>How much unreliability the service can spend before the SLO fails.</td>
+              <td>At 99.9%, budget is 0.1% of requests over the window.</td>
+              <td>If the team never measures budget burn, it cannot tell whether it is spending too fast.</td>
+            </tr>
+            <tr>
+              <td><strong>Burn rate</strong></td>
+              <td>How fast the error budget is being consumed.</td>
+              <td>Burn rate 1 means spending budget exactly as fast as the window allows.</td>
+              <td>Fast-burn and slow-burn alerts serve different operational purposes.</td>
+            </tr>
+            <tr>
+              <td><strong>Symptom page</strong></td>
+              <td>An alert that tells you users are hurting now.</td>
+              <td>5xx rate or latency SLO burn</td>
+              <td>Pages that require no action become background noise.</td>
+            </tr>
+            <tr>
+              <td><strong>Cause ticket</strong></td>
+              <td>An alert or report that feeds diagnosis, not paging.</td>
+              <td>Disk nearing capacity, replica lag, noisy neighbors</td>
+              <td>If you page on every cause, the page becomes untrustworthy.</td>
+            </tr>
+            <tr>
+              <td><strong>Maintenance window</strong></td>
+              <td>A period when expected unreliability should not count against the budget.</td>
+              <td>Planned deploy or migration window</td>
+              <td>Do not silently hide real outages inside broad windows.</td>
+            </tr>
+            <tr>
+              <td><strong>Runbook</strong></td>
+              <td>The next steps once the alert fires.</td>
+              <td>Link to rollback, feature flag, and owner info</td>
+              <td>Pages without runbooks create slow, random response.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>How to alert on SLOs</h3>
+      <div class="pipeline">
+        <article class="step">
+          <div class="num">1</div>
+          <h3>Measure the SLI</h3>
+          <p>Use a numerator and denominator that reflect user success, not an internal proxy.</p>
+          <ul>
+            <li>Example: successful requests / total requests</li>
+            <li>Gotcha: internal-only health checks can miss user pain</li>
+          </ul>
+        </article>
+        <article class="step">
+          <div class="num">2</div>
+          <h3>Set the SLO</h3>
+          <p>Pick a window and target that match how much risk the service can absorb.</p>
+          <ul>
+            <li>Example: 99.9% over 30 days</li>
+            <li>Gotcha: too-tight targets create noise; too-loose targets hide drift</li>
+          </ul>
+        </article>
+        <article class="step">
+          <div class="num">3</div>
+          <h3>Watch burn rate</h3>
+          <p>Alert when the budget is burning fast enough that action is needed now.</p>
+          <ul>
+            <li>Example: multi-window burn-rate logic</li>
+            <li>Gotcha: one window catches fast outages; another catches smaller but serious leaks</li>
+          </ul>
+        </article>
+        <article class="step">
+          <div class="num">4</div>
+          <h3>Separate page and ticket</h3>
+          <p>Pages should be actionable in minutes; tickets can wait for the next work cycle.</p>
+          <ul>
+            <li>Page on symptoms</li>
+            <li>Ticket the likely cause</li>
+          </ul>
+        </article>
+        <article class="step">
+          <div class="num">5</div>
+          <h3>Attach the runbook</h3>
+          <p>Every page should tell the responder what to check first.</p>
+          <ul>
+            <li>Rollback? flag? capacity? dependency?</li>
+            <li>Gotcha: no runbook means slower recovery and more paging fatigue</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="callout callout-info mt-3">
+        <strong>Concrete math:</strong> a 99.9% SLO over 30 days means a 0.1% error budget. If the service handles 3,000,000 requests in that window, the budget is 3,000 bad requests. A burn rate of 1 means you are spending exactly at the allowed pace.
+      </div>
+
+      <div class="callout callout-warn mt-3">
+        <strong>Prometheus alerting rule of thumb:</strong> keep alerting simple, alert on symptoms, and let dashboards explain causes. Alertmanager handles grouping, silencing, inhibition, and notification routing; the Prometheus server decides whether the alert is firing.
+      </div>
+    </section>
+
+    <section class="section" id="vendor-layer">
+      <div class="eyebrow smallcaps"><i class="bi bi-boxes"></i> Vendor layer</div>
+      <h2>Where the tools fit</h2>
+      <p class="section-lede">
+        The trap is to let the platform vendor define the architecture. The safer pattern is to standardize on OpenTelemetry and Prometheus-style metrics, then treat Datadog or New Relic as backends and workflow surfaces.
+      </p>
+
+      <div class="scroll-x frame">
+        <table class="table table-striped table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Tooling layer</th>
+              <th>What it is</th>
+              <th>Best use</th>
+              <th>Lock-in risk / gotcha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>OpenTelemetry Collector</strong></td>
+              <td>Vendor-agnostic receive/process/export pipeline for telemetry.</td>
+              <td>Normalize context, scrub data, batch, sample, and route to one or more backends.</td>
+              <td>It is not the system of record; it is the transport and transformation layer.</td>
+            </tr>
+            <tr>
+              <td><strong>Prometheus + Alertmanager</strong></td>
+              <td>Time-series model plus alert routing and notification handling.</td>
+              <td>Metrics, recording rules, and symptom-based alerting at low operational cost.</td>
+              <td>High-cardinality labels and bad histograms are the fastest way to make it hurt.</td>
+            </tr>
+            <tr>
+              <td><strong>Datadog</strong></td>
+              <td>Hosted observability platform with logs, traces, metrics, SLOs, and OpenTelemetry ingestion.</td>
+              <td>Fast setup, cross-telemetry correlation, and operational dashboards for teams that want a managed surface.</td>
+              <td>Correlate with <code>DD_ENV</code>, <code>DD_SERVICE</code>, and <code>DD_VERSION</code>; otherwise the data stays fragmented.</td>
+            </tr>
+            <tr>
+              <td><strong>New Relic</strong></td>
+              <td>Hosted observability platform with service levels and OpenTelemetry support.</td>
+              <td>Service-level management, entity views, and an operations workflow centered on SLIs and SLOs.</td>
+              <td>Do not confuse the UI features with the underlying signal design; the SLI still needs to be user-centered.</td>
+            </tr>
+            <tr>
+              <td><strong>Cloud-native monitors</strong></td>
+              <td>Provider-specific metrics, logs, and alerting in AWS, Azure, or GCP.</td>
+              <td>Baseline infra monitoring and control-plane visibility.</td>
+              <td>Useful for platform hygiene, but rarely sufficient alone for service-level alerting.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subgrid mt-3">
+        <article class="mini-card">
+          <h4>Datadog fit</h4>
+          <p>Datadog docs currently describe logs, traces, metrics, OpenTelemetry export, and SLO/burn-rate workflows. Use it when you want a managed platform with tight cross-linking between telemetry types.</p>
+        </article>
+        <article class="mini-card">
+          <h4>New Relic fit</h4>
+          <p>New Relic docs emphasize service levels, entity-centered SLO creation, and OpenTelemetry ingestion. Use it when the workflow should start from service health rather than raw infrastructure graphs.</p>
+        </article>
+        <article class="mini-card">
+          <h4>OpenTelemetry fit</h4>
+          <p>OTel is the standardization layer: semantic conventions, Collector pipelines, and shared context. Use it to keep backend choice flexible and observability data interoperable.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="incident-workflow">
+      <div class="eyebrow smallcaps"><i class="bi bi-life-preserver"></i> Operations</div>
+      <h2>Incident workflow</h2>
+      <p class="section-lede">
+        The fastest teams do not inspect every dashboard. They move through a short sequence: detect the symptom, localize the fault domain, mitigate the user impact, verify the fix, and capture the lesson.
+      </p>
+
+      <div class="pipeline">
+        <article class="step">
+          <div class="num">1</div>
+          <h3>Detect</h3>
+          <p>Start from the SLO burn, synthetic failure, or user report that proves a user-visible problem exists.</p>
+          <ul><li>Question: who is affected and how bad is it?</li></ul>
+        </article>
+        <article class="step">
+          <div class="num">2</div>
+          <h3>Localize</h3>
+          <p>Use metrics to spot the shape, traces to follow the path, and logs to inspect the exact error.</p>
+          <ul><li>Question: which dependency or hop is the first clear break?</li></ul>
+        </article>
+        <article class="step">
+          <div class="num">3</div>
+          <h3>Mitigate</h3>
+          <p>Roll back, disable the feature, drain the queue, or add capacity if that restores user success fastest.</p>
+          <ul><li>Question: what is the smallest safe action?</li></ul>
+        </article>
+        <article class="step">
+          <div class="num">4</div>
+          <h3>Verify</h3>
+          <p>Confirm the SLO, synthetic, and key user path recover before you declare victory.</p>
+          <ul><li>Question: is the symptom actually gone?</li></ul>
+        </article>
+        <article class="step">
+          <div class="num">5</div>
+          <h3>Learn</h3>
+          <p>Write the postmortem, preserve the evidence, and update the runbook and alert design.</p>
+          <ul><li>Question: what should never require this much manual effort again?</li></ul>
+        </article>
+      </div>
+
+      <div class="callout callout-good mt-3">
+        <strong>Trace-to-log-to-metric drill:</strong> start from one slow trace, jump to the span’s logs, confirm the error class or request payload, then compare the surrounding metric window to see whether the problem is a single failure or a broad regression.
+      </div>
+    </section>
+
+    <section class="section" id="mistakes">
+      <div class="eyebrow smallcaps"><i class="bi bi-exclamation-triangle"></i> Edge and advanced</div>
+      <h2>Common mistakes and anti-patterns</h2>
+      <p class="section-lede">
+        Most observability failures are self-inflicted. The tooling is usually fine; the data model or alert design is not.
+      </p>
+
+      <div class="scroll-x frame">
+        <table class="table table-striped table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Anti-pattern</th>
+              <th>Why it hurts</th>
+              <th>Concrete fix</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Logging secrets or raw personal data</td><td>Creates security and privacy risk, and turns logs into liability.</td><td>Redact at source or in the Collector; log stable identifiers instead.</td></tr>
+            <tr><td>Unbounded labels or tags</td><td>Explodes cardinality, storage, and query latency.</td><td>Keep dimensions small and safe; never use user IDs or emails as labels.</td></tr>
+            <tr><td>Alerting on CPU alone</td><td>CPU can be high while users are fine, or low while users are failing.</td><td>Page on symptoms: error rate, latency, and SLO burn.</td></tr>
+            <tr><td>Averaging latency</td><td>Average latency hides the tail that users notice.</td><td>Use histograms and p95/p99 percentiles.</td></tr>
+            <tr><td>No deploy markers</td><td>You cannot tell whether the regression started with a release.</td><td>Emit deploy events and annotate dashboards.</td></tr>
+            <tr><td>Sampling away rare errors</td><td>The exact incident you need may be the one that gets dropped.</td><td>Use tail sampling or error-biased retention.</td></tr>
+            <tr><td>Dashboards with no owner</td><td>Charts accumulate and stop reflecting operational decisions.</td><td>Assign ownership and tie each dashboard to a question.</td></tr>
+            <tr><td>Cause pages disguised as symptom pages</td><td>Pages arrive before anyone knows there is user pain.</td><td>Keep causes in tickets or dashboards; reserve pages for user impact.</td></tr>
+            <tr><td>Signals with no shared context</td><td>Logs, metrics, and traces cannot be joined.</td><td>Standardize service, version, environment, and trace IDs everywhere.</td></tr>
+            <tr><td>One backend to rule everything</td><td>Vendor lock-in becomes the design constraint.</td><td>Push standards into the app and Collector; treat the backend as replaceable.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-danger mt-3">
+        <strong>Cardinality budget rule:</strong> if you cannot explain why a label is bounded, low-cardinality, and useful for aggregation, do not add it. It will cost more than you think and help less than you want.
+      </div>
+    </section>
+
+    <section class="section" id="related">
+      <div class="eyebrow smallcaps"><i class="bi bi-link-45deg"></i> Related</div>
+      <h2>Related pages</h2>
+      <div class="subgrid">
+        <article class="mini-card">
+          <h4><a href="microservices.html">Microservices Decisions</a></h4>
+          <p>Service boundaries, sync vs async, idempotency, and the architectural choices that create or reduce observability pain.</p>
+        </article>
+        <article class="mini-card">
+          <h4><a href="modern-devops-pipelines.html">Modern DevOps Pipelines</a></h4>
+          <p>Release flow, feedback loops, and the operational path from deploy to signal.</p>
+        </article>
+        <article class="mini-card">
+          <h4><a href="linux-server-hardening.html">Linux Server Hardening</a></h4>
+          <p>Useful when incident prep turns into hardening, access control, or service isolation work.</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="footer d-flex flex-wrap justify-content-between gap-2 align-items-center">
+      <div>
+        <strong>Last verified:</strong> 2026-07-07
+        <span class="text-muted2">· OpenTelemetry, Prometheus, Datadog, and New Relic docs checked for current terminology and recommended patterns.</span>
+      </div>
+      <button class="theme-btn no-print" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+  <script>
+    (function () {
+      function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        try { localStorage.setItem('obs-theme', theme); } catch (e) {}
+      }
+      document.querySelectorAll('[data-theme-set]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          setTheme(btn.getAttribute('data-theme-set'));
+        });
+      });
+      setTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+    })();
+  </script>
+</body>
+</html>

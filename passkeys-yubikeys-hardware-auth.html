@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" href="data:,">
+
+  <title>Passkeys, YubiKeys, and Hardware Auth: Practical Security Guide</title>
+  <meta name="description" content="Practical guide to passkeys, YubiKeys, WebAuthn, recovery codes, synced vs device-bound credentials, and lockout-safe rollout plans for personal or team accounts.">
+  <meta name="keywords" content="passkeys, YubiKey, hardware security key, WebAuthn, FIDO2, phishing-resistant authentication, recovery codes, synced passkeys, device-bound passkeys, account recovery">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/passkeys-yubikeys-hardware-auth.html">
+
+  <meta property="og:title" content="Passkeys, YubiKeys, and Hardware Auth: Practical Security Guide">
+  <meta property="og:description" content="A lockout-safe guide to passkeys, hardware security keys, WebAuthn, recovery codes, synced vs device-bound credentials, and the right rollout path for personal or team accounts.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/passkeys-yubikeys-hardware-auth.html">
+  <meta property="og:image" content="images/passkeys-yubikeys-hardware-auth.png">
+  <meta property="og:image:alt" content="Lockout-safe rollout ladder for passkeys and hardware security keys">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Passkeys, YubiKeys, and Hardware Auth: Practical Security Guide">
+  <meta name="twitter:description" content="A lockout-safe guide to passkeys, hardware security keys, WebAuthn, recovery codes, synced vs device-bound credentials, and rollout plans that survive device loss.">
+  <meta name="twitter:image" content="images/passkeys-yubikeys-hardware-auth.png">
+  <meta name="twitter:creator" content="@heroiclife">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Passkeys, YubiKeys, and Hardware Auth: Practical Security Guide",
+    "description": "Practical guide to passkeys, YubiKeys, WebAuthn, recovery codes, synced vs device-bound credentials, and lockout-safe rollout plans for personal or team accounts.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-07",
+    "dateModified": "2026-07-07",
+    "keywords": "passkeys, YubiKey, hardware security key, WebAuthn, FIDO2, phishing-resistant authentication, recovery codes, synced passkeys, device-bound passkeys, account recovery"
+  }
+  </script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+  <script>
+    (() => {
+      const key = "passkeys-hardware-auth-theme";
+      const root = document.documentElement;
+      const stored = localStorage.getItem(key) || "auto";
+
+      const resolve = (pref) => pref === "auto"
+        ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+        : pref;
+
+      const render = (pref) => {
+        const actual = resolve(pref);
+        root.dataset.bsTheme = actual;
+        root.dataset.themePref = pref;
+        const btn = document.getElementById("themeToggle");
+        if (btn) {
+          btn.innerHTML = actual === "dark"
+            ? '<i class="bi bi-sun"></i><span class="ms-1">Light</span>'
+            : '<i class="bi bi-moon-stars"></i><span class="ms-1">Dark</span>';
+          btn.setAttribute("aria-label", actual === "dark" ? "Switch to light theme" : "Switch to dark theme");
+        }
+      };
+
+      render(stored);
+      window.addEventListener("DOMContentLoaded", () => {
+        const btn = document.getElementById("themeToggle");
+        if (btn) {
+          btn.addEventListener("click", () => {
+            const next = resolve(root.dataset.themePref || "auto") === "dark" ? "light" : "dark";
+            localStorage.setItem(key, next);
+            render(next);
+          });
+        }
+        render(localStorage.getItem(key) || "auto");
+      });
+      matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
+        if ((localStorage.getItem(key) || "auto") === "auto") render("auto");
+      });
+    })();
+  </script>
+  <style>
+    @layer base, components, utilities;
+
+    @layer base {
+      :root {
+        color-scheme: light dark;
+        --bg: light-dark(#f4f7fb, #081019);
+        --bg-2: light-dark(#e9eff8, #0b1420);
+        --panel: light-dark(rgba(255, 255, 255, 0.92), rgba(13, 18, 27, 0.94));
+        --panel-strong: light-dark(#ffffff, #101826);
+        --panel-soft: light-dark(#f8fbff, #0d1522);
+        --border: light-dark(#d7e0ec, #233246);
+        --text: light-dark(#0f172a, #e2e8f0);
+        --muted: light-dark(#475569, #9fb0c3);
+        --accent: #22d3ee;
+        --accent-2: #34d399;
+        --accent-3: #60a5fa;
+        --warn: #fbbf24;
+        --danger: #fb7185;
+        --shadow: 0 18px 48px rgba(2, 8, 20, .18);
+      }
+
+      html {
+        background: var(--bg);
+      }
+
+      body {
+        background:
+          radial-gradient(circle at 15% 0%, rgba(34, 211, 238, 0.14), transparent 28%),
+          radial-gradient(circle at 85% 10%, rgba(52, 211, 153, 0.10), transparent 22%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+        color: var(--text);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        min-height: 100vh;
+      }
+
+      h1, h2, h3, h4, h5, h6 { text-wrap: balance; }
+      p, li, td, th { text-wrap: pretty; }
+      :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+      .soft-border { border-color: var(--border) !important; }
+      .text-muted-2 { color: var(--muted) !important; }
+      .text-accent { color: var(--accent) !important; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      a { text-decoration-thickness: .08em; text-underline-offset: .14em; }
+    }
+
+    @layer components {
+      .masthead {
+        border-bottom: 1px solid var(--border);
+        background:
+          linear-gradient(135deg, rgba(34, 211, 238, 0.10), rgba(52, 211, 153, 0.04)),
+          var(--panel);
+        backdrop-filter: blur(14px);
+      }
+
+      .eyebrow {
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        font-size: .73rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .hero-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .35rem .65rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--panel-strong) 74%, transparent);
+        color: var(--muted);
+        font-size: .82rem;
+        line-height: 1;
+      }
+
+      .hero-shell {
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        overflow: clip;
+      }
+
+      .hero-copy {
+        padding: clamp(1.15rem, 2vw, 1.65rem);
+      }
+
+      .hero-copy p {
+        max-width: 58ch;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1.05fr .95fr;
+        gap: 1rem;
+        align-items: stretch;
+      }
+
+      .hero-panel {
+        background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0));
+        border: 1px solid var(--border);
+        border-radius: .95rem;
+        padding: 1rem;
+        height: 100%;
+      }
+
+      .decision-note {
+        display: grid;
+        gap: .6rem;
+        margin-top: 1rem;
+      }
+
+      .decision-note .mini {
+        display: flex;
+        gap: .6rem;
+        align-items: flex-start;
+        padding: .65rem .75rem;
+        border: 1px solid var(--border);
+        border-radius: .8rem;
+        background: color-mix(in srgb, var(--panel-soft) 92%, transparent);
+      }
+
+      .mini i { color: var(--accent); flex: 0 0 auto; margin-top: .05rem; }
+
+      .rollout-ladder {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .8rem;
+      }
+
+      .ladder-step {
+        border: 1px solid var(--border);
+        border-radius: .9rem;
+        background:
+          linear-gradient(180deg, rgba(34, 211, 238, 0.08), rgba(34, 211, 238, 0)),
+          color-mix(in srgb, var(--panel-strong) 92%, transparent);
+        padding: .9rem .9rem .85rem;
+        min-height: 7rem;
+      }
+
+      .step-head {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        margin-bottom: .45rem;
+      }
+
+      .step-badge {
+        width: 2rem;
+        height: 2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: rgba(34, 211, 238, .14);
+        border: 1px solid rgba(34, 211, 238, .35);
+        color: var(--accent);
+        font-weight: 800;
+        flex: 0 0 auto;
+      }
+
+      .step-title {
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .step-body {
+        color: var(--muted);
+        font-size: .92rem;
+        margin: 0;
+      }
+
+      .section-card {
+        border: 1px solid var(--border);
+        border-radius: .95rem;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        overflow: clip;
+      }
+
+      .section-head {
+        padding: 1rem 1rem .65rem;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+      }
+
+      .section-body {
+        padding: 1rem;
+      }
+
+      .lead-note {
+        border-left: 4px solid var(--accent);
+        background: color-mix(in srgb, var(--panel-soft) 92%, transparent);
+      }
+
+      .policy-table th,
+      .policy-table td {
+        vertical-align: top;
+      }
+
+      .policy-table td:first-child {
+        white-space: nowrap;
+        font-weight: 700;
+      }
+
+      .policy-table code {
+        white-space: nowrap;
+      }
+
+      .badge-soft {
+        border: 1px solid var(--border);
+        color: var(--text);
+        background: color-mix(in srgb, var(--panel-soft) 88%, transparent);
+      }
+
+      .mistakes li + li,
+      .tight-list li + li {
+        margin-top: .45rem;
+      }
+
+      .source-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: .65rem;
+      }
+
+      .source-link {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .7rem .8rem;
+        border: 1px solid var(--border);
+        border-radius: .8rem;
+        background: color-mix(in srgb, var(--panel-soft) 92%, transparent);
+      }
+
+      .source-link i {
+        color: var(--accent-2);
+      }
+
+      .related-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        margin: 0 .35rem .4rem 0;
+      }
+
+      .hero-stat {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .45rem .65rem;
+        border: 1px solid var(--border);
+        border-radius: .75rem;
+        background: color-mix(in srgb, var(--panel-soft) 94%, transparent);
+        font-size: .9rem;
+      }
+
+      .hero-stat i {
+        color: var(--accent);
+      }
+
+      .btn-theme {
+        border-color: var(--border);
+        color: var(--text);
+        background: color-mix(in srgb, var(--panel-strong) 70%, transparent);
+      }
+
+      .btn-theme:hover {
+        border-color: var(--accent);
+        color: var(--text);
+      }
+
+      @media (max-width: 991.98px) {
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+        .rollout-ladder {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
+
+    @layer utilities {
+      @media print {
+        .no-print { display: none !important; }
+        body {
+          background: #fff !important;
+          color: #000 !important;
+        }
+        .masthead, .hero-shell, .section-card {
+          box-shadow: none !important;
+          background: #fff !important;
+        }
+        .hero-shell, .section-card, .ladder-step, .hero-panel, .source-link, .hero-chip, .hero-stat {
+          border-color: #bbb !important;
+        }
+        a[href^="http"]::after {
+          content: " (" attr(href) ")";
+          font-size: .8em;
+          color: #444;
+        }
+        .page-break {
+          break-before: page;
+        }
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="masthead py-4 mb-4">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 no-print">
+        <div class="eyebrow"><i class="bi bi-shield-lock"></i> Passkey and hardware key rollout guide</div>
+        <button id="themeToggle" type="button" class="btn btn-sm btn-theme"><i class="bi bi-moon-stars"></i> Dark</button>
+      </div>
+
+      <div class="hero-shell">
+        <div class="hero-copy">
+          <div class="hero-grid">
+            <section>
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="hero-chip"><i class="bi bi-clock-history"></i> Last verified: 2026-07-07</span>
+                <span class="hero-chip"><i class="bi bi-phone"></i> Consumer and small-team focus</span>
+                <span class="hero-chip"><i class="bi bi-key"></i> FIDO2 / WebAuthn / security keys</span>
+              </div>
+              <h1 class="display-6 fw-bold mb-2">Passkeys and Hardware Security Keys</h1>
+              <p class="lead mb-3 text-muted-2">
+                Use passkeys for phishing-resistant sign-in, use a hardware key when you need a durable recovery root, and do not remove the old recovery path until the new one has been tested.
+              </p>
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge rounded-pill badge-soft"><i class="bi bi-fingerprint"></i> Local unlock, not typed secrets</span>
+                <span class="badge rounded-pill badge-soft"><i class="bi bi-cloud-check"></i> Synced passkeys are normal</span>
+                <span class="badge rounded-pill badge-soft"><i class="bi bi-usb-drive"></i> Backup key is part of the plan</span>
+              </div>
+              <div class="decision-note">
+                <div class="mini">
+                  <i class="bi bi-check2-circle"></i>
+                  <div>
+                    <strong>Default path:</strong> create a synced passkey on your main device, then add a second enrollment path before you touch recovery settings.
+                  </div>
+                </div>
+                <div class="mini">
+                  <i class="bi bi-exclamation-triangle"></i>
+                  <div>
+                    <strong>Failure mode:</strong> the weak point is no longer phishing alone. It is account recovery, device loss, and bad fallback cleanup.
+                  </div>
+                </div>
+                <div class="mini">
+                  <i class="bi bi-shield-check"></i>
+                  <div>
+                    <strong>Rule of thumb:</strong> synced passkey for most people, physical security key for admin and recovery roots, offline recovery codes for the rest.
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <aside class="hero-panel">
+              <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                <div>
+                  <div class="eyebrow text-accent mb-1"><i class="bi bi-diagram-3"></i> Lockout-safe rollout ladder</div>
+                  <h2 class="h4 mb-0">The sequence that avoids self-inflicted lockout</h2>
+                </div>
+              </div>
+              <div class="rollout-ladder" aria-label="Rollout ladder">
+                <div class="ladder-step">
+                  <div class="step-head"><span class="step-badge">1</span><div class="step-title">Inventory your root accounts</div></div>
+                  <p class="step-body">Start with email, password manager, bank, cloud, and any shared admin account that can reset others.</p>
+                </div>
+                <div class="ladder-step">
+                  <div class="step-head"><span class="step-badge">2</span><div class="step-title">Add the first passkey</div></div>
+                  <p class="step-body">Create it on the device you unlock every day. Keep the existing password and 2FA until step 4 is complete.</p>
+                </div>
+                <div class="ladder-step">
+                  <div class="step-head"><span class="step-badge">3</span><div class="step-title">Add a second path</div></div>
+                  <p class="step-body">Use a second device, a synced manager, or a physical security key so one lost phone does not end the story.</p>
+                </div>
+                <div class="ladder-step">
+                  <div class="step-head"><span class="step-badge">4</span><div class="step-title">Save recovery codes offline</div></div>
+                  <p class="step-body">Print or write them down, store them away from the primary device, and verify that one code still works.</p>
+                </div>
+                <div class="ladder-step">
+                  <div class="step-head"><span class="step-badge">5</span><div class="step-title">Test the loss scenario</div></div>
+                  <p class="step-body">Try login from a spare device or fresh browser profile before you delete any fallback. Prove the path, then trust it.</p>
+                </div>
+                <div class="ladder-step">
+                  <div class="step-head"><span class="step-badge">6</span><div class="step-title">Remove weak fallback last</div></div>
+                  <p class="step-body">Only after the new path works should you disable SMS, old push flows, or other phishable routes.</p>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container pb-5">
+    <section class="section-card mb-4">
+      <div class="section-head">
+        <div class="eyebrow text-accent mb-1"><i class="bi bi-lightning-charge-fill"></i> Quick reference</div>
+        <h2 class="h4 mb-0">The shortest usable answer</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle policy-table mb-0">
+            <thead>
+              <tr>
+                <th style="width: 18%">Situation</th>
+                <th style="width: 34%">Use this</th>
+                <th style="width: 24%">Why</th>
+                <th style="width: 24%">Gotcha</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Most personal accounts</td>
+                <td>Synced passkey in Apple, Google, Microsoft, or a password manager</td>
+                <td>Phishing-resistant and low friction for daily use</td>
+                <td>Recovery is now the critical design problem</td>
+              </tr>
+              <tr>
+                <td>Email, bank, cloud root</td>
+                <td>Passkey plus a second enrollment path and offline recovery codes</td>
+                <td>If one device dies, you still need a way back in</td>
+                <td>Do not delete the password fallback before testing recovery</td>
+              </tr>
+              <tr>
+                <td>Admin or high-risk account</td>
+                <td>Physical security key or device-bound passkey, plus a backup key</td>
+                <td>Hardware-backed possession control is harder to phish</td>
+                <td>One key only is a self-lockout plan</td>
+              </tr>
+              <tr>
+                <td>Work or school account</td>
+                <td>Use the organization-approved passkey or security key path</td>
+                <td>Policy may restrict which authenticators you can register</td>
+                <td>Managed devices can block consumer-style recovery paths</td>
+              </tr>
+              <tr>
+                <td>Family shared admin</td>
+                <td>Shared password or passkey group with explicit owners</td>
+                <td>Recovery and succession become understandable</td>
+                <td>Every shared credential expands the trust boundary</td>
+              </tr>
+              <tr>
+                <td>Legacy account with no passkeys</td>
+                <td>TOTP app, then security key if offered, then remove SMS fallback</td>
+                <td>Improves phishing resistance over SMS or push-only</td>
+                <td>TOTP is still phishable if you type it into a fake site</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card mb-4">
+      <div class="section-head">
+        <div class="eyebrow text-accent mb-1"><i class="bi bi-key"></i> Mental model</div>
+        <h2 class="h4 mb-0">What passkeys and hardware keys actually are</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-responsive mb-3">
+          <table class="table table-sm align-middle policy-table mb-0">
+            <thead>
+              <tr>
+                <th style="width: 18%">Term</th>
+                <th style="width: 36%">Definition</th>
+                <th style="width: 28%">Concrete example</th>
+                <th style="width: 18%">Gotcha / when not to use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Passkey</td>
+                <td>A FIDO credential that replaces typing a password with a cryptographic sign-in ceremony.</td>
+                <td>Unlock Gmail with Face ID or a device PIN instead of typing a password.</td>
+                <td>It is not a typed secret, so password-manager habits do not map 1:1.</td>
+              </tr>
+              <tr>
+                <td>Synced passkey</td>
+                <td>A passkey copied into a sync fabric and available on multiple signed-in devices.</td>
+                <td>An iPhone passkey available on a Mac through iCloud Keychain.</td>
+                <td>Convenient, but recovery and sync-fabric security matter more than device theft.</td>
+              </tr>
+              <tr>
+                <td>Device-bound passkey</td>
+                <td>A passkey that stays on one physical authenticator, often a security key.</td>
+                <td>A YubiKey stored in a drawer and used only for admin accounts.</td>
+                <td>Harder to lose through cloud sync, but you must plan for hardware failure.</td>
+              </tr>
+              <tr>
+                <td>Hardware security key</td>
+                <td>A dedicated token that performs the private-key operation locally when you touch or insert it.</td>
+                <td>USB-C plus NFC key used on a laptop and a phone.</td>
+                <td>Do not keep the only key on the same ring as your everyday keys.</td>
+              </tr>
+              <tr>
+                <td>WebAuthn</td>
+                <td>The browser API that creates and uses scoped public-key credentials for a relying party.</td>
+                <td>A site asks the browser to create a passkey during signup.</td>
+                <td>Credentials are bound to the site/origin, so fake login pages cannot reuse them.</td>
+              </tr>
+              <tr>
+                <td>Phishing resistance</td>
+                <td>The authenticator will not complete the sign-in on an impostor site.</td>
+                <td>A passkey refuses to sign in to a lookalike domain.</td>
+                <td>Push approvals and OTPs are often phishable, so do not rank them together.</td>
+              </tr>
+              <tr>
+                <td>Recovery code</td>
+                <td>A one-time offline fallback the service issues for account recovery.</td>
+                <td>Print ten backup codes and store them in a safe or sealed envelope.</td>
+                <td>They are a last resort, not a second daily login method.</td>
+              </tr>
+              <tr>
+                <td>Authenticator</td>
+                <td>The device or software that proves possession of the credential during sign-in.</td>
+                <td>Phone, laptop, password manager, or security key.</td>
+                <td>Biometric unlock is local verification, not the server's identity proof.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="alert lead-note mb-0">
+          <strong>Source-backed rule:</strong> the FIDO Alliance describes passkeys as FIDO credentials that can be synced or device-bound, and WebAuthn scopes credentials to the relying party/origin. NIST Rev. 4 recognizes syncable authenticators if the sync fabric is protected with AAL2-equivalent MFA.
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card mb-4">
+      <div class="section-head">
+        <div class="eyebrow text-accent mb-1"><i class="bi bi-arrow-left-right"></i> Comparison table</div>
+        <h2 class="h4 mb-0">What to use, and what you are giving up</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle policy-table mb-0">
+            <thead>
+              <tr>
+                <th style="width: 16%">Method</th>
+                <th style="width: 22%">Strength</th>
+                <th style="width: 20%">Weakness</th>
+                <th style="width: 24%">Best fit</th>
+                <th style="width: 18%">Decision note</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>SMS code</td>
+                <td>Better than password-only if nothing else exists</td>
+                <td>Phishable, SIM-swap risk, number-change recovery risk</td>
+                <td>Temporary stopgap only</td>
+                <td>Use only to get to something better</td>
+              </tr>
+              <tr>
+                <td>Email OTP</td>
+                <td>Cheap and widely supported</td>
+                <td>Email account takeover becomes account takeover everywhere</td>
+                <td>Low-sensitivity sites</td>
+                <td>Do not treat it as recovery-grade protection</td>
+              </tr>
+              <tr>
+                <td>TOTP app</td>
+                <td>Offline code generation beats SMS</td>
+                <td>Still phishable if typed into a fake site</td>
+                <td>Legacy services that lack passkeys</td>
+                <td>Good fallback, not ideal primary auth</td>
+              </tr>
+              <tr>
+                <td>Push approval</td>
+                <td>Easy to use</td>
+                <td>Fatigue attacks and weak phishing resistance</td>
+                <td>User convenience at low risk</td>
+                <td>Prefer number matching only if no passkey exists</td>
+              </tr>
+              <tr>
+                <td>Synced passkey</td>
+                <td>Phishing-resistant and easy to recover across your devices</td>
+                <td>Depends on sync fabric and account recovery hygiene</td>
+                <td>Most personal accounts</td>
+                <td>The default choice for normal users</td>
+              </tr>
+              <tr>
+                <td>Hardware key passkey</td>
+                <td>Non-exportable local key on a dedicated token</td>
+                <td>Can be lost, damaged, or left home</td>
+                <td>Admin roots, sensitive accounts, travel reserve</td>
+                <td>Best when you can keep a backup key offline</td>
+              </tr>
+              <tr>
+                <td>Smart card / PIV</td>
+                <td>Enterprise-managed credential with mature policy control</td>
+                <td>More admin overhead and less consumer-friendly</td>
+                <td>Corporate fleets and regulated environments</td>
+                <td>Use when your organization already manages it</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card mb-4">
+      <div class="section-head">
+        <div class="eyebrow text-accent mb-1"><i class="bi bi-diagram-2"></i> Platform playbooks</div>
+        <h2 class="h4 mb-0">How the major ecosystems behave in practice</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle policy-table mb-0">
+            <thead>
+              <tr>
+                <th style="width: 18%">Platform</th>
+                <th style="width: 30%">What it does</th>
+                <th style="width: 28%">Useful detail</th>
+                <th style="width: 24%">Operational note</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="https://support.apple.com/en-us/109016" target="_blank" rel="noopener noreferrer">Apple</a></td>
+                <td>iCloud Keychain syncs passwords and passkeys with end-to-end encryption.</td>
+                <td>Shared password groups let trusted contacts share passwords and passkeys.</td>
+                <td>Good for family or multi-device Apple households, but turning iCloud Keychain off changes what remains local.</td>
+              </tr>
+              <tr>
+                <td><a href="https://support.google.com/accounts/answer/13548313?hl=en" target="_blank" rel="noopener noreferrer">Google</a></td>
+                <td>Passkeys work as a password alternative and can be used with Google Account sign-in.</td>
+                <td>Google says passkeys are more secure against phishing and do not remove existing recovery factors.</td>
+                <td>Good default for Android and Chrome; still keep recovery paths because passkeys do not erase old ones.</td>
+              </tr>
+              <tr>
+                <td><a href="https://support.google.com/chrome/answer/13168025?co=GENIE.Platform%3DDesktop&hl=en" target="_blank" rel="noopener noreferrer">Google Password Manager</a></td>
+                <td>Stores and syncs passkeys across Android and Chrome on signed-in devices.</td>
+                <td>Cross-device use relies on the same Google account, screen lock, and a Google Password Manager PIN on first setup.</td>
+                <td>Great for mixed-device users who want one cloud-backed passkey vault.</td>
+              </tr>
+              <tr>
+                <td><a href="https://support.microsoft.com/en-us/windows/security/identity-signin/create-and-save-a-passkey" target="_blank" rel="noopener noreferrer">Microsoft</a></td>
+                <td>Passkeys can be saved to a device, a synced credential manager, Windows Hello, a phone, or a security key.</td>
+                <td>Work and school accounts depend on organization support and policy.</td>
+                <td>Strong for Windows fleets, but managed accounts may restrict which registration options appear.</td>
+              </tr>
+              <tr>
+                <td><a href="https://support.yubico.com/s/article/Operating-system-and-web-browser-support-for-FIDO2-and-U2F" target="_blank" rel="noopener noreferrer">YubiKey / security key</a></td>
+                <td>Physical FIDO2/U2F authenticator with USB and NFC options on common models.</td>
+                <td>Yubico positions security keys as useful with Google, Microsoft, password managers, and many other services.</td>
+                <td>Best when you want a discrete offline recovery or admin key.</td>
+              </tr>
+              <tr>
+                <td><a href="https://support.yubico.com/s/article/Understanding-YubiKey-PINs" target="_blank" rel="noopener noreferrer">YubiKey PIN</a></td>
+                <td>Many FIDO2 flows ask for a local PIN before a key can be used.</td>
+                <td>Yubico says FIDO2 PINs are not set at the factory.</td>
+                <td>Set the PIN during enrollment so the first loss test is not the first time you think about it.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card mb-4">
+      <div class="section-head">
+        <div class="eyebrow text-accent mb-1"><i class="bi bi-signpost-split"></i> Decision guidance</div>
+        <h2 class="h4 mb-0">Use the right authentication mix for the threat in front of you</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle policy-table mb-0">
+            <thead>
+              <tr>
+                <th style="width: 20%">Profile</th>
+                <th style="width: 30%">Start with</th>
+                <th style="width: 26%">Add next</th>
+                <th style="width: 24%">Do not stop at</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Ordinary user</td>
+                <td>Synced passkey on phone and laptop</td>
+                <td>Offline recovery codes</td>
+                <td>Password plus SMS only</td>
+              </tr>
+              <tr>
+                <td>Family admin</td>
+                <td>Shared passkey or shared password group for the household root</td>
+                <td>Backup device and sealed recovery copy</td>
+                <td>A single person holding the only recovery route</td>
+              </tr>
+              <tr>
+                <td>Developer</td>
+                <td>Passkey or security key on GitHub, cloud, and domain registrar</td>
+                <td>Second key off-site</td>
+                <td>Push approvals for all critical sign-ins</td>
+              </tr>
+              <tr>
+                <td>Public figure / high-value target</td>
+                <td>Device-bound security key for root accounts</td>
+                <td>Separate travel key and offline recovery</td>
+                <td>Cloud-only recovery with no local backup</td>
+              </tr>
+              <tr>
+                <td>Small business admin</td>
+                <td>Organization-approved security key or managed passkey</td>
+                <td>Documented recovery and ownership handoff</td>
+                <td>Consumer-only recovery assumptions</td>
+              </tr>
+              <tr>
+                <td>Managed work/school user</td>
+                <td>Whatever the IT policy allows</td>
+                <td>Ask for a phishing-resistant option at AAL2+ if not already present</td>
+                <td>Shadow IT accounts that bypass policy and lose auditability</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="alert lead-note mt-3 mb-0">
+          <strong>Practical reading of the standards:</strong> NIST Rev. 4 recognizes syncable authenticators when access to the sync fabric is protected by AAL2-equivalent MFA, while AAL3 still requires a non-exportable private key with phishing resistance. That is why a synced passkey is a normal choice for most people, but a hardware key still matters for the accounts that can reset everything else.
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card mb-4">
+      <div class="section-head">
+        <div class="eyebrow text-accent mb-1"><i class="bi bi-arrow-counterclockwise"></i> Recovery and lockout</div>
+        <h2 class="h4 mb-0">What to keep when the phone is gone or the key is missing</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle policy-table mb-0">
+            <thead>
+              <tr>
+                <th style="width: 18%">Scenario</th>
+                <th style="width: 30%">What to have</th>
+                <th style="width: 28%">What to do</th>
+                <th style="width: 24%">Failure mode</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Lost phone</td>
+                <td>Second device, backup security key, or synced credential manager</td>
+                <td>Sign in from the alternate path, revoke the lost device, then re-enroll the new phone</td>
+                <td>If the phone was the only passkey, you are now in account recovery</td>
+              </tr>
+              <tr>
+                <td>Lost hardware key</td>
+                <td>Spare key in a different location and offline recovery codes</td>
+                <td>Use the spare, remove the missing key, and update your inventory</td>
+                <td>If the missing key was the only key, the service now owns your schedule</td>
+              </tr>
+              <tr>
+                <td>New laptop or browser</td>
+                <td>Platform sync or an additional authenticator</td>
+                <td>Sign in, verify the device, and confirm the passkey is present before deleting the old browser profile</td>
+                <td>Windows Hello-only storage does not roam if the device is reinstalled</td>
+              </tr>
+              <tr>
+                <td>Family / shared admin</td>
+                <td>Shared group, known owner, and documented successor</td>
+                <td>Make sure one trusted person can restore access if the owner is unavailable</td>
+                <td>No documented owner means the account becomes a legal and social problem, not a technical one</td>
+              </tr>
+              <tr>
+                <td>Work or school account</td>
+                <td>IT-approved recovery flow and policy-aware device</td>
+                <td>Follow the organization path and keep your personal backup separate</td>
+                <td>Consumer recovery tricks often fail in managed environments</td>
+              </tr>
+              <tr>
+                <td>Travel / theft / disaster</td>
+                <td>Off-site backup key or recovery codes</td>
+                <td>Assume you have only what is in your pocket, then verify what still works</td>
+                <td>Backups in the same bag are not backups</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card mb-4">
+      <div class="section-head">
+        <div class="eyebrow text-accent mb-1"><i class="bi bi-x-circle"></i> Common mistakes</div>
+        <h2 class="h4 mb-0">The failures that make passkeys look worse than they are</h2>
+      </div>
+      <div class="section-body">
+        <ul class="mistakes mb-0">
+          <li><strong>One key only:</strong> a single hardware key is an outage waiting to happen. Keep a backup key or another enrolled device in a separate place.</li>
+          <li><strong>Primary and backup together:</strong> a spare key on the same ring, in the same wallet, or in the same laptop bag is not a spare.</li>
+          <li><strong>Deleting the password too early:</strong> remove the fallback only after you have logged in from a fresh device and proven the recovery path.</li>
+          <li><strong>Leaving SMS in place forever:</strong> passkeys are the upgrade. SMS is the thing to retire once the new path is stable.</li>
+          <li><strong>Confusing local unlock with identity:</strong> Face ID, Touch ID, fingerprint, or PIN unlocks the authenticator locally; it is not a free-floating server identity.</li>
+          <li><strong>Treating push and OTP as the same as phishing-resistant auth:</strong> they are not. They may reduce friction, but a fake site can still trick the user.</li>
+          <li><strong>Ignoring org policy:</strong> work or school accounts can restrict what you can save, where you can save it, and how you recover it.</li>
+          <li><strong>Not testing recovery:</strong> a recovery plan that has never been used is a rumor, not a plan.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section-card mb-4">
+      <div class="section-head">
+        <div class="eyebrow text-accent mb-1"><i class="bi bi-link-45deg"></i> Related</div>
+        <h2 class="h4 mb-0">Pages that sit next to this one</h2>
+      </div>
+      <div class="section-body">
+        <div class="related-links">
+          <a class="btn btn-sm btn-outline-secondary" href="personal-cybersecurity.html"><i class="bi bi-shield-check"></i> Personal cybersecurity</a>
+          <a class="btn btn-sm btn-outline-secondary" href="linux-server-hardening.html"><i class="bi bi-hdd-network"></i> Linux server hardening</a>
+          <a class="btn btn-sm btn-outline-secondary" href="parents-threat-model.html"><i class="bi bi-people"></i> Parents threat model</a>
+          <a class="btn btn-sm btn-outline-secondary" href="scam-defense-for-parents.html"><i class="bi bi-telephone-x"></i> Scam defense for parents</a>
+          <a class="btn btn-sm btn-outline-secondary" href="post-quantum-cryptography.html"><i class="bi bi-graph-up-arrow"></i> Post-quantum cryptography</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card mb-4">
+      <div class="section-head">
+        <div class="eyebrow text-accent mb-1"><i class="bi bi-journal-text"></i> Primary sources</div>
+        <h2 class="h4 mb-0">What was checked for the volatile parts of this page</h2>
+      </div>
+      <div class="section-body">
+        <div class="source-grid">
+          <a class="source-link" href="https://fidoalliance.org/passkeys/" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i><span>FIDO Alliance passkeys</span></a>
+          <a class="source-link" href="https://www.w3.org/TR/webauthn-2/" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i><span>W3C WebAuthn Level 2</span></a>
+          <a class="source-link" href="https://pages.nist.gov/800-63-4/sp800-63b.html" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i><span>NIST SP 800-63B Rev. 4</span></a>
+          <a class="source-link" href="https://support.apple.com/en-us/109016" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i><span>Apple iCloud Keychain</span></a>
+          <a class="source-link" href="https://support.google.com/accounts/answer/13548313?hl=en" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i><span>Google passkeys</span></a>
+          <a class="source-link" href="https://support.microsoft.com/en-us/windows/security/identity-signin/create-and-save-a-passkey" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i><span>Microsoft passkeys</span></a>
+          <a class="source-link" href="https://support.yubico.com/s/article/Operating-system-and-web-browser-support-for-FIDO2-and-U2F" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i><span>Yubico FIDO2/U2F support</span></a>
+          <a class="source-link" href="https://support.yubico.com/s/article/Understanding-YubiKey-PINs" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i><span>YubiKey PINs</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container pb-4">
+    <div class="section-card">
+      <div class="section-body small text-muted-2">
+        <div class="d-flex flex-wrap justify-content-between gap-2 align-items-center">
+          <div><strong>Last verified: 2026-07-07.</strong> Synced passkeys, device-bound passkeys, platform support, and recovery behavior were checked against the official vendor and standards docs linked above.</div>
+          <div class="mono">Bootstrap 5.3.8 · Icons 1.13.1</div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" defer integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,1619 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API Design: REST, GraphQL, gRPC, and Webhooks</title>
+<meta name="description" content="Choose REST, GraphQL, gRPC, or webhooks with clear tradeoffs: methods, schemas, auth, pagination, caching, idempotency, retries, and the failure modes that matter.">
+<meta name="keywords" content="API design, REST, GraphQL, gRPC, webhooks, OpenAPI, protobuf, OAuth, HTTP caching, idempotency, pagination, retries, observability">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/api-design-rest-graphql-grpc-webhooks.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230b1324'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-size='42' fill='%23ffffff' font-family='Arial, sans-serif'%3EAPI%3C/text%3E%3C/svg%3E">
+<meta property="og:title" content="API Design: REST, GraphQL, gRPC, and Webhooks">
+<meta property="og:description" content="A decision guide for choosing API style, shaping contracts, and avoiding the failures that make APIs expensive to change later.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/api-design-rest-graphql-grpc-webhooks.html">
+<meta property="og:image" content="images/api-design-rest-graphql-grpc-webhooks.png">
+<meta property="og:image:alt" content="API design switchboard showing REST, GraphQL, gRPC, and webhooks">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="API Design: REST, GraphQL, gRPC, and Webhooks">
+<meta name="twitter:description" content="A decision guide for choosing API style, shaping contracts, and avoiding the failures that make APIs expensive to change later.">
+<meta name="twitter:image" content="images/api-design-rest-graphql-grpc-webhooks.png">
+<meta name="twitter:creator" content="@heroiclife">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "API Design: REST, GraphQL, gRPC, and Webhooks",
+  "description": "A decision guide for designing and reviewing APIs. Covers REST resource modeling, HTTP methods and status codes, GraphQL schemas and HTTP serving, gRPC contracts and streaming, webhook delivery and verification, and the security, versioning, and operational tradeoffs that determine whether an API stays maintainable.",
+  "image": "https://cheatsheets.davidveksler.com/images/api-design-rest-graphql-grpc-webhooks.png",
+  "author": { "@type": "Person", "name": "David Veksler (AI Generated)" },
+  "publisher": { "@type": "Organization", "name": "David Veksler Cheatsheets" },
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
+  "keywords": "API design, REST, GraphQL, gRPC, webhooks, OpenAPI, protobuf, OAuth, HTTP caching, idempotency, pagination, retries, observability"
+}
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+<style>
+@layer base {
+  :root {
+    color-scheme: light dark;
+    --page-bg: light-dark(#eef4fb, #06101d);
+    --page-bg-2: light-dark(#f7f9fd, #091523);
+    --surface: light-dark(#ffffff, #0b1727);
+    --surface-2: light-dark(#f4f8fd, #111f33);
+    --surface-3: light-dark(#eaf1fb, #0f1a2a);
+    --text: light-dark(#0f172a, #e6eefb);
+    --muted: light-dark(#4b5563, #a8b5c9);
+    --border: light-dark(#d6e1ee, #20344f);
+    --shadow: light-dark(0 20px 45px rgba(12, 24, 48, 0.10), 0 20px 45px rgba(0, 0, 0, 0.35));
+    --cyan: #18b6d9;
+    --amber: #f59e0b;
+    --violet: #8b5cf6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --ink: #07111f;
+    --accent: var(--cyan);
+    --bs-body-bg: var(--page-bg);
+    --bs-body-color: var(--text);
+    --bs-primary: var(--cyan);
+    --bs-secondary: #64748b;
+    --bs-success: var(--green);
+    --bs-warning: var(--amber);
+    --bs-danger: var(--red);
+    --bs-info: var(--violet);
+    --bs-border-color: var(--border);
+    --bs-tertiary-bg: var(--surface-2);
+  }
+
+  html[data-theme="light"] {
+    color-scheme: light;
+    --page-bg: #eef4fb;
+    --page-bg-2: #f7f9fd;
+    --surface: #ffffff;
+    --surface-2: #f4f8fd;
+    --surface-3: #eaf1fb;
+    --text: #0f172a;
+    --muted: #4b5563;
+    --border: #d6e1ee;
+    --shadow: 0 20px 45px rgba(12, 24, 48, 0.10);
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --page-bg: #06101d;
+    --page-bg-2: #091523;
+    --surface: #0b1727;
+    --surface-2: #111f33;
+    --surface-3: #0f1a2a;
+    --text: #e6eefb;
+    --muted: #a8b5c9;
+    --border: #20344f;
+    --shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(24, 182, 217, 0.13), transparent 30%),
+      radial-gradient(circle at 88% 12%, rgba(139, 92, 246, 0.12), transparent 26%),
+      linear-gradient(180deg, var(--page-bg), var(--page-bg-2));
+    color: var(--text);
+    font: 400 1rem/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+    letter-spacing: 0;
+  }
+
+  p, li, td, th {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: color-mix(in srgb, var(--cyan) 80%, var(--text));
+  }
+
+  code, pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  }
+}
+
+@layer components {
+  .topbar {
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, transparent), transparent);
+    backdrop-filter: blur(12px);
+  }
+
+  .hero {
+    position: relative;
+    overflow: clip;
+    background:
+      linear-gradient(135deg, rgba(24, 182, 217, 0.18), rgba(139, 92, 246, 0.10)),
+      linear-gradient(180deg, color-mix(in srgb, var(--surface) 18%, transparent), transparent);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: linear-gradient(180deg, rgba(0,0,0,0.45), transparent 84%);
+    pointer-events: none;
+  }
+
+  .hero-shell {
+    position: relative;
+    z-index: 1;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .3rem .65rem;
+    border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    color: var(--muted);
+    font-size: .82rem;
+    margin-bottom: .75rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.1rem, 4vw, 3.7rem);
+    line-height: 1.02;
+    margin: 0 0 .8rem;
+  }
+
+  .hero-lead {
+    max-width: 62rem;
+    margin: 0 0 1rem;
+    font-size: 1.08rem;
+    color: color-mix(in srgb, var(--text) 86%, var(--muted));
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem .75rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    color: var(--muted);
+    font-size: .92rem;
+  }
+
+  .meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .35rem .7rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .btn-theme {
+    border-color: color-mix(in srgb, var(--border) 88%, transparent);
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    color: var(--text);
+  }
+
+  .btn-theme:hover,
+  .btn-theme:focus-visible {
+    background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+    color: var(--text);
+  }
+
+  .btn-print {
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    border: 0;
+    color: white;
+  }
+
+  .btn-print:hover,
+  .btn-print:focus-visible {
+    color: white;
+    filter: brightness(1.04);
+  }
+
+  .router-board {
+    position: relative;
+    margin-top: 1.25rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--surface) 86%, transparent);
+    box-shadow: var(--shadow);
+    container-type: inline-size;
+  }
+
+  .router-grid {
+    display: grid;
+    grid-template-columns: 1.15fr .9fr 1.15fr;
+    grid-template-rows: auto auto auto;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .route-card,
+  .router-hub {
+    border: 1px solid var(--border);
+    border-radius: .9rem;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 82%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
+    box-shadow: 0 14px 28px rgba(0,0,0,.08);
+    padding: 1rem 1.05rem;
+  }
+
+  .route-card strong,
+  .router-hub strong {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: .2rem;
+  }
+
+  .route-card span,
+  .router-hub span {
+    display: block;
+    color: var(--muted);
+    font-size: .92rem;
+  }
+
+  .route-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .route-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: .3rem;
+    background: var(--accent);
+  }
+
+  .route-rest { --accent: var(--cyan); grid-column: 1; grid-row: 1; }
+  .route-graphql { --accent: var(--violet); grid-column: 3; grid-row: 1; }
+  .route-grpc { --accent: var(--green); grid-column: 1; grid-row: 3; }
+  .route-webhook { --accent: var(--amber); grid-column: 3; grid-row: 3; }
+
+  .router-hub {
+    grid-column: 2;
+    grid-row: 2;
+    display: grid;
+    place-items: center;
+    min-height: 12rem;
+    text-align: center;
+    background:
+      radial-gradient(circle at 50% 40%, rgba(24, 182, 217, .20), transparent 38%),
+      radial-gradient(circle at 50% 60%, rgba(139, 92, 246, .16), transparent 42%),
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 88%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
+  }
+
+  .hub-orbit {
+    width: 7.75rem;
+    height: 7.75rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    border: 2px solid color-mix(in srgb, var(--cyan) 55%, var(--border));
+    background:
+      radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), transparent 28%),
+      linear-gradient(180deg, color-mix(in srgb, var(--cyan) 10%, var(--surface)), color-mix(in srgb, var(--violet) 10%, var(--surface)));
+    box-shadow: 0 0 0 10px rgba(24, 182, 217, .08);
+  }
+
+  .hub-orbit i {
+    font-size: 2.25rem;
+    color: var(--cyan);
+  }
+
+  .hub-orbit small {
+    display: block;
+    color: var(--muted);
+    font-size: .72rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-top: .2rem;
+  }
+
+  .section-wrap {
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .section-panel {
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    box-shadow: var(--shadow);
+    overflow: clip;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .section-panel > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 1rem 1.15rem;
+    display: flex;
+    align-items: flex-start;
+    gap: .9rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 90%, transparent), color-mix(in srgb, var(--surface) 98%, transparent));
+  }
+
+  .section-panel > summary::-webkit-details-marker { display: none; }
+
+  .section-panel > summary .summary-icon {
+    flex: 0 0 auto;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: .75rem;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--border));
+  }
+
+  .section-panel > summary .summary-copy {
+    flex: 1 1 auto;
+  }
+
+  .section-panel > summary .summary-copy strong {
+    display: block;
+    font-size: 1.05rem;
+    margin-bottom: .05rem;
+  }
+
+  .section-panel > summary .summary-copy span {
+    display: block;
+    color: var(--muted);
+    font-size: .94rem;
+  }
+
+  .section-panel > summary .chev {
+    color: var(--muted);
+    transition: transform .18s ease;
+    margin-top: .2rem;
+  }
+
+  .section-panel[open] > summary .chev {
+    transform: rotate(180deg);
+  }
+
+  .panel-body {
+    padding: 1rem 1.15rem 1.15rem;
+    min-width: 0;
+  }
+
+  .panel-kicker {
+    color: var(--muted);
+    font-size: .92rem;
+    margin-bottom: 1rem;
+    max-width: 70rem;
+  }
+
+  .subgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: .9rem;
+  }
+
+  .mini-card {
+    border: 1px solid var(--border);
+    border-radius: .85rem;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 86%, transparent), color-mix(in srgb, var(--surface) 98%, transparent));
+    padding: .95rem 1rem;
+  }
+
+  .mini-card h4 {
+    font-size: 1rem;
+    margin: 0 0 .5rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  .mini-card h4 i {
+    color: var(--accent);
+  }
+
+  .mini-card p {
+    margin: 0 0 .65rem;
+    color: var(--muted);
+  }
+
+  .mini-card ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+
+  .mini-card li + li {
+    margin-top: .3rem;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: .9rem;
+    background: color-mix(in srgb, var(--surface) 98%, transparent);
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .table-api {
+    margin-bottom: 0;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .table-api thead th {
+    background: color-mix(in srgb, var(--surface-2) 96%, transparent);
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-api td, .table-api th {
+    border-color: var(--border);
+    vertical-align: top;
+    padding: .75rem .8rem;
+    overflow-wrap: anywhere;
+  }
+
+  .table-api tbody tr:nth-child(odd) td {
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+  }
+
+  .badge-soft {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .28rem .55rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: .75rem;
+    background: color-mix(in srgb, var(--surface-2) 90%, transparent);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .code-block {
+    border-radius: .8rem;
+    border: 1px solid var(--border);
+    background: #09111d;
+    color: #d8e5f6;
+    padding: .9rem 1rem;
+    overflow-x: auto;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .code-block code {
+    color: inherit;
+  }
+
+  .note-box {
+    border-left: 4px solid var(--accent);
+    padding: .85rem 1rem;
+    border-radius: .6rem;
+    background: color-mix(in srgb, var(--surface-2) 92%, transparent);
+    color: var(--muted);
+  }
+
+  .mistake-list {
+    display: grid;
+    gap: .75rem;
+  }
+
+  .mistake-row {
+    display: grid;
+    grid-template-columns: minmax(12rem, 18rem) 1fr 1fr;
+    gap: .75rem;
+    align-items: start;
+    border: 1px solid var(--border);
+    border-radius: .85rem;
+    padding: .85rem .95rem;
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+  }
+
+  .mistake-row strong {
+    color: var(--text);
+  }
+
+  .footer-links {
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 90%, transparent);
+  }
+
+  .footer-links a {
+    text-decoration: none;
+  }
+
+  .footer-links a:hover {
+    text-decoration: underline;
+  }
+
+  .section-quick { --accent: var(--cyan); }
+  .section-choose { --accent: var(--violet); }
+  .section-primitives { --accent: var(--green); }
+  .section-rest { --accent: var(--cyan); }
+  .section-graphql { --accent: var(--violet); }
+  .section-grpc { --accent: var(--green); }
+  .section-webhooks { --accent: var(--amber); }
+  .section-security { --accent: var(--red); }
+  .section-mistakes { --accent: #f97316; }
+
+  .topic-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .25rem .55rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface-2) 92%, transparent);
+    color: var(--muted);
+    font-size: .76rem;
+    margin-right: .35rem;
+    margin-bottom: .35rem;
+  }
+
+  .small-print {
+    font-size: .9rem;
+    color: var(--muted);
+  }
+}
+
+@layer utilities {
+  .text-accent { color: var(--accent); }
+  .bg-surface { background: var(--surface); }
+}
+
+@media (max-width: 991.98px) {
+  .router-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .route-rest, .route-graphql, .route-grpc, .route-webhook, .router-hub {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .router-hub {
+    min-height: 8.5rem;
+  }
+
+  .mistake-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .route-card,
+  .mini-card,
+  .section-panel,
+  .btn-theme,
+  .btn-print {
+    transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease, color .18s ease;
+  }
+
+  .route-card:hover,
+  .mini-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .section-panel > summary:hover .chev {
+    color: var(--text);
+  }
+}
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .topbar,
+  .hero-actions,
+  .footer-links .btn,
+  .section-panel > summary .chev,
+  .btn-theme,
+  .btn-print {
+    display: none !important;
+  }
+
+  .hero,
+  .section-panel,
+  .mini-card,
+  .table-wrap,
+  .router-board {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .hero {
+    border-bottom: 1px solid #ccc;
+  }
+
+  .section-panel {
+    border: 1px solid #ccc;
+  }
+
+  .section-panel > summary {
+    display: none !important;
+  }
+
+  details > * {
+    display: block !important;
+  }
+
+  .router-board {
+    border: 1px solid #ccc;
+  }
+
+  .table-api {
+    min-width: 0 !important;
+  }
+
+  a {
+    color: #000 !important;
+    text-decoration: none !important;
+  }
+}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container hero-shell py-4 py-lg-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+      <div class="flex-grow-1">
+        <div class="eyebrow"><i class="bi bi-diagram-3-fill"></i> Software & DevOps · API contract design</div>
+        <h1>API Design Decision Guide</h1>
+        <p class="hero-lead">Choose REST, GraphQL, gRPC, or webhooks with a contract that survives caching, retries, versioning, auth, and the next review.</p>
+        <div class="meta-row">
+          <span class="meta-pill"><i class="bi bi-calendar3"></i> Last verified: 2026-07-07</span>
+          <span class="meta-pill"><i class="bi bi-people"></i> Read mode: architecture review on desktop, code review on laptop</span>
+          <span class="meta-pill"><i class="bi bi-file-earmark-text"></i> Primary query: REST vs GraphQL vs gRPC vs webhooks</span>
+        </div>
+        <div>
+          <span class="topic-tag">REST</span>
+          <span class="topic-tag">GraphQL</span>
+          <span class="topic-tag">gRPC</span>
+          <span class="topic-tag">Webhooks</span>
+          <span class="topic-tag">OpenAPI</span>
+          <span class="topic-tag">protobuf</span>
+          <span class="topic-tag">OAuth / OIDC</span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button type="button" class="btn btn-theme btn-sm" data-theme-toggle>
+          <i class="bi bi-circle-half me-1"></i><span data-theme-label>Theme: Auto</span>
+        </button>
+        <button type="button" class="btn btn-print btn-sm" onclick="window.print()">
+          <i class="bi bi-printer me-1"></i>Print
+        </button>
+      </div>
+    </div>
+
+    <div class="router-board">
+      <div class="router-grid">
+        <div class="route-card route-rest">
+          <strong><i class="bi bi-database me-1"></i>Query data</strong>
+          <span>REST for stable resources; GraphQL when the client must choose the shape.</span>
+        </div>
+        <div class="route-card route-graphql">
+          <strong><i class="bi bi-braces me-1"></i>Client-shaped reads</strong>
+          <span>GraphQL when one endpoint should answer many nested read patterns.</span>
+        </div>
+        <div class="router-hub">
+          <div class="hub-orbit">
+            <div>
+              <i class="bi bi-router"></i>
+              <small>API router</small>
+            </div>
+          </div>
+        </div>
+        <div class="route-card route-grpc">
+          <strong><i class="bi bi-lightning-charge-fill me-1"></i>Command system</strong>
+          <span>gRPC for low-latency internal calls, streaming, and strict contracts.</span>
+        </div>
+        <div class="route-card route-webhook">
+          <strong><i class="bi bi-broadcast-pin me-1"></i>Notify external consumer</strong>
+          <span>Webhooks when your system must push events out and retry delivery.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container py-4 py-lg-5">
+  <section class="section-wrap">
+    <details class="section-panel section-quick" open>
+      <summary>
+        <div class="summary-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+        <div class="summary-copy">
+          <strong>Quick reference</strong>
+          <span>The fastest decision points and the contract artifact that should exist before implementation starts.</span>
+        </div>
+        <i class="bi bi-chevron-down chev"></i>
+      </summary>
+      <div class="panel-body">
+        <p class="panel-kicker">Use this as the "cheat within the cheat". The design choice should be obvious after one scan.</p>
+        <div class="table-wrap">
+          <table class="table table-api table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Situation</th>
+                <th>Default choice</th>
+                <th>Why</th>
+                <th>Contract artifact</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>CRUD on stable resources</td>
+                <td><strong>REST</strong></td>
+                <td>HTTP methods, caching, proxies, and tooling all fit naturally.</td>
+                <td>OpenAPI document plus resource model</td>
+              </tr>
+              <tr>
+                <td>Client needs nested, shaped reads</td>
+                <td><strong>GraphQL</strong></td>
+                <td>One request can fetch the exact fields and related objects needed.</td>
+                <td>GraphQL schema and field-level auth policy</td>
+              </tr>
+              <tr>
+                <td>Internal service-to-service RPC</td>
+                <td><strong>gRPC</strong></td>
+                <td>Binary transport, generated stubs, deadlines, and streaming are first-class.</td>
+                <td><code>.proto</code> service and message definitions</td>
+              </tr>
+              <tr>
+                <td>Outbound event notifications</td>
+                <td><strong>Webhooks</strong></td>
+                <td>The producer controls retries; the consumer controls idempotency.</td>
+                <td>Event schema, signature scheme, replay policy</td>
+              </tr>
+              <tr>
+                <td>Browser push from server to client</td>
+                <td><strong>SSE</strong></td>
+                <td>Simple one-way stream over HTTP; good for live dashboards and status.</td>
+                <td>Stream endpoint and reconnect policy</td>
+              </tr>
+              <tr>
+                <td>Two-way low-latency interaction</td>
+                <td><strong>WebSockets</strong></td>
+                <td>Bidirectional control or chat when HTTP request/response is too coarse.</td>
+                <td>Message envelope, heartbeat, backpressure policy</td>
+              </tr>
+              <tr>
+                <td>Need a machine-readable HTTP contract</td>
+                <td><strong>OpenAPI</strong></td>
+                <td>Design-first docs, client generation, validation, and review gates.</td>
+                <td>OpenAPI 3.1.1 document</td>
+              </tr>
+              <tr>
+                <td>Need a versioned callback contract</td>
+                <td><strong>Webhook callback object</strong></td>
+                <td>Callbacks belong in the contract, not in the integration folklore.</td>
+                <td>OpenAPI callback object or provider webhook spec</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <details class="section-panel section-choose" open>
+      <summary>
+        <div class="summary-icon"><i class="bi bi-signpost-split"></i></div>
+        <div class="summary-copy">
+          <strong>API style decision matrix</strong>
+          <span>Compare the four primary styles across transport, caching, schema, browser fit, streaming, and failure modes.</span>
+        </div>
+        <i class="bi bi-chevron-down chev"></i>
+      </summary>
+      <div class="panel-body">
+        <div class="table-wrap">
+          <table class="table table-api align-middle">
+            <thead>
+              <tr>
+                <th>Style</th>
+                <th>Best fit</th>
+                <th>Strength</th>
+                <th>Weakness</th>
+                <th>Contract / tooling</th>
+                <th>When not to use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>REST</strong></td>
+                <td>Public or semi-public resource APIs</td>
+                <td>HTTP semantics, cacheability, broad tooling</td>
+                <td>Overfetching, endpoint sprawl, version pressure</td>
+                <td>OpenAPI, HTTP status codes, ETags</td>
+                <td>When the client must freely shape deeply nested reads</td>
+              </tr>
+              <tr>
+                <td><strong>GraphQL</strong></td>
+                <td>Client-driven aggregation and mobile/web backends</td>
+                <td>Single endpoint, exact field selection, schema introspection</td>
+                <td>Caching and authorization are harder; query planning can hurt</td>
+                <td>GraphQL schema, operation docs, complexity limits</td>
+                <td>When the API is simple CRUD or you need proxy-friendly caching</td>
+              </tr>
+              <tr>
+                <td><strong>gRPC</strong></td>
+                <td>Service-to-service RPC and streaming</td>
+                <td>Binary efficiency, stubs, deadlines, streaming</td>
+                <td>Browsers need a gateway; humans do not handcraft it easily</td>
+                <td><code>.proto</code>, generated code, reflection/health checks</td>
+                <td>When you need broad browser compatibility without a proxy</td>
+              </tr>
+              <tr>
+                <td><strong>Webhooks</strong></td>
+                <td>Asynchronous notifications to other systems</td>
+                <td>Push-based integration, decoupled timing, event fan-out</td>
+                <td>Delivery is retried, duplicated, and occasionally out of order</td>
+                <td>Event schema, signature verification, replay log</td>
+                <td>When the consumer expects request/response semantics</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note-box mt-3">
+          <strong>Decision rule:</strong> if the client should choose data shape, favor GraphQL; if the transport must be generic and cacheable, favor REST; if the caller is another service and streaming matters, favor gRPC; if your system is telling someone else that something happened, use a webhook.
+        </div>
+      </div>
+    </details>
+
+    <details class="section-panel section-primitives" open>
+      <summary>
+        <div class="summary-icon"><i class="bi bi-shuffle"></i></div>
+        <div class="summary-copy">
+          <strong>Core design primitives</strong>
+          <span>The nouns you should decide before debating style: resource, command, event, subscription, callback, and retry identity.</span>
+        </div>
+        <i class="bi bi-chevron-down chev"></i>
+      </summary>
+      <div class="panel-body">
+        <div class="subgrid">
+          <div class="mini-card">
+            <h4><i class="bi bi-box"></i>Resource</h4>
+            <p>A stable thing with an identity, such as an order, invoice, or shipment.</p>
+            <ul>
+              <li>Example: <code>/orders/12345</code> for the order record.</li>
+              <li>Gotcha: if the URL names an action, it is probably not a pure resource.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-hammer"></i>Command</h4>
+            <p>A request to cause a state change, such as capture payment or cancel order.</p>
+            <ul>
+              <li>Example: a cancel request for order <code>12345</code>.</li>
+              <li>Gotcha: commands need idempotency if callers may retry.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-bell"></i>Event</h4>
+            <p>A fact that already happened, such as <code>invoice.paid</code>.</p>
+            <ul>
+              <li>Example: event <code>payment_intent.succeeded</code> with a durable event ID.</li>
+              <li>Gotcha: events are immutable history, not editable state.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-broadcast"></i>Subscription</h4>
+            <p>A long-lived read that receives future data or events over time.</p>
+            <ul>
+              <li>Example: GraphQL subscription for order status changes.</li>
+              <li>Gotcha: subscriptions are not a replacement for durable delivery logs.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-arrow-left-right"></i>Callback</h4>
+            <p>A server-initiated request to a consumer endpoint, usually a webhook.</p>
+            <ul>
+              <li>Example: <code>POST https://hooks.example.com/stripe</code>.</li>
+              <li>Gotcha: the receiver must expect retries and duplicate deliveries.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-recycle"></i>Idempotency token</h4>
+            <p>A key that makes a retried write safe to repeat.</p>
+            <ul>
+              <li>Example: <code>Idempotency-Key: 3b4f1f4c-8c2b-4f4b-b6ee-4b1fbe4e6f8c</code>.</li>
+              <li>Gotcha: use one token per intended operation, not per HTTP attempt.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-activity"></i>Correlation / trace ID</h4>
+            <p>A shared identifier that ties a request chain together across services.</p>
+            <ul>
+              <li>Example: <code>traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00</code>.</li>
+              <li>Gotcha: do not overload it as a business identifier.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-layers"></i>Canonical representation</h4>
+            <p>The authoritative payload shape for a resource or event at a point in time.</p>
+            <ul>
+              <li>Example: the serialized JSON for an order resource.</li>
+              <li>Gotcha: internal DB shape is not the canonical API shape.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="section-panel section-rest" open id="rest">
+      <summary>
+        <div class="summary-icon"><i class="bi bi-database"></i></div>
+        <div class="summary-copy">
+          <strong>REST done well</strong>
+          <span>Resource modeling, method semantics, conditional requests, pagination, and versioning that do not fight HTTP.</span>
+        </div>
+        <i class="bi bi-chevron-down chev"></i>
+      </summary>
+      <div class="panel-body">
+        <div class="subgrid mb-3">
+          <div class="mini-card">
+            <h4><i class="bi bi-bullseye"></i>Fundamentals</h4>
+            <p>Use nouns for resources and HTTP methods for intent: GET reads, POST creates, PUT replaces, PATCH partially updates, DELETE removes.</p>
+            <ul>
+              <li>Example: <code>GET /orders/12345</code> or <code>POST /orders</code>.</li>
+              <li>Gotcha: if every endpoint is <code>/doThing</code>, you are doing RPC over HTTP.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-list-check"></i>Working knowledge</h4>
+            <p>Design the response contract before coding: status codes, pagination, filtering, sorting, and headers.</p>
+            <ul>
+              <li>Example: <code>GET /orders?customer_id=123&amp;limit=50&amp;cursor=eyJpZCI6IjQyIn0</code>.</li>
+              <li>Gotcha: without <code>ETag</code> and <code>If-Match</code>, update races become silent overwrites.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-exclamation-triangle"></i>Edge & advanced</h4>
+            <p>Use 202 for async jobs, 204 for empty success, and conditional requests for concurrency control.</p>
+            <ul>
+              <li>Example: <code>PUT /orders/12345</code> with <code>If-Match: "v7"</code>.</li>
+              <li>Gotcha: bulk and command-like endpoints need explicit failure semantics or they become unrecoverable.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="table-wrap mb-3">
+          <table class="table table-api align-middle">
+            <thead>
+              <tr>
+                <th>Method / code</th>
+                <th>Definition</th>
+                <th>Example</th>
+                <th>Pitfall</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>GET</strong></td>
+                <td>Safe read of a resource representation.</td>
+                <td><code>GET /customers/91</code></td>
+                <td>Do not make it mutate server state.</td>
+              </tr>
+              <tr>
+                <td><strong>HEAD</strong></td>
+                <td>GET metadata without the body.</td>
+                <td><code>HEAD /assets/invoice.pdf</code></td>
+                <td>Useful for existence and cache checks; often overlooked.</td>
+              </tr>
+              <tr>
+                <td><strong>POST</strong></td>
+                <td>Create a subordinate resource or trigger a non-idempotent action.</td>
+                <td><code>POST /orders</code></td>
+                <td>Use idempotency keys when clients may retry.</td>
+              </tr>
+              <tr>
+                <td><strong>PUT</strong></td>
+                <td>Replace the full representation at a known URI.</td>
+                <td><code>PUT /orders/12345</code></td>
+                <td>Do not send partial state unless the API explicitly defines merge semantics.</td>
+              </tr>
+              <tr>
+                <td><strong>PATCH</strong></td>
+                <td>Apply a partial modification.</td>
+                <td><code>PATCH /orders/12345</code></td>
+                <td>Define the patch media type and conflict behavior.</td>
+              </tr>
+              <tr>
+                <td><strong>DELETE</strong></td>
+                <td>Remove or tombstone a resource.</td>
+                <td><code>DELETE /sessions/abc123</code></td>
+                <td>Deletion may be asynchronous and return 202, not always 204.</td>
+              </tr>
+              <tr>
+                <td><strong>201 Created</strong></td>
+                <td>A write created a resource, usually with a Location header.</td>
+                <td><code>POST /orders</code> returns <code>201</code> and <code>Location: /orders/12345</code></td>
+                <td>Returning 200 for creation hides the newly created URI.</td>
+              </tr>
+              <tr>
+                <td><strong>202 Accepted</strong></td>
+                <td>The server accepted work but is not done yet.</td>
+                <td>Batch invoice generation accepted for background processing.</td>
+                <td>Never imply completion when the job can still fail.</td>
+              </tr>
+              <tr>
+                <td><strong>204 No Content</strong></td>
+                <td>Success with no body.</td>
+                <td><code>DELETE /sessions/abc123</code> returns 204.</td>
+                <td>Do not include a body and call it 204.</td>
+              </tr>
+              <tr>
+                <td><strong>409 Conflict</strong></td>
+                <td>The request conflicts with current state.</td>
+                <td>Updating an order that another writer already closed.</td>
+                <td>Useful for concurrency or business-rule conflicts.</td>
+              </tr>
+              <tr>
+                <td><strong>412 Precondition Failed</strong></td>
+                <td>A conditional request did not match current state.</td>
+                <td><code>If-Match</code> etag mismatch on update.</td>
+                <td>Use this for lost-update prevention, not generic validation.</td>
+              </tr>
+              <tr>
+                <td><strong>415 Unsupported Media Type</strong></td>
+                <td>The payload format is not acceptable.</td>
+                <td>Client sends XML to a JSON-only endpoint.</td>
+                <td>Separate format errors from semantic errors.</td>
+              </tr>
+              <tr>
+                <td><strong>422 Unprocessable Content</strong></td>
+                <td>The syntax is valid but the content fails domain validation.</td>
+                <td>Postal code fails country-specific rules.</td>
+                <td>Use only when the schema is valid and the business rule is not.</td>
+              </tr>
+              <tr>
+                <td><strong>429 Too Many Requests</strong></td>
+                <td>Rate limit or abuse control.</td>
+                <td>Retry after <code>Retry-After: 60</code>.</td>
+                <td>If you return 429, tell the client when to retry.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <pre class="code-block"><code>PUT /orders/12345 HTTP/1.1
+If-Match: "v7"
+Content-Type: application/json
+
+{
+  "status": "confirmed",
+  "shipping_address": {
+    "city": "Austin",
+    "region": "TX",
+    "postal_code": "78701"
+  }
+}</code></pre>
+
+        <p class="small-print mt-3 mb-0">OpenAPI should describe the endpoints, schemas, response codes, headers, and security schemes. If the contract cannot be generated or validated, the spec is too vague.</p>
+      </div>
+    </details>
+
+    <details class="section-panel section-graphql" open id="graphql">
+      <summary>
+        <div class="summary-icon"><i class="bi bi-braces-asterisk"></i></div>
+        <div class="summary-copy">
+          <strong>GraphQL done well</strong>
+          <span>Schema-first reads, explicit mutations, cursor pagination, and field-level security that does not collapse under real traffic.</span>
+        </div>
+        <i class="bi bi-chevron-down chev"></i>
+      </summary>
+      <div class="panel-body">
+        <div class="subgrid mb-3">
+          <div class="mini-card">
+            <h4><i class="bi bi-book"></i>Fundamentals</h4>
+            <p>GraphQL is a typed schema where clients ask for exactly the fields they need from the object graph.</p>
+            <ul>
+              <li>Example: <code>query { order(id: "12345") { id total customer { name } } }</code></li>
+              <li>Gotcha: GraphQL is not "REST but with JSON"; it has its own execution and error model.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-list-columns"></i>Working knowledge</h4>
+            <p>Serve GraphQL over HTTP with JSON bodies, use POST by default, and allow GET for query operations when appropriate.</p>
+            <ul>
+              <li>Example: response contains <code>data</code> and maybe <code>errors</code>.</li>
+              <li>Gotcha: auth and rate limits must happen before expensive execution where possible.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-exclamation-octagon"></i>Edge & advanced</h4>
+            <p>Use cursor pagination, complexity limits, persisted queries, and per-field authorization to keep it stable.</p>
+            <ul>
+              <li>Example: <code>orders(first: 20, after: "YXJyYXljb25uZWN0aW9uOjE5")</code>.</li>
+              <li>Gotcha: ignoring N+1 makes GraphQL look fast in demos and slow in production.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="table-wrap mb-3">
+          <table class="table table-api align-middle">
+            <thead>
+              <tr>
+                <th>Topic</th>
+                <th>Rule</th>
+                <th>Example</th>
+                <th>Gotcha</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Operation types</strong></td>
+                <td><code>query</code> reads, <code>mutation</code> writes, <code>subscription</code> streams live updates.</td>
+                <td><code>mutation PlaceOrder($input: PlaceOrderInput!)</code></td>
+                <td>Do not use mutations as a generic RPC escape hatch without a typed input contract.</td>
+              </tr>
+              <tr>
+                <td><strong>HTTP transport</strong></td>
+                <td>Use POST for most operations; GET is allowed for query operations.</td>
+                <td><code>Content-Type: application/json</code></td>
+                <td>Do not assume every intermediary will cache GraphQL the same way it caches REST.</td>
+              </tr>
+              <tr>
+                <td><strong>Response shape</strong></td>
+                <td>The response can include <code>data</code>, <code>errors</code>, and <code>extensions</code>.</td>
+                <td>Partial data plus field errors in one response.</td>
+                <td>Partial success is normal; code must inspect both data and errors.</td>
+              </tr>
+              <tr>
+                <td><strong>Pagination</strong></td>
+                <td>Prefer cursor-based connections for lists that can grow.</td>
+                <td><code>first: 20, after: "cursor"</code></td>
+                <td>Offset pagination becomes unstable on changing datasets.</td>
+              </tr>
+              <tr>
+                <td><strong>Authorization</strong></td>
+                <td>Enforce access by field/object boundary, not only at the root query.</td>
+                <td>A user can read their own invoice but not another tenant's email field.</td>
+                <td>Field-level leaks are easy when resolvers reuse generic loaders.</td>
+              </tr>
+              <tr>
+                <td><strong>Complexity control</strong></td>
+                <td>Limit depth, breadth, and cost of one query.</td>
+                <td>Cap list sizes and nested object expansions.</td>
+                <td>Unlimited introspection plus no limits becomes a denial-of-service path.</td>
+              </tr>
+              <tr>
+                <td><strong>Schema evolution</strong></td>
+                <td>Add fields; deprecate before removal; keep additive compatibility.</td>
+                <td>Mark <code>oldField</code> deprecated and add <code>newField</code>.</td>
+                <td>Removing a field without a deprecation window breaks clients silently.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <pre class="code-block"><code>query OrderSummary($id: ID!) {
+  order(id: $id) {
+    id
+    status
+    total
+    customer {
+      id
+      name
+    }
+  }
+}</code></pre>
+      </div>
+    </details>
+
+    <details class="section-panel section-grpc" open id="grpc">
+      <summary>
+        <div class="summary-icon"><i class="bi bi-arrow-repeat"></i></div>
+        <div class="summary-copy">
+          <strong>gRPC done well</strong>
+          <span>Strong contracts, generated clients, streaming, and deadline-aware service-to-service calls.</span>
+        </div>
+        <i class="bi bi-chevron-down chev"></i>
+      </summary>
+      <div class="panel-body">
+        <div class="subgrid mb-3">
+          <div class="mini-card">
+            <h4><i class="bi bi-file-earmark-code"></i>Fundamentals</h4>
+            <p>gRPC starts with a <code>.proto</code> file and generates client and server bindings from a typed service definition.</p>
+            <ul>
+              <li>Example: <code>service Orders { rpc GetOrder(GetOrderRequest) returns (Order); }</code></li>
+              <li>Gotcha: gRPC is not hand-written JSON over HTTP; the wire format and semantics are different.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-toggles2"></i>Working knowledge</h4>
+            <p>Use unary, server streaming, client streaming, or bidirectional streaming depending on flow direction.</p>
+            <ul>
+              <li>Example: server-streaming telemetry updates for a live job.</li>
+              <li>Gotcha: the browser usually needs gRPC-Web or a gateway proxy.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-stopwatch"></i>Edge & advanced</h4>
+            <p>Define deadlines, retries, and status handling so the caller can fail fast instead of hanging.</p>
+            <ul>
+              <li>Example: a 3 second deadline for a read path that normally finishes in 100 ms.</li>
+              <li>Gotcha: retries without deadlines can amplify load during partial outages.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="table-wrap mb-3">
+          <table class="table table-api align-middle">
+            <thead>
+              <tr>
+                <th>RPC shape</th>
+                <th>Definition</th>
+                <th>Example</th>
+                <th>Use case</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Unary</strong></td>
+                <td>One request, one response.</td>
+                <td><code>GetOrder</code></td>
+                <td>Simple reads and commands.</td>
+              </tr>
+              <tr>
+                <td><strong>Server streaming</strong></td>
+                <td>One request, many responses.</td>
+                <td><code>WatchInventory</code></td>
+                <td>Live progress, telemetry, subscriptions.</td>
+              </tr>
+              <tr>
+                <td><strong>Client streaming</strong></td>
+                <td>Many requests, one response.</td>
+                <td><code>UploadTelemetry</code></td>
+                <td>Batching a flow of client events.</td>
+              </tr>
+              <tr>
+                <td><strong>Bidirectional streaming</strong></td>
+                <td>Many requests, many responses.</td>
+                <td>Interactive control loop or sync feed.</td>
+                <td>Live collaboration, chat, or agent control.</td>
+              </tr>
+              <tr>
+                <td><strong>Deadlines</strong></td>
+                <td>Client-stated limit for how long the RPC may run.</td>
+                <td><code>deadline = now + 3s</code></td>
+                <td>Prevent zombie calls and make retries bounded.</td>
+              </tr>
+              <tr>
+                <td><strong>Status codes</strong></td>
+                <td>gRPC returns canonical codes like <code>OK</code>, <code>INVALID_ARGUMENT</code>, <code>UNAVAILABLE</code>, and <code>DEADLINE_EXCEEDED</code>.</td>
+                <td>Retry only if the status is retryable and the deadline allows it.</td>
+                <td>Always map business failures to a specific code, not "unknown".</td>
+              </tr>
+              <tr>
+                <td><strong>Proto compatibility</strong></td>
+                <td>Add fields, do not reuse field numbers, and avoid changing field types.</td>
+                <td>Add <code>string shipping_method = 8;</code></td>
+                <td>Backward compatibility depends on stable numeric tags.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <pre class="code-block"><code>syntax = "proto3";
+
+service Orders {
+  rpc GetOrder (GetOrderRequest) returns (Order);
+  rpc StreamOrderEvents (OrderEventRequest) returns (stream OrderEvent);
+}
+
+message GetOrderRequest {
+  string order_id = 1;
+}</code></pre>
+
+        <p class="small-print mt-3 mb-0">Use gRPC-Web or a gateway when the client is a browser; plain browser JavaScript cannot speak native gRPC over HTTP/2 frames directly.</p>
+      </div>
+    </details>
+
+    <details class="section-panel section-webhooks" open id="webhooks">
+      <summary>
+        <div class="summary-icon"><i class="bi bi-broadcast-pin"></i></div>
+        <div class="summary-copy">
+          <strong>Webhooks done well</strong>
+          <span>Push events out reliably, verify them cryptographically, and assume duplicates, retries, and redelivery windows.</span>
+        </div>
+        <i class="bi bi-chevron-down chev"></i>
+      </summary>
+      <div class="panel-body">
+        <div class="subgrid mb-3">
+          <div class="mini-card">
+            <h4><i class="bi bi-send-check"></i>Fundamentals</h4>
+            <p>A webhook is an HTTP POST to a consumer endpoint when something happens in the producer system.</p>
+            <ul>
+              <li>Example: <code>payment_intent.succeeded</code> sent to <code>https://hooks.example.com/payments</code>.</li>
+              <li>Gotcha: the producer cannot assume the consumer is online or fast.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-shield-check"></i>Working knowledge</h4>
+            <p>Verify signatures, respond with a 2xx quickly, then process the event asynchronously.</p>
+            <ul>
+              <li>Example: Stripe <code>Stripe-Signature</code> or GitHub <code>X-Hub-Signature-256</code>.</li>
+              <li>Gotcha: if verification happens after processing, forged traffic can waste work or trigger side effects.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-arrow-counterclockwise"></i>Edge & advanced</h4>
+            <p>Store delivery IDs, support replay, and make the consumer idempotent because retries are normal.</p>
+            <ul>
+              <li>Example: ignore a duplicate event by event ID after the first successful application.</li>
+              <li>Gotcha: ordering is usually best-effort, not a guarantee.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="table-wrap mb-3">
+          <table class="table table-api align-middle">
+            <thead>
+              <tr>
+                <th>Delivery rule</th>
+                <th>Definition</th>
+                <th>Example</th>
+                <th>Why it matters</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Fast 2xx ACK</strong></td>
+                <td>Acknowledge as soon as the payload is safely accepted.</td>
+                <td>Return <code>200</code> or <code>204</code> before long processing.</td>
+                <td>Prevents producer retry storms and keeps latency bounded.</td>
+              </tr>
+              <tr>
+                <td><strong>Signature verification</strong></td>
+                <td>Prove the event came from the expected producer and was not altered.</td>
+                <td>Verify an HMAC over the raw request body.</td>
+                <td>Protects against spoofed or tampered deliveries.</td>
+              </tr>
+              <tr>
+                <td><strong>Idempotent consumer</strong></td>
+                <td>A repeated delivery has no extra side effects.</td>
+                <td>Record event <code>evt_123</code> before applying the state change.</td>
+                <td>Retries and redelivery are normal; duplication must be harmless.</td>
+              </tr>
+              <tr>
+                <td><strong>Retry policy</strong></td>
+                <td>The producer decides how often to retry a failed delivery.</td>
+                <td>Exponential backoff over several days.</td>
+                <td>The consumer should never rely on exactly-once transport.</td>
+              </tr>
+              <tr>
+                <td><strong>Replay / redelivery</strong></td>
+                <td>A way to resend past events from a UI or CLI.</td>
+                <td>GitHub delivery redelivery or Stripe CLI resend.</td>
+                <td>Critical for recovery from downtime or bugs in the handler.</td>
+              </tr>
+              <tr>
+                <td><strong>Event filtering</strong></td>
+                <td>Subscribe only to the event types you actually handle.</td>
+                <td>Listen only to <code>invoice.paid</code> and <code>invoice.payment_failed</code>.</td>
+                <td>Reduces noise, cost, and handler complexity.</td>
+              </tr>
+              <tr>
+                <td><strong>Dead-letter / backlog</strong></td>
+                <td>Keep deliveries that repeatedly fail and surface them to operators.</td>
+                <td>A failed event queue or replay dashboard.</td>
+                <td>Without a backlog, you lose failures in the dark.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <pre class="code-block"><code>POST /webhooks/stripe HTTP/1.1
+Stripe-Signature: t=1720384800,v1=...
+Content-Type: application/json
+
+{
+  "id": "evt_123",
+  "type": "payment_intent.succeeded",
+  "data": { "object": { "id": "pi_456" } }
+}</code></pre>
+
+        <p class="small-print mt-3 mb-0">Stripe documents automatic retries for up to three days in live mode; GitHub documents signature validation and manual redelivery. Treat those as the pattern, not the whole implementation.</p>
+      </div>
+    </details>
+
+    <details class="section-panel section-security" open id="security">
+      <summary>
+        <div class="summary-icon"><i class="bi bi-shield-lock-fill"></i></div>
+        <div class="summary-copy">
+          <strong>Security, auth, and governance</strong>
+          <span>Bearer tokens, OpenID Connect, mTLS, rate limits, and contract review keep API style from becoming API drift.</span>
+        </div>
+        <i class="bi bi-chevron-down chev"></i>
+      </summary>
+      <div class="panel-body">
+        <div class="subgrid mb-3">
+          <div class="mini-card">
+            <h4><i class="bi bi-person-badge"></i>OAuth / OIDC</h4>
+            <p>OAuth is for delegated access; OpenID Connect is the identity layer on top when you need login and user claims.</p>
+            <ul>
+              <li>Example: <code>Authorization: Bearer eyJ...</code> for a protected API.</li>
+              <li>Gotcha: bearer tokens must be protected in storage and in transit.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-patch-check"></i>mTLS / sender-constrained tokens</h4>
+            <p>Mutual TLS can bind a client certificate to the token and help prevent token replay.</p>
+            <ul>
+              <li>Example: service-to-service calls on a private mesh.</li>
+              <li>Gotcha: operational complexity is higher than bearer tokens alone.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-speedometer2"></i>Rate limits</h4>
+            <p>Rate limits are a contract, not just an error response.</p>
+            <ul>
+              <li>Example: <code>429 Too Many Requests</code> with <code>Retry-After: 60</code>.</li>
+              <li>Gotcha: tell the client how to back off or you are just forcing guesswork.</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4><i class="bi bi-journal-check"></i>Governance</h4>
+            <p>Every public API should have a review path for schema changes, compatibility, and deprecation windows.</p>
+            <ul>
+              <li>Example: review new enum values and new webhook event types before release.</li>
+              <li>Gotcha: additive changes are safer, but only if consumers ignore unknown data gracefully.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="note-box">
+          <strong>Practical rule:</strong> if the contract cannot answer how auth, retries, pagination, and deprecation work, the API is not ready for production, even if the endpoints compile.
+        </div>
+      </div>
+    </details>
+
+    <details class="section-panel section-mistakes" open id="mistakes">
+      <summary>
+        <div class="summary-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="summary-copy">
+          <strong>Common mistakes and anti-patterns</strong>
+          <span>The failures that make API reviews expensive later.</span>
+        </div>
+        <i class="bi bi-chevron-down chev"></i>
+      </summary>
+      <div class="panel-body">
+        <div class="mistake-list">
+          <div class="mistake-row">
+            <div><strong>RPC over REST</strong></div>
+            <div>Symptoms: <code>/doThing</code>, <code>/runJob</code>, and non-HTTP semantics everywhere.</div>
+            <div>Better default: model a resource or switch to a true command-style contract if that is what you need.</div>
+          </div>
+          <div class="mistake-row">
+            <div><strong>GraphQL for simple CRUD</strong></div>
+            <div>Symptoms: a one-screen form uses a graph query with no aggregation benefit.</div>
+            <div>Better default: plain REST is simpler to cache, document, and secure.</div>
+          </div>
+          <div class="mistake-row">
+            <div><strong>gRPC with no browser gateway</strong></div>
+            <div>Symptoms: the frontend team cannot call the API without awkward workarounds.</div>
+            <div>Better default: add gRPC-Web / Envoy or choose REST for browser-facing traffic.</div>
+          </div>
+          <div class="mistake-row">
+            <div><strong>Non-idempotent retries</strong></div>
+            <div>Symptoms: duplicate payment charges or duplicate webhook side effects after a network blip.</div>
+            <div>Better default: add idempotency keys and dedupe storage before the first side effect.</div>
+          </div>
+          <div class="mistake-row">
+            <div><strong>Webhook handler does too much work inline</strong></div>
+            <div>Symptoms: the producer retries because the handler takes too long or times out.</div>
+            <div>Better default: verify, persist, ACK, then do the real work asynchronously.</div>
+          </div>
+          <div class="mistake-row">
+            <div><strong>Leaking DB tables as API shapes</strong></div>
+            <div>Symptoms: schema names and nullable quirks appear in the public contract.</div>
+            <div>Better default: design the contract from the consumer's point of view, not the storage engine's.</div>
+          </div>
+          <div class="mistake-row">
+            <div><strong>Unversioned breaking changes</strong></div>
+            <div>Symptoms: renamed fields, reused enum values, or removed event types break lagging clients.</div>
+            <div>Better default: additive changes first, deprecate loudly, remove only after a real window.</div>
+          </div>
+          <div class="mistake-row">
+            <div><strong>Ambiguous error semantics</strong></div>
+            <div>Symptoms: every failure is 400 or "unknown", so client behavior becomes guesswork.</div>
+            <div>Better default: define validation, auth, conflict, and retryable errors separately.</div>
+          </div>
+        </div>
+      </div>
+    </details>
+  </section>
+</main>
+
+<footer class="footer-links mt-4">
+  <div class="container py-4">
+    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <a class="btn btn-sm btn-outline-secondary" href="microservices.html" rel="noopener noreferrer" target="_blank"><i class="bi bi-diagram-3 me-1"></i>Microservices</a>
+        <a class="btn btn-sm btn-outline-secondary" href="modern-devops-pipelines.html" rel="noopener noreferrer" target="_blank"><i class="bi bi-arrow-repeat me-1"></i>DevOps Pipelines</a>
+        <a class="btn btn-sm btn-outline-secondary" href="clean-architecture-dotnet.html" rel="noopener noreferrer" target="_blank"><i class="bi bi-layers-half me-1"></i>Clean Architecture</a>
+      </div>
+      <div class="small-print">Last verified: 2026-07-07 · API Design: REST, GraphQL, gRPC, and Webhooks</div>
+    </div>
+    <p class="small-print mt-3 mb-0">© 2026 David Veksler · Design reference for choosing API style, contracts, and failure semantics before implementation starts.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+<script>
+(function () {
+  const root = document.documentElement;
+  const key = 'api-design-theme';
+  const button = document.querySelector('[data-theme-toggle]');
+  const label = document.querySelector('[data-theme-label]');
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function apply(theme) {
+    if (theme === 'auto') {
+      root.removeAttribute('data-theme');
+      root.dataset.theme = 'auto';
+    } else {
+      root.dataset.theme = theme;
+    }
+    if (label) {
+      label.textContent = 'Theme: ' + theme.charAt(0).toUpperCase() + theme.slice(1);
+    }
+  }
+
+  function current() {
+    return localStorage.getItem(key) || 'auto';
+  }
+
+  function nextTheme(value) {
+    if (value === 'auto') return 'dark';
+    if (value === 'dark') return 'light';
+    return 'auto';
+  }
+
+  apply(current());
+
+  if (button) {
+    button.addEventListener('click', () => {
+      const next = nextTheme(current());
+      localStorage.setItem(key, next);
+      apply(next);
+    });
+  }
+
+  if (systemDark && typeof systemDark.addEventListener === 'function') {
+    systemDark.addEventListener('change', () => {
+      if (current() === 'auto') {
+        apply('auto');
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1129 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SQL Performance Tuning: Indexes, Plans, Joins, and Slow Queries</title>
+  <meta name="description" content="Diagnose slow SQL with execution plans, indexes, join strategy, statistics, cardinality, pagination, locks, caching, and concrete PostgreSQL/MySQL tuning examples.">
+  <meta name="keywords" content="SQL performance tuning, execution plans, EXPLAIN ANALYZE, PostgreSQL, MySQL, slow query optimization, indexes, joins, statistics, cardinality, locks">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/sql-performance-tuning.html">
+  <meta property="og:title" content="SQL Performance Tuning: Indexes, Plans, Joins, and Slow Queries">
+  <meta property="og:description" content="A diagnostic SQL tuning guide: capture the plan, read the bottleneck, choose the right index or rewrite, and verify the win with real measurements.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/sql-performance-tuning.html">
+  <meta property="og:image" content="images/sql-performance-tuning.png">
+  <meta property="og:image:alt" content="SQL performance tuning triage board showing query, plan, bottleneck, fix, and verify steps with plan-node hotspots.">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SQL Performance Tuning: Indexes, Plans, Joins, and Slow Queries">
+  <meta name="twitter:description" content="Capture the plan, read the bottleneck, tune the right thing, and verify the result with PostgreSQL or MySQL.">
+  <meta name="twitter:image" content="images/sql-performance-tuning.png">
+  <meta name="twitter:creator" content="@heroiclife">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "SQL Performance Tuning: Indexes, Plans, Joins, and Slow Queries",
+    "description": "A practical SQL tuning reference for reading execution plans, fixing slow joins and sorts, choosing indexes, avoiding cardinality traps, dealing with locks, and verifying improvements in PostgreSQL and MySQL.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-07",
+    "dateModified": "2026-07-07",
+    "keywords": "SQL performance tuning, execution plans, EXPLAIN ANALYZE, PostgreSQL, MySQL, slow query optimization, indexes, joins, statistics, cardinality, locks"
+  }
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+  <style>
+    @layer base, layout, components, utilities;
+
+    @layer base {
+      :root {
+        color-scheme: light dark;
+        --bg: light-dark(#eef3f6, #091017);
+        --bg-2: light-dark(#f8fbfd, #0e1822);
+        --surface: light-dark(#ffffff, #111b26);
+        --surface-2: light-dark(#edf3f8, #162230);
+        --surface-3: light-dark(#e6eef4, #1b2838);
+        --ink: light-dark(#0d1722, #ecf2f8);
+        --muted: light-dark(#506072, #afbdcb);
+        --line: light-dark(#cdd9e3, #304255);
+        --shadow: 0 18px 44px rgba(0, 0, 0, .12);
+        --slate: #0f2233;
+        --slate-2: #17364f;
+        --amber: #f4b740;
+        --amber-2: #ffd774;
+        --teal: #2fb8b5;
+        --green: #2da56e;
+        --red: #d65b5b;
+        --blue: #4b8bd9;
+        --radius: 8px;
+        --bs-body-bg: var(--bg);
+        --bs-body-color: var(--ink);
+        --bs-primary: var(--teal);
+        --bs-secondary: #66768a;
+        --bs-success: var(--green);
+        --bs-warning: var(--amber);
+        --bs-danger: var(--red);
+        --bs-info: var(--blue);
+      }
+
+      html[data-theme="light"] {
+        color-scheme: light;
+        --bg: #eef3f6;
+        --bg-2: #f8fbfd;
+        --surface: #ffffff;
+        --surface-2: #edf3f8;
+        --surface-3: #e6eef4;
+        --ink: #0d1722;
+        --muted: #506072;
+        --line: #cdd9e3;
+        --shadow: 0 18px 44px rgba(0, 0, 0, .12);
+      }
+
+      html[data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #091017;
+        --bg-2: #0e1822;
+        --surface: #111b26;
+        --surface-2: #162230;
+        --surface-3: #1b2838;
+        --ink: #ecf2f8;
+        --muted: #afbdcb;
+        --line: #304255;
+        --shadow: 0 18px 44px rgba(0, 0, 0, .34);
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 14% 8%, rgba(45, 181, 110, .10), transparent 26%),
+          radial-gradient(circle at 88% 9%, rgba(244, 183, 64, .13), transparent 28%),
+          linear-gradient(180deg, var(--bg), var(--bg-2));
+        color: var(--ink);
+        font: 16px/1.62 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        text-wrap: pretty;
+      }
+      h1, h2, h3, h4 { letter-spacing: 0; text-wrap: balance; }
+      h1 {
+        margin: 0;
+        font-size: clamp(2.2rem, 5.6vw, 4.6rem);
+        line-height: .98;
+        font-weight: 900;
+        color: var(--ink);
+      }
+      h2 {
+        margin: 0;
+        font-size: clamp(1.55rem, 3.4vw, 2.5rem);
+        font-weight: 900;
+      }
+      h3 { font-size: 1.15rem; font-weight: 800; }
+      a { color: color-mix(in srgb, var(--teal) 80%, var(--ink)); }
+      code, pre, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      code { color: inherit; }
+      ::selection { background: rgba(244, 183, 64, .35); }
+    }
+
+    @layer layout {
+      .wrap { width: min(1200px, calc(100% - 28px)); margin: 0 auto; }
+      .page-top {
+        position: sticky; top: 0; z-index: 30;
+        border-bottom: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+        background: color-mix(in srgb, var(--surface) 86%, transparent);
+        backdrop-filter: blur(12px);
+      }
+      .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; }
+      .hero {
+        padding: 24px 0 18px;
+        border-bottom: 1px solid var(--line);
+      }
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(310px, .95fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+      .section { padding: 32px 0; }
+      .section-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(220px, .5fr);
+        gap: 14px;
+        align-items: end;
+        margin-bottom: 16px;
+      }
+      .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+      .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+      .table-wrap table { margin: 0; min-width: 1060px; }
+      .source-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .related-grid {
+        display: flex; flex-wrap: wrap; gap: 10px;
+      }
+      @media (max-width: 960px) {
+        .hero-grid, .section-head, .grid-2, .grid-3, .source-grid { grid-template-columns: 1fr; }
+        .flow { grid-template-columns: 1fr 1fr; }
+      }
+      @media (max-width: 560px) {
+        .flow { grid-template-columns: 1fr; }
+        h1 { font-size: 2.35rem; }
+      }
+      @media print {
+        .no-print, .theme-toggle, .copy-btn { display: none !important; }
+        body { background: #fff; color: #111; font-size: 11px; }
+        .page-top { position: static; backdrop-filter: none; }
+        .hero, .section { padding: 14px 0; break-inside: avoid; }
+        .table-wrap { overflow: visible; box-shadow: none; }
+        .table-wrap table { min-width: 0; font-size: 9px; }
+      }
+    }
+
+    @layer components {
+      .brand {
+        display: inline-flex; align-items: center; gap: .55rem;
+        text-decoration: none; font-weight: 900; color: var(--ink);
+        letter-spacing: 0; text-transform: uppercase; font-size: .9rem;
+      }
+      .theme-toggle, .copy-btn {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--ink);
+      }
+      .theme-toggle { min-height: 42px; min-width: 42px; }
+      .copy-btn { font-size: .82rem; padding: .35rem .7rem; }
+      .kicker {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: .32rem .7rem; border: 1px solid var(--line); border-radius: 999px;
+        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        color: var(--muted); font-size: .84rem;
+      }
+      .lede { margin: 14px 0 0; max-width: 62rem; font-size: 1.08rem; color: color-mix(in srgb, var(--ink) 82%, var(--muted)); }
+      .panel, .metric, .source-card, .mistake, .flow-card, .callout {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+      .panel { padding: 16px; }
+      .metric { padding: 14px; height: 100%; }
+      .metric .label, .source-pill {
+        display: inline-flex; align-items: center; gap: .35rem;
+        font-size: .73rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase;
+        color: color-mix(in srgb, var(--muted) 70%, var(--ink));
+      }
+      .metric .value {
+        margin-top: 7px; font-size: 1.22rem; font-weight: 900; line-height: 1.08;
+        color: var(--ink);
+      }
+      .metric .desc { margin-top: 6px; color: var(--muted); font-size: .92rem; }
+      .flow-card {
+        padding: 12px;
+        min-height: 118px;
+        background:
+          linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 78%, transparent), transparent),
+          var(--surface);
+      }
+      .flow-card .step {
+        display: inline-flex; align-items: center; gap: .4rem;
+        padding: .25rem .55rem; border-radius: 999px;
+        font-size: .74rem; font-weight: 900; text-transform: uppercase;
+        background: color-mix(in srgb, var(--amber) 18%, transparent);
+        color: color-mix(in srgb, var(--ink) 82%, var(--amber));
+      }
+      .flow-card:nth-child(2) .step, .flow-card:nth-child(4) .step { background: color-mix(in srgb, var(--teal) 14%, transparent); }
+      .flow-card:nth-child(3) .step, .flow-card:nth-child(5) .step { background: color-mix(in srgb, var(--red) 15%, transparent); }
+      .flow-card h3 { margin: 10px 0 4px; font-size: 1rem; }
+      .flow-card p { margin: 0; color: var(--muted); font-size: .92rem; }
+      .badge-soft {
+        display: inline-flex; align-items: center; gap: .35rem;
+        border: 1px solid var(--line); border-radius: 999px;
+        padding: .3rem .6rem; background: var(--surface-2); color: var(--ink);
+        font-size: .78rem; font-weight: 800;
+      }
+      .hero-diagram {
+        position: relative; overflow: hidden;
+        padding: 16px;
+        background:
+          linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 82%, transparent), transparent),
+          radial-gradient(circle at 20% 18%, rgba(47, 184, 181, .16), transparent 28%),
+          radial-gradient(circle at 82% 16%, rgba(244, 183, 64, .18), transparent 28%),
+          var(--surface);
+      }
+      .hero-diagram:before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(color-mix(in srgb, var(--line) 16%, transparent) 1px, transparent 1px),
+          linear-gradient(90deg, color-mix(in srgb, var(--line) 16%, transparent) 1px, transparent 1px);
+        background-size: 28px 28px;
+        mask-image: linear-gradient(180deg, rgba(0,0,0,.45), transparent 86%);
+        pointer-events: none;
+      }
+      .hero-diagram > * { position: relative; z-index: 1; }
+      .mini-note { margin-top: 10px; color: var(--muted); font-size: .9rem; }
+      .sql {
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--surface-3) 62%, var(--surface));
+      }
+      .sql pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+      .sql .copy-btn { float: right; margin-left: 10px; }
+      .table thead th {
+        background: color-mix(in srgb, var(--surface-2) 85%, transparent);
+        color: var(--ink);
+        font-size: .84rem;
+        text-transform: uppercase;
+        letter-spacing: .02em;
+        white-space: nowrap;
+      }
+      .table td, .table th { vertical-align: top; }
+      .table tbody tr:hover { background: color-mix(in srgb, var(--amber) 8%, transparent); }
+      .tag {
+        display: inline-flex; align-items: center;
+        border-radius: 999px; padding: .22rem .55rem;
+        font-size: .76rem; font-weight: 800; margin-right: .3rem; margin-bottom: .3rem;
+        background: var(--surface-2); border: 1px solid var(--line);
+      }
+      .tag.good { color: var(--green); }
+      .tag.warn { color: var(--red); }
+      .tag.info { color: var(--blue); }
+      .source-card, .mistake { padding: 16px; height: 100%; }
+      .source-card h3, .mistake h3 { margin-top: 0; }
+      .source-card p, .mistake p, .source-card ul, .mistake ul { margin-bottom: 0; }
+      footer {
+        padding: 24px 0 32px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+      }
+      .footer-note {
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+      }
+    }
+  </style>
+  <style>
+    .hero h1 { color: var(--ink) !important; }
+  </style>
+</head>
+<body>
+  <div class="page-top no-print">
+    <div class="wrap topbar">
+      <a class="brand" href="index.php"><i class="bi bi-folder2-open"></i> David Veksler Cheatsheets</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle color theme" title="Toggle theme"><i class="bi bi-circle-half"></i></button>
+    </div>
+  </div>
+
+  <header class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div>
+          <span class="kicker"><i class="bi bi-diagram-3"></i> Query autopsy for production debugging</span>
+          <h1 class="mt-3">SQL Performance Tuning Cheatsheet</h1>
+          <p class="lede">The portable way to tune a slow query is not “add an index.” Capture the real plan, compare estimated and actual rows, find the node that dominates time or I/O, then fix query shape, index shape, or data shape and prove the win on the same parameters.</p>
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <span class="badge-soft"><i class="bi bi-check2-circle"></i> Last verified: 2026-07-07</span>
+            <span class="badge-soft"><i class="bi bi-server"></i> PostgreSQL + MySQL concrete examples</span>
+            <span class="badge-soft"><i class="bi bi-clock-history"></i> Research mode, crisis mode, and post-deploy triage</span>
+          </div>
+          <div class="grid-3 mt-3">
+            <div class="metric">
+              <div class="label"><i class="bi bi-activity"></i> 1. Measure</div>
+              <div class="value">Same query, same params</div>
+              <div class="desc">Use representative values and capture runtime plus plan shape before changing anything.</div>
+            </div>
+            <div class="metric">
+              <div class="label"><i class="bi bi-eye"></i> 2. Read</div>
+              <div class="value">Estimate vs actual rows</div>
+              <div class="desc">Big estimate drift usually means stale stats, skew, or a bad predicate shape.</div>
+            </div>
+            <div class="metric">
+              <div class="label"><i class="bi bi-wrench-adjustable-circle"></i> 3. Fix</div>
+              <div class="value">One change at a time</div>
+              <div class="desc">Index, rewrite, maintenance, or schema change. Re-run the same plan capture.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-diagram panel">
+          <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+            <strong class="mono text-uppercase" style="letter-spacing:.04em;">Slow-query triage board</strong>
+            <span class="source-pill"><i class="bi bi-shield-check"></i> primary docs only</span>
+          </div>
+          <svg viewBox="0 0 760 336" class="w-100 mt-2" role="img" aria-labelledby="triageTitle triageDesc">
+            <title id="triageTitle">SQL performance tuning flow</title>
+            <desc id="triageDesc">A pipeline from SQL text to execution plan, bottleneck identification, fix selection, and re-verification.</desc>
+            <defs>
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="rgba(0,0,0,.32)"/>
+              </filter>
+            </defs>
+            <g fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+              <rect x="26" y="36" width="122" height="86" rx="16" fill="#17364f" stroke="#2fb8b5" stroke-width="2"/>
+              <rect x="186" y="36" width="122" height="86" rx="16" fill="#1b2838" stroke="#f4b740" stroke-width="2"/>
+              <rect x="346" y="36" width="122" height="86" rx="16" fill="#1b2838" stroke="#d65b5b" stroke-width="2"/>
+              <rect x="506" y="36" width="122" height="86" rx="16" fill="#17364f" stroke="#2da56e" stroke-width="2"/>
+              <rect x="666" y="36" width="68" height="86" rx="16" fill="#111b26" stroke="#4b8bd9" stroke-width="2"/>
+              <path d="M148 79H186" stroke="#9fb0c1" stroke-width="4"/>
+              <path d="M306 79H346" stroke="#9fb0c1" stroke-width="4"/>
+              <path d="M468 79H506" stroke="#9fb0c1" stroke-width="4"/>
+              <path d="M628 79H666" stroke="#9fb0c1" stroke-width="4"/>
+              <path d="M720 122c0 30-4 38-26 56-36 29-85 40-137 40H176c-48 0-94 10-124 34" stroke="#f4d774" stroke-width="3" stroke-dasharray="8 8"/>
+            </g>
+            <g fill="#ecf2f8" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+              <text x="45" y="70" font-size="18" font-weight="700">SQL text</text>
+              <text x="45" y="92" font-size="13" fill="#afbdcb">query, bind vars</text>
+              <text x="201" y="70" font-size="18" font-weight="700">Plan</text>
+              <text x="201" y="92" font-size="13" fill="#afbdcb">EXPLAIN ANALYZE</text>
+              <text x="360" y="70" font-size="18" font-weight="700">Bottleneck</text>
+              <text x="360" y="92" font-size="13" fill="#afbdcb">scan, join, sort, lock</text>
+              <text x="523" y="70" font-size="18" font-weight="700">Fix</text>
+              <text x="523" y="92" font-size="13" fill="#afbdcb">index, rewrite, stats</text>
+              <text x="678" y="70" font-size="18" font-weight="700">Verify</text>
+              <text x="678" y="92" font-size="13" fill="#afbdcb">same params</text>
+              <text x="48" y="171" font-size="16" font-weight="700" fill="#f4b740">hot spots</text>
+              <text x="48" y="197" font-size="13" fill="#afbdcb">rows off by 10x+</text>
+              <text x="48" y="223" font-size="13" fill="#afbdcb">buffers or disk reads</text>
+              <text x="48" y="249" font-size="13" fill="#afbdcb">sort or hash spills</text>
+              <text x="48" y="275" font-size="13" fill="#afbdcb">lock wait or CTE fence</text>
+              <text x="347" y="226" font-size="16" font-weight="700" fill="#2da56e">fix one thing</text>
+              <text x="347" y="252" font-size="13" fill="#afbdcb">then rerun the same query</text>
+              <text x="347" y="278" font-size="13" fill="#afbdcb">and compare the node that moved</text>
+            </g>
+          </svg>
+          <div class="mini-note">This is the page’s shareable artifact: the query-to-verify loop. The rest of the sheet explains how to interpret each stop.</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="kicker"><i class="bi bi-life-preserver"></i> First pass checklist</span>
+            <h2 class="mt-2">Quick Reference: What to do first</h2>
+          </div>
+          <p class="mb-0 text-body-secondary">The highest-frequency triage questions, in the order that usually saves time.</p>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Signal</th>
+                <th>What it usually means</th>
+                <th>First move</th>
+                <th>Verify with</th>
+                <th>Concrete example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>One node dominates runtime</strong></td>
+                <td>That node is the real bottleneck, not the query text as a whole.</td>
+                <td>Fix the node type first: scan, join, sort, aggregate, or lock wait.</td>
+                <td><code>EXPLAIN (ANALYZE, BUFFERS)</code> or <code>EXPLAIN ANALYZE</code></td>
+                <td>A 7 ms index probe feeding a 3.4 s sort means the sort is the target.</td>
+              </tr>
+              <tr>
+                <td><strong>Actual rows are far above estimate</strong></td>
+                <td>Statistics are stale, skewed, or the predicate shape is misleading the planner.</td>
+                <td>Refresh stats, inspect skew, and simplify predicates before forcing hints.</td>
+                <td><code>ANALYZE</code>, <code>ANALYZE TABLE</code>, histogram/stat views</td>
+                <td>Planner expects 12 rows; execution returns 240,000 rows after a status filter.</td>
+              </tr>
+              <tr>
+                <td><strong>Seq scan / table scan on a selective filter</strong></td>
+                <td>The predicate is not indexable, the index order is wrong, or the table is tiny enough that the scan is cheaper.</td>
+                <td>Check sargability and whether the leading index column matches the filter.</td>
+                <td>Predicate text + index definition</td>
+                <td><code>WHERE lower(email) = 'a@b.com'</code> without an expression index.</td>
+              </tr>
+              <tr>
+                <td><strong>Sort / filesort dominates</strong></td>
+                <td>The result set is being ordered after too many rows are produced.</td>
+                <td>Reduce rows earlier or add an index that matches the filter plus order.</td>
+                <td>Plan node labels and top-N rows</td>
+                <td><code>ORDER BY created_at DESC LIMIT 50</code> over millions of rows without a supporting index.</td>
+              </tr>
+              <tr>
+                <td><strong>Lock wait or blocked session</strong></td>
+                <td>The query is waiting on another transaction, not spending time on its own plan.</td>
+                <td>Find the blocker and shorten or reorder the transaction scope.</td>
+                <td><code>pg_locks</code>, Performance Schema lock tables</td>
+                <td>An update pauses behind a long reporting transaction that left a read lock open.</td>
+              </tr>
+              <tr>
+                <td><strong>Fast in dev, slow in prod</strong></td>
+                <td>Row count, data distribution, cache warmth, or lock pressure is different.</td>
+                <td>Benchmark with production-like cardinality and real parameter values.</td>
+                <td>Same SQL, same bind params, same snapshot mode</td>
+                <td>Dev table has 20k rows; prod has 48M, so the planner takes a different path.</td>
+              </tr>
+              <tr>
+                <td><strong>Adding another index makes writes hurt</strong></td>
+                <td>Index overhead is now larger than the read benefit.</td>
+                <td>Collapse overlapping indexes, prefer composite shape, or use a partial index.</td>
+                <td>Write path latency + index usage stats</td>
+                <td>Three separate single-column indexes on the same lookup path become one composite index.</td>
+              </tr>
+              <tr>
+                <td><strong>Query changed, plan changed a lot</strong></td>
+                <td>The optimizer is sensitive to join order, selectivity, or a CTE/materialization fence.</td>
+                <td>Check whether the rewrite changed cardinality or blocked a transformation.</td>
+                <td>Before/after plans on the same dataset</td>
+                <td>Wrapping a filter in a CTE prevents the engine from pushing it down early.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="kicker"><i class="bi bi-diagram-2"></i> Reading the plan</span>
+            <h2 class="mt-2">Execution plan literacy</h2>
+          </div>
+          <p class="mb-0 text-body-secondary">A plan is not a verdict. It is a model, and the useful question is which node burns time, rows, or I/O.</p>
+        </div>
+        <div class="sql mb-3">
+          <button class="copy-btn" type="button" data-copy="plan-snippet"><i class="bi bi-clipboard"></i> Copy</button>
+<pre id="plan-snippet">EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
+SELECT customer_id, order_id, total_cents
+FROM orders
+WHERE account_id = 42
+  AND created_at &gt;= TIMESTAMP '2026-07-01'
+ORDER BY created_at DESC
+LIMIT 50;</pre>
+        </div>
+        <div class="table-wrap">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Node</th>
+                <th>Definition</th>
+                <th>Good sign</th>
+                <th>Bad sign</th>
+                <th>Example / gotcha</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Sequential scan / table scan</strong></td>
+                <td>Read the table linearly and filter rows after reading them.</td>
+                <td>The table is small, or the predicate returns a large fraction of rows.</td>
+                <td>Selective lookup on a large table that should have been indexable.</td>
+                <td><span class="tag info">Example</span> 8,000-row lookup on a 2,000-row table can still be cheaper than an index. <span class="tag warn">Gotcha</span> Do not assume every scan is bad.</td>
+              </tr>
+              <tr>
+                <td><strong>Index scan</strong></td>
+                <td>Use an index to find qualifying rows, then fetch the table rows if needed.</td>
+                <td>Equality or range predicates line up with the index’s leading columns.</td>
+                <td>The filter is wrapped in a function or starts on the wrong column.</td>
+                <td><span class="tag info">Example</span> <code>WHERE account_id = 42</code> on <code>(account_id, created_at)</code>. <span class="tag warn">Gotcha</span> Reversed column order often breaks the win.</td>
+              </tr>
+              <tr>
+                <td><strong>Index-only scan / covering index</strong></td>
+                <td>Return rows from the index alone without heap or table fetches when the engine can prove visibility and all required columns are present.</td>
+                <td>The query projects only indexed columns, and the visibility map or engine metadata makes the lookup cheap.</td>
+                <td>Frequent updates keep pages non-visible, so the engine still has to visit the heap.</td>
+                <td><span class="tag info">Example</span> PostgreSQL can use an index-only scan; MySQL shows <code>Using index</code>. <span class="tag warn">Gotcha</span> A covering index is not automatically a small index.</td>
+              </tr>
+              <tr>
+                <td><strong>Bitmap scan / batched lookup</strong></td>
+                <td>Combine several index hits and visit the table in batches.</td>
+                <td>Multiple predicates each narrow the set enough to justify bitmap fusion.</td>
+                <td>You only need one narrow lookup and the batching overhead adds work.</td>
+                <td><span class="tag info">Example</span> <code>status = 'open' AND region = 'us'</code> may combine two indexes. <span class="tag warn">Gotcha</span> Bitmap wins are workload-dependent, not universal.</td>
+              </tr>
+              <tr>
+                <td><strong>Nested loop join</strong></td>
+                <td>For each row from the outer input, probe the inner input.</td>
+                <td>Outer input is tiny and the inner probe is indexed and selective.</td>
+                <td>The outer input explodes and the inner probe repeats millions of times.</td>
+                <td><span class="tag info">Example</span> 12 parent rows joining to 12 indexed child lookups. <span class="tag warn">Gotcha</span> A nested loop can be excellent or catastrophic depending on outer-row count.</td>
+              </tr>
+              <tr>
+                <td><strong>Hash join</strong></td>
+                <td>Build an in-memory hash table on one side, then probe it from the other side.</td>
+                <td>Equality join with a large enough build side to justify hashing.</td>
+                <td>Hash table spills because memory is too small or the build side is bloated.</td>
+                <td><span class="tag info">Example</span> Fact table joining a medium dimension by primary key. <span class="tag warn">Gotcha</span> Spills create a hidden sort-ish penalty.</td>
+              </tr>
+              <tr>
+                <td><strong>Merge join</strong></td>
+                <td>Walk two ordered inputs in lockstep.</td>
+                <td>Both inputs are already sorted by the join key or can be read from matching indexes.</td>
+                <td>A forced sort is more expensive than a different join algorithm.</td>
+                <td><span class="tag info">Example</span> Two B-tree paths on the same key. <span class="tag warn">Gotcha</span> Merge join often needs supporting order on both sides.</td>
+              </tr>
+              <tr>
+                <td><strong>Sort / filesort</strong></td>
+                <td>Order rows after they have been produced by earlier nodes.</td>
+                <td>Sorting a small result set, especially top-N after a selective predicate.</td>
+                <td>Sorting millions of rows because the filter came too late.</td>
+                <td><span class="tag info">Example</span> MySQL shows <code>filesort</code> when no index can satisfy <code>ORDER BY</code>. <span class="tag warn">Gotcha</span> Sorting before limiting is the classic waste.</td>
+              </tr>
+              <tr>
+                <td><strong>Hash aggregate / temp aggregate</strong></td>
+                <td>Group rows using an in-memory hash table or temp structure.</td>
+                <td>Grouping a reduced set after a good filter.</td>
+                <td>Aggregating too early on a fan-out join or spilling to disk.</td>
+                <td><span class="tag info">Example</span> Aggregate after pre-filtering orders by date. <span class="tag warn">Gotcha</span> Counting everything on a hot path is still expensive.</td>
+              </tr>
+              <tr>
+                <td><strong>Materialize / CTE fence</strong></td>
+                <td>Store an intermediate result before the optimizer can fully rearrange the statement.</td>
+                <td>Reusing the same expensive subresult more than once.</td>
+                <td>The materialization blocks pushdown and turns a selective query into a broad one.</td>
+                <td><span class="tag info">Example</span> A CTE used once can still be fine. <span class="tag warn">Gotcha</span> Do not assume a CTE is free or automatically inlined.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-3 mb-0 text-body-secondary">Rule of thumb: a plan estimate that is off by one order of magnitude or more is already a tuning clue, not a rounding error.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="kicker"><i class="bi bi-hdd-stack"></i> Index design</span>
+            <h2 class="mt-2">Pick the index that matches the access pattern</h2>
+          </div>
+          <p class="mb-0 text-body-secondary">Indexing is about matching shape, not collecting features. Overlapping indexes cost writes, memory, and maintenance.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Pattern</th>
+                <th>Definition</th>
+                <th>Example</th>
+                <th>Use when</th>
+                <th>Watch out for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>B-tree on one column</strong></td>
+                <td>The default balanced-tree index for equality and ordered range lookups.</td>
+                <td><code>CREATE INDEX ON orders (account_id);</code></td>
+                <td>Equality filters, joins, and ordered retrieval on a single key.</td>
+                <td>Do not expect it to help if the predicate starts with a function or if the table is tiny.</td>
+              </tr>
+              <tr>
+                <td><strong>Composite B-tree</strong></td>
+                <td>One index over multiple columns, ordered by the leading column sequence.</td>
+                <td><code>CREATE INDEX ON orders (account_id, created_at DESC);</code></td>
+                <td><code>WHERE account_id = 42 AND created_at &gt;= ... ORDER BY created_at DESC</code>.</td>
+                <td>The leftmost columns must line up with the filter order; the wrong order wastes the index.</td>
+              </tr>
+              <tr>
+                <td><strong>Covering / include columns</strong></td>
+                <td>Add non-key columns so the query can be satisfied without hitting the base table.</td>
+                <td>PostgreSQL: <code>CREATE INDEX ... INCLUDE (status, total_cents);</code></td>
+                <td>Read-mostly list pages that project a few extra fields.</td>
+                <td>Bigger indexes are slower to maintain; on hot write paths, keep the payload tight.</td>
+              </tr>
+              <tr>
+                <td><strong>Partial index</strong></td>
+                <td>An index over only the subset of rows that matches a fixed predicate.</td>
+                <td><code>CREATE INDEX ON orders (created_at) WHERE status = 'open';</code></td>
+                <td>A stable subset like open orders, active sessions, or pending tasks.</td>
+                <td>If the predicate does not appear verbatim in the query, the planner may not use it.</td>
+              </tr>
+              <tr>
+                <td><strong>Expression index</strong></td>
+                <td>An index on a computed expression instead of a raw column.</td>
+                <td><code>CREATE INDEX ON users ((lower(email)));</code></td>
+                <td>Case-folded lookups, normalized keys, or repeated computed filters.</td>
+                <td>Expressions must match the query shape and collation rules; otherwise the index is ignored.</td>
+              </tr>
+              <tr>
+                <td><strong>BRIN</strong></td>
+                <td>A compact block-range index that summarizes values by page range.</td>
+                <td><code>CREATE INDEX ON events USING brin (created_at);</code></td>
+                <td>Very large append-only or mostly-ordered tables with time-range queries.</td>
+                <td>Poor fit for random-update tables or highly shuffled data where locality is weak.</td>
+              </tr>
+              <tr>
+                <td><strong>GIN / GiST</strong></td>
+                <td>Specialized access methods for arrays, text search, ranges, and other non-scalar search types.</td>
+                <td><code>USING gin (tags)</code> or <code>USING gist (price_range)</code></td>
+                <td>Full-text search, containment, overlaps, and similar operators.</td>
+                <td>Do not swap these in for plain equality lookups when a B-tree is the simpler answer.</td>
+              </tr>
+              <tr>
+                <td><strong>Prefix index, MySQL</strong></td>
+                <td>Index only the leading portion of a long string column.</td>
+                <td><code>INDEX title_prefix (title(64))</code></td>
+                <td>Long text columns where the prefix is enough to narrow the search.</td>
+                <td>Prefix indexes can hurt ordering and uniqueness assumptions because the tail is not indexed.</td>
+              </tr>
+              <tr>
+                <td><strong>Unique index</strong></td>
+                <td>Enforces no duplicate keys and speeds exact lookups on the same key.</td>
+                <td><code>CREATE UNIQUE INDEX ON users (email);</code></td>
+                <td>Natural keys, lookup tables, and foreign-key targets.</td>
+                <td>In PostgreSQL, nullable unique columns allow multiple NULLs by default unless you opt into <code>NULLS NOT DISTINCT</code>.</td>
+              </tr>
+              <tr>
+                <td><strong>Skip-scan / index combination</strong></td>
+                <td>Planner techniques that salvage a partially matching multicolumn index.</td>
+                <td><code>(country, city)</code> helping a <code>city = ...</code> search in a narrow cardinality regime.</td>
+                <td>When the leading column has few distinct values and the engine can make up the gap.</td>
+                <td>These are optimizations, not design goals; build the index for the common query first.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid-2 mt-3">
+          <div class="callout p-3">
+            <strong>Decision guidance:</strong> use a single composite B-tree when the same query filters and orders by the same prefix. Use a partial index when the hot path is a small stable subset. Use a covering index when table lookups are the bottleneck, not when the filter is already cheap.
+          </div>
+          <div class="callout p-3">
+            <strong>Anti-pattern:</strong> stacking separate single-column indexes on the same query path and hoping the engine will magically turn them into one perfect access path. That usually just adds write cost.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="kicker"><i class="bi bi-arrow-repeat"></i> Query rewrites</span>
+            <h2 class="mt-2">Make the query easier to optimize</h2>
+          </div>
+          <p class="mb-0 text-body-secondary">Most slow queries become fast once the planner can see the real filter, join, and ordering shape.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Rewrite</th>
+                <th>Definition</th>
+                <th>Example</th>
+                <th>Why it helps</th>
+                <th>When not to use it</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Make predicates sargable</strong></td>
+                <td>Write the condition so the engine can use an index directly.</td>
+                <td><code>WHERE created_at &gt;= '2026-07-01'</code> instead of <code>DATE(created_at) = ...</code></td>
+                <td>Functions on indexed columns often hide the search key from the planner.</td>
+                <td>If you truly need the transformed form, use an expression index or stored normalized column instead.</td>
+              </tr>
+              <tr>
+                <td><strong>Use keyset pagination</strong></td>
+                <td>Paginate by the last seen sort key rather than by offset.</td>
+                <td><code>WHERE (created_at, id) &lt; (:created_at, :id) ORDER BY created_at DESC, id DESC LIMIT 50</code></td>
+                <td>Deep offsets make the database skip more and more rows.</td>
+                <td>Do not use it when random page-number access is the product requirement.</td>
+              </tr>
+              <tr>
+                <td><strong>Prefer EXISTS / NOT EXISTS</strong></td>
+                <td>Express semi-joins and anti-joins directly.</td>
+                <td><code>WHERE EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id)</code></td>
+                <td>Lets the optimizer stop at the first match instead of materializing a larger join result.</td>
+                <td>If you need columns from the child rows, use a join; EXISTS only answers presence.</td>
+              </tr>
+              <tr>
+                <td><strong>Pre-aggregate before joining</strong></td>
+                <td>Reduce fan-out by grouping the large side first.</td>
+                <td>Aggregate order totals by customer before joining to the customer table.</td>
+                <td>Smaller intermediate sets reduce join, sort, and memory cost.</td>
+                <td>Do not pre-aggregate if you need row-level detail from the raw fact table.</td>
+              </tr>
+              <tr>
+                <td><strong>Remove accidental DISTINCT</strong></td>
+                <td>Stop deduplicating rows that should not have duplicated in the first place.</td>
+                <td>Fix the join key instead of slapping <code>DISTINCT</code> on the SELECT list.</td>
+                <td>Distinct often hides a join bug while adding a sort or hash step.</td>
+                <td>Use it only when duplicate elimination is actually part of the business rule.</td>
+              </tr>
+              <tr>
+                <td><strong>Fetch narrow, then wide</strong></td>
+                <td>Limit the first pass to keys, then join back for the expensive payload.</td>
+                <td>Find 50 ids first, then fetch the wide JSON body in a second step.</td>
+                <td>Reduces sort width and memory pressure.</td>
+                <td>Extra round trips can hurt when the second pass is not selective.</td>
+              </tr>
+              <tr>
+                <td><strong>Avoid unnecessary CTE fences</strong></td>
+                <td>Do not force the engine to materialize an intermediate result unless reuse or isolation is the point.</td>
+                <td>Inline a single-use CTE if it blocks predicate pushdown.</td>
+                <td>The optimizer can often rearrange an inline subquery more aggressively.</td>
+                <td>Use a CTE when you actually want to reuse the result or to make the query readable and the engine still performs well.</td>
+              </tr>
+              <tr>
+                <td><strong>Move wide columns late</strong></td>
+                <td>Keep the early plan working on ids and filters, not giant text blobs.</td>
+                <td>Join a filtered key set to the table containing large JSON payloads.</td>
+                <td>Less data to sort, hash, and move between nodes.</td>
+                <td>Not useful when the payload is already needed for every row in the result.</td>
+              </tr>
+              <tr>
+                <td><strong>Constrain update batches</strong></td>
+                <td>Process rows in small chunks to shorten locks and reduce contention.</td>
+                <td><code>UPDATE ... WHERE id &gt; :cursor ORDER BY id LIMIT 500</code> in a loop.</td>
+                <td>Shorter transactions are easier for the engine to schedule.</td>
+                <td>Batching is not a substitute for a missing index on the update predicate.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="sql mt-3">
+          <button class="copy-btn" type="button" data-copy="rewrite-snippet"><i class="bi bi-clipboard"></i> Copy</button>
+<pre id="rewrite-snippet">-- Better than OFFSET for deep pages
+SELECT id, created_at, total_cents
+FROM orders
+WHERE account_id = 42
+  AND (created_at, id) &lt; (TIMESTAMP '2026-07-05 12:00:00', 981277)
+ORDER BY created_at DESC, id DESC
+LIMIT 50;</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="kicker"><i class="bi bi-stack"></i> Data shape</span>
+            <h2 class="mt-2">Schema and storage choices that change performance</h2>
+          </div>
+          <p class="mb-0 text-body-secondary">Sometimes the right answer is not a query rewrite at all. The data is shaped wrong for the hot path.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Choice</th>
+                <th>Definition</th>
+                <th>Example</th>
+                <th>Benefit</th>
+                <th>Tradeoff</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Normalize hot lookups</strong></td>
+                <td>Store repeated facts once so joins and updates stay cheap.</td>
+                <td>Keep a customer table instead of repeating the same customer fields on every order row.</td>
+                <td>Less duplication, smaller updates, cleaner indexes.</td>
+                <td>Too much normalization can create join-heavy read paths that need good indexes.</td>
+              </tr>
+              <tr>
+                <td><strong>Denormalize read-heavy reports</strong></td>
+                <td>Store precomputed or repeated fields when repeated joins are the bottleneck.</td>
+                <td>A reporting table with daily customer totals and segment labels.</td>
+                <td>Fewer joins and fewer lookups on read-mostly endpoints.</td>
+                <td>Write amplification and consistency maintenance go up.</td>
+              </tr>
+              <tr>
+                <td><strong>Partition large time-series tables</strong></td>
+                <td>Split a table into smaller child tables so old data can be skipped early.</td>
+                <td>Monthly partitions for event logs or invoices.</td>
+                <td>Partition pruning can cut both scan time and maintenance work.</td>
+                <td>Partitioning is not free; bad partition keys create more complexity than speed.</td>
+              </tr>
+              <tr>
+                <td><strong>Materialized view or summary table</strong></td>
+                <td>Precompute a stable aggregate or join result.</td>
+                <td>Daily revenue by region refreshed every hour.</td>
+                <td>Turns repeated expensive queries into cheap reads.</td>
+                <td>Refresh lag and refresh cost must be acceptable for the business use case.</td>
+              </tr>
+              <tr>
+                <td><strong>Refresh statistics after drift</strong></td>
+                <td>Update planner statistics so row estimates reflect current data distribution.</td>
+                <td>PostgreSQL <code>ANALYZE</code>; MySQL <code>ANALYZE TABLE</code>; SQLite <code>ANALYZE</code> or <code>PRAGMA optimize</code>.</td>
+                <td>Better selectivity estimates and better join choice.</td>
+                <td>Stats are only as good as the sample and the freshness of the data.</td>
+              </tr>
+              <tr>
+                <td><strong>Vacuum / visibility maintenance</strong></td>
+                <td>Reclaim dead tuples and update visibility metadata in PostgreSQL.</td>
+                <td><code>VACUUM (ANALYZE)</code> on tables with heavy updates.</td>
+                <td>Helps index-only scans and reduces bloat-related I/O.</td>
+                <td>Frequent updates can still keep pages non-all-visible, so index-only scans are not guaranteed.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid-2 mt-3">
+          <div class="callout p-3">
+            <strong>Decision guidance:</strong> choose partitioning only when a stable key like time or tenant genuinely lets the engine prune most data. If the hot path is a single lookup, an index is usually simpler and faster to operate.
+          </div>
+          <div class="callout p-3">
+            <strong>Gotcha:</strong> in PostgreSQL, vacuum does more than reclaim space. It also updates planner statistics and the visibility map, which affects both plan quality and index-only scan eligibility.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="kicker"><i class="bi bi-terminal"></i> Commands by engine</span>
+            <h2 class="mt-2">What to run in PostgreSQL, MySQL, and SQLite</h2>
+          </div>
+          <p class="mb-0 text-body-secondary">Use the engine’s own optimizer tools first. Hints are a last resort, not the opening move.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Engine</th>
+                <th>Capture the plan</th>
+                <th>Refresh stats</th>
+                <th>Watch slow queries</th>
+                <th>Inspect locks / waits</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>PostgreSQL</strong></td>
+                <td><code>EXPLAIN (ANALYZE, BUFFERS, VERBOSE)</code></td>
+                <td><code>ANALYZE</code> or <code>VACUUM (ANALYZE)</code></td>
+                <td><code>pg_stat_statements</code> for server-wide timing and query fingerprints; <code>auto_explain</code> for logging slow plans automatically.</td>
+                <td><code>pg_locks</code> for active locks and waits; <code>pg_stat_io</code> / <code>pg_statio_*</code> to understand cache behavior.</td>
+              </tr>
+              <tr>
+                <td><strong>MySQL 8.0</strong></td>
+                <td><code>EXPLAIN</code> and <code>EXPLAIN ANALYZE</code></td>
+                <td><code>ANALYZE TABLE</code> to refresh table statistics</td>
+                <td>Slow query log with <code>long_query_time</code> and <code>min_examined_row_limit</code></td>
+                <td>Performance Schema <code>data_locks</code> and <code>data_lock_waits</code> for blocking analysis</td>
+              </tr>
+              <tr>
+                <td><strong>SQLite</strong></td>
+                <td><code>EXPLAIN QUERY PLAN</code></td>
+                <td><code>ANALYZE</code> or <code>PRAGMA optimize</code></td>
+                <td>Use the query planner overview and shell output; runtime telemetry is much thinner than PostgreSQL/MySQL.</td>
+                <td>SQLite is usually lock-light at the query level, so focus more on plan shape and database access patterns.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid-2 mt-3">
+          <div class="sql">
+            <button class="copy-btn" type="button" data-copy="pg-snippet"><i class="bi bi-clipboard"></i> Copy</button>
+<pre id="pg-snippet">BEGIN;
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT ...
+ROLLBACK;</pre>
+          </div>
+          <div class="sql">
+            <button class="copy-btn" type="button" data-copy="mysql-snippet"><i class="bi bi-clipboard"></i> Copy</button>
+<pre id="mysql-snippet">EXPLAIN ANALYZE
+SELECT ...;
+
+ANALYZE TABLE orders;</pre>
+          </div>
+        </div>
+        <p class="mt-3 mb-0 text-body-secondary">MySQL 8.0.18 introduced <code>EXPLAIN ANALYZE</code>. In PostgreSQL, <code>EXPLAIN ANALYZE</code> actually runs the statement, so wrap write-side probes in a transaction and roll them back when you only want measurement.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="kicker"><i class="bi bi-exclamation-triangle"></i> Common mistakes</span>
+            <h2 class="mt-2">Anti-patterns that waste time</h2>
+          </div>
+          <p class="mb-0 text-body-secondary">These are the moves that make tuning feel random. They are usually avoidable.</p>
+        </div>
+        <div class="grid-2">
+          <div class="mistake">
+            <h3><i class="bi bi-x-circle"></i> Indexing before reading the plan</h3>
+            <p>Without the plan, you do not know whether the bottleneck is scan, join, sort, lock, or cache behavior. Build the mental model first, then the index.</p>
+          </div>
+          <div class="mistake">
+            <h3><i class="bi bi-x-circle"></i> Tuning on toy data</h3>
+            <p>Small tables hide bad selectivity and make scans look cheap. Use production-like row counts and distributions before drawing conclusions.</p>
+          </div>
+          <div class="mistake">
+            <h3><i class="bi bi-x-circle"></i> Hiding predicates in functions</h3>
+            <p><code>WHERE DATE(created_at) = ...</code> or <code>WHERE lower(email) = ...</code> often blocks index use unless you created a matching expression index.</p>
+          </div>
+          <div class="mistake">
+            <h3><i class="bi bi-x-circle"></i> Relying on OFFSET for deep paging</h3>
+            <p>OFFSET makes the database walk and discard rows you never needed. Keyset pagination keeps the search anchored to the last seen key.</p>
+          </div>
+          <div class="mistake">
+            <h3><i class="bi bi-x-circle"></i> Using DISTINCT as a join patch</h3>
+            <p>Distinct may hide a fan-out bug while adding a sort or hash step. Fix the join multiplicity or pre-aggregate first.</p>
+          </div>
+          <div class="mistake">
+            <h3><i class="bi bi-x-circle"></i> Ignoring stale statistics</h3>
+            <p>When estimates are wrong, the index may be fine and the statistics may not be. Refresh the stats before you blame the access path.</p>
+          </div>
+          <div class="mistake">
+            <h3><i class="bi bi-x-circle"></i> Chasing join hints too early</h3>
+            <p>Hints are a last resort. If the planner is wrong, first fix cardinality, join input size, or index shape so the plan becomes obvious.</p>
+          </div>
+          <div class="mistake">
+            <h3><i class="bi bi-x-circle"></i> Forgetting lock time</h3>
+            <p>A slow query that is blocked is a concurrency problem, not a SQL-shape problem. Use the lock views before you rewrite the statement.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="kicker"><i class="bi bi-book"></i> Primary sources</span>
+            <h2 class="mt-2">What this page was checked against</h2>
+          </div>
+          <p class="mb-0 text-body-secondary">The links below are the verification targets for the versioned behavior summarized on the page.</p>
+        </div>
+        <div class="source-grid">
+          <div class="source-card">
+            <h3>PostgreSQL plan and stats</h3>
+            <p class="mb-2">`EXPLAIN`, `ANALYZE`, planner statistics, index usage, and buffer/visibility behavior.</p>
+            <ul class="small mb-0">
+              <li><a href="https://www.postgresql.org/docs/current/sql-explain.html" target="_blank" rel="noopener noreferrer">EXPLAIN</a></li>
+              <li><a href="https://www.postgresql.org/docs/current/using-explain.html" target="_blank" rel="noopener noreferrer">Using EXPLAIN</a></li>
+              <li><a href="https://www.postgresql.org/docs/current/sql-analyze.html" target="_blank" rel="noopener noreferrer">ANALYZE</a></li>
+              <li><a href="https://www.postgresql.org/docs/current/indexes.html" target="_blank" rel="noopener noreferrer">Indexes</a></li>
+              <li><a href="https://www.postgresql.org/docs/current/indexes-index-only-scans.html" target="_blank" rel="noopener noreferrer">Index-only scans</a></li>
+            </ul>
+          </div>
+          <div class="source-card">
+            <h3>PostgreSQL maintenance and locks</h3>
+            <p class="mb-2">Locks, lock waits, vacuum, auto-explain, and query-level statistics collection.</p>
+            <ul class="small mb-0">
+              <li><a href="https://www.postgresql.org/docs/current/explicit-locking.html" target="_blank" rel="noopener noreferrer">Explicit Locking</a></li>
+              <li><a href="https://www.postgresql.org/docs/current/view-pg-locks.html" target="_blank" rel="noopener noreferrer">pg_locks</a></li>
+              <li><a href="https://www.postgresql.org/docs/current/routine-vacuuming.html" target="_blank" rel="noopener noreferrer">Routine Vacuuming</a></li>
+              <li><a href="https://www.postgresql.org/docs/current/auto-explain.html" target="_blank" rel="noopener noreferrer">auto_explain</a></li>
+              <li><a href="https://www.postgresql.org/docs/current/pgstatstatements.html" target="_blank" rel="noopener noreferrer">pg_stat_statements</a></li>
+            </ul>
+          </div>
+          <div class="source-card">
+            <h3>MySQL and SQLite optimization</h3>
+            <p class="mb-2">EXPLAIN, EXPLAIN ANALYZE, optimizer statistics, slow query logging, and SQLite’s query planner docs.</p>
+            <ul class="small mb-0">
+              <li><a href="https://dev.mysql.com/doc/refman/8.0/en/explain.html" target="_blank" rel="noopener noreferrer">MySQL EXPLAIN</a></li>
+              <li><a href="https://dev.mysql.com/doc/refman/8.0/en/explain-output.html" target="_blank" rel="noopener noreferrer">MySQL EXPLAIN output</a></li>
+              <li><a href="https://dev.mysql.com/doc/refman/8.0/en/slow-query-log.html" target="_blank" rel="noopener noreferrer">Slow query log</a></li>
+              <li><a href="https://sqlite.org/eqp.html" target="_blank" rel="noopener noreferrer">SQLite EXPLAIN QUERY PLAN</a></li>
+              <li><a href="https://sqlite.org/optoverview.html" target="_blank" rel="noopener noreferrer">SQLite optimizer overview</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="grid-2 mt-3">
+          <div class="panel">
+            <strong>Related pages</strong>
+            <div class="related-grid mt-2">
+              <a class="badge-soft text-decoration-none" href="databases.html"><i class="bi bi-database"></i> Databases</a>
+              <a class="badge-soft text-decoration-none" href="postgresql.html"><i class="bi bi-elephant"></i> PostgreSQL</a>
+              <a class="badge-soft text-decoration-none" href="dotnet-cheatsheet.html"><i class="bi bi-code-slash"></i> .NET</a>
+              <a class="badge-soft text-decoration-none" href="python-for-architects.html"><i class="bi bi-bezier"></i> Python for Architects</a>
+              <a class="badge-soft text-decoration-none" href="javascript-for-architects.html"><i class="bi bi-braces"></i> JavaScript for Architects</a>
+            </div>
+          </div>
+          <div class="footer-note">
+            <strong>Scope note:</strong> this page is global technical guidance, not vendor sales material. The exact optimizer behavior, plan-node labels, and hint syntax still depend on engine version, so re-check the linked official docs if you are pinning a production fix.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="footer-note">
+        <p class="mb-1"><strong>Last verified: 2026-07-07.</strong> PostgreSQL and MySQL behavior was checked against the current official manuals; SQLite caveats were checked against the current SQLite planner docs. This page is a tuning guide, not a substitute for your database’s current release notes.</p>
+        <p class="mb-0">Search workflow: capture a representative plan, fix the dominant node, rerun with the same parameters, and keep only the change that moved the measured bottleneck.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const stored = localStorage.getItem('sql-performance-tuning-theme');
+      if (stored === 'light' || stored === 'dark') {
+        root.setAttribute('data-theme', stored);
+      }
+      const toggle = document.getElementById('themeToggle');
+      const syncIcon = () => {
+        const current = root.getAttribute('data-theme') || 'auto';
+        toggle.innerHTML = current === 'dark'
+          ? '<i class="bi bi-sun"></i>'
+          : '<i class="bi bi-moon-stars"></i>';
+      };
+      syncIcon();
+      toggle?.addEventListener('click', () => {
+        const current = root.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        localStorage.setItem('sql-performance-tuning-theme', next);
+        syncIcon();
+      });
+
+      document.querySelectorAll('[data-copy]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-copy');
+          const el = document.getElementById(id);
+          if (!el) return;
+          const text = el.innerText;
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch {
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            document.execCommand('copy');
+            sel.removeAllRanges();
+          }
+          const prev = btn.innerHTML;
+          btn.innerHTML = '<i class="bi bi-check2"></i> Copied';
+          setTimeout(() => { btn.innerHTML = prev; }, 1200);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

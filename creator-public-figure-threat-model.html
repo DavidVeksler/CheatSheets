@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Creator Threat Model: Security for Public Figures and Online Creators</title>
+  <meta name="description" content="A practical security manual for creators and public figures: account takeover, doxxing, impersonation, swatting, payment fraud, home privacy, and escalation planning.">
+  <meta name="keywords" content="creator security checklist, public figure threat model, doxxing prevention, impersonation reporting, swatting prevention, influencer cybersecurity, creator account security">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/creator-public-figure-threat-model.html">
+  <meta property="og:title" content="Creator Threat Model: Security for Public Figures and Online Creators">
+  <meta property="og:description" content="A practical security manual for creators and public figures: account takeover, doxxing, impersonation, swatting, payment fraud, home privacy, and escalation planning.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/creator-public-figure-threat-model.html">
+  <meta property="og:image" content="images/creator-public-figure-threat-model.png">
+  <meta property="og:image:alt" content="Creator public-figure exposure map with fix today, fix this week, and monitor lanes">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Creator Threat Model: Security for Public Figures and Online Creators">
+  <meta name="twitter:description" content="Security manual for creators and public figures: account takeover, doxxing, impersonation, swatting, payment fraud, home privacy, and escalation planning.">
+  <meta name="twitter:image" content="images/creator-public-figure-threat-model.png">
+  <meta name="twitter:creator" content="@heroiclife">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Creator Threat Model: Security for Public Figures and Online Creators",
+    "description": "A practical security manual for creators and public figures covering account takeover, doxxing, impersonation, swatting, payment fraud, home privacy, and escalation planning.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-07",
+    "dateModified": "2026-07-07",
+    "keywords": "creator security checklist, public figure threat model, doxxing prevention, impersonation reporting, swatting prevention, influencer cybersecurity"
+  }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+  <style>
+    @layer base, components, utilities;
+
+    @layer base {
+      :root {
+        color-scheme: dark;
+        --bg: #08111f;
+        --panel: #111b2c;
+        --panel-2: #17243a;
+        --text: #e9eef7;
+        --muted: #adbac9;
+        --line: #31435b;
+        --accent: #ff8a4c;
+        --accent-2: #d946ef;
+        --accent-3: #4fd1c5;
+        --danger: #ef4444;
+        --warn: #f59e0b;
+        --ok: #22c55e;
+        --shadow: 0 20px 54px rgba(7, 14, 28, .18);
+        --radius: 8px;
+      }
+      html[data-theme="light"] {
+        color-scheme: light;
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --panel-2: #edf2f9;
+        --text: #14202c;
+        --muted: #586676;
+        --line: #d4deea;
+      }
+      html[data-theme="dark"] { color-scheme: dark; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top right, rgba(217, 70, 239, .10), transparent 28rem),
+          radial-gradient(circle at 15% 10%, rgba(79, 209, 197, .12), transparent 24rem),
+          var(--bg);
+        color: var(--text);
+        font: 18px/1.56 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        text-wrap: pretty;
+      }
+      a { color: color-mix(in srgb, var(--accent) 65%, var(--text)); }
+      a:hover { color: var(--accent); }
+      h1, h2, h3, h4 { text-wrap: balance; letter-spacing: 0; }
+      h1 { font-size: clamp(2.25rem, 5vw, 4.4rem); line-height: .96; }
+      h2 { font-size: clamp(1.55rem, 3vw, 2.2rem); }
+      .container-xl { max-width: 1200px; }
+      :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+      .btn, .panel, .alert, .table, .form-control { border-radius: var(--radius); }
+    }
+
+    @layer components {
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        background: color-mix(in srgb, var(--bg) 88%, transparent);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+      .topbar .fw-bold { color: var(--text) !important; }
+      .topbar .text-secondary { color: var(--muted) !important; }
+      .topbar .btn {
+        border-color: color-mix(in srgb, var(--line) 85%, transparent);
+        color: var(--text);
+      }
+      .brand-mark {
+        width: 2rem;
+        height: 2rem;
+        display: inline-grid;
+        place-items: center;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        color: var(--accent);
+      }
+      .hero {
+        padding: 2.1rem 0 1.35rem;
+        border-bottom: 1px solid var(--line);
+      }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .35rem .65rem;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--muted);
+        font-size: .82rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+        gap: clamp(1rem, 2.6vw, 1.6rem);
+        align-items: stretch;
+      }
+      .hero-copy {
+        display: grid;
+        align-content: start;
+        gap: 1rem;
+        min-width: 0;
+      }
+      .hero-bullets {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .75rem;
+      }
+      .hero-chip {
+        padding: .75rem .8rem;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      .hero-chip strong { display: block; }
+      .hero-chip span { color: var(--muted); font-size: .88rem; }
+      .exposure-map {
+        position: relative;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at center, transparent 0 90px, rgba(255,255,255,.03) 90px 91px, transparent 91px 165px, rgba(255,255,255,.03) 165px 166px, transparent 166px),
+          linear-gradient(145deg, rgba(255, 138, 76, .11), rgba(217, 70, 239, .07) 50%, rgba(79, 209, 197, .08));
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        border-radius: 8px;
+        padding: 1rem;
+      }
+      .exposure-map::before {
+        content: "";
+        position: absolute;
+        inset: .75rem;
+        border: 1px solid rgba(255,255,255,.06);
+        border-radius: 8px;
+        pointer-events: none;
+      }
+      .map-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: start;
+        margin-bottom: .85rem;
+      }
+      .map-head strong {
+        display: block;
+        font-size: .92rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+      }
+      .map-head span { color: var(--muted); font-size: .9rem; }
+      .map-core {
+        display: grid;
+        place-items: center;
+        min-height: 5.8rem;
+        margin: .25rem auto 1rem;
+        max-width: 15rem;
+        text-align: center;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+        background: color-mix(in srgb, var(--panel) 74%, transparent);
+        box-shadow: inset 0 0 0 10px rgba(255,255,255,.02);
+      }
+      .map-core strong { display: block; font-size: 1.05rem; }
+      .map-core span { color: var(--muted); font-size: .88rem; }
+      .lane-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .75rem;
+      }
+      .lane {
+        min-width: 0;
+        background: color-mix(in srgb, var(--panel) 80%, transparent);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 8px;
+        padding: .8rem;
+        color: var(--text);
+      }
+      .lane h3 {
+        margin: 0 0 .5rem;
+        font-size: .85rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: var(--text);
+      }
+      .lane ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: .45rem;
+      }
+      .lane li {
+        padding: .55rem .62rem;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 6px;
+        font-size: .92rem;
+        color: var(--text);
+      }
+      .lane.today h3 { color: var(--accent); }
+      .lane.week h3 { color: var(--accent-2); }
+      .lane.monitor h3 { color: var(--accent-3); }
+      .section {
+        padding: 1.8rem 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: end;
+        margin-bottom: .85rem;
+      }
+      .section-head p { margin: 0; color: var(--muted); max-width: 68ch; }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      .quick-table td, .quick-table th,
+      .matrix td, .matrix th { vertical-align: top; }
+      .quick-table td:first-child { font-weight: 800; }
+      .table { --bs-table-color: var(--text); --bs-table-bg: transparent; --bs-table-border-color: var(--line); }
+      .table thead th { background: color-mix(in srgb, var(--panel-2) 74%, transparent); }
+      .table-striped > tbody > tr:nth-of-type(odd) > * { --bs-table-striped-bg: color-mix(in srgb, var(--panel-2) 55%, transparent); }
+      .callout {
+        border-left: 4px solid var(--line);
+        padding: .85rem 1rem;
+        background: var(--panel);
+      }
+      .callout-info { border-left-color: var(--accent-3); }
+      .callout-warn { border-left-color: var(--warn); }
+      .callout-danger { border-left-color: var(--danger); }
+      .callout-ok { border-left-color: var(--ok); }
+      .entry-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .9rem;
+      }
+      details.entry {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: clip;
+        box-shadow: var(--shadow);
+      }
+      details.entry > summary {
+        list-style: none;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: start;
+        padding: .85rem 1rem;
+      }
+      details.entry > summary::-webkit-details-marker { display: none; }
+      details.entry > summary:hover { background: color-mix(in srgb, var(--panel-2) 75%, transparent); }
+      .entry-title { font-weight: 800; }
+      .entry-kicker { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+      .entry-body {
+        padding: 0 1rem 1rem;
+      }
+      .entry-body p { margin: .45rem 0; }
+      .label {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .2rem .5rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--panel-2) 75%, transparent);
+        border: 1px solid var(--line);
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+      }
+      .mistakes {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .75rem;
+      }
+      .mistake {
+        padding: .85rem .9rem;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      .mistake strong { display: block; margin-bottom: .25rem; }
+      .sources-list {
+        columns: 2;
+        column-gap: 1.5rem;
+      }
+      .sources-list li { break-inside: avoid; margin-bottom: .55rem; }
+      .footer-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        color: var(--muted);
+        font-size: .93rem;
+      }
+      .theme-toggle {
+        width: 2.35rem;
+        height: 2.35rem;
+        display: inline-grid;
+        place-items: center;
+      }
+      .min-w-0 { min-width: 0; }
+    }
+
+    @layer utilities {
+      @media (max-width: 991.98px) {
+        .hero-grid, .entry-grid, .mistakes, .lane-grid, .hero-bullets { grid-template-columns: 1fr; }
+        .sources-list { columns: 1; }
+      }
+      @media (max-width: 575.98px) {
+        body { font-size: 16px; }
+        .hero { padding-top: 1.4rem; }
+      }
+      @media print {
+        .topbar, .no-print { display: none !important; }
+        .section { break-inside: avoid; }
+        details.entry > :not(summary) { display: block !important; }
+        details.entry { break-inside: avoid; box-shadow: none; }
+        .panel, .mistake { box-shadow: none; }
+        a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .8em; color: #555; }
+        body { background: #fff; color: #000; font-size: 12pt; }
+      }
+      code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar no-print">
+    <div class="container-xl py-2 d-flex align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-2 min-w-0">
+        <span class="brand-mark rounded-2"><i class="bi bi-shield-lock-fill"></i></span>
+        <div class="min-w-0">
+          <div class="fw-bold text-truncate">Creator / Public-Figure Threat Model</div>
+          <div class="small text-secondary text-truncate">Security for account roots, public surface, impersonation, swatting, and escalation.</div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary btn-sm theme-toggle" id="themeToggle" type="button" aria-label="Toggle color theme"><i class="bi bi-moon-stars"></i></button>
+        <button class="btn btn-outline-secondary btn-sm" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container-xl py-4">
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow"><i class="bi bi-radar"></i> Public-surface first - crisis ready - U.S.-centered</div>
+          <div>
+            <h1 class="mb-3">Creator / Public-Figure Threat Model</h1>
+            <p class="lead mb-0 text-secondary">This page is for people whose audience is part of the attack surface. The goal is simple: make account takeover harder, reduce doxxing and impersonation, and have a clean escalation path for harassment, swatting, payment fraud, and team access.</p>
+          </div>
+          <div class="hero-bullets">
+            <div class="hero-chip">
+              <strong>Definition of working</strong>
+              <span>You can lock the roots, shrink the public footprint, and respond to a real incident without improvising.</span>
+            </div>
+            <div class="hero-chip">
+              <strong>Reading condition</strong>
+              <span>Stressed on a phone or laptop after harassment, before a launch, or while traveling.</span>
+            </div>
+            <div class="hero-chip">
+              <strong>Volatile facts</strong>
+              <span>Platform report flows, verification programs, and recovery paths drift. Recheck the linked official docs.</span>
+            </div>
+            <div class="hero-chip">
+              <strong>Scope</strong>
+              <span>U.S.-centered for records, carrier controls, and law-enforcement references. Local law still varies.</span>
+            </div>
+          </div>
+          <div class="callout callout-info mb-0">
+            <strong><i class="bi bi-lightning-charge-fill"></i> Fastest win:</strong> separate your private root email from your public creator identity, add passkeys or security keys to the root, set a carrier PIN, and remove public address and family leaks before you touch anything else.
+          </div>
+        </div>
+
+        <aside class="exposure-map">
+          <div class="map-head">
+            <div>
+              <strong>Signature artifact</strong>
+              <span>Exposure map for a public figure with three lanes: fix today, fix this week, monitor.</span>
+            </div>
+            <span class="label"><i class="bi bi-bullseye"></i> screenshot this</span>
+          </div>
+          <div class="map-core">
+            <div>
+              <strong>Creator / public figure</strong>
+              <span>accounts, audience, money, home, family</span>
+            </div>
+          </div>
+          <div class="lane-grid">
+            <div class="lane today">
+              <h3>Fix today</h3>
+              <ul>
+                <li>Root email with unique password and passkey or key</li>
+                <li>Carrier PIN and port-out protection</li>
+                <li>Search your name, handle, phone, and address</li>
+                <li>Turn on 2FA for creator and bank accounts</li>
+              </ul>
+            </div>
+            <div class="lane week">
+              <h3>Fix this week</h3>
+              <ul>
+                <li>Data-broker opt-outs and WHOIS privacy</li>
+                <li>PO box or CMRA for public mail</li>
+                <li>Separate admin, moderator, and finance roles</li>
+                <li>Write a swatting and impersonation runbook</li>
+              </ul>
+            </div>
+            <div class="lane monitor">
+              <h3>Monitor</h3>
+              <ul>
+                <li>Impersonation accounts and fake support messages</li>
+                <li>Family leaks, schedules, venue photos, plates</li>
+                <li>Chargebacks, vendor fraud, and payment reversals</li>
+                <li>Stale PDFs, cached posts, and repost mirrors</li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="quick-reference">
+      <div class="section-head">
+        <div>
+          <span class="label mb-2"><i class="bi bi-lightning-charge"></i> Quick reference</span>
+          <h2 class="mb-1">The 24-hour checklist</h2>
+        </div>
+        <p>Start with the roots and the public surface. Most of the damage path comes from account recovery, phone number control, and easy-to-scrape personal data.</p>
+      </div>
+      <div class="table-responsive panel p-2">
+        <table class="table table-sm table-striped quick-table align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width:6rem;">Priority</th>
+              <th>Action</th>
+              <th>Why it matters</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>Move creator logins behind a dedicated root email and password manager</td><td>Stops one public breach from becoming a full account cascade.</td></tr>
+            <tr><td>2</td><td>Add passkeys or security keys to the root email, cloud drive, and primary social accounts</td><td>Phishing and SIM-swap tricks stop at the authenticator boundary.</td></tr>
+            <tr><td>3</td><td>Set a carrier PIN and ask for port-out protection</td><td>Your phone number is a recovery root, not just a contact method.</td></tr>
+            <tr><td>4</td><td>Search your public footprint for address, family names, phone, venue, and plate leaks</td><td>Doxxing starts with boring data that is easy to scrape and reuse.</td></tr>
+            <tr><td>5</td><td>Separate public and private email, payment, and admin roles</td><td>Fans, vendors, moderators, and accountants should not share the same inbox.</td></tr>
+            <tr><td>6</td><td>Turn on impersonation and abuse reports for each platform you use</td><td>The fastest fix is to make takedown paths obvious before a crisis starts.</td></tr>
+            <tr><td>7</td><td>Write a one-page swatting and harassment runbook</td><td>Under stress, you want a script, not a memory test.</td></tr>
+            <tr><td>8</td><td>Freeze credit and separate creator payment rails from personal ones</td><td>Stops identity and payment fraud from landing on your household stack.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="decision-table">
+      <div class="section-head">
+        <div>
+          <span class="label mb-2"><i class="bi bi-columns-gap"></i> Control selection</span>
+          <h2 class="mb-1">Which control belongs where</h2>
+        </div>
+        <p>Use the strongest control that still fits the workflow. The point is not maximum security theater, it is resilient recovery when an attacker already knows your public name.</p>
+      </div>
+      <div class="table-responsive panel p-2">
+        <table class="table table-sm matrix align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Control</th>
+              <th>Use it when</th>
+              <th>Example</th>
+              <th>Watch out</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Password manager</strong></td>
+              <td>You need unique passwords across many services and staff members.</td>
+              <td>Use a shared vault for brand deals and a private vault for personal recovery.</td>
+              <td>Do not treat it as the only recovery factor.</td>
+            </tr>
+            <tr>
+              <td><strong>Passkey</strong></td>
+              <td>The account supports passwordless sign-in and you want phishing resistance.</td>
+              <td>Google says passkeys can be tied to the device screen lock; Apple treats them as password replacements.</td>
+              <td>Keep a fallback path in case the device is lost.</td>
+            </tr>
+            <tr>
+              <td><strong>Hardware security key</strong></td>
+              <td>You are high risk or want a strong second factor on a root account.</td>
+              <td>Google Advanced Protection requires security keys or passkeys; Apple lets you add at least two keys and up to six.</td>
+              <td>Store a spare off-site and test recovery before you need it.</td>
+            </tr>
+            <tr>
+              <td><strong>Carrier PIN</strong></td>
+              <td>Your phone number is used for recovery, 2FA, or public contact.</td>
+              <td>Ask the carrier to require a PIN for changes and number transfers.</td>
+              <td>SMS-based recovery still becomes a soft spot if the carrier account is weak.</td>
+            </tr>
+            <tr>
+              <td><strong>Domain privacy / proxy</strong></td>
+              <td>You own a public-facing domain for a show, brand, or newsletter.</td>
+              <td>Use a registrar privacy or proxy service so contact details do not sit in public registration data.</td>
+              <td>Privacy does not hide every signal, including DNS records or web content.</td>
+            </tr>
+            <tr>
+              <td><strong>PO box / CMRA</strong></td>
+              <td>You need an address that is not your home for fan mail, vendors, and filings.</td>
+              <td>Use a mail-receiving address for public shipping and business correspondence.</td>
+              <td>Some filings and legal notices still require a real service address.</td>
+            </tr>
+            <tr>
+              <td><strong>Advanced Protection</strong></td>
+              <td>Targeted phishing, impersonation, or account takeover would be costly.</td>
+              <td>Google recommends it for journalists, activists, and others at risk of targeted online attacks.</td>
+              <td>Expect tighter app access and more friction for legitimate tools.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="account-roots">
+      <div class="section-head">
+        <div>
+          <span class="label mb-2"><i class="bi bi-key-fill"></i> Account roots</span>
+          <h2 class="mb-1">Lock the recovery chain first</h2>
+        </div>
+        <p>Most public-figure compromises begin with the root email, the phone number, or a shared admin account. Harden those before you tune the public profile.</p>
+      </div>
+      <div class="entry-grid">
+        <details class="entry" open>
+          <summary><span class="entry-title">Dedicated root email</span><span class="entry-kicker">recovery root</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> A private inbox used only for recovery, billing, and admin access, not for public posting, giveaways, or fan replies.</p>
+            <p><strong>Example:</strong> Keep your creator mailbox public, but make <code>name.recovery@example.com</code> the address that resets social, bank, and domain accounts.</p>
+            <p><strong>Gotcha:</strong> If the root inbox is the same address you publish, you have already handed attackers the easiest search term.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Passkey on the root</span><span class="entry-kicker">phishing resistant</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> A sign-in method tied to a device or security key instead of a shared secret the user types.</p>
+            <p><strong>Example:</strong> Google says passkeys can use fingerprint, face, or device lock; Apple says they replace passwords and work across devices signed into the same Apple Account.</p>
+            <p><strong>Gotcha:</strong> A passkey is only strong if the device lock is strong and recovery access is still under your control.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Hardware security key</span><span class="entry-kicker">high-risk accounts</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> A physical FIDO key that proves you are holding a trusted authenticator, not just typing a code from memory or SMS.</p>
+            <p><strong>Example:</strong> Google notes security keys can protect against phishing and Advanced Protection uses them for targeted online attacks; Apple requires at least two keys for Apple Account security keys.</p>
+            <p><strong>Gotcha:</strong> Keep one key on your person and one off-site. Losing the only key can lock you out at the worst moment.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Recovery codes and backup owners</span><span class="entry-kicker">break-glass access</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> Offline recovery material and an assigned backup person who can regain access if your device stack fails.</p>
+            <p><strong>Example:</strong> Store recovery codes in a sealed envelope in a safe and give a second admin separate finance or channel access, not your main password.</p>
+            <p><strong>Gotcha:</strong> Do not save the codes in the same cloud drive or password vault that they are supposed to rescue.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="section" id="public-surface">
+      <div class="section-head">
+        <div>
+          <span class="label mb-2"><i class="bi bi-eye-slash-fill"></i> Public surface</span>
+          <h2 class="mb-1">Make doxxing expensive and boring</h2>
+        </div>
+        <p>The job is not total invisibility. It is to remove easy pivots: home address, phone number, family links, domain registration, and metadata that let a stranger connect the dots.</p>
+      </div>
+      <div class="entry-grid">
+        <details class="entry" open>
+          <summary><span class="entry-title">People-search opt-outs</span><span class="entry-kicker">data broker cleanup</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> The opt-out process that asks people-search sites and data brokers to stop publishing your address, phone, or profile data.</p>
+            <p><strong>Example:</strong> The FTC says many people-search sites have opt-out pages, and you can do them one by one or use a service if you prefer.</p>
+            <p><strong>Gotcha:</strong> This is recurring work. Data brokers repopulate from fresh records, so set a reminder to recheck every few months.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Domain privacy or proxy</span><span class="entry-kicker">WHOIS / RDDS</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> A registrar service that keeps your contact details out of public registration data when you own a public domain.</p>
+            <p><strong>Example:</strong> ICANN describes privacy and proxy services as a way to register a domain without publishing the customer's contact information in RDDS/WHOIS.</p>
+            <p><strong>Gotcha:</strong> Privacy/proxy does not hide everything. DNS, site content, and legal notices can still reveal the owner.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Mail and address separation</span><span class="entry-kicker">home safety</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> Using a public mailing address for fan mail, vendors, and filing paperwork instead of your home.</p>
+            <p><strong>Example:</strong> Use a PO box or CMRA for shipments and public forms, and keep the home address off invoices and public bios.</p>
+            <p><strong>Gotcha:</strong> Some legal and tax records need a real service address, so do not assume one mailbox solves every disclosure problem.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Family and metadata hygiene</span><span class="entry-kicker">secondary exposure</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> Removing the easy linkage between your public persona and family, home, travel, or work patterns.</p>
+            <p><strong>Example:</strong> Strip photo metadata before posting, avoid school logos and plates in backgrounds, and do not tag live locations in real time.</p>
+            <p><strong>Gotcha:</strong> A blurred face still leaks a schedule, a route, or a venue if the rest of the frame is obvious.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="section" id="platform-controls">
+      <div class="section-head">
+        <div>
+          <span class="label mb-2"><i class="bi bi-megaphone-fill"></i> Platform controls</span>
+          <h2 class="mb-1">Know the takedown path before you need it</h2>
+        </div>
+        <p>The platform should not be your first research project during an incident. Keep the exact report flows and evidence checklist handy, and do not rely on memory under pressure.</p>
+      </div>
+      <div class="table-responsive panel p-2 mb-3">
+        <table class="table table-sm matrix align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>What to use</th>
+              <th>Useful fact</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Instagram / Threads</strong></td>
+              <td>Impersonation report form and in-app abuse reporting.</td>
+              <td>Meta has a dedicated impersonation form for accounts pretending to be you or someone you know.</td>
+            </tr>
+            <tr>
+              <td><strong>X</strong></td>
+              <td>Impersonation report flow or bystander report from the profile.</td>
+              <td>X says you can report impersonation even without an X account.</td>
+            </tr>
+            <tr>
+              <td><strong>YouTube</strong></td>
+              <td>Channel impersonation, harassment, privacy complaint, or content report.</td>
+              <td>YouTube says impersonation and targeted abuse can be reported, and reporting is anonymous.</td>
+            </tr>
+            <tr>
+              <td><strong>Google Account</strong></td>
+              <td>Advanced Protection, passkeys, recovery options, and security keys.</td>
+              <td>Google recommends Advanced Protection for journalists, activists, and others at risk of targeted online attacks.</td>
+            </tr>
+            <tr>
+              <td><strong>General cybercrime</strong></td>
+              <td>FBI IC3 for cyber-enabled crime, extortion, and serious harassment.</td>
+              <td>IC3 says reports may be referred to federal, state, local, or international law enforcement partners.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="entry-grid">
+        <details class="entry" open>
+          <summary><span class="entry-title">Impersonation reports</span><span class="entry-kicker">account cloning</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> A report that a profile, channel, or account is pretending to be you, your brand, or a team member.</p>
+            <p><strong>Example:</strong> Instagram has a dedicated impersonation form; X has an impersonation report flow; YouTube lets you report impersonating channels.</p>
+            <p><strong>Gotcha:</strong> The takedown speed depends on evidence quality. Keep your real profile URLs, screenshots, and a short identity statement ready.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Harassment and synthetic media</span><span class="entry-kicker">abuse and deepfakes</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> Abuse reports for threats, stalking, synthetic voice or likeness use, and repeated targeted harassment.</p>
+            <p><strong>Example:</strong> YouTube says privacy complaints cover altered or synthetic content; X and Instagram both route abusive content through their safety flows.</p>
+            <p><strong>Gotcha:</strong> Keep the same evidence package everywhere. Rewriting the story for each platform wastes time and weakens consistency.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Evidence packet</span><span class="entry-kicker">one file, many uses</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> A shared folder or document with screenshots, URLs, timestamps, contact names, and the exact request you want made.</p>
+            <p><strong>Example:</strong> Include the fake profile link, the real account link, and a short line like "This profile is impersonating me and soliciting money."</p>
+            <p><strong>Gotcha:</strong> Don't capture only the offending post. Save the profile page and the account metadata before it disappears.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Audience controls</span><span class="entry-kicker">prevent escalation</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> Comment filters, DM restrictions, live-chat mods, and approval queues that stop low-effort abuse before it lands on you.</p>
+            <p><strong>Example:</strong> Route brand DMs to a monitored mailbox, limit replies during launch windows, and make one person responsible for moderation logs.</p>
+            <p><strong>Gotcha:</strong> If everyone can answer everything, nobody owns the incident when it starts.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="section" id="money-team">
+      <div class="section-head">
+        <div>
+          <span class="label mb-2"><i class="bi bi-cash-coin"></i> Money and team</span>
+          <h2 class="mb-1">Separate the creator business from the household</h2>
+        </div>
+        <p>Once you have a recognizable audience, payment fraud and insider access become part of the threat model. The goal is to make every financial and team action attributable and reversible.</p>
+      </div>
+      <div class="entry-grid">
+        <details class="entry" open>
+          <summary><span class="entry-title">Separate payment rails</span><span class="entry-kicker">cash and chargebacks</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> Creator income and vendor payments use accounts, cards, and books that are not shared with your household spending.</p>
+            <p><strong>Example:</strong> Put sponsorship income into a business account and use one card for ad spend, merch, or travel so chargebacks do not spill into personal finance.</p>
+            <p><strong>Gotcha:</strong> If your personal card is the default payment method everywhere, a merchant dispute can become a long cleanup.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Role-based access</span><span class="entry-kicker">team hygiene</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> Each assistant, editor, moderator, or accountant gets the smallest access that lets them do their job.</p>
+            <p><strong>Example:</strong> A moderator can review comments, but cannot change payout accounts or delete the root recovery email.</p>
+            <p><strong>Gotcha:</strong> One shared login makes attribution impossible and forces password resets for every small staff change.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Vendor and invoice controls</span><span class="entry-kicker">fake bill defense</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> A process that verifies who may bill you, what channel they use, and where approvals must happen.</p>
+            <p><strong>Example:</strong> Require a callback to the known vendor number before paying a new sponsorship invoice or "urgent" payment change.</p>
+            <p><strong>Gotcha:</strong> The most dangerous invoice is the one that looks routine and arrives when you are busy.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Travel and live-event planning</span><span class="entry-kicker">location exposure</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> Planning how location, logistics, and arrival timing are shared with staff, venues, and the public.</p>
+            <p><strong>Example:</strong> Give the venue one contact for emergency changes, keep family travel off public stories, and avoid real-time geotags when you move between stops.</p>
+            <p><strong>Gotcha:</strong> Live location is a broadcast, not just a convenience. One post can expose a hotel, a car, and the next stop.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="section" id="incident-response">
+      <div class="section-head">
+        <div>
+          <span class="label mb-2"><i class="bi bi-telephone-fill"></i> Incident response</span>
+          <h2 class="mb-1">Keep the first hour simple</h2>
+        </div>
+        <p>When the problem is active, clarity beats cleverness. Capture evidence, stop the bleed, and use the prewritten path for law enforcement, platform reporting, and legal help.</p>
+      </div>
+      <div class="entry-grid">
+        <details class="entry" open>
+          <summary><span class="entry-title">Swatting runbook</span><span class="entry-kicker">public safety</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> A short script that tells household members, staff, and local responders what to do if a fake emergency call sends police to your address.</p>
+            <p><strong>Example:</strong> The FBI says swatting is a serious crime and advises protective steps and reporting through law-enforcement channels; keep a printed contact sheet by the door.</p>
+            <p><strong>Gotcha:</strong> Do not improvise with officers on scene. Your job is to de-escalate, identify yourself calmly, and follow the local response protocol.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Escalation ladder</span><span class="entry-kicker">who gets called</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> The order in which you contact platform support, local police, the FBI/IC3, legal counsel, and security help.</p>
+            <p><strong>Example:</strong> Use IC3 for cyber-enabled crime or extortion, then preserve evidence so the complaint can be referred to the right agency network.</p>
+            <p><strong>Gotcha:</strong> Calling every contact in parallel can create noise. Decide who owns each lane before the incident starts.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">Evidence log</span><span class="entry-kicker">timeline and URLs</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> A dated log of threats, screenshots, timestamps, URLs, usernames, payment details, and who saw what first.</p>
+            <p><strong>Example:</strong> Save the post URL, account handle, screenshot, and the exact wording of a threatening DM or fake invoice.</p>
+            <p><strong>Gotcha:</strong> Deleted content still matters. If you wait to document it, you may lose the proof that ties events together.</p>
+          </div>
+        </details>
+        <details class="entry">
+          <summary><span class="entry-title">When to get help</span><span class="entry-kicker">professional support</span></summary>
+          <div class="entry-body">
+            <p><strong>Definition:</strong> The point where the work stops being a solo checklist and becomes legal, physical, or operational risk management.</p>
+            <p><strong>Example:</strong> Bring in a lawyer, a security firm, or a trusted ops lead when threats become targeted, repeated, or tied to your home, family, or travel schedule.</p>
+            <p><strong>Gotcha:</strong> Waiting until after a swatting event, a leaked address, or a stolen account is usually too late to design the clean response.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="section" id="mistakes">
+      <div class="section-head">
+        <div>
+          <span class="label mb-2"><i class="bi bi-exclamation-triangle-fill"></i> Common mistakes</span>
+          <h2 class="mb-1">The mistakes that keep showing up</h2>
+        </div>
+        <p>These are the recurring failures that turn a manageable creator-security issue into a multi-week mess. Fix the pattern, not just the symptom.</p>
+      </div>
+      <div class="mistakes">
+        <div class="mistake">
+          <strong>Using your public email as the account root</strong>
+          That makes recovery, impersonation, and breach cleanup all hit the same inbox.
+        </div>
+        <div class="mistake">
+          <strong>Sharing one login with the whole team</strong>
+          It hides who changed what and makes a password reset destroy everyone else's access.
+        </div>
+        <div class="mistake">
+          <strong>Posting live location and travel timing</strong>
+          A single story can expose the hotel, venue, route, and return window.
+        </div>
+        <div class="mistake">
+          <strong>Ignoring family and household records</strong>
+          School directories, voter records, property data, and old PDFs often leak the same story from a different angle.
+        </div>
+        <div class="mistake">
+          <strong>Reacting publicly to every threat</strong>
+          Public escalation can reward the attacker with attention and give them a fresh target map.
+        </div>
+        <div class="mistake">
+          <strong>Having no evidence packet before an incident</strong>
+          Without URLs, timestamps, and screenshots, takedown and reporting work becomes much slower.
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="sources">
+      <div class="section-head">
+        <div>
+          <span class="label mb-2"><i class="bi bi-book-half"></i> Primary sources</span>
+          <h2 class="mb-1">The official docs used for drift-prone facts</h2>
+        </div>
+        <p>The page is deliberately light on platform-specific menu paths. These links are the live sources for the facts that move fastest.</p>
+      </div>
+      <div class="panel p-3">
+        <ul class="sources-list mb-0">
+          <li><a href="https://support.google.com/accounts/answer/13548313?hl=en" target="_blank" rel="noopener">Google Account Help - sign in with a passkey</a></li>
+          <li><a href="https://support.google.com/accounts/answer/6103523?co=GENIE.Platform%3DAndroid&hl=en" target="_blank" rel="noopener">Google Account Help - security keys for 2-Step Verification</a></li>
+          <li><a href="https://support.google.com/accounts/answer/7519408?co=GENIE.Platform%3DAndroid&hl=en" target="_blank" rel="noopener">Google Account Help - Advanced Protection Program</a></li>
+          <li><a href="https://support.apple.com/en-us/102195" target="_blank" rel="noopener">Apple Support - about the security of passkeys</a></li>
+          <li><a href="https://support.apple.com/en-us/102637" target="_blank" rel="noopener">Apple Support - security keys for Apple Account</a></li>
+          <li><a href="https://help.instagram.com/contact/636276399721841" target="_blank" rel="noopener">Instagram Help - report an impersonation account</a></li>
+          <li><a href="https://help.x.com/en/safety-and-security/report-x-impersonation" target="_blank" rel="noopener">X Help - report impersonation accounts</a></li>
+          <li><a href="https://support.google.com/youtube/answer/2801947?hl=en" target="_blank" rel="noopener">YouTube Help - impersonation policy</a></li>
+          <li><a href="https://consumer.ftc.gov/articles/what-know-about-people-search-sites-sell-your-information" target="_blank" rel="noopener">FTC - opt out of people-search sites</a></li>
+          <li><a href="https://www.icann.org/en/contracted-parties/accredited-registrars/privacy-and-proxy-service-providers" target="_blank" rel="noopener">ICANN - privacy and proxy service providers</a></li>
+          <li><a href="https://www.fcc.gov/consumers/scam-alert/port-out-fraud-targets-your-private-accounts" target="_blank" rel="noopener">FCC - port-out fraud targets your private accounts</a></li>
+          <li><a href="https://www.ic3.gov/" target="_blank" rel="noopener">FBI IC3 - report cyber-enabled crime</a></li>
+          <li><a href="https://www.ic3.gov/PSA/2025/PSA250429" target="_blank" rel="noopener">IC3 PSA - swatting prevention and response guidance</a></li>
+          <li><a href="https://consumer.ftc.gov/identity-theft-and-online-security/identity-theft" target="_blank" rel="noopener">FTC - identity theft, credit freezes, and fraud alerts</a></li>
+          <li><a href="https://www.fbi.gov/investigate/cyber/alerts/2025/threat-actors-use-swatting-to-target-victims-nationwide" target="_blank" rel="noopener">FBI - swatting targets victims nationwide</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section pb-3 border-0" id="related">
+      <div class="panel p-3">
+        <div class="section-head mb-2">
+          <div>
+            <span class="label mb-2"><i class="bi bi-arrow-right-circle"></i> Related</span>
+            <h2 class="mb-1">Nearby pages in this repo</h2>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-outline-secondary btn-sm" href="personal-cybersecurity.html">Personal Cybersecurity</a>
+          <a class="btn btn-outline-secondary btn-sm" href="privacy-data-broker-opt-out.html">Privacy Data Broker Opt-Out</a>
+          <a class="btn btn-outline-secondary btn-sm" href="parents-threat-model.html">Parent's Threat Model</a>
+          <a class="btn btn-outline-secondary btn-sm" href="small-business-scams.html">Small Business Scams</a>
+          <a class="btn btn-outline-secondary btn-sm" href="scam-defense-for-parents.html">Scam Defense for Parents</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="py-4">
+      <div class="footer-line">
+        <div><strong>Last verified:</strong> 2026-07-07</div>
+        <div><strong>Category:</strong> Security &amp; Privacy</div>
+        <div><strong>Scope:</strong> U.S.-centered, platform docs linked above</div>
+      </div>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+  <script>
+    (() => {
+      const key = 'cpf-theme';
+      const root = document.documentElement;
+      const toggle = document.getElementById('themeToggle');
+      const icon = toggle?.querySelector('i');
+
+      const apply = (theme) => {
+        root.dataset.theme = theme;
+        if (icon) {
+          icon.className = theme === 'dark' ? 'bi bi-moon-stars' : 'bi bi-sun';
+        }
+      };
+
+      try {
+        const stored = localStorage.getItem(key);
+        if (stored === 'light' || stored === 'dark') {
+          apply(stored);
+        } else {
+          apply(root.dataset.theme || 'dark');
+        }
+      } catch {
+        apply(root.dataset.theme || 'dark');
+      }
+
+      toggle?.addEventListener('click', () => {
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        apply(next);
+        try { localStorage.setItem(key, next); } catch {}
+      });
+    })();
+  </script>
+</body>
+</html>

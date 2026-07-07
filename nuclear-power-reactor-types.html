@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+(function () {
+  try {
+    var saved = localStorage.getItem("nptr-theme");
+    var theme = saved === "light" || saved === "dark" ? saved : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  } catch (e) {}
+})();
+</script>
+<title>Nuclear Reactor Types: PWR, BWR, CANDU, SMR, Fast, Molten Salt</title>
+<meta name="description" content="Compare nuclear reactor types by coolant, moderator, fuel, pressure, safety behavior, maturity, waste, deployment status, and real-world examples.">
+<meta name="keywords" content="nuclear reactor types, PWR vs BWR, CANDU reactor, PHWR, RBMK, HTGR, sodium fast reactor, molten salt reactor, SMR">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/nuclear-power-reactor-types.html">
+
+<meta property="og:title" content="Nuclear Reactor Types: PWR, BWR, CANDU, SMR, Fast, Molten Salt">
+<meta property="og:description" content="A control-room comparison of nuclear reactor families by coolant, moderator, fuel, pressure, safety behavior, and deployment status.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/nuclear-power-reactor-types.html">
+<meta property="og:image" content="images/nuclear-power-reactor-types.png">
+<meta property="og:image:alt" content="Control-room style reactor family tree showing coolant, moderator, fuel, and maturity branches">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Nuclear Reactor Types: PWR, BWR, CANDU, SMR, Fast, Molten Salt">
+<meta name="twitter:description" content="Compare reactor families by coolant, moderator, fuel, pressure, safety behavior, maturity, and deployment status.">
+<meta name="twitter:image" content="images/nuclear-power-reactor-types.png">
+<meta name="twitter:creator" content="@heroiclife">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Nuclear Reactor Types: PWR, BWR, CANDU, SMR, Fast, Molten Salt",
+  "description": "A detailed nuclear reactor comparison cheatsheet covering PWR, BWR, PHWR/CANDU, RBMK, gas-cooled, HTGR, sodium fast, molten salt, SCWR, and SMR deployment classes, with safety tradeoffs and current PRIS status context.",
+  "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+  "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
+  "keywords": "nuclear reactor types, PWR, BWR, PHWR, CANDU, RBMK, HTGR, fast reactor, molten salt reactor, SMR"
+}
+</script>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+
+<style>
+@layer tokens, base, components, utilities, print;
+
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --bg: light-dark(#eef3f8, #081018);
+    --panel: light-dark(#ffffff, #0f1722);
+    --panel-2: light-dark(#f5f8fc, #132030);
+    --ink: light-dark(#142033, #edf5fb);
+    --muted: light-dark(#55667b, #9fb3c7);
+    --line: light-dark(#d5dfeb, #223246);
+    --accent: light-dark(#0b5cff, #6dd3ff);
+    --accent-2: light-dark(#0b7a5d, #6df0ba);
+    --warn: light-dark(#a45c00, #ffd166);
+    --bad: light-dark(#a9382c, #ff8d7f);
+    --legacy: light-dark(#7d5cff, #96a9ff);
+    --shadow: 0 18px 40px rgba(0, 0, 0, .18);
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+}
+
+@layer base {
+  * { box-sizing: border-box; min-width: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 20% 0%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 26rem),
+      radial-gradient(circle at 100% 10%, color-mix(in srgb, var(--warn) 10%, transparent), transparent 20rem),
+      linear-gradient(180deg, transparent 0, transparent 64px, color-mix(in srgb, var(--line) 20%, transparent) 64px, transparent 65px),
+      linear-gradient(90deg, color-mix(in srgb, var(--line) 14%, transparent) 1px, transparent 1px),
+      var(--bg);
+    background-size: auto, auto, 100% 100%, 32px 32px, auto;
+    line-height: 1.55;
+  }
+  h1, h2, h3, h4 { text-wrap: balance; letter-spacing: 0; }
+  p, li { text-wrap: pretty; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--warn); outline-offset: 3px; }
+  .mono { font-family: var(--mono); }
+  .table-wrap { overflow-x: auto; }
+  .stack-gap > * + * { margin-top: .75rem; }
+  .badge-soft {
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--panel) 88%, var(--accent) 12%);
+    color: var(--ink);
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    border-radius: 999px;
+    padding: .25rem .55rem;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--panel) 80%, transparent);
+    color: var(--ink);
+    font-size: .8rem;
+    font-weight: 700;
+  }
+  .theme-toggle {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    border-radius: .7rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-grid;
+    place-items: center;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+}
+
+@layer components {
+  .hero {
+    position: relative;
+    overflow: clip;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(140deg, color-mix(in srgb, var(--panel) 88%, var(--accent) 12%), color-mix(in srgb, var(--panel) 80%, transparent));
+  }
+  .hero-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 1rem 1.1rem;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    font-size: .72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--accent);
+  }
+  .hero h1 {
+    margin: .45rem 0 .35rem;
+    font-size: clamp(2rem, 4.8vw, 4.1rem);
+    font-weight: 900;
+  }
+  .hero .lead {
+    max-width: 980px;
+    color: var(--muted);
+    font-size: clamp(1.02rem, 1.35vw, 1.14rem);
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.2fr .8fr;
+    gap: 1rem;
+    align-items: start;
+    margin-top: 1rem;
+  }
+  .hero-panel, .card-panel, .source-panel, .tree-panel, .stat-panel {
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    border: 1px solid var(--line);
+    border-radius: .85rem;
+    box-shadow: var(--shadow);
+  }
+  .hero-panel { padding: 1rem; }
+  .hero-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .65rem;
+    margin-top: .9rem;
+  }
+  .kpi {
+    border: 1px solid var(--line);
+    border-radius: .7rem;
+    padding: .65rem .7rem;
+    background: var(--panel-2);
+    min-height: 100%;
+  }
+  .kpi .n {
+    display: block;
+    font: 900 1.15rem/1 var(--mono);
+    margin-bottom: .2rem;
+  }
+  .kpi .l {
+    display: block;
+    color: var(--muted);
+    font-size: .8rem;
+  }
+  .hero-note {
+    padding: 1rem;
+    border-left: 5px solid var(--warn);
+    background: color-mix(in srgb, var(--warn) 8%, var(--panel));
+    border-radius: .7rem;
+  }
+  .section-band {
+    padding: 2rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .section-title {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+    padding: .35rem .75rem;
+    border-radius: .6rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    font-size: 1.1rem;
+    font-weight: 850;
+  }
+  .mini {
+    color: var(--muted);
+    font-size: .92rem;
+  }
+  .table thead th {
+    background: color-mix(in srgb, var(--panel) 72%, var(--accent) 14%);
+    color: var(--ink);
+    vertical-align: top;
+  }
+  .table td, .table th {
+    border-color: var(--line);
+    vertical-align: top;
+  }
+  .table tbody tr:nth-child(odd) td { background: color-mix(in srgb, var(--panel) 92%, transparent); }
+  .compact td, .compact th { padding-top: .58rem; padding-bottom: .58rem; }
+  .callout {
+    border-left: 5px solid var(--accent);
+    background: color-mix(in srgb, var(--panel) 82%, var(--accent) 10%);
+    padding: 1rem;
+    border-radius: .7rem;
+  }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.bad { border-left-color: var(--bad); }
+  .callout.legacy { border-left-color: var(--legacy); }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .8rem;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+  }
+  .info-card {
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: .85rem;
+    background: var(--panel);
+    height: 100%;
+  }
+  .info-card h3, .info-card h4 {
+    margin-bottom: .35rem;
+    font-size: 1rem;
+    font-weight: 850;
+  }
+  .info-card .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    margin-bottom: .45rem;
+    color: var(--muted);
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 800;
+  }
+  .family-tree {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: .8rem;
+  }
+  .tree-root {
+    text-align: center;
+    border: 2px solid var(--accent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 16%, var(--panel)), var(--panel));
+    color: var(--ink);
+    border-radius: 999px;
+    padding: .6rem .95rem;
+    font-weight: 900;
+    width: fit-content;
+    margin: 0 auto;
+  }
+  .branch-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .75rem;
+    padding-top: 1rem;
+  }
+  .branch-row::before {
+    content: "";
+    position: absolute;
+    top: .15rem;
+    left: 10%;
+    right: 10%;
+    border-top: 2px solid var(--line);
+  }
+  .branch-row::after {
+    content: "";
+    position: absolute;
+    top: .15rem;
+    left: 50%;
+    height: .95rem;
+    border-left: 2px solid var(--line);
+  }
+  .branch {
+    position: relative;
+    padding: .9rem;
+    border: 1px solid var(--line);
+    border-radius: .8rem;
+    background: var(--panel);
+  }
+  .branch::before {
+    content: "";
+    position: absolute;
+    top: -.95rem;
+    left: 50%;
+    width: 2px;
+    height: .95rem;
+    background: var(--line);
+  }
+  .branch h3 {
+    font-size: 1rem;
+    font-weight: 900;
+    margin-bottom: .35rem;
+  }
+  .branch ul {
+    margin: .5rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--muted);
+  }
+  .branch li + li { margin-top: .2rem; }
+  .source-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem .7rem;
+  }
+  .source-links a, .related-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .32rem .58rem;
+    border: 1px solid var(--line);
+    border-radius: .6rem;
+    background: var(--panel);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .source-links a:hover, .related-links a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .safety-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+  }
+  .mistakes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+  }
+  .mistake {
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: .8rem;
+    background: var(--panel);
+  }
+  .mistake .num {
+    display: inline-grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(--warn);
+    color: #111;
+    font: 900 .92rem/1 var(--mono);
+    margin-bottom: .45rem;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .45rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: .78rem;
+    color: var(--muted);
+  }
+}
+
+@layer utilities {
+  .text-muted-2 { color: var(--muted) !important; }
+  .nowrap { white-space: nowrap; }
+}
+
+@layer print {
+  @media print {
+    body {
+      background: #fff !important;
+      color: #000 !important;
+    }
+    .hero, .section-band { border-color: #bbb !important; }
+    .theme-toggle, .no-print, .hero-note { display: none !important; }
+    .hero-panel, .card-panel, .source-panel, .tree-panel, .stat-panel, .info-card, .mistake, .branch {
+      box-shadow: none !important;
+      background: #fff !important;
+      color: #000 !important;
+    }
+    a { color: #000 !important; text-decoration: none !important; }
+    .table thead th { background: #eee !important; color: #000 !important; }
+    .page-break { break-before: page; }
+  }
+}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="d-flex align-items-start gap-2 justify-content-between">
+      <div>
+        <div class="eyebrow"><i class="bi bi-radar"></i> Reactor taxonomy cheat sheet</div>
+        <h1 class="mb-0">Nuclear Power Reactor Types</h1>
+        <p class="lead mb-0">The useful split is not "nuclear" versus "not nuclear." It is coolant, moderator, fuel form, pressure, neutron spectrum, refueling mode, and whether the design exists in the fleet or only in the lab.</p>
+      </div>
+      <button class="theme-toggle no-print" type="button" id="themeToggle" aria-label="Toggle theme">
+        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+      </button>
+    </div>
+
+    <div class="hero-grid">
+      <div class="hero-panel">
+        <div class="legend mb-2">
+          <span><i class="bi bi-check2-circle text-success"></i> Commercial</span>
+          <span><i class="bi bi-hourglass-split" style="color:var(--legacy)"></i> Legacy / phaseout</span>
+          <span><i class="bi bi-flask" style="color:var(--accent)"></i> Prototype / research</span>
+          <span><i class="bi bi-diagram-3" style="color:var(--warn)"></i> Deployment class</span>
+        </div>
+        <div class="hero-kpis">
+          <div class="kpi"><span class="n">PWR</span><span class="l">Pressurized water: dominant global fleet</span></div>
+          <div class="kpi"><span class="n">BWR</span><span class="l">Boiling water: direct steam cycle</span></div>
+          <div class="kpi"><span class="n">PHWR</span><span class="l">Heavy water: natural uranium friendly</span></div>
+          <div class="kpi"><span class="n">SMR</span><span class="l">Size class, not one physics family</span></div>
+        </div>
+        <div class="hero-kpis mt-2">
+          <div class="kpi"><span class="n">22.1 MPa</span><span class="l">SCWR threshold where water reaches its critical point</span></div>
+          <div class="kpi"><span class="n">No moderator</span><span class="l">Fast spectrum designs rely on unmoderated neutrons</span></div>
+          <div class="kpi"><span class="n">Low pressure</span><span class="l">Molten-salt concepts trade pressure for materials work</span></div>
+          <div class="kpi"><span class="n">TRISO</span><span class="l">HTGR fuel particle used for high-temperature retention</span></div>
+        </div>
+      </div>
+      <aside class="hero-note">
+        <strong>Last verified: 2026-07-07.</strong>
+        <div class="mt-2">Current fleet context here comes from IAEA PRIS and official regulator pages. PRIS last updated its reactor-by-type table on 2026-07-06, so the fleet snapshot in this page is intentionally dated.</div>
+      </aside>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-band">
+    <div class="container-xxl">
+      <div class="section-title"><i class="bi bi-card-list"></i> Quick Reference</div>
+      <p class="mini mb-3">The fastest way to classify a reactor is to ask what slows neutrons, what carries heat, and how much pressure the primary loop carries.</p>
+      <div class="table-wrap card-panel p-2">
+        <table class="table table-sm align-middle compact mb-0">
+          <thead>
+            <tr>
+              <th>Family</th>
+              <th>Core clue</th>
+              <th>Fuel / moderator / coolant</th>
+              <th>Pressure behavior</th>
+              <th>Status</th>
+              <th>Watch out for</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>PWR</strong></td>
+              <td>Heat goes through a steam generator, not straight to the turbine.</td>
+              <td>Enriched uranium; light-water moderator and coolant.</td>
+              <td>Primary loop kept at very high pressure so water does not boil.</td>
+              <td><span class="status-badge"><i class="bi bi-check2-circle text-success"></i> Commercial</span></td>
+              <td>People confuse the secondary steam cycle with primary coolant flow.</td>
+            </tr>
+            <tr>
+              <td><strong>BWR</strong></td>
+              <td>Water boils in the core and steam goes to the turbine.</td>
+              <td>Enriched uranium; light-water moderator and coolant.</td>
+              <td>Lower primary pressure than a PWR because boiling is intended.</td>
+              <td><span class="status-badge"><i class="bi bi-check2-circle text-success"></i> Commercial</span></td>
+              <td>Not every reactor with steam in the loop is a BWR.</td>
+            </tr>
+            <tr>
+              <td><strong>PHWR / CANDU</strong></td>
+              <td>Heavy water buys neutron economy and usually on-power refueling.</td>
+              <td>Heavy-water moderator and coolant; often natural uranium fuel.</td>
+              <td>Pressurized, but the key distinction is moderator chemistry.</td>
+              <td><span class="status-badge"><i class="bi bi-check2-circle text-success"></i> Commercial</span></td>
+              <td>CANDU is a family label; PHWR is the reactor class.</td>
+            </tr>
+            <tr>
+              <td><strong>RBMK / LWGR</strong></td>
+              <td>Graphite moderator with light-water coolant in pressure channels.</td>
+              <td>Low-enriched uranium oxide; graphite moderator; light-water coolant.</td>
+              <td>Channel-type, not one big pressure vessel.</td>
+              <td><span class="status-badge"><i class="bi bi-hourglass-split" style="color:var(--legacy)"></i> Legacy</span></td>
+              <td>Do not generalize Chernobyl to all graphite reactors.</td>
+            </tr>
+            <tr>
+              <td><strong>Gas-cooled</strong></td>
+              <td>CO2 or helium carries heat; graphite often slows neutrons.</td>
+              <td>Magnox / AGR / HTGR variants use different fuels and cladding.</td>
+              <td>Usually lower pressure than light-water reactors.</td>
+              <td><span class="status-badge"><i class="bi bi-hourglass-split" style="color:var(--legacy)"></i> Legacy / niche</span></td>
+              <td>Gas-cooled is a coolant family, not a single reactor.</td>
+            </tr>
+            <tr>
+              <td><strong>HTGR</strong></td>
+              <td>Helium coolant, graphite moderator, TRISO fuel, high outlet temperature.</td>
+              <td>TRISO fuel in pebbles or prismatic blocks.</td>
+              <td>Low-pressure primary coolant enables different accident behavior.</td>
+              <td><span class="status-badge"><i class="bi bi-flask" style="color:var(--accent)"></i> Limited operating / advanced</span></td>
+              <td>High temperature does not mean high power output by itself.</td>
+            </tr>
+            <tr>
+              <td><strong>SFR</strong></td>
+              <td>Fast neutrons, sodium coolant, no moderator.</td>
+              <td>Metal or oxide fuel, often HALEU / plutonium-bearing fuel.</td>
+              <td>Low-pressure coolant loop, but sodium chemistry is the hard part.</td>
+              <td><span class="status-badge"><i class="bi bi-flask" style="color:var(--accent)"></i> Prototype / demo</span></td>
+              <td>Fast spectrum is not the same as "high temperature."</td>
+            </tr>
+            <tr>
+              <td><strong>MSR</strong></td>
+              <td>Fuel and/or coolant are molten salts; pressure is low.</td>
+              <td>Either liquid fuel in salt or solid fuel with salt coolant.</td>
+              <td>Atmospheric or low pressure compared with water reactors.</td>
+              <td><span class="status-badge"><i class="bi bi-flask" style="color:var(--accent)"></i> Development</span></td>
+              <td>Molten salt is not a synonym for thorium.</td>
+            </tr>
+            <tr>
+              <td><strong>SCWR</strong></td>
+              <td>Water runs above its critical point so there is no boiling transition.</td>
+              <td>Usually light-water fuel concepts with supercritical coolant conditions.</td>
+              <td>About 22.1 MPa critical pressure, so pressure design is demanding.</td>
+              <td><span class="status-badge"><i class="bi bi-flask" style="color:var(--accent)"></i> Concept</span></td>
+              <td>Supercritical is a thermodynamic regime, not a safety label.</td>
+            </tr>
+            <tr>
+              <td><strong>SMR</strong></td>
+              <td>Modular size and factory assembly; can be PWR, BWR, HTGR, SFR, or MSR.</td>
+              <td>Depends on the underlying physics family.</td>
+              <td>Pressure depends on the underlying reactor design.</td>
+              <td><span class="status-badge"><i class="bi bi-diagram-3" style="color:var(--warn)"></i> Deployment class</span></td>
+              <td>SMR is not a coolant or moderator type.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warn mt-3">
+        <strong>Decision rule:</strong> if two designs use the same fuel but different coolant or moderator, they can behave very differently in accidents, refueling, and waste handling. If two designs use the same coolant but different spectrum, they can diverge just as much.
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band">
+    <div class="container-xxl">
+      <div class="section-title"><i class="bi bi-diagram-3"></i> Reactor Family Tree</div>
+      <p class="mini mb-3">Signature view: coolant, moderator, fuel, and maturity branch from the same starting point. This is the screenshot-worthy artifact for the page.</p>
+      <div class="tree-panel p-3">
+        <div class="family-tree">
+          <div class="tree-root"><i class="bi bi-gear-wide-connected"></i> Nuclear power reactor families</div>
+          <div class="branch-row">
+            <article class="branch">
+              <h3><i class="bi bi-droplet-fill text-info"></i> Light-water family</h3>
+              <div class="legend mb-2">
+                <span>Coolant: H2O</span><span>Moderator: H2O</span><span class="badge-soft px-2 py-1">Commercial</span>
+              </div>
+              <ul>
+                <li><strong>PWR</strong>: pressurized primary loop, steam generator, dominant global fleet.</li>
+                <li><strong>BWR</strong>: boils in core, direct steam to turbine, simpler loop geometry.</li>
+              </ul>
+            </article>
+            <article class="branch">
+              <h3><i class="bi bi-droplet-half text-primary"></i> Heavy-water family</h3>
+              <div class="legend mb-2">
+                <span>Coolant: D2O</span><span>Moderator: D2O</span><span class="badge-soft px-2 py-1">Commercial</span>
+              </div>
+              <ul>
+                <li><strong>PHWR / CANDU</strong>: natural uranium friendly, strong neutron economy, on-power refueling.</li>
+              </ul>
+            </article>
+            <article class="branch">
+              <h3><i class="bi bi-moisture text-warning"></i> Graphite / gas family</h3>
+              <div class="legend mb-2">
+                <span>Moderator: graphite</span><span>Coolant: CO2 / He / water</span><span class="badge-soft px-2 py-1">Legacy + advanced</span>
+              </div>
+              <ul>
+                <li><strong>RBMK / LWGR</strong>: graphite moderator, light-water coolant, pressure channels.</li>
+                <li><strong>GCR / AGR / Magnox</strong>: legacy gas-cooled power reactors.</li>
+                <li><strong>HTGR</strong>: helium, graphite, TRISO, high outlet temperature.</li>
+              </ul>
+            </article>
+          </div>
+          <div class="branch-row" style="grid-template-columns: repeat(4, minmax(0, 1fr));">
+            <article class="branch">
+              <h3><i class="bi bi-lightning-charge-fill text-danger"></i> Fast spectrum</h3>
+              <div class="legend mb-2">
+                <span>No moderator</span><span>Coolant: sodium / lead / gas</span><span class="badge-soft px-2 py-1">Prototype / demo</span>
+              </div>
+              <ul>
+                <li><strong>SFR</strong>: sodium cooled, breeding and actinide management focus.</li>
+              </ul>
+            </article>
+            <article class="branch">
+              <h3><i class="bi bi-bezier text-success"></i> Molten salt</h3>
+              <div class="legend mb-2">
+                <span>Fuel or coolant in salt</span><span>Low pressure</span><span class="badge-soft px-2 py-1">Development</span>
+              </div>
+              <ul>
+                <li><strong>MSR</strong>: liquid-fuel and salt-coolant variants share the same headline but not the same engineering.</li>
+              </ul>
+            </article>
+            <article class="branch">
+              <h3><i class="bi bi-thermometer-sun text-danger"></i> Supercritical water</h3>
+              <div class="legend mb-2">
+                <span>Water above 22.1 MPa</span><span>No phase change</span><span class="badge-soft px-2 py-1">Concept</span>
+              </div>
+              <ul>
+                <li><strong>SCWR</strong>: efficiency-oriented water reactor concept with a hard materials problem.</li>
+              </ul>
+            </article>
+            <article class="branch">
+              <h3><i class="bi bi-box-seam text-secondary"></i> SMR class</h3>
+              <div class="legend mb-2">
+                <span>Deployment / size class</span><span>Factory modularity</span><span class="badge-soft px-2 py-1">Cross-cutting</span>
+              </div>
+              <ul>
+                <li><strong>SMR</strong> can be a light-water, fast, gas-cooled, or molten-salt design.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band">
+    <div class="container-xxl">
+      <div class="section-title"><i class="bi bi-wrench-adjustable-circle"></i> How to Classify Any Reactor</div>
+      <p class="mini mb-3">These are the comparison axes worth reading first. Each one changes how the plant behaves, what fails first, and what the regulator cares about.</p>
+      <div class="grid-2">
+        <article class="info-card">
+          <div class="tag"><i class="bi bi-droplet-fill"></i> Coolant</div>
+          <h3>What carries heat away from the core</h3>
+          <p>Coolant is the working fluid that removes thermal power from fuel. Example: PWRs and BWRs use light water; SFRs use sodium; HTGRs use helium; MSRs may use salt.</p>
+          <p class="mb-0 text-muted-2">Gotcha: a coolant can also be a moderator, but it does not have to be. Sodium fast reactors deliberately avoid moderation.</p>
+        </article>
+        <article class="info-card">
+          <div class="tag"><i class="bi bi-circle-half"></i> Moderator</div>
+          <h3>What slows neutrons down</h3>
+          <p>Moderator choice determines neutron spectrum and fuel economy. Example: light water moderates PWRs and BWRs; heavy water moderates PHWRs; graphite moderates RBMKs, GCRs, and HTGRs.</p>
+          <p class="mb-0 text-muted-2">Gotcha: "graphite reactor" is not enough by itself. Graphite plus water, graphite plus gas, and graphite plus no moderator implications are different designs.</p>
+        </article>
+        <article class="info-card">
+          <div class="tag"><i class="bi bi-arrows-angle-expand"></i> Spectrum</div>
+          <h3>Thermal versus fast</h3>
+          <p>Thermal reactors slow neutrons before fission; fast reactors keep neutrons energetic. Example: PWR, BWR, PHWR, RBMK, HTGR are thermal; SFRs are fast.</p>
+          <p class="mb-0 text-muted-2">Gotcha: "fast" does not mean "hotter" or "more powerful." It means the neutron energy spectrum is different.</p>
+        </article>
+        <article class="info-card">
+          <div class="tag"><i class="bi bi-speedometer2"></i> Pressure</div>
+          <h3>How hard the coolant loop is being pushed</h3>
+          <p>Pressure changes boiling margin, pipe size, and accident mode. Example: PWR primary loops stay highly pressurized; BWRs let the core boil; SCWRs run above 22.1 MPa; MSRs are low pressure.</p>
+          <p class="mb-0 text-muted-2">Gotcha: low pressure is not a free safety win. Sodium chemistry, salt chemistry, and materials damage still matter.</p>
+        </article>
+        <article class="info-card">
+          <div class="tag"><i class="bi bi-fuel-pump"></i> Fuel form</div>
+          <h3>What the fissile material looks like</h3>
+          <p>Fuel form drives enrichment, burnup, reprocessing, and waste handling. Example: PWR/BWR use UO2 pellets; PHWR often uses natural uranium; HTGRs use TRISO particles; SFRs may use metal fuel.</p>
+          <p class="mb-0 text-muted-2">Gotcha: the same coolant can support multiple fuel forms, and the same fuel form can be used in more than one reactor family.</p>
+        </article>
+        <article class="info-card">
+          <div class="tag"><i class="bi bi-arrow-repeat"></i> Refueling mode</div>
+          <h3>How and when fuel is swapped</h3>
+          <p>Some designs refuel during shutdowns; others refuel online. Example: PHWR and RBMK families support on-power refueling, which affects capacity factor, maintenance, and proliferation scrutiny.</p>
+          <p class="mb-0 text-muted-2">Gotcha: online refueling is operationally convenient but does not automatically make the plant simpler or safer.</p>
+        </article>
+        <article class="info-card">
+          <div class="tag"><i class="bi bi-shield-shaded"></i> Containment</div>
+          <h3>What keeps releases inside the plant envelope</h3>
+          <p>Containment is the last barrier around accident releases. Example: PWR and BWR plants rely on robust containments; IAEA notes RBMKs were not designed with a pressure-retaining containment structure capable of limiting severe-core-damage releases.</p>
+          <p class="mb-0 text-muted-2">Gotcha: containment quality matters as much as core physics when you compare accident consequences.</p>
+        </article>
+        <article class="info-card">
+          <div class="tag"><i class="bi bi-boxes"></i> Deployment class</div>
+          <h3>SMR is a size and construction strategy</h3>
+          <p>DOE describes advanced SMRs as reactors ranging from tens to hundreds of megawatts and assembled with factory-made modules. Example: NuScale is a light-water SMR, Natrium is a sodium fast SMR, and Xe-100 is an HTGR SMR.</p>
+          <p class="mb-0 text-muted-2">Gotcha: you cannot infer coolant, moderator, or spectrum from the SMR label alone.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band">
+    <div class="container-xxl">
+      <div class="section-title"><i class="bi bi-bar-chart-line"></i> Current Fleet Snapshot</div>
+      <p class="mini mb-3">IAEA PRIS last updated its type table on 2026-07-06. These counts are useful as a reality check on what is commercially real versus mostly proposed.</p>
+      <div class="table-wrap stat-panel p-2">
+        <table class="table table-sm compact mb-0">
+          <thead>
+            <tr>
+              <th>PRIS type</th>
+              <th>Descriptive name</th>
+              <th>Operating units</th>
+              <th>What it says about the market</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>PWR</strong></td><td>Pressurized Light-Water Moderated and Cooled Reactor</td><td class="mono">308</td><td>Dominant commercial family worldwide.</td></tr>
+            <tr><td><strong>BWR</strong></td><td>Boiling Light-Water Cooled and Moderated Reactor</td><td class="mono">45</td><td>Large commercial fleet, but much smaller than PWR.</td></tr>
+            <tr><td><strong>PHWR</strong></td><td>Pressurized Heavy-Water Moderated and Cooled Reactor</td><td class="mono">46</td><td>Healthy niche, especially where natural uranium is attractive.</td></tr>
+            <tr><td><strong>GCR</strong></td><td>Gas Cooled, Graphite Moderated Reactor</td><td class="mono">8</td><td>Legacy gas-cooled power is mostly a UK story.</td></tr>
+            <tr><td><strong>LWGR</strong></td><td>Light-Water Cooled, Graphite Moderated Reactor</td><td class="mono">7</td><td>Graphite-plus-water channel-type family, historically Soviet.</td></tr>
+            <tr><td><strong>HTGR</strong></td><td>High Temperature Gas Cooled Reactor</td><td class="mono">1</td><td>Still niche, but real, not just theory.</td></tr>
+            <tr><td><strong>FBR</strong></td><td>Fast Breeder Reactor</td><td class="mono">2</td><td>Fast-spectrum operation exists, but remains rare.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout legacy mt-3">
+        <strong>Interpretation:</strong> the fleet is still overwhelmingly light-water. Advanced designs are real, but commercial scale is concentrated in PWRs, BWRs, and PHWRs.
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band">
+    <div class="container-xxl">
+      <div class="section-title"><i class="bi bi-kanban"></i> Safety and Tradeoffs</div>
+      <p class="mini mb-3">Safety behavior is not just "good" or "bad." It follows from pressure, chemistry, spectrum, refueling, and whether the plant can shed decay heat without active intervention.</p>
+      <div class="safety-grid">
+        <article class="info-card">
+          <h3>Pressure boundary</h3>
+          <p>High-pressure water reactors store more energy in the coolant system, so rupture control and depressurization matter. Example: PWR primary loops are pressurized to keep water from boiling. Gotcha: that same pressure makes pipe and vessel design more demanding.</p>
+        </article>
+        <article class="info-card">
+          <h3>Coolant chemistry</h3>
+          <p>Sodium is thermally excellent but reacts violently with water and air; salt systems avoid some pressure risks but introduce corrosion, chemistry, and freeze-point issues. Example: SFRs and MSRs both need chemistry discipline, just in different ways.</p>
+        </article>
+        <article class="info-card">
+          <h3>Decay heat</h3>
+          <p>Every fission reactor keeps producing heat after shutdown. Example: PWRs, BWRs, PHWRs, and HTGRs all need decay-heat removal. Gotcha: the accident question is never "does it stop fission?" but "how does it remove residual heat?"</p>
+        </article>
+        <article class="info-card">
+          <h3>Containment and confinement</h3>
+          <p>Robust containment lowers severe-release risk. Example: the IAEA notes RBMKs were not designed with a pressure-retaining containment structure capable of limiting releases during severe core damage. Gotcha: this is a design lesson, not a statement that every graphite reactor behaves the same.</p>
+        </article>
+        <article class="info-card">
+          <h3>Fuel economy versus proliferation</h3>
+          <p>Heavy water and fast-spectrum designs can improve neutron economy, but that can also affect fuel handling and safeguards scrutiny. Example: PHWRs often use natural uranium, while fast breeders can generate more fissile material than they consume. Gotcha: fuel economy is not a pure safety metric.</p>
+        </article>
+        <article class="info-card">
+          <h3>Operating mode</h3>
+          <p>On-power refueling supports availability but changes maintenance and safeguards planning. Example: CANDU and RBMK families can refuel online. Gotcha: "online refueling" is an operational advantage, not a reason to ignore mechanical complexity.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band">
+    <div class="container-xxl">
+      <div class="section-title"><i class="bi bi-flask"></i> Advanced and Proposed Designs</div>
+      <p class="mini mb-3">These are the reactor names that create most public confusion. The important split is what is deployed now, what is operating only in small numbers, and what is still being licensed or tested.</p>
+      <div class="table-wrap card-panel p-2">
+        <table class="table table-sm compact mb-0">
+          <thead>
+            <tr>
+              <th>Design</th>
+              <th>Why it matters</th>
+              <th>Maturity</th>
+              <th>Representative example</th>
+              <th>Primary gotcha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>HTGR</strong></td>
+              <td>Very high outlet temperature with graphite moderation and helium coolant.</td>
+              <td>Limited operating; still a small fleet.</td>
+              <td>PRIS lists 1 operating HTGR as of 2026-07-06.</td>
+              <td>Great for process heat, but the high temperature claim is not the whole engineering story.</td>
+            </tr>
+            <tr>
+              <td><strong>SFR</strong></td>
+              <td>Fast-spectrum breeding and actinide-management potential.</td>
+              <td>Prototype / demo with a small operating base.</td>
+              <td>IAEA notes sodium-cooled fast reactors are being developed internationally; NRC tracks Natrium as a 345 MWe sodium fast design.</td>
+              <td>Sodium chemistry drives much of the plant design burden.</td>
+            </tr>
+            <tr>
+              <td><strong>MSR</strong></td>
+              <td>Low-pressure operation and unusual fuel-cycle flexibility.</td>
+              <td>Development / licensing / test stage.</td>
+              <td>IAEA says the coolant and/or fuel can be molten salt; NRC issued a construction permit for ACU's MSRR in 2024.</td>
+              <td>Do not assume thorium, liquid fuel, or breeding unless the specific design says so.</td>
+            </tr>
+            <tr>
+              <td><strong>SCWR</strong></td>
+              <td>Efficiency-oriented water reactor concept above the critical point.</td>
+              <td>Concept / research.</td>
+              <td>IAEA describes water above 22.1 MPa with no phase change.</td>
+              <td>The materials and heat-transfer problem is harder than the thermodynamic pitch sounds.</td>
+            </tr>
+            <tr>
+              <td><strong>SMR</strong></td>
+              <td>Factory modularity and smaller site footprint.</td>
+              <td>Mixed: certified, pre-application, and concept designs coexist.</td>
+              <td>DOE describes advanced SMRs as tens to hundreds of megawatts; NRC tracks multiple developers.</td>
+              <td>SMR is a deployment strategy, not a reactor physics family.</td>
+            </tr>
+            <tr>
+              <td><strong>Microreactor</strong></td>
+              <td>Even smaller power systems for remote or defense-adjacent use cases.</td>
+              <td>Pre-application and research.</td>
+              <td>NRC maintains a dedicated microreactor page and reviews developer engagement.</td>
+              <td>Microreactor is smaller than SMR, but not automatically simpler to license.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band">
+    <div class="container-xxl">
+      <div class="section-title"><i class="bi bi-exclamation-triangle"></i> Common Mistakes</div>
+      <div class="mistakes">
+        <article class="mistake">
+          <div class="num">1</div>
+          <h3>Nuclear is not one reactor type</h3>
+          <p>Example: a PWR, BWR, PHWR, and SFR all make electricity from fission, but they differ on coolant, moderator, spectrum, and accident behavior. Gotcha: lumping them together erases the actual engineering tradeoffs.</p>
+        </article>
+        <article class="mistake">
+          <div class="num">2</div>
+          <h3>Molten salt does not automatically mean thorium</h3>
+          <p>Example: IAEA defines MSRs by salt in the fuel or coolant, not by thorium specifically. Gotcha: some molten-salt concepts use uranium fuel, some use thorium, and some use solid fuel with salt coolant.</p>
+        </article>
+        <article class="mistake">
+          <div class="num">3</div>
+          <h3>SMR is not a physics family</h3>
+          <p>Example: NuScale is a light-water SMR, Natrium is a sodium fast SMR, and Xe-100 is an HTGR SMR. Gotcha: the acronym tells you more about construction and size than about neutrons.</p>
+        </article>
+        <article class="mistake">
+          <div class="num">4</div>
+          <h3>Fast does not mean high temperature</h3>
+          <p>Example: SFRs use a fast spectrum because they do not moderate neutrons, not because their coolant is automatically hotter than an HTGR. Gotcha: spectrum and outlet temperature are separate design axes.</p>
+        </article>
+        <article class="mistake">
+          <div class="num">5</div>
+          <h3>Decay heat still exists after shutdown</h3>
+          <p>Example: any fission reactor that just tripped still needs heat removal. Gotcha: the most important accident question is how the plant sheds residual heat when pumps, power, or operators are unavailable.</p>
+        </article>
+        <article class="mistake">
+          <div class="num">6</div>
+          <h3>Paper concepts are not built-plant economics</h3>
+          <p>Example: a vendor cost estimate for an MSR or SMR should not be compared directly with a completed PWR fleet average unless you control for learning curve, financing, and licensing stage. Gotcha: timeline and financing can dominate the headline reactor cost.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band">
+    <div class="container-xxl">
+      <div class="section-title"><i class="bi bi-link-45deg"></i> Related Pages</div>
+      <div class="related-links">
+        <a href="deaths-per-terawatt-hour.html" rel="noopener noreferrer" target="_blank" title="Compare reactor safety with energy source mortality">
+          <i class="bi bi-graph-up-arrow"></i> Deaths per TWh
+        </a>
+        <a href="nuclear-preparedness.html" rel="noopener noreferrer" target="_blank" title="Fallout shelter and 7-10 rule survival guide">
+          <i class="bi bi-shield-exclamation"></i> Nuclear Preparedness
+        </a>
+        <a href="geoengineering-approaches.html" rel="noopener noreferrer" target="_blank" title="Compare large-scale climate intervention approaches">
+          <i class="bi bi-cloud-sun"></i> Geoengineering
+        </a>
+        <a href="future-of-warfare-technology.html" rel="noopener noreferrer" target="_blank" title="Military technology futures and tradeoffs">
+          <i class="bi bi-bullseye"></i> Future Warfare Tech
+        </a>
+      </div>
+
+      <div class="source-panel p-3 mt-3">
+        <h2 class="h5 mb-2">Primary sources used</h2>
+        <p class="mini mb-3">These are the official sources behind the page's definitions and current-status statements. The counts and status notes are intentionally dated where they can drift.</p>
+        <div class="source-links">
+          <a href="https://www.iaea.org/topics/nuclear-power-reactors" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> IAEA reactor overview</a>
+          <a href="https://pris.iaea.org/pris/glossary.aspx" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> IAEA PRIS glossary</a>
+          <a href="https://pris.iaea.org/pris/worldstatistics/operationalreactorsbytype.aspx" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> IAEA PRIS fleet counts</a>
+          <a href="https://www.nrc.gov/reactors/power" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> NRC power reactors</a>
+          <a href="https://www.nrc.gov/reactors/power/pwrs" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> NRC PWRs</a>
+          <a href="https://www.nrc.gov/reactors/power/bwrs" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> NRC BWRs</a>
+          <a href="https://www.iaea.org/topics/fast-reactors" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> IAEA fast reactors</a>
+          <a href="https://www.nrc.gov/reactors/new-reactors/advanced/who-were-working-with/pre-application-activities/natrium" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> NRC Natrium</a>
+          <a href="https://www.iaea.org/topics/molten-salt-reactors" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> IAEA molten salt reactors</a>
+          <a href="https://www.nrc.gov/reactors/new-reactors/advanced/who-were-working-with/pre-application-activities/acu-preapp" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> NRC ACU MSRR</a>
+          <a href="https://www.iaea.org/topics/gas-cooled-reactors" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> IAEA gas-cooled reactors</a>
+          <a href="https://www.iaea.org/topics/water-cooled-reactors" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> IAEA water-cooled reactors</a>
+          <a href="https://www.energy.gov/ne/advanced-small-modular-reactors-smrs" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> DOE advanced SMRs</a>
+          <a href="https://www.nrc.gov/reactors/new-reactors/advanced/modernizing/microreactors" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> NRC microreactors</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="section-band pt-3 pb-4">
+  <div class="container-xxl">
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-2 align-items-md-center">
+      <div>
+        <strong>Last verified:</strong> 2026-07-07
+        <span class="text-muted-2">|</span>
+        <span class="text-muted-2">Built from IAEA, NRC, and DOE primary sources.</span>
+      </div>
+      <div class="mini">If a reactor name lacks coolant, moderator, spectrum, and maturity, it is probably marketing, not classification.</div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+<script>
+(function () {
+  var btn = document.getElementById("themeToggle");
+  var icon = document.getElementById("themeIcon");
+  function sync(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    icon.className = theme === "dark" ? "bi bi-moon-stars-fill" : "bi bi-sun-fill";
+  }
+  try {
+    sync(document.documentElement.getAttribute("data-theme") || "dark");
+  } catch (e) {}
+  btn.addEventListener("click", function () {
+    var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    try { localStorage.setItem("nptr-theme", next); } catch (e) {}
+    sync(next);
+  });
+})();
+</script>
+</body>
+</html>

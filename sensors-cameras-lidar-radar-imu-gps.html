@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sensors: Cameras, LiDAR, Radar, IMU, GPS, and Sensor Fusion</title>
+  <meta name="description" content="Compare cameras, LiDAR, radar, IMU, GNSS, ultrasonic, and thermal sensors: what each measures, how they fail, when to fuse them, and which stack fits robots, cars, drones, and AR.">
+  <meta name="keywords" content="cameras, lidar, radar, imu, gps, gnss, sensor fusion, robotics sensors, autonomous vehicle sensors, robot perception">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/sensors-cameras-lidar-radar-imu-gps.html">
+
+  <meta property="og:title" content="Sensors: Cameras, LiDAR, Radar, IMU, GPS, and Sensor Fusion">
+  <meta property="og:description" content="A cockpit-style comparison of the major robot and vehicle sensors, their failure modes, and the stacks that work in the real world.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/sensors-cameras-lidar-radar-imu-gps.html">
+  <meta property="og:image" content="images/sensors-cameras-lidar-radar-imu-gps.png">
+  <meta property="og:image:alt" content="Sensor fusion cockpit diagram with camera, LiDAR, radar, IMU, and GNSS layers around a robot">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sensors: Cameras, LiDAR, Radar, IMU, GPS, and Sensor Fusion">
+  <meta name="twitter:description" content="What each sensor measures, where it breaks, and how to combine sensors into a stack that survives the environment.">
+  <meta name="twitter:image" content="images/sensors-cameras-lidar-radar-imu-gps.png">
+  <meta name="twitter:creator" content="@heroiclife">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Sensors: Cameras, LiDAR, Radar, IMU, GPS, and Sensor Fusion",
+    "description": "A comprehensive sensor-stack reference covering cameras, LiDAR, radar, IMU, GNSS, ultrasonic sensing, thermal imaging, and fusion patterns for robots, vehicles, drones, and AR systems.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-07",
+    "dateModified": "2026-07-07",
+    "keywords": "cameras, lidar, radar, IMU, GNSS, GPS, ultrasonic, thermal imaging, sensor fusion, robotics, autonomy"
+  }
+  </script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+
+  <style>
+    @layer base, components, utilities;
+
+    @layer base {
+      :root {
+        color-scheme: light dark;
+        --bg: light-dark(#eff6ff, #08111b);
+        --surface: light-dark(rgba(255,255,255,.90), rgba(10, 18, 29, .90));
+        --surface-strong: light-dark(#ffffff, #0f1827);
+        --surface-muted: light-dark(#e7eef8, #132033);
+        --ink: light-dark(#132033, #edf6ff);
+        --muted: light-dark(#54657f, #97aac4);
+        --border: light-dark(#cdd9ea, #28405d);
+        --accent: #37d6ff;
+        --accent-2: #f6a623;
+        --accent-3: #79f2c0;
+        --danger: #ff6b6b;
+        --grid: rgba(55, 214, 255, .10);
+        --glow: rgba(55, 214, 255, .22);
+        --shadow: rgba(0, 0, 0, .26);
+      }
+
+      [data-theme="light"] {
+        color-scheme: light;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+      }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 12% 14%, rgba(55, 214, 255, .10), transparent 24rem),
+          radial-gradient(circle at 85% 10%, rgba(246, 166, 35, .10), transparent 20rem),
+          linear-gradient(135deg, light-dark(#f6fbff, #07101a), light-dark(#e5eef8, #0b1420));
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 36px 36px;
+        mask-image: linear-gradient(to bottom, rgba(0,0,0,.95), transparent 82%);
+        opacity: .55;
+      }
+
+      h1, h2, h3, h4, h5 {
+        text-wrap: balance;
+        letter-spacing: 0;
+      }
+
+      p, li, td, th {
+        text-wrap: pretty;
+      }
+
+      a {
+        color: light-dark(#006c9f, #72e8ff);
+      }
+
+      :focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 3px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    }
+
+    @layer components {
+      .page-shell {
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero {
+        position: relative;
+        overflow: clip;
+        background:
+          linear-gradient(120deg, rgba(8, 17, 27, .95), rgba(13, 29, 47, .82)),
+          radial-gradient(circle at 78% 40%, rgba(55, 214, 255, .20), transparent 24rem);
+        color: #f3fbff;
+        border-bottom: 1px solid rgba(255,255,255,.08);
+        box-shadow: 0 20px 45px var(--shadow);
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 1fr);
+        gap: 1.25rem;
+        align-items: center;
+      }
+
+      .hero-copy {
+        padding: clamp(1.5rem, 3vw, 2.5rem) 0;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .35rem .7rem;
+        border: 1px solid rgba(55, 214, 255, .28);
+        border-radius: 999px;
+        background: rgba(6, 12, 20, .42);
+        color: rgba(243, 251, 255, .82);
+        font-size: .86rem;
+        font-weight: 700;
+      }
+
+      .hero h1 {
+        margin: .85rem 0 .65rem;
+        font-size: clamp(2.4rem, 6vw, 4.7rem);
+        line-height: .95;
+      }
+
+      .hero-lead {
+        max-width: 62rem;
+        color: rgba(243, 251, 255, .80);
+        font-size: clamp(1rem, 1.4vw, 1.15rem);
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+        margin-top: 1.1rem;
+      }
+
+      .hero-aside {
+        padding: 1rem 0 1.5rem;
+      }
+
+      .glass-card {
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 1rem;
+        background: rgba(9, 17, 28, .55);
+        box-shadow: 0 20px 40px rgba(0,0,0,.28);
+        backdrop-filter: blur(14px);
+      }
+
+      .diagram {
+        padding: 1rem;
+      }
+
+      .diagram svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .section-band {
+        margin-top: 1.1rem;
+        margin-bottom: 1.1rem;
+      }
+
+      .section-title {
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .45rem .8rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+        border-radius: .8rem;
+        background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+        box-shadow: 0 12px 24px var(--shadow);
+        font-size: clamp(1.05rem, 1.2vw, 1.4rem);
+        font-weight: 900;
+      }
+
+      .surface {
+        border: 1px solid var(--border);
+        border-radius: .9rem;
+        background: var(--surface);
+        box-shadow: 0 14px 28px var(--shadow);
+      }
+
+      .quick-table {
+        overflow-x: auto;
+      }
+
+      table.matrix {
+        width: 100%;
+        min-width: 980px;
+        border-collapse: separate;
+        border-spacing: 0;
+      }
+
+      .matrix th,
+      .matrix td {
+        padding: .72rem .8rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      .matrix thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: linear-gradient(180deg, light-dark(#eff7ff, #111d2f), light-dark(#dde8f5, #0d1724));
+        color: var(--ink);
+        font-size: .84rem;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+      }
+
+      .matrix tbody tr:nth-child(odd) td {
+        background: light-dark(rgba(255,255,255,.62), rgba(255,255,255,.02));
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .22rem .55rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: light-dark(#edf5ff, #112033);
+        color: var(--ink);
+        font-size: .82rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .sensor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+        gap: 1rem;
+        container-type: inline-size;
+      }
+
+      .sensor-card {
+        height: 100%;
+        border: 1px solid var(--border);
+        border-radius: .9rem;
+        background: var(--surface-strong);
+        box-shadow: 0 12px 28px var(--shadow);
+      }
+
+      .sensor-card .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        padding: .9rem 1rem .7rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .sensor-card .card-head h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 900;
+      }
+
+      .sensor-card .card-body {
+        padding: 1rem;
+      }
+
+      .meta-list {
+        margin: 0;
+        padding-left: 1.1rem;
+      }
+
+      .meta-list li + li {
+        margin-top: .35rem;
+      }
+
+      details.sensor-detail {
+        border: 1px solid var(--border);
+        border-radius: .9rem;
+        background: var(--surface-strong);
+        box-shadow: 0 12px 28px var(--shadow);
+        overflow: clip;
+      }
+
+      details.sensor-detail > summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 1rem 1rem .9rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        font-weight: 900;
+      }
+
+      details.sensor-detail > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details.sensor-detail .detail-body {
+        padding: 0 1rem 1rem;
+      }
+
+      .decision-table {
+        min-width: 860px;
+      }
+
+      .source-list a {
+        word-break: break-word;
+      }
+
+      .related-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        margin: .2rem .55rem .2rem 0;
+        padding: .35rem .65rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: light-dark(#f6fbff, #102033);
+        text-decoration: none;
+      }
+
+      .footer-note {
+        color: var(--muted);
+      }
+    }
+
+    @layer utilities {
+      .text-muted-2 { color: var(--muted) !important; }
+      .bg-accent-soft { background: rgba(55, 214, 255, .12); }
+      .bg-warn-soft { background: rgba(246, 166, 35, .12); }
+      .bg-success-soft { background: rgba(121, 242, 192, .12); }
+      .border-soft { border-color: var(--border) !important; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    }
+
+    @media (max-width: 991.98px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .hero h1 {
+        font-size: clamp(2rem, 10vw, 3rem);
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff !important;
+        color: #000 !important;
+      }
+      body::before,
+      .hero::before,
+      .hero::after,
+      .no-print {
+        display: none !important;
+      }
+      .hero,
+      .surface,
+      .sensor-card,
+      details.sensor-detail,
+      .glass-card {
+        box-shadow: none !important;
+        background: #fff !important;
+        color: #000 !important;
+      }
+      details.sensor-detail > :not(summary) {
+        display: block !important;
+      }
+      a {
+        color: #000 !important;
+        text-decoration: none !important;
+      }
+      .section-title {
+        box-shadow: none !important;
+      }
+      .matrix thead th {
+        position: static !important;
+      }
+      .table-responsive,
+      .quick-table {
+        overflow: visible !important;
+      }
+      .hero {
+        border-bottom: 2px solid #000;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="container py-4 py-lg-5">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <div class="eyebrow"><i class="bi bi-grid-3x3-gap-fill"></i> Sensor stack reference · Last verified 2026-07-07</div>
+            <h1>Sensors: Cameras, LiDAR, Radar, IMU, GPS, and Sensor Fusion</h1>
+            <p class="hero-lead mb-0">
+              The practical question is not “which sensor is best?” It is “which combination survives the environment, keeps timing honest, and gives the estimator enough truth to correct the rest.”
+            </p>
+            <div class="hero-actions no-print">
+              <a class="btn btn-info fw-bold" href="#quick-reference"><i class="bi bi-lightning-charge-fill me-1"></i> Quick Reference</a>
+              <a class="btn btn-outline-light fw-bold" href="#decision-guide"><i class="bi bi-diagram-3 me-1"></i> Stack decisions</a>
+              <button class="btn btn-outline-light fw-bold" type="button" id="themeToggle" aria-pressed="false"><i class="bi bi-moon-stars me-1"></i> Theme</button>
+            </div>
+            <p class="mt-3 mb-0 small text-white-50">
+              Built for robotics, autonomy, drones, phones, AR, and field systems where you need geometry, motion, time, and position to agree.
+            </p>
+          </div>
+          <div class="hero-aside">
+            <div class="glass-card diagram">
+              <svg viewBox="0 0 760 520" role="img" aria-labelledby="sensor-diagram-title sensor-diagram-desc">
+                <title id="sensor-diagram-title">Sensor fusion cockpit diagram</title>
+                <desc id="sensor-diagram-desc">Camera, LiDAR, radar, IMU, GNSS, and thermal layers around a robot on a calibrated grid.</desc>
+                <defs>
+                  <linearGradient id="gridGlow" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#37d6ff" stop-opacity=".08"/>
+                    <stop offset="100%" stop-color="#f6a623" stop-opacity=".08"/>
+                  </linearGradient>
+                  <linearGradient id="cameraCone" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#37d6ff" stop-opacity=".25"/>
+                    <stop offset="100%" stop-color="#37d6ff" stop-opacity="0"/>
+                  </linearGradient>
+                  <linearGradient id="radarCone" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#f6a623" stop-opacity=".25"/>
+                    <stop offset="100%" stop-color="#f6a623" stop-opacity="0"/>
+                  </linearGradient>
+                  <linearGradient id="lidarCone" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#79f2c0" stop-opacity=".18"/>
+                    <stop offset="100%" stop-color="#79f2c0" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="760" height="520" rx="20" fill="#071019" stroke="#27445e" />
+                <g opacity=".9">
+                  <path d="M0 100H760M0 180H760M0 260H760M0 340H760M0 420H760" stroke="url(#gridGlow)" />
+                  <path d="M100 0V520M200 0V520M300 0V520M400 0V520M500 0V520M600 0V520M700 0V520" stroke="url(#gridGlow)" />
+                </g>
+                <g opacity=".92">
+                  <ellipse cx="375" cy="260" rx="118" ry="76" fill="#0f1b2c" stroke="#37d6ff" stroke-width="2"/>
+                  <path d="M290 150L140 60" stroke="#37d6ff" stroke-width="3" />
+                  <path d="M290 150L500 56" stroke="#37d6ff" stroke-width="3" />
+                  <path d="M120 55H190M486 55H566" stroke="#37d6ff" stroke-width="2"/>
+                  <path d="M170 58l6-18 6 18" fill="none" stroke="#37d6ff" stroke-width="2"/>
+                  <path d="M525 58l6-18 6 18" fill="none" stroke="#37d6ff" stroke-width="2"/>
+                  <path d="M180 60C220 90 240 115 286 150" stroke="url(#cameraCone)" stroke-width="70" fill="none" stroke-linecap="round"/>
+                  <circle cx="302" cy="146" r="16" fill="#071019" stroke="#37d6ff" stroke-width="4"/>
+                  <path d="M321 164C371 177 402 183 470 183" stroke="#37d6ff" stroke-width="4" fill="none"/>
+                  <circle cx="471" cy="183" r="14" fill="#071019" stroke="#37d6ff" stroke-width="4"/>
+                </g>
+                <g opacity=".95">
+                  <circle cx="375" cy="260" r="126" fill="none" stroke="url(#lidarCone)" stroke-width="2" stroke-dasharray="6 7"/>
+                  <circle cx="375" cy="260" r="167" fill="none" stroke="#79f2c0" stroke-width="2" stroke-dasharray="1 11"/>
+                  <circle cx="375" cy="260" r="205" fill="none" stroke="#79f2c0" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="3 9"/>
+                  <circle cx="375" cy="260" r="85" fill="none" stroke="#79f2c0" stroke-width="2" stroke-dasharray="2 8"/>
+                  <path d="M373 260c-80-28-134-84-150-140" stroke="#79f2c0" stroke-width="6" fill="none" stroke-linecap="round" opacity=".6"/>
+                  <path d="M377 260c120-22 192-78 220-135" stroke="#79f2c0" stroke-width="6" fill="none" stroke-linecap="round" opacity=".5"/>
+                </g>
+                <g opacity=".92">
+                  <path d="M182 356C227 310 276 285 340 275" stroke="url(#radarCone)" stroke-width="60" fill="none" stroke-linecap="round"/>
+                  <path d="M175 350C234 325 292 312 375 310" stroke="#f6a623" stroke-width="3"/>
+                  <path d="M600 355C560 312 513 287 450 276" stroke="#f6a623" stroke-width="3"/>
+                  <path d="M553 373C520 336 480 312 420 299" stroke="url(#radarCone)" stroke-width="52" fill="none" stroke-linecap="round"/>
+                </g>
+                <g>
+                  <rect x="332" y="240" width="86" height="42" rx="11" fill="#0f1b2c" stroke="#37d6ff" stroke-width="2"/>
+                  <circle cx="353" cy="260" r="6" fill="#37d6ff"/>
+                  <circle cx="375" cy="260" r="6" fill="#79f2c0"/>
+                  <circle cx="397" cy="260" r="6" fill="#f6a623"/>
+                </g>
+                <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="700">
+                  <rect x="66" y="38" width="106" height="30" rx="10" fill="#0f1b2c" stroke="#37d6ff"/>
+                  <text x="81" y="59" fill="#e9fbff">camera</text>
+                  <rect x="482" y="38" width="92" height="30" rx="10" fill="#0f1b2c" stroke="#79f2c0"/>
+                  <text x="500" y="59" fill="#e9fbff">LiDAR</text>
+                  <rect x="95" y="343" width="92" height="30" rx="10" fill="#0f1b2c" stroke="#f6a623"/>
+                  <text x="112" y="364" fill="#e9fbff">radar</text>
+                  <rect x="590" y="341" width="76" height="30" rx="10" fill="#0f1b2c" stroke="#f6a623"/>
+                  <text x="611" y="362" fill="#e9fbff">GNSS</text>
+                  <rect x="319" y="407" width="122" height="30" rx="10" fill="#0f1b2c" stroke="#79f2c0"/>
+                  <text x="333" y="428" fill="#e9fbff">IMU + time</text>
+                </g>
+                <g opacity=".9" stroke="#37d6ff" stroke-width="2" fill="none">
+                  <path d="M610 110v-34M612 76l-10 10M612 76l10 10"/>
+                  <path d="M624 110v-26M624 84l-8 8M624 84l8 8"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="container py-4 py-lg-5">
+      <section id="quick-reference" class="section-band">
+        <h2 class="section-title"><i class="bi bi-lightning-charge-fill"></i> Quick Reference: what each sensor really buys you</h2>
+        <div class="surface p-0">
+          <div class="quick-table">
+            <table class="matrix">
+              <thead>
+                <tr>
+                  <th>Sensor</th>
+                  <th>Measures</th>
+                  <th>Best at</th>
+                  <th>Weak at</th>
+                  <th>Typical failure mode</th>
+                  <th>Use it when</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Camera</strong></td>
+                  <td>Radiance projected into pixels; can infer color, texture, labels, and lanes.</td>
+                  <td>Semantics, classification, OCR, cheap dense detail.</td>
+                  <td>Absolute depth, darkness, glare, weather, motion blur.</td>
+                  <td>Rolling-shutter wobble, exposure washout, occlusion.</td>
+                  <td>You need “what is it?” more than “exactly where is it?”</td>
+                </tr>
+                <tr>
+                  <td><strong>LiDAR</strong></td>
+                  <td>Time of flight to build a point cloud.</td>
+                  <td>Geometry, shape, obstacle outlines, 3D mapping.</td>
+                  <td>Color, texture, fog/rain/dust scattering, black absorbers.</td>
+                  <td>Ghost points, dropouts, multipath off shiny surfaces.</td>
+                  <td>You need precise 3D structure in controlled or semi-controlled air.</td>
+                </tr>
+                <tr>
+                  <td><strong>Radar</strong></td>
+                  <td>Range, radial velocity, and sometimes angle from RF reflections.</td>
+                  <td>Motion, weather tolerance, long-range detection.</td>
+                  <td>Fine shape, semantic detail, clean separation in dense clutter.</td>
+                  <td>Multipath, clutter, poor angular resolution versus vision.</td>
+                  <td>You care about moving objects and the weather is bad.</td>
+                </tr>
+                <tr>
+                  <td><strong>IMU</strong></td>
+                  <td>Acceleration and angular rate.</td>
+                  <td>Fast local motion, stabilization, prediction between slower sensors.</td>
+                  <td>Absolute position and long-term heading without correction.</td>
+                  <td>Bias drift, integration drift, vibration sensitivity.</td>
+                  <td>You need continuity at high rate, then correction from other sensors.</td>
+                </tr>
+                <tr>
+                  <td><strong>GNSS / GPS</strong></td>
+                  <td>Global position, velocity, and time from satellites.</td>
+                  <td>Outdoor absolute position, map anchoring, time sync.</td>
+                  <td>Indoors, urban canyons, foliage, tunnels, intentional interference.</td>
+                  <td>Multipath, jamming, spoofing, satellite masking.</td>
+                  <td>You need global context and can see the sky.</td>
+                </tr>
+                <tr>
+                  <td><strong>Ultrasonic</strong></td>
+                  <td>Near-field distance from sound reflection.</td>
+                  <td>Parking, short-range proximity, tank or bin level.</td>
+                  <td>Soft surfaces, long range, precise lateral detail.</td>
+                  <td>Angle sensitivity, wind, temperature variation, dead zones.</td>
+                  <td>Simple close-range detection is enough.</td>
+                </tr>
+                <tr>
+                  <td><strong>Thermal</strong></td>
+                  <td>Infrared emission mapped to apparent temperature.</td>
+                  <td>Night work, heat leaks, people or equipment contrasts.</td>
+                  <td>Fine texture, exact material identity, internal temperature.</td>
+                  <td>Emissivity error, reflective surfaces, ambient wash.</td>
+                  <td>Visible light is poor but heat contrast is useful.</td>
+                </tr>
+                <tr>
+                  <td><strong>Wheel odometry</strong></td>
+                  <td>Relative motion from encoder counts and kinematics.</td>
+                  <td>Short-horizon motion on flat or structured ground.</td>
+                  <td>Slip, bumps, stairs, loose terrain.</td>
+                  <td>Dead-reckoning drift that accumulates with distance.</td>
+                  <td>You need local pose prediction and can tolerate drift correction.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-band">
+        <h2 class="section-title"><i class="bi bi-bullseye"></i> Sensor mental model</h2>
+        <div class="row g-3">
+          <div class="col-lg-4">
+            <div class="surface p-3 h-100">
+              <h3 class="h5">Measurement vs inference</h3>
+              <p class="mb-2">A sensor reports a measurable physical effect; the system infers state from it. A camera measures light, then software infers a lane, a face, or a barcode. A GNSS receiver measures satellite timing and then infers position and time.</p>
+              <p class="mb-0"><strong>Example:</strong> a 12.5 MP Basler camera can see a pallet label; it does not directly tell you the pallet is 2.6 m away unless you add geometry or another depth source.</p>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="surface p-3 h-100">
+              <h3 class="h5">Bias, drift, noise</h3>
+              <p class="mb-2">Noise is the short-term wobble; bias is the persistent offset; drift is bias integrated over time. IMUs live or die on this distinction because a tiny gyro bias becomes a large angle error after minutes.</p>
+              <p class="mb-0"><strong>Example:</strong> Analog Devices notes gyro drift comes from bias instability and angular random walk; that is why you never leave an IMU uncorrected for long runs.</p>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="surface p-3 h-100">
+              <h3 class="h5">Calibration and time</h3>
+              <p class="mb-2">Extrinsics tell you where sensors sit relative to one another; timing tells you whether they describe the same instant. A perfect camera frame and a perfect LiDAR scan are still wrong if they are 120 ms apart.</p>
+              <p class="mb-0"><strong>Example:</strong> Ouster lists time synchronization via gPTP and PTP, because multi-sensor systems need aligned timestamps more than they need raw throughput.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-band">
+        <h2 class="section-title"><i class="bi bi-cpu"></i> Representative hardware snapshot</h2>
+        <div class="surface p-0">
+          <div class="quick-table">
+            <table class="matrix">
+              <thead>
+                <tr>
+                  <th>Example</th>
+                  <th>Snapshot</th>
+                  <th>What it teaches</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Basler ace 2 a2A3536-9gcPRO</strong></td>
+                  <td>12.5 MP, 9 fps, Sony IMX676 CMOS sensor, net list price €419.00 on the Basler shop as of July 2026.</td>
+                  <td>Camera choice is about pixel size, shutter behavior, interface, and exposure strategy, not just megapixels.</td>
+                </tr>
+                <tr>
+                  <td><strong>Ouster OS0</strong></td>
+                  <td>Ultra-wide 90° FOV, 35 m range at 10% target, 0.25 cm precision up to, 5–40 Hz, IP68/IP69K.</td>
+                  <td>Short-range LiDAR wins when you need dense near-field geometry around a robot or warehouse vehicle.</td>
+                </tr>
+                <tr>
+                  <td><strong>Ouster OS1 Max</strong></td>
+                  <td>45° FOV, 200 m range at 10% target, 0.25 cm precision up to, 15–25 W, 128 or 256 channel options.</td>
+                  <td>Longer range usually costs power and packaging complexity, but it buys more stand-off for faster vehicles.</td>
+                </tr>
+                <tr>
+                  <td><strong>TI AWR2944EVM</strong></td>
+                  <td>76–81 GHz mmWave radar evaluation module with 4TX/4RX antenna; TI lists it at $628.95.</td>
+                  <td>Automotive radar is a range-and-velocity sensor first; the point cloud is a byproduct of signal processing.</td>
+                </tr>
+                <tr>
+                  <td><strong>Bosch BMI270</strong></td>
+                  <td>6-axis IMU, ±2g to ±16g accel, ±125 dps to ±2000 dps gyro, up to 6.4 kHz gyro ODR.</td>
+                  <td>IMUs are fast enough to run prediction loops, but they need correction from something that does not drift the same way.</td>
+                </tr>
+                <tr>
+                  <td><strong>u-blox ZED-F9P</strong></td>
+                  <td>Multi-band GNSS with centimeter-level accuracy in seconds with RTK, fast convergence, and multi-constellation reception.</td>
+                  <td>GNSS goes from “good enough for navigation” to “survey-grade” only when corrections and sky view are good.</td>
+                </tr>
+                <tr>
+                  <td><strong>MaxBotix MB1040</strong></td>
+                  <td>6 to 254 inches, 20 Hz read rate, narrowest detection field, $23.65.</td>
+                  <td>Cheap ultrasonic sensors are excellent for short-range proximity, but they are not a general-purpose depth camera.</td>
+                </tr>
+                <tr>
+                  <td><strong>FLIR C8</strong></td>
+                  <td>320 × 240 thermal resolution, compact thermal camera, $899 on the official FLIR store.</td>
+                  <td>Thermal imaging is about heat contrast and inspection utility, not seeing through walls or measuring internal temperature directly.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-band" id="sensor-deep-dives">
+        <h2 class="section-title"><i class="bi bi-journal-text"></i> Sensor deep dives</h2>
+        <div class="sensor-grid">
+          <details class="sensor-detail" open>
+            <summary><span><i class="bi bi-camera-video me-2"></i>Cameras</span><span class="pill">semantics first</span></summary>
+            <div class="detail-body">
+              <p><strong>Definition:</strong> a camera samples reflected light and turns it into pixels that software can classify, measure, or segment. Use it when “what is it?” matters more than direct depth.</p>
+              <p><strong>Example:</strong> Basler’s ace 2 a2A3536-9gcPRO exposes a Sony IMX676 CMOS sensor, 12.5 MP resolution, and 9 fps. Sony’s industrial pages split camera behavior into rolling-shutter and global-shutter modes.</p>
+              <p class="mb-0"><strong>Gotcha:</strong> rolling shutter distorts fast motion and cheap exposure control can wash out glare or shadow. Do not treat camera AI output as a measurement of distance unless you have stereo, structure-from-motion, or another depth source.</p>
+            </div>
+          </details>
+
+          <details class="sensor-detail">
+            <summary><span><i class="bi bi-bounding-box-circles me-2"></i>LiDAR</span><span class="pill">geometry first</span></summary>
+            <div class="detail-body">
+              <p><strong>Definition:</strong> LiDAR emits laser pulses and measures return time to produce a 3D point cloud. It is the cleanest path to geometry when you need actual shape, not just texture.</p>
+              <p><strong>Example:</strong> Ouster’s OS0 is a 90° ultra-wide sensor for short-range robotics, while OS1 Max reaches 200 m at 10% target with a 45° field of view. That is the trade: near-field breadth versus long-range reach.</p>
+              <p class="mb-0"><strong>Gotcha:</strong> fog, rain, dust, black absorptive surfaces, and reflective clutter can all degrade returns. If your environment is dirty or highly reflective, LiDAR is usually a piece of the stack, not the whole stack.</p>
+            </div>
+          </details>
+
+          <details class="sensor-detail">
+            <summary><span><i class="bi bi-radar me-2"></i>Radar</span><span class="pill">motion in weather</span></summary>
+            <div class="detail-body">
+              <p><strong>Definition:</strong> radar sends RF energy and reads the reflection to estimate range and radial velocity; modern mmWave systems also infer angle and object clusters.</p>
+              <p><strong>Example:</strong> TI’s AWR2944EVM operates in the 76 to 81 GHz band and uses a 4TX/4RX antenna. TI lists the board at $628.95, which is a useful reminder that useful radar is still not toy-priced.</p>
+              <p class="mb-0"><strong>Gotcha:</strong> radar sees motion and multipath better than shape. Dense urban clutter, metal reflectors, and near-field interference can create ghosts or ambiguous returns.</p>
+            </div>
+          </details>
+
+          <details class="sensor-detail">
+            <summary><span><i class="bi bi-speedometer2 me-2"></i>IMU</span><span class="pill">prediction engine</span></summary>
+            <div class="detail-body">
+              <p><strong>Definition:</strong> an IMU combines accelerometers and gyroscopes to measure linear acceleration and angular rate. It gives the estimator high-rate continuity when the slower sensors are between samples.</p>
+              <p><strong>Example:</strong> Bosch’s BMI270 is a 6-axis IMU with ±2g/±4g/±8g/±16g accel ranges and ±125 dps through ±2000 dps gyro ranges. That is plenty for stabilization, but it still drifts.</p>
+              <p class="mb-0"><strong>Gotcha:</strong> gyro drift grows because of bias instability and angular random walk. Without correction from vision, GNSS, magnetometer, or wheel/scene constraints, dead reckoning will walk away from reality.</p>
+            </div>
+          </details>
+
+          <details class="sensor-detail">
+            <summary><span><i class="bi bi-geo-alt me-2"></i>GNSS / GPS</span><span class="pill">global context</span></summary>
+            <div class="detail-body">
+              <p><strong>Definition:</strong> GNSS receivers use satellite timing to estimate position, velocity, and time. GPS.gov describes GPS as a U.S.-owned PNT utility, and the system becomes most useful when you can also trust the sky view and spectrum.</p>
+              <p><strong>Example:</strong> u-blox’s ZED-F9P module advertises centimeter-level accuracy in seconds with multi-band RTK. In practice that means a rover or vehicle can anchor itself globally instead of merely locally.</p>
+              <p class="mb-0"><strong>Gotcha:</strong> indoor use is usually a non-starter, and even outdoors you must worry about multipath, masking, jamming, and spoofing. GPS.gov and FAA guidance explicitly call out interference, because it is not an edge case anymore.</p>
+            </div>
+          </details>
+
+          <details class="sensor-detail">
+            <summary><span><i class="bi bi-soundwave me-2"></i>Ultrasonic</span><span class="pill">cheap near-field</span></summary>
+            <div class="detail-body">
+              <p><strong>Definition:</strong> ultrasonic sensors measure distance by timing sound reflections. They are a low-cost solution for close-range obstacle detection and level sensing.</p>
+              <p><strong>Example:</strong> MaxBotix’s MB1040 LV-MaxSonar-EZ4 ranges from 6 inches to 254 inches, reads at 20 Hz, and lists at $23.65. That is why it appears in parking, bin, and small-robot designs.</p>
+              <p class="mb-0"><strong>Gotcha:</strong> the beam is wide, soft targets absorb energy, and the environment changes the reading. Use it for short-range proximity, not for precise mapping.</p>
+            </div>
+          </details>
+
+          <details class="sensor-detail">
+            <summary><span><i class="bi bi-thermometer-half me-2"></i>Thermal</span><span class="pill">heat contrast</span></summary>
+            <div class="detail-body">
+              <p><strong>Definition:</strong> thermal cameras detect infrared energy and turn it into an image, often calibrated for temperature inspection. They help when visible light is weak or misleading.</p>
+              <p><strong>Example:</strong> FLIR’s official store lists a 320 × 240 compact thermal camera for $899, and the E54 reports temperatures up to 650°C. That is enough for inspections, not for magical X-ray vision.</p>
+              <p class="mb-0"><strong>Gotcha:</strong> emissivity, reflections, and surface coatings can mislead the reading. Thermal sees surface temperature, not hidden internal structure.</p>
+            </div>
+          </details>
+
+          <details class="sensor-detail">
+            <summary><span><i class="bi bi-sign-turn-right me-2"></i>Wheel odometry</span><span class="pill">local motion only</span></summary>
+            <div class="detail-body">
+              <p><strong>Definition:</strong> wheel odometry estimates motion from encoder counts and robot kinematics. It is the simplest relative-motion signal in ground robots.</p>
+              <p><strong>Example:</strong> in ROS state estimation, the projected pose is corrected by perceived sensor data, which is exactly why odometry is useful as a prediction input and dangerous as a final answer.</p>
+              <p class="mb-0"><strong>Gotcha:</strong> wheel slip, bumps, stairs, and loose terrain accumulate error fast. Treat odometry as a short-horizon bridge, not a map of the world.</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="section-band" id="decision-guide">
+        <h2 class="section-title"><i class="bi bi-diagram-3"></i> Stack decisions: what to use when</h2>
+        <div class="surface p-0">
+          <div class="quick-table">
+            <table class="matrix decision-table">
+              <thead>
+                <tr>
+                  <th>Use case</th>
+                  <th>Recommended stack</th>
+                  <th>Why this stack works</th>
+                  <th>What to add next</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Phone AR / consumer vision</strong></td>
+                  <td>Camera + IMU + optional depth or GNSS</td>
+                  <td>Camera handles semantics, IMU gives motion continuity, depth or GNSS adds global scale when available.</td>
+                  <td>Add LiDAR or time-of-flight if you need better occlusion handling or room-scale geometry.</td>
+                </tr>
+                <tr>
+                  <td><strong>Warehouse AMR</strong></td>
+                  <td>Camera + LiDAR + IMU + wheel odometry</td>
+                  <td>LiDAR gives floor and obstacle geometry, camera reads labels and signs, IMU/odometry stabilize motion between scans.</td>
+                  <td>Add GNSS only if the building or yard has usable sky view; otherwise build off map-based localization.</td>
+                </tr>
+                <tr>
+                  <td><strong>Outdoor drone</strong></td>
+                  <td>IMU + GNSS + camera, optionally barometer and LiDAR</td>
+                  <td>IMU handles fast motion, GNSS anchors global position, camera supports landing and obstacle perception.</td>
+                  <td>Add visual odometry or LiDAR for hover and GNSS-denied resilience.</td>
+                </tr>
+                <tr>
+                  <td><strong>Highway vehicle</strong></td>
+                  <td>Camera + radar + LiDAR + IMU + GNSS</td>
+                  <td>Camera classifies lanes and signs, radar tracks motion in bad weather, LiDAR improves geometry, IMU smooths everything.</td>
+                  <td>Use redundancy for safety-critical features; do not lean on one modality for every condition.</td>
+                </tr>
+                <tr>
+                  <td><strong>Precision agriculture</strong></td>
+                  <td>GNSS RTK + IMU + camera + optional LiDAR/radar</td>
+                  <td>RTK gives centimeter-level positioning, IMU stabilizes turns, camera handles row detection and crop state.</td>
+                  <td>Add radar if dust, spray, or foliage make vision unstable.</td>
+                </tr>
+                <tr>
+                  <td><strong>Night inspection / maintenance</strong></td>
+                  <td>Thermal + camera + IMU + GNSS</td>
+                  <td>Thermal exposes heat anomalies, camera preserves context, IMU/GNSS preserve alignment and route tracking.</td>
+                  <td>Add LiDAR if the job depends on precise 3D structure, not only defect finding.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-band">
+        <h2 class="section-title"><i class="bi bi-exclamation-triangle"></i> Common mistakes and anti-patterns</h2>
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <div class="surface p-3 h-100">
+              <h3 class="h5">1. Comparing headline range only</h3>
+              <p class="mb-0">Range without target reflectivity, field of view, resolution, and weather context is mostly marketing. Ouster’s own table shows how range, precision, and FOV trade against one another across OS0, OS1, and OS1 Max.</p>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="surface p-3 h-100">
+              <h3 class="h5">2. Ignoring timestamp alignment</h3>
+              <p class="mb-0">A camera frame and a radar return that describe different instants are not a fused truth. Time sync is not optional if you want clean fusion or replayable logs.</p>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="surface p-3 h-100">
+              <h3 class="h5">3. Treating IMU output as ground truth</h3>
+              <p class="mb-0">IMUs are excellent at short-term motion prediction, but the gyro drift problem is intrinsic. Use them to carry the estimate between corrections, not to define position forever.</p>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="surface p-3 h-100">
+              <h3 class="h5">4. Assuming GNSS always works outdoors</h3>
+              <p class="mb-0">GPS.gov and FAA guidance both treat interference, spoofing, and masking as operational issues. If your stack fails whenever the sky is bad, you do not have a robust stack.</p>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="surface p-3 h-100">
+              <h3 class="h5">5. Using ultrasound for too much</h3>
+              <p class="mb-0">Ultrasonic sensors are cheap and useful, but they are not precise 3D perception tools. Wide beams, soft surfaces, and short range make them a special-purpose proximity sensor.</p>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="surface p-3 h-100">
+              <h3 class="h5">6. Over-trusting camera AI alone</h3>
+              <p class="mb-0">Vision is superb at classification and context, but it is brittle under glare, darkness, and occlusion. If the task needs distance or motion safety, pair it with LiDAR, radar, or IMU.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-band">
+        <h2 class="section-title"><i class="bi bi-journal-bookmark"></i> Primary sources and verification targets</h2>
+        <div class="surface p-3">
+          <ul class="source-list mb-0">
+            <li><a href="https://www.baslerweb.com/en/shop/a2a3536-9gcpro/" target="_blank" rel="noopener noreferrer">Basler ace 2 a2A3536-9gcPRO</a> - camera example, sensor type, resolution, frame rate, and current shop price.</li>
+            <li><a href="https://ouster.com/os-overview" target="_blank" rel="noopener noreferrer">Ouster OS sensor overview</a> - OS0 / OS1 / OS1 Max range, FOV, precision, power, and sync data.</li>
+            <li><a href="https://ouster.com/products/hardware/os0-lidar-sensor" target="_blank" rel="noopener noreferrer">Ouster OS0 product page</a> - short-range wide-FOV LiDAR positioning.</li>
+            <li><a href="https://www.ti.com/tool/AWR2944EVM" target="_blank" rel="noopener noreferrer">TI AWR2944EVM</a> and <a href="https://www.ti.com/product/AWR2944EVM/part-details/AWR2944EVM" target="_blank" rel="noopener noreferrer">part details</a> - radar band, antenna topology, and price.</li>
+            <li><a href="https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi270-ds000.pdf" target="_blank" rel="noopener noreferrer">Bosch BMI270 datasheet</a> - IMU axes, ranges, ODR, and package size.</li>
+            <li><a href="https://www.u-blox.com/en/product/zed-f9p-module" target="_blank" rel="noopener noreferrer">u-blox ZED-F9P module</a> and <a href="https://www.u-blox.com/en/technologies/rtk-real-time-kinematic" target="_blank" rel="noopener noreferrer">RTK overview</a> - centimeter-level GNSS positioning and corrections.</li>
+            <li><a href="https://www.gps.gov/spectrum-interference-issues" target="_blank" rel="noopener noreferrer">GPS.gov interference guidance</a> and <a href="https://www.faa.gov/about/office_org/headquarters_offices/avs/offices/afx/afs/afs400/afs410/GNSS/GPS_GNSS_Interference_Resource_Guide.pdf" target="_blank" rel="noopener noreferrer">FAA GNSS interference guide</a> - interference, spoofing, and operational resilience.</li>
+            <li><a href="https://www.maxbotix.com/pages/ultrasonic-sensor" target="_blank" rel="noopener noreferrer">MaxBotix ultrasonic sensor product lines</a> - range, read rate, and price examples.</li>
+            <li><a href="https://www.flir.com/store/" target="_blank" rel="noopener noreferrer">FLIR official store</a> and <a href="https://www.flir.com/products/e54/" target="_blank" rel="noopener noreferrer">FLIR E54</a> - thermal resolution, pricing, and inspection temperature range.</li>
+            <li><a href="https://developer.nvidia.com/blog/near-range-obstacle-perception-with-early-grid-fusion/" target="_blank" rel="noopener noreferrer">NVIDIA DRIVE early grid fusion</a> - camera, radar, and ultrasonic fusion for near-field perception.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section-band">
+        <h2 class="section-title"><i class="bi bi-link-45deg"></i> Related pages</h2>
+        <div class="surface p-3 related-links">
+          <a href="humanoid-robots.html"><i class="bi bi-robot"></i> Humanoid Robots</a>
+          <a href="automotive-innovation-timeline.html"><i class="bi bi-car-front"></i> Automotive Innovation Timeline</a>
+          <a href="future-of-warfare-technology.html"><i class="bi bi-shield-shaded"></i> Future of Warfare Technology</a>
+          <a href="orbital-rockets-comparison.html"><i class="bi bi-rocket-takeoff"></i> Orbital Rockets Comparison</a>
+          <a href="nuclear-preparedness.html"><i class="bi bi-broadcast-pin"></i> Nuclear Preparedness</a>
+          <a href="baofeng-uv5r-quick-ref.html"><i class="bi bi-walkie-talkie"></i> Baofeng UV-5R Quick Reference</a>
+        </div>
+      </section>
+
+      <footer class="py-4 pb-5">
+        <div class="surface p-3">
+          <p class="mb-2"><strong>Last verified: 2026-07-07.</strong> Sensor physics is stable; vendor product lines, prices, and evaluation modules change. Current examples above were checked against official vendor or agency pages during the build. GNSS interference and spoofing remain operational concerns, not theoretical footnotes.</p>
+          <p class="mb-2 footer-note">Standalone HTML · Bootstrap 5.3.8 · Bootstrap Icons 1.13.1 · Built for robotics, autonomy, drones, and field systems.</p>
+          <p class="mb-0 footer-note">Use the page as a stack-selection reference, not as a substitute for your exact platform, calibration, safety case, or regulator guidance.</p>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" defer integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const button = document.getElementById('themeToggle');
+      const storageKey = 'sensors-theme';
+
+      const applyTheme = (theme) => {
+        root.setAttribute('data-theme', theme);
+        localStorage.setItem(storageKey, theme);
+        const active = theme === 'dark';
+        button.setAttribute('aria-pressed', String(active));
+        button.innerHTML = active
+          ? '<i class="bi bi-sun me-1"></i> Theme'
+          : '<i class="bi bi-moon-stars me-1"></i> Theme';
+      };
+
+      const saved = localStorage.getItem(storageKey);
+      if (saved === 'light' || saved === 'dark') {
+        applyTheme(saved);
+      } else {
+        applyTheme(root.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+      }
+
+      button.addEventListener('click', () => {
+        applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      });
+    })();
+  </script>
+</body>
+</html>

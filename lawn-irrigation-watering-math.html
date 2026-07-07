@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lawn Irrigation Math: How Long to Water Each Zone</title>
+<meta name="description" content="Turn lawn watering advice into minutes per zone: precipitation rate, catch-cup tests, ET, soil type, slope, cycle-and-soak, sprinkler audits, and water-use math." />
+<meta name="keywords" content="lawn irrigation, watering math, how long to water lawn, sprinkler precipitation rate, catch can test, cycle and soak, evapotranspiration, irrigation audit, watering calculator" />
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/lawn-irrigation-watering-math.html" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%232d8cff' d='M32 6c8 12 16 20 16 30a16 16 0 1 1-32 0c0-10 8-18 16-30z'/%3E%3Cpath fill='%23fff' d='M27 37c0 2.8 2.2 5 5 5 3 0 5-2.2 5-5 0-2.6-2-4.5-4.6-7.7-.3-.4-.9-.4-1.2 0C29 32.4 27 34.4 27 37z'/%3E%3C/svg+xml" />
+<meta property="og:title" content="Lawn Irrigation Math: How Long to Water Each Zone" />
+<meta property="og:description" content="A practical lawn watering calculator and diagnostic guide: precipitation rate, catch-cup tests, ET, soil type, cycle-and-soak, and zone runtime math." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/lawn-irrigation-watering-math.html" />
+<meta property="og:image" content="images/lawn-irrigation-watering-math.png" />
+<meta property="og:image:alt" content="Blueprint-style lawn irrigation calculator showing minutes per zone and sprinkler coverage" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Lawn Irrigation Math: How Long to Water Each Zone" />
+<meta name="twitter:description" content="A practical lawn watering calculator and diagnostic guide: precipitation rate, catch-cup tests, ET, soil type, cycle-and-soak, and zone runtime math." />
+<meta name="twitter:image" content="images/lawn-irrigation-watering-math.png" />
+<meta name="twitter:creator" content="@heroiclife" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Lawn Irrigation Math: How Long to Water Each Zone",
+  "description": "A practical lawn watering calculator and diagnostic guide covering weekly water targets, gallons-to-depth math, catch-cup audits, precipitation rate, runtime conversion, ET, soil and slope adjustments, cycle-and-soak timing, and sprinkler troubleshooting.",
+  "author": {
+    "@type": "Person",
+    "name": "David Veksler (AI Generated)"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "David Veksler Cheatsheets"
+  },
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
+  "keywords": "lawn irrigation, watering math, sprinkler precipitation rate, catch can test, cycle and soak, evapotranspiration, irrigation audit, lawn watering calculator"
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous" />
+<style>
+@layer theme {
+  :root {
+    color-scheme: light dark;
+    --bg: light-dark(#edf6fb, #0a1318);
+    --panel: light-dark(rgba(255,255,255,.95), rgba(13,24,31,.94));
+    --panel-2: light-dark(#ffffff, #12212a);
+    --ink: light-dark(#143042, #d8edf7);
+    --muted: light-dark(#506678, #94adbd);
+    --border: light-dark(#c8dce8, #274250);
+    --line: light-dark(rgba(38,116,167,.18), rgba(78,171,220,.16));
+    --water: #2d8cff;
+    --water-2: #61b8ff;
+    --grass: #5ca84f;
+    --soil: #8a5d38;
+    --sun: #f1c84b;
+    --accent: #1976a2;
+    --shadow: 0 18px 45px rgba(2, 30, 48, .12);
+    --radius: 0.85rem;
+  }
+  html[data-theme="light"] { color-scheme: light; }
+  html[data-theme="dark"] { color-scheme: dark; }
+  body {
+    min-height: 100vh;
+    color: var(--ink);
+    background:
+      linear-gradient(180deg, rgba(45,140,255,.08), transparent 220px),
+      linear-gradient(90deg, transparent 0 24px, var(--line) 24px 25px, transparent 25px 48px),
+      linear-gradient(0deg, transparent 0 24px, var(--line) 24px 25px, transparent 25px 48px),
+      var(--bg);
+    background-size: auto, 48px 48px, 48px 48px, auto;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .page-shell { position: relative; overflow: clip; }
+  .hero {
+    padding: clamp(1.25rem, 3vw, 2rem) 0 1rem;
+  }
+  .hero-card, .section-card, .table-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .hero-card { position: relative; overflow: clip; }
+  .hero-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--water), var(--grass), var(--sun));
+  }
+  .kicker {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-size: .78rem;
+    font-weight: 700;
+  }
+  h1, h2, h3, h4 { text-wrap: balance; }
+  p, li, td, th, summary { text-wrap: pretty; }
+  .display-title {
+    font-family: ui-serif, Georgia, "Times New Roman", serif;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.05;
+  }
+  .hero-copy { padding: clamp(1.25rem, 3vw, 2rem); }
+  .hero-copy .lead { color: var(--muted); max-width: 62ch; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .chip {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--panel-2) 85%, transparent);
+    color: var(--ink);
+    padding: .35rem .7rem;
+    font-size: .88rem;
+  }
+  .chip i { color: var(--water); }
+  .viz-wrap {
+    position: relative;
+    min-height: 100%;
+    padding: clamp(1rem, 2vw, 1.25rem);
+    background:
+      radial-gradient(circle at 30% 25%, rgba(97,184,255,.24), transparent 35%),
+      radial-gradient(circle at 70% 75%, rgba(92,168,79,.18), transparent 38%),
+      linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 84%, transparent), color-mix(in srgb, var(--panel) 92%, transparent));
+  }
+  .diagram {
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - .15rem);
+    overflow: hidden;
+    background:
+      linear-gradient(90deg, transparent 0 49px, rgba(45,140,255,.12) 49px 50px, transparent 50px 100%),
+      linear-gradient(0deg, transparent 0 49px, rgba(45,140,255,.12) 49px 50px, transparent 50px 100%),
+      linear-gradient(135deg, rgba(13,24,31,.02), rgba(13,24,31,.06));
+  }
+  .calc-card {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    width: min(25rem, calc(100% - 2rem));
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - .2rem);
+    background: color-mix(in srgb, var(--panel-2) 92%, transparent);
+    box-shadow: 0 16px 34px rgba(0,0,0,.18);
+    backdrop-filter: blur(8px);
+  }
+  .calc-card .card-header {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--water) 16%, transparent), transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .calc-number {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: clamp(1.45rem, 4vw, 2rem);
+    font-weight: 700;
+    color: var(--water);
+    line-height: 1;
+  }
+  .mini-label { color: var(--muted); font-size: .82rem; }
+  .section-card, .table-card { padding: 1rem; }
+  .section-card + .section-card { margin-top: 1rem; }
+  .section-title {
+    font-family: ui-serif, Georgia, serif;
+    font-weight: 800;
+    text-wrap: balance;
+  }
+  .soft-note {
+    background: color-mix(in srgb, var(--sun) 18%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--sun) 36%, var(--border));
+    border-radius: .75rem;
+    padding: .85rem 1rem;
+  }
+  .formula {
+    border-left: 4px solid var(--water);
+    background: color-mix(in srgb, var(--panel-2) 92%, transparent);
+    padding: .85rem 1rem;
+    border-radius: .4rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    overflow-x: auto;
+  }
+  .table > :not(caption) > * > * { background: transparent; color: var(--ink); }
+  .table thead th { color: var(--accent); }
+  .table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-accent-bg: color-mix(in srgb, var(--water) 5%, transparent);
+  }
+  .table-responsive { border-radius: .75rem; }
+  details {
+    border: 1px solid var(--border);
+    border-radius: .75rem;
+    background: color-mix(in srgb, var(--panel-2) 92%, transparent);
+    overflow: clip;
+  }
+  details + details { margin-top: .75rem; }
+  summary {
+    list-style: none;
+    cursor: pointer;
+    padding: .9rem 1rem;
+    font-weight: 700;
+  }
+  summary::-webkit-details-marker { display: none; }
+  details > .details-body { padding: 0 1rem 1rem; color: var(--ink); }
+  .icon-badge {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: .65rem;
+    display: inline-grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--water) 12%, transparent);
+    color: var(--water);
+    flex: 0 0 auto;
+  }
+  .metric {
+    background: color-mix(in srgb, var(--panel-2) 88%, transparent);
+    border: 1px solid var(--border);
+    border-radius: .7rem;
+    padding: .75rem .9rem;
+    height: 100%;
+  }
+  .metric .value { font-size: 1.25rem; font-weight: 800; line-height: 1.1; }
+  .metric .label { color: var(--muted); font-size: .84rem; }
+  .calc-grid {
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .calc-grid .full { grid-column: 1 / -1; }
+  .form-control, .form-select {
+    background-color: color-mix(in srgb, var(--panel-2) 92%, transparent);
+    color: var(--ink);
+    border-color: var(--border);
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: var(--water);
+    box-shadow: 0 0 0 .2rem color-mix(in srgb, var(--water) 26%, transparent);
+  }
+  .btn-outline-primary {
+    --bs-btn-color: var(--water);
+    --bs-btn-border-color: var(--water);
+    --bs-btn-hover-bg: var(--water);
+    --bs-btn-hover-border-color: var(--water);
+    --bs-btn-hover-color: white;
+    --bs-btn-active-bg: var(--water);
+    --bs-btn-active-border-color: var(--water);
+  }
+  .theme-toggle .btn { min-width: 4.6rem; }
+  .related a {
+    text-decoration: none;
+  }
+  .related a:hover { text-decoration: underline; }
+  .footer-note {
+    color: var(--muted);
+    font-size: .93rem;
+  }
+}
+@layer utilities {
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .nowrap { white-space: nowrap; }
+}
+@media (max-width: 991.98px) {
+  .calc-card {
+    position: static;
+    width: auto;
+    margin-top: 1rem;
+  }
+}
+@media (max-width: 575.98px) {
+  .hero { padding-top: .75rem; }
+  .hero-copy, .viz-wrap, .section-card, .table-card { padding: .9rem; }
+  .calc-grid { grid-template-columns: 1fr; }
+}
+@media print {
+  :root { color-scheme: light; }
+  body { background: white !important; }
+  .hero-card, .section-card, .table-card, details { box-shadow: none !important; }
+  .theme-toggle, .btn, .calc-card button { display: none !important; }
+  .calc-card {
+    position: static !important;
+    width: auto !important;
+    margin-top: .8rem;
+    box-shadow: none !important;
+  }
+  details > .details-body { display: block !important; }
+  details:not([open]) > *:not(summary) { display: block !important; }
+  .table-responsive { overflow: visible !important; }
+  a { color: inherit; text-decoration: none; }
+  .page-break { break-before: page; }
+}
+</style>
+</head>
+<body>
+<main class="page-shell">
+  <div class="container-xxl hero">
+    <div class="hero-card">
+      <div class="row g-0 align-items-stretch">
+        <div class="col-lg-5 hero-copy">
+          <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
+            <div class="kicker">Home & Lifestyle</div>
+            <div class="theme-toggle btn-group btn-group-sm" role="group" aria-label="Theme toggle">
+              <button class="btn btn-outline-primary" type="button" data-theme-choice="auto">Auto</button>
+              <button class="btn btn-outline-primary" type="button" data-theme-choice="light">Light</button>
+              <button class="btn btn-outline-primary" type="button" data-theme-choice="dark">Dark</button>
+            </div>
+          </div>
+          <h1 class="display-title mb-3">Lawn Irrigation and Watering Math</h1>
+          <p class="lead mb-3">This page turns “water deeply” into minutes, gallons, and zone-by-zone runtime. Start with the sprinkler’s precipitation rate, then adjust for soil, slope, plant establishment, and local weather or restrictions.</p>
+          <div class="chip-row mb-3">
+            <span class="chip"><i class="bi bi-droplet-half"></i> 1 inch/week is the starting point</span>
+            <span class="chip"><i class="bi bi-cup-straw"></i> Tuna-cup catch test</span>
+            <span class="chip"><i class="bi bi-arrow-repeat"></i> Cycle-and-soak on runoff zones</span>
+            <span class="chip"><i class="bi bi-thermometer-sun"></i> Morning watering</span>
+          </div>
+          <div class="soft-note mb-3">
+            <strong>Last verified:</strong> 2026-07-07. Local watering rules, drought limits, and utility rates vary; use this page for the math and verify local policy separately.
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-primary" href="#calculator"><i class="bi bi-calculator me-1"></i>Open calculator</a>
+            <a class="btn btn-outline-primary" href="#quick-reference"><i class="bi bi-table me-1"></i>Quick reference</a>
+          </div>
+        </div>
+        <div class="col-lg-7 viz-wrap">
+          <div class="diagram p-2">
+            <svg viewBox="0 0 920 520" class="w-100" role="img" aria-label="Blueprint style sprinkler layout with catch cups and a controller">
+              <defs>
+                <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+                  <path d="M 48 0 L 0 0 0 48" fill="none" stroke="rgba(45,140,255,0.18)" stroke-width="1" />
+                </pattern>
+                <linearGradient id="waterGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#61b8ff" stop-opacity=".95" />
+                  <stop offset="100%" stop-color="#2d8cff" stop-opacity=".18" />
+                </linearGradient>
+              </defs>
+              <rect width="920" height="520" fill="url(#grid)" />
+              <rect x="54" y="64" width="812" height="360" rx="18" fill="rgba(255,255,255,0.06)" stroke="rgba(45,140,255,0.45)" />
+              <g opacity=".95">
+                <path d="M180 310 C250 150, 390 150, 460 310" fill="none" stroke="url(#waterGrad)" stroke-width="18" stroke-linecap="round" />
+                <path d="M460 310 C530 150, 670 150, 740 310" fill="none" stroke="url(#waterGrad)" stroke-width="18" stroke-linecap="round" />
+                <path d="M300 350 C300 250, 620 250, 620 350" fill="none" stroke="rgba(92,168,79,.55)" stroke-width="6" stroke-dasharray="12 12" />
+              </g>
+              <g fill="#d9f0ff" stroke="#2d8cff" stroke-width="4">
+                <circle cx="180" cy="310" r="16" />
+                <circle cx="460" cy="310" r="16" />
+                <circle cx="740" cy="310" r="16" />
+              </g>
+              <g fill="#f7fbff" stroke="#8bb8d4" stroke-width="3">
+                <rect x="130" y="355" width="28" height="42" rx="5" />
+                <rect x="220" y="360" width="28" height="42" rx="5" />
+                <rect x="345" y="360" width="28" height="42" rx="5" />
+                <rect x="520" y="360" width="28" height="42" rx="5" />
+                <rect x="655" y="360" width="28" height="42" rx="5" />
+                <rect x="785" y="355" width="28" height="42" rx="5" />
+              </g>
+              <g fill="#f1c84b" stroke="#f1c84b">
+                <circle cx="420" cy="125" r="14" />
+                <path d="M420 95 l7 20 h-14 z" />
+                <line x1="420" y1="67" x2="420" y2="88" stroke-width="5" />
+              </g>
+              <g>
+                <rect x="360" y="46" width="198" height="90" rx="14" fill="rgba(13,24,31,.72)" stroke="rgba(97,184,255,.55)" />
+                <text x="458" y="83" text-anchor="middle" fill="#d8edf7" font-size="22" font-weight="700">Controller</text>
+                <text x="458" y="110" text-anchor="middle" fill="#94adbd" font-size="16">Set by minutes, not guesses</text>
+              </g>
+              <g>
+                <line x1="180" y1="310" x2="180" y2="430" stroke="#5ca84f" stroke-width="6" />
+                <line x1="460" y1="310" x2="460" y2="430" stroke="#5ca84f" stroke-width="6" />
+                <line x1="740" y1="310" x2="740" y2="430" stroke="#5ca84f" stroke-width="6" />
+              </g>
+              <g fill="none" stroke="#2d8cff" stroke-width="2" opacity=".9">
+                <path d="M150 145 H300" />
+                <path d="M560 145 H790" />
+              </g>
+              <g fill="#d8edf7" font-size="18" font-weight="700">
+                <text x="178" y="452" text-anchor="middle">Zone 1</text>
+                <text x="460" y="452" text-anchor="middle">Zone 2</text>
+                <text x="740" y="452" text-anchor="middle">Zone 3</text>
+              </g>
+            </svg>
+          </div>
+
+          <section id="calculator" class="calc-card p-3" aria-labelledby="calculator-title">
+            <div class="card-header p-2 mb-3 rounded-top">
+              <div class="d-flex align-items-center justify-content-between gap-2">
+                <div>
+                  <div class="mini-label">Signature tool</div>
+                  <h2 id="calculator-title" class="h5 mb-0">Minutes per zone</h2>
+                </div>
+                <span class="badge text-bg-primary-subtle text-primary-emphasis border border-primary-subtle">Live math</span>
+              </div>
+            </div>
+            <div class="calc-grid">
+              <label class="full">
+                <span class="mini-label">Target water per week, inches</span>
+                <input id="targetInches" class="form-control" type="number" min="0" step="0.05" value="1" />
+              </label>
+              <label>
+                <span class="mini-label">Zone area, sq ft</span>
+                <input id="zoneArea" class="form-control" type="number" min="1" step="1" value="800" />
+              </label>
+              <label>
+                <span class="mini-label">Precipitation rate, in/hr</span>
+                <input id="precipRate" class="form-control" type="number" min="0.05" step="0.01" value="0.50" />
+              </label>
+              <label>
+                <span class="mini-label">Distribution uniformity</span>
+                <input id="du" class="form-control" type="number" min="0.5" max="1" step="0.01" value="0.75" />
+              </label>
+              <label>
+                <span class="mini-label">Watering sessions/week</span>
+                <input id="sessions" class="form-control" type="number" min="1" max="14" step="1" value="2" />
+              </label>
+            </div>
+            <div class="row g-2 mt-3">
+              <div class="col-6">
+                <div class="metric">
+                  <div class="label">Adjusted depth</div>
+                  <div class="value" id="adjustedDepth">1.33 in</div>
+                  <div class="mini-label">Target divided by DU</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="metric">
+                  <div class="label">Runtime/week</div>
+                  <div class="value" id="runtimeMinutes">160 min</div>
+                  <div class="mini-label">Split across sessions</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="metric">
+                  <div class="label">Gallons/week</div>
+                  <div class="value" id="gallonsWeek">853 gal</div>
+                  <div class="mini-label">Area × depth × 0.623</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="metric">
+                  <div class="label">Minutes/session</div>
+                  <div class="value" id="minutesSession">80 min</div>
+                  <div class="mini-label">With the chosen session count</div>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center gap-2 mt-3">
+              <div class="mini-label">Example uses a 800 sq ft zone at 0.50 in/hr and DU 0.75.</div>
+              <button class="btn btn-sm btn-outline-primary" type="button" id="resetCalc"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-xxl pb-4">
+    <section id="quick-reference" class="table-card mb-3">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="icon-badge"><i class="bi bi-journal-text"></i></span>
+        <div>
+          <h2 class="section-title h4 mb-0">Quick Reference</h2>
+          <div class="footer-note">The small set of numbers you reach for first.</div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle mb-0">
+          <thead>
+            <tr>
+              <th>What</th>
+              <th>Rule</th>
+              <th>Example</th>
+              <th>Gotcha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Weekly target</td>
+              <td>Many lawns start around <strong>1 inch/week</strong>, rainfall included.</td>
+              <td>1.0 in = 25.4 mm.</td>
+              <td>Use local ET and restrictions, not a fixed calendar forever.</td>
+            </tr>
+            <tr>
+              <td>Depth to gallons</td>
+              <td><strong>0.623 gallons</strong> per sq ft per inch of water.</td>
+              <td>800 sq ft at 1.0 in = 498 gal.</td>
+              <td>That is volume, not runtime.</td>
+            </tr>
+            <tr>
+              <td>Precipitation rate</td>
+              <td><strong>PR = 96.3 × GPM / (S × L)</strong>.</td>
+              <td>5.675 GPM over 28 × 29 ft = 0.67 in/hr.</td>
+              <td>Mixed heads break the math unless rates are matched.</td>
+            </tr>
+            <tr>
+              <td>Runtime</td>
+              <td><strong>Minutes = inches / PR × 60</strong>.</td>
+              <td>0.5 in at 0.5 in/hr = 60 min.</td>
+              <td>Divide by DU if you want the driest quarter to reach target depth.</td>
+            </tr>
+            <tr>
+              <td>Catch-cup test</td>
+              <td>Place tuna cans, run to a half-inch fill, and average the time.</td>
+              <td>18 min to half an inch implies about 1.67 in/hr.</td>
+              <td>One dry can can reveal a coverage problem even when the average looks fine.</td>
+            </tr>
+            <tr>
+              <td>Soil warning</td>
+              <td>Clay and slopes need <strong>cycle-and-soak</strong>.</td>
+              <td>Three 8-minute cycles can beat one long 24-minute run.</td>
+              <td>If water pools, the application rate is too fast for infiltration.</td>
+            </tr>
+            <tr>
+              <td>Controller rule</td>
+              <td>Use weather or soil-moisture data where possible.</td>
+              <td>Smart controllers can adjust to season and rain.</td>
+              <td>Do not leave a clock timer on autopilot through the whole summer.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card mb-3" aria-labelledby="fundamentals-title">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="icon-badge"><i class="bi bi-compass"></i></span>
+        <div>
+          <h2 id="fundamentals-title" class="section-title h4 mb-0">Fundamentals</h2>
+          <div class="footer-note">The mental model that turns “deep and infrequent” into a number.</div>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-6 col-xl-3">
+          <div class="metric">
+            <div class="d-flex align-items-center gap-2 mb-2"><span class="icon-badge"><i class="bi bi-water"></i></span><strong>Depth, not just time</strong></div>
+            <div class="label">Definition</div>
+            <p class="mb-2">Watering advice is about applying a depth of water to the root zone, not about setting a universal minute count.</p>
+            <div class="label">Example</div>
+            <p class="mb-2">If a zone needs 0.75 inch this week, a 500 sq ft patch needs 234 gallons.</p>
+            <div class="label">Gotcha</div>
+            <p class="mb-0">The same 30 minutes can mean very different depths on a spray zone and a rotor zone.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="metric">
+            <div class="d-flex align-items-center gap-2 mb-2"><span class="icon-badge"><i class="bi bi-speedometer2"></i></span><strong>Precipitation rate</strong></div>
+            <div class="label">Definition</div>
+            <p class="mb-2">PR is how fast the system applies water, in inches per hour.</p>
+            <div class="label">Example</div>
+            <p class="mb-2">A spray zone at 1.75 in/hr needs roughly 17 minutes to apply 0.5 inch.</p>
+            <div class="label">Gotcha</div>
+            <p class="mb-0">Do not assume nozzle catalog flow rate equals actual field PR; spacing and overlap matter.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="metric">
+            <div class="d-flex align-items-center gap-2 mb-2"><span class="icon-badge"><i class="bi bi-cloud-rain"></i></span><strong>ET and rain</strong></div>
+            <div class="label">Definition</div>
+            <p class="mb-2">ET is the water lost by evaporation and plant use; effective rain offsets some of that demand.</p>
+            <div class="label">Example</div>
+            <p class="mb-2">If local ET is 1.2 inches and effective rain is 0.3 inch, the net demand is about 0.9 inch.</p>
+            <div class="label">Gotcha</div>
+            <p class="mb-0">Rain totals are not always all effective rainfall; use the local method or utility guidance.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="metric">
+            <div class="d-flex align-items-center gap-2 mb-2"><span class="icon-badge"><i class="bi bi-graph-up-arrow"></i></span><strong>Distribution uniformity</strong></div>
+            <div class="label">Definition</div>
+            <p class="mb-2">DU measures how evenly the driest part of a zone compares with the average.</p>
+            <div class="label">Example</div>
+            <p class="mb-2">A home lawn DU around 0.70 to 0.80 is a decent target.</p>
+            <div class="label">Gotcha</div>
+            <p class="mb-0">Low DU means you either accept dry spots or run long enough to overwater the rest.</p>
+          </div>
+        </div>
+      </div>
+      <div class="soft-note mt-3">
+        <strong>Decision rule:</strong> use the simplest target that fits the season. Established turf gets deep, infrequent irrigation; new seed and sod get much lighter, more frequent watering until roots establish.
+      </div>
+    </section>
+
+    <section class="section-card mb-3" aria-labelledby="workflow-title">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="icon-badge"><i class="bi bi-rulers"></i></span>
+        <div>
+          <h2 id="workflow-title" class="section-title h4 mb-0">Measurement Workflow</h2>
+          <div class="footer-note">Measure the zone before you guess at minutes.</div>
+        </div>
+      </div>
+      <details name="workflow" open>
+        <summary><i class="bi bi-1-circle me-2"></i>Place catch cups in a grid across one zone</summary>
+        <div class="details-body">
+          <p class="mb-2">Use identical straight-sided cups or tuna cans. Spread them between heads and under the overlap pattern, not just in the obvious wet spots.</p>
+          <p class="mb-0">Example: on an 8-head zone, place 8 to 12 cups in a rough grid. If one cup stays nearly dry while others fill, you likely have a spacing or coverage problem rather than a runtime problem.</p>
+        </div>
+      </details>
+      <details name="workflow">
+        <summary><i class="bi bi-2-circle me-2"></i>Run the zone until the cups reach a known depth</summary>
+        <div class="details-body">
+          <p class="mb-2">EPA’s practical test is to measure the time to fill a few cans with half an inch of water, then average that time across the zone.</p>
+          <p class="mb-0">Example: if the cups reach 0.5 inch in 18 minutes, the average precipitation rate is about 1.67 in/hr.</p>
+        </div>
+      </details>
+      <details name="workflow">
+        <summary><i class="bi bi-3-circle me-2"></i>Convert the result into runtime</summary>
+        <div class="details-body">
+          <p class="mb-2">Runtime in minutes is the target depth divided by precipitation rate, then multiplied by 60. If you are protecting the driest quarter, divide by DU as well.</p>
+          <div class="formula mb-2">minutes = (target_inches / precipitation_rate_in_hr) × 60 ÷ DU</div>
+          <p class="mb-0">Example: 0.75 inch at 0.50 in/hr with DU 0.75 becomes 120 minutes total. Split that into shorter cycles if the soil cannot absorb it in one pass.</p>
+        </div>
+      </details>
+      <details name="workflow">
+        <summary><i class="bi bi-4-circle me-2"></i>Recheck after repairs or season changes</summary>
+        <div class="details-body">
+          <p class="mb-2">Monthly inspection catches broken heads, clogged nozzles, leaks, and controllers that drift with the season.</p>
+          <p class="mb-0">Example: a head that starts misting after a pressure change can lose radius and waste water before you notice it on the lawn.</p>
+        </div>
+      </details>
+    </section>
+
+    <section class="section-card mb-3" aria-labelledby="zone-types-title">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="icon-badge"><i class="bi bi-diagram-3"></i></span>
+        <div>
+          <h2 id="zone-types-title" class="section-title h4 mb-0">Zone Type Comparison</h2>
+          <div class="footer-note">Use matched heads and matched precipitation rates whenever possible.</div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>What it is</th>
+              <th>Best use</th>
+              <th>When not to use</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Fixed spray heads</strong></td>
+              <td>Short-throw heads that deliver water quickly across a small pattern.</td>
+              <td>Small turf zones, narrow strips, and tight corners where coverage is easy to audit.</td>
+              <td>Clayey or sloped zones where the application rate outruns infiltration and causes runoff.</td>
+            </tr>
+            <tr>
+              <td><strong>Rotor heads</strong></td>
+              <td>Rotating heads that apply water more slowly than sprays.</td>
+              <td>Larger turf areas and zones where runoff is a concern.</td>
+              <td>Very small zones where throw distance is poor or head spacing gets awkward.</td>
+            </tr>
+            <tr>
+              <td><strong>Rotating spray nozzles</strong></td>
+              <td>Multi-stream nozzles that slow spray delivery compared with fixed sprays.</td>
+              <td>Moderate-size zones where a slower rate helps infiltration.</td>
+              <td>Any zone with mixed nozzle types unless the precipitation rates are matched.</td>
+            </tr>
+            <tr>
+              <td><strong>Drip / microirrigation</strong></td>
+              <td>Low-volume water delivered directly to roots.</td>
+              <td>Beds, shrubs, trees, and places where you do not want overhead wetting.</td>
+              <td>Do not mix drip with sprinklers on the same zone; turf usually needs a different layout.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="soft-note mt-3">
+        <strong>Decision guidance:</strong> use slower application when infiltration is the constraint, but do not use a slower nozzle as a substitute for bad spacing, missing heads, or a leak.
+      </div>
+    </section>
+
+    <section class="section-card mb-3" aria-labelledby="soil-title">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="icon-badge"><i class="bi bi-signpost-split"></i></span>
+        <div>
+          <h2 id="soil-title" class="section-title h4 mb-0">Soil and Site Factors</h2>
+          <div class="footer-note">Soil sets the ceiling on how fast you can water before runoff starts.</div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Condition</th>
+              <th>What it changes</th>
+              <th>Practical adjustment</th>
+              <th>Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Sand</strong></td>
+              <td>Low water-holding capacity; water moves through quickly.</td>
+              <td>Water more often, but smaller doses per session.</td>
+              <td>A 1 inch/week target may be split into 3 to 4 lighter runs.</td>
+            </tr>
+            <tr>
+              <td><strong>Loam</strong></td>
+              <td>Middle ground for infiltration and storage.</td>
+              <td>Use the baseline math first, then fine-tune by ET and plant response.</td>
+              <td>0.75 inch applied slowly often works without runoff.</td>
+            </tr>
+            <tr>
+              <td><strong>Clay</strong></td>
+              <td>Slow infiltration; runoff risk rises fast.</td>
+              <td>Use cycle-and-soak, shorter runtimes, and wider spacing between passes.</td>
+              <td>Three 8-minute cycles can be safer than a single 24-minute run.</td>
+            </tr>
+            <tr>
+              <td><strong>Slope</strong></td>
+              <td>Gravity moves water before it can soak in.</td>
+              <td>Short cycles, slower application, and better head alignment.</td>
+              <td>Watering two days in a row may beat trying to force one long soak.</td>
+            </tr>
+            <tr>
+              <td><strong>Shade</strong></td>
+              <td>Lower ET and slower drying.</td>
+              <td>Reduce frequency before you increase runtime.</td>
+              <td>A shaded north strip can need less than the sunny center of the yard.</td>
+            </tr>
+            <tr>
+              <td><strong>Compaction / thatch</strong></td>
+              <td>Less infiltration and poorer root depth.</td>
+              <td>Aerate, dethatch if needed, and do not just add more minutes.</td>
+              <td>Wet surface + dry roots usually means water is not getting down.</td>
+            </tr>
+            <tr>
+              <td><strong>New seed</strong></td>
+              <td>Surface must stay moist through germination.</td>
+              <td>Light, frequent watering, often once or twice a day.</td>
+              <td>Keep the upper 1 inch of soil moist until seedlings are established.</td>
+            </tr>
+            <tr>
+              <td><strong>New sod</strong></td>
+              <td>Roots have not knitted to the soil yet.</td>
+              <td>Water once or twice a day at first, then back off gradually.</td>
+              <td>After rooting, move toward a 6-inch deep, less frequent schedule.</td>
+            </tr>
+            <tr>
+              <td><strong>Established turf</strong></td>
+              <td>Can tolerate deeper, less frequent irrigation.</td>
+              <td>Let the plant signal need before watering again.</td>
+              <td>If the footprint lingers, the grass is starting to need water.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card mb-3" aria-labelledby="diagnostics-title">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="icon-badge"><i class="bi bi-wrench-adjustable-circle"></i></span>
+        <div>
+          <h2 id="diagnostics-title" class="section-title h4 mb-0">System Diagnostics</h2>
+          <div class="footer-note">If the math looks wrong, the hardware usually is.</div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Symptom</th>
+              <th>Likely cause</th>
+              <th>Fix</th>
+              <th>Why it matters</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Misting around heads</td>
+              <td>Pressure too high.</td>
+              <td>Check pressure, regulator, and nozzle spec.</td>
+              <td>Fine droplets drift and evaporate before they reach the lawn.</td>
+            </tr>
+            <tr>
+              <td>Dry ring or striping</td>
+              <td>Poor overlap, spacing, or a clogged nozzle.</td>
+              <td>Restore head-to-head coverage and clear obstructions.</td>
+              <td>Average runtime can look fine while one band stays dry.</td>
+            </tr>
+            <tr>
+              <td>Puddles on slopes</td>
+              <td>Application rate exceeds infiltration.</td>
+              <td>Use cycle-and-soak and shorten each cycle.</td>
+              <td>Runoff wastes water and moves fertilizer off-site.</td>
+            </tr>
+            <tr>
+              <td>Wet spots near one head</td>
+              <td>Leak, broken head, or low-fitting nozzle.</td>
+              <td>Inspect valves, joints, and head alignment.</td>
+              <td>A small leak can waste thousands of gallons in a month.</td>
+            </tr>
+            <tr>
+              <td>Water on driveway or sidewalk</td>
+              <td>Misaligned heads or overspray.</td>
+              <td>Re-aim the heads toward the landscape.</td>
+              <td>Landscape water that lands on pavement is just lost runtime.</td>
+            </tr>
+            <tr>
+              <td>Zone needs very different runtimes inside one area</td>
+              <td>Mixed nozzle types or mismatched precipitation rates.</td>
+              <td>Split the zone or match the heads.</td>
+              <td>One part will be overwatered if the slower section drives the schedule.</td>
+            </tr>
+            <tr>
+              <td>Grass springs back after a step</td>
+              <td>Still enough moisture in the root zone.</td>
+              <td>Wait rather than watering on a fixed day.</td>
+              <td>Watering too early encourages shallow roots.</td>
+            </tr>
+            <tr>
+              <td>Footprint stays visible for minutes</td>
+              <td>Water stress is starting.</td>
+              <td>Schedule the next irrigation event.</td>
+              <td>This is a simple field check when you do not have a sensor.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card mb-3" aria-labelledby="budget-title">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="icon-badge"><i class="bi bi-cash-coin"></i></span>
+        <div>
+          <h2 id="budget-title" class="section-title h4 mb-0">Water Budget and Cost</h2>
+          <div class="footer-note">Useful when you want gallons and dollars, not just minutes.</div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Line item</th>
+              <th>Formula</th>
+              <th>Example</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Gallons per zone</td>
+              <td>area × depth × 0.623</td>
+              <td>800 sq ft × 1.0 in = 498 gal</td>
+              <td>Use adjusted depth if you are planning for DU.</td>
+            </tr>
+            <tr>
+              <td>Gallons per season</td>
+              <td>weekly gallons × number of watering weeks</td>
+              <td>498 gal × 16 weeks = 7,968 gal</td>
+              <td>Season length changes by climate and turf type.</td>
+            </tr>
+            <tr>
+              <td>Cost per watering</td>
+              <td>gallons ÷ 1,000 × utility rate</td>
+              <td>498 gal at $5.25 / 1,000 gal = $2.61</td>
+              <td>Use your own utility tariff; rates vary a lot.</td>
+            </tr>
+            <tr>
+              <td>Leak clue</td>
+              <td>Check for pooling, soggy patches, and heads that behave differently.</td>
+              <td>A tiny 1/32 inch leak can waste about 6,300 gal/month.</td>
+              <td>That is a hardware problem, not a scheduling problem.</td>
+            </tr>
+            <tr>
+              <td>Smart controller value</td>
+              <td>Weather or soil-moisture data trims unnecessary runtime.</td>
+              <td>EPA says WaterSense labeled controllers can significantly reduce overwatering.</td>
+              <td>Good scheduling does not fix bad coverage, but it can stop repeat waste.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card mb-3" aria-labelledby="mistakes-title">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="icon-badge"><i class="bi bi-exclamation-triangle"></i></span>
+        <div>
+          <h2 id="mistakes-title" class="section-title h4 mb-0">Common Mistakes</h2>
+          <div class="footer-note">The failures that make the math look wrong.</div>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-6 col-xl-4">
+          <div class="metric h-100">
+            <strong>Daily shallow watering</strong>
+            <p class="mb-2">A quick daily splash encourages shallow roots and makes the lawn less resilient.</p>
+            <p class="mb-0">Use it only for new seed or sod during establishment.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-4">
+          <div class="metric h-100">
+            <strong>Mixing nozzle types in one zone</strong>
+            <p class="mb-2">Sprays, rotors, and drip do not apply water at the same rate.</p>
+            <p class="mb-0">Split the zone instead of asking one schedule to fit all heads.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-4">
+          <div class="metric h-100">
+            <strong>Watering pavement</strong>
+            <p class="mb-2">Overspray onto driveways and sidewalks is just lost water.</p>
+            <p class="mb-0">Aim at the landscape and fix the head alignment.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-4">
+          <div class="metric h-100">
+            <strong>Ignoring runoff</strong>
+            <p class="mb-2">If water pools, the run time is too long for that soil or slope.</p>
+            <p class="mb-0">Break the run into cycles, then come back after soak time.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-4">
+          <div class="metric h-100">
+            <strong>Setting and forgetting</strong>
+            <p class="mb-2">Seasonal ET, rain, shade, and soil conditions change the schedule.</p>
+            <p class="mb-0">Controllers need periodic adjustment, not a one-time setup.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-4">
+          <div class="metric h-100">
+            <strong>Using rainfall total without context</strong>
+            <p class="mb-2">Not every inch of rain is effective water for the root zone.</p>
+            <p class="mb-0">Use the local ET method or utility guidance for the net demand.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card mb-3 related" aria-labelledby="related-title">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="icon-badge"><i class="bi bi-link-45deg"></i></span>
+        <div>
+          <h2 id="related-title" class="section-title h4 mb-0">Related</h2>
+          <div class="footer-note">Pages that sit next to this one in the home-math cluster.</div>
+        </div>
+      </div>
+      <div class="row g-2">
+        <div class="col-md-6 col-xl-3"><a class="btn btn-outline-primary w-100" href="home-maintenance-guide.html">Home maintenance guide</a></div>
+        <div class="col-md-6 col-xl-3"><a class="btn btn-outline-primary w-100" href="the-household-numbers.html">The household numbers</a></div>
+        <div class="col-md-6 col-xl-3"><a class="btn btn-outline-primary w-100" href="air-water-filtration.html">Air, water, filtration</a></div>
+        <div class="col-md-6 col-xl-3"><a class="btn btn-outline-primary w-100" href="lifestyle-calculator.html">Lifestyle calculator</a></div>
+      </div>
+    </section>
+
+    <div class="footer-note px-1 pb-3">
+      <strong>Verification sources used:</strong>
+      <a href="https://www.epa.gov/watersense/watering-tips" rel="noreferrer" target="_blank">EPA Watering Tips</a>,
+      <a href="https://www.epa.gov/watersense/turfgrass-and-water-efficiency" rel="noreferrer" target="_blank">EPA Turfgrass and Water Efficiency</a>,
+      <a href="https://www.epa.gov/watersense/watersense-labeled-controllers" rel="noreferrer" target="_blank">EPA WaterSense Labeled Controllers</a>,
+      <a href="https://extension.colostate.edu/resource/methods-to-schedule-home-lawn-irrigation/" rel="noreferrer" target="_blank">Colorado State Extension</a>,
+      <a href="https://extension.colostate.edu/resource/watering-efficiently/" rel="noreferrer" target="_blank">Colorado State Watering Efficiently</a>,
+      <a href="https://extension.okstate.edu/fact-sheets/simple-irrigation-audit-for-home-lawns-in-oklahoma" rel="noreferrer" target="_blank">Oklahoma State irrigation audit</a>,
+      <a href="https://mytexas.ag.tamu.edu/wp-content/uploads/2026/02/preventing-runoff-with-cycle-and-soak-irrigation.pdf" rel="noreferrer" target="_blank">Texas A&amp;M runoff guidance</a>,
+      <a href="https://extension.usu.edu/yardandgarden/research/conservation-without-changing-landscape" rel="noreferrer" target="_blank">Utah State zone matching</a>,
+      <a href="https://ucanr.edu/site/center-landscape-urban-horticulture/using-ansi/asabe-s623-slide-estimate-landscape-water" rel="noreferrer" target="_blank">UC ANR SLIDE</a>,
+      <a href="https://yardandgarden.extension.iastate.edu/how-to/watering-home-lawns" rel="noreferrer" target="_blank">Iowa State lawn watering</a>.
+    </div>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+<script>
+(() => {
+  const root = document.documentElement;
+  const storageKey = 'lawn-irrigation-theme';
+  const controls = [...document.querySelectorAll('[data-theme-choice]')];
+  const targetInches = document.getElementById('targetInches');
+  const zoneArea = document.getElementById('zoneArea');
+  const precipRate = document.getElementById('precipRate');
+  const du = document.getElementById('du');
+  const sessions = document.getElementById('sessions');
+  const adjustedDepth = document.getElementById('adjustedDepth');
+  const runtimeMinutes = document.getElementById('runtimeMinutes');
+  const gallonsWeek = document.getElementById('gallonsWeek');
+  const minutesSession = document.getElementById('minutesSession');
+  const resetCalc = document.getElementById('resetCalc');
+
+  function format1(value) {
+    return Number.isFinite(value) ? value.toFixed(1) : '0.0';
+  }
+  function format0(value) {
+    return Number.isFinite(value) ? Math.round(value).toLocaleString() : '0';
+  }
+  function applyTheme(mode) {
+    if (mode === 'auto') {
+      root.removeAttribute('data-theme');
+    } else {
+      root.setAttribute('data-theme', mode);
+    }
+    try { localStorage.setItem(storageKey, mode); } catch (_) {}
+    controls.forEach((btn) => btn.classList.toggle('active', btn.dataset.themeChoice === mode));
+  }
+  function syncCalc() {
+    const target = Math.max(0, Number(targetInches.value || 0));
+    const area = Math.max(0, Number(zoneArea.value || 0));
+    const rate = Math.max(0.01, Number(precipRate.value || 0.01));
+    const uniformity = Math.min(1, Math.max(0.5, Number(du.value || 1)));
+    const weeklySessions = Math.max(1, Number(sessions.value || 1));
+
+    const grossDepth = target / uniformity;
+    const gallons = area * grossDepth * 0.623;
+    const totalMinutes = grossDepth / rate * 60;
+    const perSession = totalMinutes / weeklySessions;
+
+    adjustedDepth.textContent = `${format1(grossDepth)} in`;
+    runtimeMinutes.textContent = `${format0(totalMinutes)} min`;
+    gallonsWeek.textContent = `${format0(gallons)} gal`;
+    minutesSession.textContent = `${format0(perSession)} min`;
+  }
+
+  controls.forEach((btn) => btn.addEventListener('click', () => applyTheme(btn.dataset.themeChoice)));
+  try {
+    applyTheme(localStorage.getItem(storageKey) || 'auto');
+  } catch (_) {
+    applyTheme('auto');
+  }
+
+  [targetInches, zoneArea, precipRate, du, sessions].forEach((el) => el.addEventListener('input', syncCalc));
+  resetCalc.addEventListener('click', () => {
+    targetInches.value = 1;
+    zoneArea.value = 800;
+    precipRate.value = 0.5;
+    du.value = 0.75;
+    sessions.value = 2;
+    syncCalc();
+  });
+  syncCalc();
+
+  function openAllDetails(open) {
+    document.querySelectorAll('details[name="workflow"]').forEach((el) => { el.open = open; });
+  }
+  addEventListener('beforeprint', () => openAllDetails(true));
+  addEventListener('afterprint', () => {
+    if (matchMedia('(max-width: 0px)').matches) return;
+  });
+})();
+</script>
+</body>
+</html>
