@@ -33,14 +33,17 @@ return [
     'javascript-for-architects.html' => 'Software & DevOps',
     'microservices.html' => 'Software & DevOps',
     'modern-devops-pipelines.html' => 'Software & DevOps',
+    'observability-logs-metrics-traces-slos.html' => 'Software & DevOps',
     'postgresql.html' => 'Software & DevOps',
     'python-for-architects.html' => 'Software & DevOps',
     'scrum.html' => 'Software & DevOps',
+    'sql-performance-tuning.html' => 'Software & DevOps',
     'ubuntu-linux-for-ai-developers.html' => 'Software & DevOps',
     'versioncontrol.html' => 'Software & DevOps',
 
     // Security & Privacy
     'linux-server-hardening.html' => 'Security & Privacy',
+    'passkeys-yubikeys-hardware-auth.html' => 'Security & Privacy',
     'personal-cybersecurity.html' => 'Security & Privacy',
     'post-quantum-cryptography.html' => 'Security & Privacy',
     'privacy-data-broker-opt-out.html' => 'Security & Privacy',
@@ -48,12 +51,14 @@ return [
     // Risk & Preparedness
     'actual-risk-dashboard.html' => 'Risk & Preparedness',
     'celestial-navigation.html' => 'Risk & Preparedness',
+    'creator-public-figure-threat-model.html' => 'Risk & Preparedness',
     'how-burglars-break-in.html' => 'Risk & Preparedness',
     'nuclear-preparedness.html' => 'Risk & Preparedness',
     'parents-threat-model.html' => 'Risk & Preparedness',
     'prepper-gear-audit.html' => 'Risk & Preparedness',
     'safes-what-they-stop.html' => 'Risk & Preparedness',
     'security-theater-audit.html' => 'Risk & Preparedness',
+    'vehicle-emergency-kit.html' => 'Risk & Preparedness',
 
     // Bitcoin & Finance
     'bitcoin-exchanges-cards.html' => 'Bitcoin & Finance',
@@ -87,6 +92,7 @@ return [
     'ham-radio-technician.html' => 'Radio',
 
     // Health & Fitness
+    'blood-tests-cbc-cmp-lipids-a1c-thyroid.html' => 'Health & Fitness',
     'cycling.html' => 'Health & Fitness',
     'er-triage.html' => 'Health & Fitness',
     'hospital-stay-survival.html' => 'Health & Fitness',
@@ -132,7 +138,11 @@ return [
     'geoengineering-approaches.html' => 'Engineering & Science',
     'human-evolution.html' => 'Engineering & Science',
     'humanoid-robots.html' => 'Engineering & Science',
+    'nuclear-power-reactor-types.html' => 'Engineering & Science',
     'orbital-rockets-comparison.html' => 'Engineering & Science',
+    'semiconductor-manufacturing.html' => 'Engineering & Science',
+    'sensors-cameras-lidar-radar-imu-gps.html' => 'Engineering & Science',
+    'space-habitats-life-support.html' => 'Engineering & Science',
     'stellar-lifecycle.html' => 'Engineering & Science',
     'tesla-products.html' => 'Engineering & Science',
 
@@ -143,8 +153,10 @@ return [
     'cooking-guide.html' => 'Home & Lifestyle',
     'air-water-filtration.html' => 'Home & Lifestyle',
     'global_cuisine_guide.html' => 'Home & Lifestyle',
+    'home-electrical-basics.html' => 'Home & Lifestyle',
     'home-maintenance-guide.html' => 'Home & Lifestyle',
     'hot-tub-treatment.html' => 'Home & Lifestyle',
+    'lawn-irrigation-watering-math.html' => 'Home & Lifestyle',
     'living-richly-guide.html' => 'Home & Lifestyle',
     'samsung-bespoke-oven-guide.html' => 'Home & Lifestyle',
     'the-glue-chart.html' => 'Home & Lifestyle',
