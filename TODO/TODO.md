@@ -6,6 +6,8 @@ This is intentionally subjective. I weighted broad search volume, crisis / task-
 
 Excluded from this queue because they are workflow docs, not cheatsheet specs: `README.md`, `SPEC-AUDIT.md`, `CHEATSHEET-AUDIT.md`.
 
+New specs added 2026-07-07 but not yet traffic-ranked: `api-design-rest-graphql-grpc-webhooks.md`, `observability-logs-metrics-traces-slos.md`, `sql-performance-tuning.md`, `passkeys-yubikeys-hardware-auth.md`, `creator-public-figure-threat-model.md`, `home-electrical-basics.md`, `lawn-irrigation-watering-math.md`, `blood-tests-cbc-cmp-lipids-a1c-thyroid.md`, `vehicle-emergency-kit.md`, `semiconductor-manufacturing.md`, `nuclear-power-reactor-types.md`, `space-habitats-life-support.md`, `sensors-cameras-lidar-radar-imu-gps.md`, `stoicism-practice-texts-misreadings.md`, `comparative-religion-map.md`, `decision-theory-everyday-life.md`.
+
 1. `audit-recommendations-2026-07-05.md` — Forced top item per request; fixes to already-popular pages should compound existing traffic fastest.
 2. `er-triage.md` — Huge crisis-intent query family around ER vs urgent care, symptom-specific H2s, and high stakes.
 3. `death-logistics.md` — "What to do when someone dies" is universal, urgent, adversarially served, and likely to earn bookmarks and links.
