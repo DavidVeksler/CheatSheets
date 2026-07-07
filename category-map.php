@@ -23,6 +23,7 @@ return [
     // Software & DevOps
     'aws-vs-azure.html' => 'Software & DevOps',
     'azure-devops.html' => 'Software & DevOps',
+    'api-design-rest-graphql-grpc-webhooks.html' => 'Software & DevOps',
     'clean-architecture-dotnet.html' => 'Software & DevOps',
     'compression-algorithms.html' => 'Software & DevOps',
     'databases.html' => 'Software & DevOps',
