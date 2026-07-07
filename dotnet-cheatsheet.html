@@ -934,7 +934,11 @@
               <tr><td>Publish</td><td><code>dotnet publish</code></td><td><code>dotnet publish -c Release -r linux-x64 --self-contained false</code></td><td>Runtime-dependent is smaller; self-contained carries the runtime.</td></tr>
               <tr><td>Inspect SDKs</td><td><code>dotnet --list-sdks</code></td><td><code>dotnet --info</code></td><td>Installed SDK and target framework are different decisions.</td></tr>
               <tr><td>Manage packages</td><td><code>dotnet package</code></td><td><code>dotnet add package Microsoft.EntityFrameworkCore.SqlServer</code></td><td>Central package management prevents version drift across projects.</td></tr>
+              <tr><td>Audit packages</td><td><code>dotnet list package</code></td><td><code>dotnet list package --outdated --include-transitive</code></td><td>Transitive upgrades can change runtime behavior even when direct references stay fixed.</td></tr>
               <tr><td>EF migration</td><td><code>dotnet ef</code></td><td><code>dotnet ef migrations add AddInvoices</code></td><td>Install matching EF tools and keep migrations reviewed as code.</td></tr>
+              <tr><td>Format</td><td><code>dotnet format</code></td><td><code>dotnet format --verify-no-changes</code></td><td>Run in CI only after agreeing on analyzer severities.</td></tr>
+              <tr><td>Secrets</td><td><code>dotnet user-secrets</code></td><td><code>dotnet user-secrets set ConnectionStrings:Billing "...dev..."</code></td><td>User secrets are local development storage, not production secret management.</td></tr>
+              <tr><td>Workloads</td><td><code>dotnet workload</code></td><td><code>dotnet workload install maui</code></td><td>Workloads are SDK-scoped; CI images must install the same workloads developers use.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1002,7 +1006,22 @@ dotnet test</code></pre>
             <ul>
               <li>Use <code>dotnet --list-sdks</code> and <code>dotnet --list-runtimes</code> to diagnose mismatches.</li>
               <li>Use <code>global.json</code> to pin SDK feature band for a repo.</li>
+              <li>The SDK includes CLI commands, MSBuild targets, Roslyn compilers, templates, analyzers, and optional workloads such as MAUI.</li>
+              <li>The runtime supplies CoreCLR execution, garbage collection, JIT compilation, type safety, exception handling, and host policy.</li>
               <li>Gotcha: installing a runtime does not let you compile code.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="detail-panel filter-card" name="platform" data-category="platform" data-level="fundamental">
+          <summary>BCL, CIL, Assemblies, and Metadata</summary>
+          <div class="detail-body">
+            <p>The Base Class Library is the common API surface: <code>System</code>, collections, streams, JSON, HTTP, LINQ, threading, diagnostics, globalization, and cryptography. C# compiles to Common Intermediate Language plus metadata inside assemblies; the runtime loads assemblies and JIT-compiles methods as they execute.</p>
+            <ul>
+              <li><strong>Assemblies:</strong> <code>.dll</code> or <code>.exe</code> deployment and versioning units with a manifest, referenced assemblies, resources, and type metadata.</li>
+              <li><strong>CIL/JIT:</strong> normal apps compile source to IL first, then the JIT emits native code for the current CPU at runtime.</li>
+              <li><strong>ReadyToRun and NativeAOT:</strong> move more work to publish time; useful for startup-sensitive services or CLI tools, but dynamic code and reflection need testing.</li>
+              <li><strong>Gotcha:</strong> assembly version, package version, file version, and target framework are separate concepts; confusing them makes binding and deployment bugs hard to diagnose.</li>
             </ul>
           </div>
         </details>
@@ -1033,7 +1052,12 @@ dotnet test</code></pre>
   &lt;/PropertyGroup&gt;
 &lt;/Project&gt;</code></pre>
             </div>
-            <p class="mt-3 mb-0">Gotcha: <code>TreatWarningsAsErrors</code> is useful, but generated code or analyzer packages may need targeted suppressions instead of blanket disabling.</p>
+            <ul class="mt-3 mb-0">
+              <li><strong>Properties:</strong> <code>Nullable</code>, <code>ImplicitUsings</code>, <code>LangVersion</code>, <code>RuntimeIdentifier</code>, and publish properties change build output.</li>
+              <li><strong>Items:</strong> <code>PackageReference</code>, <code>ProjectReference</code>, <code>Compile</code>, <code>Content</code>, and <code>None</code> control dependencies and included files.</li>
+              <li><strong>Repo defaults:</strong> centralize shared settings in <code>Directory.Build.props</code>, package versions in <code>Directory.Packages.props</code>, and SDK selection in <code>global.json</code>.</li>
+              <li><strong>Gotcha:</strong> <code>TreatWarningsAsErrors</code> is useful, but generated code or analyzer packages may need targeted suppressions instead of blanket disabling.</li>
+            </ul>
           </div>
         </details>
 
@@ -1044,6 +1068,9 @@ dotnet test</code></pre>
               <li><strong>Central package management:</strong> keep versions in <code>Directory.Packages.props</code> to prevent drift.</li>
               <li><strong>Lock files:</strong> use <code>RestorePackagesWithLockFile</code> and CI <code>--locked-mode</code> for deterministic restores.</li>
               <li><strong>Private feeds:</strong> keep credentials outside source via environment, credential providers, or CI secrets.</li>
+              <li><strong>Package sources:</strong> keep <code>nuget.config</code> explicit for public and private feeds; use package source mapping when multiple feeds can serve the same ID.</li>
+              <li><strong>Package creation:</strong> set package ID, version, license, repository URL, symbols, and README before publishing a reusable library.</li>
+              <li><strong>Vulnerability review:</strong> audit direct and transitive packages during dependency updates, not only during incident response.</li>
               <li><strong>Gotcha:</strong> transitive package upgrades can change runtime behavior; review dependency diffs.</li>
             </ul>
           </div>
@@ -1068,17 +1095,43 @@ dotnet test</code></pre>
         </article>
         <article class="card-panel filter-card" data-category="language" data-level="fundamental">
           <h3><i class="bi bi-hourglass-split"></i> Async/Await</h3>
-          <p><strong>Purpose:</strong> express non-blocking I/O. Example: <code>await http.GetFromJsonAsync&lt;Invoice[]&gt;("/invoices")</code>. Gotcha: do not block with <code>.Result</code> or <code>.Wait()</code> in request paths.</p>
+          <p><strong>Purpose:</strong> express non-blocking I/O while keeping straight-line control flow. Example: <code>await http.GetFromJsonAsync&lt;Invoice[]&gt;("/invoices", ct)</code>. Gotcha: do not block with <code>.Result</code> or <code>.Wait()</code> in request paths.</p>
+          <ul>
+            <li><code>Task</code> represents an operation; <code>Task&lt;T&gt;</code> represents an operation with a result; <code>ValueTask&lt;T&gt;</code> is for measured allocation-sensitive APIs.</li>
+            <li>Async improves scalability for I/O-bound work; CPU-bound work still needs CPU time, often behind a queue or background worker.</li>
+            <li>Exceptions propagate through <code>await</code>; use normal <code>try</code>/<code>catch</code> around awaited calls.</li>
+          </ul>
           <div class="check-row"><input class="task-check" id="chk-csharp-async" type="checkbox"><label for="chk-csharp-async">Use cancellation tokens at API, database, and HTTP boundaries.</label></div>
         </article>
         <article class="card-panel filter-card" data-category="language" data-level="working">
           <h3><i class="bi bi-filter-square"></i> LINQ</h3>
-          <p><strong>Purpose:</strong> query objects and providers with composable operators. Example: <code>orders.Where(o =&gt; o.Total &gt; 100).Select(o =&gt; o.Id)</code>. Gotcha: LINQ-to-Objects and EF SQL translation have different costs.</p>
+          <p><strong>Purpose:</strong> query objects, XML, and providers with composable operators. Example: <code>orders.Where(o =&gt; o.Total &gt; 100).Select(o =&gt; o.Id)</code>. Gotcha: LINQ-to-Objects and EF SQL translation have different costs.</p>
+          <ul>
+            <li><strong>Method syntax:</strong> fluent operators such as <code>Where</code>, <code>Select</code>, <code>GroupBy</code>, <code>OrderBy</code>, <code>Any</code>, and <code>FirstOrDefault</code>.</li>
+            <li><strong>Query syntax:</strong> SQL-like syntax that can be clearer for joins and grouping.</li>
+            <li><strong>Deferred execution:</strong> many queries run only when enumerated; materialize with <code>ToList()</code> or <code>ToArray()</code> at a deliberate boundary.</li>
+            <li><strong>Provider boundary:</strong> EF Core translates expression trees to SQL; unsupported methods either fail translation or force client-side work.</li>
+          </ul>
           <div class="check-row"><input class="task-check" id="chk-csharp-linq" type="checkbox"><label for="chk-csharp-linq">Know when a query executes: enumeration, materialization, or provider translation.</label></div>
         </article>
         <article class="card-panel filter-card" data-category="language" data-level="working">
+          <h3><i class="bi bi-grid-3x3-gap"></i> Pattern Matching</h3>
+          <p><strong>Purpose:</strong> branch on type, shape, values, and collection structure without fragile casts. Example: <code>order is { Total: &gt; 500, Status: OrderStatus.Pending }</code>. Gotcha: clever nested patterns can become less readable than explicit guards.</p>
+          <ul>
+            <li><strong>Type pattern:</strong> <code>message is PaymentReceived received</code> checks and casts in one expression.</li>
+            <li><strong>Property pattern:</strong> <code>customer is { Address.Country: "US" }</code> expresses object-shape checks.</li>
+            <li><strong>Relational/logical patterns:</strong> <code>score is &gt;= 90 and &lt;= 100</code> keeps range rules close to the branch.</li>
+            <li><strong>List patterns:</strong> <code>tokens is ["deploy", var service, ..]</code> is useful for command parsers.</li>
+          </ul>
+        </article>
+        <article class="card-panel filter-card" data-category="language" data-level="working">
           <h3><i class="bi bi-record-circle"></i> Records and Immutability</h3>
-          <p><strong>Purpose:</strong> concise value-oriented models. Example: <code>public sealed record Money(decimal Amount, string Currency);</code>. Gotcha: record equality is value-based; do not use mutable navigation-heavy EF entities as records by default.</p>
+          <p><strong>Purpose:</strong> concise value-oriented models with generated equality, deconstruction, formatting, and non-destructive mutation. Example: <code>public sealed record Money(decimal Amount, string Currency);</code>. Gotcha: record equality is value-based; do not use mutable navigation-heavy EF entities as records by default.</p>
+          <ul>
+            <li>Use positional records for compact DTOs and events; use explicit properties when validation or serialization shape matters.</li>
+            <li><code>with</code> expressions create modified copies, for example <code>invoice with { Status = Paid }</code>.</li>
+            <li>Record structs can avoid allocation for small values, but copying large structs can cost more than expected.</li>
+          </ul>
           <div class="check-row"><input class="task-check" id="chk-csharp-records" type="checkbox"><label for="chk-csharp-records">Use records for DTOs, commands, events, and value objects.</label></div>
         </article>
         <article class="card-panel filter-card" data-category="language" data-level="advanced">
@@ -1136,15 +1189,25 @@ dotnet test</code></pre>
           <summary>ASP.NET Core Request Pipeline</summary>
           <div class="detail-body">
             <p>The pipeline is ordered middleware plus endpoints. Example order: exception handling, HTTPS redirection, static files, routing, authentication, authorization, endpoint mapping. Gotcha: authorization before authentication does not work as intended.</p>
+            <ul>
+              <li><strong>Core hosting pieces:</strong> Kestrel serves HTTP, the generic host wires configuration/logging/DI, and middleware composes request behavior.</li>
+              <li><strong>Surface choices:</strong> minimal APIs for lean JSON endpoints, MVC/Razor Pages for server-rendered workflows, Blazor for component UI, and gRPC for high-throughput service calls.</li>
+              <li><strong>Dependency injection:</strong> register services with singleton, scoped, or transient lifetimes; never inject scoped services into singletons without a scope factory.</li>
+              <li><strong>Configuration:</strong> layer JSON, environment variables, command-line values, user secrets for local dev, and real secret stores for production.</li>
+              <li><strong>Logging:</strong> use <code>ILogger&lt;T&gt;</code> with structured templates, log levels, scopes, and correlation IDs rather than string-concatenated messages.</li>
+            </ul>
             <div class="cmd">
               <div class="cmd-head"><span>Minimal API skeleton</span><button class="copy-btn" type="button" data-copy="minimalApi">Copy</button></div>
               <pre><code id="minimalApi">var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+builder.Services.AddHealthChecks();
+builder.Services.AddHttpClient("catalog", c =&gt; c.BaseAddress = new Uri("https://catalog.internal/"));
 
 var app = builder.Build();
 app.UseExceptionHandler();
 app.MapOpenApi();
+app.MapHealthChecks("/healthz");
 app.MapGet("/orders/{id:int}", async (int id, OrdersDb db, CancellationToken ct) =&gt;
     await db.Orders.FindAsync([id], ct) is { } order
         ? Results.Ok(order)
@@ -1160,8 +1223,25 @@ app.Run();</code></pre>
             <ul>
               <li><strong>DbContext:</strong> unit-of-work boundary. Example: one scoped context per web request. Gotcha: do not keep a context as a singleton.</li>
               <li><strong>Migrations:</strong> source-controlled schema evolution. Example: <code>dotnet ef migrations add AddInvoiceStatus</code>.</li>
+              <li><strong>Providers:</strong> SQL Server, SQLite, PostgreSQL, MySQL, Cosmos DB, and other providers differ in SQL translation and feature coverage.</li>
+              <li><strong>Relationships:</strong> model keys, indexes, required/optional relationships, delete behavior, and concurrency tokens explicitly for important aggregates.</li>
               <li><strong>Tracking:</strong> default for updates; use <code>AsNoTracking()</code> for read-only queries.</li>
-              <li><strong>Performance:</strong> project DTOs with <code>Select</code>, avoid N+1 queries, inspect generated SQL for hot paths.</li>
+              <li><strong>Performance:</strong> project DTOs with <code>Select</code>, avoid N+1 queries, use pagination, prefer compiled queries only after measuring, and inspect generated SQL for hot paths.</li>
+              <li><strong>Transactions:</strong> EF wraps <code>SaveChanges</code> in a transaction for supported providers; coordinate explicit transactions only when multiple operations must commit together.</li>
+              <li><strong>When not to use:</strong> use Dapper or raw ADO.NET for heavily tuned SQL/reporting paths where hand-written SQL is clearer and faster.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="detail-panel filter-card" name="webdata" data-category="tooling" data-level="working">
+          <summary>Testing Web and Data Code</summary>
+          <div class="detail-body">
+            <ul>
+              <li><strong>Unit tests:</strong> isolate domain logic with xUnit, NUnit, or MSTest; keep database, clock, network, and filesystem behind explicit seams.</li>
+              <li><strong>Integration tests:</strong> use <code>WebApplicationFactory</code> for ASP.NET Core endpoints and test containers or dedicated databases for realistic persistence behavior.</li>
+              <li><strong>EF tests:</strong> avoid assuming EF's in-memory provider behaves like a relational database; use SQLite or the real provider for SQL-sensitive behavior.</li>
+              <li><strong>Coverage:</strong> coverage highlights untested code, but assertions and scenario quality matter more than a target percentage.</li>
+              <li><strong>Gotcha:</strong> shared fixtures speed tests up but can leak state; reset databases and clocks deliberately.</li>
             </ul>
           </div>
         </details>
@@ -1173,6 +1253,8 @@ app.Run();</code></pre>
               <li><strong>Contracts:</strong> use request/response DTOs instead of exposing EF entities.</li>
               <li><strong>Errors:</strong> return RFC 7807-style problem details for predictable client handling.</li>
               <li><strong>Versioning:</strong> introduce explicit versioning when multiple active clients need independent evolution.</li>
+              <li><strong>HTTP semantics:</strong> use status codes, idempotency, caching headers, pagination, filtering, and optimistic concurrency intentionally.</li>
+              <li><strong>Validation:</strong> validate boundary models before command execution; keep domain invariants inside the domain model or application service.</li>
               <li><strong>OpenAPI:</strong> generate and verify docs from the actual app endpoints. Gotcha: docs that drift are worse than no docs.</li>
             </ul>
           </div>
@@ -1185,6 +1267,9 @@ app.Run();</code></pre>
               <li>Use HTTPS, secure cookies, strict auth policies, and least-privilege service identities.</li>
               <li>Validate inputs at the boundary and encode outputs in UI contexts.</li>
               <li>Store secrets in environment, managed identity, user secrets for local dev, or a real secret store.</li>
+              <li>Use ASP.NET Core authentication schemes and authorization policies rather than hand-rolled role checks scattered through controllers.</li>
+              <li>Use Data Protection APIs for framework-managed tokens and cookies; use established cryptography APIs and libraries for application data, not custom crypto.</li>
+              <li>Configure CORS narrowly by origin, method, and header; do not use permissive wildcard policies with credentials.</li>
               <li>Gotcha: logging tokens, connection strings, or PII creates a production incident.</li>
             </ul>
           </div>
@@ -1205,17 +1290,42 @@ app.Run();</code></pre>
         <article class="card-panel filter-card" data-category="tooling" data-level="working">
           <h3><i class="bi bi-activity"></i> Observability</h3>
           <p>Use structured logs, metrics, traces, health checks, and correlation IDs. Example: OpenTelemetry exporting traces to your collector. Gotcha: logs without request IDs are painful during incidents.</p>
+          <ul>
+            <li><strong>Logging:</strong> capture decisions and failures with message templates and relevant IDs, not secrets or raw payloads.</li>
+            <li><strong>Metrics:</strong> count requests, errors, queue depth, dependency latency, allocation rate, and domain events that indicate business health.</li>
+            <li><strong>Tracing:</strong> propagate context across HTTP, gRPC, queues, and database calls so one request can be followed across services.</li>
+          </ul>
           <div class="check-row"><input class="task-check" id="chk-ops-observe" type="checkbox"><label for="chk-ops-observe">Every service has health checks and structured request logs.</label></div>
         </article>
         <article class="card-panel filter-card" data-category="platform" data-level="advanced">
           <h3><i class="bi bi-memory"></i> GC and Allocation</h3>
           <p>Measure before optimizing. Example: use <code>dotnet-counters</code> for allocation rate and GC pressure, then profile hot paths. Gotcha: premature <code>Span&lt;T&gt;</code> rewrites can obscure code without improving throughput.</p>
+          <ul>
+            <li><strong>Workstation GC:</strong> optimized for client responsiveness; common for desktop apps and tools.</li>
+            <li><strong>Server GC:</strong> optimized for throughput on multi-core servers; common for ASP.NET Core services.</li>
+            <li><strong>Common pressure sources:</strong> large object heap churn, unnecessary string allocations, sync-over-async, and buffering full payloads.</li>
+          </ul>
           <div class="check-row"><input class="task-check" id="chk-ops-gc" type="checkbox"><label for="chk-ops-gc">Profile allocations before low-level optimization.</label></div>
         </article>
         <article class="card-panel filter-card" data-category="cloud" data-level="working">
           <h3><i class="bi bi-box"></i> Containers</h3>
           <p>Use official runtime images, non-root users where possible, and small publish output. Example: build in SDK image, run in ASP.NET runtime image. Gotcha: self-contained containers are larger and patch differently.</p>
+          <ul>
+            <li><strong>Multi-stage builds:</strong> restore/build/publish in an SDK image, copy only publish output into an ASP.NET or runtime image.</li>
+            <li><strong>Runtime-dependent:</strong> smaller image that receives runtime fixes from base image updates.</li>
+            <li><strong>Self-contained:</strong> includes runtime bits; useful when host runtime is unavailable, but patching requires republishing the app.</li>
+          </ul>
           <div class="check-row"><input class="task-check" id="chk-ops-container" type="checkbox"><label for="chk-ops-container">Pin base images and rebuild for runtime security updates.</label></div>
+        </article>
+        <article class="card-panel filter-card" data-category="cloud" data-level="advanced">
+          <h3><i class="bi bi-rocket-takeoff"></i> Publish and Deployment Modes</h3>
+          <p><strong>Purpose:</strong> choose output based on host control, startup, size, and runtime patching. Example: <code>dotnet publish -c Release -r linux-x64 -p:PublishTrimmed=true</code>. Gotcha: trimming and AOT can break reflection-heavy libraries unless tested from published output.</p>
+          <ul>
+            <li><strong>Framework-dependent:</strong> smallest app output, requires compatible runtime installed on the host or in the base image.</li>
+            <li><strong>Self-contained:</strong> deploys app plus runtime for a specific RID such as <code>linux-x64</code> or <code>win-x64</code>.</li>
+            <li><strong>Single-file:</strong> packages app into one executable; extraction and native dependency behavior still need validation.</li>
+            <li><strong>NativeAOT:</strong> fastest startup and reduced runtime footprint for compatible apps; validate source generators, serializers, reflection, and dynamic proxy libraries early.</li>
+          </ul>
         </article>
         <article class="card-panel filter-card" data-category="architecture" data-level="advanced">
           <h3><i class="bi bi-arrow-repeat"></i> Resilience</h3>
@@ -1225,11 +1335,31 @@ app.Run();</code></pre>
         <article class="card-panel filter-card" data-category="tooling" data-level="working">
           <h3><i class="bi bi-bug"></i> Debug Tools</h3>
           <p>Useful CLI tools include <code>dotnet-trace</code>, <code>dotnet-counters</code>, <code>dotnet-dump</code>, and test loggers. Gotcha: collect diagnostics from a matching environment before guessing.</p>
+          <ul>
+            <li><code>dotnet-counters monitor --process-id 1234 System.Runtime</code> watches GC, exceptions, thread pool, and allocation pressure.</li>
+            <li><code>dotnet-trace collect --process-id 1234</code> captures runtime events for later analysis.</li>
+            <li><code>dotnet-dump collect --process-id 1234</code> captures memory state for leaks, hangs, and crash investigation.</li>
+            <li><code>dotnet test --logger trx --blame-hang</code> helps diagnose test failures that only appear in CI.</li>
+          </ul>
           <div class="check-row"><input class="task-check" id="chk-ops-debug" type="checkbox"><label for="chk-ops-debug">Can capture counters/traces from a local or staging process.</label></div>
+        </article>
+        <article class="card-panel filter-card" data-category="tooling" data-level="working">
+          <h3><i class="bi bi-clipboard2-check"></i> Build, Test, and CI/CD</h3>
+          <p><strong>Purpose:</strong> make restore, build, test, package, and deploy repeatable outside a developer IDE. Example: CI runs <code>dotnet restore --locked-mode</code>, <code>dotnet build --no-restore -warnaserror</code>, then <code>dotnet test --no-build</code>. Gotcha: an IDE-only workflow hides missing SDKs, workloads, and environment settings.</p>
+          <ul>
+            <li>Commit solution files, project files, lock files, analyzer config, and central package files so CI sees the same graph.</li>
+            <li>Cache NuGet packages carefully; stale caches can hide restore and vulnerability problems.</li>
+            <li>Produce artifacts from a clean release publish, not from <code>bin/Debug</code> output.</li>
+          </ul>
         </article>
         <article class="card-panel filter-card" data-category="architecture" data-level="working">
           <h3><i class="bi bi-diagram-2"></i> Architecture Boundaries</h3>
           <p>Keep domain logic independent from transport, persistence, and UI. Example: controllers call application services; EF implementations live behind repository/query abstractions where useful. Gotcha: over-abstracting CRUD can add noise.</p>
+          <ul>
+            <li><strong>Scalability:</strong> use caching, queues, load balancing, and microservices only when the operational cost is justified.</li>
+            <li><strong>Maintainability:</strong> keep validation, transactions, authorization, and external calls in predictable layers.</li>
+            <li><strong>Cost:</strong> monitor resource usage and match service tiers to measured load instead of defaulting to oversized hosts.</li>
+          </ul>
           <div class="check-row"><input class="task-check" id="chk-ops-boundaries" type="checkbox"><label for="chk-ops-boundaries">Know which layer owns validation, transactions, and external calls.</label></div>
         </article>
       </div>
@@ -1250,6 +1380,10 @@ app.Run();</code></pre>
         <div class="mistake"><strong>Ignoring cancellation.</strong><p>HTTP disconnects, job shutdown, and timeouts should flow through tokens. Pass <code>CancellationToken</code> into EF, HTTP, and long-running work.</p></div>
         <div class="mistake"><strong>Runtime version drift.</strong><p>Developers, CI, containers, and production can silently use different SDK/runtime versions. Pin SDKs and log runtime info at startup.</p></div>
         <div class="mistake"><strong>Reflection-heavy NativeAOT surprises.</strong><p>AOT trims unused code and restricts dynamic patterns. Test publish output early when targeting AOT or trimming.</p></div>
+        <div class="mistake"><strong>Creating HttpClient per call.</strong><p>Repeated clients can exhaust sockets and lose handler pooling. Use <code>IHttpClientFactory</code>, typed clients, or a deliberately managed long-lived client.</p></div>
+        <div class="mistake"><strong>Using EF in-memory tests as proof of SQL behavior.</strong><p>The in-memory provider does not enforce relational constraints or SQL translation. Use SQLite or the real provider for query and migration behavior.</p></div>
+        <div class="mistake"><strong>Leaking secrets through config and logs.</strong><p>User secrets are for local development only, and production secrets belong in managed stores. Scrub tokens, passwords, and PII from logs.</p></div>
+        <div class="mistake"><strong>Publishing without testing the published output.</strong><p>Debug builds can pass while trimmed, single-file, self-contained, or NativeAOT output fails. Smoke-test the exact artifact you deploy.</p></div>
       </div>
     </section>
 

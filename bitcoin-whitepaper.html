@@ -671,10 +671,12 @@
       </div>
       <div class="quick-grid">
         <div class="quick-card"><strong>Core problem</strong><p>Digital signatures prove ownership, but do not by themselves prevent spending the same output twice.</p></div>
+        <div class="quick-card"><strong>Signature chain</strong><p>Each owner signs the previous transaction hash and the next owner's public key, creating an auditable ownership chain.</p></div>
         <div class="quick-card"><strong>Consensus object</strong><p>The network accepts the valid chain with the most cumulative proof-of-work, commonly described in the paper as the longest chain.</p></div>
         <div class="quick-card"><strong>Block proof</strong><p>Miners vary nonce and related header fields until <code>SHA256(SHA256(header)) &lt; target</code>.</p></div>
         <div class="quick-card"><strong>Retarget cadence</strong><p>Difficulty adjusts every 2,016 blocks toward a 10-minute average block interval.</p></div>
-        <div class="quick-card"><strong>Issuance rule</strong><p>The initial 50 BTC subsidy halves every 210,000 blocks; fees become the long-run incentive.</p></div>
+        <div class="quick-card"><strong>Issuance rule</strong><p>The initial 50 BTC subsidy halves every 210,000 blocks; total issuance converges toward 21 million BTC, while fees become the long-run incentive.</p></div>
+        <div class="quick-card"><strong>SPV proof</strong><p>A light client checks proof-of-work headers plus a Merkle branch, but does not fully validate every transaction rule.</p></div>
         <div class="quick-card"><strong>Privacy baseline</strong><p>Bitcoin is pseudonymous, not anonymous; address reuse and multi-input transactions leak linkage.</p></div>
       </div>
     </section>
@@ -712,6 +714,12 @@
               <td>Nodes extend the valid chain with the most accumulated proof-of-work.</td>
               <td>A one-block fork resolves when one branch receives the next valid block first.</td>
               <td>"Longest" means most work, not necessarily the greatest number of block headers.</td>
+            </tr>
+            <tr>
+              <td>Hash commitments</td>
+              <td>Transaction hashes feed a Merkle root; block headers include that root and the previous block hash.</td>
+              <td>Changing one old transaction changes its TXID, Merkle root, block hash, and every descendant proof-of-work link.</td>
+              <td>A Merkle branch proves inclusion, not that the transaction is valid under every consensus rule.</td>
             </tr>
             <tr>
               <td>Incentives</td>
@@ -765,6 +773,14 @@
               </ul>
               <h4>Do not overread</h4>
               <p>The whitepaper is not a full node implementation spec; it leaves networking, serialization, script details, and many consensus limits to later software and BIPs.</p>
+              <h4>Design goals restored from the original blueprint</h4>
+              <ul>
+                <li><strong>Peer-to-peer:</strong> payments move directly between participants instead of through a financial intermediary.</li>
+                <li><strong>Cryptographic proof over trust:</strong> signatures prove authorization and proof-of-work makes history costly to rewrite.</li>
+                <li><strong>Public transaction order:</strong> the network needs one visible ordering so conflicting spends cannot both settle.</li>
+                <li><strong>Computational irreversibility:</strong> a recipient waits for confirmations until rewriting the payment is economically impractical for the payment value.</li>
+                <li><strong>Honest-majority assumption:</strong> security relies on honest nodes controlling more hash power than an attacker.</li>
+              </ul>
             </div>
           </details>
         </article>
@@ -797,6 +813,12 @@
           <details class="detail-block" name="mechanism-details">
             <summary>Structure and gotchas</summary>
             <div class="detail-content">
+              <h4>Ownership and verification</h4>
+              <ul>
+                <li><strong>Definition:</strong> a recipient verifies the chain of signatures back to an unspent prior output and checks that the spender can satisfy the locking condition.</li>
+                <li><strong>Example:</strong> if Alice pays Bob, Alice signs a digest committing to the previous output and Bob's receiving condition; Bob can verify the signature against Alice's public key.</li>
+                <li><strong>Limit:</strong> signature verification proves authorization, not uniqueness. Bob still needs the network's ordering mechanism to know Alice did not also spend the same input elsewhere.</li>
+              </ul>
               <h4>Conceptual modern transaction</h4>
               <pre class="formula"><code>Transaction {
   <span class="var">version</span>         <span class="comment">// 4 bytes</span>
@@ -816,6 +838,10 @@
                 <li><strong>Example:</strong> a 0.015 BTC UTXO can be spent into one 0.010 BTC payment output and one change output, minus the miner fee.</li>
                 <li><strong>Gotcha:</strong> the whitepaper does not specify today's full Script system, SegWit witness data, or Taproot spending paths.</li>
               </ul>
+              <h4>Hash commitments</h4>
+              <pre class="formula"><code><span class="var">txid</span> <span class="op">=</span> SHA256(SHA256(<span class="var">serialized_transaction</span>))
+<span class="var">legacy_p2pkh_hash</span> <span class="op">=</span> RIPEMD160(SHA256(<span class="var">public_key</span>))</code></pre>
+              <p><strong>Double-spend caveat:</strong> two transactions can both carry valid signatures for the same previous output. Consensus accepts only the spend that lands in the valid accumulated-work history.</p>
             </div>
           </details>
         </article>
@@ -832,6 +858,7 @@
               <ul>
                 <li><strong>Definition:</strong> a timestamp proves that the block data existed before the next block was created.</li>
                 <li><strong>Example:</strong> changing a transaction in block N changes its Merkle root, which changes block N's hash and invalidates every descendant hash link.</li>
+                <li><strong>Mechanism:</strong> each timestamp includes the previous timestamp's hash, so every later block reinforces the chronological order before it.</li>
                 <li><strong>Gotcha:</strong> Bitcoin timestamps are not trusted clock records; nodes enforce validity windows, while proof-of-work establishes ordering.</li>
               </ul>
             </div>
@@ -857,6 +884,11 @@
   <span class="var">bits</span>           <span class="comment">// compact target</span>
   <span class="var">nonce</span>          <span class="comment">// 4 bytes</span>
 }</code></pre>
+              <ul>
+                <li><strong>Expensive forward, cheap backward check:</strong> finding a valid nonce requires repeated hashing; validating the found hash is one deterministic comparison.</li>
+                <li><strong>Rewriting history:</strong> changing a past block requires recalculating proof-of-work for that block and every successor, then overtaking the honest branch.</li>
+                <li><strong>Consensus rule:</strong> nodes follow the valid branch with the most cumulative proof-of-work; this is the whitepaper's "longest chain" rule in operational form.</li>
+              </ul>
               <p><strong>Gotcha:</strong> miners also vary transaction selection and extra nonce data in the coinbase transaction because the 32-bit header nonce alone can be exhausted.</p>
             </div>
           </details>
@@ -879,6 +911,7 @@
                 <li>Nodes accept it only if all included transactions are valid and unspent.</li>
                 <li>Nodes express acceptance by building the next block on top of it.</li>
               </ol>
+              <p><strong>Fork handling:</strong> if two valid blocks appear at the same height, nodes keep the competing branch in view and build on the branch they saw first until one side gains more cumulative work.</p>
               <p><strong>Gotcha:</strong> network messages, peer discovery, mempool policy, compact block relay, and DoS limits are implementation details beyond the paper.</p>
             </div>
           </details>
@@ -899,6 +932,8 @@
 <span class="var">fee</span> <span class="op">=</span> sum(<span class="var">input_values</span>) <span class="op">-</span> sum(<span class="var">output_values</span>)</code></pre>
               <ul>
                 <li><strong>Example:</strong> height 0 pays 50 BTC; height 210,000 pays 25 BTC; height 420,000 pays 12.5 BTC.</li>
+                <li><strong>Supply shape:</strong> repeated halving makes issuance a convergent series approaching 21 million BTC rather than an uncapped mint.</li>
+                <li><strong>Fee rule:</strong> transaction fee equals the sum of spent input values minus the sum of created output values.</li>
                 <li><strong>Gotcha:</strong> miners cannot claim arbitrary fees; full nodes reject blocks whose coinbase output exceeds allowed subsidy plus actual fees.</li>
               </ul>
             </div>
@@ -936,6 +971,7 @@
               <ul>
                 <li><strong>Definition:</strong> leaf hashes are transaction IDs; parent hashes combine pairs until one root remains.</li>
                 <li><strong>Example:</strong> a wallet can verify a transaction is in a block using a branch of sibling hashes plus the block header.</li>
+                <li><strong>Pruning:</strong> once all transactions before a point are fully spent, old transaction bodies can be discarded while keeping block headers and Merkle commitments.</li>
                 <li><strong>Gotcha:</strong> Merkle inclusion proves a transaction is in a block, not that the block itself obeys every consensus rule.</li>
               </ul>
             </div>
@@ -957,6 +993,10 @@
                 <li>Check that the branch commits to the header's Merkle root.</li>
                 <li>Wait for enough confirmations for the payment value and risk profile.</li>
               </ol>
+              <ul>
+                <li><strong>What SPV checks:</strong> accumulated proof-of-work and inclusion of the target transaction in a block on that work chain.</li>
+                <li><strong>What SPV does not check:</strong> every script, every input value, inflation rules, and every consensus edge case across the full block history.</li>
+              </ul>
               <p><strong>When not to rely on SPV:</strong> high-value validation, policy-sensitive receiving, and adversarial environments call for full validation.</p>
             </div>
           </details>
@@ -993,7 +1033,9 @@
 <span class="var">hash160</span> <span class="op">=</span> RIPEMD160(SHA256(<span class="var">public_key</span>))
 <span class="var">legacy_address</span> <span class="op">=</span> Base58Check(<span class="var">version_byte</span> + <span class="var">hash160</span>)</code></pre>
               <ul>
+                <li><strong>Whitepaper model:</strong> the public can see that someone sent an amount to someone else, but the identities behind public keys are not inherently published.</li>
                 <li><strong>Example:</strong> reusing one donation address makes every inbound payment to that address publicly clusterable.</li>
+                <li><strong>Best practice from the paper:</strong> use a new key or address for each transaction to avoid linking payments to a common owner.</li>
                 <li><strong>Gotcha:</strong> SegWit and Taproot use different address encodings, but they do not erase transaction graph analysis.</li>
               </ul>
             </div>
@@ -1017,6 +1059,14 @@ if <span class="var">p</span> <span class="op">&gt;</span> <span class="var">q</
   <span class="var">P_catchup</span> <span class="op">=</span> (<span class="var">q</span> / <span class="var">p</span>)<span class="op">^</span><span class="var">z</span>
 else:
   <span class="var">P_catchup</span> <span class="op">=</span> <span class="num">1</span></code></pre>
+              <pre class="formula"><code><span class="comment">// Whitepaper's confirmation model also accounts for attacker progress while honest nodes mine z blocks.</span>
+<span class="var">lambda</span> <span class="op">=</span> <span class="var">z</span> * (<span class="var">q</span> / <span class="var">p</span>)
+<span class="var">P_success</span> <span class="op">=</span> sum over <span class="var">k</span> attacker blocks found during the wait:
+  Poisson(<span class="var">k</span>, <span class="var">lambda</span>) * min(<span class="num">1</span>, (<span class="var">q</span> / <span class="var">p</span>)<span class="op">^</span>(<span class="var">z</span> - <span class="var">k</span>))</code></pre>
+              <ul>
+                <li><strong>Example:</strong> with small attacker share, each added confirmation sharply lowers catch-up probability; with attacker share near or above 50%, waiting does not provide the same assurance.</li>
+                <li><strong>Decision guidance:</strong> wait longer for larger payments, low-trust counterparties, or signs of network instability.</li>
+              </ul>
               <p><strong>Gotcha:</strong> confirmations are probabilistic risk reduction, not absolute finality. Risk depends on attacker hash share, network conditions, and payment value.</p>
             </div>
           </details>
@@ -1035,6 +1085,7 @@ else:
                 <li><strong>P2SH / BIP 16:</strong> moves complex script conditions behind a script hash, simplifying receiving addresses.</li>
                 <li><strong>SegWit / BIPs 141-144:</strong> separates witness data, fixes third-party transaction malleability, and introduces block weight accounting.</li>
                 <li><strong>Taproot / BIPs 340-342:</strong> adds Schnorr signatures and taproot script paths for better efficiency and privacy properties.</li>
+                <li><strong>Timelocks / BIPs 65 and 112:</strong> CLTV and CSV added consensus-enforced time conditions that became important for payment-channel designs.</li>
               </ul>
               <p><strong>Gotcha:</strong> these are not in the 2008 paper; they are later consensus changes layered onto the base design.</p>
             </div>
@@ -1108,6 +1159,7 @@ else:
                 <li>P2P message formats, peer discovery, inv/getdata behavior, and relay policy.</li>
                 <li>Script opcodes, standardness policy, sighash modes, witness serialization, and Taproot validation.</li>
                 <li>Consensus limits such as block weight, coinbase maturity, locktime semantics, and difficulty edge cases.</li>
+                <li>Exact signature curve choices such as ECDSA over secp256k1 for legacy signatures.</li>
                 <li>Fork activation rules and operational deployment process.</li>
               </ul>
               <p><strong>Practical rule:</strong> implement from Bitcoin Core consensus behavior and BIPs, not from the whitepaper alone.</p>
@@ -1144,6 +1196,12 @@ else:
               <td>Proof-of-work timestamp chain.</td>
               <td>You need a public, costly-to-rewrite ordering of events.</td>
               <td>You need instant deterministic finality; Bitcoin gives probabilistic settlement.</td>
+            </tr>
+            <tr>
+              <td>Double-spend resistance</td>
+              <td>Nodes reject transactions spending already-spent inputs in the accepted work chain.</td>
+              <td>A merchant needs a practical rule for when a signed payment should be treated as settled.</td>
+              <td>An attacker controls enough hash power to privately mine a conflicting branch and catch up.</td>
             </tr>
             <tr>
               <td>Lightweight verification</td>
@@ -1184,6 +1242,14 @@ else:
           <h3 class="h5">Confusing pseudonymity with anonymity</h3>
           <p>Public transaction graphs leak patterns. Address reuse, multi-input spends, and KYC-linked transactions can connect activity to people.</p>
         </div>
+        <div class="callout">
+          <h3 class="h5">Treating a Merkle proof as full validation</h3>
+          <p>A Merkle branch proves inclusion under a block header. It does not prove every input was unspent, every script was valid, or the money supply rules were enforced.</p>
+        </div>
+        <div class="callout">
+          <h3 class="h5">Ignoring the trust tradeoff in reversible payments</h3>
+          <p>The paper removes trusted dispute mediation for final settlement. That is useful for cash-like payments, but it also means mistakes and fraud need controls outside base-layer reversibility.</p>
+        </div>
       </div>
     </section>
 
@@ -1197,6 +1263,8 @@ else:
         <div class="quick-card"><strong>Developer guide</strong><p><a href="https://developer.bitcoin.org/devguide/" rel="noopener noreferrer" target="_blank">Bitcoin Developer Guide</a></p></div>
         <div class="quick-card"><strong>BIPs</strong><p><a href="https://github.com/bitcoin/bips" rel="noopener noreferrer" target="_blank">Bitcoin Improvement Proposals repository</a></p></div>
         <div class="quick-card"><strong>Reference implementation</strong><p><a href="https://github.com/bitcoin/bitcoin" rel="noopener noreferrer" target="_blank">Bitcoin Core source code</a></p></div>
+        <div class="quick-card"><strong>Bitcoin Wiki</strong><p><a href="https://en.bitcoin.it/wiki/Main_Page" rel="noopener noreferrer" target="_blank">Protocol and historical reference pages</a></p></div>
+        <div class="quick-card"><strong>Cited precursors</strong><p>Hashcash, b-money, Haber-Stornetta timestamping, and Merkle trees are the main prior concepts named by the original paper.</p></div>
       </div>
     </section>
   </main>
