@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """generate-image-previews.py
 
-Does exactly two things, and nothing else:
+Does exactly three things, and nothing else:
 
   1. Generates a 1200x630 social-preview screenshot per cheatsheet -> images/{stem}.png
-  2. Adds any MISSING Open Graph / Twitter / canonical meta tags to the <head>
+  2. Runs ImageOptim.app on generated preview images to minify them
+  3. Adds any MISSING Open Graph / Twitter / canonical meta tags to the <head>
 
 It NEVER reformats or re-serializes your HTML. Tags are inserted surgically as a
 text block immediately before </head>; existing tags are left untouched. This is
@@ -25,8 +26,10 @@ Deps: beautifulsoup4 (tag reading), playwright (screenshots).
 import argparse
 import html as html_lib
 import socket
+import subprocess
 import sys
 import threading
+import time
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -38,6 +41,8 @@ except ImportError:
 
 DEFAULT_BASE_URL = "https://cheatsheets.davidveksler.com/"
 VIEWPORT = {"width": 1200, "height": 630}
+IMAGEOPTIM_BUNDLE_ID = "net.pornel.ImageOptim"
+IMAGEOPTIM_SETTLE_SECONDS = 2
 # Floating UI chrome that should not appear in the social preview.
 HIDE_SELECTORS = ["#themeToggle", "#backTop", ".theme-toggle", ".back-top", ".back-to-top"]
 
@@ -160,16 +165,17 @@ class QuietHandler(SimpleHTTPRequestHandler):
         pass
 
 
-def generate_screenshots(files: list, images_dir: Path, root: Path, dark: bool):
+def generate_screenshots(files: list, images_dir: Path, root: Path, dark: bool) -> list[Path]:
     try:
         from playwright.sync_api import sync_playwright, Error as PlaywrightError
     except ImportError:
         print(f"{C.RED}Playwright not installed. Skipping screenshots.{C.ENDC}")
         print(f"{C.YELLOW}Enable with: python3 -m pip install playwright && python3 -m playwright install chromium{C.ENDC}")
-        return
+        return []
 
     images_dir.mkdir(exist_ok=True)
     server, port = start_server(root)
+    generated = []
     print(f"\n{C.BLUE}Generating {len(files)} preview image(s)...{C.ENDC}")
     hide_css = ",".join(HIDE_SELECTORS) + "{display:none !important}"
 
@@ -190,12 +196,122 @@ def generate_screenshots(files: list, images_dir: Path, root: Path, dark: bool):
                     page.evaluate("window.scrollTo(0, 0)")
                     page.wait_for_timeout(400)  # let fonts/animations settle
                     page.screenshot(path=str(out), type="png", clip={"x": 0, "y": 0, **VIEWPORT})
+                    generated.append(out)
                     print(f"  {C.GREEN}Generated:{C.ENDC} images/{out.name}")
                 except PlaywrightError as e:
                     print(f"  {C.RED}Failed:{C.ENDC} {html_file.name}: {e}")
             browser.close()
     finally:
         server.shutdown()
+    return generated
+
+
+# --------------------------------------------------------------------------- #
+# Image optimization
+# --------------------------------------------------------------------------- #
+
+def imageoptim_installed() -> bool:
+    """Return whether ImageOptim.app is installed on this macOS machine."""
+    if sys.platform != "darwin":
+        return False
+
+    app_paths = [
+        Path("/Applications/ImageOptim.app"),
+        Path.home() / "Applications" / "ImageOptim.app",
+    ]
+    if any(path.exists() for path in app_paths):
+        return True
+
+    try:
+        result = subprocess.run(
+            ["mdfind", 'kMDItemCFBundleIdentifier == "net.pornel.ImageOptim"'],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return False
+    return bool(result.stdout.strip())
+
+
+def imageoptim_queue_count() -> int | None:
+    """Read ImageOptim's active queue length via its AppleScript dictionary."""
+    try:
+        result = subprocess.run(
+            ["osascript", "-e", f'tell application id "{IMAGEOPTIM_BUNDLE_ID}" to do queuecount command'],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return None
+
+    if result.returncode != 0:
+        return None
+    try:
+        return int(result.stdout.strip())
+    except ValueError:
+        return None
+
+
+def optimize_images(images: list[Path], timeout: int) -> None:
+    """Send generated images to ImageOptim.app and wait for lossless minification."""
+    existing_images = [image for image in images if image.exists()]
+    if not existing_images:
+        return
+
+    if not imageoptim_installed():
+        print(f"\n{C.YELLOW}ImageOptim.app not found. Skipping image minification.{C.ENDC}")
+        return
+
+    before_sizes = {image: image.stat().st_size for image in existing_images}
+    print(f"\n{C.BLUE}Optimizing {len(existing_images)} preview image(s) with ImageOptim.app...{C.ENDC}")
+
+    try:
+        subprocess.run(
+            ["open", "-b", IMAGEOPTIM_BUNDLE_ID, *[str(image) for image in existing_images]],
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as e:
+        print(f"  {C.YELLOW}ImageOptim launch failed. Skipping minification: {e}{C.ENDC}")
+        return
+
+    start = time.monotonic()
+    deadline = start + timeout
+    saw_work = False
+    zero_since = None
+
+    while time.monotonic() < deadline:
+        count = imageoptim_queue_count()
+        if count is None:
+            print(f"  {C.YELLOW}Could not read ImageOptim queue. It was launched; verify completion in the app.{C.ENDC}")
+            return
+
+        if count > 0:
+            saw_work = True
+            zero_since = None
+        elif saw_work:
+            if zero_since is None:
+                zero_since = time.monotonic()
+            elif time.monotonic() - zero_since >= IMAGEOPTIM_SETTLE_SECONDS:
+                break
+        elif time.monotonic() - start >= IMAGEOPTIM_SETTLE_SECONDS:
+            break
+
+        time.sleep(1)
+    else:
+        print(f"  {C.YELLOW}ImageOptim still appears busy after {timeout}s; continuing without waiting longer.{C.ENDC}")
+        return
+
+    for image in existing_images:
+        before = before_sizes[image]
+        after = image.stat().st_size
+        saved = before - after
+        if saved > 0:
+            pct = (saved / before) * 100
+            print(f"  {C.GREEN}Optimized:{C.ENDC} images/{image.name} (-{saved:,} bytes, {pct:.1f}%)")
+        else:
+            print(f"  {C.GREEN}Optimized:{C.ENDC} images/{image.name} (already optimal)")
 
 
 # --------------------------------------------------------------------------- #
@@ -210,8 +326,10 @@ def main():
     ap.add_argument("--apply", action="store_true", help="Apply changes (default: dry run).")
     ap.add_argument("--force", action="store_true", help="Regenerate images that already exist.")
     ap.add_argument("--no-images", action="store_true", help="Skip screenshot generation.")
+    ap.add_argument("--no-imageoptim", action="store_true", help="Skip ImageOptim.app minification after screenshots.")
     ap.add_argument("--no-og", action="store_true", help="Skip OG/meta tag insertion.")
     ap.add_argument("--dark", action="store_true", help="Render previews in dark color scheme.")
+    ap.add_argument("--imageoptim-timeout", type=int, default=300, help="Seconds to wait for ImageOptim.app (default: 300).")
     args = ap.parse_args()
 
     root = Path(args.dir).resolve()
@@ -281,7 +399,9 @@ def main():
                 print(f"  {C.RED}Failed:{C.ENDC} {f.name}: {e}")
 
     if shot_plan:
-        generate_screenshots(shot_plan, images_dir, root, args.dark)
+        generated_images = generate_screenshots(shot_plan, images_dir, root, args.dark)
+        if not args.no_imageoptim:
+            optimize_images(generated_images, args.imageoptim_timeout)
 
     print(f"\n{C.GREEN}Done.{C.ENDC}")
 
