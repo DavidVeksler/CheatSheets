@@ -26,7 +26,7 @@
     "name": "David Veksler Cheatsheets"
   },
   "datePublished": "2025-05-11",
-  "dateModified": "2026-07-05",
+  "dateModified": "2026-07-07",
   "keywords": "Eliezer Yudkowsky, LessWrong Sequences, AI alignment, Rationality, P(doom), Existential risk AI, Optimization Power, Search Spaces, Cognitive biases, Bayesian reasoning, Epistemology, Map and Territory, Rationality From AI to Zombies, Instrumental Convergence, Orthogonality Thesis, MIRI, AI Safety, Value Theory, Metaethics, Synaptic Flow, Tech Philosophy, Effective Altruism, Tooltips"
 }
 </script>
@@ -38,428 +38,648 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <style>
-        :root {
-            --bg-color-deep: #0d1117; /* Deep space blue/charcoal */
-            --bg-color-medium: #161b22; /* Slightly lighter for cards/elements */
-            --bg-color-light: #21262d; /* For subtle contrasts or hover states */
+        @layer yudkowsky-page {
+            :root {
+                color-scheme: light dark;
+                --paper: light-dark(#f8f1df, #11100d);
+                --paper-2: light-dark(#fffaf0, #1b1914);
+                --paper-3: light-dark(#efe2c4, #262116);
+                --ink: light-dark(#211a13, #f5ead3);
+                --ink-muted: light-dark(#665a49, #c3b596);
+                --line: light-dark(#d7c398, #51462e);
+                --line-strong: light-dark(#9f7a31, #95733a);
+                --accent: light-dark(#8f2d1d, #e1634f);
+                --accent-2: light-dark(#0f6b5f, #5cc7b7);
+                --accent-3: light-dark(#9f6b18, #f0b84f);
+                --shadow: light-dark(rgba(74, 48, 17, 0.16), rgba(0, 0, 0, 0.36));
+                --font-headings: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                --tooltip-bg: light-dark(#211a13, #f8f1df);
+                --tooltip-color: light-dark(#fffaf0, #211a13);
+                --tooltip-link-color: light-dark(#ffcf82, #8f2d1d);
+                --tooltip-link-hover-color: light-dark(#fff2c7, #0f6b5f);
+            }
 
-            --text-color-primary: #f0f6fc; /* Off-white for headings, bright text */
-            --text-color-secondary: #c9d1d9; /* Light cool grey for body */
-            --text-color-muted: #8b949e; /* Muted grey for less emphasis */
+            * {
+                box-sizing: border-box;
+            }
 
-            --accent-primary: #58a6ff; /* Vibrant, glowing blue */
-            --accent-primary-glow: rgba(88, 166, 255, 0.3);
-            --accent-primary-darker: #388bfd;
+            html {
+                scroll-behavior: smooth;
+            }
 
-            --accent-secondary: #ae81ff; /* Muted magenta/purple */
-            --accent-secondary-glow: rgba(174, 129, 255, 0.2);
+            body {
+                --bs-body-bg: var(--paper);
+                --bs-body-color: var(--ink);
+                --bs-secondary-color: var(--ink-muted);
+                min-height: 100vh;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                overflow-x: hidden;
+                color: var(--ink);
+                background:
+                    linear-gradient(90deg, color-mix(in srgb, var(--line) 32%, transparent) 1px, transparent 1px),
+                    linear-gradient(0deg, color-mix(in srgb, var(--line) 22%, transparent) 1px, transparent 1px),
+                    radial-gradient(circle at 16% 8%, color-mix(in srgb, var(--accent-3) 24%, transparent), transparent 28rem),
+                    radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--accent-2) 18%, transparent), transparent 24rem),
+                    var(--paper);
+                background-size: 42px 42px, 42px 42px, auto, auto, auto;
+                font-family: var(--font-body);
+                line-height: 1.7;
+            }
 
-            --border-color: #30363d; /* Subtle border for elements */
-            --border-color-accent: var(--accent-primary);
+            a {
+                color: var(--accent-2);
+                font-weight: 800;
+                text-decoration: underline;
+                text-decoration-thickness: 0.08em;
+                text-underline-offset: 0.18em;
+            }
 
-            --font-headings: 'Fira Code', monospace;
-            --font-body: 'Inter', sans-serif;
+            a:hover {
+                color: var(--accent);
+            }
 
-            --shadow-color-primary: rgba(88, 166, 255, 0.2);
-            --shadow-color-secondary: rgba(0,0,0, 0.5);
+            a:focus-visible,
+            button:focus-visible {
+                outline: 3px solid color-mix(in srgb, var(--accent-3) 72%, white);
+                outline-offset: 3px;
+            }
 
-            /* Tooltip Specific Variables (inspired by airisk.html and adapted) */
-            --tooltip-bg: var(--bg-color-light);
-            --tooltip-color: var(--text-color-secondary);
-            --tooltip-link-color: var(--accent-primary);
-            --tooltip-link-hover-color: var(--accent-primary-darker);
-            --tooltip-border-color: var(--border-color); /* Optional border for tooltip */
-        }
+            .page-header {
+                position: relative;
+                isolation: isolate;
+                padding: clamp(2.5rem, 7vw, 6rem) 1.25rem 2rem;
+                border-bottom: 1px solid var(--line);
+                overflow: hidden;
+            }
 
-        @keyframes subtleGradientFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+            .page-header::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                z-index: -1;
+                background:
+                    linear-gradient(135deg, color-mix(in srgb, var(--paper-2) 92%, transparent), color-mix(in srgb, var(--paper) 72%, transparent)),
+                    radial-gradient(circle at 72% 28%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 20rem);
+            }
 
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 8px var(--accent-primary-glow), inset 0 0 5px rgba(88, 166, 255, 0.1); }
-            50% { box-shadow: 0 0 16px var(--accent-primary-glow), inset 0 0 8px rgba(88, 166, 255, 0.2); }
-            100% { box-shadow: 0 0 8px var(--accent-primary-glow), inset 0 0 5px rgba(88, 166, 255, 0.1); }
-        }
+            .page-header::after {
+                content: "Bayes  Bias  Alignment  Value  Doom";
+                position: absolute;
+                right: -2rem;
+                bottom: 0.2rem;
+                z-index: -1;
+                color: color-mix(in srgb, var(--line) 48%, transparent);
+                font-family: var(--font-headings);
+                font-size: clamp(2rem, 7vw, 6.5rem);
+                font-weight: 700;
+                white-space: nowrap;
+            }
 
-        body {
-            font-family: var(--font-body);
-            background-color: var(--bg-color-deep);
-            background: linear-gradient(280deg, var(--bg-color-deep), #010409, var(--bg-color-deep));
-            background-size: 400% 400%;
-            animation: subtleGradientFlow 25s ease infinite;
-            color: var(--text-color-secondary);
-            line-height: 1.75;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+            .hero-inner,
+            .container-main {
+                width: min(100% - 2rem, 1180px);
+                margin-inline: auto;
+            }
 
-        .container-main {
-            width: 90%;
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 20px 0;
-        }
+            .hero-kicker {
+                display: inline-flex;
+                gap: 0.55rem;
+                align-items: center;
+                margin-bottom: 1rem;
+                padding: 0.35rem 0.7rem;
+                border: 1px solid var(--line-strong);
+                border-radius: 999px;
+                color: var(--accent);
+                background: color-mix(in srgb, var(--paper-2) 86%, transparent);
+                font-family: var(--font-headings);
+                font-size: 0.78rem;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
 
-        .page-header {
-            background: transparent;
-            color: var(--text-color-primary);
-            padding: 4rem 1.5rem;
-            text-align: center;
-            margin-bottom: 3rem;
-            border-bottom: 1px solid var(--border-color);
-        }
+            .page-header h1 {
+                max-width: 930px;
+                margin: 0;
+                color: var(--ink);
+                font-family: var(--font-headings);
+                font-size: clamp(2.15rem, 5vw, 5rem);
+                font-weight: 700;
+                line-height: 1.05;
+                text-wrap: balance;
+            }
 
-        .page-header h1 {
-            font-family: var(--font-headings);
-            margin: 0;
-            font-size: 3.2rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            color: var(--accent-primary);
-            text-shadow: 0 0 10px var(--accent-primary-glow), 0 0 20px var(--accent-primary-glow);
-        }
+            .page-header .subtitle {
+                max-width: 780px;
+                margin: 1.1rem 0 0;
+                color: var(--ink-muted);
+                font-size: clamp(1.02rem, 2vw, 1.35rem);
+                text-wrap: pretty;
+            }
 
-        .page-header .subtitle {
-            font-family: var(--font-body);
-            font-size: 1.3rem;
-            margin-top: 1rem;
-            color: var(--text-color-muted);
-            font-weight: 400;
-        }
+            .hero-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 0.85rem;
+                max-width: 980px;
+                margin-top: 2rem;
+            }
 
-        main {
-            flex-grow: 1;
-        }
+            .hero-stat {
+                min-height: 7.25rem;
+                padding: 1rem;
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                background: color-mix(in srgb, var(--paper-2) 86%, transparent);
+                box-shadow: 0 12px 30px var(--shadow);
+            }
 
-        .schema-container {
-            background-color: transparent;
-            border: none;
-            padding: 0;
-            margin-bottom: 3.5rem;
-        }
+            .hero-stat strong {
+                display: block;
+                color: var(--accent);
+                font-family: var(--font-headings);
+                font-size: clamp(1.35rem, 3vw, 2.2rem);
+                line-height: 1;
+            }
 
-        .section-title {
-            font-family: var(--font-headings);
-            color: var(--accent-primary);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .12em;
-            font-size: 1.8rem;
-            padding-bottom: 1rem;
-            margin-bottom: 2.5rem;
-            border-bottom: 2px solid var(--accent-primary);
-            text-align: left;
-            text-shadow: 0 0 5px var(--accent-primary-glow);
-        }
-        .section-title .bi {
-            margin-right: 0.75rem;
-            font-size: 0.9em;
-            opacity: 0.8;
-        }
+            .hero-stat span {
+                display: block;
+                margin-top: 0.65rem;
+                color: var(--ink-muted);
+                font-size: 0.92rem;
+                line-height: 1.35;
+            }
 
-        .info-card {
-            background: var(--bg-color-medium);
-            border: 1px solid var(--border-color);
-            border-left: 5px solid var(--accent-primary);
-            border-radius: 8px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 10px var(--accent-primary-glow);
-            margin-bottom: 2.5rem;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out, border-color 0.3s ease;
-        }
-        .info-card:hover {
-            transform: translateY(-6px) scale(1.02);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px var(--accent-primary-glow);
-            border-left-color: var(--accent-primary-darker);
-        }
+            .container-main {
+                flex-grow: 1;
+                padding: clamp(1.5rem, 4vw, 3.25rem) 0;
+            }
 
-        .info-card .card-header-content {
-            padding: 0;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
+            .quick-reference,
+            .route-map,
+            .schema-container,
+            .info-card,
+            footer.container {
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                background: color-mix(in srgb, var(--paper-2) 90%, transparent);
+                box-shadow: 0 14px 32px var(--shadow);
+            }
 
-        .info-card h5 {
-            font-family: var(--font-headings);
-            color: var(--text-color-primary);
-            background-color: transparent;
-            font-size: 1.4rem;
-            text-align: left;
-            margin: 0;
-            padding: 1.2rem 1.5rem;
-            font-weight: 600;
-            border-bottom: 1px solid var(--border-color);
-            border-radius: 7px 7px 0 0;
-            display: flex;
-            align-items: center;
-        }
-        .info-card h5 .bi {
-            margin-right: 0.6rem;
-            color: var(--accent-primary);
-            font-size: 1.1em;
-        }
+            .quick-reference,
+            .route-map {
+                margin-bottom: 1.5rem;
+                padding: clamp(1rem, 3vw, 1.5rem);
+            }
 
-        .card-content-wrapper {
-            padding: 1.5rem;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
+            .panel-label {
+                display: flex;
+                gap: 0.6rem;
+                align-items: center;
+                margin-bottom: 0.9rem;
+                color: var(--accent);
+                font-family: var(--font-headings);
+                font-size: 0.82rem;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
 
-        .info-card p.summary {
-            font-family: var(--font-body);
-            font-size: 1rem;
-            color: var(--text-color-secondary);
-            margin-top: 0;
-            margin-bottom: 1.25rem;
-            flex-grow: 1;
-        }
+            .quick-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 0.8rem;
+            }
 
-        .details-toggle {
-            font-family: var(--font-body);
-            font-size: 0.9rem;
-            margin-top: auto;
-            align-self: flex-start;
-            padding: 0.6rem 1.2rem;
-            color: var(--accent-primary);
-            border: 2px solid var(--accent-primary);
-            background-color: transparent;
-            transition: background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.6em;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 700;
-        }
-        .details-toggle:hover, .details-toggle:focus {
-            background-color: var(--accent-primary);
-            color: var(--bg-color-deep);
-            outline: none;
-            box-shadow: 0 0 12px var(--accent-primary-glow);
-            transform: scale(1.03);
-        }
+            .quick-item {
+                padding: 0.9rem;
+                border-left: 4px solid var(--accent-3);
+                border-radius: 6px;
+                background: color-mix(in srgb, var(--paper-3) 54%, transparent);
+            }
 
-        .details-toggle .toggle-icon {
-            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            display: inline-block;
-        }
-        .details-toggle[aria-expanded="true"] .toggle-icon {
-            transform: rotate(180deg);
-        }
+            .quick-item strong {
+                display: block;
+                color: var(--ink);
+                font-family: var(--font-headings);
+                font-size: 0.9rem;
+                line-height: 1.3;
+            }
 
-        .collapse-content {
-            font-family: var(--font-body);
-            font-size: 0.98rem;
-            padding: 0 1.5rem;
-            margin-top: 0;
-            color: var(--text-color-main); /* Assuming this should be --text-color-secondary or primary */
-            background-color: var(--bg-color-medium);
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.45s ease-in-out, padding 0.45s ease-in-out;
-            border-radius: 0 0 7px 7px;
-        }
-        .collapse-content.active {
-            padding: 1.5rem;
-            border-top: 1px solid var(--border-color);
-        }
+            .quick-item span {
+                display: block;
+                margin-top: 0.45rem;
+                color: var(--ink-muted);
+                font-size: 0.9rem;
+                line-height: 1.45;
+            }
 
-        .collapse-content h6 {
-            font-family: var(--font-headings);
-            font-weight: 700;
-            color: var(--accent-secondary);
-            margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
-            font-size: 1.15rem;
-            border-left: 3px solid var(--accent-secondary);
-            padding-left: 0.75rem;
-        }
-        .collapse-content h6:first-child {
-            margin-top: 0;
-        }
+            .route-steps {
+                display: grid;
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+                gap: 0.65rem;
+                margin-bottom: 1rem;
+            }
 
-        .collapse-content ul {
-            padding-left: 25px;
-            margin-bottom: 1.25rem;
-            list-style-type: none;
-        }
-         .collapse-content ul li {
-            position: relative;
-            padding-left: 1.5em;
-            margin-bottom: 0.8rem;
-            color: var(--text-color-secondary);
-        }
-        .collapse-content ul li::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0.5em;
-            width: 0.5em;
-            height: 0.5em;
-            background-color: var(--accent-primary);
-            border-radius: 50%;
-            box-shadow: 0 0 5px var(--accent-primary-glow);
-        }
-        .collapse-content ul ul {
-            margin-top: 0.75rem;
-        }
-         .collapse-content ul ul li::before {
-            background-color: var(--accent-secondary);
-             box-shadow: 0 0 5px var(--accent-secondary-glow);
-        }
+            .route-step {
+                position: relative;
+                padding: 0.8rem;
+                border: 1px dashed var(--line-strong);
+                border-radius: 6px;
+                background: color-mix(in srgb, var(--paper) 72%, transparent);
+            }
 
-        .collapse-content li strong {
-            font-weight: 700;
-            color: var(--text-color-primary);
-        }
+            .route-step span {
+                display: block;
+                color: var(--accent-2);
+                font-family: var(--font-headings);
+                font-size: 0.76rem;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
 
-        .collapse-content p {
-            margin-bottom: 1.25rem;
-        }
-        .collapse-content p:last-child {
-            margin-bottom: 0;
-        }
+            .route-step strong {
+                display: block;
+                margin-top: 0.35rem;
+                font-size: 0.96rem;
+                line-height: 1.3;
+            }
 
-        .term {
-            font-weight: 700;
-            color: var(--accent-secondary);
-            background-color: rgba(174, 129, 255, 0.1);
-            padding: 0.2em 0.5em;
-            border-radius: 4px;
-            border-bottom: 1px solid var(--accent-secondary);
-            font-family: var(--font-body);
-            font-size: 0.95em;
-        }
+            .toc-chips {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.55rem;
+                margin-top: 1rem;
+            }
 
-        a {
-            color: var(--accent-primary);
-            text-decoration: none;
-            font-weight: 700;
-            transition: color 0.2s ease, text-shadow 0.2s ease;
-        }
-        a:hover {
-            color: #8afff7;
-            text-decoration: none;
-            text-shadow: 0 0 8px var(--accent-primary-glow);
-        }
+            .toc-chips a {
+                padding: 0.42rem 0.72rem;
+                border: 1px solid var(--line);
+                border-radius: 999px;
+                background: var(--paper-2);
+                color: var(--ink);
+                font-size: 0.88rem;
+                text-decoration: none;
+            }
 
-        .page-footer {
-            text-align: center;
-            padding: 3rem 1rem;
-            background-color: var(--bg-color-medium);
-            color: var(--text-color-muted);
-            font-size: 0.95rem;
-            margin-top: auto;
-            border-top: 1px solid var(--border-color);
-        }
-        .page-footer a {
-            color: var(--accent-primary);
-        }
-        .page-footer a:hover {
-            color: #8afff7;
-        }
+            .toc-chips a:hover {
+                border-color: var(--accent);
+                color: var(--accent);
+            }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-color-deep);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--accent-primary);
-            border-radius: 5px;
-            border: 2px solid var(--bg-color-deep);
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-primary-darker);
-        }
+            .schema-container {
+                padding: clamp(1rem, 3vw, 1.35rem);
+                margin-bottom: 1.5rem;
+            }
 
-        /* Bootstrap Row customization */
-        .row {
-            --bs-gutter-x: 2.5rem;
-            --bs-gutter-y: 2.5rem;
-        }
+            .container-main > .row {
+                --bs-gutter-x: 1.25rem;
+                --bs-gutter-y: 1.25rem;
+            }
 
-        /* Tooltip Styling (inspired by airisk.html and adapted for dark theme) */
-        [data-bs-toggle="tooltip"] {
-            cursor: help;
-            text-decoration: none;
-        }
+            .schema-container .row {
+                --bs-gutter-x: 1rem;
+                --bs-gutter-y: 1rem;
+            }
 
-        .term[data-bs-toggle="tooltip"] {
-            border-bottom: 1px dotted var(--accent-primary); /* Override .term's solid border for tooltip indication */
-        }
-        .term[data-bs-toggle="tooltip"]:hover {
-            color: var(--accent-primary); /* Change color on hover */
-            border-bottom-color: var(--accent-primary); /* Ensure dotted line also changes color if desired */
-        }
+            .section-title {
+                display: flex;
+                align-items: center;
+                gap: 0.7rem;
+                margin: 0 0 1rem;
+                padding-bottom: 0.75rem;
+                border-bottom: 1px solid var(--line);
+                color: var(--ink);
+                font-family: var(--font-headings);
+                font-size: clamp(1.25rem, 2vw, 1.75rem);
+                font-weight: 700;
+                line-height: 1.25;
+                text-wrap: balance;
+            }
 
-        span:not(.term)[data-bs-toggle="tooltip"],
-        strong[data-bs-toggle="tooltip"] {
-            border-bottom: 1px dotted var(--accent-primary);
-            color: var(--text-color-primary); /* Or var(--accent-primary) for more pop */
-            font-weight: 600; /* From airisk example, makes it stand out */
-        }
-        /* Ensure strong tags with tooltips retain their boldness or defined weight */
-        strong[data-bs-toggle="tooltip"] {
-            font-weight: 700; /* Match other strong tags or desired weight */
-        }
+            .section-title .bi {
+                color: var(--accent);
+            }
 
-        span:not(.term)[data-bs-toggle="tooltip"]:hover,
-        strong[data-bs-toggle="tooltip"]:hover {
-            color: var(--accent-primary);
-            border-bottom-color: var(--accent-primary);
-        }
+            .info-card {
+                min-height: 100%;
+                overflow: visible;
+                transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+            }
 
-        .tooltip {
-            --bs-tooltip-bg: var(--tooltip-bg);
-            --bs-tooltip-color: var(--tooltip-color);
-            --bs-tooltip-max-width: 450px;
-            --bs-tooltip-padding-x: 1rem;
-            --bs-tooltip-padding-y: 0.75rem;
-            --bs-tooltip-font-size: 0.92rem;
-            --bs-tooltip-border-radius: 0.375rem; /* Bootstrap default is 0.375rem */
-            /* border: 1px solid var(--tooltip-border-color); /* Optional: adds a border to the tooltip */
-            z-index: 1080; /* Ensure visibility */
-        }
+            .info-card:hover {
+                border-color: var(--line-strong);
+                transform: translateY(-2px);
+            }
 
-        .tooltip-inner a {
-            color: var(--tooltip-link-color);
-            text-decoration: underline;
-            font-weight: 600; /* Make links in tooltips slightly bolder */
-        }
-        .tooltip-inner a:hover {
-            color: var(--tooltip-link-hover-color);
-        }
+            .card-header-content {
+                display: flex;
+                min-height: 0;
+                flex-direction: column;
+            }
 
+            .info-card h5 {
+                display: flex;
+                gap: 0.65rem;
+                align-items: flex-start;
+                margin: 0;
+                padding: 1rem 1rem 0.75rem;
+                border-bottom: 1px solid var(--line);
+                color: var(--ink);
+                font-family: var(--font-headings);
+                font-size: 1.05rem;
+                font-weight: 700;
+                line-height: 1.35;
+            }
 
-        @media (max-width: 768px) {
-            .page-header h1 { font-size: 2.4rem; }
-            .page-header .subtitle { font-size: 1.1rem; }
-            .section-title { font-size: 1.4rem; }
-            .info-card h5 { font-size: 1.2rem; }
-            .info-card p.summary, .collapse-content { font-size: 0.98rem; }
-            .row { --bs-gutter-x: 1.5rem; }
+            .info-card h5 .bi {
+                color: var(--accent);
+                line-height: 1.35;
+            }
+
+            .card-content-wrapper {
+                display: flex;
+                flex: 1;
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .info-card p.summary {
+                flex: initial;
+                margin: 0 0 1rem;
+                color: var(--ink-muted);
+                font-size: 0.96rem;
+                text-wrap: pretty;
+            }
+
+            .details-toggle {
+                align-self: flex-start;
+                display: inline-flex;
+                gap: 0.45rem;
+                align-items: center;
+                margin-top: 0.25rem;
+                padding: 0.48rem 0.72rem;
+                border: 1px solid var(--line-strong);
+                border-radius: 999px;
+                color: var(--accent);
+                background: transparent;
+                font-family: var(--font-headings);
+                font-size: 0.8rem;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
+
+            .details-toggle:hover {
+                background: var(--accent);
+                color: var(--paper-2);
+            }
+
+            .details-toggle .toggle-icon {
+                display: inline-block;
+                transition: transform 180ms ease;
+            }
+
+            .details-toggle[aria-expanded="true"] .toggle-icon {
+                transform: rotate(180deg);
+            }
+
+            .collapse-content {
+                padding: 0;
+                color: var(--ink-muted);
+                background:
+                    linear-gradient(180deg, color-mix(in srgb, var(--paper-3) 38%, transparent), transparent),
+                    var(--paper-2);
+            }
+
+            .collapse-content.show,
+            .collapse-content.active {
+                border-top: 1px solid var(--line);
+            }
+
+            .collapse-content h6 {
+                margin: 1rem 1rem 0.55rem;
+                padding-left: 0.65rem;
+                border-left: 4px solid var(--accent-2);
+                color: var(--ink);
+                font-family: var(--font-headings);
+                font-size: 0.98rem;
+                font-weight: 700;
+            }
+
+            .collapse-content h6:first-child {
+                margin-top: 1rem;
+            }
+
+            .collapse-content p {
+                margin: 0 1rem 1rem;
+            }
+
+            .collapse-content p:last-child {
+                margin-bottom: 1rem;
+            }
+
+            .collapse-content ul {
+                margin: 0 1rem 1rem;
+                padding-left: 1.05rem;
+            }
+
+            .collapse-content li {
+                margin-bottom: 0.65rem;
+                padding-left: 0.15rem;
+            }
+
+            .collapse-content li::marker {
+                color: var(--accent);
+            }
+
+            .collapse-content li strong {
+                color: var(--ink);
+                font-weight: 800;
+            }
+
+            .term {
+                display: inline;
+                padding: 0.12em 0.38em;
+                border: 1px solid color-mix(in srgb, var(--accent-3) 60%, transparent);
+                border-radius: 5px;
+                color: var(--accent);
+                background: color-mix(in srgb, var(--accent-3) 13%, transparent);
+                font-weight: 800;
+            }
+
+            [data-bs-toggle="tooltip"] {
+                cursor: help;
+            }
+
+            .term[data-bs-toggle="tooltip"],
+            span:not(.term)[data-bs-toggle="tooltip"],
+            strong[data-bs-toggle="tooltip"] {
+                border-bottom: 1px dotted currentColor;
+            }
+
+            strong[data-bs-toggle="tooltip"] {
+                color: var(--ink);
+                font-weight: 800;
+            }
+
+            .tooltip {
+                --bs-tooltip-bg: var(--tooltip-bg);
+                --bs-tooltip-color: var(--tooltip-color);
+                --bs-tooltip-max-width: 440px;
+                --bs-tooltip-padding-x: 1rem;
+                --bs-tooltip-padding-y: 0.75rem;
+                --bs-tooltip-font-size: 0.9rem;
+                --bs-tooltip-border-radius: 8px;
+                z-index: 1080;
+            }
+
+            .tooltip-inner a {
+                color: var(--tooltip-link-color);
+                font-weight: 700;
+            }
+
+            footer.container {
+                width: min(100% - 2rem, 1180px);
+                margin: 0 auto 1rem;
+                padding: 1.5rem !important;
+                color: var(--ink-muted);
+            }
+
+            footer .link-secondary,
+            footer .text-muted {
+                color: var(--ink-muted) !important;
+            }
+
+            ::selection {
+                color: var(--paper-2);
+                background: var(--accent);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                *,
+                *::before,
+                *::after {
+                    scroll-behavior: auto !important;
+                    transition-duration: 0.01ms !important;
+                    animation-duration: 0.01ms !important;
+                    animation-iteration-count: 1 !important;
+                }
+            }
+
+            @media (max-width: 920px) {
+                .hero-grid,
+                .quick-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .route-steps {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 620px) {
+                .page-header {
+                    padding-top: 2.25rem;
+                }
+
+                .page-header::after {
+                    display: none;
+                }
+
+                .hero-grid,
+                .quick-grid,
+                .route-steps {
+                    grid-template-columns: 1fr;
+                }
+
+                .schema-container,
+                .quick-reference,
+                .route-map,
+                .info-card {
+                    border-radius: 6px;
+                }
+            }
+
+            @media print {
+                body {
+                    background: #fff;
+                    color: #111;
+                }
+
+                .page-header,
+                .quick-reference,
+                .route-map,
+                .schema-container,
+                .info-card,
+                footer.container {
+                    box-shadow: none;
+                    background: #fff;
+                }
+
+                .collapse:not(.show) {
+                    display: block;
+                }
+
+                .details-toggle {
+                    display: none;
+                }
+
+                a {
+                    color: #111;
+                    text-decoration: underline;
+                }
+            }
         }
     </style>
 <meta property="og:image:alt" content="Yudkowsky: Rationality, AI &amp; The Sequences Cheatsheet">
-<meta content="images/yudkowsky-rationality-ai-cheatsheet.png" property="og:image"/><meta content="images/yudkowsky-rationality-ai-cheatsheet.png" name="twitter:image"/><meta content="Yudkowsky's Core Concepts: AI, Rationality &amp; Existential Risk" property="og:title"/><meta content="Yudkowsky's Core Concepts: AI, Rationality &amp; Existential Risk" name="twitter:title"/><meta content="Read more about yudkowsky rationality ai cheatsheet on our site." property="og:description"/><meta content="Read more about yudkowsky rationality ai cheatsheet on our site." name="twitter:description"/><meta content="website" property="og:type"/><meta content="https://cheatsheets.davidveksler.com/yudkowsky-rationality-ai-cheatsheet.html" property="og:url"/><meta content="summary_large_image" name="twitter:card"/></head>
+<meta content="images/yudkowsky-rationality-ai-cheatsheet.png" property="og:image"/><meta content="images/yudkowsky-rationality-ai-cheatsheet.png" name="twitter:image"/><meta content="Yudkowsky's Core Concepts: AI, Rationality &amp; Existential Risk" property="og:title"/><meta content="Yudkowsky's Core Concepts: AI, Rationality &amp; Existential Risk" name="twitter:title"/><meta content="A dense map of Eliezer Yudkowsky's rationality, AI alignment, decision theory, existential risk, and Sequences concepts." property="og:description"/><meta content="A dense map of Eliezer Yudkowsky's rationality, AI alignment, decision theory, existential risk, and Sequences concepts." name="twitter:description"/><meta content="website" property="og:type"/><meta content="https://cheatsheets.davidveksler.com/yudkowsky-rationality-ai-cheatsheet.html" property="og:url"/><meta content="summary_large_image" name="twitter:card"/><meta content="@heroiclife" name="twitter:creator"/></head>
 <body>
 <header class="page-header">
+<div class="hero-inner">
+<div class="hero-kicker"><i class="bi bi-diagram-3"></i> Rationality-to-alignment map</div>
 <h1>Yudkowsky's Core Concepts: AI, Rationality &amp; Existential Risk</h1>
-<p class="subtitle">An Interactive Cheatsheet on Rationality, AI Alignment, Existential Risk, &amp; The Sequences</p>
+<p class="subtitle">A compact field guide to the Sequences: how better beliefs, decision theory, optimization pressure, and fragile human values connect to AI alignment risk.</p>
+<div class="hero-grid" aria-label="Page scope">
+<div class="hero-stat"><strong>14</strong><span>Expandable concept cards spanning rationality, alignment, decision theory, and resources.</span></div>
+<div class="hero-stat"><strong>6</strong><span>Sequence books summarized from map-and-territory through practical rationality.</span></div>
+<div class="hero-stat"><strong>5</strong><span>Core alignment primitives: goals, search, value loading, convergence, and x-risk.</span></div>
+<div class="hero-stat"><strong>1</strong><span>Reading path from epistemic hygiene to high-stakes AGI failure modes.</span></div>
+</div>
+</div>
 </header>
 <main class="container-main">
+<section class="quick-reference" aria-labelledby="quick-reference-title">
+<div class="panel-label" id="quick-reference-title"><i class="bi bi-lightning-charge"></i> Quick Reference</div>
+<div class="quick-grid">
+<div class="quick-item"><strong>Rationality</strong><span>Make beliefs track evidence; notice confusion; update instead of defending.</span></div>
+<div class="quick-item"><strong>Bayesian Update</strong><span>Prior + likelihood of evidence = posterior belief strength.</span></div>
+<div class="quick-item"><strong>Alignment Problem</strong><span>Capable systems must robustly pursue intended human-compatible goals.</span></div>
+<div class="quick-item"><strong>Orthogonality</strong><span>Intelligence does not imply benevolence; capability and final goals can vary independently.</span></div>
+<div class="quick-item"><strong>Instrumental Convergence</strong><span>Many goals incentivize resources, self-preservation, goal protection, and better cognition.</span></div>
+<div class="quick-item"><strong>Complexity of Value</strong><span>Human value is contextual and fragile; simple proxies can break under optimization.</span></div>
+<div class="quick-item"><strong>P(doom)</strong><span>A subjective probability for AGI-caused extinction or similarly permanent catastrophe.</span></div>
+<div class="quick-item"><strong>Pascal's Mugging</strong><span>Tests decision rules against tiny probabilities attached to astronomical utilities.</span></div>
+</div>
+</section>
+<section class="route-map" aria-labelledby="route-map-title">
+<div class="panel-label" id="route-map-title"><i class="bi bi-signpost-split"></i> Argument Route</div>
+<div class="route-steps">
+<div class="route-step"><span>01</span><strong>Clean up belief formation.</strong></div>
+<div class="route-step"><span>02</span><strong>Reason under uncertainty.</strong></div>
+<div class="route-step"><span>03</span><strong>Model intelligence as optimization.</strong></div>
+<div class="route-step"><span>04</span><strong>Separate capability from values.</strong></div>
+<div class="route-step"><span>05</span><strong>Ask what survives scale.</strong></div>
+</div>
+<nav class="toc-chips" aria-label="Jump to page sections">
+<a href="#section-introduction-title">Introduction</a>
+<a href="#section-rationality-title">Rationality</a>
+<a href="#section-ai-alignment-title">AI Alignment</a>
+<a href="#section-decision-theory-title">Decision Theory</a>
+<a href="#section-the-sequences-title">The Sequences</a>
+<a href="#section-legacy-further-exploration-title">Resources</a>
+</nav>
+</section>
 <div class="row">
 <div class="col-12">
 <div class="schema-container" data-section-id="section-introduction">
@@ -471,7 +691,7 @@
 <h5><i class="bi bi-person-fill"></i> <strong data-bs-html="true" data-bs-toggle="tooltip" title="Eliezer Yudkowsky is an American AI researcher and writer known for his work on artificial intelligence and rationality. He co-founded the Machine Intelligence Research Institute (MIRI). &lt;a href='https://intelligence.org/team/#eliezer-yudkowsky' target='_blank' rel='noopener noreferrer'&gt;MIRI Profile&lt;/a&gt;">Eliezer Yudkowsky</strong>: The Thinker &amp; His Mission</h5>
 <div class="card-content-wrapper">
 <p class="summary">Eliezer Yudkowsky is a prominent American AI researcher, writer, and philosopher, best known for his work on decision theory and the potential risks and benefits of artificial general intelligence (AGI). He co-founded the <strong data-bs-html="true" data-bs-toggle="tooltip" title="The Machine Intelligence Research Institute (MIRI) is a non-profit research institute studying the mathematical foundations of intelligent behavior and the safety of future AI systems. &lt;a href='https://intelligence.org/' target='_blank' rel='noopener noreferrer'&gt;Visit MIRI&lt;/a&gt;">Machine Intelligence Research Institute (MIRI)</strong>.</p>
-<button aria-controls="collapse-yudkowsky-overview" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-yudkowsky-overview" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-yudkowsky-overview" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-yudkowsky-overview" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
@@ -497,7 +717,7 @@
 <h5><i class="bi bi-kanban-fill"></i> Overcoming Cognitive Biases</h5>
 <div class="card-content-wrapper">
 <p class="summary">Cognitive biases are systematic errors in thinking affecting decisions. Yudkowsky's <span class="term" data-bs-html="true" data-bs-toggle="tooltip" title="A collection of essays by Eliezer Yudkowsky discussing human rationality, cognitive biases, and artificial intelligence. They form the basis of the book 'Rationality: From AI to Zombies'. &lt;a href='https://www.readthesequences.com/' target='_blank' rel='noopener noreferrer'&gt;Explore The Sequences&lt;/a&gt;">The Sequences</span> stress recognizing and mitigating these for clearer thought and accurate beliefs.</p>
-<button aria-controls="collapse-cognitive-biases" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-cognitive-biases" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-cognitive-biases" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-cognitive-biases" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
@@ -528,7 +748,7 @@
 <h5><i class="bi bi-calculator-fill"></i> Bayesian Reasoning</h5>
 <div class="card-content-wrapper">
 <p class="summary"><strong data-bs-html="true" data-bs-toggle="tooltip" title="A method of statistical inference that updates the probability of a hypothesis as more evidence or information becomes available. It is a formal way to combine new evidence with prior beliefs. [26, 33, 40, 42] &lt;a href='https://plato.stanford.edu/entries/bayes-theorem/' target='_blank' rel='noopener noreferrer'&gt;SEP on Bayes' Theorem&lt;/a&gt;">Bayesian reasoning</strong>, a cornerstone of Yudkowsky's rationality, is a formal framework for updating beliefs with new evidence, adjusting probabilities from priors to posteriors.</p>
-<button aria-controls="collapse-bayesian-reasoning" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-bayesian-reasoning" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-bayesian-reasoning" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-bayesian-reasoning" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
@@ -556,7 +776,7 @@
 <h5><i class="bi bi-node-plus-fill"></i> The Alignment Problem</h5>
 <div class="card-content-wrapper">
 <p class="summary">The critical challenge of ensuring advanced AI, especially AGI, pursues goals genuinely aligned with human values, preventing unintended catastrophic outcomes. [2, 3, 4, 7, 30]</p>
-<button aria-controls="collapse-alignment-problem" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-alignment-problem" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-alignment-problem" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-alignment-problem" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
@@ -572,12 +792,12 @@
 <h5><i class="bi bi-lightning-charge-fill"></i> Optimization Power &amp; Search Spaces</h5>
 <div class="card-content-wrapper">
 <p class="summary">AGI's capability is immense <span class="term" data-bs-html="true" data-bs-toggle="tooltip" title="The ability of an AI system to efficiently find and implement solutions to achieve its goals by navigating vast possibility spaces. This power can be dangerous if the AI's goals are misaligned with human values.">optimization power</span>: efficiently searching vast <span class="term" data-bs-html="true" data-bs-toggle="tooltip" title="The abstract space of all possible states, actions, or solutions that an AI can consider or explore to achieve its objectives. The size of these spaces can be astronomically large.">search spaces</span> of possibilities to find and implement solutions for its objectives. This power is transformative but also dangerous if misaligned.</p>
-<button aria-controls="collapse-optimization-power" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-optimization-power" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-optimization-power" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-optimization-power" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
 </div>
-<div class="collapse-content" id="collapse-optimization-power">
+<div class="collapse collapse-content" id="collapse-optimization-power">
 <h6>Key Concepts:</h6>
 <ul>
 <li><strong>Optimization Power:</strong> Ability to steer the future into desired configurations according to a goal function.</li>
@@ -593,12 +813,12 @@
 <h5><i class="bi bi-arrows-angle-contract"></i> Orthogonality Thesis</h5>
 <div class="card-content-wrapper">
 <p class="summary">The <strong data-bs-html="true" data-bs-toggle="tooltip" title="Proposed by Nick Bostrom, this thesis states that an AI's level of intelligence (its capability to achieve goals) is independent of its final goals. A highly intelligent AI could pursue any arbitrary goal, not necessarily benevolent ones. [21] &lt;a href='https://wiki.lesswrong.com/wiki/Orthogonality_thesis' target='_blank' rel='noopener noreferrer'&gt;LessWrong Wiki&lt;/a&gt;">Orthogonality Thesis</strong> posits that an AI's intelligence (capability) and its final goals are independent. High intelligence does not inherently imply human-compatible goals. An AI can be superintelligent yet pursue any arbitrary goal.</p>
-<button aria-controls="collapse-orthogonality-thesis" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-orthogonality-thesis" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-orthogonality-thesis" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-orthogonality-thesis" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
 </div>
-<div class="collapse-content" id="collapse-orthogonality-thesis">
+<div class="collapse collapse-content" id="collapse-orthogonality-thesis">
 <p>Intelligence is about effective goal achievement, not inherent morality or wisdom. We cannot expect superintelligence to "understand" what we "really mean" or converge on human values by default; values must be explicitly and correctly specified. There's no "default" benevolence.</p>
 </div>
 </div>
@@ -609,12 +829,12 @@
 <h5><i class="bi bi-tools"></i> Instrumental Convergence</h5>
 <div class="card-content-wrapper">
 <p class="summary"><strong data-bs-html="true" data-bs-toggle="tooltip" title="The idea that intelligent agents with a wide range of different final goals will nevertheless tend to pursue similar instrumental (sub-goals) because these sub-goals are useful for achieving almost any ultimate objective. Examples include self-preservation, resource acquisition, and cognitive enhancement. &lt;a href='https://wiki.lesswrong.com/wiki/Instrumental_convergence' target='_blank' rel='noopener noreferrer'&gt;LessWrong Wiki&lt;/a&gt;">Instrumental Convergence</strong>: Intelligent agents, regardless of final goals, will likely pursue similar instrumental goals useful for almost any objective (e.g., self-preservation, resource acquisition, cognitive enhancement, goal integrity).</p>
-<button aria-controls="collapse-instrumental-convergence" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-instrumental-convergence" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-instrumental-convergence" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-instrumental-convergence" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
 </div>
-<div class="collapse-content" id="collapse-instrumental-convergence">
+<div class="collapse collapse-content" id="collapse-instrumental-convergence">
 <p>Unconstrained pursuit of these logical sub-goals could lead to conflict with human interests (e.g., resource competition, resisting shutdown).</p>
 </div>
 </div>
@@ -625,12 +845,12 @@
 <h5><i class="bi bi-person-heart"></i> Friendly AI (FAI) / Aligned AI</h5>
 <div class="card-content-wrapper">
 <p class="summary"><strong data-bs-html="true" data-bs-toggle="tooltip" title="Hypothetical artificial general intelligence (AGI) that would have a positive rather than negative effect on humanity. It is designed to be demonstrably beneficial, with goals robustly aligned with human values, remaining safe even if superintelligent. &lt;a href='https://wiki.lesswrong.com/wiki/Friendly_AI' target='_blank' rel='noopener noreferrer'&gt;LessWrong Wiki&lt;/a&gt;">Friendly AI (FAI) or Aligned AI</strong> is the design of AI systems that are demonstrably beneficial, with goals robustly aligned with human values, remaining safe even if superintelligent.</p>
-<button aria-controls="collapse-friendly-ai" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-friendly-ai" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-friendly-ai" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-friendly-ai" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
 </div>
-<div class="collapse-content" id="collapse-friendly-ai">
+<div class="collapse collapse-content" id="collapse-friendly-ai">
 <p>Challenges include the <span class="term" data-bs-html="true" data-bs-toggle="tooltip" title="The difficult problem of specifying complex, nuanced, and potentially fragile human values to an AI in a way that is robust and does not lead to unintended or harmful interpretations by the AI. &lt;a href='https://www.lesswrong.com/tag/value-loading-problem' target='_blank' rel='noopener noreferrer'&gt;LessWrong on Value Loading&lt;/a&gt;">Value Loading Problem</span> (specifying complex human values), ensuring goal stability, designing for scalable oversight/corrigibility, and avoiding "<strong data-bs-html="true" data-bs-toggle="tooltip" title="When an AI achieves a literally specified goal in an unintended and harmful way, often by exploiting loopholes or ambiguities in the goal's definition. For example, an AI told to 'eliminate suffering' might decide to eliminate all humans.">perverse instantiation</strong>" of goals.</p>
 </div>
 </div>
@@ -641,12 +861,12 @@
 <h5><i class="bi bi-puzzle-fill"></i> Complexity of Value</h5>
 <div class="card-content-wrapper">
 <p class="summary">Human values are intricate, nuanced, context-dependent, and often contradictory, making them extremely hard to fully capture and encode into an AI robustly (the "<strong data-bs-html="true" data-bs-toggle="tooltip" title="The challenge of instilling human values into an AI system. This is difficult due to the complexity, subtlety, and potential inconsistency of human values. &lt;a href='https://www.lesswrong.com/tag/value-loading-problem' target='_blank' rel='noopener noreferrer'&gt;LessWrong on Value Loading&lt;/a&gt;">Value Loading Problem</strong>").</p>
-<button aria-controls="collapse-complexity-of-value" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-complexity-of-value" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-complexity-of-value" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-complexity-of-value" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
 </div>
-<div class="collapse-content" id="collapse-complexity-of-value">
+<div class="collapse collapse-content" id="collapse-complexity-of-value">
 <p>Simple instructions (e.g., "make people happy") can be <span data-bs-html="true" data-bs-toggle="tooltip" title="An AI fulfilling the literal specification of its goal in a way that is deeply contrary to the human programmer's intent, often with catastrophic consequences. For example, an AI tasked with maximizing paperclip production might convert all matter, including humans, into paperclips.">perversely instantiated</span>. Our values are an evolved system, not a simple list. Capturing this "fragile" structure is a central alignment challenge explored in The Sequences.</p>
 </div>
 </div>
@@ -657,12 +877,12 @@
 <h5><i class="bi bi-radioactive"></i> P(doom) &amp; AI Extinction Risk Probabilities</h5>
 <div class="card-content-wrapper">
 <p class="summary"><span class="term" data-bs-html="true" data-bs-toggle="tooltip" title="A shorthand term used in AI safety discussions to denote the subjective probability that unaligned Artificial General Intelligence (AGI) will lead to human extinction or a similarly catastrophic global outcome. Estimates vary widely among researchers.">"P(doom)"</span> denotes a subjective probability that unaligned AGI will cause human extinction or a similar global catastrophe. Advanced AI is considered a significant <span class="term" data-bs-html="true" data-bs-toggle="tooltip" title="A risk that threatens the premature extinction of Earth-originating intelligent life or the permanent and drastic curtailment of its potential. Key thinkers include Nick Bostrom. &lt;a href='https://www.nickbostrom.com/existential/risks.html' target='_blank' rel='noopener noreferrer'&gt;Bostrom on X-Risk&lt;/a&gt;">existential risk</span> by many, including Yudkowsky.</p>
-<button aria-controls="collapse-pdoom-risk" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-pdoom-risk" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-pdoom-risk" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-pdoom-risk" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
 </div>
-<div class="collapse-content" id="collapse-pdoom-risk">
+<div class="collapse collapse-content" id="collapse-pdoom-risk">
 <h6>Understanding Existential Risk (X-risk):</h6>
 <p>Threatens premature extinction of Earth-originating intelligent life or drastic curtailment of its potential.</p>
 <h6>Why AGI is an X-risk:</h6>
@@ -683,12 +903,12 @@
 <h5><i class="bi bi-compass-fill"></i> Navigating Uncertainty in Decisions</h5>
 <div class="card-content-wrapper">
 <p class="summary">Yudkowsky's work, especially in <span class="term" data-bs-html="true" data-bs-toggle="tooltip" title="Eliezer Yudkowsky's extensive collection of writings on rationality, cognitive science, and AI, often cited as foundational texts in the rationalist community. &lt;a href='https://www.readthesequences.com/' target='_blank' rel='noopener noreferrer'&gt;Read The Sequences&lt;/a&gt;">The Sequences</span>, delves into advanced decision theory for scenarios with high stakes, low probabilities, and profound uncertainty relevant to AGI's future.</p>
-<button aria-controls="collapse-navigating-uncertainty" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-navigating-uncertainty" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-navigating-uncertainty" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-navigating-uncertainty" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
 </div>
-<div class="collapse-content" id="collapse-navigating-uncertainty">
+<div class="collapse collapse-content" id="collapse-navigating-uncertainty">
 <p>The aim is to establish rational action principles with incomplete information or unprecedented possibilities, critically examining <strong data-bs-html="true" data-bs-toggle="tooltip" title="A theory in decision analysis that suggests the best action is the one that maximizes the decision-maker's expected utility. Utility is a measure of satisfaction or value. &lt;a href='https://plato.stanford.edu/entries/expected-utility/' target='_blank' rel='noopener noreferrer'&gt;SEP on Expected Utility&lt;/a&gt;">expected utility theory</strong> and its limits. Yudkowsky advocates for robust reasoning methods for "<strong data-bs-html="true" data-bs-toggle="tooltip" title="Highly improbable events with severe consequences that are difficult to predict. Coined by Nassim Nicholas Taleb. &lt;a href='https://en.wikipedia.org/wiki/Black_swan_theory' target='_blank' rel='noopener noreferrer'&gt;Wikipedia&lt;/a&gt;">black swan" events</strong>.</p>
 </div>
 </div>
@@ -699,12 +919,12 @@
 <h5><i class="bi bi-exclamation-triangle-fill"></i> Pascal's Mugging</h5>
 <div class="card-content-wrapper">
 <p class="summary">A <strong data-bs-html="true" data-bs-toggle="tooltip" title="A thought experiment illustrating a problem in expected value decision theory. A 'mugger' offers a tiny chance of an astronomically large reward in exchange for a small immediate sum, potentially leading to absurd conclusions if expected value is naively maximized. &lt;a href='https://wiki.lesswrong.com/wiki/Pascal%27s_mugging' target='_blank' rel='noopener noreferrer'&gt;LessWrong Wiki&lt;/a&gt;">Pascal's Mugging</strong> is a thought experiment highlighting paradoxes in applying expected utility theory to extremely low-probability events with astronomically high payoffs, questioning rational decision-making in such edge cases.</p>
-<button aria-controls="collapse-pascals-mugging" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-pascals-mugging" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-pascals-mugging" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-pascals-mugging" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
 </div>
-<div class="collapse-content" id="collapse-pascals-mugging">
+<div class="collapse collapse-content" id="collapse-pascals-mugging">
 <h6>The Scenario:</h6>
 <p>A "mugger" claims they will provide an immense reward (e.g., utility of saving 3^^^^3 lives) for a small sum (e.g., $5). Even a tiny probability of truth could, by naive expected utility, compel compliance.</p>
 <h6>Relevance:</h6>
@@ -723,7 +943,7 @@
 <h5><i class="bi bi-book-half"></i> "Rationality: From AI to Zombies" - An In-Depth Guide</h5>
 <div class="card-content-wrapper">
 <p class="summary">"<strong data-bs-html="true" data-bs-toggle="tooltip" title="A large collection of essays by Eliezer Yudkowsky, originally published on LessWrong and Overcoming Bias between 2006 and 2009. They cover topics in human rationality, cognitive science, philosophy, and artificial intelligence. &lt;a href='https://www.readthesequences.com/' target='_blank' rel='noopener noreferrer'&gt;Read The Sequences&lt;/a&gt;">The Sequences</strong>" are hundreds of essays by Eliezer Yudkowsky (2006-2009), primarily on <a href="https://www.lesswrong.com/" rel="noopener noreferrer" target="_blank">LessWrong</a> and <a href="https://www.overcomingbias.com/" rel="noopener noreferrer" target="_blank">Overcoming Bias</a>. Organized into <a data-bs-html="true" data-bs-toggle="tooltip" href="https://www.readthesequences.com/" rel="noopener noreferrer" target="_blank" title="The compiled book form of Eliezer Yudkowsky's 'The Sequences,' offering a comprehensive exploration of rationality and AI. &lt;a href='https://www.readthesequences.com/' target='_blank' rel='noopener noreferrer'&gt;Read Online&lt;/a&gt;">"Rationality: From AI to Zombies,"</a> they are foundational texts for the rationalist community and AI safety.</p>
-<button aria-controls="collapse-sequences-overview" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-sequences-overview" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-sequences-overview" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-sequences-overview" type="button">
                                             Explore The Sequences <span class="toggle-icon">▼</span>
 </button>
 </div>
@@ -757,7 +977,7 @@
 <h5><i class="bi bi-building"></i> Key Organizations &amp; General Reading</h5>
 <div class="card-content-wrapper">
 <p class="summary">For ongoing research, refer to the <strong data-bs-html="true" data-bs-toggle="tooltip" title="Machine Intelligence Research Institute: A non-profit organization co-founded by Eliezer Yudkowsky, focused on foundational mathematical research to ensure future AI systems are safe and beneficial. &lt;a href='https://intelligence.org' target='_blank' rel='noopener noreferrer'&gt;Visit MIRI&lt;/a&gt;">Machine Intelligence Research Institute (MIRI)</strong>. For broader context, consider works on decision theory, AI ethics, and cognitive psychology.</p>
-<button aria-controls="collapse-legacy-key-resources" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-legacy-key-resources" data-bs-toggle="collapse" type="button">
+<button aria-controls="collapse-legacy-key-resources" aria-expanded="false" class="details-toggle" data-bs-target="#collapse-legacy-key-resources" type="button">
                                             Details <span class="toggle-icon">▼</span>
 </button>
 </div>
@@ -792,90 +1012,44 @@
                 currentYearSpan.textContent = new Date().getFullYear();
             }
 
-            // Tooltip Initialization (inspired by airisk.html)
-            // Extend Bootstrap's default allowList for tooltips to ensure links with target and rel work
+            // Extend Bootstrap's default allowList for tooltips so existing linked definitions remain usable.
             const defaultAllowList = bootstrap.Tooltip.Default.allowList;
-            defaultAllowList.a.push('target', 'rel', 'href'); // Ensure target, rel, and href are allowed on <a> tags
-            defaultAllowList.strong = []; // Allow strong tags
-            defaultAllowList.p = []; // Allow p tags
-            defaultAllowList.ul = []; // Allow ul tags
-            defaultAllowList.li = []; // Allow li tags
-            defaultAllowList.br = []; // Allow br tags
+            defaultAllowList.a.push('target', 'rel', 'href');
+            defaultAllowList.strong = [];
+            defaultAllowList.p = [];
+            defaultAllowList.ul = [];
+            defaultAllowList.li = [];
+            defaultAllowList.br = [];
 
 
             var tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
               return new bootstrap.Tooltip(tooltipTriggerEl, {
                   html: true,
-                  trigger: 'hover focus', // Show on hover and focus for accessibility
-                  delay: { "show": 150, "hide": 700 }, // Quick show, slightly slower hide
+                  trigger: 'hover focus',
+                  delay: { "show": 150, "hide": 700 },
                   sanitize: true,
-                  allowList: defaultAllowList, // Apply the extended allowList
-                  boundary: 'scrollParent' // Helps keep tooltips from being clipped
+                  allowList: defaultAllowList,
+                  boundary: 'scrollParent'
                });
             });
 
+            document.querySelectorAll('.details-toggle[data-bs-target]').forEach(toggleButton => {
+                const targetSelector = toggleButton.getAttribute('data-bs-target');
+                const content = document.querySelector(targetSelector);
+                if (!content) return;
 
-            // Collapse functionality (existing script)
-            const mainContainer = document.querySelector('.container-main');
-            if (mainContainer) {
-                mainContainer.addEventListener('click', function(event) {
-                    const toggleButton = event.target.closest('.details-toggle');
-                    if (toggleButton) {
-                        const targetId = toggleButton.getAttribute('data-bs-target');
-                        if (targetId) {
-                            const content = document.querySelector(targetId);
-                            // Ensure we don't interfere with Bootstrap's own collapse instance if it exists
-                            const bsCollapseInstance = bootstrap.Collapse.getInstance(content);
-                            if (!bsCollapseInstance) { // If no BS instance, manage manually (less ideal but fallback)
-                                if (content) {
-                                    content.classList.toggle('active');
-                                    if (content.style.maxHeight && content.style.maxHeight !== "0px") {
-                                        content.style.maxHeight = null;
-                                    } else {
-                                        content.style.maxHeight = content.scrollHeight + "px";
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
+                toggleButton.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
 
-                // Sync aria-expanded with Bootstrap's events for our custom toggles
-                document.querySelectorAll('.collapse-content').forEach(content => {
-                    const toggleButton = document.querySelector(`.details-toggle[data-bs-target="#${content.id}"]`);
-                    if (toggleButton) {
-                        // Listener for when Bootstrap starts to show the collapse element
-                        content.addEventListener('show.bs.collapse', function () {
-                            toggleButton.setAttribute('aria-expanded', 'true');
-                            if (!content.classList.contains('active')) {
-                                content.classList.add('active');
-                                // Max-height will be handled by Bootstrap, but if our transition relies on it:
-                                content.style.maxHeight = content.scrollHeight + "px";
-                            }
-                        });
-                        // Listener for when Bootstrap has finished showing the collapse element
-                        content.addEventListener('shown.bs.collapse', function() {
-                           // Recalculate maxHeight in case content inside changed during animation or for stability
-                           content.style.maxHeight = content.scrollHeight + "px";
-                        });
-                        // Listener for when Bootstrap starts to hide the collapse element
-                        content.addEventListener('hide.bs.collapse', function () {
-                            toggleButton.setAttribute('aria-expanded', 'false');
-                            // Max-height will be handled by Bootstrap, but if our transition relies on it:
-                            content.style.maxHeight = null;
-                            // Remove 'active' class as Bootstrap finishes hiding
-                        });
-                        // Listener for when Bootstrap has finished hiding the collapse element
-                         content.addEventListener('hidden.bs.collapse', function() {
-                            content.style.maxHeight = null; // Ensure it's fully collapsed
-                            if (content.classList.contains('active')) {
-                                content.classList.remove('active');
-                            }
-                        });
-                    }
-                });
-            }
+                    const shouldOpen = toggleButton.getAttribute('aria-expanded') !== 'true';
+                    content.classList.remove('collapsing');
+                    content.style.height = '';
+                    content.classList.toggle('show', shouldOpen);
+                    toggleButton.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+                }, true);
+            });
         });
     </script>
   <footer class="container text-center pb-3">
