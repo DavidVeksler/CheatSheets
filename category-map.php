@@ -37,6 +37,7 @@ return [
     'postgresql.html' => 'Software & DevOps',
     'python-for-architects.html' => 'Software & DevOps',
     'scrum.html' => 'Software & DevOps',
+    'software-development-guides.html' => 'Software & DevOps',
     'sql-performance-tuning.html' => 'Software & DevOps',
     'ubuntu-linux-for-ai-developers.html' => 'Software & DevOps',
     'versioncontrol.html' => 'Software & DevOps',
