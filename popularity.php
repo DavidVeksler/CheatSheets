@@ -421,7 +421,7 @@ foreach ($dailyViews as $filename => $count) {
                         <?php foreach ($risingStars as $star): ?>
                         <div class="mini-row">
                             <span class="mini-icon"><i class="bi bi-star-fill"></i></span>
-                            <a class="mini-label" href="<?php echo h($star['filename']); ?>" target="_blank" rel="noopener" title="<?php echo h($star['title']); ?>">
+                            <a class="mini-label" href="<?php echo h($star['filename']); ?>" target="_blank" title="<?php echo h($star['title']); ?>">
                                 <?php echo h($star['title']); ?>
                             </a>
                             <span class="mini-value"><?php echo number_format($star['score'], 0); ?></span>
@@ -454,7 +454,7 @@ foreach ($dailyViews as $filename => $count) {
                         <?php foreach ($dailyRows as $day): ?>
                         <div class="mini-row">
                             <span class="mini-icon"><i class="bi bi-eye-fill"></i></span>
-                            <a class="mini-label" href="<?php echo h($day['filename']); ?>" target="_blank" rel="noopener" title="<?php echo h($day['title']); ?>">
+                            <a class="mini-label" href="<?php echo h($day['filename']); ?>" target="_blank" title="<?php echo h($day['title']); ?>">
                                 <?php echo h($day['title']); ?>
                             </a>
                             <span class="mini-value"><?php echo number_format($day['count']); ?></span>
@@ -492,7 +492,7 @@ foreach ($dailyViews as $filename => $count) {
 
                 <!-- Title + bar -->
                 <div class="rank-info">
-                    <a class="rank-title" href="<?php echo h($row['filename']); ?>" target="_blank" rel="noopener"
+                    <a class="rank-title" href="<?php echo h($row['filename']); ?>" target="_blank"
                        title="<?php echo h($row['filename']); ?>">
                         <?php echo h($row['title']); ?>
                     </a>

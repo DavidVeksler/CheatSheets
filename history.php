@@ -483,7 +483,7 @@ $pageTitle = match ($view) {
         <p class="muted mb-4">
           <?php echo count($commitsList); ?> commit<?php echo count($commitsList) === 1 ? '' : 's'; ?> touched this file.
           <?php $isHtml = str_ends_with(strtolower($file), '.html'); if ($isHtml): ?>
-            <a href="<?php echo h($file); ?>" target="_blank" rel="noopener">View current version <i class="bi bi-box-arrow-up-right"></i></a>
+            <a href="<?php echo h($file); ?>" target="_blank">View current version <i class="bi bi-box-arrow-up-right"></i></a>
           <?php endif; ?>
         </p>
         <div class="list-card">

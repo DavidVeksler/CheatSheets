@@ -683,7 +683,7 @@ if (is_readable($popularityFile)) {
                         <a href="how-its-built.html" class="btn btn-light btn-lg fw-semibold">
                             <i class="bi bi-gear-wide-connected me-1"></i>How this site is built
                         </a>
-                        <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-lg" data-ga-linkedin="hero">
+                        <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" class="btn btn-outline-light btn-lg" data-ga-linkedin="hero">
                             <i class="bi bi-linkedin me-1"></i>Connect on LinkedIn
                         </a>
                     </div>
@@ -748,7 +748,7 @@ if (is_readable($popularityFile)) {
                 <?php foreach ($cheatsheets as $sheet): ?>
                     <div class="col portfolio-item" data-title="<?php echo htmlspecialchars($sheet['title']); ?>" data-mtime="<?php echo (int)$sheet['mtime']; ?>" data-git-ctime="<?php echo (int)($sheet['git_ctime'] ?? 0); ?>" data-category="<?php echo htmlspecialchars($sheet['category']); ?>" data-popularity="<?php echo number_format($popularityScores[$sheet['filename']] ?? 0, 4, '.', ''); ?>">
                         <article class="card" style="--cat-color: <?php echo htmlspecialchars($sheet['cat_color']); ?>; --cat-bg: <?php echo htmlspecialchars($sheet['cat_bg']); ?>;">
-                            <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="card-img-top-container" aria-label="Open <?php echo htmlspecialchars($sheet['title']); ?>">
+                            <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" class="card-img-top-container" aria-label="Open <?php echo htmlspecialchars($sheet['title']); ?>">
                                 <i class="bi <?php echo htmlspecialchars($sheet['cat_icon']); ?> cat-placeholder-icon" aria-hidden="true"></i>
                                 <?php if (!empty($sheet['mtime']) && $sheet['mtime'] >= $newThreshold): ?>
                                     <span class="badge new-badge"><i class="bi bi-stars me-1"></i>New</span>
@@ -762,7 +762,7 @@ if (is_readable($popularityFile)) {
                                     <span class="badge category-badge mb-2 align-self-start"><i class="bi <?php echo htmlspecialchars($sheet['cat_icon']); ?> me-1"></i><?php echo htmlspecialchars($sheet['category']); ?></span>
                                 <?php endif; ?>
                                 <h5 class="card-title">
-                                    <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener">
+                                    <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank">
                                         <?php echo htmlspecialchars($sheet['title']); ?>
                                     </a>
                                 </h5>
@@ -780,7 +780,7 @@ if (is_readable($popularityFile)) {
                                 </div>
                             </div>
                             <div class="card-footer">
-                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary w-100" style="--bs-btn-color: var(--cat-color); --bs-btn-border-color: var(--cat-color); --bs-btn-hover-bg: var(--cat-color); --bs-btn-hover-border-color: var(--cat-color); --bs-btn-hover-color: #fff; --bs-btn-active-bg: var(--cat-color); --bs-btn-active-border-color: var(--cat-color); --bs-btn-active-color: #fff;">
+                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" class="btn btn-sm btn-outline-primary w-100" style="--bs-btn-color: var(--cat-color); --bs-btn-border-color: var(--cat-color); --bs-btn-hover-bg: var(--cat-color); --bs-btn-hover-border-color: var(--cat-color); --bs-btn-hover-color: #fff; --bs-btn-active-bg: var(--cat-color); --bs-btn-active-border-color: var(--cat-color); --bs-btn-active-color: #fff;">
                                     View Cheatsheet <i class="bi bi-box-arrow-up-right ms-1"></i>
                                 </a>
                             </div>
@@ -805,7 +805,7 @@ if (is_readable($popularityFile)) {
                   <a href="how-its-built.html" class="btn btn-primary btn-lg px-4">
                       <i class="bi bi-gear-wide-connected me-2"></i>See how it's built
                   </a>
-                  <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-lg px-4" data-ga-linkedin="cta">
+                  <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" class="btn btn-outline-primary btn-lg px-4" data-ga-linkedin="cta">
                       <i class="bi bi-linkedin me-2"></i>Let's talk on LinkedIn
                   </a>
               </div>
@@ -839,7 +839,7 @@ if (is_readable($popularityFile)) {
                 Cheatsheet Portfolio © <?php echo date("Y"); ?> David Veksler. All rights reserved.
             </p>
             <div>
-              <a href="https://www.linkedin.com/in/davidveksler/" title="David Veksler on LinkedIn" target="_blank" rel="noopener noreferrer" class="mx-2 small" data-ga-linkedin="footer">
+              <a href="https://www.linkedin.com/in/davidveksler/" title="David Veksler on LinkedIn" target="_blank" class="mx-2 small" data-ga-linkedin="footer">
                 <i class="bi bi-linkedin"></i> LinkedIn
               </a>
               <span class="mx-1 small">|</span>

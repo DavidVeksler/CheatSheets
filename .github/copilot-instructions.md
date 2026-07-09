@@ -10,17 +10,17 @@ Interactive HTML cheatsheet collection covering technology, philosophy, AI, cryp
    - Bootstrap 5.3.3 via CDN, Bootstrap Icons
    - Interactive features: collapsible sections, filters, localStorage persistence
    - Print-optimized styles
-   
+
 2. **`index.php`** - Dynamic portfolio gallery
    - Scans root directory for `.html` files automatically
    - Extracts metadata using DOMDocument/DOMXPath
    - Generates card-based layout with thumbnails
-   
+
 3. **`sitemap.php`** - SEO-optimized XML sitemap
    - Auto-discovers HTML files in root
    - Priority: 1.0 for index, 0.8 for cheatsheets
    - Uses file modification times for `<lastmod>`
-   
+
 4. **`generate-image-previews.py`** - Metadata & screenshot automation
    - Playwright-based screenshot generation (1200x630px for social media)
    - BeautifulSoup HTML parsing with intelligent metadata injection
@@ -45,7 +45,7 @@ root/
 4. Generate preview: `python3 generate-image-previews.py --apply`
 
 ### Metadata Management
-Run dry-run to audit: `python3 generate-image-previews.py`  
+Run dry-run to audit: `python3 generate-image-previews.py`
 Apply fixes: `python3 generate-image-previews.py --apply`
 
 The script intelligently:
@@ -108,7 +108,7 @@ Or use PHP built-in: `php -S localhost:8000`
 - Use `<details>`/`<summary>` or Bootstrap collapse for sections
 - Add toggle controls with localStorage persistence
 - Include print-specific CSS (`@media print`)
-- External links: `target="_blank" rel="noopener noreferrer"`
+- External links: `target="_blank"`
 
 ### PHP Metadata Extraction Pattern
 ```php

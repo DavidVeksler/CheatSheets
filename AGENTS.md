@@ -225,7 +225,7 @@ Deferred. Do **not** add affiliate links in the current pass. When implemented, 
 
 - **Disclose** every affiliate relationship with a clear, visible FTC-compliant disclosure on the page (not buried).
 - **No fabricated IDs.** Affiliate/tracking IDs come from a single config source (a PHP config var or documented placeholder), never invented or guessed — same discipline as the email endpoint and SRI hashes.
-- Keep links `rel="sponsored nofollow noopener"` and only on genuinely commercial-intent pages; do not retrofit informational/reference sheets.
+- Keep links `rel="sponsored nofollow"` and only on genuinely commercial-intent pages; do not retrofit informational/reference sheets.
 
 ## Adding New Cheatsheets
 
