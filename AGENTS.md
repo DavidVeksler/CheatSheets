@@ -33,6 +33,11 @@ Non-Markdown but load-bearing: `SEO_PROMPT.txt` (footer cross-linking procedure)
 3. **Outline to three depths, then fill** (see Coverage Contract). No section ships hollow.
 4. **Self-verify against the Testing Checklist** before finishing. The model is expected to run its own output through the checklist, not assume it passed.
 
+## Change Management
+
+- **Commit every change.** All changes to this project must be committed, including documentation and workflow updates. Keep commits scoped to the logical batch of work.
+- **Ask for deployment after every batch or completed piece of work.** Once a batch is committed, ask the user whether to deploy it. Do not push or deploy without the user's explicit approval.
+
 Treat the Coverage Contract, Atomic Entry Rule, and Accuracy Protocol as binding acceptance criteria. A cheatsheet that violates them is not done, regardless of polish.
 
 ## Content Comprehensiveness Standard (REQUIRED)
