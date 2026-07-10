@@ -24,14 +24,40 @@ This spec is binding. Where it conflicts with habit, follow the spec. Where it c
    git log -1 --format=%ad --date=short -- <file>                          # dateModified
    ```
 5. **Do not touch** `index.php`, `sitemap.php`, `robots.txt`, `.htaccess`, or any server config.
-6. **Character budgets are hard limits**, not targets. Titles **≤ 60**. Descriptions **150–160**.
+6. **Character budgets are hard limits**, not targets. Titles **≤ 60**. Descriptions **150–200**
+   (the band `AGENTS.md` specifies). When *writing a new* description, aim for 150–160; when a
+   description already sits anywhere in 150–200, **leave it alone** — it conforms.
    Verify with the script in "Acceptance gate" below — do not eyeball them.
+
+   > **Corrected 2026-07-09.** An earlier revision of this spec set a 150–160 hard band, which
+   > contradicts `AGENTS.md` and would have flagged ~65 conforming files as failures. The gate script
+   > below now enforces 150–200.
+
+7. **Never assert a fact about a page you have not read.** Titles and descriptions are content
+   claims, and `AGENTS.md`'s Accuracy Protocol governs them: no fabricated counts, no naming an
+   entity the page doesn't cover. If proposed text names "68 throws", "20+ styles", or a specific
+   technology, **verify it against the page body first**. If it's wrong, reject the text and report
+   it — do not ship it, and do not quietly invent a replacement claim either.
 7. **Commit per work package**, not per file. Message format: `SEO: <what> (WP<n>)`, ending with the
    `Co-Authored-By` trailer. **Do not push.** Do not stage `.claude/` or unrelated changes.
 8. If a page's proposed title would lose a term it currently ranks for, **stop and flag it** rather
    than shipping the change.
 
 ---
+
+## Status (updated 2026-07-09)
+
+- **WP1 — done**, commit `4a8383b`. 15 of 16 files changed. **5 of the 16 proposed descriptions were
+  rejected as factually wrong against the page body** and reverted by the implementer (see the
+  post-mortem note under WP1's table). `judo.html` and `databases.html` titles were subsequently
+  rewritten by hand in `51abbba`.
+- **WP2 — done**, commit `04252ad`. 70 files (the spec's "66" was arithmetic error; real overlap with
+  WP1 was 12, not 16).
+- **WP3 — done**, commit `42727af`. 55 files.
+- **WP4, WP5, WP6 — not started.**
+- `autonomous-defense-systems.html` was added by a concurrent session *after* the audit snapshot and is
+  **outside this spec's 151-file corpus**. Do not touch it. It currently has a 75-char title and a
+  214-char description; fold it into a later pass.
 
 ## WP1 — Rewrite titles + descriptions for the 16 highest-impression pages
 
@@ -74,6 +100,28 @@ For each file, update **four** places so they stay consistent:
 
 `databases.html` and `bitcoin-whitepaper.html` also appear in later work packages — do WP1's rewrite
 first, then let WP4 read the *new* title when it generates JSON-LD.
+
+### ⚠️ Post-mortem: 5 of the 16 rows above were factually wrong
+
+The table was written from the Search Console query data **without reading the page bodies**. Five
+proposed descriptions asserted things the pages do not contain. The implementing agent verified each
+against the source and **correctly refused all five**:
+
+| File | Fabricated claim | Reality |
+|---|---|---|
+| `judo.html` | "all 68 Kodokan throws" | Page presents a *selection* from the Gokyo no Waza (~17 throws) and explicitly says "Many more exist." |
+| `databases.html` | "NewSQL" | No NewSQL section; taxonomy is SQL / NoSQL & Search / Modern Engines. |
+| `martial-arts-cheatsheet.html` | "Compare 20+ martial arts" | Page covers **9** styles; its own JSON-LD already said so. |
+| `compression-algorithms.html` | names "LZ4" | LZ4 appears nowhere on the page. |
+| `anapanasati-mindfulness-of-breathing.html` | "how each step maps to the four jhanas" | Jhāna is mentioned only in passing; no step-to-jhāna mapping exists. |
+
+All five were verified independently against the source afterwards — every rejection was correct.
+
+**The lesson, which now lives in Hard Rule 7:** a `<title>` and a `meta description` are content
+claims and fall under `AGENTS.md`'s Accuracy Protocol ("never fabricate a plausible-looking number";
+"structured data must match visible content"). Search-intent data tells you *which words to rank for*,
+never *what the page says*. Read the page before you describe it. An agent that ships spec text
+verbatim without checking it against the body is doing the wrong job.
 
 ---
 
@@ -238,7 +286,7 @@ for f in sorted(glob.glob('*.html')):
     t = p.title or ''; d = p.meta.get('description', '')
     if len(t) > 60:            fails.append(f'{f}: title {len(t)} chars > 60')
     if not d:                  fails.append(f'{f}: no meta description')
-    elif not 150 <= len(d) <= 160: fails.append(f'{f}: description {len(d)} chars, want 150-160')
+    elif not 150 <= len(d) <= 200: fails.append(f'{f}: description {len(d)} chars, want 150-200')
     if not p.canon:            fails.append(f'{f}: no canonical')
     if 'application/ld+json' not in src: fails.append(f'{f}: no JSON-LD')
     # each ld+json block must parse INDEPENDENTLY (pages legitimately have 2-3 blocks)
