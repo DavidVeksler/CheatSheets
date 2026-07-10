@@ -16,8 +16,14 @@ This spec is binding. Where it conflicts with habit, follow the spec. Where it c
    (reversed). Match the file's local style; do not "normalise" it. A find-and-replace that assumes
    `name=` comes first will silently miss the tag.
 3. **JSON-LD must match visible content** (`AGENTS.md`, Accuracy Protocol). If you change a page's
-   `<title>`, update `headline` in that page's JSON-LD to match. If you change the description,
-   update `description`. Never let them drift.
+   description, update JSON-LD `description` to match. Never let them drift.
+
+   > **Corrected 2026-07-09.** This rule originally said `headline` must equal the `<title>`. That is
+   > wrong. `headline` is the *article's* headline and should track the page's visible `<h1>`;
+   > `<title>` is the *SERP listing* and is legitimately shorter and more keyword-led. Forcing them
+   > equal would have made ~9 pages' `headline` diverge from their own visible `<h1>` — the exact
+   > thing the Accuracy Protocol forbids. **Standard: `headline` ≈ visible `<h1>`; leave it alone when
+   > it already does.**
 4. **Never invent dates.** For `datePublished` / `dateModified`, derive from git:
    ```bash
    git log --diff-filter=A --format=%ad --date=short -- <file> | tail -1   # datePublished

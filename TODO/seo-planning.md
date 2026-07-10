@@ -105,6 +105,27 @@ script in the implementation spec does both — reuse it rather than writing a f
 - [ ] `list_sitemaps` MCP call currently **errors** (`cannot unmarshal string into … warnings of type
   int64`) — an MCP-server bug, not a sitemap problem. Check coverage via the GSC web UI instead.
 
+## Follow-ups left open by the 2026-07-09 metadata pass
+
+- [ ] **`humanoid-robots.html` visible/title incoherence.** The `<title>` now reads "Humanoid Robots
+  2026: Every Company, Robot and Spec Compared", but the visible `<h1>` and the JSON-LD `headline`
+  still say "Humanoid Robot **Builders**" — the exact wording the audit identified as off-query.
+  Fixing it means editing body content (an `<h1>`), which was out of scope. Same shape, less severe,
+  on `ai-frontier.html`. Worth a small, deliberate pass.
+- [ ] **7 pages have a JSON-LD `headline` that matches neither `<title>` nor `<h1>`** — cosmetic
+  staleness, no false claims: `audit-odds`, `baofeng-uv5r-ham-guide`, `baofeng-uv5r-quick-ref`,
+  `engineering-metals-selection`, `future-of-warfare-technology`, `samsung-bespoke-oven-guide`,
+  `the-cliff-map`. Low priority.
+- [ ] **`javascript-for-architects.html` has more unescaped HTML in code samples.** WP5 escaped the
+  phantom `<h1>`s, but `<div>` and `<p>` inside the same `<pre><code>` blocks are still parsed as real
+  markup. A rendering bug, not an SEO one.
+- [ ] **`human-skeleton.html` body content is a stub.** Its `anatomicalData` object returns "Further
+  details would describe the specific bones in this group" for every region. The page's own
+  description promises anatomical details it does not deliver — a Comprehensiveness Standard failure,
+  not a metadata one.
+- [ ] **`autonomous-defense-systems.html`** was added by a concurrent session after the audit snapshot
+  (title 75 chars, description 214). Outside the 151-file corpus; fold into the next pass.
+
 ## Measurement plan
 
 Re-pull **2026-08-06** (28 days after the metadata pass lands), same 180-day window for comparability.
