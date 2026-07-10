@@ -135,9 +135,24 @@ Re-pull **2026-08-06** (28 days after the metadata pass lands), same 180-day win
   lost relevance — revert that one page.
 - **Do not** use site-wide CTR as the metric (see conclusion 1).
 
+## AI frontier implementation — 2026-07-10
+
+Implemented the strategic-page changes following the competitor/GSC review:
+
+- Replaced the unprovable “Complete List” promise with a query-aligned, scoped title and visible H1.
+- Rebuilt the quick-reference map around model posture, access, strategy, and first use; removed unstable cross-company valuation figures from the comparison table.
+- Added an explicit scope/method statement, official-source links for every profiled lab, and a visible update policy. The table is a curated seven-lab comparison, not a claim to enumerate every capable provider.
+- Added three reciprocal contextual links into the flagship from the AI coding-agent, Ubuntu AI-developer, and AI safety pages, bringing contextual inbound links from five to eight.
+- Added two intentionally non-overlapping follow-on specs: open-weight deployment and API pricing/capacity. Do not build a second generic AI-labs list.
+
+### Measurement adjustment
+
+The July 9 title experiment was superseded on July 10 because “Complete List” could not be supported by a seven-lab page. Measure the revised page as a new baseline from **2026-07-10 to 2026-08-06**, using the page filter and the frontier-AI query family. Compare clicks, CTR, and position against the preceding equal-length period; interpret high-impression zero-click fragment URLs as SERP-feature exposure, not a direct blue-link CTR failure.
+
 ## Log
 
 - 2026-07-09 — Doc created, seeded with first GSC baseline pull (28-day window). No changes made yet.
 - 2026-07-09 — Full audit: 180-day GSC pull + parsed metadata sweep of all 151 files. Wrote
   `seo-audit-2026-07-09.md` and `seo-implementation-spec.md`. Corrected three false-positive classes
   from the naïve-regex first pass. Metadata pass (WP1–WP6) dispatched for implementation.
+- 2026-07-10 — Implemented the AI frontier strategic refresh, cluster links, and two differentiated follow-on specs. Awaiting the new 28-day measurement window before judging CTR or position impact.
