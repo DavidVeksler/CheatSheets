@@ -61,21 +61,62 @@ highest-leverage targets for on-page/title/meta work rather than new content:
 - **compression-algorithms.html** — 1,545 impressions, 0.32% CTR, position 18.0.
 - **tesla-products.html** — 1,961 impressions, 0.31% CTR, position 12.8.
 
+## Full audit — 2026-07-09
+
+A 180-day pull (2026-01-10 → 2026-07-08) plus a parsed metadata sweep of all 151 files superseded the
+28-day snapshot above. See **[`seo-audit-2026-07-09.md`](seo-audit-2026-07-09.md)** for findings and
+**[`seo-implementation-spec.md`](seo-implementation-spec.md)** for the executable spec.
+
+Headline conclusions (do not re-derive these; re-pull data instead):
+
+1. **Two different causes of low CTR, only one fixable.** A large share of impressions are absorbed by
+   AI Overviews / SERP features — e.g. `judo.html` earned 17,854 impressions and **2 clicks** on the
+   single query "judo guide" at position 7.0. Do not set a site-wide CTR target; it will drown the
+   signal from work that does matter.
+2. **The fixable cause is the listing itself.** 82/151 titles exceed 60 chars (truncated); 52
+   descriptions exceed 200. Worse, titles don't contain the words users type — `ai-frontier.html`
+   (47% of all site clicks) ranks 2.4–6.0 for "frontier ai **companies**/**labs**/**list**", none of
+   which appear in its title.
+3. **Metadata hygiene is better than it looks.** Canonical, og:image, and twitter:card coverage is
+   100%. The genuine gaps are 21 pages with no JSON-LD and 3 `<h1>` defects.
+
+⚠️ **Methodology warning.** A first pass using naïve regexes reported ~67 pages missing
+description/canonical/og:image and 5 with invalid JSON-LD. **All were false positives:** these files
+use reversed attribute order (`content="…" name="description"`), several carry multiple `ld+json`
+blocks, and inline **SVG `<title>`** elements pollute a naïve `<title>` match. Always parse the
+`<head>` with a real HTML parser and validate each `ld+json` block independently. The acceptance-gate
+script in the implementation spec does both — reuse it rather than writing a fresh regex.
+
 ## Open questions / next steps
 
-- [ ] Diagnose why `ai-frontier.html` CTR is so low despite good position — check title tag,
-  meta description, and SERP snippet against top query intent ("frontier ai companies",
-  "list of frontier ai models").
-- [ ] Decide whether to pull a longer window (90/180 days) for trend direction, not just a
-  28-day snapshot.
-- [ ] Check `list_sitemaps` / coverage status for indexing gaps (pages with zero impressions
-  that should have some).
-- [ ] Cross-reference striking-distance pages against `TODO/CHEATSHEET-AUDIT.md` metadata
-  checks (title/description/JSON-LD) before assuming the fix is content depth vs. metadata.
-- [ ] Revisit `SEO_PROMPT.txt` footer cross-linking procedure — confirm striking-distance pages
-  are well-linked from higher-traffic pages in their cluster.
+- [x] ~~Diagnose why `ai-frontier.html` CTR is so low despite good position~~ → title omits the query
+  nouns (*companies*, *labs*, *list*); rewrite specced in WP1.
+- [x] ~~Pull a longer window (90/180 days) for trend direction~~ → 180-day pull done 2026-07-09.
+- [x] ~~Cross-reference striking-distance pages against metadata checks~~ → done; it's metadata, not
+  content depth.
+- [ ] **David's decision:** return `410 Gone` for `anduril-products.html`? It was deliberately removed
+  (commit `5a5db5e`, trademark exposure) but earned 295 clicks / 90,225 impressions at position 6.6
+  over the window, and now serves a bare 404. Recommended: 410, no redirect.
+- [ ] **David's decision:** cannibalization — `versioncontrol.html` (4,904 impressions, **0 clicks**)
+  overlaps `git-scm.html` (position 36.8). Consolidate, differentiate, or leave? Per the site-goals
+  rule, check which goal each serves first.
+- [ ] Contextual internal linking pass (`SEO_PROMPT.txt` footer procedure). Deferred until the
+  metadata pass is measured. Flagship `ai-frontier.html` has only 5 inbound contextual links.
+- [ ] `list_sitemaps` MCP call currently **errors** (`cannot unmarshal string into … warnings of type
+  int64`) — an MCP-server bug, not a sitemap problem. Check coverage via the GSC web UI instead.
+
+## Measurement plan
+
+Re-pull **2026-08-06** (28 days after the metadata pass lands), same 180-day window for comparability.
+
+- **Primary metric:** clicks on the 16 WP1 pages, before vs. after, at roughly constant position.
+- **Guard-rail:** average position on those pages must not fall. A rewritten title that drops position
+  lost relevance — revert that one page.
+- **Do not** use site-wide CTR as the metric (see conclusion 1).
 
 ## Log
 
-- 2026-07-09 — Doc created, seeded with first GSC baseline pull (28-day window). No changes
-  made yet.
+- 2026-07-09 — Doc created, seeded with first GSC baseline pull (28-day window). No changes made yet.
+- 2026-07-09 — Full audit: 180-day GSC pull + parsed metadata sweep of all 151 files. Wrote
+  `seo-audit-2026-07-09.md` and `seo-implementation-spec.md`. Corrected three false-positive classes
+  from the naïve-regex first pass. Metadata pass (WP1–WP6) dispatched for implementation.
