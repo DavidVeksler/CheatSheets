@@ -80,6 +80,7 @@ return [
     'martial-arts-cheatsheet.html' => 'Martial Arts & Strategy',
 
     // Firearms & Military
+    'autonomous-defense-systems.html' => 'Firearms & Military',
     'future-of-warfare-technology.html' => 'Firearms & Military',
     'handgun-calibers.html' => 'Firearms & Military',
     'military-aphorisms.html' => 'Firearms & Military',
