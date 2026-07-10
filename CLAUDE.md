@@ -1,5 +1,11 @@
 See AGENTS.md
 
+## SEO planning
+
+Use [`TODO/seo-planning.md`](TODO/seo-planning.md) as the working doc for SEO strategy work
+(Search Console baseline, striking-distance opportunities, open questions). Pull fresh data via
+the `search-console` MCP tools rather than trusting stale numbers in that file.
+
 ## Cached CDN dependencies (SRI hashes)
 
 Precomputed `integrity` values for the pinned CDN assets, so they don't have to be

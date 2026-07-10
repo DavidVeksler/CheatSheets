@@ -19,6 +19,7 @@ This file owns the quality bar. The other Markdown docs divide the workflows —
 | `TODO/<topic>.md` | One spec per planned cheatsheet (content angle, sections, visual identity). Deleted after the build ships. |
 | [`TODO/SPEC-AUDIT.md`](TODO/SPEC-AUDIT.md) | **Writing or reviewing a spec** — spec-completeness criteria (search targeting, reader outcome, staleness register, etc.). |
 | [`TODO/CHEATSHEET-AUDIT.md`](TODO/CHEATSHEET-AUDIT.md) | **Reviewing an existing/shipped cheatsheet** — run this per-file conformance audit (metadata, SRI, content depth, site integration), with severity tiers, fix policy, and the corpus defect baseline. |
+| [`TODO/seo-planning.md`](TODO/seo-planning.md) | **Planning SEO work** — durable doc (not deleted after one pass) tracking the Search Console baseline, striking-distance opportunities, and open questions. Pull fresh GSC data before trusting numbers more than a few weeks old. |
 | [`weekly-freshness-update.md`](weekly-freshness-update.md) | The scheduled **fact-drift job** — worker instructions for refreshing one dated cheatsheet per run. Owns fact verification; the audit above only checks the freshness *machinery* exists. |
 | [`Device Cheat Sheet Generator.md`](Device%20Cheat%20Sheet%20Generator.md) | Standalone generator prompt for hardware/device guides (radios, appliances, tools). Predates this file — where they conflict, this file wins. |
 | [`README.md`](README.md) | Public repo readme (minimal). |
