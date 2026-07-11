@@ -94,9 +94,8 @@ script in the implementation spec does both — reuse it rather than writing a f
 - [x] ~~Pull a longer window (90/180 days) for trend direction~~ → 180-day pull done 2026-07-09.
 - [x] ~~Cross-reference striking-distance pages against metadata checks~~ → done; it's metadata, not
   content depth.
-- [ ] **David's decision:** return `410 Gone` for `anduril-products.html`? It was deliberately removed
-  (commit `5a5db5e`, trademark exposure) but earned 295 clicks / 90,225 impressions at position 6.6
-  over the window, and now serves a bare 404. Recommended: 410, no redirect.
+- [x] **Decision (2026-07-10):** leave `anduril-products.html` as a 404; do not return `410 Gone` and
+  do not redirect it. It was deliberately removed for trademark exposure.
 - [ ] **David's decision:** cannibalization — `versioncontrol.html` (4,904 impressions, **0 clicks**)
   overlaps `git-scm.html` (position 36.8). Consolidate, differentiate, or leave? Per the site-goals
   rule, check which goal each serves first.

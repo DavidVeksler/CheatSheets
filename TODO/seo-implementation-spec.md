@@ -60,7 +60,9 @@ This spec is binding. Where it conflicts with habit, follow the spec. Where it c
 - **WP2 — done**, commit `04252ad`. 70 files (the spec's "66" was arithmetic error; real overlap with
   WP1 was 12, not 16).
 - **WP3 — done**, commit `42727af`. 55 files.
-- **WP4, WP5, WP6 — not started.**
+- **WP4 — done**, commit `3bf35f1`: added `TechArticle` JSON-LD to 21 pages.
+- **WP5 — done**, commit `bfb691a`: fixed `<h1>` defects in 3 files.
+- **WP6 — done**, commit `e8cfd07`: added `/llms.txt`.
 - `autonomous-defense-systems.html` was added by a concurrent session *after* the audit snapshot and is
   **outside this spec's 151-file corpus**. Do not touch it. It currently has a 75-char title and a
   214-char description; fold it into a later pass.
