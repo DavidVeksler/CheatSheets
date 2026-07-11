@@ -7,6 +7,7 @@ return [
     'agi-development-guide.html' => 'AI & Safety',
     'ai-coding-agents-compared.html' => 'AI & Safety',
     'ai-frontier.html' => 'AI & Safety',
+    'ai-model-api-pricing.html' => 'AI & Safety',
     'ai-model-picker.html' => 'AI & Safety',
     'ai-progress-dashboard.html' => 'AI & Safety',
     'ai-risk-timeline.html' => 'AI & Safety',
@@ -18,6 +19,7 @@ return [
     'p-doom-calculator.html' => 'AI & Safety',
     'p-doom-test-harness.html' => 'AI & Safety',
     'prompt-builder.html' => 'AI & Safety',
+    'open-weight-ai-models.html' => 'AI & Safety',
     'yudkowsky-rationality-ai-cheatsheet.html' => 'AI & Safety',
 
     // Software & DevOps
@@ -117,8 +119,10 @@ return [
     'buddhism.html' => 'Philosophy & Religion',
     'buddhist-work-leadership.html' => 'Philosophy & Religion',
     'capitalism.html' => 'Philosophy & Religion',
+    'comparative-religion-map.html' => 'Philosophy & Religion',
     'conscious-leadership-contexts.html' => 'Philosophy & Religion',
     'craving-desire-habit-loops.html' => 'Philosophy & Religion',
+    'decision-theory-everyday-life.html' => 'Philosophy & Religion',
     'etz-chaim-tree-of-life.html' => 'Philosophy & Religion',
     'five-hindrances-debugger.html' => 'Philosophy & Religion',
     'islam.html' => 'Philosophy & Religion',
@@ -129,6 +133,7 @@ return [
     'right-speech-modern-life.html' => 'Philosophy & Religion',
     'satipatthana-four-foundations.html' => 'Philosophy & Religion',
     'shabbat-services-cheatsheet.html' => 'Philosophy & Religion',
+    'stoicism-practice-texts-misreadings.html' => 'Philosophy & Religion',
 
     // Engineering & Science
     'automotive-innovation-timeline.html' => 'Engineering & Science',
