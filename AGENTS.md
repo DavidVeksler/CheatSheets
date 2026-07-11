@@ -36,7 +36,8 @@ Non-Markdown but load-bearing: `SEO_PROMPT.txt` (footer cross-linking procedure)
 
 ## Change Management
 
-- **Commit every change.** All changes to this project must be committed, including documentation and workflow updates. Keep commits scoped to the logical batch of work.
+- **Commit every change, every run — unconditionally.** All changes to this project must be committed, including documentation and workflow updates. Keep commits scoped to the logical batch of work. Do not withhold a commit because the work feels incomplete, unpolished, or not yet audit-clean — commit what the run produced.
+- **The quality gate is deployment, not the commit.** Comprehensiveness, accuracy, and audit checks (Coverage Contract, Accuracy Protocol, CHEATSHEET-AUDIT) gate whether you *recommend deploying* a batch, not whether you commit it. Committed-but-not-yet-deployed is normal, safe state.
 - **Ask for deployment after every batch or completed piece of work.** Once a batch is committed, ask the user whether to deploy it. Do not push or deploy without the user's explicit approval.
 
 Treat the Coverage Contract, Atomic Entry Rule, and Accuracy Protocol as binding acceptance criteria. A cheatsheet that violates them is not done, regardless of polish.
