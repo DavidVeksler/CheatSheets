@@ -5,6 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://cheatsheets.davidveksler.com/human-skeleton.html" rel="canonical"/>
 <title>Interactive Human Skeleton - Anatomical Study</title>
+<meta content="human skeleton, axial skeleton, appendicular skeleton, bone anatomy, skull, vertebral column, thoracic cage, upper limb, lower limb" name="keywords"/>
 <style>
         body { margin: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; overflow: hidden; }
         #skeleton-container { flex-grow: 1; background-color: #e0e0e0; /* Lighter gray */ }
@@ -88,18 +89,44 @@
         const boneNameElement = document.getElementById('bone-name');
         const boneDetailsElement = document.getElementById('bone-details');
 
-        // --- Anatomical Data (Update this based on your model's actual structure) ---
-        // The names "Object_2", "Object_3", etc. are based on the node names
-        // found in your GLB file's JSON header.
-        // You will need to inspect the model to determine what these parts actually are.
+        // The GLB has four mesh groups named Object_2 through Object_5, but it does
+        // not include bone-level labels. Do not present those internal names as anatomy.
+        // Each selection therefore opens a focused, source-linked study note instead.
         const anatomicalData = {
-            "Object_2": { name: "Skeleton Part 1 (e.g., Torso/Ribs?)", details: "This is one of the major components of the loaded skeleton model. Further details would describe the specific bones in this group." },
-            "Object_3": { name: "Skeleton Part 2 (e.g., Limbs?)", details: "This part of the skeleton model likely contains multiple bones. You can identify them by exploring the model." },
-            "Object_4": { name: "Skeleton Part 3 (e.g., Skull?)", details: "An important component of the skeleton. Specifics depend on how the model was segmented." },
-            "Object_5": { name: "Skeleton Part 4 (e.g., Pelvis/Legs?)", details: "Another major segment of the skeleton model provided." },
-            // Fallback if a sub-mesh without a direct entry is clicked
-            "Unknown": { name: "Unknown Part", details: "This is a part of the skeleton, but more specific information is not yet available in this demo." },
-            "Default": { name: "Select a bone", details: "Click on a part of the skeleton to learn more. Use mouse to rotate, zoom, and pan."}
+            "Object_2": {
+                name: "Model segment A — axial skeleton study",
+                details: `<p><strong>Asset note:</strong> this selectable mesh is an unlabeled model group, not a named bone. Use it as a visual anchor for the axial skeleton: the skull, vertebral column, ribs, and sternum.</p>
+                    <h3>What to identify</h3><ul><li><strong>Skull:</strong> protects the brain and includes 22 cranial and facial bones.</li><li><strong>Vertebral column:</strong> 24 vertebrae plus the sacrum and coccyx protect the spinal cord and support the head and trunk.</li><li><strong>Thoracic cage:</strong> 12 pairs of ribs and the sternum protect the heart and lungs and move with breathing.</li></ul>
+                    <p><strong>Study check:</strong> trace the body’s midline from skull to coccyx, then distinguish the floating lower ribs from the ribs that attach directly or indirectly to the sternum.</p>`
+            },
+            "Object_3": {
+                name: "Model segment B — shoulder and upper-limb study",
+                details: `<p><strong>Asset note:</strong> this selectable mesh is an unlabeled model group, not a named bone. Use it to review the mobile upper limb and the pectoral girdle that attaches it to the trunk.</p>
+                    <h3>What to identify</h3><ul><li><strong>Pectoral girdle:</strong> clavicle and scapula; the clavicle connects medially to the sternum and laterally to the scapula.</li><li><strong>Free upper limb:</strong> humerus in the arm; radius and ulna in the forearm; then carpals, metacarpals, and phalanges in the hand.</li><li><strong>Orientation:</strong> in anatomical position, the radius is on the thumb side and the ulna is on the little-finger side.</li></ul>
+                    <p><strong>Study check:</strong> find the shoulder joint, elbow, and wrist; then compare the hand’s fine-movement structure with the lower limb’s weight-bearing structure.</p>`
+            },
+            "Object_4": {
+                name: "Model segment C — pelvis and lower-limb study",
+                details: `<p><strong>Asset note:</strong> this selectable mesh is an unlabeled model group, not a named bone. Use it to review the pelvic girdle and lower limb, which prioritize stability and locomotion.</p>
+                    <h3>What to identify</h3><ul><li><strong>Pelvic girdle:</strong> the paired hip bones attach the lower limbs to the axial skeleton and form the hip sockets.</li><li><strong>Free lower limb:</strong> femur and patella at the thigh/knee; tibia and fibula in the leg; then tarsals, metatarsals, and phalanges in the foot.</li><li><strong>Orientation:</strong> the tibia is medial and bears most weight; the fibula is lateral and does not form the knee joint.</li></ul>
+                    <p><strong>Study check:</strong> follow the load path from pelvis to femur to tibia to foot, and distinguish the ankle bones from the long bones of the foot.</p>`
+            },
+            "Object_5": {
+                name: "Model segment D — bone form and joint study",
+                details: `<p><strong>Asset note:</strong> this selectable mesh is an unlabeled model group, not a named bone. Use it to compare bone shapes and the joints that connect the major regions.</p>
+                    <h3>What to identify</h3><ul><li><strong>Long bones:</strong> such as the humerus and femur, act as levers for movement.</li><li><strong>Flat bones:</strong> such as cranial bones, scapulae, ribs, and sternum protect organs and provide broad muscle-attachment surfaces.</li><li><strong>Short bones:</strong> the carpals and tarsals provide stability with limited motion at the wrist and ankle.</li></ul>
+                    <p><strong>Study check:</strong> locate a ball-and-socket joint (shoulder or hip), a hinge-like joint (elbow or knee), and a pivot relationship between the radius and ulna.</p>`
+            },
+            "Unknown": {
+                name: "Unlabeled model segment",
+                details: `<p>The source GLB did not expose a bone-level name for this mesh. Rotate the model, then use the nearby landmarks to decide whether it belongs to the axial skeleton (head and trunk) or appendicular skeleton (girdles and limbs).</p>`
+            },
+            "Default": {
+                name: "Explore the adult skeleton",
+                details: `<p>The adult skeleton has <strong>206 bones</strong>: <strong>80 axial</strong> bones in the head and trunk, and <strong>126 appendicular</strong> bones in the limbs and the girdles that attach them.</p>
+                    <h3>Quick study map</h3><ul><li><strong>Axial:</strong> skull, vertebral column, ribs, and sternum form the body’s central axis.</li><li><strong>Appendicular:</strong> shoulder girdle, upper limbs, pelvic girdle, and lower limbs connect to that axis.</li><li><strong>Read the model:</strong> click a mesh for a focused study note. The downloaded model groups are unlabeled, so the notes describe verified anatomical regions rather than guessing a bone name.</li></ul>
+                    <p><strong>Source:</strong> <a href="https://openstax.org/books/anatomy-and-physiology-2e/pages/7-1-divisions-of-the-skeletal-system" target="_blank" rel="noopener">OpenStax Anatomy &amp; Physiology 2e, §7.1</a> (last verified 2026-07-10).</p>`
+            }
         };
 
         function init() {
@@ -270,7 +297,7 @@
         function updateInfoPanel(objectKey) {
             const data = anatomicalData[objectKey] || anatomicalData["Unknown"]; // Fallback for unmapped parts
             boneNameElement.textContent = data.name;
-            boneDetailsElement.innerHTML = `<p>${data.details || "No further information available for this part."}</p>`;
+            boneDetailsElement.innerHTML = data.details || "<p>No further information available for this part.</p>";
              if (objectKey === "Default" || !anatomicalData[objectKey] || anatomicalData[objectKey].name === anatomicalData["Default"].name ) {
                  boneDetailsElement.innerHTML += `
                     <p><strong>Controls:</strong></p>
@@ -304,7 +331,7 @@
     </a>
   </div>
   <p class="mb-2">
-    © 2025 David Veksler · Compiled &amp; expanded based on medical anatomy textbooks and osteology reference materials.
+    © 2026 David Veksler · Compiled &amp; expanded using anatomy references. Last verified: 2026-07-10.
   </p>
   <div>
     <a class="mx-2 link-secondary" href="https://www.linkedin.com/in/davidveksler/" target="_blank" title="David Veksler on LinkedIn">
