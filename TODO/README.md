@@ -9,6 +9,32 @@ against `SPEC-AUDIT.md` (spec-completeness criteria: search targeting, reader ou
 staleness register, etc.). For auditing **already-shipped** cheatsheets, use
 `CHEATSHEET-AUDIT.md` (per-file conformance procedure + corpus defect baseline).
 
+## Rule 0: Topic acceptance — the niche utility test (July 2026 pivot)
+
+New cheatsheet topics must pass a **niche utility test** before a spec is written:
+
+> Would a person keep this page open while performing a task that an AI chat answer
+> can't replace?
+
+Passing shapes: **device programming** (Baofeng keypad sequences, oven error codes),
+**ritual/procedure reference** (follow-along service guides, checklists worked through in
+real time), **field diagnostics** (test/terminology lookup at the bench or clinic), and
+**comparison tables with exact specs** (rockets, robots, metals — where the value is the
+dense verified numbers side by side, not a narrative).
+
+**Broad informational topics ("overview of X") are no longer accepted for goal-3
+(agentic-automation case study) purposes.** They may still be built for the personal-study
+or advocacy goals, and are then judged by those goals' criteria, not by traffic
+(per the site-goals rule in `seo-planning.md`).
+
+**Evidence (180-day GSC pull, 2026-01 → 2026-07):** site impressions fell ~60% from January
+to July 2026 — the broad-informational SEO play is structurally losing to AI answers and
+SERP features. The pages that held up are exactly the niche-utility shape:
+`baofeng-uv5r-quick-ref.html` (4.7% CTR), `shabbat-services-cheatsheet.html` (4.9% CTR),
+`veterinary-diagnostics.html` (9.2% CTR) — versus ~0.3% CTR on the broad pages despite far
+more impressions. People click through when the page is a tool they'll keep open, not an
+answer they've already been given.
+
 ## Rule 1: Numbers in specs are anchors, not facts
 
 Every figure in a spec (prices, NNTs, protection factors, micromort values, legal
