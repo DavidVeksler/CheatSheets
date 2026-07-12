@@ -96,9 +96,16 @@ script in the implementation spec does both — reuse it rather than writing a f
   content depth.
 - [x] **Decision (2026-07-10):** leave `anduril-products.html` as a 404; do not return `410 Gone` and
   do not redirect it. It was deliberately removed for trademark exposure.
-- [ ] **David's decision:** cannibalization — `versioncontrol.html` (4,904 impressions, **0 clicks**)
-  overlaps `git-scm.html` (position 36.8). Consolidate, differentiate, or leave? Per the site-goals
-  rule, check which goal each serves first.
+- [ ] **David's decision:** cannibalization — `versioncontrol.html` vs `git-scm.html`.
+  **Update 2026-07-12, fresh 28-day data:** the overlap has largely self-resolved.
+  `versioncontrol.html` collapsed to **12 impressions / 6 queries**, all Mercurial/DVCS-comparison
+  intent (`mercurial dvcs`, hosting-platform comparisons) — the 4,904-impression figure was an
+  artifact of the 180-day window. `git-scm.html` now owns the git intent but ranks **50–70** for
+  the big-head queries (`git commands`, `git cheat sheet` — dominated by github.com's official PDF;
+  realistically unwinnable) while winning real clicks at position 10–16 on
+  `git cheat sheet interactive` / `interactive git cheat sheet` (3 clicks, 27% CTR on the former).
+  **Recommendation: leave both; do not consolidate.** They no longer compete on the same queries.
+  If anything, lean `git-scm.html` further into the "interactive" differentiator it already wins on.
 - [ ] Contextual internal linking pass (`SEO_PROMPT.txt` footer procedure). Deferred until the
   metadata pass is measured. Flagship `ai-frontier.html` has only 5 inbound contextual links.
 - [ ] `list_sitemaps` MCP call currently **errors** (`cannot unmarshal string into … warnings of type
@@ -106,24 +113,27 @@ script in the implementation spec does both — reuse it rather than writing a f
 
 ## Follow-ups left open by the 2026-07-09 metadata pass
 
-- [ ] **`humanoid-robots.html` visible/title incoherence.** The `<title>` now reads "Humanoid Robots
-  2026: Every Company, Robot and Spec Compared", but the visible `<h1>` and the JSON-LD `headline`
-  still say "Humanoid Robot **Builders**" — the exact wording the audit identified as off-query.
-  Fixing it means editing body content (an `<h1>`), which was out of scope. Same shape, less severe,
-  on `ai-frontier.html`. Worth a small, deliberate pass.
-- [ ] **7 pages have a JSON-LD `headline` that matches neither `<title>` nor `<h1>`** — cosmetic
-  staleness, no false claims: `audit-odds`, `baofeng-uv5r-ham-guide`, `baofeng-uv5r-quick-ref`,
+All five closed as of the 2026-07-12 sweep (most were fixed by concurrent sessions between 07-10
+and 07-12; verified rather than assumed):
+
+- [x] ~~`humanoid-robots.html` visible/title incoherence~~ → verified 2026-07-12: `<title>`,
+  `<h1>`, and JSON-LD `headline` now all read "Humanoid Robots 2026: Every Company, Robot and Spec
+  Compared". `ai-frontier.html` likewise fully coherent.
+- [x] ~~7 pages with stale JSON-LD `headline`~~ → fixed 2026-07-12. An interim fix had synced
+  `headline` to `<title>`, which is exactly what the spec's corrected rule 3 forbids; realigned all
+  7 to the visible `<h1>` (`audit-odds`, `baofeng-uv5r-ham-guide`, `baofeng-uv5r-quick-ref`,
   `engineering-metals-selection`, `future-of-warfare-technology`, `samsung-bespoke-oven-guide`,
-  `the-cliff-map`. Low priority.
-- [ ] **`javascript-for-architects.html` has more unescaped HTML in code samples.** WP5 escaped the
-  phantom `<h1>`s, but `<div>` and `<p>` inside the same `<pre><code>` blocks are still parsed as real
-  markup. A rendering bug, not an SEO one.
-- [ ] **`human-skeleton.html` body content is a stub.** Its `anatomicalData` object returns "Further
-  details would describe the specific bones in this group" for every region. The page's own
-  description promises anatomical details it does not deliver — a Comprehensiveness Standard failure,
-  not a metadata one.
-- [ ] **`autonomous-defense-systems.html`** was added by a concurrent session after the audit snapshot
-  (title 75 chars, description 214). Outside the 151-file corpus; fold into the next pass.
+  `the-cliff-map`).
+- [x] ~~`javascript-for-architects.html` unescaped HTML in code samples~~ → verified 2026-07-12:
+  no raw non-`code`/`span`/`br` tags remain inside any `<pre>` block.
+- [x] ~~`human-skeleton.html` stub body content~~ → verified 2026-07-12: `anatomicalData` now
+  carries real axial/appendicular study content; no "Further details would describe" stubs remain.
+- [x] ~~`autonomous-defense-systems.html` over-long metadata~~ → verified 2026-07-12: title 60
+  chars, description 186; passes the acceptance gate.
+
+**Corpus status 2026-07-12: the acceptance-gate script reports 0 failures across all root HTML
+files** (titles ≤60, descriptions 150–200, canonical, valid JSON-LD). Metadata hygiene is done;
+remaining SEO leverage is in content, ranking, and the AI-citability layer — not tags.
 
 ## AI distribution — baseline (2026-07-11)
 
@@ -201,6 +211,11 @@ Re-pull **2026-08-06** (28 days after the metadata pass lands), same 180-day win
   7 referral sessions/90d).
 - `ai-frontier.html` is measured as its own new baseline from **2026-07-10** (see "Measurement
   adjustment" below), not as part of the WP1-page comparison.
+- **Added 2026-07-12:** `boom-supersonic.html` is measured as its own baseline from **2026-07-12**
+  (query-aligned title/description rewrite; outside the WP1 set, so it does not confound the WP1
+  comparison). Pre-change 28 days: 2 clicks / 2,098 impressions / position 9.4; query family is
+  "boom overture range / speed mach 1.7 / timeline" at positions 8–10. Judge clicks and CTR on
+  that family at roughly constant position.
 
 ## Decision checkpoint — verdict (run on or after 2026-08-06)
 
@@ -243,3 +258,12 @@ The July 9 title experiment was superseded on July 10 because “Complete List�
 - 2026-07-10 — Implemented the AI frontier strategic refresh, cluster links, and two differentiated follow-on specs. Awaiting the new 28-day measurement window before judging CTR or position impact.
 - 2026-07-11 — Strategic pivot to niche-reference + AI-citability. Recorded the AI-distribution baseline (Cloudflare crawler UAs + GA4 AI referrals) and restructured `/llms.txt` around a curated strongest-pages section.
 - 2026-07-11 — Added the AI-distribution re-pull to the 2026-08-06 measurement plan, pre-registered the continue-vs-maintenance decision rule, and scheduled the checkpoint (`cheatsheets-pivot-checkpoint`, one-time 2026-08-06). Content policy (niche utility test) added to `TODO/README.md`.
+- 2026-07-12 — Coherence sweep + one new striking-distance rewrite. Fresh 28-day GSC pull (2026-06-13
+  → 2026-07-10): `ai-frontier.html` 138 clicks / 50,562 impressions / position 9.9 (up from 123 /
+  42,978 in the prior window — impressions growing). Verified and closed all five 07-09 follow-ups;
+  realigned 7 pages' JSON-LD `headline` to their visible `<h1>`; acceptance gate now 0 failures
+  corpus-wide. Rewrote `boom-supersonic.html` title/description around its real query family
+  ("Boom Supersonic Overture: Specs, Range, Speed & Timeline" — every claim verified against the
+  page body). Answered the versioncontrol/git-scm cannibalization question with fresh data:
+  self-resolved, recommend leaving both. Internal-linking pass stays deferred until the 2026-08-06
+  checkpoint, per the pre-registered plan. Not pushed.
