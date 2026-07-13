@@ -98,6 +98,9 @@ return [
     // Health & Fitness
     'blood-tests-cbc-cmp-lipids-a1c-thyroid.html' => 'Health & Fitness',
     'cycling.html' => 'Health & Fitness',
+    'longevity-biomarkers.html' => 'Health & Fitness',
+    'longevity-supplements-evidence.html' => 'Health & Fitness',
+    'longevity-what-actually-works.html' => 'Health & Fitness',
     'er-triage.html' => 'Health & Fitness',
     'hospital-stay-survival.html' => 'Health & Fitness',
     'human-skeleton.html' => 'Health & Fitness',
