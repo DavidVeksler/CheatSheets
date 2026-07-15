@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Data Center Power Chain, Grid to GPU: How AI Facilities Get Power</title>
+  <meta name="description" content="How power reaches an AI data center: interconnection queues, substations, switchgear, UPS, busways, and rack PDUs — plus behind-the-meter gas turbines and SMRs, explained end to end.">
+  <meta name="keywords" content="data center power chain, grid interconnection, AI data center, switchgear, UPS, busway, rack PDU, behind-the-meter generation">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/datacenter-power-chain.html">
+
+  <meta property="og:title" content="The Power Chain: Grid to GPU">
+  <meta property="og:description" content="Trace power through an AI data center—and see where voltage changes, protection acts, energy is lost, and capacity gets blocked.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/datacenter-power-chain.html">
+  <meta property="og:image" content="images/datacenter-power-chain.png">
+  <meta property="og:image:alt" content="Copper one-line electrical diagram tracing utility power through a data center to a GPU">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Power Chain: Grid to GPU">
+  <meta name="twitter:description" content="A one-page electrical map of utility service, switchgear, UPS, busway, racks, and the choices behind the meter.">
+  <meta name="twitter:image" content="images/datacenter-power-chain.png">
+  <meta name="twitter:creator" content="@heroiclife">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "The Data Center Power Chain, Grid to GPU: How AI Facilities Get Power",
+    "description": "A technically grounded reference for tracing electricity from the U.S. bulk power system through data-center substations, UPS systems, busways, rack PDUs, server power supplies, and GPU voltage regulators.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-14",
+    "dateModified": "2026-07-14",
+    "keywords": "data center power chain, grid interconnection, switchgear, UPS, PDU, AI infrastructure, behind-the-meter generation"
+  }
+  </script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+
+  <style>
+    @layer reset, base, components, utilities;
+
+    @layer base {
+      :root {
+        color-scheme: dark light;
+        --ink: light-dark(#17212a, #eef3f5);
+        --muted: light-dark(#50606c, #a7b3ba);
+        --paper: light-dark(#f2eee5, #10181e);
+        --panel: light-dark(#fffaf0, #162229);
+        --panel-2: light-dark(#e8e1d3, #1b2b33);
+        --line: light-dark(#66737a, #51616a);
+        --line-soft: light-dark(#c8c0b2, #31414a);
+        --copper: light-dark(#9c4f27, #e09252);
+        --gold: light-dark(#7b5a04, #f2ca68);
+        --live: light-dark(#b13c28, #ff7b5c);
+        --safe: light-dark(#1c6e58, #65d1ad);
+        --blue: light-dark(#285d7a, #79b9dc);
+        --shadow: 0 14px 36px rgb(0 0 0 / .16);
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --ink: #eef3f5; --muted: #a7b3ba; --paper: #10181e; --panel: #162229;
+        --panel-2: #1b2b33; --line: #51616a; --line-soft: #31414a; --copper: #e09252;
+        --gold: #f2ca68; --live: #ff7b5c; --safe: #65d1ad; --blue: #79b9dc;
+      }
+
+      [data-theme="light"] {
+        color-scheme: light;
+        --ink: #17212a; --muted: #50606c; --paper: #f2eee5; --panel: #fffaf0;
+        --panel-2: #e8e1d3; --line: #66737a; --line-soft: #c8c0b2; --copper: #9c4f27;
+        --gold: #7b5a04; --live: #b13c28; --safe: #1c6e58; --blue: #285d7a;
+      }
+
+      html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+      body {
+        margin: 0;
+        background:
+          linear-gradient(rgb(255 255 255 / .025) 1px, transparent 1px),
+          linear-gradient(90deg, rgb(255 255 255 / .025) 1px, transparent 1px),
+          var(--paper);
+        background-size: 24px 24px;
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.62;
+      }
+
+      h1, h2, h3 { text-wrap: balance; letter-spacing: -.025em; }
+      p, li { text-wrap: pretty; }
+      a { color: var(--blue); text-underline-offset: .18em; }
+      a:hover { color: var(--copper); }
+      :focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; border-radius: .2rem; }
+      code, .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+      .skip-link { position: fixed; left: 1rem; top: -5rem; z-index: 100; background: var(--gold); color: #111; padding: .65rem 1rem; }
+      .skip-link:focus { top: 1rem; }
+    }
+
+    @layer components {
+      .topbar {
+        position: sticky; top: 0; z-index: 30;
+        border-bottom: 1px solid var(--line-soft);
+        background: color-mix(in srgb, var(--paper) 88%, transparent);
+        backdrop-filter: blur(14px);
+      }
+      .topbar-inner { min-height: 3.7rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+      .brand { color: var(--ink); text-decoration: none; font-weight: 760; letter-spacing: .04em; text-transform: uppercase; font-size: .8rem; }
+      .brand i { color: var(--copper); margin-right: .45rem; }
+      .theme-toggle { border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); padding: .4rem .75rem; font-size: .82rem; }
+
+      .hero { min-height: 570px; display: grid; align-items: center; padding: 3.3rem 0 2.5rem; overflow: clip; }
+      .kicker { display: inline-flex; align-items: center; gap: .55rem; color: var(--gold); font: 700 .76rem/1.2 "SFMono-Regular", monospace; text-transform: uppercase; letter-spacing: .16em; }
+      .kicker::before { content: ""; width: 2.8rem; height: 2px; background: var(--copper); }
+      .hero h1 { max-width: 1000px; margin: .8rem 0 .7rem; font-size: clamp(2.5rem, 6vw, 5.25rem); line-height: .96; font-weight: 820; }
+      .hero h1 span { color: var(--copper); }
+      .dek { max-width: 780px; margin: 0 0 1.7rem; color: var(--muted); font-size: clamp(1.02rem, 2vw, 1.24rem); }
+      .verified { display: inline-flex; gap: .45rem; align-items: center; color: var(--safe); font: 650 .78rem/1.2 "SFMono-Regular", monospace; }
+
+      .one-line-shell { margin-top: 1.8rem; border: 1px solid var(--line-soft); border-radius: 1rem; padding: .9rem; background: color-mix(in srgb, var(--panel) 92%, transparent); box-shadow: var(--shadow); }
+      .diagram-caption { display: flex; justify-content: space-between; gap: 1rem; margin: 0 .35rem .45rem; color: var(--muted); font: 600 .72rem/1.3 "SFMono-Regular", monospace; text-transform: uppercase; letter-spacing: .08em; }
+      .diagram-wide { display: block; width: 100%; height: auto; }
+      .diagram-tall { display: none; width: 100%; height: auto; }
+      .one-line-svg .wire { stroke: var(--copper); stroke-width: 4; fill: none; }
+      .one-line-svg .bus { stroke: var(--gold); stroke-width: 8; }
+      .one-line-svg .node { fill: var(--panel-2); stroke: var(--line); stroke-width: 2; }
+      .one-line-svg .glyph { stroke: var(--gold); stroke-width: 3; fill: none; }
+      .one-line-svg .label { fill: var(--ink); font: 700 15px "SFMono-Regular", monospace; text-anchor: middle; }
+      .one-line-svg .volt { fill: var(--copper); font: 650 12px "SFMono-Regular", monospace; text-anchor: middle; }
+      .one-line-svg .loss { fill: var(--muted); font: 500 10px "SFMono-Regular", monospace; text-anchor: middle; }
+      .one-line-svg .bleed { stroke: var(--live); stroke-width: 2; stroke-dasharray: 3 4; }
+      .one-line-svg a:hover .node, .one-line-svg a:focus .node { stroke: var(--gold); stroke-width: 4; }
+
+      .legend-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 0 0 3rem; background: var(--line-soft); border: 1px solid var(--line-soft); border-radius: .8rem; overflow: hidden; }
+      .legend-item { background: var(--panel); padding: 1rem; }
+      .legend-item b { display: block; color: var(--gold); font: 750 .73rem/1.3 "SFMono-Regular", monospace; text-transform: uppercase; }
+      .legend-item span { display: block; margin-top: .3rem; color: var(--muted); font-size: .86rem; }
+
+      main section { padding: 2.8rem 0; }
+      .section-head { display: grid; grid-template-columns: minmax(180px, .55fr) minmax(0, 1.45fr); gap: 2rem; margin-bottom: 1.6rem; align-items: end; }
+      .section-no { color: var(--copper); font: 700 .75rem/1.2 "SFMono-Regular", monospace; letter-spacing: .12em; text-transform: uppercase; }
+      .section-head h2 { margin: .3rem 0 0; font-size: clamp(1.8rem, 4vw, 3.2rem); }
+      .section-head p { margin: 0; color: var(--muted); font-size: 1.02rem; }
+
+      .callout { border-left: 4px solid var(--gold); background: var(--panel); padding: 1.15rem 1.25rem; border-radius: 0 .65rem .65rem 0; }
+      .callout strong { color: var(--gold); }
+      .callout.warning { border-left-color: var(--live); }
+      .callout.warning strong { color: var(--live); }
+
+      .card-grid { container-type: inline-size; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+      .schematic-card { position: relative; border: 1px solid var(--line-soft); border-radius: .8rem; padding: 1.1rem; background: var(--panel); overflow: hidden; }
+      .schematic-card::after { content: ""; position: absolute; width: 52px; height: 1px; background: var(--copper); right: 0; top: 1.5rem; }
+      .schematic-card i { color: var(--copper); font-size: 1.25rem; }
+      .schematic-card h3 { margin: .55rem 0 .35rem; font-size: 1.05rem; }
+      .schematic-card p { margin: 0; color: var(--muted); font-size: .9rem; }
+      .schematic-card .example { margin-top: .7rem; padding-top: .65rem; border-top: 1px dashed var(--line-soft); color: var(--ink); font-size: .83rem; }
+
+      .table-shell { overflow-x: auto; border: 1px solid var(--line-soft); border-radius: .8rem; background: var(--panel); }
+      .power-table { width: 100%; min-width: 920px; border-collapse: collapse; margin: 0; font-size: .86rem; }
+      .power-table caption { padding: .95rem 1rem; color: var(--muted); text-align: left; caption-side: top; }
+      .power-table th { background: var(--panel-2); color: var(--gold); font: 700 .72rem/1.3 "SFMono-Regular", monospace; text-transform: uppercase; letter-spacing: .05em; }
+      .power-table th, .power-table td { padding: .8rem .85rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+      .power-table tbody tr:last-child td { border-bottom: 0; }
+      .power-table tbody tr:target { background: color-mix(in srgb, var(--gold) 14%, var(--panel)); }
+      .power-table .stage { font-weight: 760; color: var(--ink); }
+      .power-table .voltage { color: var(--copper); font-family: "SFMono-Regular", monospace; white-space: nowrap; }
+      .loss-chip { display: inline-block; padding: .16rem .4rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font: 600 .72rem/1.2 "SFMono-Regular", monospace; }
+
+      .math-panel { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.2rem; border: 1px solid var(--line-soft); border-radius: .85rem; background: var(--panel); padding: 1.25rem; }
+      .math-panel h3 { font-size: 1.08rem; }
+      .formula { display: block; margin: .75rem 0; padding: .75rem; background: var(--paper); border: 1px dashed var(--line); color: var(--gold); font: 650 .86rem/1.5 "SFMono-Regular", monospace; }
+      .result-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem; }
+      .result { border-left: 2px solid var(--copper); padding-left: .7rem; }
+      .result b { display: block; font: 760 1.15rem/1.2 "SFMono-Regular", monospace; color: var(--ink); }
+      .result span { color: var(--muted); font-size: .78rem; }
+
+      .decision-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+      .decision { border: 1px solid var(--line-soft); border-radius: .75rem; padding: 1rem; background: var(--panel); }
+      .decision h3 { font-size: 1rem; color: var(--gold); }
+      .decision p { margin-bottom: .5rem; color: var(--muted); font-size: .9rem; }
+      .decision ul { margin-bottom: 0; padding-left: 1.1rem; font-size: .87rem; }
+
+      .myths { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem; }
+      .myth { border: 1px solid var(--line-soft); border-radius: .65rem; padding: 1rem; background: var(--panel); }
+      .myth b { display: block; color: var(--live); margin-bottom: .35rem; }
+      .myth span { color: var(--muted); font-size: .9rem; }
+
+      .source-list { columns: 2; column-gap: 2rem; padding-left: 1.2rem; }
+      .source-list li { break-inside: avoid; margin-bottom: .7rem; color: var(--muted); font-size: .88rem; }
+      .source-list a { font-weight: 650; }
+
+      footer { margin-top: 3rem; border-top: 1px solid var(--line-soft); padding: 2rem 0 3rem; color: var(--muted); font-size: .86rem; }
+      .footer-grid { display: flex; justify-content: space-between; gap: 2rem; align-items: start; }
+      .footer-grid nav { text-align: right; }
+      .footer-grid nav a { margin-left: 1rem; }
+    }
+
+    @layer utilities {
+      .eyebrow { color: var(--gold); font: 700 .72rem/1.3 "SFMono-Regular", monospace; text-transform: uppercase; letter-spacing: .1em; }
+      .muted { color: var(--muted); }
+      .rule { height: 1px; background: linear-gradient(90deg, transparent, var(--line), transparent); margin: 1rem 0; }
+    }
+
+    @container (max-width: 760px) {
+      .card-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 767.98px) {
+      .hero { padding-top: 2.2rem; }
+      .hero h1 { font-size: clamp(2.35rem, 14vw, 4rem); }
+      .diagram-wide { display: none; }
+      .diagram-tall { display: block; max-height: 760px; }
+      .diagram-caption span:last-child { display: none; }
+      .legend-strip { grid-template-columns: 1fr 1fr; }
+      .section-head { grid-template-columns: 1fr; gap: .7rem; }
+      .card-grid, .decision-grid, .myths, .math-panel { grid-template-columns: 1fr; }
+      .result-list { grid-template-columns: 1fr; }
+      .source-list { columns: 1; }
+      .footer-grid { display: block; }
+      .footer-grid nav { text-align: left; margin-top: 1rem; }
+      .footer-grid nav a { margin: 0 1rem 0 0; }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .one-line-svg .wire { stroke-dasharray: 8 4; animation: current 14s linear infinite; }
+      .schematic-card { transition: transform .2s ease, border-color .2s ease; }
+      .schematic-card:hover { transform: translateY(-3px); border-color: var(--copper); }
+      @keyframes current { to { stroke-dashoffset: -240; } }
+    }
+
+    @media print {
+      @page { size: letter landscape; margin: .35in; }
+      :root { color-scheme: light; --ink: #111; --muted: #444; --paper: #fff; --panel: #fff; --panel-2: #eee; --line: #555; --line-soft: #bbb; --copper: #5e3a1d; --gold: #554400; --live: #222; --safe: #222; --blue: #222; }
+      body { background: #fff; font-size: 9pt; }
+      .topbar, .theme-toggle, .legend-strip, #fundamentals, #architecture, #resilience, #edge, #mistakes, #sources, footer { display: none; }
+      .hero { min-height: auto; padding: 0 0 .06in; }
+      .hero .kicker, .hero .verified, .diagram-caption { display: none; }
+      .hero h1 { font-size: 22pt; margin: 0 0 .03in; }
+      .dek { max-width: none; font-size: 7.5pt; line-height: 1.2; margin-bottom: .04in; }
+      .one-line-shell { margin-top: .04in; padding: 0; box-shadow: none; break-inside: avoid; }
+      .diagram-wide { height: 1.55in; }
+      .one-line-svg .wire { animation: none; }
+      #chain { display: block; padding: .1in 0 0; break-before: avoid; }
+      #chain .section-head { margin-bottom: .08in; }
+      #chain .section-head h2 { font-size: 13pt; }
+      #chain .section-head p, #chain .section-no { display: none; }
+      #chain .power-table caption { display: none; }
+      #chain .power-table { min-width: 0; font-size: 6.2pt; line-height: 1.16; }
+      #chain .power-table th, #chain .power-table td { padding: .025in .035in; }
+      #chain .power-table th:nth-child(n+5), #chain .power-table td:nth-child(n+5) { display: none; }
+      a { color: #111; text-decoration: none; }
+    }
+
+    /* Bootstrap ships unlayered, so these three bridge rules keep the page-level
+       canvas and link palette synced with the layered theme tokens. */
+    body {
+      background:
+        linear-gradient(rgb(255 255 255 / .025) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(255 255 255 / .025) 1px, transparent 1px),
+        var(--paper);
+      background-size: 24px 24px;
+      color: var(--ink);
+    }
+    a { color: var(--blue); }
+    .brand { color: var(--ink); }
+    @media print { a { color: #111; text-decoration: none; } }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to reference</a>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="index.php"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i>David Veksler Cheatsheets</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark theme">
+        <i class="bi bi-circle-half" aria-hidden="true"></i> <span>Theme</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="container">
+        <div class="kicker">Electrical one-line / US grid context</div>
+        <h1 id="page-title">The Power Chain: <span>Grid to GPU</span></h1>
+        <p class="dek">A watt does not jump from a power plant into an accelerator. It crosses planning studies, protection zones, voltage transformations, energy storage, conductors, and power electronics—each with a different job and failure mode.</p>
+        <div class="verified"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Last verified: 2026-07-14</div>
+
+        <figure class="one-line-shell" aria-labelledby="diagram-title">
+          <figcaption class="diagram-caption" id="diagram-title"><span>Click a stage to inspect it</span><span>Voltage examples—not a universal design</span></figcaption>
+          <svg class="one-line-svg diagram-wide" viewBox="0 0 1200 350" role="img" aria-labelledby="wide-title wide-desc">
+            <title id="wide-title">Horizontal one-line power diagram from grid to GPU</title>
+            <desc id="wide-desc">Nine linked stages show transmission, substation, medium-voltage distribution, switchgear, UPS, low-voltage distribution, busway, rack PDU, and server power conversion.</desc>
+            <path class="wire" d="M55 164 H1145"/>
+            <g aria-hidden="true"><path class="glyph" d="M35 165h40m-34-18 14-20 14 20m-23-10v28m18-28v28"/></g>
+            <g aria-hidden="true"><rect class="bus" x="1138" y="116" width="8" height="96"/></g>
+            <a href="#stage-grid" aria-label="Go to bulk grid stage"><g transform="translate(95 110)"><rect class="node" rx="12" width="100" height="108"/><path class="glyph" d="M25 42h50M35 24l15 18 15-18M50 42v22"/><text class="label" x="50" y="82">GRID</text><text class="volt" x="50" y="99">115–500 kV</text></g></a>
+            <a href="#stage-substation" aria-label="Go to substation stage"><g transform="translate(220 110)"><rect class="node" rx="12" width="100" height="108"/><circle class="glyph" cx="41" cy="43" r="17"/><circle class="glyph" cx="59" cy="43" r="17"/><text class="label" x="50" y="82">SUB</text><text class="volt" x="50" y="99">230→34.5 kV</text><path class="bleed" d="M50 108v25"/><text class="loss" x="50" y="145">core + I²R</text></g></a>
+            <a href="#stage-medium-voltage" aria-label="Go to campus medium voltage stage"><g transform="translate(345 110)"><rect class="node" rx="12" width="100" height="108"/><path class="glyph" d="M28 34h44M28 48h44M28 62h44"/><text class="label" x="50" y="82">MV LOOP</text><text class="volt" x="50" y="99">13.8/34.5 kV</text><path class="bleed" d="M50 108v25"/><text class="loss" x="50" y="145">cable I²R</text></g></a>
+            <a href="#stage-switchgear" aria-label="Go to switchgear stage"><g transform="translate(470 110)"><rect class="node" rx="12" width="100" height="108"/><path class="glyph" d="M22 45h21m14 0h21M43 45l14-12"/><text class="label" x="50" y="82">SWGR</text><text class="volt" x="50" y="99">protect + isolate</text><path class="bleed" d="M50 108v25"/><text class="loss" x="50" y="145">contact I²R</text></g></a>
+            <a href="#stage-ups" aria-label="Go to UPS stage"><g transform="translate(595 110)"><rect class="node" rx="12" width="100" height="108"/><path class="glyph" d="M20 46h17l7-14 12 28 7-14h17"/><text class="label" x="50" y="82">UPS</text><text class="volt" x="50" y="99">480 V AC</text><path class="bleed" d="M50 108v25"/><text class="loss" x="50" y="145">≤5% @ ≥95%</text></g></a>
+            <a href="#stage-low-voltage" aria-label="Go to low voltage distribution stage"><g transform="translate(720 110)"><rect class="node" rx="12" width="100" height="108"/><path class="glyph" d="M24 28v38m17-38v38m18-38v38m17-38v38M18 48h64"/><text class="label" x="50" y="82">LV DIST</text><text class="volt" x="50" y="99">480/415 V</text><path class="bleed" d="M50 108v25"/><text class="loss" x="50" y="145">xformer + I²R</text></g></a>
+            <a href="#stage-busway" aria-label="Go to busway stage"><g transform="translate(845 110)"><rect class="node" rx="12" width="100" height="108"/><path class="glyph" d="M20 38h60M27 28v20m15-20v20m16-20v20m15-20v20"/><text class="label" x="50" y="82">BUSWAY</text><text class="volt" x="50" y="99">overhead taps</text><path class="bleed" d="M50 108v25"/><text class="loss" x="50" y="145">branch I²R</text></g></a>
+            <a href="#stage-rack" aria-label="Go to rack PDU stage"><g transform="translate(970 110)"><rect class="node" rx="12" width="100" height="108"/><rect class="glyph" x="29" y="20" width="42" height="48" rx="3"/><circle class="glyph" cx="41" cy="33" r="2"/><circle class="glyph" cx="59" cy="33" r="2"/><circle class="glyph" cx="41" cy="52" r="2"/><circle class="glyph" cx="59" cy="52" r="2"/><text class="label" x="50" y="82">RACK PDU</text><text class="volt" x="50" y="99">208/240 V AC</text><path class="bleed" d="M50 108v25"/><text class="loss" x="50" y="145">cord + contact</text></g></a>
+            <a href="#stage-gpu" aria-label="Go to server and GPU stage"><g transform="translate(1095 110)"><rect class="node" rx="12" width="100" height="108"/><rect class="glyph" x="26" y="23" width="48" height="42" rx="4"/><path class="glyph" d="M35 33h30v22H35zm-16 4h7m-7 10h7m48-10h7m-7 10h7"/><text class="label" x="50" y="82">GPU</text><text class="volt" x="50" y="99">AC→DC→VRM</text><path class="bleed" d="M50 108v25"/><text class="loss" x="50" y="145">conversion heat</text></g></a>
+            <text x="600" y="300" class="loss">Utility boundary → facility boundary → critical-power boundary → IT boundary</text>
+          </svg>
+
+          <svg class="one-line-svg diagram-tall" viewBox="0 0 360 1060" role="img" aria-labelledby="tall-title tall-desc">
+            <title id="tall-title">Vertical one-line power diagram from grid to GPU</title>
+            <desc id="tall-desc">Nine linked stages flow from transmission at the top to server power conversion at the bottom.</desc>
+            <path class="wire" d="M180 35V1025"/>
+            <a href="#stage-grid"><g transform="translate(100 35)"><rect class="node" rx="12" width="160" height="88"/><text class="label" x="80" y="38">GRID</text><text class="volt" x="80" y="62">115–500 kV</text></g></a>
+            <a href="#stage-substation"><g transform="translate(100 145)"><rect class="node" rx="12" width="160" height="88"/><text class="label" x="80" y="38">SUBSTATION</text><text class="volt" x="80" y="62">230→34.5 kV</text><path class="bleed" d="M160 44h42"/><text class="loss" x="245" y="48">core + I²R</text></g></a>
+            <a href="#stage-medium-voltage"><g transform="translate(100 255)"><rect class="node" rx="12" width="160" height="88"/><text class="label" x="80" y="38">MV CAMPUS</text><text class="volt" x="80" y="62">13.8/34.5 kV</text></g></a>
+            <a href="#stage-switchgear"><g transform="translate(100 365)"><rect class="node" rx="12" width="160" height="88"/><text class="label" x="80" y="38">SWITCHGEAR</text><text class="volt" x="80" y="62">protect + isolate</text></g></a>
+            <a href="#stage-ups"><g transform="translate(100 475)"><rect class="node" rx="12" width="160" height="88"/><text class="label" x="80" y="38">UPS</text><text class="volt" x="80" y="62">480 V / ≥95%</text><path class="bleed" d="M160 44h42"/><text class="loss" x="243" y="48">≤5%</text></g></a>
+            <a href="#stage-low-voltage"><g transform="translate(100 585)"><rect class="node" rx="12" width="160" height="88"/><text class="label" x="80" y="38">LV DISTRIBUTION</text><text class="volt" x="80" y="62">480/415 V</text></g></a>
+            <a href="#stage-busway"><g transform="translate(100 695)"><rect class="node" rx="12" width="160" height="88"/><text class="label" x="80" y="38">BUSWAY</text><text class="volt" x="80" y="62">overhead taps</text></g></a>
+            <a href="#stage-rack"><g transform="translate(100 805)"><rect class="node" rx="12" width="160" height="88"/><text class="label" x="80" y="38">RACK PDU</text><text class="volt" x="80" y="62">208/240 V AC</text></g></a>
+            <a href="#stage-gpu"><g transform="translate(100 915)"><rect class="node" rx="12" width="160" height="88"/><text class="label" x="80" y="38">SERVER → GPU</text><text class="volt" x="80" y="62">AC→DC→VRM</text></g></a>
+          </svg>
+        </figure>
+      </div>
+    </section>
+
+    <div class="container">
+      <aside class="legend-strip" aria-label="Quick reference legend">
+        <div class="legend-item"><b>Power</b><span>kW or MW is an instantaneous rate.</span></div>
+        <div class="legend-item"><b>Energy</b><span>kWh or MWh is power accumulated over time.</span></div>
+        <div class="legend-item"><b>Critical IT</b><span>The compute, storage, and network load the protected chain serves.</span></div>
+        <div class="legend-item"><b>PUE</b><span>Total facility energy ÷ IT equipment energy; 1.20 means 20% facility overhead.</span></div>
+      </aside>
+    </div>
+
+    <section id="fundamentals" aria-labelledby="fundamentals-title">
+      <div class="container">
+        <div class="section-head">
+          <div><div class="section-no">01 / Fundamentals</div><h2 id="fundamentals-title">A customer the grid can feel</h2></div>
+          <p>A hyperscale campus is not merely a large building. Its size, power-electronic controls, rapid ramps, and ride-through behavior can affect transmission planning and bulk-system operations.</p>
+        </div>
+
+        <div class="card-grid">
+          <article class="schematic-card"><i class="bi bi-speedometer2" aria-hidden="true"></i><h3>Flat energy, sharp edges</h3><p>Many data centers run near-continuously, but AI training can switch between compute and checkpoint phases quickly.</p><div class="example"><strong>Observed case:</strong> NERC shows a North American facility falling from about 450 MW to 40 MW in 36 seconds, then returning later over minutes (July 2025 report).</div></article>
+          <article class="schematic-card"><i class="bi bi-cpu" aria-hidden="true"></i><h3>Power-electronic load</h3><p>UPS rectifiers, server power supplies, variable-speed cooling drives, and GPU regulators do not behave like passive resistance.</p><div class="example"><strong>Why it matters:</strong> models need harmonics, controls, protection settings, reactive demand, and voltage ride-through—not only peak MW.</div></article>
+          <article class="schematic-card"><i class="bi bi-activity" aria-hidden="true"></i><h3>Power quality sensitivity</h3><p>A brief voltage sag may leave utility breakers closed while customer protection transfers or sheds compute.</p><div class="example"><strong>2024 incident:</strong> a 230 kV fault sequence coincided with roughly 1,500 MW of customer-side load reduction in the Eastern Interconnection.</div></article>
+          <article class="schematic-card"><i class="bi bi-diagram-3" aria-hidden="true"></i><h3>Capacity is layered</h3><p>Utility service MW, total facility demand, critical IT MW, installed nameplate, and usable redundant capacity are different numbers.</p><div class="example"><strong>Example:</strong> 120 MW at the meter with PUE 1.20 corresponds to 100 MW of IT—not a 120 MW GPU hall.</div></article>
+          <article class="schematic-card"><i class="bi bi-shield-check" aria-hidden="true"></i><h3>Reliability is end-to-end</h3><p>A duplicate UPS does not create a duplicate path if both feeds share one transformer, switchboard, fuel pump, or rack transfer device.</p><div class="example"><strong>Test:</strong> trace each A/B path on the one-line and remove one component at a time; the weakest shared point sets the outcome.</div></article>
+          <article class="schematic-card"><i class="bi bi-thermometer-sun" aria-hidden="true"></i><h3>Every lost watt becomes heat</h3><p>Transformer, UPS, conductor, and power-supply losses add electrical demand and cooling demand.</p><div class="example"><strong>Example:</strong> a 95%-efficient UPS delivering 100 MW dissipates about 5.26 MW before the downstream cooling penalty.</div></article>
+        </div>
+
+        <div class="callout warning mt-4">
+          <strong>“Interconnection queue” needs a qualifier.</strong> A data center submits a <em>load</em> service/interconnection request through its utility, transmission owner, and sometimes an ISO/RTO process. Berkeley Lab’s widely quoted generator queue statistics concern power plants and storage seeking to inject energy, not data centers seeking to consume it. The two can constrain the same project, but they are not one queue.
+        </div>
+      </div>
+    </section>
+
+    <section id="chain" aria-labelledby="chain-title">
+      <div class="container">
+        <div class="section-head">
+          <div><div class="section-no">02 / Quick reference</div><h2 id="chain-title">Nine handoffs, nine jobs</h2></div>
+          <p>Voltages are representative U.S. examples, not a prescription. The most honest “loss” entry is often a mechanism and a meter location: topology, loading, conductor length, and vendor curves decide the number.</p>
+        </div>
+
+        <div class="table-shell">
+          <table class="power-table">
+            <caption>Trace the active path and its alternate path from the point of common coupling to each dual-corded server.</caption>
+            <thead><tr><th scope="col">Stage</th><th scope="col">Representative voltage</th><th scope="col">Purpose</th><th scope="col">Loss / how to verify</th><th scope="col">Primary failure mode</th><th scope="col">Operator check</th></tr></thead>
+            <tbody>
+              <tr id="stage-grid"><td class="stage">1. Bulk grid / utility supply</td><td class="voltage">115–500 kV class</td><td>Moves bulk energy to the campus area and establishes the source fault level and reliability envelope.</td><td><span class="loss-chip">Upstream of site PUE</span> Utility system losses are not a facility-stage constant.</td><td>Generation shortage, transmission fault, congestion, or delayed network upgrades.</td><td>Confirm firm service terms, allowable ramps, curtailment rights, and energization milestones.</td></tr>
+              <tr id="stage-substation"><td class="stage">2. Receiving substation</td><td class="voltage">Example: 230 → 34.5 kV</td><td>Terminates utility service, transforms voltage, meters demand, and defines protection zones.</td><td><span class="loss-chip">Core + copper loss</span> Use transformer test report/nameplate and interval meters; do not assume one percentage.</td><td>Transformer outage, bus fault, relay miscoordination, or common incoming-line exposure.</td><td>Check N-1 load transfer, spare strategy, relay study, fault duty, and actual loading.</td></tr>
+              <tr id="stage-medium-voltage"><td class="stage">3. Campus medium voltage</td><td class="voltage">13.8 or 34.5 kV examples</td><td>Moves power between substations, buildings, data halls, cooling plants, and generation with lower current than LV distribution.</td><td><span class="loss-chip">I²R + dielectric</span> Calculate from route, conductor, current, and power factor; trend feeder meters.</td><td>Cable damage, splice failure, ground fault, or a loop that cannot isolate a section.</td><td>Validate selective coordination, sectionalizing points, route diversity, and ampacity at worst ambient.</td></tr>
+              <tr id="stage-switchgear"><td class="stage">4. MV/LV switchgear</td><td class="voltage">MV in; often 480 V after step-down</td><td>Interrupts fault current, isolates equipment, and transfers/parallels sources under a defined sequence.</td><td><span class="loss-chip">Contact + bus I²R</span> Inspect thermal scans and millivolt drop; no voltage conversion in a plain breaker.</td><td>Breaker fails to open/close, controls lose DC power, arc fault, or transfer logic acts incorrectly.</td><td>Test trip units, interlocks, protection selectivity, control power, and maintenance bypass.</td></tr>
+              <tr id="stage-ups"><td class="stage">5. UPS / ride-through</td><td class="voltage">Common example: 480 V AC in/out</td><td>A VFI/double-conversion UPS rectifies AC to a DC link and inverts it back, bridging sags and the generator-start interval.</td><td><span class="loss-chip">≥95% efficient</span> DOE reported 95%+ for 2023 double-conversion systems; verify the vendor curve at actual load.</td><td>Battery string, inverter, bypass, controls, or a transfer outside the IT ride-through envelope.</td><td>Trend module load, battery impedance/temperature, bypass availability, and end-to-end transfer tests.</td></tr>
+              <tr id="stage-low-voltage"><td class="stage">6. LV distribution / PDU</td><td class="voltage">480 V or 415/240 V examples</td><td>Feeds rows or busways; transformer-based PDUs may create 208/120 V for legacy loads.</td><td><span class="loss-chip">Transformer + I²R</span> Higher voltage and fewer conversion steps reduce current and avoid avoidable heat.</td><td>Overloaded neutral/phase, transformer hot spot, breaker miscoordination, or shared PDU choke point.</td><td>Balance phases, measure harmonics, verify transformer load factor, and reserve real—not paper—capacity.</td></tr>
+              <tr id="stage-busway"><td class="stage">7. Overhead busway</td><td class="voltage">Often 415/240 or 480/277 V</td><td>Distributes high-current power along a row with movable, metered tap-off boxes.</td><td><span class="loss-chip">Bus + joint I²R</span> Calculate voltage drop and inspect joints thermographically under load.</td><td>Loose joint, incorrect tap rating, phase imbalance, or arc flash exposure during work.</td><td>Record tap location/rating, torque/thermal history, fault rating, and A/B physical separation.</td></tr>
+              <tr id="stage-rack"><td class="stage">8. Rack PDU + cords</td><td class="voltage">208 or 240 V AC examples</td><td>Meters and branches row power to server power supplies; dual-corded equipment should land on independent A/B paths.</td><td><span class="loss-chip">Cord + connector I²R</span> Meter per outlet/branch and watch connector temperature; higher voltage means less current for the same power.</td><td>Branch overload, accidental unplug, bad connector, or both cords on one source.</td><td>Enforce A/B labeling, phase balance, breaker headroom, locking cords, and per-outlet telemetry.</td></tr>
+              <tr id="stage-gpu"><td class="stage">9. Server PSU → DC bus → VRMs</td><td class="voltage">AC → DC bus → chip rails</td><td>Power supplies rectify rack AC; point-of-load regulators create the low-voltage, high-current rails used by GPUs, CPUs, memory, and fans.</td><td><span class="loss-chip">Conversion curve</span> Use measured server input versus component telemetry; every conversion loss appears as heat in the rack.</td><td>PSU/VRM trip, firmware power cap, transient overshoot, or cooling-driven throttling.</td><td>Compare rack input, PSU telemetry, accelerator power, throttling, and workload phase timestamps.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture" aria-labelledby="architecture-title">
+      <div class="container">
+        <div class="section-head">
+          <div><div class="section-no">03 / Working knowledge</div><h2 id="architecture-title">Size from the load outward</h2></div>
+          <p>Start with the compute profile, decide what must ride through, add distribution losses and cooling, then test each normal and contingency state. Starting with campus nameplate reverses the logic.</p>
+        </div>
+
+        <div class="math-panel">
+          <div>
+            <div class="eyebrow">Worked example</div>
+            <h3>100 MW of IT at PUE 1.20</h3>
+            <p class="muted">This is a transparent arithmetic model, not a “typical campus.” PUE is an energy ratio; using it with constant power assumes the same load for the full interval.</p>
+            <code class="formula">Facility power = IT power × PUE<br>100 MW × 1.20 = 120 MW</code>
+            <code class="formula">Annual energy = 120 MW × 8,760 h<br>= 1,051,200 MWh/year</code>
+          </div>
+          <div>
+            <div class="result-list">
+              <div class="result"><b>100 MW</b><span>critical IT output</span></div>
+              <div class="result"><b>20 MW</b><span>facility overhead at PUE 1.20</span></div>
+              <div class="result"><b>120 MW</b><span>meter demand under the constant-load assumption</span></div>
+            </div>
+            <div class="rule"></div>
+            <h3>UPS segment sensitivity</h3>
+            <p>If that entire 100 MW IT segment is behind a 95%-efficient UPS, the UPS needs <strong>105.26 MW</strong> input and rejects <strong>5.26 MW</strong> as loss. At 97%, input falls to <strong>103.09 MW</strong>; the 2.17 MW difference equals about <strong>19,010 MWh/year</strong> at continuous full output. Do not add this again if the measured PUE already includes it.</p>
+          </div>
+        </div>
+
+        <div class="decision-grid mt-4">
+          <article class="decision"><h3>Double-conversion UPS</h3><p>Use when continuous conditioning and a defined AC–DC–AC ride-through path justify conversion loss.</p><ul><li>DOE: 95%+ efficiency was available in 2023 for large systems.</li><li>Eco modes can approach 99% but expose a different disturbance/transfer path.</li><li>Gotcha: 2N modules lightly loaded may operate below their best efficiency point.</li></ul></article>
+          <article class="decision"><h3>Battery vs. flywheel</h3><p>Both bridge an interruption; duration, cycling, footprint, maintenance, and fault behavior drive the choice.</p><ul><li>Batteries provide electrochemical stored energy and can support longer bridges.</li><li>Flywheels provide short electromechanical ride-through with high cycle capability.</li><li>Gotcha: neither replaces a tested generator-start and transfer sequence.</li></ul></article>
+          <article class="decision"><h3>208 V vs. 415/240 or 480 V</h3><p>Keep voltage higher longer when equipment supports it; the same power at higher voltage requires less current.</p><ul><li>Legacy 208/120 V designs often add a floor PDU transformer.</li><li>415/240 V can feed 240 V server PSUs phase-to-neutral without that 208/120 V step.</li><li>480 V distribution is common upstream but must match listed downstream equipment.</li></ul></article>
+          <article class="decision"><h3>Generator ≠ UPS</h3><p>Engine generators sustain the site through a long utility outage; the UPS bridges the start/transfer gap and conditions sensitive load.</p><ul><li>Generator controls must accept the facility’s block loading and harmonics.</li><li>Fuel storage and delivery paths belong in the redundancy analysis.</li><li>Gotcha: emergency-engine permits are not blanket permission for routine generation.</li></ul></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="resilience" aria-labelledby="resilience-title">
+      <div class="container">
+        <div class="section-head">
+          <div><div class="section-no">04 / Working knowledge</div><h2 id="resilience-title">Capacity is not topology</h2></div>
+          <p>N, N+1, and 2N describe spare capacity and paths; they do not, by themselves, certify availability. Uptime’s Tiers are performance outcomes: basic capacity, redundant capacity, concurrent maintainability, and fault tolerance.</p>
+        </div>
+
+        <div class="table-shell">
+          <table class="power-table">
+            <caption>Cost is expressed as relative infrastructure scope because a defensible universal dollar multiplier does not exist.</caption>
+            <thead><tr><th scope="col">Pattern</th><th scope="col">Concrete meaning for N = 4 modules</th><th scope="col">Relative scope</th><th scope="col">What it can provide</th><th scope="col">Use when</th><th scope="col">Gotcha</th></tr></thead>
+            <tbody>
+              <tr><td class="stage">N</td><td>Four required modules; zero spare.</td><td>Lowest</td><td>Capacity only; maintenance or one failure can shed load.</td><td>The workload can stop, migrate, or checkpoint without unacceptable loss.</td><td>N at UPS does not mean N at transformer, cooling, fuel, or controls.</td></tr>
+              <tr><td class="stage">N+1</td><td>Five equal modules; any four carry design load.</td><td>Moderate</td><td>One redundant capacity component; can permit component maintenance if paths and isolation cooperate.</td><td>One component failure must be tolerated and software/site diversity covers larger events.</td><td>A common bus remains a shared failure domain; low module loading can reduce efficiency.</td></tr>
+              <tr><td class="stage">2N</td><td>Two independent four-module systems, A and B; either path carries 100%.</td><td>Highest of these patterns</td><td>Full duplicate capacity and distribution paths when the duplication truly reaches dual-corded IT.</td><td>The facility must maintain service through a complete path outage.</td><td>Cross-ties, shared control power, rack ATSs, or both cords on A can collapse “2N” into one path.</td></tr>
+              <tr><td class="stage">Distributed redundant / catcher</td><td>Example: three loaded blocks plus a shared spare block that can accept one failed block.</td><td>Between N+1 and 2N; topology-specific</td><td>Capital-efficient block failover with fewer fully duplicated assets.</td><td>Large modular halls can transfer blocks selectively and operators can manage switching complexity.</td><td>Protection, transfer capacity, and simultaneous maintenance states must be modeled—not inferred from the block count.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout mt-4"><strong>Decision rule:</strong> choose the business outcome first. “No interruption during planned maintenance” points toward concurrent maintainability; “one unplanned component/path fault cannot interrupt IT” points toward fault tolerance. Then prove the outcome on the complete electrical, cooling, fuel, control, and IT one-lines.</div>
+      </div>
+    </section>
+
+    <section id="edge" aria-labelledby="edge-title">
+      <div class="container">
+        <div class="section-head">
+          <div><div class="section-no">05 / Edge & advanced</div><h2 id="edge-title">The meter is now a design choice</h2></div>
+          <p>Onsite generation can accelerate or reinforce supply, but it creates a second interconnection problem: fuel, emissions, protection, islanding, synchronization, and utility operating agreements. It does not erase the grid.</p>
+        </div>
+
+        <div class="callout warning mb-4"><strong>Cost table boundary:</strong> figures below are EIA AEO2026 national planning assumptions in 2025 dollars (or 2024 installed averages where noted), not data-center bids. Overnight cost excludes financing and may omit site-specific gas, transmission, redundancy, owner, and permitting scope. Lead time is EIA’s model assumption—not a delivery promise.</div>
+
+        <div class="table-shell">
+          <table class="power-table">
+            <caption>Behind-the-meter options must still be paired with the critical-power chain and a credible operating mode.</caption>
+            <thead><tr><th scope="col">Option</th><th scope="col">EIA reference scale</th><th scope="col">Lead-time assumption</th><th scope="col">Capital anchor</th><th scope="col">Regulatory / operating posture</th><th scope="col">Use / do not use</th></tr></thead>
+            <tbody>
+              <tr><td class="stage">Natural-gas combustion turbine</td><td>211 MW aeroderivative; 419 MW industrial frame</td><td>2 years</td><td>$2.275M/MW aero; $1.158M/MW frame</td><td>Air permit, firm gas and often pipeline work, noise/water review, utility protection and parallel-operation agreement.</td><td><strong>Use:</strong> dispatchable bulk onsite power. <strong>Not:</strong> as a substitute for UPS ride-through or without firm fuel analysis.</td></tr>
+              <tr><td class="stage">Gas reciprocating engines</td><td>7 MW average new unit installed in 2024</td><td>Vendor/site-specific; EIA actual-cost series gives no comparable lead time</td><td>$1.490M/MW average installed in 2024</td><td>Modular air and noise permits, gas service, many-unit controls, maintenance and utility interconnection.</td><td><strong>Use:</strong> modular phasing and black-start-capable designs. <strong>Not:</strong> when emissions/noise footprint or unit count is unacceptable.</td></tr>
+              <tr><td class="stage">Solid-oxide fuel cell</td><td>10 MW</td><td>3 years</td><td>$8.287M/MW</td><td>Gas supply and air permitting still apply; inverter controls and island/parallel behavior need study.</td><td><strong>Use:</strong> modular steady generation where the emissions/footprint case works. <strong>Not:</strong> assume “fuel cell” means fuel-free or zero-emission.</td></tr>
+              <tr><td class="stage">Small modular reactor</td><td>480 MW plant (6 × 80 MW)</td><td>6 years; first available 2031 in AEO2026 model</td><td>$9.831M/MW</td><td>NRC licensing, environmental/site review, security, emergency planning, fuel and waste obligations; project-specific approvals remain decisive.</td><td><strong>Use:</strong> treat as a long-horizon firm-supply scenario. <strong>Not:</strong> present it as a near-term drop-in campus generator.</td></tr>
+              <tr><td class="stage">Solar PV + 4-hour battery</td><td>150 MW PV reference; storage bundled in cost case</td><td>2 years</td><td>$1.903M/MW of PV reference capacity</td><td>Land, local permits, inverter interconnection, charging source and dispatch rules; capacity accreditation varies by system.</td><td><strong>Use:</strong> energy/capacity shaping and resilience as modeled. <strong>Not:</strong> claim 24/7 firm coverage from nameplate MW or four-hour storage.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="decision-grid mt-4">
+          <article class="decision"><h3>Load interconnection</h3><p>The serving utility/transmission owner studies whether the new demand violates thermal, voltage, stability, short-circuit, or reliability limits.</p><ul><li>ERCOT’s process applies at 75 MW or more at one site (as of June 2026).</li><li>ERCOT reported tracking 438,000+ MW of large-load requests, 89% attributed to data centers; requests are not built load.</li><li>Energization may be staged below ultimate campus nameplate.</li></ul></article>
+          <article class="decision"><h3>Generator interconnection</h3><p>Onsite supply that operates in parallel—or a remote plant built for the campus—may need a separate generation study and agreement.</p><ul><li>Berkeley Lab’s 2026 queue update: median request-to-IA exceeded 3 years; request-to-operation exceeded 5 years for reporting regions.</li><li>Those figures are for generators, not load requests.</li><li>Withdrawal rates make raw queue MW a poor build forecast.</li></ul></article>
+          <article class="decision"><h3>AI transient behavior</h3><p>Training transitions can move load faster than conventional scheduling intervals, so the grid needs ramp rate, protection, and ride-through models.</p><ul><li>NERC documented a 50 MW block ramping at 1.9 per unit/second for about 250 ms.</li><li>The July 10, 2024 Eastern event shed about 1,500 MW customer-side and raised frequency to 60.053 Hz before recovery.</li><li>Coordinate restoration; a simultaneous restart is another step change.</li></ul></article>
+          <article class="decision"><h3>Large-load tariff</h3><p>A tariff converts engineering risk into contract terms: minimum billing demand, ramp/curtailment provisions, collateral, dedicated-facility cost, and service duration.</p><ul><li>Ask who pays if forecast load arrives late or never.</li><li>Separate energy ($/MWh), demand ($/kW-month), and one-time upgrade obligations.</li><li>Do not infer firm service from an interconnection study or a public project announcement.</li></ul></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="mistakes" aria-labelledby="mistakes-title">
+      <div class="container">
+        <div class="section-head">
+          <div><div class="section-no">06 / Anti-patterns</div><h2 id="mistakes-title">Six category errors</h2></div>
+          <p>Most bad explanations mix a time scale, a boundary, or a reliability term. Correct the category and the architecture becomes easier to reason about.</p>
+        </div>
+        <div class="myths">
+          <div class="myth"><b>“Generators are the UPS.”</b><span>A UPS bridges and conditions on millisecond-to-minute scales; generators sustain the load after starting and transferring. Test the handoff as one system.</span></div>
+          <div class="myth"><b>“The queue is five years.”</b><span>Which queue? Berkeley Lab’s timeline is for generator projects. Load studies vary by utility/ISO, voltage, size, upgrades, readiness, and jurisdiction.</span></div>
+          <div class="myth"><b>“A 1 GW campus consumes 1 GW.”</b><span>Nameplate or ultimate master-plan capacity is not interval demand. Ask for energized capacity, meter peak, IT critical load, PUE boundary, and schedule.</span></div>
+          <div class="myth"><b>“2N means Tier IV.”</b><span>2N is a capacity/path shorthand. Uptime Tier IV is a tested fault-tolerance outcome across every relevant subsystem; shared downstream points can defeat it.</span></div>
+          <div class="myth"><b>“Behind the meter means off grid.”</b><span>Parallel generation still needs protection and operating agreements; islanding needs controls, black start, stable fuel, and a complete facility balance.</span></div>
+          <div class="myth"><b>“Interconnection approval delivers power.”</b><span>An agreement can precede substation, transformer, line, generation, permit, easement, and construction completion. Track physical milestones separately.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources" aria-labelledby="sources-title">
+      <div class="container">
+        <div class="section-head">
+          <div><div class="section-no">07 / Source map</div><h2 id="sources-title">Primary references</h2></div>
+          <p>Numbers and dated process claims link to the issuing agency, lab, standards body, or operator. Vendor-specific loss claims were deliberately excluded from the chain table.</p>
+        </div>
+        <ol class="source-list">
+          <li><a href="https://www.energy.gov/sites/default/files/2024-07/best-practice-guide-data-center-design.pdf">U.S. DOE — Best Practices Guide for Energy-Efficient Data Center Design</a>: electrical path, distribution voltage guidance, UPS 95%+ and eco-mode context.</li>
+          <li><a href="https://www.nerc.com/globalassets/who-we-are/standing-committees/rstc/3_doc_white-paper-characteristics-and-risks-of-emerging-large-loads.pdf">NERC — Characterization and Risks of Emerging Large Loads (July 2025)</a>: AI ramps, load-study thresholds, 2024 voltage-sensitive load event, UPS caveat for HPC.</li>
+          <li><a href="https://prod.nerc.com/initiatives/large-loads-action-plan">NERC — Large Loads Action Plan</a>: current 2026 reliability work, studies, and computational-load guidance.</li>
+          <li><a href="https://www.ercot.com/news/release/06182026-puct-approves-ercots">ERCOT — Batch Zero large-load process (June 18, 2026)</a>: 75 MW threshold and request-volume snapshot.</li>
+          <li><a href="https://www.ercot.com/files/docs/2025/12/24/Large-Load-Interconnection-Process-Q-A.pdf">ERCOT — Large Load Interconnection Process Q&amp;A</a>: study purpose, steps, facilities, operational limits, and energization context.</li>
+          <li><a href="https://emp.lbl.gov/news/backlog-power-plants-seeking-transmission-grid-connection-eased-somewhat-2025-amidst">Berkeley Lab — Queued Up 2026 update</a>: generator request-to-agreement and operation durations; explicitly not load queues.</li>
+          <li><a href="https://uptimeinstitute.com/tier-certification">Uptime Institute — Tier classifications</a>: basic capacity, redundant capacity, concurrent maintainability, and fault tolerance.</li>
+          <li><a href="https://journal.uptimeinstitute.com/fuel-system-design-reliability/">Uptime Institute — Fuel system design and reliability</a>: redundancy must include pumps, valves, controls, tanks, and distribution paths.</li>
+          <li><a href="https://www.eia.gov/outlooks/aeo/assumptions/pdf/EMM_Assumptions.pdf">U.S. EIA — AEO2026 Electricity Market Module assumptions</a>: 2025-dollar scale, lead-time, and overnight-capital inputs for turbines, fuel cells, SMR, batteries, and solar-plus-storage.</li>
+          <li><a href="https://www.eia.gov/electricity/generatorcosts/index.php">U.S. EIA — 2024 generator construction costs</a>: installed cost and average unit capacity for combustion turbines and internal-combustion engines.</li>
+          <li><a href="https://www.nrc.gov/about-nrc/regulatory/licensing">U.S. NRC — Licensing</a> and <a href="https://www.nrc.gov/reactors/new-reactors/advanced/highlights/2026">2026 advanced-reactor highlights</a>: regulatory pathway and current project status.</li>
+          <li><a href="https://www.thegreengrid.org/resources/glossary?combine=pue">The Green Grid — PUE definition</a>: total facility energy divided by IT equipment energy.</li>
+          <li><a href="https://www.energy.gov/sites/default/files/2026-01/Data_Center_EMT_Models.pdf">PNNL/DOE — Electromagnetic Transient Modeling of Large Data Centers (Dec. 2025)</a>: current and emerging centralized, distributed, and DC power architectures.</li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-grid">
+      <div><strong>The Data Center Power Chain</strong><br>US-centric grid process; electrical principles apply globally.<br><span class="verified"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Last verified: 2026-07-14</span></div>
+      <nav aria-label="Related pages"><a href="index.php">All cheatsheets</a><a href="#page-title">Back to one-line</a></nav>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const button = document.getElementById('themeToggle');
+      let stored = null;
+      try { stored = localStorage.getItem('datacenter-power-theme'); } catch (_) {}
+      if (stored === 'light' || stored === 'dark') root.dataset.theme = stored;
+      const syncLabel = () => {
+        const current = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        button.querySelector('span').textContent = current === 'dark' ? 'Light' : 'Dark';
+        button.setAttribute('aria-label', `Switch to ${current === 'dark' ? 'light' : 'dark'} theme`);
+      };
+      button.addEventListener('click', () => {
+        const current = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        root.dataset.theme = current === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem('datacenter-power-theme', root.dataset.theme); } catch (_) {}
+        syncLabel();
+      });
+      syncLabel();
+    })();
+  </script>
+</body>
+</html>
