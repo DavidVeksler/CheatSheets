@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Starlink Satellite Anatomy: V1 to V3 Engineering Specs (2026)</title>
+  <meta name="description" content="Complete Starlink satellite spec reference: V1.0 through V3 mass, throughput, laser links, Hall thrusters, solar arrays, and deployment—each generation compared.">
+  <meta name="keywords" content="Starlink satellite specs, Starlink V3 vs V2 Mini, Starlink laser links, Starlink Hall thruster, Starlink satellite mass, Starship Starlink deployment">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/starlink-satellite-anatomy.html">
+  <meta property="og:title" content="Starlink Satellite Anatomy — V1 to V3 Engineering Specs">
+  <meta property="og:description" content="A source-gated mission-control reference for every Starlink broadband spacecraft generation and subsystem.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/starlink-satellite-anatomy.html">
+  <meta property="og:image" content="images/starlink-satellite-anatomy.png">
+  <meta property="og:image:alt" content="Exploded technical view of a Starlink V3 satellite with labeled arrays, lasers, avionics, and Hall thruster">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Starlink Satellite Anatomy — V1 to V3 Engineering Specs">
+  <meta name="twitter:description" content="Mass, capacity, bands, lasers, propulsion, power, deployment, and lifecycle—compared generation by generation.">
+  <meta name="twitter:image" content="images/starlink-satellite-anatomy.png">
+  <meta name="twitter:creator" content="@heroiclife">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Starlink Satellite Anatomy: V1 to V3 Engineering Specs (2026)",
+    "description": "A source-gated engineering reference comparing Starlink V1.0, V1.5, V2 Mini, V2 Mini Optimized, and announced V3 spacecraft by subsystem.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-14",
+    "dateModified": "2026-07-14",
+    "keywords": "Starlink satellite specs, V3, V2 Mini, laser inter-satellite links, Hall thruster, phased array"
+  }
+  </script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23070b10'/%3E%3Cpath d='M10 38h44M17 27h30M25 16h14' stroke='%2358e6ff' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+  <style>
+    @layer reset, bootstrap, mission;
+    @layer mission {
+      :root {
+        color-scheme: dark light;
+        --void: light-dark(#edf3f5, #06090d);
+        --panel: light-dark(#ffffff, #0c1219);
+        --panel-2: light-dark(#f5f8f9, #111a23);
+        --ink: light-dark(#15212b, #dbe8ed);
+        --muted: light-dark(#526570, #8da1ab);
+        --line: light-dark(#c6d2d7, #24343e);
+        --cyan: light-dark(#006f86, #58e6ff);
+        --cyan-soft: light-dark(#d8f5fa, #0c3039);
+        --amber: light-dark(#8a5200, #ffb84d);
+        --red: light-dark(#a02d2d, #ff7373);
+        --green: light-dark(#147044, #5ce39a);
+        --shadow: 0 18px 50px light-dark(#6d82832b, #0009);
+      }
+      [data-theme="dark"] { color-scheme: dark; }
+      [data-theme="light"] { color-scheme: light; }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background:
+          linear-gradient(light-dark(#d9e4e733, #1e2a331f) 1px, transparent 1px),
+          linear-gradient(90deg, light-dark(#d9e4e733, #1e2a331f) 1px, transparent 1px),
+          radial-gradient(circle at 50% -20%, light-dark(#c8f1f7, #123b47) 0, transparent 40%),
+          var(--void);
+        background-size: 32px 32px, 32px 32px, auto, auto;
+        color: var(--ink);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        line-height: 1.58;
+      }
+      a { color: var(--cyan); text-underline-offset: .2em; }
+      h1, h2, h3 { font-family: Inter, ui-sans-serif, system-ui, sans-serif; text-wrap: balance; letter-spacing: -.025em; }
+      p, li { text-wrap: pretty; }
+      .shell { width: min(1500px, calc(100% - 2rem)); margin-inline: auto; }
+      .topbar {
+        position: sticky; top: 0; z-index: 20; border-bottom: 1px solid var(--line);
+        background: color-mix(in srgb, var(--void) 88%, transparent); backdrop-filter: blur(14px);
+      }
+      .topbar .shell { min-height: 52px; display: flex; align-items: center; gap: 1rem; justify-content: space-between; }
+      .brand { color: var(--ink); text-decoration: none; font-weight: 800; letter-spacing: .08em; font-size: .82rem; }
+      .brand span { color: var(--cyan); }
+      .nav-links { display: flex; align-items: center; gap: 1rem; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
+      .nav-links a { color: var(--muted); text-decoration: none; }
+      .theme-btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: .35rem .7rem; }
+      .hero { padding: clamp(2.5rem, 6vw, 6rem) 0 2.2rem; }
+      .kicker, .eyebrow { color: var(--cyan); text-transform: uppercase; letter-spacing: .15em; font-weight: 800; font-size: .72rem; }
+      h1 { font-size: clamp(2.25rem, 5.6vw, 5.6rem); max-width: 1200px; line-height: .98; margin: .6rem 0 1.25rem; }
+      .hero-copy { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 380px); gap: 2rem; align-items: end; }
+      .lead { max-width: 78ch; font-family: ui-sans-serif, system-ui, sans-serif; color: var(--muted); font-size: clamp(1rem, 2vw, 1.25rem); }
+      .status-card { border: 1px solid var(--line); border-left: 4px solid var(--amber); background: var(--panel); padding: 1rem 1.1rem; box-shadow: var(--shadow); }
+      .status-card strong { color: var(--amber); }
+      .legend { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1.5rem; }
+      .tag { display: inline-flex; gap: .4rem; align-items: center; border: 1px solid var(--line); background: var(--panel); padding: .3rem .55rem; font-size: .7rem; border-radius: 2px; }
+      .tag::before { content: ""; width: .55rem; height: .55rem; border-radius: 50%; background: var(--cyan); }
+      .tag.claim::before { background: var(--amber); }
+      .tag.unknown::before { background: var(--muted); }
+      .mission-panel { background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); margin: 1rem 0 2.5rem; }
+      .panel-head { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 1rem; border-bottom: 1px solid var(--line); background: var(--panel-2); color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: .7rem; }
+      .panel-head b { color: var(--cyan); }
+      .diagram-wrap { padding: .8rem; overflow: hidden; }
+      .anatomy-svg { display: block; width: 100%; min-height: 440px; height: auto; }
+      .anatomy-svg .ghost { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 4 7; }
+      .anatomy-svg .metal { fill: var(--panel-2); stroke: var(--cyan); stroke-width: 2; }
+      .anatomy-svg .array { fill: color-mix(in srgb, var(--cyan) 16%, var(--panel)); stroke: var(--cyan); stroke-width: 1.5; }
+      .anatomy-svg .call { fill: none; stroke: var(--cyan); stroke-width: 1.2; }
+      .anatomy-svg .call-dot { fill: var(--cyan); }
+      .anatomy-svg .label { fill: var(--ink); font: 700 14px ui-monospace, monospace; }
+      .anatomy-svg .sub { fill: var(--muted); font: 11px ui-monospace, monospace; }
+      .anatomy-svg a:hover .label { fill: var(--cyan); }
+      .diagram-note { margin: 0; padding: 0 1rem 1rem; color: var(--muted); font-size: .78rem; }
+      .mobile-callouts { display: none; }
+      section { scroll-margin-top: 70px; margin: 4.5rem 0; }
+      .section-head { display: grid; grid-template-columns: 120px minmax(0, 1fr); align-items: baseline; gap: 1rem; margin-bottom: 1.2rem; }
+      .section-no { color: var(--cyan); font-size: .78rem; letter-spacing: .12em; }
+      h2 { font-size: clamp(1.75rem, 3vw, 3rem); margin: 0; }
+      h3 { font-size: 1.15rem; }
+      .summary { max-width: 88ch; color: var(--muted); font-family: ui-sans-serif, system-ui, sans-serif; }
+      .table-shell { overflow-x: auto; border: 1px solid var(--line); background: var(--panel); scrollbar-color: var(--cyan) var(--panel-2); }
+      table { width: 100%; border-collapse: collapse; min-width: 980px; font-size: .78rem; }
+      th, td { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: .65rem .72rem; vertical-align: top; }
+      thead th { position: sticky; top: 52px; z-index: 3; background: var(--panel-2); color: var(--cyan); text-transform: uppercase; letter-spacing: .06em; }
+      tbody th { position: sticky; left: 0; z-index: 2; min-width: 175px; background: var(--panel-2); color: var(--ink); }
+      td:last-child, th:last-child { border-right: 0; }
+      tbody tr:last-child > * { border-bottom: 0; }
+      .verified { color: var(--green); }
+      .target { color: var(--amber); }
+      .nd { color: var(--muted); font-style: italic; }
+      .table-foot { padding: .7rem 1rem; color: var(--muted); font-size: .7rem; border-top: 1px solid var(--line); }
+      .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+      .cardx { container-type: inline-size; border: 1px solid var(--line); background: var(--panel); padding: 1.15rem; }
+      .cardx .metric { color: var(--cyan); font-weight: 900; font-size: 1.55rem; }
+      .cardx p { color: var(--muted); margin-bottom: 0; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .92rem; }
+      .lineup { display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; gap: .8rem; min-height: 325px; padding: 1.25rem; border: 1px solid var(--line); background: var(--panel); }
+      .silhouette { text-align: center; min-width: 0; }
+      .sat-shape { margin: auto; width: var(--w); height: var(--h); max-width: 100%; border: 1px solid var(--cyan); background: repeating-linear-gradient(90deg, var(--cyan-soft) 0 8px, transparent 8px 10px); position: relative; }
+      .sat-shape::after { content: ""; position: absolute; left: 20%; right: 20%; bottom: -13px; height: 12px; background: var(--panel-2); border: 1px solid var(--line); }
+      .silhouette strong { display: block; color: var(--ink); margin-top: 1.7rem; font-size: .8rem; }
+      .silhouette small { color: var(--muted); font-size: .68rem; }
+      .human { width: 17px; height: 70px; border-radius: 45% 45% 25% 25%; background: var(--muted); margin: 0 auto 0; position: relative; }
+      .human::before { content: ""; position: absolute; width: 21px; height: 21px; border-radius: 50%; background: var(--muted); left: -2px; top: -24px; }
+      .sequence { counter-reset: phase; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+      .phase { counter-increment: phase; background: var(--panel); padding: 1.1rem; }
+      .phase::before { content: "0" counter(phase); display: block; color: var(--cyan); font-weight: 900; margin-bottom: .5rem; }
+      .phase p { color: var(--muted); font-size: .84rem; margin: 0; }
+      .misconceptions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; }
+      .myth { border: 1px solid var(--line); background: var(--panel); padding: 1rem; }
+      .myth .wrong { color: var(--red); font-weight: 800; }
+      .myth .right { color: var(--green); font-weight: 800; }
+      details { border: 1px solid var(--line); background: var(--panel); margin-top: .65rem; }
+      summary { cursor: pointer; padding: .85rem 1rem; color: var(--cyan); font-weight: 800; }
+      details > div { padding: 0 1rem 1rem; color: var(--muted); }
+      .sources { columns: 2; column-gap: 2rem; padding-left: 1.2rem; }
+      .sources li { break-inside: avoid; margin-bottom: .65rem; font-size: .82rem; }
+      footer { border-top: 1px solid var(--line); padding: 2rem 0 3rem; color: var(--muted); font-size: .78rem; }
+      .footer-grid { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+      :focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+      @media (prefers-reduced-motion: no-preference) {
+        .sat-shape, .cardx { transition: transform .2s ease, border-color .2s ease; }
+        .sat-shape:hover, .cardx:hover { transform: translateY(-3px); border-color: var(--cyan); }
+      }
+      @media (max-width: 900px) {
+        .hero-copy, .grid { grid-template-columns: 1fr; }
+        .lineup { grid-template-columns: repeat(3, 1fr); }
+        .sequence { grid-template-columns: 1fr 1fr; }
+        .nav-links a { display: none; }
+      }
+      @media (max-width: 600px) {
+        .shell { width: min(100% - 1rem, 1500px); }
+        .hero { padding-top: 2rem; }
+        .section-head { grid-template-columns: 1fr; gap: .2rem; }
+        .anatomy-svg { display: none; }
+        .mobile-callouts { display: grid; grid-template-columns: 1fr; gap: .5rem; padding: .75rem; }
+        .mobile-callouts a { border: 1px solid var(--line); background: var(--panel-2); padding: .65rem; text-decoration: none; }
+        .lineup { grid-template-columns: 1fr 1fr; min-height: 0; }
+        .sequence, .misconceptions { grid-template-columns: 1fr; }
+        .sources { columns: 1; }
+      }
+      @media print {
+        :root { color-scheme: light; }
+        @page { size: landscape; margin: 8mm; }
+        body { background: #fff; color: #111; font-size: 9pt; }
+        .topbar, .hero, .theme-btn, .legend, .lineup, #sources, footer { display: none !important; }
+        .shell { width: 100%; }
+        .mission-panel { height: 49mm; margin: 0 0 2mm; box-shadow: none; break-inside: avoid; }
+        .panel-head { height: 6mm; padding: 1mm 3mm; }
+        .anatomy-svg { display: block !important; min-height: 0; height: 37mm; }
+        .diagram-wrap { padding: 0; }
+        .diagram-note { height: 6mm; padding: 0 3mm; font-size: 5.6pt; }
+        .mobile-callouts { display: none !important; }
+        #quickref { break-before: avoid; break-after: page; margin: 0; }
+        #quickref .section-head, #quickref .summary, #quickref .table-foot { display: none; }
+        section { margin: 8mm 0; }
+        .table-shell { overflow: visible; }
+        #quickref table { min-width: 0; font-size: 4.7pt; line-height: 1.12; }
+        #quickref th, #quickref td { padding: .7mm 1mm; }
+        table { min-width: 0; font-size: 6.2pt; }
+        th, td { padding: 1.4mm; }
+        thead th, tbody th { position: static; background: #eef2f3 !important; }
+        a { color: #111; text-decoration: none; }
+        .panel-head, .cardx, .phase, .myth, details { background: #fff !important; }
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="topbar" aria-label="Page navigation">
+    <div class="shell">
+      <a class="brand" href="index.php">DV//<span>ORBITAL_REF</span></a>
+      <div class="nav-links">
+        <a href="#quickref">Master table</a><a href="#payload">RF payload</a><a href="#lasers">Lasers</a><a href="#propulsion">Propulsion</a>
+        <button class="theme-btn" id="themeToggle" type="button" aria-label="Toggle color theme"><i class="bi bi-circle-half" aria-hidden="true"></i></button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero shell">
+    <div class="kicker">Orbital hardware dossier // source-gated // 2026-07-14</div>
+    <h1>Starlink Satellite Anatomy — Every Generation, Every Subsystem</h1>
+    <div class="hero-copy">
+      <p class="lead">A mission-control reference for the spacecraft—not the customer dish. Published numbers are separated from company design targets, derived figures, and engineering details SpaceX has not disclosed.</p>
+      <aside class="status-card" aria-label="V3 deployment status">
+        <div class="eyebrow">Flight status</div>
+        <strong>No operational V3 deployment yet.</strong><br>
+        As of 2026-07-14, SpaceX still describes V3 as in development with deployment expected in H2 2026. Starship Flight 13 is targeted for July 16; that future test cannot be reported as a completed operational deployment.
+      </aside>
+    </div>
+    <div class="legend" aria-label="Evidence legend">
+      <span class="tag">Published / authorized</span><span class="tag claim">Company target / pending</span><span class="tag unknown">Not publicly disclosed</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <figure class="mission-panel" id="anatomy">
+      <figcaption class="panel-head"><span><b>FIG 01</b> // V3 functional anatomy</span><span>schematic · not to scale</span></figcaption>
+      <div class="diagram-wrap">
+        <svg class="anatomy-svg" viewBox="0 0 1200 570" role="img" aria-labelledby="anatomy-title anatomy-desc">
+          <title id="anatomy-title">Exploded functional view of an announced Starlink V3 satellite</title>
+          <desc id="anatomy-desc">Two solar wings, phased-array payload plane, laser terminals, avionics layer, batteries, and Hall-effect propulsion separated vertically with linked labels.</desc>
+          <defs>
+            <pattern id="cells" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M0 9h18M9 0v18" stroke="currentColor" opacity=".24"/></pattern>
+            <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <path class="ghost" d="M600 40v485M210 285h780"/>
+          <g aria-label="solar arrays">
+            <rect class="array" x="250" y="65" width="300" height="72" rx="3"/><rect class="array" x="650" y="65" width="300" height="72" rx="3"/>
+            <rect x="250" y="65" width="300" height="72" fill="url(#cells)"/><rect x="650" y="65" width="300" height="72" fill="url(#cells)"/>
+            <path class="metal" d="M550 92h100v18H550z"/>
+          </g>
+          <g aria-label="avionics and power plane">
+            <path class="metal" d="M420 195l180-42 180 42-180 44z"/>
+            <rect class="array" x="485" y="180" width="90" height="35" rx="3"/><rect class="array" x="625" y="180" width="90" height="35" rx="3"/>
+          </g>
+          <g aria-label="radio payload plane">
+            <path class="metal" d="M345 295l255-58 255 58-255 62z"/>
+            <ellipse class="array" cx="485" cy="290" rx="56" ry="24"/><ellipse class="array" cx="600" cy="315" rx="56" ry="24"/><ellipse class="array" cx="715" cy="290" rx="56" ry="24"/>
+            <circle class="call-dot" cx="370" cy="292" r="8" filter="url(#glow)"/><circle class="call-dot" cx="830" cy="292" r="8" filter="url(#glow)"/><circle class="call-dot" cx="600" cy="247" r="8" filter="url(#glow)"/>
+          </g>
+          <g aria-label="propulsion plane">
+            <path class="metal" d="M505 420l95-30 95 30-95 34z"/>
+            <path class="array" d="M575 454l25 58 25-58z"/>
+            <path class="ghost" d="M600 512v42M585 518l-18 30M615 518l18 30"/>
+          </g>
+          <a href="#power"><path class="call" d="M250 95H75v-25"/><circle class="call-dot" cx="250" cy="95" r="4"/><text class="label" x="70" y="54">DUAL SOLAR WINGS</text><text class="sub" x="70" y="70">V2 architecture published;</text><text class="sub" x="70" y="84">V3 power not disclosed</text></a>
+          <a href="#bus"><path class="call" d="M485 198H160v38"/><circle class="call-dot" cx="485" cy="198" r="4"/><text class="label" x="70" y="255">AVIONICS / POWER</text><text class="sub" x="70" y="272">next-gen computers, modems,</text><text class="sub" x="70" y="286">beamforming + switching</text></a>
+          <a href="#payload"><path class="call" d="M465 305H105v70"/><circle class="call-dot" cx="465" cy="305" r="4"/><text class="label" x="70" y="396">PHASED ARRAYS</text><text class="sub" x="70" y="413">electronically steer many beams;</text><text class="sub" x="70" y="427">exact V3 count undisclosed</text></a>
+          <a href="#lasers"><path class="call" d="M830 292h275v-120"/><circle class="call-dot" cx="830" cy="292" r="4"/><text class="label" x="910" y="150">OPTICAL ISLs</text><text class="sub" x="910" y="166">V2 Mini: 3 × up to 200 Gbps;</text><text class="sub" x="910" y="180">V3 terminal count undisclosed</text></a>
+          <a href="#payload"><path class="call" d="M715 315h400v60"/><circle class="call-dot" cx="715" cy="315" r="4"/><text class="label" x="910" y="397">Ka / E BACKHAUL</text><text class="sub" x="910" y="413">gateway links; nearly 4 Tbps</text><text class="sub" x="910" y="427">V3 RF + optical design target</text></a>
+          <a href="#propulsion"><path class="call" d="M625 470h430v40"/><circle class="call-dot" cx="625" cy="470" r="4"/><text class="label" x="910" y="531">HALL PROPULSION</text><text class="sub" x="910" y="547">orbit raise, avoidance, stationkeep,</text><text class="sub" x="910" y="561">and controlled end-of-life deorbit</text></a>
+        </svg>
+        <div class="mobile-callouts" aria-label="Anatomy callouts">
+          <a href="#power"><b>Solar + battery</b><br><small>V3 output and array geometry are not public.</small></a>
+          <a href="#bus"><b>Avionics</b><br><small>Next-generation computers, modems, beamforming, and switching.</small></a>
+          <a href="#payload"><b>RF payload</b><br><small>Steerable user beams plus gateway backhaul.</small></a>
+          <a href="#lasers"><b>Optical ISLs</b><br><small>V3 terminal count and rate are not public.</small></a>
+          <a href="#propulsion"><b>Hall propulsion</b><br><small>Orbit raising, avoidance, stationkeeping, disposal.</small></a>
+        </div>
+      </div>
+      <p class="diagram-note">Functional placement is illustrative. SpaceX has published V3 capability targets but not a mechanical drawing, exact dimensions, solar output, or component layout.</p>
+    </figure>
+
+    <section id="quickref">
+      <div class="section-head"><div class="section-no">00 // QUICK REF</div><h2>Generation master table</h2></div>
+      <p class="summary">The cells are deliberately conservative. “Not disclosed” is more useful than false precision; orange values are announced targets or carefully labeled near-primary reporting, not measured flight performance.</p>
+      <div class="table-shell" tabindex="0" aria-label="Scrollable Starlink satellite generation comparison">
+        <table>
+          <thead><tr><th scope="col">Specification</th><th scope="col">V1.0</th><th scope="col">V1.5</th><th scope="col">V2 Mini</th><th scope="col">V2 Mini Optimized</th><th scope="col">V3 broadband</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">First launch</th><td>Nov 2019</td><td>Sep 2021</td><td>27 Feb 2023</td><td>Jan 2025</td><td class="target">Target: H2 2026</td></tr>
+            <tr><th scope="row">Status · 2026-07-14</th><td>Legacy; many retired</td><td>Legacy fleet active</td><td>Active Gen2</td><td class="verified">Current production / majority</td><td class="target">In development; none operational</td></tr>
+            <tr><th scope="row">Launch mass</th><td>≈260 kg (573 lb), archived SpaceX kit</td><td class="nd">Not published by SpaceX</td><td class="target">≈800 kg (1,764 lb), launch reporting</td><td class="verified">≈575 kg (1,267 lb)</td><td class="nd">Not disclosed for H2-2026 V3*</td></tr>
+            <tr><th scope="row">Stowed / deployed dimensions</th><td class="nd">Not disclosed</td><td class="nd">Not disclosed</td><td class="nd">Not disclosed</td><td class="nd">Not disclosed</td><td class="nd">Not disclosed*</td></tr>
+            <tr><th scope="row">Solar configuration</th><td>Single wing</td><td>Single wing</td><td class="verified">Dual aero-neutral wings</td><td class="verified">Dual wings; power system upgraded</td><td class="nd">Not disclosed</td></tr>
+            <tr><th scope="row">Solar area / electrical power</th><td class="nd">Not disclosed</td><td class="nd">Not disclosed</td><td class="nd">Not disclosed</td><td class="nd">Not disclosed</td><td class="nd">Not disclosed*</td></tr>
+            <tr><th scope="row">Downlink capacity / satellite</th><td class="nd">Not separately published</td><td class="verified">24 Gbps</td><td class="verified">96 Gbps</td><td class="verified">96 Gbps class</td><td class="target">1,024 Gbps design target</td></tr>
+            <tr><th scope="row">Uplink capacity / satellite</th><td class="nd">Not disclosed</td><td class="nd">Not disclosed</td><td class="nd">Not directly published; V3 stated as &gt;24×</td><td class="nd">Not directly published</td><td class="target">Over 200 Gbps design target</td></tr>
+            <tr><th scope="row">RF + optical backhaul</th><td class="nd">Not disclosed</td><td class="nd">Not disclosed</td><td class="nd">Not disclosed</td><td>Hundreds of Gbps via optical links</td><td class="target">Nearly 4 Tbps combined target (2024)</td></tr>
+            <tr><th scope="row">Laser ISLs</th><td>No fleet-wide mesh</td><td>Laser-equipped; per-sat count not separately published</td><td class="verified">3 × up to 200 Gbps</td><td class="verified">3 × up to 200 Gbps</td><td class="nd">Count / rate not disclosed</td></tr>
+            <tr><th scope="row">RF payload</th><td>Ku user; Ka gateway</td><td>Ku user; Ka gateway</td><td>5 Ku phased arrays + 3 Ka/E dual-band antennas</td><td>Doppio dual-band backhaul + upgraded avionics</td><td class="target">Next-gen modems, beamforming, switching</td></tr>
+            <tr><th scope="row">Propulsion</th><td>Krypton Hall effect</td><td>Krypton Hall effect</td><td>Argon Hall effect · 170 mN</td><td>Upgraded argon system</td><td class="nd">Propellant / thrust not disclosed</td></tr>
+            <tr><th scope="row">Specific impulse</th><td class="nd">SpaceX only publishes relative baseline</td><td class="nd">Not separately disclosed</td><td>2,500 s in SpaceX 2023 release</td><td class="nd">Not separately disclosed</td><td class="nd">Not disclosed</td></tr>
+            <tr><th scope="row">Launch vehicle / count</th><td>Falcon 9 · 60</td><td>Falcon 9 · typically 52–54</td><td>Falcon 9 · up to 23</td><td>Falcon 9 · up to 29</td><td class="target">Starship · up to 60 target</td></tr>
+            <tr><th scope="row">Operational altitude</th><td colspan="4">V1 + V2 broadband planned at 450–490 km by end-2026 (shell-specific inclinations)</td><td class="target">330–370 km planned; final shells subject to change</td></tr>
+            <tr><th scope="row">Service life / disposal</th><td colspan="5">Designed for 5+ years; health-triggered deorbit, targeted open-ocean reentry where controllable, demisability as the final protection layer</td></tr>
+          </tbody>
+        </table>
+        <div class="table-foot">* A separate July 2026 “Gen3 NGSO” FCC application reportedly specifies 2,000–2,500 kg dry mass and 300–400 m² area. The filing does not explicitly establish that those values describe the H2-2026 V3 broadband vehicle, so they are not promoted into the V3 spec cells.</div>
+      </div>
+    </section>
+
+    <section id="scale">
+      <div class="section-head"><div class="section-no">01 // SCALE</div><h2>Mass growth, without fake dimensions</h2></div>
+      <p class="summary">This lineup scales visual area by the square root of published or reported mass, not by unverified spacecraft dimensions. It conveys launch-mass growth only. The dashed V3 silhouette is a 2,000 kg scenario, not a confirmed V3 mass.</p>
+      <div class="lineup" role="img" aria-label="Relative mass silhouettes for five Starlink generations and a human scale marker">
+        <div class="silhouette"><div class="sat-shape" style="--w:76px;--h:42px"></div><strong>V1.0</strong><small>≈260 kg</small></div>
+        <div class="silhouette"><div class="sat-shape" style="--w:76px;--h:42px;border-style:dashed"></div><strong>V1.5</strong><small>not scaled · mass N/D</small></div>
+        <div class="silhouette"><div class="sat-shape" style="--w:132px;--h:74px"></div><strong>V2 Mini</strong><small>≈800 kg reported</small></div>
+        <div class="silhouette"><div class="sat-shape" style="--w:112px;--h:63px"></div><strong>V2 Optimized</strong><small>≈575 kg official</small></div>
+        <div class="silhouette"><div class="sat-shape" style="--w:210px;--h:118px;border-style:dashed"></div><strong>V3 scenario</strong><small>2,000 kg filing scenario*</small></div>
+      </div>
+    </section>
+
+    <section id="bus">
+      <div class="section-head"><div class="section-no">02 // BUS</div><h2>Bus, structure, and the launcher constraint</h2></div>
+      <div class="grid">
+        <article class="cardx"><div class="metric">FLAT</div><h3>Stackable bus</h3><p>A thin spacecraft uses fairing volume efficiently: Falcon 9 can carry a dense, dispenser-free stack. The stack is clamped during ascent, then released so each vehicle separates before deploying its array.</p></article>
+        <article class="cardx"><div class="metric">−22%</div><h3>Optimized mass</h3><p>SpaceX lists V2 Mini Optimized at about 575 kg, nearly 22% lighter than the original V2 Mini. The gain buys up to 29 satellites per Falcon 9 instead of 23—six more capacity units per mission.</p></article>
+        <article class="cardx"><div class="metric">20×</div><h3>Why V3 waits for Starship</h3><p>SpaceX projects up to 60 V3 satellites and roughly 61 Tbps downlink capacity per Starship flight, more than 20× the per-launch capacity of a current Falcon 9 batch. This is a launch-system dependency, not merely a bigger panel.</p></article>
+        <article class="cardx"><div class="metric">4 RW</div><h3>Attitude control</h3><p>V2 uses four reaction wheels in a hot-spare architecture. They point the RF beams, align solar arrays, manage low-drag flight attitudes, and preserve control deep into targeted reentry.</p></article>
+        <article class="cardx"><div class="metric">STAR</div><h3>Navigation cameras</h3><p>“Star Trekker” cameras recognize star fields to estimate attitude. Combined with onboard position and velocity, that state estimate supports beam placement, formation spacing, and autonomous maneuver planning.</p></article>
+        <article class="cardx"><div class="metric">N/D</div><h3>What remains private</h3><p>SpaceX does not publish a V3 mechanical drawing, exact envelope, dry/wet mass split, processor count, thermal design, battery chemistry, or radiation-hardness figures. Treat detailed internet cutaways as conjecture.</p></article>
+      </div>
+    </section>
+
+    <section id="payload">
+      <div class="section-head"><div class="section-no">03 // RF PAYLOAD</div><h2>Phased arrays, gateways, and frequency roles</h2></div>
+      <p class="summary">User links and backhaul are different paths. Electronically steered Ku beams serve many moving footprint cells; larger-capacity Ka/E links connect satellites to gateway sites. Optical ISLs move traffic between satellites but do not talk to the customer dish.</p>
+      <div class="table-shell" tabindex="0">
+        <table>
+          <thead><tr><th>Link / function</th><th>Direction</th><th>Authorized / published band</th><th>Generation notes</th><th>Engineering use</th></tr></thead>
+          <tbody>
+            <tr><th>User downlink</th><td>Space → terminal</td><td>Ku: 10.7–12.7 GHz</td><td>Gen1 + Gen2</td><td>Steered spot beams deliver customer data; terminal plan and congestion still cap user speed.</td></tr>
+            <tr><th>User uplink</th><td>Terminal → space</td><td>Ku: 14.0–14.5 GHz</td><td>Gen1 + Gen2</td><td>Return traffic from electronically steered customer terminals.</td></tr>
+            <tr><th>Gateway downlink</th><td>Space → gateway</td><td>Ka: 17.8–18.6 &amp; 18.8–19.3 GHz</td><td>Gen1 + Gen2 authorizations</td><td>Moves aggregated traffic toward terrestrial points of presence.</td></tr>
+            <tr><th>Gateway uplink</th><td>Gateway → space</td><td>Ka: 27.5–29.1 &amp; 29.5–30.0 GHz</td><td>Gen1 + Gen2 authorizations</td><td>High-capacity feeder link; rain fade and gateway diversity matter.</td></tr>
+            <tr><th>E-band downlink</th><td>Space → gateway</td><td>71.0–76.0 GHz</td><td>Gen2 authorized Mar 2024</td><td>Five GHz of high-frequency backhaul spectrum; tighter atmospheric and pointing margins.</td></tr>
+            <tr><th>E-band uplink</th><td>Gateway → space</td><td>81.0–86.0 GHz</td><td>Gen2 authorized Mar 2024</td><td>Complements Ka with much wider feeder-link bandwidth.</td></tr>
+            <tr><th>Optical ISL</th><td>Satellite ↔ satellite</td><td>Infrared laser; wavelength not published here</td><td>Operational mesh from V1.5 onward</td><td>Vacuum crosslink avoids terrestrial fiber detours; requires line-of-sight acquisition and routing.</td></tr>
+            <tr><th>Direct to Cell</th><td>Phone ↔ satellite</td><td>Partner terrestrial mobile spectrum</td><td>Dedicated V1 Mobile payloads, not every broadband V2</td><td>Custom phased arrays and eNodeB/5G-class modem functions make the spacecraft act as a cell tower.</td></tr>
+            <tr><th>TT&amp;C / beacons</th><td>Control + tracking</td><td>Multiple authorized channels; configuration-specific</td><td>All generations</td><td>Keep command, telemetry, orbit determination, and emergency operations distinct from customer capacity.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <details name="payload-notes"><summary>Digital beamforming: what actually changes?</summary><div>A phased array changes the phase and amplitude applied to many antenna elements so the combined wavefront points electronically, without rotating a dish. SpaceX says V3 moves to next-generation computers, modems, beamforming, and switching; it has not published element count, converter resolution, beam count, or whether every stage is fully digital.</div></details>
+      <details name="payload-notes"><summary>Direct to Cell is a sibling system, not a universal V2 feature</summary><div>SpaceX’s 2026 prospectus explicitly distinguishes broadband and mobile satellite constellations even though both use “V” names. V1 Mobile provides light data, text, and over-the-top voice; V2 Mobile is a future Starship-deployed platform expected in 2027. Do not read “V2” and assume one shared spacecraft spec.</div></details>
+    </section>
+
+    <section id="lasers">
+      <div class="section-head"><div class="section-no">04 // OPTICAL MESH</div><h2>Laser inter-satellite links</h2></div>
+      <div class="table-shell" tabindex="0">
+        <table>
+          <thead><tr><th>Generation</th><th>Laser status</th><th>Terminals / satellite</th><th>Published rate</th><th>Operational meaning</th></tr></thead>
+          <tbody>
+            <tr><th>V1.0</th><td>Early fleet not built around a global optical mesh</td><td class="nd">Not a fleet-wide standard</td><td class="nd">N/A / experiments varied</td><td>Traffic depended more heavily on a satellite simultaneously seeing a user and gateway.</td></tr>
+            <tr><th>V1.5</th><td>Operational laser crosslinks introduced</td><td class="nd">Not separately stated in current primary docs</td><td class="nd">Not separated by generation</td><td>Polar/ocean routes could forward traffic toward distant gateways.</td></tr>
+            <tr><th>V2 Mini</th><td class="verified">Operational</td><td class="verified">3</td><td class="verified">Up to 200 Gbps each</td><td>Three neighbors give routing choices as geometry changes; “up to” is a link ceiling, not assured payload throughput.</td></tr>
+            <tr><th>V2 Mini Optimized</th><td class="verified">Operational</td><td class="verified">3</td><td>Up to 200 Gbps; 400 Gbps operation was a 2026 upgrade target</td><td>2025 jitter rejection and faster route reaction cut ping loss 2–3×, per SpaceX.</td></tr>
+            <tr><th>V3</th><td class="target">Designed into next generation</td><td class="nd">Not disclosed</td><td class="nd">Not disclosed</td><td>V3’s “nearly 4 Tbps” figure combines RF and optical backhaul; it is not a per-laser specification.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid mt-3">
+        <article class="cardx"><div class="metric">24,000+</div><h3>Mesh scale</h3><p>SpaceX reported more than 24,000 lasers in the constellation in its 2025 report. That is a fleet count, not 24,000 simultaneous end-to-end routes.</p></article>
+        <article class="cardx"><div class="metric">25+ Gbps</div><h3>Mini Laser demo</h3><p>Two third-party-bus Mini Laser demonstration units transferred more than 25 Gbps to the existing mesh in summer 2025, proving a smaller hosted-terminal path.</p></article>
+        <article class="cardx"><div class="metric">Δ route</div><h3>Why the mesh matters</h3><p>A satellite over an ocean can relay across moving neighbors until one sees a gateway. The scheduler must continuously reacquire links and route around weather, outages, geometry, and congestion.</p></article>
+      </div>
+    </section>
+
+    <section id="propulsion">
+      <div class="section-head"><div class="section-no">05 // PROPULSION</div><h2>Hall thrusters: krypton to argon</h2></div>
+      <p class="summary">A Hall thruster ionizes stored gas and accelerates the ions electrostatically. It produces tiny force for long periods: excellent for orbit raising, spacing, conjunction avoidance, stationkeeping, and disposal—useless for launch from Earth.</p>
+      <div class="table-shell" tabindex="0">
+        <table>
+          <thead><tr><th>Decision criterion</th><th>Xenon</th><th>Krypton</th><th>Argon</th><th>Starlink consequence</th></tr></thead>
+          <tbody>
+            <tr><th>Availability</th><td>Rare trace gas; constrained market</td><td>More available than xenon, still rare</td><td>≈0.93% of dry atmosphere; industrial bulk gas</td><td>Argon aligns propellant supply with mass production of thousands of spacecraft.</td></tr>
+            <tr><th>Storage / particle mass</th><td>Heavy atoms ease thrust efficiency but storage is dense/expensive</td><td>Middle ground used by V1/V1.5</td><td>Lighter atom requires a purpose-built thruster and different flow/voltage trade</td><td>Do not assume a cheaper gas is a drop-in replacement.</td></tr>
+            <tr><th>Procurement economics</th><td>Highest commodity-price exposure</td><td>Lower than xenon</td><td>Orders-of-magnitude supply advantage; SpaceX does not publish its delivered $/kg</td><td>Use relative economics, not internet spot-price tables that ignore purity, cylinders, and contracts.</td></tr>
+            <tr><th>Starlink flight use</th><td>No production generation identified</td><td>V1.0 + V1.5</td><td>V2 Mini + Optimized</td><td>V3 propellant remains undisclosed as of 2026-07-14.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid mt-3">
+        <article class="cardx"><div class="metric">170 mN</div><h3>V2 Mini thrust</h3><p>About the weight-force of a 17 g object on Earth. SpaceX reports 2.4× first-generation thrust and 1.5× its specific impulse; its 2023 release listed 2,500 s Isp.</p></article>
+        <article class="cardx"><div class="metric">DAILY</div><h3>Stationkeeping</h3><p>Starlink’s 2026 space-safety documentation says satellites use daily stationkeeping burns to constrain radial offset and along-track spacing. Avoidance burns are additional, conjunction-driven events.</p></article>
+        <article class="cardx"><div class="metric">AUTO</div><h3>Collision avoidance</h3><p>Onboard state and SpaceX’s screening system support autonomous planning. “Autonomous” does not mean uncoordinated: operators exchange ephemerides and SpaceX still applies maneuver policies and health gates.</p></article>
+      </div>
+    </section>
+
+    <section id="power">
+      <div class="section-head"><div class="section-no">06 // POWER</div><h2>Solar arrays, batteries, eclipse</h2></div>
+      <div class="grid">
+        <article class="cardx"><div class="metric">2 WINGS</div><h3>Aero-neutral V2 layout</h3><p>SpaceX says V2 uses dual solar arrays arranged to improve on-orbit maneuvering and control. In very low orbit, even a deployed solar wing sees enough residual atmosphere for drag attitude to matter.</p></article>
+        <article class="cardx"><div class="metric">BATTERY</div><h3>Eclipse operation</h3><p>High-capacity batteries run the bus and payload when Earth blocks the Sun. Charge state, thermal limits, and payload demand must be scheduled across repeated roughly 90-minute LEO orbits; exact capacity is private.</p></article>
+        <article class="cardx"><div class="metric">N/D kW</div><h3>No trustworthy V3 power figure</h3><p>SpaceX has not published a V3 solar-array area, nameplate output, or battery capacity. The often-repeated 10–12 kW range is an enthusiast estimate and is intentionally omitted.</p></article>
+      </div>
+    </section>
+
+    <section id="lifecycle">
+      <div class="section-head"><div class="section-no">07 // DEPLOY + LIFE</div><h2>From launch stack to targeted reentry</h2></div>
+      <div class="sequence" aria-label="Starlink deployment lifecycle">
+        <article class="phase"><h3>Release</h3><p>Falcon 9 releases a tensioned flat stack; the satellites drift apart. Starship tests have demonstrated a side-mounted “Pez” slot with simulator satellites, but operational V3 deployment has not occurred.</p></article>
+        <article class="phase"><h3>Checkout + raise</h3><p>Vehicles inserted low must pass health checks and begin orbit raising within days. Multiple temporary waypoints keep the transfer flow separated from crewed stations and settled shells.</p></article>
+        <article class="phase"><h3>Serve + maneuver</h3><p>At the assigned shell, daily burns maintain spacing while RF beams and optical crosslinks continuously hand off. SpaceX’s current broadband shell plan spans 450–490 km; V3 is planned lower.</p></article>
+        <article class="phase"><h3>Deorbit + demise</h3><p>Health metrics trigger retirement. A controllable satellite lowers itself and targets open ocean; attitude control continues to about 125 km. Demisable parts are the last risk-control layer.</p></article>
+      </div>
+      <div class="grid mt-3">
+        <article class="cardx"><div class="metric">5+ yr</div><h3>Designed service life</h3><p>Starlink’s current space-safety documentation says satellites are designed to serve for more than five years. Individual retirement depends on health, capacity economics, shell changes, and conjunction risk.</p></article>
+        <article class="cardx"><div class="metric">&lt;3 J</div><h3>Component impact target</h3><p>The 2025 progress report says Starlink targets less than 3 joules at component level, versus the U.S. debris-mitigation reference of 15 J. This is a design-analysis target, not a guarantee every atom vanishes.</p></article>
+        <article class="cardx"><div class="metric">330–370</div><h3>V3 altitude band</h3><p>SpaceX’s July 2026 public space-safety plan places V3 broadband between 330 and 370 km by end-2026, with detailed shell geometry still subject to change.</p></article>
+      </div>
+    </section>
+
+    <section id="mistakes">
+      <div class="section-head"><div class="section-no">08 // ANTI-PATTERNS</div><h2>Common misconceptions</h2></div>
+      <div class="misconceptions">
+        <article class="myth"><div class="wrong">MYTH // “V3 is just a bigger V2 Mini.”</div><p><span class="right">CORRECTION //</span> SpaceX identifies next-generation computers, modems, beamforming, and switching, plus an order-of-magnitude capacity jump and lower target orbit. The mechanical details remain private.</p></article>
+        <article class="myth"><div class="wrong">MYTH // “1 Tbps means my dish gets 1 Tbps.”</div><p><span class="right">CORRECTION //</span> Satellite capacity is shared across beams, gateways, users, routing overhead, spectrum, and time. Terminal capability, service plan, congestion, visibility, and weather constrain an individual session.</p></article>
+        <article class="myth"><div class="wrong">MYTH // “Laser links connect customers directly.”</div><p><span class="right">CORRECTION //</span> The user terminal uses RF. Lasers connect spacecraft to spacecraft, relaying aggregated traffic until it can reach a satellite with a usable ground path.</p></article>
+        <article class="myth"><div class="wrong">MYTH // “Dish Gen 3 equals satellite V3.”</div><p><span class="right">CORRECTION //</span> Customer-terminal generations, broadband spacecraft generations, and mobile/DTC spacecraft families are separate product lines with overlapping “V” or “Gen” labels.</p></article>
+        <article class="myth"><div class="wrong">MYTH // “The FCC filing is deployed hardware.”</div><p><span class="right">CORRECTION //</span> An application describes a requested operating envelope. It can be deferred, modified, partially granted, or never built. SpaceX design targets are not measured orbital performance.</p></article>
+        <article class="myth"><div class="wrong">MYTH // “All V2 Minis carry Direct to Cell.”</div><p><span class="right">CORRECTION //</span> DTC payloads are mission-specific mobile satellites. SpaceX’s own prospectus distinguishes V1/V2 Mobile from V2 Mini and V3 broadband spacecraft.</p></article>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="section-head"><div class="section-no">09 // SOURCES</div><h2>Primary-source map</h2></div>
+      <p class="summary">Every volatile number on this page is either traceable here, labeled as a company target, or explicitly withheld. Accessed 2026-07-14.</p>
+      <ol class="sources">
+        <li><a href="https://starlink.com/public-files/starlinkProgressReport_2025.pdf">SpaceX, Starlink Progress 2025</a> — V2 Optimized production, laser fleet, 3-link architecture, V3 down/uplink targets, Starship deployment.</li>
+        <li><a href="https://starlink.com/public-files/starlinkProgressReport_2024.pdf">SpaceX, Starlink Progress 2024</a> — 96/24 Gbps, 575 kg optimized mass, 170 mN, antenna count, power architecture, V3 backhaul target.</li>
+        <li><a href="https://content.spacex.com/cms-assets/FINAL_Documents%20and%20Updates/SpaceX%20-%20EU%20Prospectus%20%28Approved%20by%20Bafin%29%20-%20June%205%2C%202026.pdf">SpaceX EU Prospectus, 5 Jun 2026</a> — official V naming, V3 development status, H2 2026 target, 1,024 Gbps, up to 60 per Starship.</li>
+        <li><a href="https://space-safety.starlink.com/docs/space-safety-articles/constellation_altitudes/">Starlink Space Safety: Constellation Altitudes</a> — end-2026 shell plan, daily stationkeeping, 5+ year life, deorbit flow.</li>
+        <li><a href="https://starlink.com/us/technology">Starlink Technology</a> — three optical ISLs up to 200 Gbps and system overview.</li>
+        <li><a href="https://docs.fcc.gov/public/attachments/DA-24-222A1.pdf">FCC DA 24-222</a> — Gen2 E-band authorization: 71–76 GHz down, 81–86 GHz up.</li>
+        <li><a href="https://docs.fcc.gov/public/attachments/FCC-22-91A1.pdf">FCC 22-91</a> — first partial Gen2 authorization and Ku/Ka operating framework.</li>
+        <li><a href="https://docs.fcc.gov/public/attachments/DA-26-36A1.pdf">FCC DA 26-36</a> — 2026 Gen2 upgrade authorization and current regulatory limits.</li>
+        <li><a href="https://www.spacex.com/launches/sl-6-1">SpaceX Starlink 6-1 mission</a> — first V2 Mini launch date and deployment.</li>
+        <li><a href="https://www.spacex.com/launches/sl-2-1">SpaceX Starlink 2-1 mission</a> — first full-production laser-equipped V1.5 launch date.</li>
+        <li><a href="https://web.archive.org/web/20190515091900/https://www.spacex.com/sites/spacex/files/starlink_press_kit.pdf">Archived SpaceX Starlink press kit (2019)</a> — V1 flat-panel architecture and published launch mass.</li>
+        <li><a href="https://spaceflightnow.com/2023/02/27/falcon-9-starlink-6-1-live-coverage/">Spaceflight Now, Starlink 6-1 launch report</a> — near-primary V2 Mini mass context and SpaceX propulsion statements.</li>
+        <li><a href="https://www.space.com/space-exploration/launches-spacecraft/spacex-targets-july-16-for-starship-flight-13-reveals-what-went-wrong-on-previous-launch">Space.com, Flight 13 schedule report</a> — secondary source used only for the July 16 target; the page does not treat the future flight as completed.</li>
+        <li><a href="https://planet4589.org/space/con/star/stats.html">Jonathan McDowell, Starlink Statistics</a> — independent launch/orbit cross-check; used as near-primary context, not for undisclosed engineering cells.</li>
+      </ol>
+    </section>
+
+    <section id="related">
+      <div class="section-head"><div class="section-no">10 // RELATED</div><h2>Continue the signal chain</h2></div>
+      <div class="grid">
+        <article class="cardx"><h3><a href="ham-radio-technician.html">Ham Radio Technician</a></h3><p>RF fundamentals, propagation, link behavior, and spectrum practice from the operator side.</p></article>
+        <article class="cardx"><h3><a href="sensors-cameras-lidar-radar-imu-gps.html">Sensors, Radar, IMU &amp; GPS</a></h3><p>How navigation sensors turn physical measurements into spacecraft state estimates.</p></article>
+        <article class="cardx"><h3><a href="space-habitats-life-support.html">Space Habitats &amp; Life Support</a></h3><p>A systems-engineering reference for the much larger spacecraft humans occupy.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-grid"><span>Last verified: 2026-07-14 · Source status frozen at publication time</span><span><a href="index.php">All cheatsheets</a> · Engineering reference, not a SpaceX publication</span></div>
+  </footer>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  <script>
+    (() => {
+      const button = document.getElementById('themeToggle');
+      const root = document.documentElement;
+      let saved = null;
+      try { saved = localStorage.getItem('starlink-anatomy-theme'); } catch (_) {}
+      if (saved === 'dark' || saved === 'light') root.dataset.theme = saved;
+      button?.addEventListener('click', () => {
+        const current = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        try { localStorage.setItem('starlink-anatomy-theme', next); } catch (_) {}
+      });
+    })();
+  </script>
+</body>
+</html>
