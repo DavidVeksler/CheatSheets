@@ -37,6 +37,7 @@ import os
 import re
 import subprocess
 import sys
+from html.parser import HTMLParser
 from urllib.parse import unquote
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -49,7 +50,42 @@ HTML_CACHE_MAXAGE = "max-age=1800"
 # href/src targets we never treat as local files.
 SKIP_PREFIXES = ("http://", "https://", "//", "mailto:", "tel:", "data:",
                  "javascript:", "#", "{", "%7b")
-ATTR_RE = re.compile(r"""\b(?:href|src)\s*=\s*(?:"([^"]*)"|'([^']*)')""", re.IGNORECASE)
+LINK_ATTRS = ("href", "src")
+
+
+class _LinkExtractor(HTMLParser):
+    """Collect href/src values from real elements only.
+
+    A real parser (vs. a regex over the raw bytes) ignores anything the browser
+    would never treat as a link, which is exactly where the old regex produced
+    false positives:
+      * content inside <script>/<style> is CDATA, so client-side templates like
+        ``<a href="${item.url}">`` are never parsed as tags, and
+      * escaped markup in prose (``&lt;script src="main.js"&gt;``) is text, so
+        its "attributes" are never seen.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.targets: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list) -> None:
+        for name, value in attrs:
+            if name.lower() in LINK_ATTRS and value:
+                self.targets.append(value)
+
+    handle_startendtag = handle_starttag
+
+
+def extract_targets(source: str) -> list[str]:
+    parser = _LinkExtractor()
+    try:
+        parser.feed(source)
+        parser.close()
+    except Exception:
+        # A malformed page should never crash the deploy; skip what we can't parse.
+        pass
+    return parser.targets
 
 GREEN, RED, YELLOW, DIM, RESET = "\033[32m", "\033[31m", "\033[33m", "\033[2m", "\033[0m"
 if os.name == "nt" and not os.environ.get("WT_SESSION"):
@@ -236,10 +272,12 @@ def check_links(html_files: list[str]) -> list[str]:
             continue
         page_dir = os.path.dirname(path)
         seen: set[str] = set()
-        for match in ATTR_RE.finditer(source):
-            target = (match.group(1) or match.group(2) or "").strip()
+        for target in extract_targets(source):
+            target = target.strip()
             low = target.lower()
             if not target or low.startswith(SKIP_PREFIXES):
+                continue
+            if "${" in target or "{{" in target:  # client-side template placeholder
                 continue
             clean = unquote(target.split("#", 1)[0].split("?", 1)[0])
             if not clean or clean in seen:
