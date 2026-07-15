@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Tracked pre-push hook: guard pushes to the live 'production' docroot.
+#
+# Runs the deploy preflight + validation ("python scripts/deploy.py --check")
+# whenever you push to the production remote, so even a raw `git push production`
+# gets the seatbelt. Other remotes (origin) are untouched.
+#
+# Enable in a clone with:  git config core.hooksPath .githooks
+#
+# Git passes the remote name as $1 and the URL as $2.
+set -euo pipefail
+
+remote_name="${1:-}"
+remote_url="${2:-}"
+
+is_production=0
+[ "$remote_name" = "production" ] && is_production=1
+case "$remote_url" in
+  *cheatsheets.davidveksler.com*) is_production=1 ;;
+esac
+[ "$is_production" -eq 1 ] || exit 0
+
+# deploy.py sets this when it issues its own push — don't double-validate.
+[ "${CHEATSHEETS_DEPLOY:-}" = "1" ] && exit 0
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+if   command -v python  >/dev/null 2>&1; then py=python
+elif command -v python3 >/dev/null 2>&1; then py=python3
+else echo "pre-push: no python found; run scripts/deploy.py manually." >&2; exit 1
+fi
+
+echo "pre-push: validating before pushing to production..."
+if ! "$py" "$root/scripts/deploy.py" --check; then
+  echo "pre-push: validation failed — push blocked. Fix the issues or use ./deploy.sh with a --skip-* flag." >&2
+  exit 1
+fi
