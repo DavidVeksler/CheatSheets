@@ -48,7 +48,7 @@ ORIGIN_REMOTE = "origin"
 HTML_CACHE_MAXAGE = "max-age=1800"
 
 # href/src targets we never treat as local files.
-SKIP_PREFIXES = ("http://", "https://", "//", "mailto:", "tel:", "data:",
+SKIP_PREFIXES = ("http://", "https://", "//", "mailto:", "tel:", "sms:", "data:",
                  "javascript:", "#", "{", "%7b")
 LINK_ATTRS = ("href", "src")
 
