@@ -20,6 +20,7 @@ This file owns the quality bar. The other Markdown docs divide the workflows —
 | [`TODO/SPEC-AUDIT.md`](TODO/SPEC-AUDIT.md) | **Writing or reviewing a spec** — spec-completeness criteria (search targeting, reader outcome, staleness register, etc.). |
 | [`TODO/CHEATSHEET-AUDIT.md`](TODO/CHEATSHEET-AUDIT.md) | **Reviewing an existing/shipped cheatsheet** — run this per-file conformance audit (metadata, SRI, content depth, site integration), with severity tiers, fix policy, and the corpus defect baseline. |
 | [`TODO/seo-planning.md`](TODO/seo-planning.md) | **Planning SEO work** — durable doc (not deleted after one pass) tracking the Search Console baseline, striking-distance opportunities, and open questions. Pull fresh GSC data before trusting numbers more than a few weeks old. |
+| [`deploy/DEPLOY.md`](deploy/DEPLOY.md) | **Deploying to production** — the guarded `./deploy.sh` pipeline (preflight → validate → confirm → push → live verify), remotes, flags, the pre-push hook, and manual fallback. Deploy via the script, not raw `git push production`. |
 | [`weekly-freshness-update.md`](weekly-freshness-update.md) | The scheduled **fact-drift job** — worker instructions for refreshing one dated cheatsheet per run. Owns fact verification; the audit above only checks the freshness *machinery* exists. |
 | [`Device Cheat Sheet Generator.md`](Device%20Cheat%20Sheet%20Generator.md) | Standalone generator prompt for hardware/device guides (radios, appliances, tools). Predates this file — where they conflict, this file wins. |
 | [`README.md`](README.md) | Public repo readme (minimal). |
@@ -39,6 +40,7 @@ Non-Markdown but load-bearing: `SEO_PROMPT.txt` (footer cross-linking procedure)
 - **Commit every change, every run — unconditionally.** All changes to this project must be committed, including documentation and workflow updates. Keep commits scoped to the logical batch of work. Do not withhold a commit because the work feels incomplete, unpolished, or not yet audit-clean — commit what the run produced.
 - **The quality gate is deployment, not the commit.** Comprehensiveness, accuracy, and audit checks (Coverage Contract, Accuracy Protocol, CHEATSHEET-AUDIT) gate whether you *recommend deploying* a batch, not whether you commit it. Committed-but-not-yet-deployed is normal, safe state.
 - **Ask for deployment after every batch or completed piece of work.** Once a batch is committed, ask the user whether to deploy it. Do not push or deploy without the user's explicit approval.
+- **Deploy with the guarded pipeline, not raw `git push production`.** Push `main` to `origin` first, then run `./deploy.sh` (`./deploy.ps1` on PowerShell) — it runs preflight, local validation (SEO gate, link/asset integrity, JSON, `php -l`), a confirm prompt, the push, then live curl verification. Full runbook: [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
 
 Treat the Coverage Contract, Atomic Entry Rule, and Accuracy Protocol as binding acceptance criteria. A cheatsheet that violates them is not done, regardless of polish.
 
