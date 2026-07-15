@@ -23,7 +23,8 @@ Usage:
   python scripts/deploy.py --all           # validate every page, not just changed ones
 
 Escape hatches (use sparingly):
-  --force        allow a non-main branch / skip the origin-sync check
+  --force        allow a non-main branch, skip the origin-sync check, and
+                 force-push HEAD to production/main (overrides non-fast-forward)
   --skip-seo     skip scripts/seo_check.py
   --skip-links   skip internal link/asset integrity check
   --skip-verify  skip the post-deploy live curl checks
@@ -288,11 +289,18 @@ def confirm(args) -> None:
         sys.exit(1)
 
 
-def push() -> None:
+def push(args) -> None:
     step("Deploy")
     env = dict(os.environ, CHEATSHEETS_DEPLOY="1")  # let the pre-push hook no-op
-    result = subprocess.run(["git", "push", PRODUCTION_REMOTE, DEPLOY_BRANCH],
-                            cwd=ROOT, env=env)
+    # Push HEAD (not the local main ref) so a --force deploy from a non-main
+    # branch ships the commits you actually validated.
+    cmd = ["git", "push", PRODUCTION_REMOTE, f"HEAD:{DEPLOY_BRANCH}"]
+    if args.force:
+        # --force-with-lease is checked against production/main, which preflight
+        # just fetched, so it still refuses to clobber an unexpected remote state.
+        cmd.insert(2, "--force-with-lease")
+        warn(f"force-pushing HEAD to {PRODUCTION_REMOTE}/{DEPLOY_BRANCH} (--force)")
+    result = subprocess.run(cmd, cwd=ROOT, env=env)
     if result.returncode != 0:
         fail("git push to production failed (see output above).")
     ok("pushed. Server post-receive hook builds nothing (static) and purges Cloudflare.")
@@ -357,7 +365,8 @@ def main() -> None:
     p.add_argument("--check", action="store_true",
                    help="preflight + validate only (used by the pre-push hook)")
     p.add_argument("--all", action="store_true", help="validate every file, not just changed")
-    p.add_argument("--force", action="store_true", help="allow non-main branch / skip origin sync")
+    p.add_argument("--force", action="store_true",
+                   help="allow non-main branch, skip origin sync, and force-push HEAD to production")
     p.add_argument("--skip-seo", action="store_true")
     p.add_argument("--skip-links", action="store_true")
     p.add_argument("--skip-verify", action="store_true")
@@ -377,7 +386,7 @@ def main() -> None:
         return
 
     confirm(args)
-    push()
+    push(args)
 
     if args.skip_verify:
         warn("live verification skipped (--skip-verify)")
