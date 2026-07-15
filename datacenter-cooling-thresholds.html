@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Center Cooling Thresholds: When Air Stops Working (kW/Rack Guide)</title>
+  <meta name="description" content="At what rack density does air cooling fail? A vendor-neutral decision ladder from CRAC to two-phase direct-to-chip, with reconciled kW/rack thresholds, PUE evidence, and cost classes.">
+  <meta name="keywords" content="data center cooling thresholds, air cooling limit kW per rack, liquid cooling, direct-to-chip, rear-door heat exchanger, immersion cooling, ASHRAE W classes">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/datacenter-cooling-thresholds.html">
+  <meta property="og:title" content="Data Center Cooling Thresholds: When Air Stops Working">
+  <meta property="og:description" content="Place a rack on the vendor-neutral ladder from room air to immersion—and see what each quoted limit assumes.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/datacenter-cooling-thresholds.html">
+  <meta property="og:image" content="images/datacenter-cooling-thresholds.png">
+  <meta property="og:image:alt" content="Thermal-gradient data center cooling ladder from air below 10 kW per rack to liquid cooling above 100 kW">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Data Center Cooling Thresholds: When Air Stops Working">
+  <meta name="twitter:description" content="A vendor-neutral kW/rack decision ladder with reconciled claims, calculations, failure modes, and water-class guidance.">
+  <meta name="twitter:image" content="images/datacenter-cooling-thresholds.png">
+  <meta name="twitter:creator" content="@heroiclife">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Data Center Cooling Thresholds: When Air Stops Working (kW/Rack Guide)",
+    "description": "A vendor-neutral engineering reference for selecting room air, containment, in-row cooling, rear-door heat exchangers, single- or two-phase direct-to-chip cooling, and immersion by rack density and facility constraints.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-14",
+    "dateModified": "2026-07-14",
+    "keywords": "data center cooling thresholds, air cooling limit, kW per rack, liquid cooling, RDHx, direct-to-chip, immersion, ASHRAE W classes"
+  }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+  <style>
+    @layer base, components, utilities;
+    @layer base {
+      :root {
+        color-scheme: dark light;
+        --ink: light-dark(#172338, #edf5ff);
+        --muted: light-dark(#526178, #a9b8cb);
+        --surface: light-dark(#f7f9fc, #101823);
+        --surface-2: light-dark(#ffffff, #172331);
+        --line: light-dark(#cbd6e4, #33465a);
+        --air: #29a8ff;
+        --contain: #2dd4bf;
+        --row: #a3e635;
+        --door: #facc15;
+        --dtc: #fb923c;
+        --phase: #f05252;
+        --immerse: #be123c;
+        --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      :root[data-theme="light"] { color-scheme: light; }
+      :root[data-theme="dark"] { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 80% -10%, color-mix(in srgb, var(--air) 18%, transparent), transparent 30rem),
+          linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #06101c), var(--surface));
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.58;
+      }
+      a { color: light-dark(#0568a9, #72c6ff); text-underline-offset: .18em; }
+      h1, h2, h3 { text-wrap: balance; letter-spacing: -.025em; }
+      p, li { text-wrap: pretty; }
+      code, .mono { font-family: var(--mono); }
+      :focus-visible { outline: 3px solid var(--door); outline-offset: 3px; }
+    }
+    @layer components {
+      .shell { width: min(1180px, calc(100% - 2rem)); margin-inline: auto; }
+      .topbar { display: flex; justify-content: space-between; align-items: center; padding-block: 1rem; }
+      .brand { color: var(--ink); text-decoration: none; font: 700 .78rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+      .theme-btn { border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); border-radius: 999px; padding: .45rem .75rem; }
+      .hero { padding: clamp(2rem, 5vw, 5rem) 0 2.4rem; }
+      .kicker { color: var(--air); font: 700 .77rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+      .hero h1 { max-width: 1050px; font-size: clamp(2.15rem, 5.7vw, 5.1rem); line-height: .98; margin: .8rem 0 1.1rem; }
+      .gradient-text { background: linear-gradient(90deg, var(--air), var(--door) 52%, var(--immerse)); background-clip: text; color: transparent; }
+      .lede { max-width: 830px; color: var(--muted); font-size: clamp(1.02rem, 2vw, 1.28rem); }
+      .rule { border-left: 4px solid var(--door); background: color-mix(in srgb, var(--door) 10%, var(--surface-2)); padding: .85rem 1rem; border-radius: 0 .7rem .7rem 0; max-width: 890px; }
+      .hero-meta { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1.25rem; }
+      .chip { border: 1px solid var(--line); background: color-mix(in srgb, var(--surface-2) 82%, transparent); border-radius: 999px; padding: .38rem .65rem; font: 650 .72rem/1 var(--mono); }
+      .section { padding: 3.6rem 0; border-top: 1px solid var(--line); }
+      .section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, .55fr); gap: 2rem; align-items: end; margin-bottom: 1.6rem; }
+      .eyebrow { color: var(--muted); font: 700 .72rem/1 var(--mono); letter-spacing: .13em; text-transform: uppercase; }
+      .section h2 { font-size: clamp(1.8rem, 4vw, 3.15rem); margin: .5rem 0 0; }
+      .section-intro { color: var(--muted); margin: 0; }
+      .ladder-grid { display: grid; grid-template-columns: minmax(300px, 1.05fr) minmax(330px, .95fr); gap: 1rem; }
+      .panel { background: color-mix(in srgb, var(--surface-2) 92%, transparent); border: 1px solid var(--line); border-radius: 1rem; box-shadow: 0 18px 55px rgb(0 0 0 / .12); }
+      .visual-panel { padding: clamp(.75rem, 2vw, 1.35rem); overflow: hidden; position: relative; }
+      .visual-panel::after { content: "THERMAL ENVELOPE / NOT A PRODUCT RATING"; position: absolute; right: -4.7rem; top: 7rem; rotate: 90deg; color: var(--muted); font: 600 .56rem/1 var(--mono); letter-spacing: .12em; }
+      .ladder-svg { width: 100%; height: auto; display: block; }
+      .selector { padding: 1.25rem; display: flex; flex-direction: column; }
+      .selector h3 { font-size: 1.05rem; }
+      .density-display { font: 800 clamp(2.3rem, 7vw, 4.7rem)/1 var(--mono); margin: .3rem 0; }
+      .density-display small { font-size: .28em; color: var(--muted); }
+      input[type="range"] { width: 100%; accent-color: var(--door); }
+      .recommendation { margin: 1rem 0; padding: 1rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface); }
+      .recommendation strong { display: block; font-size: 1.1rem; margin-bottom: .2rem; }
+      .checks { display: grid; gap: .55rem; margin-top: auto; }
+      .check { display: grid; grid-template-columns: 1.4rem 1fr; gap: .5rem; color: var(--muted); font-size: .9rem; }
+      .check i { color: var(--contain); }
+      .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface-2); }
+      table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: .88rem; }
+      caption { color: var(--muted); padding: .85rem 1rem; caption-side: top; font-size: .78rem; }
+      th, td { padding: .78rem .8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { color: var(--muted); font: 700 .68rem/1.25 var(--mono); letter-spacing: .05em; text-transform: uppercase; background: color-mix(in srgb, var(--surface-2) 88%, var(--ink) 4%); }
+      tbody tr:last-child td { border-bottom: 0; }
+      th:first-child, td:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface-2); min-width: 145px; }
+      tbody tr[data-band].active td { background: color-mix(in srgb, var(--door) 13%, var(--surface-2)); }
+      .regime { display: inline-flex; align-items: center; gap: .45rem; font-weight: 750; }
+      .dot { width: .7rem; aspect-ratio: 1; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 18%, transparent); }
+      .level { font: 700 .72rem/1 var(--mono); white-space: nowrap; }
+      .cards { container-type: inline-size; display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+      .cardx { padding: 1rem; border: 1px solid var(--line); border-top: 4px solid var(--c, var(--air)); border-radius: .8rem; background: var(--surface-2); }
+      .cardx h3 { font-size: 1rem; margin-bottom: .45rem; }
+      .cardx p { font-size: .87rem; color: var(--muted); margin: .35rem 0; }
+      .cardx .when { color: var(--ink); font-weight: 700; }
+      .formula-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .85rem; }
+      .formula { padding: 1rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-2); }
+      .formula .equation { font: 800 1rem/1.5 var(--mono); color: var(--door); }
+      .worked { border: 1px solid var(--line); border-radius: .9rem; overflow: hidden; margin-top: 1rem; }
+      .worked-header { padding: .8rem 1rem; color: #08111b; background: linear-gradient(90deg, var(--air), var(--door)); font-weight: 800; }
+      .worked-body { padding: 1rem; background: var(--surface-2); display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; }
+      .step { border-left: 2px solid var(--line); padding-left: .7rem; }
+      .step b { display: block; font: 700 .68rem/1.2 var(--mono); color: var(--muted); text-transform: uppercase; }
+      .step span { display: block; font-weight: 750; margin-top: .25rem; }
+      details { border: 1px solid var(--line); border-radius: .75rem; background: var(--surface-2); margin-bottom: .65rem; }
+      summary { cursor: pointer; padding: .9rem 1rem; font-weight: 760; }
+      details > div { padding: 0 1rem 1rem; color: var(--muted); }
+      .quote-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+      .quote { padding: 1rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-2); }
+      .quote .number { font: 850 1.8rem/1 var(--mono); color: var(--c, var(--door)); }
+      .quote p { color: var(--muted); font-size: .88rem; margin: .45rem 0 0; }
+      .source-list { columns: 2; column-gap: 2rem; padding-left: 1.2rem; }
+      .source-list li { break-inside: avoid; margin-bottom: .75rem; color: var(--muted); font-size: .86rem; }
+      .footer { padding: 2rem 0 3rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+      .related { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .7rem; }
+      .related a { border: 1px solid var(--line); border-radius: .5rem; padding: .45rem .65rem; text-decoration: none; }
+      @container (max-width: 740px) { .cards { grid-template-columns: 1fr 1fr; } }
+    }
+    @layer utilities {
+      .small-note { color: var(--muted); font-size: .78rem; }
+      .no-break { white-space: nowrap; }
+      @media (max-width: 800px) {
+        .section-head, .ladder-grid { grid-template-columns: 1fr; }
+        .formula-grid, .worked-body { grid-template-columns: 1fr 1fr; }
+        .source-list { columns: 1; }
+      }
+      @media (max-width: 520px) {
+        .shell { width: min(100% - 1rem, 1180px); }
+        .hero { padding-top: 1.5rem; }
+        .visual-panel::after { display: none; }
+        .cards, .quote-grid, .formula-grid, .worked-body { grid-template-columns: 1fr; }
+        .section { padding-block: 2.8rem; }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        tbody tr { transition: background-color .25s ease; }
+        .theme-btn, .related a { transition: transform .18s ease, border-color .18s ease; }
+        .theme-btn:hover, .related a:hover { transform: translateY(-2px); border-color: var(--air); }
+      }
+      @media print {
+        @page { size: letter landscape; margin: .18in; }
+        :root { color-scheme: light; }
+        body { background: #fff; color: #111; font-size: 9.5pt; }
+        .topbar, .hero, .selector, #regimes, #advanced, #mistakes, #sources, .footer { display: none; }
+        .section { padding: .12in 0; border: 0; }
+        #decision { padding: 0; break-after: page; }
+        #decision .shell { width: 100%; display: grid; grid-template-columns: 28% minmax(0, 1fr); grid-template-areas: "head head" "ladder table"; gap: .08in; }
+        #decision .section-head { grid-area: head; display: flex; justify-content: space-between; align-items: end; margin: 0 0 .04in; }
+        #decision .section-head > div { min-width: 3.3in; }
+        #decision .section-head p { max-width: 6in; font-size: 7.5pt; }
+        .section h2 { font-size: 16pt; }
+        .ladder-grid { grid-area: ladder; display: block; }
+        .visual-panel { width: 100%; float: none; margin: 0; padding: .05in; box-shadow: none; }
+        .visual-panel::after { display: none; }
+        .visual-panel figcaption { font-size: 6pt; line-height: 1.25; }
+        #decision .table-wrap { grid-area: table; align-self: start; }
+        .table-wrap { overflow: visible; border-color: #777; }
+        table { min-width: 0; font-size: 5.6pt; line-height: 1.22; }
+        caption { padding: 2px 3px; font-size: 5.2pt; line-height: 1.2; }
+        th, td { padding: 2px 3px; }
+        th:first-child, td:first-child { position: static; }
+        a { color: #111; text-decoration: none; }
+        .panel, .table-wrap { background: #fff; }
+        * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="shell topbar" aria-label="Page controls">
+    <a class="brand" href="index.php"><i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i> Cheatsheets</a>
+    <button class="theme-btn" id="themeToggle" type="button" aria-label="Toggle light and dark theme"><i class="bi bi-circle-half" aria-hidden="true"></i> Theme</button>
+  </nav>
+
+  <header class="shell hero">
+    <div class="kicker">Vendor-neutral thermal planning / verified 2026-07-14</div>
+    <h1>Cooling decision thresholds:<br><span class="gradient-text">air → containment → RDHx → liquid → immersion</span></h1>
+    <p class="lede">There is no universal “air limit.” The practical threshold is where your rack airflow, temperature rise, fan power, redundancy, acoustics, and room distribution stop closing simultaneously. Use this ladder to screen an architecture—then validate it against the actual server thermal report and a failure-mode design.</p>
+    <p class="rule"><strong>Core rule:</strong> density is a trigger for investigation, not a product-selection algorithm. At the same 20 kW/rack, a clean contained hall may stay on air while a legacy raised-floor room with recirculation needs a rear-door exchanger.</p>
+    <div class="hero-meta">
+      <span class="chip">GLOBAL SCOPE</span><span class="chip">RACK PEAK, NOT ROOM AVERAGE</span><span class="chip">PUE ≠ COOLING EFFICIENCY</span><span class="chip">N+1 INCLUDED IN FINAL DESIGN</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="section" id="decision">
+      <div class="shell">
+        <div class="section-head">
+          <div><div class="eyebrow">01 / Quick reference</div><h2>The density ladder</h2></div>
+          <p class="section-intro">Bands overlap deliberately. “Viable” means technically defensible under the listed assumptions; “default shortlist” is the first architecture to price and model, not a mandate.</p>
+        </div>
+        <div class="ladder-grid">
+          <figure class="panel visual-panel" aria-labelledby="ladder-caption">
+            <svg class="ladder-svg" viewBox="0 0 620 880" role="img" aria-labelledby="ladder-title ladder-desc">
+              <title id="ladder-title">Data center cooling density threshold ladder</title>
+              <desc id="ladder-desc">A vertical thermometer from 5 to over 250 kilowatts per rack. Air and containment occupy the lower zones, rear-door and direct-to-chip the middle, and immersion the upper zone. A 120 kilowatt NVIDIA GB200 NVL72 example is pinned in the liquid zone.</desc>
+              <defs>
+                <linearGradient id="thermal" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0" stop-color="#29a8ff"/><stop offset=".27" stop-color="#2dd4bf"/><stop offset=".47" stop-color="#facc15"/><stop offset=".7" stop-color="#fb923c"/><stop offset=".86" stop-color="#f05252"/><stop offset="1" stop-color="#be123c"/>
+                </linearGradient>
+                <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#fff" stroke-opacity=".18" stroke-width="2"/></pattern>
+              </defs>
+              <rect x="18" y="18" width="584" height="844" rx="26" fill="#0c1520" stroke="#34475a"/>
+              <text x="48" y="60" fill="#93a6ba" font-family="ui-monospace, monospace" font-size="13" letter-spacing="2">RACK DENSITY / kW IT LOAD</text>
+              <rect x="104" y="102" width="74" height="694" rx="37" fill="#121e2b" stroke="#60778e" stroke-width="2"/>
+              <rect x="118" y="116" width="46" height="666" rx="23" fill="url(#thermal)" filter="url(#glow)"/>
+              <rect x="118" y="116" width="46" height="666" rx="23" fill="url(#hatch)"/>
+              <circle cx="141" cy="792" r="51" fill="#29a8ff" opacity=".9" filter="url(#glow)"/><circle cx="141" cy="792" r="28" fill="#e6f7ff" opacity=".72"/>
+              <g fill="#b8c7d8" stroke="#6f8499" stroke-width="2" font-family="ui-monospace, monospace" font-size="14">
+                <path d="M178 735h28"/><text x="216" y="740" stroke="none">5</text>
+                <path d="M178 670h28"/><text x="216" y="675" stroke="none">10</text>
+                <path d="M178 595h28"/><text x="216" y="600" stroke="none">20</text>
+                <path d="M178 512h28"/><text x="216" y="517" stroke="none">40</text>
+                <path d="M178 425h28"/><text x="216" y="430" stroke="none">80</text>
+                <path d="M178 337h28"/><text x="216" y="342" stroke="none">120</text>
+                <path d="M178 245h28"/><text x="216" y="250" stroke="none">200</text>
+                <path d="M178 148h28"/><text x="216" y="153" stroke="none">250+</text>
+              </g>
+              <g font-family="ui-sans-serif, system-ui" font-weight="700">
+                <g><rect x="270" y="698" width="282" height="49" rx="9" fill="#29a8ff" fill-opacity=".14" stroke="#29a8ff"/><text x="286" y="719" fill="#8fd4ff" font-size="16">ROOM AIR</text><text x="286" y="738" fill="#93a6ba" font-size="12">best below ~10 · meter the peak</text></g>
+                <g><rect x="270" y="624" width="282" height="58" rx="9" fill="#2dd4bf" fill-opacity=".12" stroke="#2dd4bf"/><text x="286" y="646" fill="#7cebdc" font-size="16">CONTAINMENT / IN-ROW</text><text x="286" y="666" fill="#93a6ba" font-size="12">~10–30 screening overlap</text></g>
+                <g><rect x="270" y="510" width="282" height="96" rx="9" fill="#facc15" fill-opacity=".11" stroke="#facc15"/><text x="286" y="534" fill="#ffe46b" font-size="16">REAR-DOOR HX</text><text x="286" y="554" fill="#93a6ba" font-size="12">vendor products span 20–80</text><text x="286" y="579" fill="#ffe46b" font-size="12">liquid at rack · servers remain air-cooled</text></g>
+                <g><rect x="270" y="350" width="282" height="142" rx="9" fill="#fb923c" fill-opacity=".12" stroke="#fb923c"/><text x="286" y="374" fill="#ffc18a" font-size="16">DIRECT-TO-CHIP</text><text x="286" y="396" fill="#93a6ba" font-size="12">single or two phase · hybrid air remains</text><path d="M250 337h302" stroke="#f05252" stroke-width="2" stroke-dasharray="6 5"/><circle cx="250" cy="337" r="6" fill="#f05252"/><text x="270" y="327" fill="#ff9e9e" font-size="13">GB200 NVL72 ≈120 kW (2026 docs)</text></g>
+                <g><rect x="270" y="126" width="282" height="204" rx="9" fill="#be123c" fill-opacity=".13" stroke="#e4486c"/><text x="286" y="152" fill="#ff9bb2" font-size="16">IMMERSION / EXTREME DLC</text><text x="286" y="175" fill="#93a6ba" font-size="12">100–361 kW product examples</text><text x="286" y="203" fill="#ff9bb2" font-size="12">density ≠ automatic immersion choice</text><text x="286" y="227" fill="#93a6ba" font-size="12">service model + hardware warranty decide</text></g>
+              </g>
+              <text x="48" y="838" fill="#75889c" font-family="ui-monospace, monospace" font-size="11">PLANNING ZONES · PRODUCT RATINGS REQUIRE THEIR STATED WATER/AIR CONDITIONS</text>
+            </svg>
+            <figcaption class="small-note" id="ladder-caption">Screening bands synthesized from the attributed claims below. The pinned NVIDIA rack is a hardware example, not a regime boundary.</figcaption>
+          </figure>
+
+          <aside class="panel selector" aria-label="Rack density screening tool">
+            <div class="eyebrow">Place your hottest rack</div>
+            <div class="density-display"><span id="densityValue">40</span><small> kW/rack</small></div>
+            <label class="visually-hidden" for="densityRange">Planned peak rack power in kilowatts</label>
+            <input id="densityRange" type="range" min="5" max="250" value="40" step="5">
+            <div class="recommendation" aria-live="polite">
+              <span class="eyebrow">Default shortlist</span>
+              <strong id="regimeOutput">Rear-door heat exchanger or direct-to-chip</strong>
+              <span id="reasonOutput">Price both. RDHx preserves standard servers; DTC removes the hottest silicon load before it becomes air.</span>
+            </div>
+            <div class="checks">
+              <div class="check"><i class="bi bi-1-circle-fill" aria-hidden="true"></i><span>Enter the <strong>measured or modeled sustained peak</strong> of the hottest rack—not room average and not summed PSU nameplates.</span></div>
+              <div class="check"><i class="bi bi-2-circle-fill" aria-hidden="true"></i><span>Confirm server heat capture, required inlet temperature, flow, pressure, water chemistry, and rejected-to-air fraction.</span></div>
+              <div class="check"><i class="bi bi-3-circle-fill" aria-hidden="true"></i><span>Repeat at normal load, design peak, one cooling unit failed, and loss of facility water. A capacity number without a failure case is incomplete.</span></div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="table-wrap mt-3">
+          <table id="decisionTable">
+            <caption>Decision ladder. Density bands are engineering screens derived from cited product ranges and case evidence; capex uses relative classes because retrofit scope dominates any honest dollar figure.</caption>
+            <thead><tr><th>Regime</th><th>Screening band</th><th>Viable when…</th><th>Default / optimal when…</th><th>PUE evidence, not promise</th><th>Relative capex</th><th>Ops load</th></tr></thead>
+            <tbody>
+              <tr data-band="5-10"><td><span class="regime"><span class="dot" style="--c:var(--air)"></span>Room air</span></td><td class="level">~5–10 kW</td><td>Inlet temperatures are uniform; bypass/recirculation is controlled; CRAH/CRAC and floor/duct paths close at N+1.</td><td>Mixed legacy racks, low peaks, no facility-water loop at rack.</td><td>2024 fleet average: <strong>1.56</strong>; not an air-system rating.</td><td>$</td><td>Familiar; airflow balancing and filter maintenance.</td></tr>
+              <tr data-band="10-20"><td><span class="regime"><span class="dot" style="--c:var(--contain)"></span>Containment</span></td><td class="level">~10–20 kW</td><td>Sealing, blanking panels, fan control, and enough return path eliminate mixing.</td><td>The room has capacity but distribution—not heat rejection—is the constraint.</td><td>DOE Jefferson Lab reached <strong>1.27</strong> after a multi-measure retrofit including hot-aisle containment.</td><td>$–$$</td><td>Door/roof discipline; pressure and inlet sensors.</td></tr>
+              <tr data-band="15-30"><td><span class="regime"><span class="dot" style="--c:var(--row)"></span>In-row air</span></td><td class="level">~15–30 kW</td><td>Short airflow path, contained aisle, sufficient coil and fan capacity, and a maintainable condensate/chilled-water path.</td><td>A local hot row must be added without rebuilding the whole room.</td><td>No transferable PUE band; include unit, pumps/chiller, and partial-load controls in the facility model.</td><td>$$</td><td>More distributed fans, valves, drains, and controls.</td></tr>
+              <tr data-band="20-80"><td><span class="regime"><span class="dot" style="--c:var(--door)"></span>Rear-door HX</span></td><td class="level">20–80 kW products</td><td>Server fans can overcome door pressure drop; water and condensate risk are engineered; discharge remains room-neutral.</td><td>Standard air-cooled IT must stay intact, or DTC readiness is staged.</td><td>LBNL projected a facility change from <strong>~1.4 to ~1.1</strong> in a broader liquid-cooling project.</td><td>$$–$$$</td><td>Water balancing, hinges/hoses, leak detection, coil cleaning.</td></tr>
+              <tr data-band="30-120"><td><span class="regime"><span class="dot" style="--c:var(--dtc)"></span>Single-phase DTC</span></td><td class="level">~30–120+ kW</td><td>Cold plates cover dominant heat sources; a CDU and secondary loop reject heat; residual air is budgeted.</td><td>OEM-supported AI/HPC trays, warm-water opportunity, conventional service workflow desired.</td><td>Do not infer PUE from heat-capture ratio; model pumps, dry cooler/chiller, and remaining air separately.</td><td>$$$</td><td>CDUs, chemistry, quick disconnects, firmware, leak response.</td></tr>
+              <tr data-band="80-250"><td><span class="regime"><span class="dot" style="--c:var(--phase)"></span>Two-phase DTC</span></td><td class="level">20–120 kW current rack units; higher claims</td><td>Qualified dielectric/refrigerant loop and condenser can be supported; component and fluid lifecycle are accepted.</td><td>Very high chip heat flux, low flow, or waterless white-space requirement outweighs ecosystem novelty.</td><td>Vendor efficiency claims are not comparable to whole-facility metered PUE.</td><td>$$$–$$$$</td><td>Specialized fluid, pressure, recovery, and supplier skills.</td></tr>
+              <tr data-band="100-250"><td><span class="regime"><span class="dot" style="--c:var(--immerse)"></span>Immersion</span></td><td class="level">100–361 kW product examples</td><td>Hardware, materials, cabling, fluid, lifting, fire, and warranty workflows are qualified as one system.</td><td>Maximum floor density, harsh/dusty environment, or fanless server design justifies a new service model.</td><td>One vendor claims <strong>&lt;1.03</strong>; require boundary definition and meter it yourself.</td><td>$$$$</td><td>Tank service, lifting/drip control, fluid analysis, hardware adaptation.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="fundamentals">
+      <div class="shell">
+        <div class="section-head"><div><div class="eyebrow">02 / Fundamentals</div><h2>Turn watts into flow before choosing hardware</h2></div><p class="section-intro">Nearly every watt delivered to IT becomes heat in the data hall. Cooling capacity and transport are separate problems: a chiller may have spare tons while a rack starves for airflow.</p></div>
+        <div class="formula-grid">
+          <article class="formula"><div class="eyebrow">Heat balance</div><div class="equation">Q̇ = P<sub>IT</sub></div><p class="small-note mb-0">For a steady rack boundary, 40 kW electrical draw means approximately 40 kW thermal rejection. Use metered input or the vendor thermal report.</p></article>
+          <article class="formula"><div class="eyebrow">Airflow</div><div class="equation">CFM ≈ 3,160 × kW ÷ ΔT°F</div><p class="small-note mb-0">From <span class="mono">Q = 1.08 × CFM × ΔT</span>. At 20°F rise: ~158 CFM/kW. Altitude, humidity, leakage, and fan curves change the result.</p></article>
+          <article class="formula"><div class="eyebrow">Water flow</div><div class="equation">L/min ≈ 14.3 × kW ÷ ΔT°C</div><p class="small-note mb-0">For water near room temperature. At a 10°C loop rise: ~1.43 L/min per kW before glycol/property and margin corrections.</p></article>
+        </div>
+        <div class="worked">
+          <div class="worked-header">Worked example — a sustained 40 kW rack at 20°F air rise</div>
+          <div class="worked-body">
+            <div class="step"><b>1 / Heat</b><span>40 kW = 136,480 Btu/h</span></div>
+            <div class="step"><b>2 / Airflow</b><span>136,480 ÷ (1.08 × 20)</span></div>
+            <div class="step"><b>3 / Result</b><span>≈ 6,319 CFM</span></div>
+            <div class="step"><b>4 / Meaning</b><span>~149 air changes/min through a 42U rack face*</span></div>
+          </div>
+        </div>
+        <p class="small-note mt-2">*Illustrative velocity framing, not a fan selection. Using a nominal 24 × 79 in rack face (~13.2 ft²), 6,319 CFM implies ~479 ft/min face velocity. Real open area is smaller and pressure drop matters.</p>
+        <div class="quote-grid mt-3">
+          <article class="quote" style="--c:var(--air)"><div class="number">~3,000×</div><strong>Volumetric heat-capacity advantage</strong><p>LBNL training material states it takes roughly 2,000–3,000 times the volume of air to cool what water can; the point is transport work, not that every liquid system is automatically efficient.</p></article>
+          <article class="quote" style="--c:var(--door)"><div class="number">18–27°C</div><strong>Recommended inlet band</strong><p>ASHRAE’s recommended air temperature envelope is 18–27°C (64.4–80.6°F). Measure server inlets—room thermostat temperature can hide recirculation.</p></article>
+          <article class="quote" style="--c:var(--contain)"><div class="number">RCI = 100%</div><strong>No recommended-range excursions</strong><p>DOE’s Rack Cooling Index framing: 100% means no intakes outside the recommended range; below 90% signals poor thermal conditions. Trend top/middle/bottom inlet probes.</p></article>
+          <article class="quote" style="--c:var(--phase)"><div class="number">120 kW</div><strong>A real rack anchor, not a forecast</strong><p>NVIDIA documents approximately 120 kW for an NVL72 rack. The OCP MGX spec also uses 120 kW rack power and an 85% liquid heat-capture requirement, leaving residual air cooling.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="reconciliation">
+      <div class="shell">
+        <div class="section-head"><div><div class="eyebrow">03 / Claim reconciliation</div><h2>Why “the air limit” moves</h2></div><p class="section-intro">These figures describe different boundaries: installed fleet, room distribution, passive door rating, active door rating, or server thermal architecture. They do not contradict once the boundary is named.</p></div>
+        <div class="table-wrap">
+          <table>
+            <caption>Attributed threshold claims checked 2026-07-14. “Up to” is recorded as a product/vendor claim, not converted into a sustained design limit.</caption>
+            <thead><tr><th>Quoted figure</th><th>Source / date</th><th>What it actually describes</th><th>Assumption producing the number</th><th>Decision use</th></tr></thead>
+            <tbody>
+              <tr><td class="level">1–2 kW/rack</td><td>Schneider Electric, 2011</td><td>Order-of-magnitude design density for legacy room-oriented systems.</td><td>Long shared air path; room average; older cooling distribution.</td><td>Explains why a legacy room can fail far below a modern air-cooled hall.</td></tr>
+              <tr><td class="level">8–12 kW/rack</td><td>LiquidStack article, 2021</td><td>Vendor statement about what “most air cooling systems” can handle.</td><td>Unstated typical system; no containment or acoustic boundary disclosed.</td><td>Treat as sales framing; require measurements before using it.</td></tr>
+              <tr><td class="level">over 10 kW/rack</td><td>Schneider Electric, 2011</td><td>Operator-experience threshold in then-typical facilities.</td><td>Blade-era room cooling and limited high-density operating history.</td><td>A warning that distribution and redundancy become first-class design work.</td></tr>
+              <tr><td class="level">~20 kW/rack</td><td>Vertiv white paper / 2025 article</td><td>Practical conventional-air transition point and start of RDHx consideration.</td><td>Rising fan/distribution work; liquid heat exchanger relocates heat transport.</td><td>Good price-both trigger—not a physical law.</td></tr>
+              <tr><td class="level">20 kW/door</td><td>Vertiv Liebert XDR brochure, 2024-era publication</td><td>Passive, fanless rear-door module rating.</td><td>Server fans drive the door; specified approach and refrigerant system.</td><td>Demonstrates that “RDHx” spans passive products with modest ratings.</td></tr>
+              <tr><td class="level">50 kW/door</td><td>Vertiv Liebert DCD manual, 2023</td><td>Chilled-water rear-door product family design point.</td><td>Door geometry, headroom, water conditions, and server airflow apply.</td><td>Validate site clearance, hose path, pressure drop, and N+1—not just kW.</td></tr>
+              <tr><td class="level">80 kW/door</td><td>Vertiv CoolLoop RDHx launch, 2025</td><td>Maximum capacity claim for an active chilled-water door.</td><td>Product test conditions; active fans; facility water available.</td><td>Shows why “air-cooled server” can survive at 80 kW while heat transport is already liquid.</td></tr>
+              <tr><td class="level">100–361 kW/tank</td><td>Submer product pages, 2023–2026</td><td>Immersion tank heat-dissipation ratings.</td><td>Tank, CDU, fluid, operating condition, and compatible IT treated as a system.</td><td>Use for footprint screening only; do not compare one tank directly with one rack.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="regimes">
+      <div class="shell">
+        <div class="section-head"><div><div class="eyebrow">04 / Working knowledge</div><h2>Seven regimes, seven different constraints</h2></div><p class="section-intro">A regime earns its place when it changes the limiting mechanism or the operating model—not merely because a vendor renamed a coil.</p></div>
+        <div class="cards">
+          <article class="cardx" style="--c:var(--air)"><h3>CRAC / CRAH room air</h3><p><span class="when">Purpose:</span> reject whole-room heat through DX refrigerant (CRAC) or chilled-water coil (CRAH).</p><p><strong>Use:</strong> low/mixed density with measured inlet control. <strong>Gotcha:</strong> installed tons do not prove air reaches the rack; verify fan curve and return path at failure state.</p></article>
+          <article class="cardx" style="--c:var(--contain)"><h3>Hot/cold aisle containment</h3><p><span class="when">Purpose:</span> stop supply and exhaust mixing so each CFM performs useful transport.</p><p><strong>Use:</strong> before buying exotic cooling. <strong>Gotcha:</strong> open U spaces, cable cutouts, fire-system interfaces, and doors left open defeat the pressure boundary.</p></article>
+          <article class="cardx" style="--c:var(--row)"><h3>In-row air</h3><p><span class="when">Purpose:</span> shorten the source-to-coil path and add capacity beside a dense row.</p><p><strong>Use:</strong> localized retrofit. <strong>Gotcha:</strong> unit failure can create a sharp local transient; distributed valves, drains, fans, and controls multiply maintenance points.</p></article>
+          <article class="cardx" style="--c:var(--door)"><h3>Rear-door heat exchanger</h3><p><span class="when">Purpose:</span> transfer server exhaust to liquid without modifying server internals.</p><p><strong>Use:</strong> 20–80 kW product range or staged liquid transition. <strong>Gotcha:</strong> passive doors add pressure drop to server fans; concentrated hot spots can underuse coil area.</p></article>
+          <article class="cardx" style="--c:var(--dtc)"><h3>Single-phase DTC</h3><p><span class="when">Purpose:</span> circulate water/glycol or dielectric liquid through cold plates while it remains liquid.</p><p><strong>Use:</strong> OEM-qualified CPUs/GPUs and warm-water loops. <strong>Gotcha:</strong> memory, drives, PSUs, NICs, and switches may remain air-cooled; capture ratio is never assumed to be 100%.</p></article>
+          <article class="cardx" style="--c:var(--phase)"><h3>Two-phase DTC</h3><p><span class="when">Purpose:</span> boil dielectric fluid at the cold plate and condense it in a closed loop.</p><p><strong>Use:</strong> high heat flux or waterless white space. Current ZutaCore rack units span 20–120 kW (as of Jul 2026). <strong>Gotcha:</strong> fluid availability, recovery, seals, and supplier dependence.</p></article>
+          <article class="cardx" style="--c:var(--immerse)"><h3>Immersion</h3><p><span class="when">Purpose:</span> submerge compatible IT in dielectric fluid, removing most server air paths.</p><p><strong>Use:</strong> dense standardized fleets with redesigned service. <strong>Gotcha:</strong> warranty/material compatibility, lifting, optics/cabling, drip control, fluid aging, and tank-level fault domains.</p></article>
+          <article class="cardx" style="--c:#8b5cf6"><h3>Hybrid is the normal end state</h3><p><span class="when">Purpose:</span> liquid-cool dominant silicon while air serves residual components and conventional racks.</p><p><strong>Example:</strong> NVIDIA documents liquid-cooled CPU/GPU/NVSwitch devices and air-cooled remaining components. <strong>Gotcha:</strong> “liquid cooled” never licenses removal of the air budget.</p></article>
+          <article class="cardx" style="--c:#94a3b8"><h3>Heat rejection is still required</h3><p><span class="when">Purpose:</span> move heat from CDU/tank loop to dry cooler, cooling tower, chiller, district heat, or another sink.</p><p><strong>Gotcha:</strong> closed-loop liquid can have zero direct water consumption and still reject heat through a water-using facility plant—or vice versa.</p></article>
+        </div>
+
+        <div class="table-wrap mt-3">
+          <table>
+            <caption>Regime comparison. “Water use” separates white-space coolant from site heat rejection; they are different questions.</caption>
+            <thead><tr><th>Regime</th><th>Published capacity anchor</th><th>White-space fluid</th><th>Retrofit fit</th><th>Dominant failure modes</th><th>Staffing / tooling</th></tr></thead>
+            <tbody>
+              <tr><td>Room air</td><td>Legacy 1–2; investigation often begins 10–20 kW</td><td>Air; CRAC/CRAH plant may use refrigerant/chilled water</td><td>Highest</td><td>Recirculation, bypass, fan/CRAH loss, filter loading</td><td>HVAC + airflow measurement</td></tr>
+              <tr><td>Containment</td><td>Screen roughly 10–20 kW</td><td>Air</td><td>High</td><td>Door/opening breach, pressure imbalance, sensor blind spot</td><td>Air balancing + controls</td></tr>
+              <tr><td>In-row</td><td>Product-specific; screen roughly 15–30 kW</td><td>Air plus refrigerant/water at row</td><td>High–medium</td><td>Local fan/valve/condensate failure, short-circuit airflow</td><td>Distributed HVAC service</td></tr>
+              <tr><td>RDHx</td><td>20–80 kW cited products</td><td>Water/refrigerant at rack; air through server</td><td>Medium–high</td><td>Leak, hose/hinge damage, fouling, excess pressure drop</td><td>Hydronics + rack service</td></tr>
+              <tr><td>Single-phase DTC</td><td>OCP 120 kW rack / 85% capture anchor</td><td>Water/glycol or dielectric secondary loop</td><td>Medium</td><td>Leak, corrosion/chemistry, pump/CDU, cold-plate blockage</td><td>CDU, chemistry, QD and OEM procedures</td></tr>
+              <tr><td>Two-phase DTC</td><td>ZutaCore 20–120 kW current units</td><td>Dielectric phase-change fluid</td><td>Medium</td><td>Charge loss, non-condensables, condenser/control fault</td><td>Specialized fluid + sealed-loop service</td></tr>
+              <tr><td>Immersion</td><td>Submer 100–361 kW examples</td><td>Bulk dielectric fluid</td><td>Low–medium</td><td>Pump/CDU, contamination, material incompatibility, lift incident</td><td>Tank, fluid, lifting and adapted IT workflow</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="advanced">
+      <div class="shell">
+        <div class="section-head"><div><div class="eyebrow">05 / Edge & advanced</div><h2>Design the loop, failure state, and exit path</h2></div><p class="section-intro">High-density cooling is an interface problem: IT, controls, facility water, heat rejection, electrical redundancy, and service procedures have to agree on the same boundary conditions.</p></div>
+        <details name="advanced" open><summary>ASHRAE W classes: the name is the upper facility-supply temperature</summary><div><p>As of the ASHRAE framework checked July 2026, all classes share a 2°C lower bound. <strong>W17, W27, W32, W40, W45</strong> name their upper facility-supply temperature; <strong>W+</strong> means above 45°C. Select equipment certified for the entire chosen class—not merely one nominal setpoint.</p><p><strong>Decision:</strong> W17/W27 commonly implies colder infrastructure; W32/W40/W45 expands economizer/dry-cooler hours and heat-reuse quality, but only qualified IT can accept it. Check approach temperature from facility loop → CDU → technology loop → cold plate.</p></div></details>
+        <details name="advanced"><summary>Hybrid load split: calculate residual air instead of quoting “fully liquid”</summary><div><p>Use <span class="mono">Q<sub>air</sub> = P<sub>rack</sub> × (1 − liquid heat-capture ratio)</span>. For the OCP MGX anchor, <strong>120 kW × (1 − 0.85) = 18 kW</strong> remains outside the liquid-captured load. Then add any rack elements outside the stated boundary and validate the OEM thermal report. NVIDIA’s current GB200 documentation explicitly describes hybrid trays: major processors and switches are liquid-cooled; remaining components are air-cooled.</p></div></details>
+        <details name="advanced"><summary>N+1: redundancy applies to flow and heat rejection, not just nameplate tons</summary><div><p>Test loss of one CDU pump, one CDU, one facility pump, one heat-rejection cell, and utility-water interruption. Confirm check-valve behavior, automatic isolation, ride-through time, thermal mass, controls fail-position, and which racks shed load. A 1 MW CDU does not provide N+1 to a 900 kW load if it is the only CDU.</p></div></details>
+        <details name="advanced"><summary>Climate and water: Phoenix and Minneapolis do not get the same “free cooling”</summary><div><p>ASHRAE notes many locations can economize for as much as 50% of annual hours within the 18–27°C recommended envelope, but actual hours depend on dry-bulb, wet-bulb, humidity, air quality, and selected water class. Price annual energy and water from an hourly weather file; never transplant a vendor PUE from a different climate.</p></div></details>
+        <details name="advanced"><summary>Heat reuse: higher-grade heat helps, but a customer and timing still matter</summary><div><p>Track <strong>Energy Reuse Effectiveness (ERE)</strong> when exported heat displaces useful energy; PUE alone does not credit reuse. Warm W40/W45/W+ return can reduce temperature lift, yet value requires a nearby coincident sink, heat exchanger, backup, metering boundary, and contract. “100% recoverable” is not “100% economically reused.”</p></div></details>
+        <details name="advanced"><summary>Two-phase vs single-phase: density alone does not decide</summary><div><p>Two-phase can remove high chip heat flux at low mass flow; ZutaCore states 0.3 L/min per 1,000 W for its system and current in-rack units from 20 to 120 kW. Single-phase offers a broader water-cooling ecosystem and simpler fluid accounting. Compare qualified chip list, approach temperature, pump/compressor energy, fluid regulation and replacement, service recovery, control response, and supplier exit plan.</p></div></details>
+      </div>
+    </section>
+
+    <section class="section" id="mistakes">
+      <div class="shell">
+        <div class="section-head"><div><div class="eyebrow">06 / Common mistakes</div><h2>Failure begins in the assumptions</h2></div><p class="section-intro">A useful design review attacks the input boundary before debating brands.</p></div>
+        <div class="cards">
+          <article class="cardx" style="--c:var(--phase)"><h3>Using room average</h3><p><strong>Failure:</strong> 600 kW across 100 racks looks like 6 kW/rack while two GPU racks each peak at 80 kW.</p><p><strong>Fix:</strong> size distribution from per-rack and per-row peaks plus coincidence; size plant from diversified load with explicit margin.</p></article>
+          <article class="cardx" style="--c:var(--phase)"><h3>Adding PSU nameplates</h3><p><strong>Failure:</strong> nameplate maximum is mistaken for simultaneous heat. DOE’s Air Management Tool explicitly says not to substitute nameplate for measured power.</p><p><strong>Fix:</strong> use branch/rack meters or vendor thermal reports; preserve a documented growth case.</p></article>
+          <article class="cardx" style="--c:var(--phase)"><h3>Confusing IT and facility losses</h3><p><strong>Failure:</strong> UPS/PDU losses are blindly added to rack heat even when the equipment is outside the white space.</p><p><strong>Fix:</strong> draw boundaries. Rack cooling uses delivered IT heat; facility plant must reject electrical and mechanical losses where they physically occur.</p></article>
+          <article class="cardx" style="--c:var(--phase)"><h3>Believing “up to”</h3><p><strong>Failure:</strong> an 80 kW door rating is used without its entering-water temperature, flow, air volume, pressure drop, fouling, or redundancy conditions.</p><p><strong>Fix:</strong> require a certified duty point and fan/pump curves at normal and failure states.</p></article>
+          <article class="cardx" style="--c:var(--phase)"><h3>Assuming 100% heat capture</h3><p><strong>Failure:</strong> liquid-cooled CPUs/GPUs lead to deletion of room airflow.</p><p><strong>Fix:</strong> use OEM component mapping and heat-capture ratio; calculate residual kW and verify inlet temperatures.</p></article>
+          <article class="cardx" style="--c:var(--phase)"><h3>Ignoring maintenance geometry</h3><p><strong>Failure:</strong> doors cannot swing, hoses kink, tanks block egress, CDUs steal rack U, or lifted wet servers have no drip/service zone.</p><p><strong>Fix:</strong> model service clearances, floor loading, pipe strain, containment, rigging, drainage, and concurrent maintenance.</p></article>
+          <article class="cardx" style="--c:var(--phase)"><h3>Comparing PUE claims</h3><p><strong>Failure:</strong> a subsystem projection, vendor lab number, and annual whole-facility PUE are put in one ranking.</p><p><strong>Fix:</strong> normalize boundary, annual weather, load factor, redundancy mode, water, and what parasitic energy is included.</p></article>
+          <article class="cardx" style="--c:var(--phase)"><h3>Skipping controls commissioning</h3><p><strong>Failure:</strong> pumps fight, valves hunt, condensation alarms are untested, or facility and IT loops use incompatible setpoints.</p><p><strong>Fix:</strong> functional-test sensor failure, low flow, high dew point, leak, power loss, restart, and degraded heat rejection.</p></article>
+          <article class="cardx" style="--c:var(--phase)"><h3>No exit strategy</h3><p><strong>Failure:</strong> proprietary fluids, cold plates, manifolds, or firmware lock a fleet to one supplier.</p><p><strong>Fix:</strong> document compatible alternatives, drain/flush plan, spares horizon, data/API ownership, and decommissioning cost.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="sources">
+      <div class="shell">
+        <div class="section-head"><div><div class="eyebrow">07 / Primary evidence</div><h2>Sources & boundaries</h2></div><p class="section-intro">Vendor sources are used only for attributed product claims. Standards, government guidance, and published case studies anchor physics and operating practice.</p></div>
+        <ol class="source-list">
+          <li><a href="https://www.ashrae.org/technical-resources/ai-data-center-framework/introduction-and-purpose">ASHRAE AI Data Center Energy Performance Framework</a> — current W17/W27/W32/W40/W45/W+ naming and 2°C lower bound.</li>
+          <li><a href="https://resourcecenter.ashrae.org/File%20Library/Technical%20Resources/Publication%20Errata%20and%20Updates/2009-GASEOUS-AND-PARTICULATE-GUIDELINES.pdf">ASHRAE TC 9.9 contamination guidelines</a> — 18–27°C recommended inlet envelope.</li>
+          <li><a href="https://www.energy.gov/sites/default/files/2024-07/best-practice-guide-data-center-design.pdf">DOE FEMP Best Practices Guide (2024)</a> — airflow efficiency, RCI, liquid cooling, metering, heat recovery.</li>
+          <li><a href="https://www1.eere.energy.gov/manufacturing/datacenters/pdfs/am_tool_manual.pdf">DOE/LBNL Air Management Tool manual</a> — measured power, temperature rise, and warning against nameplate substitution.</li>
+          <li><a href="https://datacenters.lbl.gov/sites/default/files/LiquidCooling.CaseStudy_0.pdf">LBNL liquid-cooling case study</a> — RDHx lessons and projected PUE ~1.4 → ~1.1.</li>
+          <li><a href="https://www.energy.gov/cmei/femp/2018-award-winning-champion-lessons-learned-case-study-us-department-energy-thomas">DOE Jefferson Lab case study</a> — PUE >2 → 1.27 after containment and other upgrades.</li>
+          <li><a href="https://datacenter.uptimeinstitute.com/rs/711-RIA-145/images/2024.GlobalDataCenterSurvey.Report.pdf">Uptime Institute Global Survey 2024</a> — 1.56 average annual PUE and fleet-density context.</li>
+          <li><a href="https://www.opencompute.org/documents/mgx-accelerated-computing-rack-and-trays-specification-1-1-pdf-1">OCP MGX rack specification 1.1</a> — 120 kW rack, 85% capture, 130 L/min target flow, pressure and filtration requirements.</li>
+          <li><a href="https://docs.nvidia.com/dgx/dgxgb200-user-guide/hardware.html">NVIDIA DGX GB rack hardware guide</a> — approximately 120 kW NVL72 rack and hybrid cooling hardware.</li>
+          <li><a href="https://www.vertiv.com/en-asia/about/news-and-events/articles/educational-articles/how-rear-door-heat-exchangers-rdhx-support-high-density-rack-cooling/">Vertiv RDHx engineering article (2025)</a> — attributed 20 kW transition and 20–80 kW range.</li>
+          <li><a href="https://www.vertiv.com/en-in/about/news-and-events/news-releases/vertiv-announces-global-launch-of-chilled-water-rear-door-heat-exchanger-for-ai-and-hpc-applications/">Vertiv CoolLoop launch (2025)</a> — up-to-80 kW active RDHx claim.</li>
+          <li><a href="https://www.vertiv.com/4ab219/globalassets/shared/liebert-xd-brochure.pdf">Vertiv Liebert XD brochure</a> — 20 kW passive XDR rating.</li>
+          <li><a href="https://blog.se.com/datacenter/2011/09/23/examining-your-cooling-options-room-row-and-rack/">Schneider Electric room/row/rack article</a> — attributed 1–2 kW legacy room design claim.</li>
+          <li><a href="https://zutacore.com/solutions">ZutaCore HyperCool product page</a> — attributed two-phase DTC 20–120 kW current in-rack range.</li>
+          <li><a href="https://submer.com/smartpod/exo/">Submer SmartPod EXO product page</a> — attributed up-to-361 kW immersion capacity claim.</li>
+          <li><a href="https://archive.thegreengrid.org/en/resources/library-and-tools/242-WP">The Green Grid ERE white paper</a> — metric for useful reuse energy.</li>
+        </ol>
+        <p class="rule mt-3"><strong>Revalidation trigger:</strong> re-check product capacities, NVIDIA/OCP rack examples, PUE evidence, and W-class naming at least annually or whenever the selected IT bill of materials changes. Thermodynamic equations remain stable; fluid properties must match the actual mixture and operating temperature.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell">
+      <strong>Last verified: 2026-07-14</strong> · Engineering screening reference; final design requires OEM thermal data, stamped facility design where applicable, commissioning, and site-specific failure analysis.
+      <div class="related"><span class="eyebrow align-self-center">Related:</span><a href="ai-infrastructure-numbers.html">AI infrastructure numbers</a><a href="datacenter-power-chain.html">Data center power chain</a></div>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const toggle = document.getElementById('themeToggle');
+      const storageKey = 'datacenter-cooling-theme';
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
+      } catch (_) {}
+      toggle.addEventListener('click', () => {
+        const current = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        root.dataset.theme = current === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem(storageKey, root.dataset.theme); } catch (_) {}
+      });
+
+      const range = document.getElementById('densityRange');
+      const value = document.getElementById('densityValue');
+      const output = document.getElementById('regimeOutput');
+      const reason = document.getElementById('reasonOutput');
+      const rows = [...document.querySelectorAll('#decisionTable tbody tr[data-band]')];
+      const recommend = (kw) => {
+        if (kw <= 10) return ['Room air + airflow hygiene', 'Measure rack inlets and prove the return path before adding local cooling.'];
+        if (kw <= 20) return ['Containment + tuned room or in-row air', 'Stop mixing first; compare local in-row capacity if one row dominates.'];
+        if (kw <= 40) return ['RDHx or direct-to-chip shortlist', 'Price both. RDHx preserves standard servers; DTC removes dominant chip heat earlier.'];
+        if (kw <= 80) return ['Active RDHx or OEM-qualified DTC', 'Conventional room air is no longer a prudent default; calculate residual air and water duty.'];
+        if (kw <= 140) return ['Direct-to-chip hybrid', 'Current 120 kW rack-class systems use liquid on major silicon and retain air for other components.'];
+        return ['DTC vs immersion system study', 'Density alone cannot choose: compare hardware compatibility, heat flux, service model, fluid, floor loading, and exit risk.'];
+      };
+      const update = () => {
+        const kw = Number(range.value);
+        value.textContent = kw;
+        const [name, why] = recommend(kw);
+        output.textContent = name;
+        reason.textContent = why;
+        rows.forEach((row) => {
+          const [min, max] = row.dataset.band.split('-').map(Number);
+          row.classList.toggle('active', kw >= min && kw <= max);
+        });
+      };
+      range.addEventListener('input', update);
+      update();
+    })();
+  </script>
+</body>
+</html>
