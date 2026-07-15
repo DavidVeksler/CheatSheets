@@ -13,7 +13,7 @@ divergent branch, or pages that link to files that aren't committed, then curls
 the live URLs afterward to prove the deploy landed. Cloudflare cache purging
 still happens server-side in the repo's post-receive hook (see purge-cache.py).
 
-Stdlib only — no venv or pip install required.
+Stdlib only - no venv or pip install required.
 
 Usage:
   python scripts/deploy.py                 # full pipeline, interactive confirm
@@ -156,7 +156,7 @@ def validate(args, base: str) -> None:
         json_files = changed_files(base, (".json",))
         php_files = changed_files(base, (".php",))
         scope = "changed files"
-    print(f"  {c(DIM, f'scope: {scope} — {len(html)} html, {len(json_files)} json, {len(php_files)} php')}")
+    print(f"  {c(DIM, f'scope: {scope} - {len(html)} html, {len(json_files)} json, {len(php_files)} php')}")
 
     if not (html or json_files or php_files):
         warn("no publishable files changed vs production. Nothing new to validate.")
@@ -181,7 +181,7 @@ def validate(args, base: str) -> None:
     elif args.skip_seo:
         warn("SEO gate skipped (--skip-seo)")
 
-    # 2. Internal link/asset integrity — every local href/src must resolve.
+    # 2. Internal link/asset integrity - every local href/src must resolve.
     if html and not args.skip_links:
         missing = check_links(html)
         if missing:
@@ -206,7 +206,7 @@ def validate(args, base: str) -> None:
     if php_files:
         php = which("php")
         if not php:
-            warn(f"php not on PATH — skipped lint of {len(php_files)} .php file(s)")
+            warn(f"php not on PATH - skipped lint of {len(php_files)} .php file(s)")
         else:
             for pf in php_files:
                 res = subprocess.run([php, "-l", os.path.join(ROOT, pf)],
@@ -220,7 +220,7 @@ def validate(args, base: str) -> None:
         print()
         for f in failures:
             print(f"  {c(RED, 'FAIL')} {f}")
-        fail(f"{len(failures)} validation issue(s) — fix or use the matching --skip-* flag.")
+        fail(f"{len(failures)} validation issue(s) - fix or use the matching --skip-* flag.")
 
 
 def check_links(html_files: list[str]) -> list[str]:
@@ -302,7 +302,7 @@ def verify(changed_html: list[str]) -> None:
     step("Verify live")
     curl = which("curl")
     if not curl:
-        warn("curl not found — skipping live verification.")
+        warn("curl not found - skipping live verification.")
         return
 
     checks: list[tuple[str, str, str | None]] = [("/", "200", None)]
@@ -327,7 +327,7 @@ def verify(changed_html: list[str]) -> None:
                   + (f" + {want_cache}" if want_cache else "") + ")")
 
     if problems:
-        print(c(YELLOW, f"\n{problems} live check(s) failed. The push already landed — "
+        print(c(YELLOW, f"\n{problems} live check(s) failed. The push already landed - "
                         "investigate the server/nginx/Cloudflare before assuming success."))
         sys.exit(1)
     print(c(GREEN, "\nAll live checks passed."))
@@ -373,7 +373,7 @@ def main() -> None:
     changed_html = show_changeset(base)
 
     if args.dry_run:
-        print(c(GREEN, "\nDry run complete — not pushing."))
+        print(c(GREEN, "\nDry run complete - not pushing."))
         return
 
     confirm(args)
