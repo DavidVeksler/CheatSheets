@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Infrastructure Numbers Everyone Should Know (2026)</title>
+  <meta name="description" content="The essential order-of-magnitude numbers for AI data centers: kW per rack, watts per GPU, PUE and WUE bands, MW per 10K GPUs, capex per megawatt, and time to power.">
+  <meta name="keywords" content="AI infrastructure numbers, AI data center power, GPU rack density, data center PUE, WUE, megawatts per GPU cluster, data center cost per megawatt">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/ai-infrastructure-numbers.html">
+  <meta property="og:title" content="AI Infrastructure Numbers Everyone Should Know (2026)">
+  <meta property="og:description" content="Sanity-check AI data center claims with 26 sourced numbers spanning chips, racks, cooling, water, cost, and time.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/ai-infrastructure-numbers.html">
+  <meta property="og:image" content="images/ai-infrastructure-numbers.png">
+  <meta property="og:image:alt" content="Terminal-style AI infrastructure reference table with GPU, rack, power, PUE, water, and cost numbers">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Infrastructure Numbers Everyone Should Know (2026)">
+  <meta name="twitter:description" content="26 sourced numbers for sanity-checking AI data center power, cooling, water, cost, and schedule claims.">
+  <meta name="twitter:image" content="images/ai-infrastructure-numbers.png">
+  <meta name="twitter:creator" content="@heroiclife">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "AI Infrastructure Numbers Everyone Should Know (2026)",
+    "description": "A sourced order-of-magnitude reference for AI data center chips, servers, racks, power, cooling, water, cost, construction schedules, and utilization.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-14",
+    "dateModified": "2026-07-14",
+    "keywords": "AI infrastructure numbers, GPU rack density, data center PUE, data center WUE, AI data center power, data center construction cost"
+  }
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+  <style>
+    @layer reset, terminal;
+    @layer terminal {
+      :root {
+        color-scheme: dark;
+        --bg: #070a0c;
+        --bg-grid: #101820;
+        --panel: #0d1317;
+        --panel-2: #111b21;
+        --ink: #e8edf0;
+        --muted: #9aabb4;
+        --line: #30414b;
+        --accent: #ffb000;
+        --accent-ink: #ffd36f;
+        --cyan: #64d9df;
+        --danger: #ff7887;
+        --good: #64e29d;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      @supports (color: light-dark(#000, #fff)) {
+        :root {
+          --bg: light-dark(#f3f0e7, #070a0c); --bg-grid: light-dark(#d8d3c6, #101820);
+          --panel: light-dark(#fffdf8, #0d1317); --panel-2: light-dark(#ebe7dc, #111b21);
+          --ink: light-dark(#14191d, #e8edf0); --muted: light-dark(#555e64, #9aabb4);
+          --line: light-dark(#a69f91, #30414b); --accent-ink: light-dark(#5e3d00, #ffd36f);
+          --cyan: light-dark(#006c71, #64d9df); --danger: light-dark(#a32132, #ff7887); --good: light-dark(#117143, #64e29d);
+        }
+      }
+      :root[data-theme="dark"] { color-scheme: dark; --bg:#070a0c;--bg-grid:#101820;--panel:#0d1317;--panel-2:#111b21;--ink:#e8edf0;--muted:#9aabb4;--line:#30414b;--accent-ink:#ffd36f;--cyan:#64d9df;--danger:#ff7887;--good:#64e29d; }
+      :root[data-theme="light"] { color-scheme: light; --bg:#f3f0e7;--bg-grid:#d8d3c6;--panel:#fffdf8;--panel-2:#ebe7dc;--ink:#14191d;--muted:#555e64;--line:#a69f91;--accent-ink:#5e3d00;--cyan:#006c71;--danger:#a32132;--good:#117143; }
+      @media (prefers-color-scheme: light) { :root:not([data-theme]) { color-scheme: light; --bg:#f3f0e7;--bg-grid:#d8d3c6;--panel:#fffdf8;--panel-2:#ebe7dc;--ink:#14191d;--muted:#555e64;--line:#a69f91;--accent-ink:#5e3d00;--cyan:#006c71;--danger:#a32132;--good:#117143; } }
+    }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background-color: var(--bg);
+        background-image: linear-gradient(var(--bg-grid) 1px, transparent 1px), linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+        background-size: 36px 36px;
+        color: var(--ink);
+        font: 16px/1.58 var(--sans);
+        text-wrap: pretty;
+      }
+      a { color: var(--cyan); text-underline-offset: .2em; }
+      a:hover { color: var(--accent-ink); }
+      :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+      h1, h2, h3 { text-wrap: balance; }
+      h2 { font: 800 clamp(1.35rem, 3vw, 2rem)/1.15 var(--mono); margin: 3.5rem 0 1rem; }
+      h2::before { content: "// "; color: var(--accent); }
+      h3 { font: 750 1.05rem/1.35 var(--mono); }
+      .shell { width: min(1180px, calc(100% - 2rem)); margin-inline: auto; }
+      .site-head {
+        background: color-mix(in srgb, var(--bg) 92%, transparent);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+      .site-head .shell { min-height: 48px; display: flex; align-items: center; gap: 1rem; }
+      .brand { color: var(--accent-ink); font: 800 .76rem var(--mono); letter-spacing: .08em; text-decoration: none; text-transform: uppercase; }
+      .head-links { margin-left: auto; display: flex; gap: .85rem; align-items: center; font: .75rem var(--mono); }
+      .head-links a { text-decoration: none; }
+      .theme-button { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 3px; padding: .3rem .55rem; }
+      .hero { padding: clamp(3.2rem, 8vw, 6.5rem) 0 2.2rem; }
+      .prompt { color: var(--accent-ink); font: 700 .8rem var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+      .prompt::before { content: "$ "; color: var(--good); }
+      h1 { max-width: 1030px; margin: .75rem 0 1rem; font: 900 clamp(2.35rem, 7vw, 5.4rem)/.96 var(--mono); letter-spacing: -.065em; }
+      .hero .dek { max-width: 850px; margin: 0; color: var(--muted); font-size: clamp(1rem, 2.2vw, 1.25rem); }
+      .stamp { display: inline-flex; gap: .5rem; align-items: center; margin-top: 1.25rem; color: var(--muted); font: .78rem var(--mono); }
+      .stamp i { color: var(--good); }
+      .rule { height: 1px; background: linear-gradient(90deg, var(--accent), var(--line) 28%, transparent); }
+      .terminal-card { border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 96%, transparent); box-shadow: 0 14px 50px #0003; }
+      .terminal-bar { display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--line); padding: .6rem .8rem; color: var(--muted); font: .72rem var(--mono); }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+      .dot:first-child { background: var(--danger); }
+      .dot:nth-child(2) { background: var(--accent); }
+      .dot:nth-child(3) { background: var(--good); }
+      .terminal-bar span:last-child { margin-left: .35rem; }
+      .table-wrap { overflow-x: auto; }
+      .numbers-table { width: 100%; margin: 0; border-collapse: collapse; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+      .numbers-table th { padding: .72rem .8rem; color: var(--muted); border-bottom: 1px solid var(--line); font-size: .7rem; letter-spacing: .09em; text-align: left; text-transform: uppercase; white-space: nowrap; }
+      .numbers-table td { padding: .72rem .8rem; border-bottom: 1px dotted var(--line); vertical-align: top; font-size: .82rem; }
+      .numbers-table tbody tr:last-child td { border-bottom: 0; }
+      .numbers-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+      .numbers-table .num { color: var(--accent-ink); font-weight: 900; font-size: 1rem; white-space: nowrap; }
+      .numbers-table .meaning { font-family: var(--sans); min-width: 280px; }
+      .numbers-table .scope { color: var(--muted); white-space: nowrap; }
+      .numbers-table .source { white-space: nowrap; }
+      .derived { display: inline-block; padding: .08rem .3rem; border: 1px solid var(--line); color: var(--muted); font: 650 .61rem var(--mono); text-transform: uppercase; }
+      .artifact-note { border-top: 1px solid var(--line); padding: .75rem .85rem; color: var(--muted); font: .73rem/1.5 var(--mono); }
+      .legend { display: flex; flex-wrap: wrap; gap: .6rem 1rem; margin: 1rem 0; color: var(--muted); font: .75rem var(--mono); }
+      .legend strong { color: var(--ink); }
+      .calc-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .8rem; padding: 1rem; }
+      label { display: block; color: var(--muted); font: 700 .7rem var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+      input { width: 100%; margin-top: .35rem; padding: .55rem .6rem; border: 1px solid var(--line); border-radius: 2px; background: var(--bg); color: var(--ink); font: 800 .95rem var(--mono); }
+      .readout-grid { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line); }
+      .readout { padding: .9rem 1rem; border-right: 1px solid var(--line); }
+      .readout:last-child { border-right: 0; }
+      .readout span { display: block; color: var(--muted); font: .68rem var(--mono); text-transform: uppercase; }
+      .readout output { display: block; color: var(--accent-ink); font: 900 clamp(1.05rem, 2.4vw, 1.55rem) var(--mono); }
+      .panel { border: 1px solid var(--line); background: var(--panel); padding: 1rem; }
+      .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+      .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+      .metric-table { width: 100%; border-collapse: collapse; }
+      .metric-table th, .metric-table td { border-bottom: 1px solid var(--line); padding: .68rem .7rem; vertical-align: top; }
+      .metric-table th { color: var(--accent-ink); font: 800 .77rem var(--mono); text-align: left; }
+      .metric-table td { font-size: .87rem; }
+      .metric-table tr:last-child > * { border-bottom: 0; }
+      .formula { color: var(--cyan); font: 750 .8rem/1.5 var(--mono); }
+      .callout { border-left: 4px solid var(--accent); background: var(--panel); padding: .9rem 1rem; }
+      .callout strong { color: var(--accent-ink); font-family: var(--mono); }
+      .scale-card { padding: 1.1rem; }
+      .scale-row { display: grid; grid-template-columns: 130px minmax(150px, 1fr) 88px 220px; gap: 1rem; align-items: center; padding: .58rem 0; border-bottom: 1px dotted var(--line); }
+      .scale-row:last-child { border-bottom: 0; }
+      .scale-name { font: 750 .76rem var(--mono); }
+      .scale-track { height: 10px; background: var(--panel-2); border: 1px solid var(--line); position: relative; }
+      .scale-track span { position: absolute; inset: 0 auto 0 0; width: var(--w); background: linear-gradient(90deg, var(--accent), var(--cyan)); }
+      .scale-power { color: var(--accent-ink); font: 900 .85rem var(--mono); text-align: right; white-space: nowrap; }
+      .scale-note { color: var(--muted); font-size: .78rem; }
+      details { border: 1px solid var(--line); background: var(--panel); margin-bottom: .65rem; }
+      summary { cursor: pointer; padding: .85rem 1rem; color: var(--accent-ink); font: 800 .86rem var(--mono); }
+      details > div { padding: 0 1rem 1rem; }
+      details p:last-child, .panel p:last-child { margin-bottom: 0; }
+      .mistakes { counter-reset: mistakes; list-style: none; padding: 0; margin: 0; }
+      .mistakes li { counter-increment: mistakes; display: grid; grid-template-columns: 2rem 1fr; gap: .65rem; margin-bottom: .85rem; }
+      .mistakes li::before { content: "0" counter(mistakes); color: var(--danger); font: 900 .78rem var(--mono); }
+      .mistakes strong { font-family: var(--mono); }
+      .source-list { columns: 2; column-gap: 2rem; padding-left: 1.1rem; }
+      .source-list li { break-inside: avoid; margin-bottom: .55rem; font-size: .82rem; }
+      footer { margin-top: 4rem; border-top: 1px solid var(--line); background: var(--panel); padding: 2rem 0; color: var(--muted); font: .78rem/1.6 var(--mono); }
+      .print-only { display: none; }
+      @container (max-width: 620px) { .grid-3 { grid-template-columns: 1fr; } }
+      @media (max-width: 800px) {
+        .calc-grid { grid-template-columns: repeat(2, 1fr); }
+        .readout-grid { grid-template-columns: repeat(2, 1fr); }
+        .readout { border-bottom: 1px solid var(--line); }
+        .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        .scale-row { grid-template-columns: 100px 1fr 72px; }
+        .scale-note { grid-column: 1 / -1; }
+        .source-list { columns: 1; }
+      }
+      @media (max-width: 575.98px) {
+        .shell { width: min(100% - 1rem, 1180px); }
+        .head-links a { display: none; }
+        h1 { letter-spacing: -.055em; }
+        .numbers-table, .numbers-table tbody, .numbers-table tr, .numbers-table td { display: block; width: 100%; }
+        .numbers-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+        .numbers-table tr { padding: .9rem; border-bottom: 1px solid var(--line); }
+        .numbers-table td { border: 0; padding: .15rem 0; white-space: normal; min-width: 0; }
+        .numbers-table td::before { content: attr(data-label); display: inline-block; min-width: 5.4rem; color: var(--muted); font: 650 .61rem var(--mono); letter-spacing: .05em; text-transform: uppercase; }
+        .numbers-table .num { font-size: 1.55rem; margin-bottom: .25rem; }
+        .numbers-table .num::before { display: block; }
+        .numbers-table .meaning { font-size: .86rem; }
+        .calc-grid, .readout-grid { grid-template-columns: 1fr; }
+        .readout { border-right: 0; }
+        .scale-row { grid-template-columns: 80px 1fr; gap: .55rem; }
+        .scale-power { grid-column: 2; text-align: left; }
+        .scale-note { grid-column: 1 / -1; }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .scale-track span { animation: reveal .75s ease-out both; transform-origin: left; }
+        @keyframes reveal { from { transform: scaleX(0); } }
+      }
+      @media print {
+        @page { size: letter portrait; margin: .34in; }
+        :root { color-scheme: light; }
+        body { background: #fff; color: #000; font-size: 8pt; }
+        body > header, body > main, body > footer, body > script { display: none; }
+        .print-only { display: block; }
+        .print-title { margin: 0 0 4pt; font: 900 18pt/1 var(--mono); letter-spacing: -.04em; }
+        .print-only p { margin: 0 0 5pt; }
+        .print-table { width: 100%; border-collapse: collapse; font: 7.1pt/1.18 var(--mono); }
+        .print-table th { text-align: left; border-bottom: 1.5pt solid #000; padding: 2pt; }
+        .print-table td { border-bottom: .35pt solid #aaa; padding: 2pt; vertical-align: top; }
+        .print-table td:first-child { font-weight: 900; white-space: nowrap; }
+        .print-foot { margin-top: 4pt; font: 6.5pt/1.2 var(--mono); }
+      }
+  </style>
+</head>
+<body>
+  <header class="site-head">
+    <div class="shell">
+      <a class="brand" href="index.php">DV / cheatsheets</a>
+      <nav class="head-links" aria-label="Page navigation">
+        <a href="#numbers">numbers</a><a href="#calculator">calculator</a><a href="#ladder">scale</a><a href="#mistakes">mistakes</a>
+        <button class="theme-button" id="themeToggle" type="button" aria-label="Toggle light and dark theme"><i class="bi bi-circle-half" aria-hidden="true"></i></button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero shell" aria-labelledby="page-title">
+      <p class="prompt">cat /infra/reality.txt</p>
+      <h1 id="page-title">AI Infrastructure Numbers Everyone Should Know</h1>
+      <p class="dek">A neutral, order-of-magnitude reference for sanity-checking an AI facility claim in 60 seconds—from accelerator nameplate power to rack density, PUE, water, construction cost, and grid schedule.</p>
+      <p class="stamp"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Last verified: 2026-07-14 · volatile hardware and market figures are dated inline</p>
+    </section>
+    <div class="rule"></div>
+
+    <section class="shell" id="numbers" aria-labelledby="numbers-title">
+      <h2 id="numbers-title">The numbers</h2>
+      <p>These are <strong>comparison anchors, not universal constants</strong>. “Derived” rows show transparent arithmetic from cited inputs; vendor power is nameplate unless the row says otherwise.</p>
+      <div class="legend" aria-label="Table legend"><span><strong>W / kW / MW</strong> = instantaneous power</span><span><strong>kWh / TWh</strong> = energy over time</span><span><strong>IT</strong> = compute equipment only</span><span><strong>facility</strong> = IT plus overhead</span></div>
+      <div class="terminal-card">
+        <div class="terminal-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>infra-numbers.tsv — 27 rows</span></div>
+        <div class="table-wrap">
+          <table class="numbers-table">
+            <thead><tr><th>Number</th><th>Unit / object</th><th>What it means</th><th>Scope</th><th>Primary source</th></tr></thead>
+            <tbody>
+              <tr><td class="num" data-label="Number">700 W</td><td data-label="Object">NVIDIA H200 SXM</td><td class="meaning" data-label="Meaning">Maximum configurable TDP for one SXM accelerator; it is not whole-server power.</td><td class="scope" data-label="Scope">Jul 2026</td><td class="source" data-label="Source"><a href="https://www.nvidia.com/en-sg/data-center/h200/">NVIDIA</a></td></tr>
+              <tr><td class="num" data-label="Number">1,400 W</td><td data-label="Object">AMD MI355X OAM</td><td class="meaning" data-label="Meaning">Typical board power for one flagship liquid-cooled-capable accelerator module.</td><td class="scope" data-label="Scope">Jul 2026</td><td class="source" data-label="Source"><a href="https://www.amd.com/en/products/accelerators/instinct/mi350/mi355x.html">AMD</a></td></tr>
+              <tr><td class="num" data-label="Number">10.2 kW</td><td data-label="Object">DGX H100/H200 server</td><td class="meaning" data-label="Meaning">Maximum AC input for an 8U, eight-GPU system—about 1.275 kW per installed GPU including CPUs, memory, fabric, and losses.</td><td class="scope" data-label="Scope">current guide</td><td class="source" data-label="Source"><a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/introduction-to-dgxh100.html">NVIDIA</a></td></tr>
+              <tr><td class="num" data-label="Number">40.8 kW</td><td data-label="Object">4× DGX H100 rack</td><td class="meaning" data-label="Meaning">Recommended maximum server demand for four air-cooled DGX H100 systems in one rack.</td><td class="scope" data-label="Scope">current guide</td><td class="source" data-label="Source"><a href="https://docs.nvidia.com/dgx-superpod/design-guides/dgx-superpod-data-center-design-h100/latest/planning.html">NVIDIA</a></td></tr>
+              <tr><td class="num" data-label="Number">72 GPUs</td><td data-label="Object">GB200 NVL72 rack</td><td class="meaning" data-label="Meaning">One liquid-cooled rack-scale NVLink domain also carries 36 Grace CPUs.</td><td class="scope" data-label="Scope">Jul 2026</td><td class="source" data-label="Source"><a href="https://www.nvidia.com/en-gb/data-center/gb200-nvl72/">NVIDIA</a></td></tr>
+              <tr><td class="num" data-label="Number">≈120 kW</td><td data-label="Object">GB200 NVL72 rack</td><td class="meaning" data-label="Meaning">Full-load rack power including 18 compute nodes and rack components—not only the 72 GPUs.</td><td class="scope" data-label="Scope">Mission Control 2.1</td><td class="source" data-label="Source"><a href="https://docs.nvidia.com/mission-control/docs/systems-administration-guide/2.1.0/prs/faq.html">NVIDIA</a></td></tr>
+              <tr><td class="num" data-label="Number">7 MW</td><td data-label="Object">10,000 H200 SXM GPUs</td><td class="meaning" data-label="Meaning">Accelerator-only TDP: 10,000 × 700 W. Servers, network, and cooling raise the connection requirement.</td><td class="scope" data-label="Scope"><span class="derived">derived</span></td><td class="source" data-label="Source"><a href="https://www.nvidia.com/en-sg/data-center/h200/">NVIDIA input</a></td></tr>
+              <tr><td class="num" data-label="Number">14 MW</td><td data-label="Object">10,000 MI355X GPUs</td><td class="meaning" data-label="Meaning">Accelerator-only TBP: 10,000 × 1.4 kW; do not quote this as facility load.</td><td class="scope" data-label="Scope"><span class="derived">derived</span></td><td class="source" data-label="Source"><a href="https://www.amd.com/en/products/accelerators/instinct/mi350/mi355x.html">AMD input</a></td></tr>
+              <tr><td class="num" data-label="Number">8.19 MW</td><td data-label="Object">10K H200 facility floor</td><td class="meaning" data-label="Meaning">7 MW accelerator TDP × Microsoft FY25 PUE 1.17. Still excludes the non-GPU parts already missing from 7 MW.</td><td class="scope" data-label="Scope"><span class="derived">derived floor</span></td><td class="source" data-label="Source"><a href="https://datacenters.microsoft.com/sustainability/efficiency/">Microsoft PUE</a></td></tr>
+              <tr><td class="num" data-label="Number">1.56 PUE</td><td data-label="Object">industry average</td><td class="meaning" data-label="Meaning">Uptime’s 2024 survey average: 100 MW of IT corresponds to 156 MW total facility power.</td><td class="scope" data-label="Scope">2024, n=526</td><td class="source" data-label="Source"><a href="https://datacenter.uptimeinstitute.com/rs/711-RIA-145/images/2024.GlobalDataCenterSurvey.Report.pdf?version=0">Uptime</a></td></tr>
+              <tr><td class="num" data-label="Number">1.17 PUE</td><td data-label="Object">Microsoft fleet</td><td class="meaning" data-label="Meaning">Owned-fleet global average; an efficient hyperscaler reference, not a guarantee for a new site.</td><td class="scope" data-label="Scope">FY25</td><td class="source" data-label="Source"><a href="https://datacenters.microsoft.com/sustainability/efficiency/">Microsoft</a></td></tr>
+              <tr><td class="num" data-label="Number">0.27 L/kWh</td><td data-label="Object">Microsoft WUE</td><td class="meaning" data-label="Meaning">Annual cooling and humidification water per IT kWh across Microsoft’s owned fleet.</td><td class="scope" data-label="Scope">FY25</td><td class="source" data-label="Source"><a href="https://datacenters.microsoft.com/sustainability/efficiency/">Microsoft</a></td></tr>
+              <tr><td class="num" data-label="Number">≈171K gal/day</td><td data-label="Object">100 MW IT at WUE 0.27</td><td class="meaning" data-label="Meaning">100,000 kW × 24 h × 0.27 L/kWh ÷ 3.785 L/US gal. Site water only; power-plant water is separate.</td><td class="scope" data-label="Scope"><span class="derived">derived</span></td><td class="source" data-label="Source"><a href="https://datacenters.microsoft.com/sustainability/efficiency/">Microsoft input</a></td></tr>
+              <tr><td class="num" data-label="Number">≈228K gal/day</td><td data-label="Object">100 MW IT at WUE 0.36</td><td class="meaning" data-label="Meaning">Same calculation using LBNL’s modeled 2023 U.S. fleet average just over 0.36 L/kWh.</td><td class="scope" data-label="Scope"><span class="derived">2023 model</span></td><td class="source" data-label="Source"><a href="https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report.pdf">LBNL</a></td></tr>
+              <tr><td class="num" data-label="Number">18–27°C</td><td data-label="Object">server inlet air</td><td class="meaning" data-label="Meaning">ASHRAE recommended dry-bulb envelope for air-cooled A1–A4 equipment; allowable limits are broader by class.</td><td class="scope" data-label="Scope">ASHRAE guidance</td><td class="source" data-label="Source"><a href="https://xp20.ashrae.org/datacom1_4th/ReferenceCard.pdf">ASHRAE</a></td></tr>
+              <tr><td class="num" data-label="Number">100 kW+</td><td data-label="Object">liquid-cooled rack</td><td class="meaning" data-label="Meaning">Density class OCP says hyperscalers were considering; GB200’s ≈120 kW is a shipping example.</td><td class="scope" data-label="Scope">2024 reference</td><td class="source" data-label="Source"><a href="https://www.opencompute.org/index.php/events/past-events/ocp-educational-webinar-liquid-cooling-tco-comparison-for-the-ai-data-center">OCP</a></td></tr>
+              <tr><td class="num" data-label="Number">500 kW+</td><td data-label="Object">near-future AI rack</td><td class="meaning" data-label="Meaning">OCP’s July 2026 infrastructure-standardization callout; a planning horizon, not today’s fleet average.</td><td class="scope" data-label="Scope">Jul 2026</td><td class="source" data-label="Source"><a href="https://www.opencompute.org/about/a-call-for-collaboration-on-ai-data-center-infrastructure-standards">OCP</a></td></tr>
+              <tr><td class="num" data-label="Number">1 kWh → 1 kWh heat</td><td data-label="Object">IT energy conversion</td><td class="meaning" data-label="Meaning">Nearly all server electricity becomes heat in the room; “efficient compute” does not remove the heat-rejection obligation.</td><td class="scope" data-label="Scope">physics</td><td class="source" data-label="Source"><a href="https://energyanalysis.lbl.gov/publications/avoiding-waste-heat-through-ai">LBNL</a></td></tr>
+              <tr><td class="num" data-label="Number">70–80%</td><td data-label="Object">potentially recoverable heat</td><td class="meaning" data-label="Meaning">LBNL’s cited technical potential; usefulness still depends on temperature, distance, and a coincident heat customer.</td><td class="scope" data-label="Scope">2025 review</td><td class="source" data-label="Source"><a href="https://energyanalysis.lbl.gov/publications/avoiding-waste-heat-through-ai">LBNL</a></td></tr>
+              <tr><td class="num" data-label="Number">60–80%</td><td data-label="Object">AI server operating power</td><td class="meaning" data-label="Meaning">LBNL’s modeled range as a fraction of rated power—evidence against equating nameplate with annual average draw.</td><td class="scope" data-label="Scope">2024 model</td><td class="source" data-label="Source"><a href="https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report.pdf">LBNL</a></td></tr>
+              <tr><td class="num" data-label="Number">80% / 40%</td><td data-label="Object">training / inference time</td><td class="meaning" data-label="Meaning">LBNL modeled AI server operational time—not measured utilization for every deployment.</td><td class="scope" data-label="Scope">2024 model</td><td class="source" data-label="Source"><a href="https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report.pdf">LBNL</a></td></tr>
+              <tr><td class="num" data-label="Number">415 TWh</td><td data-label="Object">global data centers</td><td class="meaning" data-label="Meaning">About 1.5% of world electricity consumption in 2024.</td><td class="scope" data-label="Scope">2024 estimate</td><td class="source" data-label="Source"><a href="https://www.iea.org/reports/energy-and-ai/executive-summary%C2%A0">IEA</a></td></tr>
+              <tr><td class="num" data-label="Number">≈945 TWh</td><td data-label="Object">global data centers</td><td class="meaning" data-label="Meaning">IEA base-case demand in 2030—more than double 2024, but explicitly scenario-dependent.</td><td class="scope" data-label="Scope">2030 forecast</td><td class="source" data-label="Source"><a href="https://www.iea.org/reports/energy-and-ai/energy-demand-from-ai">IEA</a></td></tr>
+              <tr><td class="num" data-label="Number">649 TWh</td><td data-label="Object">U.S. data centers</td><td class="meaning" data-label="Meaning">LBNL 2026 reference case for 2030; compounded uncertainty spans 521–843 TWh.</td><td class="scope" data-label="Scope">Jun 2026 model</td><td class="source" data-label="Source"><a href="https://eta-publications.lbl.gov/publications/united-states-data-center-energy-2025">LBNL</a></td></tr>
+              <tr><td class="num" data-label="Number">$9.5–13.3/W</td><td data-label="Object">U.S. construction</td><td class="meaning" data-label="Meaning">2025 traditional data-center build benchmarks: Charlotte to Silicon Valley. Facility construction scope—not land, IT hardware, finance, or energy.</td><td class="scope" data-label="Scope">2025 USD</td><td class="source" data-label="Source"><a href="https://reports.turnerandtownsend.com/data-centre-construction-cost-index-2025/data-centre-cost-trends">T&amp;T</a></td></tr>
+              <tr><td class="num" data-label="Number">+7–10%</td><td data-label="Object">AI liquid-cooling premium</td><td class="meaning" data-label="Meaning">Turner &amp; Townsend’s U.S. average premium versus equivalent air-cooled capacity.</td><td class="scope" data-label="Scope">2025 analysis</td><td class="source" data-label="Source"><a href="https://reports.turnerandtownsend.com/data-centre-construction-cost-index-2025/data-centre-cost-trends">T&amp;T</a></td></tr>
+              <tr><td class="num" data-label="Number">2–3 years</td><td data-label="Object">data center to operation</td><td class="meaning" data-label="Meaning">IEA’s general facility lead-time anchor; transmission, generation, permitting, and equipment can take longer.</td><td class="scope" data-label="Scope">2025 report</td><td class="source" data-label="Source"><a href="https://www.iea.org/reports/energy-and-ai/energy-demand-from-ai">IEA</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="artifact-note">READ THIS FIRST: power is a rate; energy is power × time. PUE and WUE require annual boundary-consistent measurements. A 120 kW rack is not a 120 kW utility request, and a 700 W GPU is not a 700 W server.</div>
+      </div>
+    </section>
+
+    <section class="shell" id="calculator" aria-labelledby="calculator-title">
+      <h2 id="calculator-title">Sanity-check console</h2>
+      <p>Enter a cluster assumption. The output makes the accounting boundary explicit; it does not size redundancy, storage, networking, switchgear, or phasing.</p>
+      <div class="terminal-card">
+        <div class="terminal-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>cluster-envelope.sh</span></div>
+        <div class="calc-grid">
+          <label for="gpuCount">Accelerators<input id="gpuCount" type="number" min="1" step="1" value="10000"></label>
+          <label for="gpuWatts">Watts / accelerator<input id="gpuWatts" type="number" min="1" step="10" value="700"></label>
+          <label for="pue">PUE<input id="pue" type="number" min="1" step="0.01" value="1.17"></label>
+          <label for="wue">WUE L/kWh IT<input id="wue" type="number" min="0" step="0.01" value="0.27"></label>
+          <label for="costW">Construction $/W<input id="costW" type="number" min="0" step="0.1" value="11.4"></label>
+        </div>
+        <div class="readout-grid" aria-live="polite">
+          <div class="readout"><span>Accelerator IT</span><output id="itPower">7.00 MW</output></div>
+          <div class="readout"><span>Facility floor</span><output id="facilityPower">8.19 MW</output></div>
+          <div class="readout"><span>Heat at IT</span><output id="heatLoad">23.88 MMBtu/h</output></div>
+          <div class="readout"><span>Site water / day</span><output id="waterDay">499K gal</output></div>
+          <div class="readout"><span>Facility capex floor</span><output id="capex">$93.4M</output></div>
+        </div>
+        <div class="artifact-note" id="calcNote">Facility floor = accelerator TDP × PUE. This is deliberately a floor because CPU, memory, network, and storage power are absent from accelerator TDP.</div>
+      </div>
+    </section>
+
+    <section class="shell" id="glossary" aria-labelledby="glossary-title">
+      <h2 id="glossary-title">Metric glossary</h2>
+      <div class="table-wrap terminal-card">
+        <table class="metric-table">
+          <thead><tr><th>Metric</th><th>Precise meaning</th><th>Concrete example</th><th>Gotcha</th></tr></thead>
+          <tbody>
+            <tr><th>PUE</th><td>Total annual facility energy ÷ annual IT equipment energy. Ideal is 1.0.</td><td class="formula">156 MWh ÷ 100 MWh = 1.56</td><td>It does not measure useful compute, water, carbon, or embodied energy; climate and boundary choices matter.</td></tr>
+            <tr><th>WUE</th><td>Annual site water for cooling/humidification ÷ annual IT energy, in L/kWh.</td><td class="formula">27,000 L ÷ 100,000 kWh = 0.27 L/kWh</td><td>On-site WUE excludes water consumed to generate electricity unless separately reported as source WUE.</td></tr>
+            <tr><th>ERE</th><td>Energy Reuse Effectiveness credits energy reused outside the data center against total facility energy.</td><td class="formula">(156 − 30) MWh ÷ 100 MWh = 1.26</td><td>A heat-recovery nameplate is not reused energy; count metered delivery to a real sink.</td></tr>
+            <tr><th>CUE</th><td>Annual operational carbon emissions ÷ annual IT energy, usually kg CO₂e/kWh IT.</td><td class="formula">40,000 kg ÷ 100,000 kWh = 0.40 kg/kWh</td><td>State whether emissions are location- or market-based and whether Scope 3 is excluded.</td></tr>
+            <tr><th>Rack density</th><td>Maximum or measured IT power in one rack, expressed in kW/rack.</td><td class="formula">4 × 10.2 kW DGX = 40.8 kW/rack</td><td>An “average 30 kW rack” says nothing about a 120 kW hot spot the cooling loop must survive.</td></tr>
+            <tr><th>IT load</th><td>Power delivered to compute, storage, and network equipment at the defined measurement point.</td><td class="formula">100 MW IT × PUE 1.17 = 117 MW facility</td><td>Vendor GPU TDP is not IT load; it omits the rest of the server and network.</td></tr>
+            <tr><th>Critical load</th><td>Protected load the electrical design must sustain through the agreed redundancy path.</td><td class="formula">80 MW critical at N+1 needs spare path capacity</td><td>It is a design/resilience boundary, not automatically the same as average IT draw.</td></tr>
+            <tr><th>Nameplate</th><td>Rated maximum or design limit used for safe electrical and thermal provisioning.</td><td class="formula">10.2 kW max DGX ≠ 10.2 kW annual average</td><td>Using nameplate as measured demand overstates energy; using average demand to size breakers is unsafe.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="shell" id="ladder" aria-labelledby="ladder-title">
+      <h2 id="ladder-title">Power scale ladder</h2>
+      <p>The bar uses a logarithmic scale so 700 W and 1 GW fit in one frame. Cost envelopes apply the 2025 U.S. <strong>$9.5–13.3/W facility-construction range</strong> only where a facility rung makes sense; they exclude IT hardware and land.</p>
+      <div class="terminal-card scale-card" role="img" aria-label="Logarithmic power ladder from a 700 watt GPU to a one gigawatt campus">
+        <div class="scale-row"><div class="scale-name">H200 SXM</div><div class="scale-track"><span style="--w:7%"></span></div><div class="scale-power">0.7 kW</div><div class="scale-note">Nameplate accelerator only; roughly half a 2022 U.S. home’s average continuous purchased power.</div></div>
+        <div class="scale-row"><div class="scale-name">DGX H100</div><div class="scale-track"><span style="--w:25%"></span></div><div class="scale-power">10.2 kW</div><div class="scale-note">Eight GPUs plus host; about 8.3 average U.S. residential customers’ continuous purchase.</div></div>
+        <div class="scale-row"><div class="scale-name">H100 rack</div><div class="scale-track"><span style="--w:34%"></span></div><div class="scale-power">40.8 kW</div><div class="scale-note">Four air-cooled DGX servers; NVIDIA does not recommend more than four for thermodynamic reasons.</div></div>
+        <div class="scale-row"><div class="scale-name">GB200 rack</div><div class="scale-track"><span style="--w:42%"></span></div><div class="scale-power">120 kW</div><div class="scale-note">72 GPUs, direct liquid cooling; ≈98 average U.S. residential customers’ continuous purchase.</div></div>
+        <div class="scale-row"><div class="scale-name">AI row</div><div class="scale-track"><span style="--w:57%"></span></div><div class="scale-power">1 MW</div><div class="scale-note">About eight GB200 racks; illustrative layout, not a universal row. Facility shell ≈$9.5–13.3M.</div></div>
+        <div class="scale-row"><div class="scale-name">Data hall</div><div class="scale-track"><span style="--w:71%"></span></div><div class="scale-power">10 MW</div><div class="scale-note">Illustrative hall block; facility shell ≈$95–133M before liquid-cooling premium.</div></div>
+        <div class="scale-row"><div class="scale-name">Campus</div><div class="scale-track"><span style="--w:85%"></span></div><div class="scale-power">100 MW</div><div class="scale-note">≈81,200 average U.S. residential customers’ continuous purchase; shell ≈$0.95–1.33B.</div></div>
+        <div class="scale-row"><div class="scale-name">GW cluster</div><div class="scale-track"><span style="--w:100%"></span></div><div class="scale-power">1 GW</div><div class="scale-note">Utility-system scale, not “just more racks”; ≈812,000 residential customers and ≈$9.5–13.3B shell.</div></div>
+      </div>
+      <p class="artifact-note">Residential analogy uses EIA’s 2022 average purchase of 10,791 kWh/customer/year = 1.232 kW continuous. It compares energy rate, not reliability, coincident peak, transmission, or customer count served.</p>
+    </section>
+
+    <section class="shell" aria-labelledby="power-title">
+      <h2 id="power-title">Power: chip → utility meter</h2>
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Use boundary math, not GPU multiplication</h3>
+          <p>Start with measured or engineered <strong>whole-server</strong> power. Add network and storage to reach IT load, then multiply by PUE for facility energy. For a quick upper envelope, four 10.2 kW DGX H100 systems make a 40.8 kW server rack; at PUE 1.17, that rack’s allocated facility burden is 47.7 kW before shared-load nuances.</p>
+          <p class="formula">facility power = (servers + network + storage) × PUE</p>
+        </div>
+        <div class="panel">
+          <h3>Nameplate, demand, and energy answer different questions</h3>
+          <p><strong>Nameplate</strong> sizes safe circuits. <strong>Coincident peak demand</strong> sizes the service and capacity contract. <strong>Annual energy</strong> determines much of the bill and footprint. LBNL’s 2024 model used 60–80% of rated power for operating AI servers and 80% / 40% operational time for training / inference.</p>
+          <p>For 10.2 kW nameplate, 70% operating power × 80% operational time gives a 5.71 kW annual-average model—not permission to provision only 5.71 kW.</p>
+        </div>
+      </div>
+      <div class="callout mt-3"><strong>100 MW IT at PUE 1.56 = 156 MW facility.</strong> The 56 MW difference is cooling, power conversion, lighting, and other facility overhead. At PUE 1.17, the same IT load is 117 MW: PUE changes the overhead, never the 100 MW of compute.</div>
+    </section>
+
+    <section class="shell" aria-labelledby="cooling-title">
+      <h2 id="cooling-title">Cooling: density changes the architecture</h2>
+      <div class="grid-3">
+        <article class="panel"><h3>Air: optimize before replacing</h3><p>Contain hot and cold aisles, seal bypass paths, manage blanking panels, and hold server inlets in the vendor/ASHRAE envelope. NVIDIA’s four-DGX rack is 40.8 kW and explicitly caps the reference pattern at four systems for thermodynamic reasons.</p><p><strong>Use when:</strong> the equipment and rack density remain inside a validated airflow design. <strong>Do not use:</strong> a fleet-average kW/rack to excuse a hotter local rack.</p></article>
+        <article class="panel"><h3>Direct-to-chip: heat leaves in liquid</h3><p>Cold plates take high-flux heat from CPUs/GPUs to a coolant distribution unit; residual DIMM, PSU, and network heat may still need air. AMD specifies 2.1 L/min per MI355X OAM and coolant inlet up to 43°C for its eight-GPU platform.</p><p><strong>Use when:</strong> rack power and chip heat flux outrun economical air delivery. <strong>Do not assume:</strong> “liquid cooled” means zero facility water consumption.</p></article>
+        <article class="panel"><h3>Immersion / rear-door: different tradeoffs</h3><p>Immersion places electronics in dielectric fluid; rear-door heat exchangers intercept exhaust at the rack. Both change service procedures, materials compatibility, leakage risk, floor load, and the facility loop.</p><p><strong>Decision:</strong> compare total solution density—including CDUs and service clearance—not the bare tank or rack number.</p></article>
+      </div>
+      <div class="table-wrap terminal-card mt-3">
+        <table class="metric-table"><thead><tr><th>Cooling claim</th><th>Sanity check</th><th>Decision implication</th></tr></thead><tbody>
+          <tr><th>“Air handles it”</th><td>Show inlet temperature, airflow, pressure, containment, fan power, and the worst rack—not only average density.</td><td>40.8 kW is a published air-cooled rack design; ≈120 kW GB200 ships liquid cooled. There is no universal cutoff.</td></tr>
+          <tr><th>“Warm water is free cooling”</th><td>Show facility-water supply/return temperatures and outdoor design conditions.</td><td>Warmer loops can expand economizer hours and heat reuse, but a CDU/pump still consumes power.</td></tr>
+          <tr><th>“Liquid cooling saves water”</th><td>Separate closed-loop coolant volume from cooling-tower evaporation and source-water use.</td><td>A closed chip loop can reject heat through a wet tower or a dry cooler; WUE reveals the site result.</td></tr>
+          <tr><th>“We can reuse the heat”</th><td>Name the customer, distance, required temperature, seasonal load, and metered MWh delivered.</td><td>LBNL cites 70–80% recoverable potential; low-grade heat without a sink has zero reuse value.</td></tr>
+        </tbody></table>
+      </div>
+    </section>
+
+    <section class="shell" aria-labelledby="water-title">
+      <h2 id="water-title">Water: state the numerator and boundary</h2>
+      <div class="grid-2">
+        <div class="panel"><h3>Site WUE is simple; interpretation is not</h3><p>Microsoft defines WUE as annual liters used for cooling and humidification divided by annual IT kWh. Its FY25 owned-fleet values range from 0.03 L/kWh in EMEA to 0.34 in the Americas, with 0.27 global. Climate, cooling design, and load make a single global comparison hazardous.</p><p class="formula">100 MW IT × 24 h × 0.27 L/kWh = 648,000 L/day = 171,202 US gal/day</p></div>
+        <div class="panel"><h3>Direct and indirect water are different</h3><p>Site WUE excludes water consumed by the electricity supply. LBNL models both because thermoelectric generation and hydropower can add a location-dependent indirect footprint. “Zero water for cooling” can be accurate at the facility and incomplete for the workload.</p><p><strong>Decision:</strong> report site withdrawal, site consumption, and source-energy water separately; do not add unlike boundaries.</p></div>
+      </div>
+      <div class="callout mt-3"><strong>Dry is not automatically efficient.</strong> Microsoft’s zero-water evaporation design avoids more than 125 million liters per facility per year against its stated FY24 baseline, but the company also says energy use rises nominally. Optimize power and water together, in the actual climate.</div>
+    </section>
+
+    <section class="shell" aria-labelledby="cost-title">
+      <h2 id="cost-title">Cost and time: capacity is a supply chain</h2>
+      <div class="grid-2">
+        <div class="panel"><h3>Facility capex is not total cluster cost</h3><p>Turner &amp; Townsend’s 2025 traditional build benchmarks span $9.5/W in Charlotte to $13.3/W in Silicon Valley. A 100 MW facility therefore implies about $950M–$1.33B in comparable construction scope; high-density liquid cooling adds a reported 7–10% U.S. premium.</p><p><strong>Excluded:</strong> land, utility off-site work, finance, owner costs outside methodology, and the accelerators/servers themselves. A vendor quote that combines these categories cannot be compared directly.</p></div>
+        <div class="panel"><h3>“Power-on” has multiple clocks</h3><p>IEA says a data center can be operational in two to three years, while the broader energy system needs longer. ERCOT’s 2026 process studies ≥75 MW large loads in batches and was tracking 438 GW of requests; that queue is requests, not forecast realized demand.</p><p>PJM says its reformed <em>generation</em> queue targets one-to-two-year agreements, but large-load service also depends on utility studies, substations, transmission, transformers, permits, and construction. Do not substitute a generation-queue statistic for a load energization promise.</p></div>
+      </div>
+      <div class="table-wrap terminal-card mt-3"><table class="metric-table"><thead><tr><th>Gate</th><th>Evidence to request</th><th>Common schedule failure</th></tr></thead><tbody>
+        <tr><th>Site + permits</th><td>Controlled parcel, zoning path, environmental/water permits, construction permit milestones.</td><td>“Shovel-ready” means marketing-ready, not permit-complete.</td></tr>
+        <tr><th>Utility service</th><td>Signed study/service agreements, MW by year, firm vs interruptible terms, required upgrades.</td><td>Treating an application or queue position as reserved capacity.</td></tr>
+        <tr><th>Long-lead equipment</th><td>Purchase orders and delivery dates for transformers, switchgear, generators, chillers/CDUs.</td><td>Building shell finishes before the power train arrives.</td></tr>
+        <tr><th>Commissioning</th><td>Integrated systems test, load-bank plan, staged rack acceptance, operational runbooks.</td><td>Calling utility energization “production ready.”</td></tr>
+        <tr><th>Compute delivery</th><td>Allocation, network fabric, storage, spares, firmware/software validation.</td><td>Power exists while usable accelerator capacity does not.</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section class="shell" aria-labelledby="advanced-title">
+      <h2 id="advanced-title">Edge and advanced checks</h2>
+      <details name="advanced" open><summary>Behind-the-meter generation: MW is not enough</summary><div><p>A 100 MW continuous campus consumes 2.4 GWh/day. A 100 MW generator nameplate cannot cover that load if it is intermittent, derated by temperature/altitude, down for maintenance, or constrained by fuel. Specify dependable capacity, ramp, startup, minimum load, storage duration, black-start behavior, emissions permits, and N+1 contingencies.</p><p class="formula">required generator nameplate ≈ continuous load ÷ capacity factor — before reserves</p></div></details>
+      <details name="advanced"><summary>Grid queues: separate load, generation, and transmission</summary><div><p>They are related but different processes. ERCOT’s Batch Zero is for large users ≥75 MW; PJM’s quoted one-to-two-year agreement target is for generation interconnection. Ask the serving utility/ISO for the actual study path, milestones, upgrade scope, and energization conditions for the site.</p></div></details>
+      <details name="advanced"><summary>Training and inference are not interchangeable</summary><div><p>Training tends toward long, synchronized runs with high accelerator occupancy and network intensity. Inference can be latency-sensitive, bursty, geographically distributed, and provisioned for peak demand. LBNL’s model uses 80% operational time for training and 40% for inference, but a real fleet must be measured at server, rack, and service boundaries.</p></div></details>
+      <details name="advanced"><summary>Flexible load has operational value—and constraints</summary><div><p>Checkpointing, workload migration, power capping, and staged commissioning can lower coincident demand or accelerate partial energization. Quantify how many MW can move, for how long, with what notice, and at what recovery cost. “Interruptible” without a tested workload contract is not firm grid flexibility.</p></div></details>
+    </section>
+
+    <section class="shell" id="mistakes" aria-labelledby="mistakes-title">
+      <h2 id="mistakes-title">Common mistakes / anti-patterns</h2>
+      <div class="grid-2">
+        <div class="panel"><ol class="mistakes">
+          <li><span><strong>GPU TDP = facility demand.</strong><br>It omits CPUs, memory, storage, network, power conversion, and cooling.</span></li>
+          <li><span><strong>Nameplate = annual draw.</strong><br>Nameplate is for safe provisioning; meter data and operating profiles determine energy.</span></li>
+          <li><span><strong>PUE = compute efficiency.</strong><br>PUE can improve while useful work per kWh gets worse.</span></li>
+          <li><span><strong>Cross-climate PUE league tables.</strong><br>Weather, redundancy, load, boundary, and water tradeoffs differ.</span></li>
+          <li><span><strong>Average rack density sizes cooling.</strong><br>The hottest rack and row drive local delivery and return capacity.</span></li>
+        </ol></div>
+        <div class="panel"><ol class="mistakes" start="6">
+          <li><span><strong>Training = inference.</strong><br>Their utilization, latency, redundancy, network, and geographic profiles differ.</span></li>
+          <li><span><strong>Peak vendor spec = delivered performance.</strong><br>TDP and peak FLOPS do not reveal sustained workload throughput.</span></li>
+          <li><span><strong>Closed-loop liquid = zero water.</strong><br>The facility heat-rejection system and power source determine consumption.</span></li>
+          <li><span><strong>Queue request = committed load.</strong><br>Requests can be speculative, duplicated, phased, or unable to secure upgrades.</span></li>
+          <li><span><strong>Cost per MW = all-in cluster cost.</strong><br>Confirm whether land, utility work, IT, finance, and owner costs are inside the boundary.</span></li>
+        </ol></div>
+      </div>
+    </section>
+
+    <section class="shell" aria-labelledby="sources-title">
+      <h2 id="sources-title">Primary-source register</h2>
+      <p>Use the dated source, not this page’s cached number, when approving a design or investment.</p>
+      <div class="panel"><ul class="source-list">
+        <li><a href="https://www.nvidia.com/en-sg/data-center/h200/">NVIDIA H200 specifications</a> — GPU TDP.</li>
+        <li><a href="https://www.amd.com/en/products/accelerators/instinct/mi350/mi355x.html">AMD MI355X specifications</a> — TBP, launch, memory.</li>
+        <li><a href="https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/amd-instinct-miI355x-platform-brochure.pdf">AMD MI355X platform brief</a> — coolant inlet and flow.</li>
+        <li><a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/introduction-to-dgxh100.html">NVIDIA DGX H100/H200 guide</a> — 10.2 kW system.</li>
+        <li><a href="https://docs.nvidia.com/dgx-superpod/design-guides/dgx-superpod-data-center-design-h100/latest/planning.html">NVIDIA SuperPOD planning</a> — four-system rack.</li>
+        <li><a href="https://docs.nvidia.com/mission-control/docs/systems-administration-guide/2.1.0/prs/faq.html">NVIDIA Mission Control FAQ</a> — GB200 rack power.</li>
+        <li><a href="https://datacenter.uptimeinstitute.com/rs/711-RIA-145/images/2024.GlobalDataCenterSurvey.Report.pdf?version=0">Uptime Global Survey 2024</a> — industry PUE.</li>
+        <li><a href="https://datacenters.microsoft.com/sustainability/efficiency/">Microsoft efficiency data</a> — FY25 PUE/WUE.</li>
+        <li><a href="https://www.microsoft.com/en-us/microsoft-cloud/blog/2024/12/09/sustainable-by-design-next-generation-datacenters-consume-zero-water-for-cooling/">Microsoft zero-water design</a> — avoided water and tradeoff.</li>
+        <li><a href="https://eta-publications.lbl.gov/publications/united-states-data-center-energy-2025">LBNL 2025 Update (published 2026)</a> — U.S. 2030 cases.</li>
+        <li><a href="https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report.pdf">LBNL 2024 U.S. report</a> — utilization, PUE/WUE modeling.</li>
+        <li><a href="https://www.iea.org/reports/energy-and-ai/energy-demand-from-ai">IEA Energy and AI</a> — global energy and lead time.</li>
+        <li><a href="https://xp20.ashrae.org/datacom1_4th/ReferenceCard.pdf">ASHRAE thermal reference</a> — inlet conditions.</li>
+        <li><a href="https://www.opencompute.org/about/a-call-for-collaboration-on-ai-data-center-infrastructure-standards">OCP infrastructure standards call</a> — 500 kW+ horizon.</li>
+        <li><a href="https://reports.turnerandtownsend.com/data-centre-construction-cost-index-2025/data-centre-cost-trends">Turner &amp; Townsend DCCI 2025</a> — construction cost and liquid premium.</li>
+        <li><a href="https://www.ercot.com/news/release/06182026-puct-approves-ercots">ERCOT Batch Zero release</a> — ≥75 MW and request volume.</li>
+        <li><a href="https://insidelines.pjm.com/pjm-announces-application-deadline-for-first-cycle-of-new-interconnection-process/">PJM cycle announcement</a> — generation process target.</li>
+        <li><a href="https://www.eia.gov/tools/faqs/faq.php?id=97&t=7">EIA residential electricity FAQ</a> — analogy baseline.</li>
+      </ul></div>
+    </section>
+
+    <section class="shell" aria-labelledby="related-title">
+      <h2 id="related-title">Related references</h2>
+      <div class="callout"><a href="datacenter-cooling-thresholds.html">Data-center cooling thresholds</a> · <a href="datacenter-power-chain.html">Data-center power chain</a> · <a href="data-center-myths.html">Data-center myths</a> · <a href="ai-frontier.html">AI frontier landscape</a> · <a href="governing-agentic-ai.html">Governing agentic AI</a>. This page is the numbers hub; use the focused references for engineering detail and the AI pages for strategy context.</div>
+    </section>
+  </main>
+
+  <footer><div class="shell">AI Infrastructure Numbers Everyone Should Know · Last verified: 2026-07-14 · Figures marked “derived” are arithmetic from linked primary-source inputs. Always confirm measurement boundary, location, redundancy tier, and date.</div></footer>
+
+  <section class="print-only" aria-label="Printable AI infrastructure numbers reference">
+    <div class="print-title">AI Infrastructure Numbers Everyone Should Know</div>
+    <p>Print-and-pin reference · verified 2026-07-14 · W/kW/MW = power; kWh/TWh = energy · source abbreviations below</p>
+    <table class="print-table"><thead><tr><th>Number</th><th>Object</th><th>Meaning / boundary</th><th>Source</th></tr></thead><tbody>
+      <tr><td>700 W</td><td>H200 SXM</td><td>max configurable GPU TDP</td><td>NV</td></tr><tr><td>1,400 W</td><td>MI355X</td><td>one OAM typical board power</td><td>AMD</td></tr><tr><td>10.2 kW</td><td>DGX H100/H200</td><td>8U eight-GPU server maximum</td><td>NV</td></tr><tr><td>40.8 kW</td><td>4× DGX rack</td><td>recommended air-cooled server demand</td><td>NV</td></tr><tr><td>72 GPUs</td><td>GB200 NVL72</td><td>one liquid-cooled NVLink domain</td><td>NV</td></tr><tr><td>≈120 kW</td><td>GB200 NVL72</td><td>full rack at full load</td><td>NV</td></tr><tr><td>7 MW</td><td>10K H200</td><td>GPU-only TDP; derived</td><td>NV</td></tr><tr><td>14 MW</td><td>10K MI355X</td><td>GPU-only TBP; derived</td><td>AMD</td></tr><tr><td>8.19 MW</td><td>10K H200 floor</td><td>GPU-only 7 MW × PUE 1.17; derived</td><td>NV/MS</td></tr><tr><td>1.56</td><td>industry PUE</td><td>2024 average; 100 MW IT → 156 MW facility</td><td>UI</td></tr><tr><td>1.17</td><td>Microsoft PUE</td><td>FY25 owned-fleet global average</td><td>MS</td></tr><tr><td>0.27 L/kWh</td><td>Microsoft WUE</td><td>FY25 site water per IT energy</td><td>MS</td></tr><tr><td>171K gal/day</td><td>100 MW IT</td><td>at WUE 0.27; derived</td><td>MS</td></tr><tr><td>228K gal/day</td><td>100 MW IT</td><td>at WUE 0.36; derived</td><td>LBL</td></tr><tr><td>18–27°C</td><td>server inlet</td><td>ASHRAE recommended A1–A4 air</td><td>ASH</td></tr><tr><td>100 kW+</td><td>liquid rack</td><td>density class cited by OCP</td><td>OCP</td></tr><tr><td>500 kW+</td><td>future AI rack</td><td>OCP Jul 2026 planning horizon</td><td>OCP</td></tr><tr><td>1:1</td><td>energy → heat</td><td>nearly all IT electricity becomes heat</td><td>LBL</td></tr><tr><td>70–80%</td><td>heat recovery</td><td>technical potential, not delivered reuse</td><td>LBL</td></tr><tr><td>60–80%</td><td>operating power</td><td>LBNL model fraction of AI rated power</td><td>LBL</td></tr><tr><td>80% / 40%</td><td>training / inference</td><td>LBNL modeled operational time</td><td>LBL</td></tr><tr><td>415 TWh</td><td>global 2024</td><td>data-center electricity, ≈1.5%</td><td>IEA</td></tr><tr><td>945 TWh</td><td>global 2030</td><td>IEA base case</td><td>IEA</td></tr><tr><td>649 TWh</td><td>U.S. 2030</td><td>LBNL reference; 521–843 uncertainty</td><td>LBL</td></tr><tr><td>$9.5–13.3/W</td><td>U.S. build</td><td>2025 traditional facility construction</td><td>T&amp;T</td></tr><tr><td>+7–10%</td><td>liquid premium</td><td>U.S. high-density vs air-cooled</td><td>T&amp;T</td></tr><tr><td>2–3 years</td><td>facility</td><td>general build-to-operation anchor</td><td>IEA</td></tr>
+    </tbody></table>
+    <p class="print-foot">NV nvidia.com/docs.nvidia.com · AMD amd.com · UI Uptime Institute 2024 · MS Microsoft FY25 · LBL Lawrence Berkeley National Laboratory 2024/2026 · ASH ASHRAE · OCP Open Compute Project · IEA Energy and AI 2025 · T&amp;T Data Centre Construction Cost Index 2025. Full links and boundary notes: cheatsheets.davidveksler.com/ai-infrastructure-numbers.html</p>
+  </section>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const themeButton = document.getElementById('themeToggle');
+      let savedTheme = null;
+      try { savedTheme = localStorage.getItem('ai-infra-theme'); } catch (_) {}
+      if (savedTheme === 'dark' || savedTheme === 'light') root.dataset.theme = savedTheme;
+      themeButton.addEventListener('click', () => {
+        const current = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        try { localStorage.setItem('ai-infra-theme', next); } catch (_) {}
+      });
+
+      const ids = ['gpuCount', 'gpuWatts', 'pue', 'wue', 'costW'];
+      const el = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
+      const value = id => Math.max(0, Number(el[id].value) || 0);
+      const compact = n => new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(n);
+      function update() {
+        const count = value('gpuCount'), watts = value('gpuWatts'), pue = Math.max(1, value('pue'));
+        const wue = value('wue'), cost = value('costW');
+        const itMW = count * watts / 1e6;
+        const facilityMW = itMW * pue;
+        const heatMMBtu = itMW * 3.412142;
+        const gallons = itMW * 1000 * 24 * wue / 3.785411784;
+        const capex = facilityMW * 1e6 * cost;
+        document.getElementById('itPower').value = `${itMW.toFixed(2)} MW`;
+        document.getElementById('facilityPower').value = `${facilityMW.toFixed(2)} MW`;
+        document.getElementById('heatLoad').value = `${heatMMBtu.toFixed(2)} MMBtu/h`;
+        document.getElementById('waterDay').value = `${compact(gallons)} gal`;
+        document.getElementById('capex').value = `$${compact(capex)}`;
+        document.getElementById('calcNote').textContent = `Facility floor = ${count.toLocaleString()} × ${watts.toLocaleString()} W × PUE ${pue.toFixed(2)}. Capex applies $${cost.toFixed(1)}/W to that floor. CPU, memory, network, storage, redundancy, land, utility work, finance, and IT hardware cost are not modeled.`;
+      }
+      ids.forEach(id => el[id].addEventListener('input', update));
+      update();
+    })();
+  </script>
+</body>
+</html>
