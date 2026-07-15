@@ -139,9 +139,14 @@ return [
     'stoicism-practice-texts-misreadings.html' => 'Philosophy & Religion',
 
     // Engineering & Science
+    'ai-accelerator-comparison.html' => 'Engineering & Science',
+    'ai-infrastructure-numbers.html' => 'Engineering & Science',
     'automotive-innovation-timeline.html' => 'Engineering & Science',
     'boom-supersonic.html' => 'Engineering & Science',
+    'data-center-community-impact.html' => 'Engineering & Science',
     'data-center-myths.html' => 'Engineering & Science',
+    'datacenter-cooling-thresholds.html' => 'Engineering & Science',
+    'datacenter-power-chain.html' => 'Engineering & Science',
     'deaths-per-terawatt-hour.html' => 'Engineering & Science',
     'engineering-materials-future.html' => 'Engineering & Science',
     'engineering-metals-selection.html' => 'Engineering & Science',
@@ -153,6 +158,7 @@ return [
     'semiconductor-manufacturing.html' => 'Engineering & Science',
     'sensors-cameras-lidar-radar-imu-gps.html' => 'Engineering & Science',
     'space-habitats-life-support.html' => 'Engineering & Science',
+    'starlink-satellite-anatomy.html' => 'Engineering & Science',
     'stellar-lifecycle.html' => 'Engineering & Science',
     'tesla-products.html' => 'Engineering & Science',
 
