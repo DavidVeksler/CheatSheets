@@ -1,125 +1,154 @@
-# Marketing campaign — high-level brainstorm
+# Marketing campaign — execution plan
 
-Working doc for promoting cheatsheets.davidveksler.com beyond passive SEO. First pass
-2026-07-14; brainstorm only, no committed budget/calendar yet. Companion to
-[`seo-planning.md`](seo-planning.md) (organic search is covered there — this doc is about
-everything else).
+Implemented in-repo 2026-07-14. Companion to [`seo-planning.md`](seo-planning.md), which owns
+organic-search measurement. This document now contains the remaining human publishing queue and the
+ready-to-use campaign assets; completed prerequisites are recorded as evidence, not left as TODOs.
 
-## What we're marketing
+## Positioning
 
-~160 standalone, no-framework HTML cheatsheets spanning AI/dev tools, martial arts, Buddhism,
-ham radio, personal finance/legal defense, prepping, religion, engineering. Site goals (per
-`cheatsheets-site-goals` memory) shape the campaign — we are NOT just chasing traffic:
+The flagship story is the system, not any single page:
 
-1. **Personal study tool** — not marketed.
-2. **Personal brand / portfolio** — marketed to recruiters, peers, hiring managers.
-3. **Agentic-automation case study** — marketed to the AI/dev community; traffic = proof.
-4. **Advocacy pages** — marketed for reach in relevant communities.
+> One person plus AI agents build and maintain 160+ standalone reference pages through written specs,
+> primary-source research, browser QA, deployment gates, and a public git audit trail.
 
-Implication: run **per-audience mini-campaigns**, not one site-wide campaign.
+Individual cheatsheets are proof that the process repeatedly produces useful artifacts. Use separate
+mini-campaigns for separate audiences; do not market the whole 13-category collection as one product.
 
-## The core story (the thing actually worth promoting)
+## Implemented owned-media foundation
 
-The single most differentiated asset isn't any one cheatsheet — it's the **meta-story**:
-*"One person + Claude Code built and maintains a 160-page reference site: specs, QA audits,
-SEO, deploys — all agentic."* That's a story the AI/dev community shares organically; individual
-cheatsheets are the supporting evidence. Goal-3 marketing should lead with the process, not
-the pages.
+Verified 2026-07-14:
 
-## Campaign ideas by audience
+- The public [`how-its-built.html`](../how-its-built.html) case study explains the pipeline, governance,
+  tradeoffs, live collection size, and audit trail.
+- [`README.md`](../README.md) now gives the public repository a useful landing page and links to the
+  live site, case study, and change history.
+- The homepage now leads with the 160+ page agentic-pipeline story and links directly to GitHub.
+- Every root cheatsheet carries a concise pipeline proof block linking to the case study and public
+  source repository.
+- Every root cheatsheet participates in a reciprocal, category-local discovery ring. The link audit
+  reports 0 orphan pages and a minimum of 4 inbound links per page.
+- Email capture is already implemented on the homepage and build-story page through `subscribe.php`;
+  no new provider or tracking dependency is needed.
+- The initial campaign pages below have valid local OG assets at 1200×630 or the exact 2× equivalent,
+  and their metadata points at those assets.
 
-### A. AI / dev community (goal 3 — the flagship campaign)
+## Initial campaign pages
 
-- **"How this site is built" write-up** — a public post (blog or a cheatsheet-style page on the
-  site itself) documenting the pipeline: TODO specs → generation → QA audits → popularity
-  scoring → deploy. Include real numbers (pages, commits, GSC clicks). This is the launchable
-  asset everything else links back to.
-- **Show HN / Hacker News launch** of that write-up (not the raw site). One shot; timing and
-  title matter. Lobsters, r/ClaudeAI, r/LocalLLaMA as secondary.
-- **The repo is public — use it.** Add a strong README with the meta-story, link it from every
-  page footer ("built with agents — see how"). GitHub stars are a distribution channel.
-- **Individual high-value dev pages as standalone posts**: ai-frontier, ai-model-api-pricing,
-  ai-coding-agents-compared are natural fits for r/artificial, X/Twitter threads, and
-  newsletters (Ben's Bites, TLDR AI accept submissions).
-- **X/Twitter thread series**: "I asked Claude to build me a cheatsheet on X" — screenshot the
-  page, link it. Cheap, repeatable, compounds with the meta-story.
+| Audience | Lead asset | Supporting proof | Share angle |
+|---|---|---|---|
+| AI / developer | `how-its-built.html` | `ai-frontier.html`, `ai-model-api-pricing.html`, `ai-coding-agents-compared.html` | A governed one-person agentic publishing pipeline, with inspectable source and output |
+| Ham radio | `baofeng-uv5r-quick-ref.html` | `baofeng-uv5r-ham-guide.html`, `ham-radio-technician.html` | A keep-open programming and field reference, shared as “I made this” |
+| Martial arts | `judo.html` | `brazilian-jiu-jitsu.html`, `ashihara-karate.html` | Dense training reference; ask practitioners what is missing rather than claiming authority |
+| Space / engineering | `orbital-rockets-comparison.html` | `space-habitats-life-support.html`, `boom-supersonic.html` | Exact side-by-side engineering comparisons |
+| Advocacy | `objectivism.html` | — | Reach within existing relevant communities; keep separate from the developer campaign |
 
-### B. Niche hobby communities (traffic + proof, low effort)
+Do not promote the Anduril topic. The removed page and 404 decision remain settled.
 
-Each strong niche page has a home community where a genuinely useful reference is welcome
-(not spam) if shared honestly as "I made this":
+## Tracking convention
 
-- **Ham radio**: baofeng-uv5r pages → r/amateurradio, r/Baofeng, QRZ forums. Already the #2
-  organic performer — the audience demonstrably wants it.
-- **Martial arts**: bjj / judo / ashihara-karate → r/bjj, r/judo, martial arts Discords.
-- **Prepping/emergency**: emergency-radio-card, air-water-filtration → r/preparedness.
-- **Buddhism/meditation**: the Buddhism cluster → r/Buddhism, r/Meditation (mind the
-  self-promo norms; these subs are strict).
-- **Space**: orbital-rockets-comparison → r/space, r/SpaceXLounge.
-- Rule of thumb: one post per community, ever, unless it lands well. Reputation > reach.
+Use one canonical UTM shape on every manually shared link:
 
-### C. Recruiters & professional peers (goal 2)
+```text
+https://cheatsheets.davidveksler.com/<page>.html?utm_source=<channel>&utm_medium=social&utm_campaign=agentic_cheatsheets_2026&utm_content=<post_slug>
+```
 
-- **LinkedIn**: the agentic-automation case study as a LinkedIn article/post — this audience
-  rewards "how I use AI at scale" content heavily right now.
-- Link the site prominently from davidveksler.com, LinkedIn profile, GitHub profile, resume.
-- Cross-link with resumeforge.davidveksler.com if that's public-facing.
+Examples:
 
-### D. Advocacy pages (goal 4)
+```text
+https://cheatsheets.davidveksler.com/how-its-built.html?utm_source=linkedin&utm_medium=social&utm_campaign=agentic_cheatsheets_2026&utm_content=build_story
+https://cheatsheets.davidveksler.com/baofeng-uv5r-quick-ref.html?utm_source=reddit&utm_medium=social&utm_campaign=agentic_cheatsheets_2026&utm_content=baofeng_quick_ref
+```
 
-- Share capitalism/objectivism-adjacent pages through existing channels (freecapitalists.org
-  audience, relevant subreddits/groups). Measured on reach, kept separate from the dev-brand
-  campaign — don't mix the two audiences.
+Keep `utm_campaign` stable so GA4 groups the launch. Change `utm_source` and `utm_content` per post.
+Do not put UTMs in internal links, canonical tags, `llms.txt`, or the sitemap.
 
-## Channel inventory (owned / earned / paid)
+## Ready-to-publish copy
 
-- **Owned**: the site itself, public GitHub repo, davidveksler.com, freecapitalists.org,
-  LinkedIn, X/Twitter, email (Mailgun is already wired up — a "new cheatsheet of the month"
-  digest is possible later; needs a signup form first).
-- **Earned**: HN, Reddit niches, newsletters, podcasts (AI-builder podcasts love the
-  one-person-agentic-site story), backlinks from "awesome-cheatsheets"-style lists.
-- **Paid**: probably not worth it — no monetization, so CAC has nothing to amortize against.
-  Skip unless testing a specific hypothesis.
+### LinkedIn — flagship
 
-## Site-side prerequisites (do before driving traffic)
+> I built a 160+ page reference site with AI agents. The pages are useful, but the more interesting
+> artifact is the system behind them: written specs, primary-source fact checks, accessibility and
+> metadata gates, real browser QA, preview generation, git history, and a human-controlled deploy.
+>
+> The full pipeline and tradeoffs are here: [UTM link to `how-its-built.html`]
+>
+> The source is public too: https://github.com/DavidVeksler/CheatSheets
 
-- [ ] Fix striking-distance metadata first (already specced in
-      [`seo-implementation-spec.md`](seo-implementation-spec.md)) — don't send traffic to
-      pages with truncated titles.
-- [ ] "How this site is built" page — the campaign centerpiece.
-- [ ] Footer/homepage link to the GitHub repo + meta-story blurb on every page.
-- [ ] OG images verified on the pages we'll share (social cards are the ad creative).
-- [ ] Decide: email capture or not (adds maintenance; defer unless HN launch pops).
+### Hacker News
 
-## Measurement
+Suggested title:
 
-- GSC + Cloudflare edge analytics + GA4 (Cloudflare-injected) already in place — enough.
-- Per-campaign: UTM-tag shared links so referral spikes are attributable.
-- Success metrics by goal: goal 2 = profile views / recruiter contacts (anecdotal is fine);
-  goal 3 = referral traffic, GitHub stars, HN/newsletter pickup; goal 4 = reach on advocacy
-  pages. No site-wide traffic target.
+```text
+Show HN: A 160+ page reference site built with a governed AI-agent pipeline
+```
 
-## Constraints / guardrails
+Suggested first comment:
 
-- Public repo, personal site: no personal data, ever (per standing rule).
-- One-person operation: prefer campaigns that are **write once, compound forever** (the
-  write-up, the README, footer links) over ones needing sustained posting cadence.
-- Don't astroturf niche communities — one honest "I made this" per community.
-- Never touch the Anduril topic (C&D on record).
+> I built this to test whether agentic content production can be made repeatable rather than lucky.
+> The repository has one binding quality standard, topic specs, primary-source verification rules,
+> browser checks, social-preview generation, and a separate human deploy gate. The case-study page
+> explains what worked, what is deliberately simple, and what still requires judgment. I would value
+> criticism of the governance model and the actual page quality more than the raw page count.
 
-## Open questions for David
+### Niche community template
 
-1. Is the meta-story write-up something you'd want on the site itself, on davidveksler.com,
-   or as a LinkedIn article first?
-2. Appetite for an HN launch (it invites scrutiny of every page)?
-3. Email digest: worth the maintenance, or skip?
-4. Any communities above you're already active in (posting lands much better from an
-   established account)?
+> I made a free, keep-open reference for [specific task]: [one-sentence utility]. I would appreciate
+> corrections from people who do this regularly: [UTM link].
 
-## Rough sequencing (if/when this becomes a plan)
+Before posting, replace the bracketed text, read that community's current self-promotion rules, and
+answer comments from the same account. One honest post per community is the default.
 
-1. Prerequisites (metadata fixes, build-story page, repo README, footer links).
-2. Quiet niche shares (B) to validate pages land well.
-3. LinkedIn post (C) — low risk, on-brand.
-4. HN/newsletter launch of the meta-story (A) — the big swing.
-5. Evaluate → decide on email digest / repeatable X cadence.
+### Newsletter / podcast pitch
+
+Subject:
+
+```text
+Story idea: the governance system behind a 160+ page AI-built reference site
+```
+
+Body:
+
+> I maintain a public 160+ page cheatsheet collection with AI agents, but the useful story is the
+> production system: a binding cross-agent spec, verified volatile facts, deterministic acceptance
+> checks, browser QA, a public commit trail, and a human deployment gate. The engineering case study
+> and source are public. If you cover practical agentic workflows, I can share the failure modes,
+> economics, and what still does not automate cleanly.
+
+## Human publishing queue
+
+These actions affect external accounts or community reputation and therefore remain intentionally
+unexecuted in the repository:
+
+- [ ] Publish the LinkedIn flagship post with the tracked build-story URL.
+- [ ] Make one quiet niche share, starting with the Baofeng quick reference; record the post URL and
+  7-day outcome below before choosing the next community.
+- [ ] Decide whether the quality of discussion from the first two posts justifies the one-shot Show HN
+  launch.
+- [ ] If the HN launch earns sustained interest, pitch no more than three relevant AI-builder
+  newsletters or podcasts using the draft above.
+
+## Measurement log
+
+Judge each audience by its actual goal:
+
+- Professional brand: profile views and recruiter or peer conversations.
+- Agentic case study: tracked referral sessions, GitHub stars, substantive discussion, and earned
+  newsletter or podcast pickup.
+- Advocacy: reach and engagement inside the intended community.
+- Niche references: useful corrections, saves/bookmarks where visible, and qualified referral traffic.
+
+Do not set a site-wide traffic target. Record each post date, final URL, UTM content slug, 7-day
+referral sessions, and qualitative outcome here before repeating a channel.
+
+| Date | Channel | Asset | Post URL | 7-day result | Decision |
+|---|---|---|---|---|---|
+| — | — | — | — | — | — |
+
+## Guardrails
+
+- Never commit personal data, subscriber addresses, or private analytics exports.
+- No astroturfing, sockpuppets, paid amplification, or fabricated social proof.
+- Check community rules at posting time; they are not stable repo facts.
+- Prefer write-once assets that compound: the case study, README, public source, and durable links.
+- External sending and posting require the account owner's explicit action; this repository contains
+  the copy and measurement contract, not authorization to publish.
