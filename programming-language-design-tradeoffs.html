@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  html,body{margin:0;padding:0;background:#e7e0cf;}
+  *{box-sizing:border-box;}
+  ::selection{background:#c0842e;color:#f6f2e8;}
+  a{color:#a94f38;text-decoration:none;border-bottom:1px solid rgba(169,79,56,.35);}
+  a:hover{color:#8a3c29;border-bottom-color:#8a3c29;}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#e7e0cf;padding:40px 16px 90px;font-family:Georgia,'Iowan Old Style','Palatino Linotype',serif;">
+<div style="max-width:1000px;margin:0 auto;background:#f6f2e8;border:1px solid #d8cdb2;box-shadow:0 1px 0 #fffdf6 inset,0 24px 60px -30px rgba(43,42,38,.5);">
+
+<!-- ============ MASTHEAD ============ -->
+<header style="padding:52px 56px 40px;border-bottom:3px double #2b2a26;position:relative;">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;font:600 11.5px/1.4 'SF Mono',ui-monospace,Menlo,monospace;letter-spacing:.2em;text-transform:uppercase;color:#a94f38;">
+    <span>A Field Guide</span>
+    <span style="color:#8b8368;">Software &amp; DevOps</span>
+  </div>
+  <h1 style="font:400 clamp(38px,6vw,62px)/1.02 Georgia,'Iowan Old Style',serif;color:#2b2a26;letter-spacing:-.015em;margin:20px 0 6px;max-width:16ch;">How Modern Languages Specialize</h1>
+  <div style="font:italic 400 clamp(20px,2.6vw,27px)/1.3 Georgia,serif;color:#6b6553;margin-bottom:22px;">Design tradeoffs under constraint</div>
+  <p style="font:400 18px/1.66 Georgia,serif;color:#3a382f;max-width:66ch;margin:0 0 8px;">The paradigm wars ended in a merger. Every mainstream language now ships lambdas, pattern matching, sum types, async, and null-safety-ish features — so feature checklists no longer tell them apart. What differentiates a language is the <em>one requirement it could not negotiate away</em>: the binding constraint it was bred under. Every famous design decision falls out of that constraint.</p>
+  <p style="font:400 18px/1.66 Georgia,serif;color:#3a382f;max-width:66ch;margin:0;">Same ancestors, different islands. This guide reads languages the way a naturalist reads Darwin's finches — the beak follows the food.</p>
+  <div style="margin-top:26px;font:600 11px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#8b8368;">Last verified Jul 2026 · Global technical content · Ver. facts tagged inline</div>
+</header>
+
+<!-- ============ QUICK REFERENCE CARD ============ -->
+<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+  <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">Quick Reference</div>
+  <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 4px;">The one question that predicts a language</h2>
+  <p style="font:italic 400 18px/1.5 Georgia,serif;color:#6b6553;margin:0 0 26px;">State the binding constraint. Read off the design DNA.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;background:#ddd2b8;border:1px solid #ddd2b8;">
+    <div style="background:#f6f2e8;padding:18px 20px;">
+      <div style="font:600 13px/1.4 'SF Mono',ui-monospace,monospace;color:#c0842e;margin-bottom:7px;">Rust</div>
+      <div style="font:400 15.5px/1.5 Georgia,serif;color:#3a382f;">&ldquo;No runtime allowed&rdquo; <span style="color:#a94f38;">&rArr;</span> ownership &amp; borrow-checking instead of a GC.</div>
+    </div>
+    <div style="background:#f6f2e8;padding:18px 20px;">
+      <div style="font:600 13px/1.4 'SF Mono',ui-monospace,monospace;color:#4a6fa5;margin-bottom:7px;">Go</div>
+      <div style="font:400 15.5px/1.5 Georgia,serif;color:#3a382f;">&ldquo;10,000 engineers, 1-second builds&rdquo; <span style="color:#a94f38;">&rArr;</span> deliberate boredom.</div>
+    </div>
+    <div style="background:#f6f2e8;padding:18px 20px;">
+      <div style="font:600 13px/1.4 'SF Mono',ui-monospace,monospace;color:#6b8f3d;margin-bottom:7px;">TypeScript</div>
+      <div style="font:400 15.5px/1.5 Georgia,serif;color:#3a382f;">&ldquo;Must type existing JS&rdquo; <span style="color:#a94f38;">&rArr;</span> unsound on purpose.</div>
+    </div>
+    <div style="background:#f6f2e8;padding:18px 20px;">
+      <div style="font:600 13px/1.4 'SF Mono',ui-monospace,monospace;color:#a94f38;margin-bottom:7px;">Erlang</div>
+      <div style="font:400 15.5px/1.5 Georgia,serif;color:#3a382f;">&ldquo;Nine-nines on telecom switches&rdquo; <span style="color:#a94f38;">&rArr;</span> let it crash.</div>
+    </div>
+    <div style="background:#f6f2e8;padding:18px 20px;">
+      <div style="font:600 13px/1.4 'SF Mono',ui-monospace,monospace;color:#2e7d74;margin-bottom:7px;">F#</div>
+      <div style="font:400 15.5px/1.5 Georgia,serif;color:#3a382f;">&ldquo;Must live on .NET&rdquo; <span style="color:#a94f38;">&rArr;</span> ML with nulls at every boundary.</div>
+    </div>
+    <div style="background:#f6f2e8;padding:18px 20px;">
+      <div style="font:600 13px/1.4 'SF Mono',ui-monospace,monospace;color:#4a6fa5;margin-bottom:7px;">Swift</div>
+      <div style="font:400 15.5px/1.5 Georgia,serif;color:#3a382f;">&ldquo;Must interop with Objective-C&rdquo; <span style="color:#a94f38;">&rArr;</span> ARC, not tracing GC.</div>
+    </div>
+    <div style="background:#f6f2e8;padding:18px 20px;">
+      <div style="font:600 13px/1.4 'SF Mono',ui-monospace,monospace;color:#c0842e;margin-bottom:7px;">Zig</div>
+      <div style="font:400 15.5px/1.5 Georgia,serif;color:#3a382f;">&ldquo;Replace C, keep C's transparency&rdquo; <span style="color:#a94f38;">&rArr;</span> no hidden control flow.</div>
+    </div>
+    <div style="background:#f6f2e8;padding:18px 20px;">
+      <div style="font:600 13px/1.4 'SF Mono',ui-monospace,monospace;color:#4a6fa5;margin-bottom:7px;">Java</div>
+      <div style="font:400 15.5px/1.5 Georgia,serif;color:#3a382f;">&ldquo;Write once, run anywhere&rdquo; <span style="color:#a94f38;">&rArr;</span> a portable VM you can never remove.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ARCHIPELAGO ============ -->
+<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+  <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">Plate I · The signature artifact</div>
+  <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">The Adaptation Archipelago</h2>
+  <p style="font:400 17px/1.6 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 20px;">Each island is a deployment niche. Languages are the specimens that adapted to live there; dashed currents trace the ancestry that carried genes between islands. Hover a specimen to read its binding constraint.</p>
+
+  <div style="overflow-x:auto;border:1px solid #d8cdb2;background:#eef3f2;">
+  <svg viewBox="0 0 1000 560" style="display:block;min-width:820px;width:100%;height:auto;font-family:'SF Mono',ui-monospace,Menlo,monospace;">
+    <defs>
+      <pattern id="waves" width="46" height="26" patternUnits="userSpaceOnUse">
+        <path d="M0 13 Q11 6 23 13 T46 13" fill="none" stroke="#cdd8d5" stroke-width="1.1"/>
+      </pattern>
+    </defs>
+    <rect x="0" y="0" width="1000" height="560" fill="#eef3f2"/>
+    <rect x="0" y="0" width="1000" height="560" fill="url(#waves)" opacity="0.55"/>
+
+    <!-- ancestry currents -->
+    <g ref="{{ ancestryRef }}" stroke-dasharray="3 6" stroke-width="1.6" fill="none" opacity="0.55">
+      <path d="M760 175 C640 240 600 300 520 345" stroke="#2e7d74"/>
+      <path d="M760 175 C560 210 360 250 220 300" stroke="#2e7d74"/>
+      <path d="M180 175 C260 210 360 150 430 145" stroke="#c0842e"/>
+      <path d="M200 345 C330 330 420 250 445 165" stroke="#c0842e"/>
+      <path d="M60 470 C300 520 560 520 700 480" stroke="#4a6fa5"/>
+    </g>
+
+    <!-- ISLAND: Bare Metal Atoll -->
+    <g>
+      <ellipse cx="150" cy="150" rx="92" ry="58" fill="#e9d9b8" stroke="#c0842e" stroke-width="1.4"/>
+      <ellipse cx="150" cy="150" rx="60" ry="34" fill="#efe4c8"/>
+      <text x="150" y="102" text-anchor="middle" font-size="11" letter-spacing="1.5" fill="#8a6a26" font-weight="700">BARE METAL ATOLL</text>
+    </g>
+    <!-- ISLAND: Kernel Ridge -->
+    <g>
+      <ellipse cx="150" cy="360" rx="98" ry="62" fill="#e9d9b8" stroke="#c0842e" stroke-width="1.4"/>
+      <ellipse cx="150" cy="360" rx="64" ry="36" fill="#efe4c8"/>
+      <text x="150" y="308" text-anchor="middle" font-size="11" letter-spacing="1.5" fill="#8a6a26" font-weight="700">KERNEL RIDGE</text>
+    </g>
+    <!-- ISLAND: Server Fleet -->
+    <g>
+      <ellipse cx="490" cy="150" rx="118" ry="66" fill="#dce3ee" stroke="#4a6fa5" stroke-width="1.4"/>
+      <ellipse cx="490" cy="150" rx="78" ry="38" fill="#e6ebf3"/>
+      <text x="490" y="94" text-anchor="middle" font-size="11" letter-spacing="1.5" fill="#3a5885" font-weight="700">SERVER FLEET ARCHIPELAGO</text>
+    </g>
+    <!-- ISLAND: Enterprise Mainland -->
+    <g>
+      <ellipse cx="470" cy="380" rx="120" ry="70" fill="#dce3ee" stroke="#4a6fa5" stroke-width="1.4"/>
+      <ellipse cx="470" cy="380" rx="80" ry="42" fill="#e6ebf3"/>
+      <text x="470" y="322" text-anchor="middle" font-size="11" letter-spacing="1.5" fill="#3a5885" font-weight="700">ENTERPRISE MAINLAND</text>
+    </g>
+    <!-- ISLAND: Browser Basin -->
+    <g>
+      <ellipse cx="290" cy="490" rx="104" ry="52" fill="#dfe6cd" stroke="#6b8f3d" stroke-width="1.4"/>
+      <text x="290" y="452" text-anchor="middle" font-size="11" letter-spacing="1.5" fill="#4f6d29" font-weight="700">BROWSER BASIN</text>
+    </g>
+    <!-- ISLAND: ML Cove -->
+    <g>
+      <ellipse cx="800" cy="165" rx="104" ry="62" fill="#d3e2df" stroke="#2e7d74" stroke-width="1.4"/>
+      <ellipse cx="800" cy="165" rx="66" ry="34" fill="#e0ebe8"/>
+      <text x="800" y="112" text-anchor="middle" font-size="11" letter-spacing="1.5" fill="#1f6158" font-weight="700">ML COVE</text>
+    </g>
+    <!-- ISLAND: Phone Peninsula -->
+    <g>
+      <ellipse cx="760" cy="480" rx="112" ry="58" fill="#d8e0e8" stroke="#4a6fa5" stroke-width="1.4"/>
+      <text x="760" y="440" text-anchor="middle" font-size="11" letter-spacing="1.5" fill="#3a5885" font-weight="700">PHONE PENINSULA</text>
+    </g>
+    <!-- ISLAND: Telecom Reef -->
+    <g>
+      <ellipse cx="905" cy="340" rx="78" ry="52" fill="#ecd9d2" stroke="#a94f38" stroke-width="1.4"/>
+      <text x="905" y="298" text-anchor="middle" font-size="11" letter-spacing="1.5" fill="#8a3c29" font-weight="700">TELECOM REEF</text>
+    </g>
+
+    <!-- SPECIMENS -->
+    <!-- helper: circle + label; data-note read on hover -->
+    <g style="cursor:default;" data-note="C — portable assembler for Unix; no runtime, you manage memory." onMouseEnter="{{ onSpec }}">
+      <circle cx="118" cy="150" r="7" fill="#c0842e" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="118" y="172" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">C</text>
+    </g>
+    <g style="cursor:default;" data-note="Zig — replace C, keep its transparency: no hidden control flow, no hidden allocations." onMouseEnter="{{ onSpec }}">
+      <circle cx="182" cy="150" r="7" fill="#c0842e" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="182" y="172" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Zig</text>
+    </g>
+    <g style="cursor:default;" data-note="Rust — must replace C++ with no runtime and no GC: safety proven at compile time." onMouseEnter="{{ onSpec }}">
+      <circle cx="118" cy="360" r="7" fill="#c0842e" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="118" y="382" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Rust</text>
+    </g>
+    <g style="cursor:default;" data-note="C++ — zero-overhead abstraction over C: you don't pay for what you don't use." onMouseEnter="{{ onSpec }}">
+      <circle cx="188" cy="368" r="7" fill="#c0842e" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="188" y="390" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">C++</text>
+    </g>
+    <g style="cursor:default;" data-note="Go — 10,000 engineers and sub-second builds at Google scale: deliberate boredom." onMouseEnter="{{ onSpec }}">
+      <circle cx="440" cy="150" r="7" fill="#4a6fa5" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="440" y="172" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Go</text>
+    </g>
+    <g style="cursor:default;" data-note="Java — write once, run anywhere: a portable VM that can never be removed." onMouseEnter="{{ onSpec }}">
+      <circle cx="500" cy="158" r="7" fill="#4a6fa5" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="500" y="180" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Java</text>
+    </g>
+    <g style="cursor:default;" data-note="C# — a better Java on Microsoft's terms; later the CLR's flagship language." onMouseEnter="{{ onSpec }}">
+      <circle cx="548" cy="148" r="7" fill="#4a6fa5" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="556" y="152" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">C#</text>
+    </g>
+    <g style="cursor:default;" data-note="F# — an ML that must run on the CLR and consume every .NET library." onMouseEnter="{{ onSpec }}">
+      <circle cx="440" cy="384" r="7" fill="#2e7d74" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="440" y="406" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">F#</text>
+    </g>
+    <g style="cursor:default;" data-note="Kotlin — a nicer language, but it marries the JVM (and its platform types)." onMouseEnter="{{ onSpec }}">
+      <circle cx="505" cy="392" r="7" fill="#4a6fa5" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="505" y="414" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Kotlin</text>
+    </g>
+    <g style="cursor:default;" data-note="JavaScript — the browser's only language: single-threaded event loop, ship everywhere." onMouseEnter="{{ onSpec }}">
+      <circle cx="258" cy="492" r="7" fill="#6b8f3d" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="258" y="514" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">JS</text>
+    </g>
+    <g style="cursor:default;" data-note="TypeScript — must type the JavaScript that already exists: unsound by design." onMouseEnter="{{ onSpec }}">
+      <circle cx="322" cy="492" r="7" fill="#6b8f3d" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="330" y="496" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">TS</text>
+    </g>
+    <g style="cursor:default;" data-note="OCaml — a fast, pragmatic ML with its own sovereign runtime; multicore since 5.0 (2022)." onMouseEnter="{{ onSpec }}">
+      <circle cx="770" cy="165" r="7" fill="#2e7d74" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="770" y="187" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">OCaml</text>
+    </g>
+    <g style="cursor:default;" data-note="Haskell — purely functional research vehicle: laziness and types as the whole point." onMouseEnter="{{ onSpec }}">
+      <circle cx="835" cy="158" r="7" fill="#2e7d74" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="843" y="162" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Haskell</text>
+    </g>
+    <g style="cursor:default;" data-note="Swift — replace Objective-C and interop with Cocoa: ARC instead of a tracing GC." onMouseEnter="{{ onSpec }}">
+      <circle cx="720" cy="482" r="7" fill="#4a6fa5" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="720" y="504" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Swift</text>
+    </g>
+    <g style="cursor:default;" data-note="Erlang / Elixir — nine-nines uptime on telecom switches: isolated processes, let it crash." onMouseEnter="{{ onSpec }}">
+      <circle cx="905" cy="340" r="7" fill="#a94f38" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="905" y="362" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Erlang</text>
+    </g>
+    <g style="cursor:default;" data-note="Python — readable scripting glue: developer time over machine time, C for the hot loops." onMouseEnter="{{ onSpec }}">
+      <circle cx="360" cy="300" r="7" fill="#6b8f3d" stroke="#2b2a26" stroke-width="1.3"/>
+      <text x="360" y="322" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Python</text>
+    </g>
+  </svg>
+  </div>
+
+  <div ref="{{ capRef }}" style="margin-top:14px;min-height:52px;padding:13px 18px;background:#efe8d4;border-left:3px solid #a94f38;font:italic 400 16.5px/1.5 Georgia,serif;color:#5a5443;">Hover a specimen to read its binding constraint.</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font:600 11.5px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;color:#5a5443;">
+    <span style="display:inline-flex;align-items:center;gap:7px;"><span style="width:11px;height:11px;border-radius:50%;background:#c0842e;border:1px solid #2b2a26;"></span>SYSTEMS</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;"><span style="width:11px;height:11px;border-radius:50%;background:#2e7d74;border:1px solid #2b2a26;"></span>ML / FUNCTIONAL</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;"><span style="width:11px;height:11px;border-radius:50%;background:#4a6fa5;border:1px solid #2b2a26;"></span>MANAGED / VM</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;"><span style="width:11px;height:11px;border-radius:50%;background:#6b8f3d;border:1px solid #2b2a26;"></span>DYNAMIC</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;"><span style="width:11px;height:11px;border-radius:50%;background:#a94f38;border:1px solid #2b2a26;"></span>BEAM / TELECOM</span>
+  </div>
+</section>
+
+<!-- ============ §1 THE MERGER ============ -->
+<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+  <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§1 · Convergent evolution</div>
+  <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">The paradigm wars are over</h2>
+  <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 22px;">The features people once argued about have converged. Every column below eventually grew every row — so if two languages both have pattern matching and lambdas, that tells you almost nothing about how they differ. The differences live in the <em>defaults</em> and the <em>constraints</em>, not the feature list.</p>
+  <div style="overflow-x:auto;border:1px solid #d8cdb2;">
+    <table style="border-collapse:collapse;width:100%;min-width:640px;background:#fbf8ef;">
+      <thead><tr>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Feature</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Java</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">C#</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">C++</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">JS</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Python</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Go</th>
+      </tr></thead>
+      <tbody style="font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Lambdas / closures</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">8 · 2014</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">3.0 · 2007</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">C++11</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">always</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">1994</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">2012</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Generics</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">5 · 2004</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">2.0 · 2005</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">C++98</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#b19a52;">&mdash;</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">3.5 / 3.12</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;color:#a94f38;">1.18 · 2022</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Pattern matching</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">21 · 2023</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">7&ndash;9</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#b19a52;">partial</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#b19a52;">destructuring</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">3.10 · 2021</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#b19a52;">&mdash;</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Sum / tagged types</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">sealed 17</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#b19a52;">proposed</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">variant 17</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#b19a52;">&mdash;</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Union</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#b19a52;">&mdash;</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">async / await</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">21 vthreads</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">5.0 · 2012</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">C++20</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">ES2017</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">3.5 · 2015</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">goroutines</td></tr>
+        <tr><td style="padding:10px 13px;font-weight:600;">Null safety</td><td style="padding:10px 13px;color:#b19a52;">Optional 8</td><td style="padding:10px 13px;">8 · 2019</td><td style="padding:10px 13px;color:#b19a52;">&mdash;</td><td style="padding:10px 13px;color:#b19a52;">?. 2020</td><td style="padding:10px 13px;color:#b19a52;">Optional</td><td style="padding:10px 13px;color:#b19a52;">nil</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font:italic 400 15px/1.5 Georgia,serif;color:#6b6553;margin:14px 0 0;">Read the columns, not the rows: the interesting facts are Go's twelve-year wait for generics and the fact that null safety is the one row still half-empty.</p>
+</section>
+
+<!-- ============ §2 CONSTRAINT LEDGER + PICKER ============ -->
+<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+  <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§2 · The heart of the guide</div>
+  <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">The Constraint Ledger</h2>
+  <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 20px;">One row per language: what it was bred for, what the binding constraint bought, and what it cost. <strong>Toggle the constraints below</strong> — the ledger dims every language that can't satisfy them, leaving the survivors lit. This is decision support, not a summary: state your own non-negotiables and read the shortlist.</p>
+
+  <div ref="{{ chipbarRef }}" style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:8px;">
+    <button data-key="noRuntime" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">no runtime allowed</button>
+    <button data-key="noGcPause" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">GC pauses unacceptable</button>
+    <button data-key="staticBinary" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">single static binary</button>
+    <button data-key="fastCompile" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">compile speed critical</button>
+    <button data-key="bigTeam" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">huge team / high churn</button>
+    <button data-key="interop" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">interop JVM/.NET/JS/C</button>
+    <button data-key="uptime" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">nine-nines uptime</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;min-height:22px;">
+    <button onClick="{{ onReset }}" style="cursor:pointer;font:600 11px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;padding:6px 10px;border:1px solid #b0a684;background:transparent;color:#8b8368;border-radius:2px;">Reset</button>
+    <span ref="{{ countRef }}" style="font:italic 400 15px/1.4 Georgia,serif;color:#a94f38;"></span>
+  </div>
+
+  <div style="overflow-x:auto;border:1px solid #d8cdb2;">
+    <table style="border-collapse:collapse;width:100%;min-width:820px;background:#fbf8ef;">
+      <thead><tr>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Language</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Born</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Binding constraint</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">What it bought</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">What it paid</th>
+      </tr></thead>
+      <tbody ref="{{ tbodyRef }}" style="font:400 13.5px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
+        <tr data-tags="noRuntime noGcPause staticBinary" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#c0842e;"></span>Rust</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">2010, Mozilla</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">No runtime, no GC; replace C++ in a browser engine.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Memory safety with zero runtime cost.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Borrow-checker learning curve; slow compiles.</td></tr>
+        <tr data-tags="bigTeam fastCompile staticBinary" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#4a6fa5;"></span>Go</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">2009, Google</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">10,000 engineers; sub-second builds; low onboarding.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Fast builds, easy concurrency, one binary.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Deliberate omissions; 12-yr wait for generics.</td></tr>
+        <tr data-tags="noRuntime noGcPause staticBinary fastCompile" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#c0842e;"></span>Zig</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">2016, A. Kelley</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Replace C; keep total transparency.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">No hidden control flow / allocations; comptime.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Still pre-1.0 (0.16, Apr 2026); no safety proofs.</td></tr>
+        <tr data-tags="noRuntime noGcPause staticBinary" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#c0842e;"></span>C</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">1972, Bell Labs</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">A portable assembler for Unix.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Runs on everything; total control; the lingua franca.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">You own every byte; UB everywhere.</td></tr>
+        <tr data-tags="noRuntime noGcPause staticBinary" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#c0842e;"></span>C++</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">1985, Bell Labs</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Abstraction over C at zero overhead.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">&ldquo;Don't pay for what you don't use&rdquo;; huge reach.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Staggering complexity; backward-compat forever.</td></tr>
+        <tr data-tags="bigTeam interop" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#4a6fa5;"></span>Java</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">1995, Sun</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Write once, run anywhere &mdash; on a VM.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Portability, vast ecosystem, mature tooling.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">A VM you can't remove; generics by erasure.</td></tr>
+        <tr data-tags="bigTeam interop" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#4a6fa5;"></span>C#</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">2000, Microsoft</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">A better Java on the CLR.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Reified generics, LINQ, async first (2012).</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Long Windows-first period; CLR ties.</td></tr>
+        <tr data-tags="interop" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#2e7d74;"></span>F#</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">2005, MS Research</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">An ML that must run on the CLR &amp; consume all of .NET.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Industrial ecosystem &amp; tooling on day one.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Nulls at every boundary; no functors / HKTs.</td></tr>
+        <tr data-tags="fastCompile staticBinary" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#2e7d74;"></span>OCaml</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">1996, INRIA</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">A fast, pragmatic ML with a sovereign runtime.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Blazing compiles; functors; multicore (5.0, 2022).</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Small ecosystem; idiosyncratic syntax.</td></tr>
+        <tr data-tags="" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#2e7d74;"></span>Haskell</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">1990, committee</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">A shared lab for lazy, pure functional research.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Purity, type-class power, reasoning guarantees.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Laziness surprises; steep on-ramp.</td></tr>
+        <tr data-tags="interop" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#6b8f3d;"></span>TypeScript</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">2012, Microsoft</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Add types to the JavaScript that already exists.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Gradual typing over the whole npm world.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Deliberately unsound; types erased at runtime.</td></tr>
+        <tr data-tags="bigTeam interop" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#4a6fa5;"></span>Kotlin</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">2011, JetBrains</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">A nicer language that must marry the JVM.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Null-safety, coroutines, seamless Java interop.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Platform types leak nulls; coroutines are a library.</td></tr>
+        <tr data-tags="interop noGcPause" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#4a6fa5;"></span>Swift</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">2014, Apple</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Replace Objective-C; interop with Cocoa.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">ARC (no pauses), value types, modern syntax.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">ObjC bridging baggage; Apple-centric gravity.</td></tr>
+        <tr data-tags="uptime" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#a94f38;"></span>Erlang / Elixir</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">1986, Ericsson</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Nine-nines uptime on telecom switches.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Isolation, supervision, hot code reload.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Raw single-core throughput; copying overhead.</td></tr>
+        <tr data-tags="interop" style="transition:opacity .2s;"><td style="padding:11px 13px;"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#6b8f3d;"></span>Python</span></td><td style="padding:11px 13px;color:#6b6553;">1991, G. van Rossum</td><td style="padding:11px 13px;">Readable scripting glue; developer time first.</td><td style="padding:11px 13px;">Legibility, libraries, C for the hot loops.</td><td style="padding:11px 13px;">The GIL; runtime speed; packaging.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ §3 SIBLING RIVALRIES ============ -->
+<section style="padding:44px 56px 20px;border-bottom:1px solid #ddd2b8;">
+  <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§3 · Isolating one variable at a time</div>
+  <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">The sibling rivalries</h2>
+  <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 8px;">The cleanest way to see a constraint at work is to hold everything else fixed. Each pair below shares an ancestor and differs on exactly one island variable. The tables trace <em>design decisions</em> back to that variable &mdash; not feature checkboxes.</p>
+</section>
+
+<!-- Rivalry blocks -->
+<section style="padding:30px 56px;border-bottom:1px solid #ddd2b8;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px;">
+    <h3 style="font:400 25px/1.15 Georgia,serif;color:#2b2a26;margin:0;">F# vs OCaml</h3>
+    <span style="font:600 11.5px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#2e7d74;">Variable: host platform</span>
+  </div>
+  <p style="font:400 15.5px/1.55 Georgia,serif;color:#5a5443;max-width:70ch;margin:6px 0 16px;"><em>Same ancestor</em> (Caml / ML). <em>Different island</em>: OCaml keeps its own sovereign runtime; F# must live on the CLR. <em>Resulting beak</em>: hosted ML vs sovereign ML.</p>
+  <div style="overflow-x:auto;border:1px solid #d8cdb2;">
+    <table style="border-collapse:collapse;width:100%;min-width:620px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
+      <thead><tr>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Decision</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#2e7d74;">F# (on the CLR)</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#1f6158;">OCaml (sovereign)</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Null</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Present at every .NET boundary; must defend against it.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">No null in the language; option types only.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Functors / modules</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">No ML module system; CLR has no place for it.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Full higher-order functors &mdash; a core feature.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Ecosystem</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">All of .NET, day one.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Smaller, self-contained; opam.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Metaprogramming</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Type providers (bring external schemas in as types).</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">PPX syntax extensions.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">OO</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Inherits .NET's class/interface model whether it wants it or not.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Object system exists but is rarely reached for.</td></tr>
+        <tr><td style="padding:10px 13px;font-weight:600;">Concurrency</td><td style="padding:10px 13px;">Async built on the CLR's Task model.</td><td style="padding:10px 13px;">Effect handlers &amp; multicore since OCaml 5.0 (2022).</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section style="padding:30px 56px;border-bottom:1px solid #ddd2b8;background:#f3ede0;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px;">
+    <h3 style="font:400 25px/1.15 Georgia,serif;color:#2b2a26;margin:0;">Rust vs Go</h3>
+    <span style="font:600 11.5px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#a94f38;">Variable: is a runtime allowed?</span>
+  </div>
+  <p style="font:400 15.5px/1.55 Georgia,serif;color:#5a5443;max-width:72ch;margin:6px 0 16px;">The marquee rivalry. Both are modern &ldquo;systems-ish&rdquo; languages from the same era, but Go accepts a runtime (a garbage collector, a scheduler) and Rust forbids one. Nearly every visible difference between them descends from that single yes/no.</p>
+  <div style="overflow-x:auto;border:1px solid #d8cdb2;">
+    <table style="border-collapse:collapse;width:100%;min-width:640px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
+      <thead><tr>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Decision</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#c0842e;">Rust (no runtime)</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#4a6fa5;">Go (runtime OK)</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Memory</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Ownership + borrow checker; freed deterministically.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Tracing GC (Green Tea GC default in 1.26, 2026).</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Concurrency</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Stackless async/await &mdash; green threads removed (RFC 230).</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Goroutines on an M:N scheduler in the runtime.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Errors</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="font-family:'SF Mono',monospace;">Result&lt;T,E&gt;</span> + <span style="font-family:'SF Mono',monospace;">?</span>; no exceptions.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Explicit <span style="font-family:'SF Mono',monospace;">if err != nil</span> values.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Compile philosophy</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Prove everything at compile time; accept slow builds.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Sub-second builds are a hard requirement.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Abstraction</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Traits, generics, macros &mdash; zero-cost.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Minimal surface; generics only since 1.18 (2022).</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Deploys to</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Kernels, MCUs (no_std), WASM, browsers.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Server fleets, CLIs, ops tooling.</td></tr>
+        <tr><td style="padding:10px 13px;font-weight:600;">Motto in one line</td><td style="padding:10px 13px;">&ldquo;If it compiles, it's probably correct.&rdquo;</td><td style="padding:10px 13px;">&ldquo;A little copying is better than a little dependency.&rdquo;</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section style="padding:30px 56px;border-bottom:1px solid #ddd2b8;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px;">
+    <h3 style="font:400 25px/1.15 Georgia,serif;color:#2b2a26;margin:0;">Go vs Erlang / BEAM</h3>
+    <span style="font:600 11.5px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#4a6fa5;">Variable: what does &ldquo;concurrency-first&rdquo; serve?</span>
+  </div>
+  <p style="font:400 15.5px/1.55 Georgia,serif;color:#5a5443;max-width:72ch;margin:6px 0 16px;">Both put concurrency at the center, but for different masters: Go optimizes for developer throughput on server fleets; the BEAM optimizes for never going down.</p>
+  <div style="overflow-x:auto;border:1px solid #d8cdb2;">
+    <table style="border-collapse:collapse;width:100%;min-width:620px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
+      <thead><tr>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Decision</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#4a6fa5;">Go</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#a94f38;">Erlang / BEAM</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Scheduling</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Cooperative-ish; goroutines yield at safepoints.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Preemptive, per-process reduction counting.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Memory model</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Shared memory; data races possible.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Per-process heaps; share nothing, message-pass.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Failure</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Handle errors as returned values.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">&ldquo;Let it crash&rdquo;; supervisors restart.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Deploy</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Redeploy the binary.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Hot code reload with no downtime.</td></tr>
+        <tr><td style="padding:10px 13px;font-weight:600;">Sweet spot</td><td style="padding:10px 13px;">Throughput-bound services, tooling.</td><td style="padding:10px 13px;">Always-on messaging, telecom, chat.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section style="padding:30px 56px;border-bottom:1px solid #ddd2b8;background:#f3ede0;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px;">
+    <h3 style="font:400 25px/1.15 Georgia,serif;color:#2b2a26;margin:0;">Rust vs Zig</h3>
+    <span style="font:600 11.5px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#c0842e;">Variable: how do you get memory safety?</span>
+  </div>
+  <p style="font:400 15.5px/1.55 Georgia,serif;color:#5a5443;max-width:72ch;margin:6px 0 16px;">Both refuse a garbage collector. Rust buys safety with a type system; Zig buys predictability with radical transparency and leaves safety to tooling and discipline.</p>
+  <div style="overflow-x:auto;border:1px solid #d8cdb2;">
+    <table style="border-collapse:collapse;width:100%;min-width:620px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
+      <thead><tr>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Decision</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#c0842e;">Rust</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#8a6a26;">Zig</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Safety mechanism</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Borrow checker proves it at compile time.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Explicit allocators + safety-checked build modes.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Allocation</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Mostly implicit via ownership.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">No hidden allocation; you pass an allocator.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Metaprogramming</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Macros + traits + generics.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="font-family:'SF Mono',monospace;">comptime</span> &mdash; ordinary code run at compile time.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Control flow</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Some hidden (Drop, operator overloading).</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">No hidden control flow &mdash; a design law.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">C interop</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">FFI with bindgen.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Imports C headers directly; ships a C compiler.</td></tr>
+        <tr><td style="padding:10px 13px;font-weight:600;">Maturity</td><td style="padding:10px 13px;">1.0 in 2015; stable editions.</td><td style="padding:10px 13px;">Pre-1.0 (0.16, Apr 2026); breaking changes expected.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section style="padding:30px 56px 40px;border-bottom:1px solid #ddd2b8;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px;">
+    <h3 style="font:400 25px/1.15 Georgia,serif;color:#2b2a26;margin:0;">Kotlin vs Swift</h3>
+    <span style="font:600 11.5px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#4a6fa5;">Variable: which legacy do you marry?</span>
+  </div>
+  <p style="font:400 15.5px/1.55 Georgia,serif;color:#5a5443;max-width:72ch;margin:6px 0 16px;">Two &ldquo;modern app languages&rdquo; born within three years, each welded to an incumbent: Kotlin to the JVM and Java, Swift to Objective-C and Cocoa. The incumbent dictates their compromises.</p>
+  <div style="overflow-x:auto;border:1px solid #d8cdb2;">
+    <table style="border-collapse:collapse;width:100%;min-width:620px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
+      <thead><tr>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Decision</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#4a6fa5;">Kotlin (JVM)</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:10px 13px;border-bottom:2px solid #2b2a26;color:#3a5885;">Swift (Cocoa)</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Memory</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">JVM tracing GC.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">ARC &mdash; ObjC's model, no tracing collector.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Null</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Nullable types <span style="font-family:'SF Mono',monospace;">T?</span>, but platform types from Java escape.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Optionals; ObjC nil bridged carefully.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Async</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Coroutines &mdash; a library, not a keyword.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">async/await built into the language.</td></tr>
+        <tr><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Interop</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Call any Java class transparently.</td><td style="padding:10px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Bridges ObjC; C interop first-class.</td></tr>
+        <tr><td style="padding:10px 13px;font-weight:600;">Value types</td><td style="padding:10px 13px;">Data classes; still reference-heavy on the JVM.</td><td style="padding:10px 13px;">Structs everywhere; value semantics by default.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ §4 THE GC FORK ============ -->
+<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+  <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§4 · The single decision that shapes everything</div>
+  <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">The garbage-collection fork</h2>
+  <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 20px;">How a language reclaims memory is the earliest, most load-bearing decision it makes &mdash; it decides which deployment targets are even reachable. There are four families, and a language lives inside one of them for life.</p>
+  <div style="overflow-x:auto;border:1px solid #d8cdb2;">
+    <table style="border-collapse:collapse;width:100%;min-width:760px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
+      <thead><tr>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Family</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Mechanism</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Forbids</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Enables</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Lives here</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Tracing GC</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Background collector walks live objects; may pause.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Hard real-time, kernels, tiny footprints.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Simplicity; no lifetimes to think about.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Java, C#, Go</td></tr>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">ARC (ref counting)</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Compiler inserts retain/release at compile time.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Auto cycle collection (need weak refs).</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Predictable frees, low footprint, no pauses.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Swift, ObjC</td></tr>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Ownership / borrow</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Compile-time lifetimes; freed deterministically.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Nothing at runtime &mdash; but a steep learning curve.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Zero runtime + safety; runs anywhere.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Rust</td></tr>
+        <tr><td style="padding:11px 13px;font-weight:600;">Manual / allocator</td><td style="padding:11px 13px;">You call free / pass an allocator explicitly.</td><td style="padding:11px 13px;">Automatic safety guarantees.</td><td style="padding:11px 13px;">Total control &amp; transparency; smallest binaries.</td><td style="padding:11px 13px;">C, C++, Zig</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ §5 SAME FEATURE FIVE REASONS ============ -->
+<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+  <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§5 · One concept, five constraints</div>
+  <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">Same feature, five reasons</h2>
+  <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 20px;">&ldquo;It has concurrency&rdquo; is a checkbox. <em>Why</em> and <em>how</em> it has concurrency is the design. Here is one concept, implemented five different ways because five different constraints demanded it.</p>
+  <div style="overflow-x:auto;border:1px solid #d8cdb2;">
+    <table style="border-collapse:collapse;width:100%;min-width:720px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
+      <thead><tr>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Model</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Why it exists</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">How it works</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">The tradeoff</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Goroutines (Go)</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Cheap concurrency for server fleets.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Growable stacks on an M:N scheduler.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Shared memory &rArr; data races possible.</td></tr>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">BEAM processes</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Fault isolation for nine-nines uptime.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Preemptive, per-process heaps, messages only.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Copying cost; lower raw throughput.</td></tr>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">async/await (Rust)</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Concurrency with no runtime, zero cost.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Stackless state machines, no GC.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Function coloring; <span style="font-family:'SF Mono',monospace;">Pin</span> complexity.</td></tr>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Event loop (JS)</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">The browser is single-threaded.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Callbacks / promises, non-blocking I/O.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">CPU-bound work blocks everything.</td></tr>
+        <tr><td style="padding:11px 13px;font-weight:600;">Virtual threads (Java 21)</td><td style="padding:11px 13px;">Keep blocking style; scale to millions.</td><td style="padding:11px 13px;">JVM-scheduled lightweight threads.</td><td style="padding:11px 13px;">Needs a mature runtime underneath.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font:italic 400 15px/1.5 Georgia,serif;color:#6b6553;margin:14px 0 0;">The same story repeats for null safety (Kotlin's <span style="font-family:'SF Mono',monospace;font-style:normal;">T?</span> vs Rust's <span style="font-family:'SF Mono',monospace;font-style:normal;">Option</span> vs Go's <span style="font-family:'SF Mono',monospace;font-style:normal;">nil</span>) and error handling (Go's error values vs Rust's <span style="font-family:'SF Mono',monospace;font-style:normal;">Result</span> vs Java's exceptions vs Erlang's &ldquo;let it crash&rdquo;).</p>
+</section>
+
+<!-- ============ §6 DEPLOYMENT TARGET ============ -->
+<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+  <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§6 · The island decides the beak</div>
+  <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">Deployment target &rarr; design DNA</h2>
+  <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 20px;">Where the code has to run forbids some designs and demands others. Give an architect a target and they can predict the language family before anyone names it.</p>
+  <div style="overflow-x:auto;border:1px solid #d8cdb2;">
+    <table style="border-collapse:collapse;width:100%;min-width:760px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
+      <thead><tr>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Target</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Forbids</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Demands</th>
+        <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">Who lives there</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Bare metal / MCU</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">GC, large runtime, heap reliance.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Deterministic timing, tiny footprint.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">C, Rust (no_std), Zig</td></tr>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">OS kernel</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Hidden allocation, stack unwinding, GC.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Manual memory, stable ABI.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">C, Rust, C++</td></tr>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Server fleet</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Slow builds, operational fragility.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Throughput, fast builds, simple ops.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Go, Java, C#, Rust</td></tr>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Browser</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Native binaries, arbitrary threads.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Ship as JS / WASM, sandboxed.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">JS, TypeScript, WASM (Rust)</td></tr>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Phone (iOS / Android)</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Battery-hungry GC, bloated binaries.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Platform interop, energy efficiency.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Swift, Kotlin</td></tr>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Enterprise mainland</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Ecosystem breaks, mass retraining.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Library breadth, hiring pool, tooling.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">C#, Java, F#, Kotlin</td></tr>
+        <tr><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);font-weight:600;">Telecom switch</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Downtime, stop-the-world pauses.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Hot reload, isolation, nine-nines.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Erlang, Elixir</td></tr>
+        <tr><td style="padding:11px 13px;font-weight:600;">Data science / glue</td><td style="padding:11px 13px;">Ceremony, mandatory compile step.</td><td style="padding:11px 13px;">REPL, libraries, readability.</td><td style="padding:11px 13px;">Python</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ §7 UNSOUNDNESS AS STRATEGY ============ -->
+<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;background:#efe8d4;">
+  <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§7 · The contrarian section</div>
+  <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">When the &ldquo;wrong&rdquo; decision was the right one</h2>
+  <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 24px;">The most instructive design decisions look like mistakes until you know the constraint. Each of these is routinely mocked and was, under its constraint, the rational choice.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;">
+    <div style="background:#f6f2e8;border:1px solid #d8cdb2;padding:20px 22px;">
+      <div style="font:600 13px/1.3 'SF Mono',ui-monospace,monospace;color:#6b8f3d;margin-bottom:8px;">TypeScript · unsound on purpose</div>
+      <p style="font:400 15px/1.55 Georgia,serif;color:#3a382f;margin:0;">Soundness is an explicit <em>non-goal</em>. A sound type system that rejected real-world JavaScript would have typed nothing anyone actually wrote. Being usefully wrong beat being uselessly right.</p>
+    </div>
+    <div style="background:#f6f2e8;border:1px solid #d8cdb2;padding:20px 22px;">
+      <div style="font:600 13px/1.3 'SF Mono',ui-monospace,monospace;color:#4a6fa5;margin-bottom:8px;">Java · generics by erasure</div>
+      <p style="font:400 15px/1.55 Georgia,serif;color:#3a382f;margin:0;">Type erasure kept old bytecode running unchanged. Reified generics would have broken the &ldquo;never break compatibility&rdquo; promise that made the JVM safe to bet a company on.</p>
+    </div>
+    <div style="background:#f6f2e8;border:1px solid #d8cdb2;padding:20px 22px;">
+      <div style="font:600 13px/1.3 'SF Mono',ui-monospace,monospace;color:#4a6fa5;margin-bottom:8px;">Go · 12 years without generics</div>
+      <p style="font:400 15px/1.55 Georgia,serif;color:#3a382f;margin:0;">Shipping generics badly at Google scale is worse than shipping late. Go waited until 1.18 (2022) for a design that didn't wreck compile times &mdash; the constraint it refused to trade.</p>
+    </div>
+    <div style="background:#f6f2e8;border:1px solid #d8cdb2;padding:20px 22px;">
+      <div style="font:600 13px/1.3 'SF Mono',ui-monospace,monospace;color:#6b8f3d;margin-bottom:8px;">Python · the GIL</div>
+      <p style="font:400 15px/1.55 Georgia,serif;color:#3a382f;margin:0;">A global lock made C extensions trivial to write correctly &mdash; and C extensions are why Python won scientific computing. The GIL bought the ecosystem that made Python matter.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ §8 CHOOSING UNDER YOUR CONSTRAINTS ============ -->
+<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+  <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§8 · Decision support</div>
+  <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">Choosing under your constraints</h2>
+  <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 24px;">Don't compare feature lists. State your binding constraints, let them forbid what they forbid, and read the shortlist. Three worked examples, each ending at a named answer.</p>
+
+  <div style="display:grid;gap:16px;">
+    <div style="border:1px solid #d8cdb2;background:#fbf8ef;padding:22px 24px;">
+      <div style="font:600 12px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#c0842e;margin-bottom:6px;">Example A</div>
+      <h3 style="font:400 21px/1.2 Georgia,serif;color:#2b2a26;margin:0 0 10px;">A CLI tool shipped as one binary to customer machines</h3>
+      <div style="font:600 12.5px/1.6 'SF Mono',ui-monospace,monospace;color:#5a5443;margin-bottom:10px;">constraints: single static binary · fast startup · cross-compile · no install step</div>
+      <p style="font:400 15.5px/1.6 Georgia,serif;color:#3a382f;margin:0 0 8px;">&ldquo;No runtime install&rdquo; kills the JVM and .NET. &ldquo;Fast startup&rdquo; disfavors anything with warm-up. That leaves the systems island: <strong>Rust, Go, Zig</strong>.</p>
+      <p style="font:400 15.5px/1.6 Georgia,serif;color:#2b2a26;margin:0;border-top:1px solid #e3dabf;padding-top:10px;"><strong>Pick:</strong> <span style="color:#4a6fa5;font-weight:700;">Go</span> for most teams &mdash; fast builds, trivial cross-compilation, easy hiring. Choose Rust if correctness or peak performance dominates; Zig if you need C interop and the smallest possible binary.</p>
+    </div>
+
+    <div style="border:1px solid #d8cdb2;background:#fbf8ef;padding:22px 24px;">
+      <div style="font:600 12px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#2e7d74;margin-bottom:6px;">Example B</div>
+      <h3 style="font:400 21px/1.2 Georgia,serif;color:#2b2a26;margin:0 0 10px;">Line-of-business services in a .NET shop that wants functional style</h3>
+      <div style="font:600 12.5px/1.6 'SF Mono',ui-monospace,monospace;color:#5a5443;margin-bottom:10px;">constraints: must consume .NET libraries · hire from the .NET pool · FP ergonomics</div>
+      <p style="font:400 15.5px/1.6 Georgia,serif;color:#3a382f;margin:0 0 8px;">&ldquo;Must live on .NET&rdquo; forbids OCaml and Haskell despite their FP appeal. &ldquo;FP ergonomics&rdquo; disfavors plain C#. The intersection is exactly one language.</p>
+      <p style="font:400 15.5px/1.6 Georgia,serif;color:#2b2a26;margin:0;border-top:1px solid #e3dabf;padding-top:10px;"><strong>Pick:</strong> <span style="color:#2e7d74;font-weight:700;">F#</span> &mdash; ML expressiveness with the entire .NET ecosystem and hiring pool intact. The nulls-at-the-boundary tax is the price, and it's a fair one here.</p>
+    </div>
+
+    <div style="border:1px solid #d8cdb2;background:#fbf8ef;padding:22px 24px;">
+      <div style="font:600 12px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#a94f38;margin-bottom:6px;">Example C</div>
+      <h3 style="font:400 21px/1.2 Georgia,serif;color:#2b2a26;margin:0 0 10px;">Firmware on a 256&nbsp;KB microcontroller</h3>
+      <div style="font:600 12.5px/1.6 'SF Mono',ui-monospace,monospace;color:#5a5443;margin-bottom:10px;">constraints: no heap / no GC · deterministic timing · tiny binary · mature toolchain</div>
+      <p style="font:400 15.5px/1.6 Georgia,serif;color:#3a382f;margin:0 0 8px;">&ldquo;No GC&rdquo; and &ldquo;256&nbsp;KB&rdquo; forbid every managed language outright. The only island is bare metal: <strong>C, Rust (no_std), Zig</strong>.</p>
+      <p style="font:400 15.5px/1.6 Georgia,serif;color:#2b2a26;margin:0;border-top:1px solid #e3dabf;padding-top:10px;"><strong>Pick:</strong> <span style="color:#c0842e;font-weight:700;">C</span> when vendor toolchain maturity is the deciding factor; <span style="color:#c0842e;font-weight:700;">Rust no_std</span> when the device is safety-critical and the toolchain supports your MCU. Zig is a strong contender once it reaches 1.0.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ §9 COMMON MISTAKES ============ -->
+<section style="padding:44px 56px 54px;">
+  <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§9 · Anti-patterns</div>
+  <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 22px;">Common mistakes when choosing</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;background:#ddd2b8;border:1px solid #ddd2b8;">
+    <div style="background:#f6f2e8;padding:18px 20px;"><div style="font:700 15.5px/1.4 Georgia,serif;color:#a94f38;margin-bottom:5px;">Choosing by microbenchmark</div><div style="font:400 14.5px/1.5 -apple-system,system-ui,sans-serif;color:#3a382f;">A loop that no one runs in production tells you almost nothing about your workload.</div></div>
+    <div style="background:#f6f2e8;padding:18px 20px;"><div style="font:700 15.5px/1.4 Georgia,serif;color:#a94f38;margin-bottom:5px;">&ldquo;Rust is always faster than Go&rdquo;</div><div style="font:400 14.5px/1.5 -apple-system,system-ui,sans-serif;color:#3a382f;">For most services the bottleneck is I/O and the network, not the language. Velocity often wins.</div></div>
+    <div style="background:#f6f2e8;padding:18px 20px;"><div style="font:700 15.5px/1.4 Georgia,serif;color:#a94f38;margin-bottom:5px;">Treating TS unsoundness as a bug</div><div style="font:400 14.5px/1.5 -apple-system,system-ui,sans-serif;color:#3a382f;">It's a documented non-goal, not a defect. Fighting it means fighting the whole design.</div></div>
+    <div style="background:#f6f2e8;padding:18px 20px;"><div style="font:700 15.5px/1.4 Georgia,serif;color:#a94f38;margin-bottom:5px;">Porting idioms against the grain</div><div style="font:400 14.5px/1.5 -apple-system,system-ui,sans-serif;color:#3a382f;">Writing Haskell-in-Java or OOP-in-Rust fights the language instead of using it.</div></div>
+    <div style="background:#f6f2e8;padding:18px 20px;"><div style="font:700 15.5px/1.4 Georgia,serif;color:#a94f38;margin-bottom:5px;">Ignoring the hiring pool</div><div style="font:400 14.5px/1.5 -apple-system,system-ui,sans-serif;color:#3a382f;">&ldquo;Can we staff this in two years?&rdquo; is a real constraint, not a footnote.</div></div>
+    <div style="background:#f6f2e8;padding:18px 20px;"><div style="font:700 15.5px/1.4 Georgia,serif;color:#a94f38;margin-bottom:5px;">Assuming newer = better-adapted</div><div style="font:400 14.5px/1.5 -apple-system,system-ui,sans-serif;color:#3a382f;">A language is adapted to <em>its</em> constraint, not yours. Age is not fitness for your niche.</div></div>
+    <div style="background:#f6f2e8;padding:18px 20px;"><div style="font:700 15.5px/1.4 Georgia,serif;color:#a94f38;margin-bottom:5px;">&ldquo;Has feature X&rdquo; = &ldquo;makes X cheap&rdquo;</div><div style="font:400 14.5px/1.5 -apple-system,system-ui,sans-serif;color:#3a382f;">Java has lambdas and Rust has classes-ish. What matters is which style is <em>ergonomic</em>.</div></div>
+    <div style="background:#f6f2e8;padding:18px 20px;"><div style="font:700 15.5px/1.4 Georgia,serif;color:#a94f38;margin-bottom:5px;">Picking before stating constraints</div><div style="font:400 14.5px/1.5 -apple-system,system-ui,sans-serif;color:#3a382f;">If you can't write down your non-negotiables, no comparison table can help you.</div></div>
+  </div>
+  <p style="font:italic 400 15px/1.55 Georgia,serif;color:#6b6553;margin:26px 0 0;max-width:70ch;">The thesis, one more time: predict a language's design from its deployment target and host ecosystem, and shortlist for a project by stating <em>your</em> binding constraints &mdash; not by counting features.</p>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { selected: {} };
+
+  onChip = (e) => {
+    const key = e.currentTarget.getAttribute('data-key');
+    this.setState((s) => {
+      const sel = { ...s.selected };
+      if (sel[key]) delete sel[key]; else sel[key] = true;
+      return { selected: sel };
+    });
+  };
+
+  onReset = () => this.setState({ selected: {} });
+
+  onSpec = (e) => {
+    if (this.capEl) this.capEl.textContent = e.currentTarget.getAttribute('data-note') || '';
+  };
+
+  applyFilter() {
+    const sel = Object.keys(this.state.selected);
+    // chips visual state
+    if (this.chipbar) {
+      this.chipbar.querySelectorAll('button[data-key]').forEach((b) => {
+        const on = !!this.state.selected[b.getAttribute('data-key')];
+        b.style.background = on ? '#2b2a26' : '#f6f2e8';
+        b.style.color = on ? '#f6f2e8' : '#2b2a26';
+      });
+    }
+    // rows
+    if (this.tbody) {
+      const rows = this.tbody.querySelectorAll('tr[data-tags]');
+      let survivors = 0;
+      rows.forEach((r) => {
+        const tags = (r.getAttribute('data-tags') || '').split(' ').filter(Boolean);
+        const ok = sel.every((k) => tags.includes(k));
+        r.style.opacity = ok ? '1' : '0.24';
+        r.style.filter = ok ? 'none' : 'grayscale(1)';
+        if (ok) survivors++;
+      });
+      if (this.countEl) {
+        this.countEl.textContent = sel.length
+          ? survivors + ' of ' + rows.length + ' languages survive these constraints'
+          : '';
+      }
+    }
+  }
+
+  componentDidMount() { this.applyFilter(); }
+  componentDidUpdate() { this.applyFilter(); }
+
+  renderVals() {
+    return {
+      onChip: this.onChip,
+      onReset: this.onReset,
+      onSpec: this.onSpec,
+      chipbarRef: (el) => { this.chipbar = el; },
+      tbodyRef: (el) => { this.tbody = el; },
+      countRef: (el) => { this.countEl = el; },
+      capRef: (el) => { this.capEl = el; },
+      ancestryRef: (el) => { this.ancestryEl = el; },
+    };
+  }
+}
+</script>
+</body>
+</html>
