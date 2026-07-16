@@ -407,8 +407,7 @@ foreach ($dailyViews as $filename => $count) {
             <i class="bi bi-info-circle me-1"></i>
             Each day's raw view count is added to the score after multiplying existing values by <strong>29/30</strong>.
             After 30 days a single visit contributes ~37 % of its original weight, so this reflects
-            <em>consistently popular</em> pages — not one-day spikes. Scores reset to zero over ~3 months of inactivity.
-            <a href="https://stats.davidveksler.com/" target="_blank" rel="noopener" class="fw-semibold">More detailed traffic analytics <i class="bi bi-box-arrow-up-right"></i></a>
+            <em>consistently popular</em> pages — not one-day spikes. Scores reset to zero over ~3 months of inactivity.            
         </div>
 
         <!-- Rising stars / Score distribution / Top referrers -->
