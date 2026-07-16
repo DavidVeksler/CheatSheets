@@ -408,6 +408,7 @@ foreach ($dailyViews as $filename => $count) {
             Each day's raw view count is added to the score after multiplying existing values by <strong>29/30</strong>.
             After 30 days a single visit contributes ~37 % of its original weight, so this reflects
             <em>consistently popular</em> pages — not one-day spikes. Scores reset to zero over ~3 months of inactivity.
+            <a href="https://stats.davidveksler.com/" target="_blank" rel="noopener" class="fw-semibold">More detailed traffic analytics <i class="bi bi-box-arrow-up-right"></i></a>
         </div>
 
         <!-- Rising stars / Score distribution / Top referrers -->
@@ -518,6 +519,8 @@ foreach ($dailyViews as $filename => $count) {
             <a href="index.php"><i class="bi bi-collection-fill me-1"></i>All cheatsheets</a>
             <span class="mx-2">·</span>
             <a href="history.php"><i class="bi bi-clock-history me-1"></i>Change history</a>
+            <span class="mx-2">·</span>
+            <a href="https://stats.davidveksler.com/" target="_blank" rel="noopener"><i class="bi bi-graph-up me-1"></i>Full analytics</a>
             <span class="mx-2">·</span>
             Scores decay 1/30 per day · updated nightly via GitHub Actions
             <span class="mx-2">·</span>
