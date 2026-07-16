@@ -23,8 +23,12 @@ Usage:
   python scripts/deploy.py --all           # validate every page, not just changed ones
 
 Escape hatches (use sparingly):
-  --force        allow a non-main branch, skip the origin-sync check, and
-                 force-push HEAD to production/main (overrides non-fast-forward)
+  --force        the "just ship it" override: allow a non-main branch, skip the
+                 origin-sync check, force-push HEAD to production/main (overrides
+                 non-fast-forward), AND bypass every validation gate (implies
+                 --skip-seo, --skip-links, --skip-verify). The working tree must
+                 still be clean - a push only ships committed content, so a dirty
+                 tree would silently deploy something other than what's on disk.
   --skip-seo     skip scripts/seo_check.py
   --skip-links   skip internal link/asset integrity check
   --skip-verify  skip the post-deploy live curl checks
@@ -404,11 +408,18 @@ def main() -> None:
                    help="preflight + validate only (used by the pre-push hook)")
     p.add_argument("--all", action="store_true", help="validate every file, not just changed")
     p.add_argument("--force", action="store_true",
-                   help="allow non-main branch, skip origin sync, and force-push HEAD to production")
+                   help="just ship it: allow non-main branch, skip origin sync, "
+                        "force-push HEAD, and bypass every validation gate")
     p.add_argument("--skip-seo", action="store_true")
     p.add_argument("--skip-links", action="store_true")
     p.add_argument("--skip-verify", action="store_true")
     args = p.parse_args()
+
+    # --force is the "just ship it" escape hatch. It already overrides the git
+    # guards (branch/origin-sync/fast-forward); make it bypass the local
+    # validation gates too so a single flag means "no rules", not "some rules".
+    if args.force:
+        args.skip_seo = args.skip_links = args.skip_verify = True
 
     base = preflight(args)
     validate(args, base)
