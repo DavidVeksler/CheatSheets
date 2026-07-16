@@ -4,6 +4,7 @@
 // Add one line here when you publish a new cheatsheet.
 return [
     // AI & Safety
+    'agentic-ai.html' => 'AI & Safety',
     'agi-development-guide.html' => 'AI & Safety',
     'ai-coding-agents-compared.html' => 'AI & Safety',
     'ai-frontier.html' => 'AI & Safety',
