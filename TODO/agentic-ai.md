@@ -169,16 +169,85 @@ checklist — is enough; everything else is static).
 
 ## Visual design
 
-- **Aesthetic: naturalist's field guide** — cream paper texture, ink-line illustrations,
-  specimen-label typography (small caps, figure numbers, "Plate I" captions) for the
-  light theme; dark theme keeps the ink-on-slate feel. Distinct from the engineering
-  exhibit of `how-its-built.html` and the civic tone of `governing-agentic-ai.html`.
-  Commit fully: failure modes as pinned-specimen cards with Latin-style binomials
-  (e.g. *Successus hallucinatus*), the ladder as an engraved plate.
-- **Signature element / og:image / shareable artifact: the Autonomy Ladder** — a single
-  1200×630-friendly plate, L0→L5 with one-line guardrail per rung. Build it first and
-  best; it must read at 375 px (rungs stack vertically on mobile).
-- Interactive element (one, optional-JS): clicking a ladder rung reveals its guardrail
-  checklist via native `<details name="ladder">`. Works without JS as stacked details.
-- Wide tables get `overflow-x: auto` wrappers; specimen cards go single-column at 375 px.
-- Print: sane defaults; details print expanded where feasible.
+**Aesthetic: 19th-century naturalist's field guide** — the page reads like an engraved
+natural-history volume cataloguing a new genus of software. The joke carries the brand:
+agents are treated as observed fauna (specimen cards, binomials, field notes), and the
+author's authority is literally "collected in the field." Distinct from the engineering
+exhibit of `how-its-built.html` and the civic tone of `governing-agentic-ai.html`.
+Half-applied theming reads as default AI styling (README Rule 5) — commit fully.
+
+### Palette (implement via `light-dark()`, both modes mandatory)
+
+| Token | Light ("paper") | Dark ("ink-on-slate") | Role |
+|---|---|---|---|
+| `--paper` | `#F6F0E1` cream | `#211F1A` warm slate | page background |
+| `--paper-raised` | `#FBF7EC` | `#2A2822` | cards/plates |
+| `--ink` | `#2A2721` warm near-black | `#E7DFCC` bone | body text |
+| `--ink-soft` | `#5C5343` sepia | `#B3A88F` | secondary text, captions |
+| `--rule` | `#C9BFA8` | `#4A4436` | hairlines, table rules |
+| `--oxide` | `#93402A` oxide red | `#C96A4E` | stamps, pins, warnings, failure accents |
+| `--verdigris` | `#3E5C4B` botanical green | `#7FA98F` | links, "antidote"/mitigation accents |
+| `--brass` | `#A8842C` | `#C9A44E` | ladder rungs, highlights, small ornaments |
+
+Contrast-check every pair at build time (WCAG 4.5:1 body); adjust stops, not the scheme.
+Links: verdigris with `text-decoration: underline` (period-appropriate; no bare color).
+
+### Typography
+
+- Headings & labels: `"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+  Georgia, serif` — no webfonts (README Rule 5). Section labels in
+  `font-variant-caps: small-caps` with `letter-spacing: 0.08em`.
+- Body: Georgia at 17px/1.65 (long-read comfort).
+- Specimen binomials: italic serif (*Successus hallucinatus*).
+- Code/config: `ui-monospace, "SF Mono", Menlo, Consolas, monospace` on a
+  `--paper-raised` chip — code blocks are "collected samples," labeled like exhibits.
+
+### Ornament system (the flourishes — use these, and only these)
+
+1. **Plate captions:** every major section header is styled as an engraving caption —
+   centered small caps over a double rule (`border-top: 4px double var(--rule)`), e.g.
+   `PLATE III · THE AUTONOMY LADDER` with a subtitle line in italic sepia. Sections are
+   numbered as plates consistently (Plate I…XI).
+2. **Drop cap** on the opening paragraph only: `initial-letter: 3` with float fallback,
+   oxide red.
+3. **Rubber stamp:** a `FIELD-TESTED` stamp — small caps, oxide red, 2px double border,
+   `transform: rotate(-4deg)`, slight opacity (0.85) for ink texture. Used EXACTLY three
+   times, on the three receipts (this site / lender case study / public tooling). Scarcity
+   is what makes it land.
+4. **Specimen pin:** each failure-mode card gets a pin — a small radial-gradient circle
+   at top-center with a 1px "shadow" ellipse. Cards are double-framed like mounted
+   specimens: hairline outer border + `outline: 1px solid var(--rule); outline-offset:
+   -6px`. Card fields ruled like a ledger: OBSERVED IN / DETECTION / ANTIDOTE (antidote
+   line in verdigris).
+5. **Paper grain (optional):** one inline-SVG `feTurbulence` data-URI overlay at ≤4%
+   opacity on `--paper` only; drop it entirely if it costs any contrast, and exclude
+   from print. No external texture assets.
+6. **Volatile-fact daggers:** "as of Jul 2026" tags rendered as footnote-style
+   `† as of Jul 2026` in sepia italic — turns the staleness protocol into a period
+   flourish.
+
+Anti-flourish list: no parchment gradients, no script/cursive fonts, no skeuomorphic
+leather, no sepia photos, no torn-edge clip-paths. The look is *engraved precision*,
+not "olde-worlde."
+
+### Signature element: the Autonomy Ladder (Plate I, og:image, shareable artifact)
+
+- One inline SVG "engraved plate": two vertical rails with six rungs, L0 (bottom) → L5
+  (top), cross-hatch shading via an SVG `<pattern>`, strokes in `currentColor` so the
+  plate themes automatically. Each rung carries: `L3 · SUPERVISED AGENT` (small caps),
+  a binomial subtitle in italic, and a one-line guardrail in sepia. A brass climbing
+  arrow annotates "what unlocks the next rung."
+- Interactive layer (the page's ONE interactive element): each rung is a native
+  `<details name="ladder">` — clicking reveals that rung's guardrail checklist. Without
+  JS it's fully functional stacked details; JS adds nothing but smooth-scroll.
+- 375 px behavior: rails hide, rungs stack as full-width cards, nothing truncates.
+- og:image composition (1200×630): the plate on cream, title cartouche top-left
+  ("AGENTIC AI — A Practitioner's Field Guide · Plate I"), site URL bottom-right in
+  small caps. Screenshot the light theme — cream reads better in social feeds than slate.
+
+### Layout & print
+
+- Wide tables in `overflow-x: auto` wrappers; specimen grid: 3-up desktop → 2-up tablet
+  → 1-up at 375 px (CSS grid + container queries).
+- Print: paper theme forced, grain removed, details expanded where feasible, plate
+  captions kept with their sections (`break-inside: avoid`).
