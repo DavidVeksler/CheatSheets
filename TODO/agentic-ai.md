@@ -130,7 +130,7 @@ checklist — is enough; everything else is static).
     `how-its-built.html`; (b) the regulated-lender platform — 10-plugin marketplace,
     ~30 skills, drafts-only architecture, link the case study; (c) public tooling —
     skill-lint, agent-skills, CodeContext, each with a one-line lesson it encodes.
-    End with LinkedIn + GitHub profile links.
+    End with a byline linking the portfolio site (davidveksler.com), LinkedIn, and GitHub.
 
 **Own-resource link map (the point of the page — implement ALL of these):**
 - On-site spokes: `governing-agentic-ai.html`, `how-its-built.html`,
@@ -138,8 +138,12 @@ checklist — is enough; everything else is static).
   `open-weight-ai-models.html`, `prompt-builder.html`, `aisafety.html` /
   `ai-safety-existential-risk.html` (risk framing), `software-development-guides.html`
   (sibling pillar).
+- Off-site — REQUIRED, per David (do not drop these two even if trimming links):
+  `https://davidveksler.com/david/ai-strategy.html?ref=cheatsheets` (the lender case
+  study — the primary receipt, linked from the security/governance section AND the
+  field-notes section) and `https://davidveksler.com/?ref=cheatsheets` (portfolio site —
+  linked from the field-notes section byline, e.g. "More of David's work →").
 - Off-site (verify each is live at build time before linking):
-  `https://davidveksler.com/david/ai-strategy.html?ref=cheatsheets`,
   `https://github.com/DavidVeksler/skill-lint`,
   `https://github.com/DavidVeksler/agent-skills`,
   `https://github.com/DavidVeksler/CodeContext`,
