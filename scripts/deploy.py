@@ -119,7 +119,7 @@ def warn(msg: str) -> None:
 
 
 def fail(msg: str) -> None:
-    print(f"{c(RED, 'deploy: ' + msg)}", file=sys.stderr)
+    print(f"{c(RED, 'ERROR: ' + msg)}", file=sys.stderr)
     sys.exit(1)
 
 
@@ -327,8 +327,8 @@ def confirm(args) -> None:
     except EOFError:
         answer = ""
     if not re.match(r"^y(es)?$", answer, re.IGNORECASE):
-        print("Aborted.")
-        sys.exit(1)
+        print("Cancelled. Nothing was deployed.")
+        sys.exit(0)
 
 
 def push(args) -> None:

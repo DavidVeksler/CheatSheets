@@ -8,6 +8,11 @@
   All arguments are passed straight through to scripts/deploy.py.
 #>
 $ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+trap {
+  Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+  exit 1
+}
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 $py =
@@ -18,4 +23,4 @@ $py =
   else { throw 'No python interpreter found on PATH.' }
 
 & $py "$root/scripts/deploy.py" @args
-exit $LASTEXITCODE
+if ($LASTEXITCODE -ne 0) { throw "scripts/deploy.py failed with exit code $LASTEXITCODE." }
