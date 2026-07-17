@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agentic AI Cheatsheet: Patterns, Failures, Autonomy Ladder</title>
 <meta name="description" content="A field guide to agentic AI from a practitioner who ships it: architecture patterns, the autonomy ladder, context engineering, failure modes, security, and governance — with receipts, not vibes."/>
-<meta name="keywords" content="agentic ai, ai agents, ai agent architecture patterns, agent vs workflow, context engineering, ai agent failure modes, mcp, model context protocol, ai agent security, prompt injection, ai governance, autonomy ladder"/>
+<meta name="keywords" content="agentic ai, ai agents, ai agent architecture patterns, agent vs workflow, context engineering, ai agent failure modes, mcp, model context protocol, ai agent security, prompt injection, ai governance, autonomy ladder, ai adoption maturity, agent orchestration"/>
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/agentic-ai.html"/>
 <meta property="og:title" content="Agentic AI: A Practitioner's Field Guide"/>
 <meta property="og:description" content="Architecture patterns, the autonomy ladder, context engineering, and a taxonomy of failure modes — a field guide to agentic AI written by someone who ships it, with receipts."/>
@@ -27,8 +27,8 @@
   "author": {"@type": "Person", "name": "David Veksler (AI Generated)", "url": "https://davidveksler.com/"},
   "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
   "datePublished": "2026-07-16",
-  "dateModified": "2026-07-16",
-  "keywords": "agentic ai, ai agents, agent architecture patterns, context engineering, ai agent failure modes, mcp, ai agent security, ai governance"
+  "dateModified": "2026-07-17",
+  "keywords": "agentic ai, ai agents, agent architecture patterns, context engineering, ai agent failure modes, mcp, ai agent security, ai governance, ai adoption maturity, agent orchestration"
 }
 </script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
@@ -184,7 +184,7 @@ html[data-theme="light"] { color-scheme: light; }
   <h1>Agentic AI: A Practitioner's Field Guide</h1>
   <p class="subtitle">Being a catalogue of the genus <span class="binom">Agentum</span> — its architectures, habitats, and abundant failure modes — compiled from specimens collected in production, not from the literature alone.</p>
   <div class="rule-orn"></div>
-  <div class="verified">Last verified: 2026-07-16</div>
+  <div class="verified">Last verified: 2026-07-17</div>
 </header>
 
 <nav class="toc" aria-label="Table of plates">
@@ -198,7 +198,8 @@ html[data-theme="light"] { color-scheme: light; }
   <a href="#security"><span class="n">Pl. VIII</span> Security &amp; Governance</a>
   <a href="#evals"><span class="n">Pl. IX</span> Evals &amp; Observability</a>
   <a href="#antipatterns"><span class="n">Pl. X</span> Anti-Patterns</a>
-  <a href="#receipts"><span class="n">Pl. XI</span> Field Notes: The Receipts</a>
+  <a href="#adoption"><span class="n">Pl. XI</span> The Naturalist's Progress</a>
+  <a href="#receipts"><span class="n">Pl. XII</span> Field Notes: The Receipts</a>
 </nav>
 
 <main>
@@ -291,6 +292,7 @@ html[data-theme="light"] { color-scheme: light; }
   </div>
 
   <p style="font-size:0.92rem; max-width:65ch;"><strong>Reading the ladder:</strong> climb only when the rung below is boring — L2 when validated chat output becomes repetitive, L3 when supervision becomes rubber-stamping, L4 when one context window can't hold the work, L5 when the human adds no information. Descend at the first unexplained failure.</p>
+  <p style="font-size:0.92rem; max-width:65ch;">This ladder measures <em>one</em> agent's autonomy on <em>one</em> task. A second, orthogonal axis measures the practitioner's own role as the fleet scales from one agent to a thousand — see <a href="#adoption">Plate XI, The Naturalist's Progress</a>. Both must be climbed, and trust must lead the count on each.</p>
 </section>
 
 <!-- ══════════════ PLATE II ══════════════ -->
@@ -643,9 +645,64 @@ html[data-theme="light"] { color-scheme: light; }
 </section>
 
 <!-- ══════════════ PLATE XI ══════════════ -->
-<section id="receipts" aria-labelledby="receipts-h">
+<section id="adoption" aria-labelledby="adoption-h">
   <div class="plate-caption">
     <span class="pnum">Plate XI</span>
+    <h2 id="adoption-h">The Naturalist's Progress</h2>
+    <p class="pdesc">A second axis, orthogonal to the Autonomy Ladder: how the practitioner's own role metamorphoses as the fleet scales by orders of magnitude — and which bottleneck moves next.</p>
+  </div>
+
+  <p style="max-width:65ch;"><a href="#ladder">Plate I</a> ranks how far you trust <em>one</em> agent on <em>one</em> task. This plate ranks something orthogonal: how many agents you run at once, and what that makes <em>you</em>. As the count climbs by orders of magnitude — one, ten, a hundred, a thousand — your job stops being "write the code" and becomes, in turn, to review it, to engineer the context and trust that make review rare, and finally to choose what gets built at all. The bottleneck migrates with you, and each step up is earned by <strong>trust in the loop, never by adding agents</strong>. Scale the fleet before the loop is trustworthy and you have not multiplied output — you have multiplied the review queue.</p>
+
+  <div class="twrap">
+    <table class="ftable">
+      <thead><tr><th scope="col">Fleet</th><th scope="col">Your role</th><th scope="col">What it looks like</th><th scope="col">The bottleneck now</th><th scope="col">What earns the next order of magnitude</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="term">~0<br><span class="rbinom">Hortus clausus</span></td>
+          <td><strong>The gated yard</strong> — pre-adoption</td>
+          <td>Access is gated or process-heavy; only older, lighter models are approved; there is no path to host or ship what an agent produces, so outputs die on the local machine.</td>
+          <td>Legacy security and approval processes; decisions driven by cost-per-token containment rather than outcomes; no technical voice in the room where autonomy is judged.</td>
+          <td>Executive alignment and a secure, sanctioned launch path — someone accountable clears the blockers and opens a governed door.</td>
+        </tr>
+        <tr>
+          <td class="term">~1<br><span class="rbinom">Socius par</span></td>
+          <td><strong>The pair</strong> — you and one agent</td>
+          <td>One human, one agent, mostly supervised — a fast pair programmer. One session at a time; you review nearly every change before it merges. A task that used to fill an afternoon now fits between meetings.</td>
+          <td>Your attention. Low trust means you read everything and never look away; the work is synchronous — you sit and watch it work instead of moving on to the next thing.</td>
+          <td>A self-verification loop you actually trust — tests, build, lint, end-to-end checks — plus non-blocking permissions, so you can stop watching keystrokes and start reviewing results.</td>
+        </tr>
+        <tr>
+          <td class="term">~10<br><span class="rbinom">Magister cohortis</span></td>
+          <td><strong>The orchestrator</strong></td>
+          <td>You run five to ten agents at once, each isolated in its own worktree, jumping between them. Each checks its own work — tests, build, lint, security scan — before you see it. You review final diffs, not keystrokes, and the maintenance backlog starts shrinking.</td>
+          <td>Review. You hand-write far less code and instead inspect many streams of it; steering and reviewing now fill the hours that writing used to.</td>
+          <td>Let agents pull their own context (read the code, the docs, the discussions); automate code and security review; break recurring work into named loops and routines.</td>
+        </tr>
+        <tr>
+          <td class="term">~100<br><span class="rbinom">Praefectus praefectorum</span></td>
+          <td><strong>Manager of managers</strong> — an org tree</td>
+          <td>Agents write nearly all the code. The tree is too deep to babysit. "Did you read the code?" becomes <em>"what context was the model missing, and how do we supply it next time?"</em> Maintenance that used to wait for a spare hour now runs continuously in the background.</td>
+          <td>Trust in the loop, and your team's decision throughput. The trap: scaling agent count before the loop has earned widespread trust.</td>
+          <td>Scaled automation of domain-specific work — migrations, fuzzing, feature-building, feedback remediation — with token economics watched deliberately as usage climbs.</td>
+        </tr>
+        <tr>
+          <td class="term">~1,000+<br><span class="rbinom">Rector intentionis</span></td>
+          <td><strong>Steering by intent</strong></td>
+          <td>The loop is closed; most agents are kicked off by other agents. Hundreds to thousands run at once; you steer by intent and monitor by exception. A quarter-long migration becomes a workflow you start and check on.</td>
+          <td>Identifying which work is worth automating, and enforcing the right guardrails for each <em>kind</em> of work.</td>
+          <td>— the top of this axis. Growth is now in the breadth of automated domains, not the depth of the tree.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:0.92rem; max-width:65ch;"><strong>The test that governs every step:</strong> "is this something an engineer would have done?" — if yes, it is a candidate to automate; if no, adding an agent will not rescue it. Watch where value migrates: from writing code, to reviewing it, to engineering the context that makes review rare, to deciding what should exist at all. The two ladders interlock — you cannot honestly run a hundred agents (this plate) while each is stuck at hand-held <a href="#ladder">L1–L2 autonomy</a> (Plate I). Climb both; climb the trust before the count.</p>
+</section>
+
+<!-- ══════════════ PLATE XII ══════════════ -->
+<section id="receipts" aria-labelledby="receipts-h">
+  <div class="plate-caption">
+    <span class="pnum">Plate XII</span>
     <h2 id="receipts-h">Field Notes: The Receipts</h2>
     <p class="pdesc">The expeditions this guide was collected on. Each entry is a case study with a lesson, verifiable by following the link.</p>
   </div>
@@ -701,7 +758,7 @@ html[data-theme="light"] { color-scheme: light; }
 </section>
 
 <div class="footnote-block">
-  <p style="margin:0;">† Volatile facts on this page are tagged inline with their verification date. Pattern names and the workflow/agent distinction follow <a href="https://www.anthropic.com/engineering/building-effective-agents" rel="noopener">Anthropic, "Building Effective Agents"</a> (Dec 2024; re-verified Jul 2026). The lethal trifecta follows <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" rel="noopener">Simon Willison</a> (Jun 2025). Case-study figures are from the linked primary sources. Last verified: 2026-07-16.</p>
+  <p style="margin:0;">† Volatile facts on this page are tagged inline with their verification date. Pattern names and the workflow/agent distinction follow <a href="https://www.anthropic.com/engineering/building-effective-agents" rel="noopener">Anthropic, "Building Effective Agents"</a> (Dec 2024; re-verified Jul 2026). The lethal trifecta follows <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" rel="noopener">Simon Willison</a> (Jun 2025). The adoption-curve framing in Plate XI adapts Boris Cherny's "Steps of AI Adoption" (2026), generalized away from any single vendor's tooling. Case-study figures are from the linked primary sources. Last verified: 2026-07-17.</p>
 </div>
 
 <div class="related-cheatsheets mb-3" data-seo-related-links aria-label="Related AI &amp; Safety cheatsheets" style="margin-top:2rem; font-size:0.88rem;">
