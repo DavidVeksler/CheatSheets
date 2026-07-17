@@ -14,6 +14,8 @@ This file owns the quality bar. The other Markdown docs divide the workflows —
 
 | Document | Use it when |
 |---|---|
+| [`docs/content.md`](docs/content.md) | **Quick path: add / edit / publish a cheatsheet, front to back** — a thin index that routes into this file's content workflow, the local build/QA steps, and the SEO gate. |
+| [`docs/marketing.md`](docs/marketing.md) | **Quick path: SEO, promotion, measurement** — the SEO gate, discovery files, Search Console / Cloudflare measurement, promotion channels, and cross-linking pointers. |
 | [`CLAUDE.md`](CLAUDE.md) | Entry point → this file; also holds the **precomputed SRI hash table** for pinned CDN assets. |
 | [`TODO/README.md`](TODO/README.md) | **Building a cheatsheet from a spec** in `TODO/` — binding implementation rules (numbers-are-anchors, outline-first, definition of done, design execution). |
 | `TODO/<topic>.md` | One spec per planned cheatsheet (content angle, sections, visual identity). Deleted after the build ships. |
