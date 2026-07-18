@@ -88,7 +88,7 @@ export function createTerrain(container, opts = {}) {
   let lastTime = performance.now(), lastRealFrame = lastTime, frameAccumulator = 0, frameSamples = 0, slowSeconds = 0;
   let totalTime = 0, temperature = Number(els.temperature?.value ?? opts.temperature ?? 0.42);
   let fallbackActive = false, paused = false;
-  let refusalActive = false, refusalT = 0, slammed = false, alert = 0, camTween = null, camHome = null;
+  let refusalActive = false, refusalT = 0, slammed = false, slamArmed = false, alert = 0, camTween = null, camHome = null;
 
   function emit(type, detail = {}) {
     listeners.get(type)?.forEach(handler => handler(detail));
@@ -310,7 +310,7 @@ export function createTerrain(container, opts = {}) {
   // The refusal prompt is a scripted event, not just another drop: reset to the base
   // field (so the shift is always visible), push the camera in, then slam a wall up.
   function beginRefusal() {
-    refusalActive = true; slammed = false; refusalT = 0;
+    refusalActive = true; slammed = false; slamArmed = true; refusalT = 0;
     morph = 0; morphTween = null; terrain.material.uniforms.uMorph.value = 0; root.dataset.morph = '0.000';
     if (els.rlhf) els.rlhf.checked = false;
     idleTime = 0; controls.autoRotate = false; controls.enabled = false;
@@ -322,13 +322,13 @@ export function createTerrain(container, opts = {}) {
   }
 
   function endRefusal() {
-    refusalActive = false; slammed = false; alert = 0;
+    refusalActive = false; slammed = false; slamArmed = false; alert = 0;
     controls.enabled = true; idleTime = 0;
     if (camHome) camTween = { fromP: camera.position.clone(), fromT: controls.target.clone(), toP: camHome.pos.clone(), toT: camHome.target.clone(), elapsed: 0, duration: 1.15 };
   }
 
   function fireSlam() {
-    slammed = true;
+    slammed = true; slamArmed = false; // auto-slam fires once per drop; the toggle controls it after
     morphTween = { from: morph, to: 1, elapsed: 0, duration: 1.9, slam: true };
     if (els.rlhf) els.rlhf.checked = true;
     if (els.state) els.state.textContent = 'Safeguard wall rising — the request is walled off';
@@ -347,14 +347,20 @@ export function createTerrain(container, opts = {}) {
 
   function startMorph(target) {
     const next = THREE.MathUtils.clamp(Number(target), 0, 1);
-    morphTween = { from: morph, to: next, elapsed: 0, duration: 2.6 };
+    const refusal = refusalActive;
+    // During a refusal, the toggle IS the control: on raises the safeguard wall,
+    // off drops it so the base model would roll straight into the raw-corpus pit.
+    morphTween = { from: morph, to: next, elapsed: 0, duration: refusal ? 1.6 : 2.6, slam: refusal && next === 1 };
     if (els.rlhf) els.rlhf.checked = next === 1;
+    if (refusal) slammed = next === 1;
     hideCallout();
     if (phase === 'settled' && particle.visible) {
       const nudgeAngle = random() * Math.PI * 2, nudgeMag = .02 + random() * .02;
       velocity.set(Math.cos(nudgeAngle) * nudgeMag, Math.sin(nudgeAngle) * nudgeMag);
       pool.visible = false; pool.material.opacity = 0;
-      setPhase('descending', 'The terrain is moving under a settled answer…');
+      const msg = refusal ? (next ? 'Safeguard wall rising — the request is walled off' : 'Wall removed — the base model would roll straight to it')
+                          : 'The terrain is moving under a settled answer…';
+      setPhase('descending', msg);
     } else if (els.state) {
       els.state.textContent = next ? 'Post-training is reshaping likely answers…' : 'Restoring the base landscape…';
     }
@@ -400,17 +406,21 @@ export function createTerrain(container, opts = {}) {
     if (phase !== 'descending') return;
     phaseTime += dt;
     const fixedDt = Math.min(dt, .035) * 60;
-    // Once the safeguard wall is fully up, the outcome is scripted: a tall/steep wall would
-    // otherwise fling the ball clean past the pocket. Glide it into "Refused" and settle there.
-    if (refusalActive && slammed && morph > .985) {
-      const rc = mixBasin(7).center;
-      velocity.set(rc[0] - particleXZ.x, rc[1] - particleXZ.y).clampLength(0, .16);
-      particleXZ.addScaledVector(velocity, fixedDt);
-      const ry = heightAt(particleXZ.x, particleXZ.y) - 2.4 + .23;
-      particle.position.set(particleXZ.x, ry, particleXZ.y); glow.position.copy(particle.position);
-      addTrailPoint(particle.position);
-      if (Math.hypot(rc[0] - particleXZ.x, rc[1] - particleXZ.y) < .45) settleAtNearest();
-      return;
+    // After the auto-slam has fired once (slamArmed cleared), the toggle owns the outcome and
+    // it is scripted to the correct pocket — free physics would fling the ball past the target
+    // (wall up) or drift it into a neighbouring basin (wall down), muddying the demo.
+    if (refusalActive && !slamArmed) {
+      const idx = (slammed && morph > .985) ? 7 : (!slammed && morph < .05) ? 6 : -1;
+      if (idx >= 0) {
+        const tc = mixBasin(idx).center;
+        velocity.set(tc[0] - particleXZ.x, tc[1] - particleXZ.y).clampLength(0, .16);
+        particleXZ.addScaledVector(velocity, fixedDt);
+        const ry = heightAt(particleXZ.x, particleXZ.y) - 2.4 + .23;
+        particle.position.set(particleXZ.x, ry, particleXZ.y); glow.position.copy(particle.position);
+        addTrailPoint(particle.position);
+        if (Math.hypot(tc[0] - particleXZ.x, tc[1] - particleXZ.y) < .45) settleAtNearest();
+        return;
+      }
     }
     const gradient = gradientAt(particleXZ.x, particleXZ.y);
     const thermal = CONFIG.physics.noiseScale * temperature * (.72 + .28 * Math.sin(phaseTime * 2.1));
@@ -545,7 +555,7 @@ export function createTerrain(container, opts = {}) {
   function frameBody(dt) {
     idleTime += dt; totalTime += dt;
     if (!reducedMotion && idleTime > 8 && phase !== 'dropping' && !refusalActive) controls.autoRotate = true;
-    if (refusalActive) { refusalT += dt; if (!slammed && refusalT > 1.65) fireSlam(); }
+    if (refusalActive) { refusalT += dt; if (slamArmed && refusalT > 1.65) fireSlam(); }
     if (morphTween?.slam) alert = Math.min(1, alert + dt * 4);   // ramp up as the wall rises
     else if (alert > 0) alert = Math.max(0, alert - dt * .7);    // then fade over ~1.4s
     updateMorph(dt); updateParticle(dt); updateCallout(); updateCamera(dt);
