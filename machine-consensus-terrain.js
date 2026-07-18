@@ -31,7 +31,7 @@ const CONFIG = {
     { label: 'Fringe', center: [-0.1, 5.1], sigma: [1.48, 1.68], depth: 0.48 },
     { label: 'Institutional default', center: [-5.45, -4.5], sigma: [1.95, 1.42], depth: 2.75 },
     { label: 'Long-tail surprise', center: [0.7, 1.35], sigma: [4.2, 0.7], depth: 1.12 },
-    { label: 'Raw-corpus basin', center: [8.8, -6.2], sigma: [2.1, 2.1], depth: -3.4 },
+    { label: 'Raw-corpus basin', center: [8.8, -6.2], sigma: [2.6, 2.6], depth: -6.8 },
     { label: 'Refused', center: [7.0, -4.2], sigma: [2.5, 2.2], depth: 4.2 }
   ],
   prompts: {
@@ -316,7 +316,7 @@ export function createTerrain(container, opts = {}) {
     idleTime = 0; controls.autoRotate = false; controls.enabled = false;
     camTween = {
       fromP: camera.position.clone(), fromT: controls.target.clone(),
-      toP: new THREE.Vector3(12.8, 7.2, 5.0), toT: new THREE.Vector3(7.1, -1.7, -4.2),
+      toP: new THREE.Vector3(15.5, 7.0, 5.0), toT: new THREE.Vector3(7.9, -0.3, -5.0),
       elapsed: 0, duration: 1.7
     };
   }
@@ -400,6 +400,18 @@ export function createTerrain(container, opts = {}) {
     if (phase !== 'descending') return;
     phaseTime += dt;
     const fixedDt = Math.min(dt, .035) * 60;
+    // Once the safeguard wall is fully up, the outcome is scripted: a tall/steep wall would
+    // otherwise fling the ball clean past the pocket. Glide it into "Refused" and settle there.
+    if (refusalActive && slammed && morph > .985) {
+      const rc = mixBasin(7).center;
+      velocity.set(rc[0] - particleXZ.x, rc[1] - particleXZ.y).clampLength(0, .16);
+      particleXZ.addScaledVector(velocity, fixedDt);
+      const ry = heightAt(particleXZ.x, particleXZ.y) - 2.4 + .23;
+      particle.position.set(particleXZ.x, ry, particleXZ.y); glow.position.copy(particle.position);
+      addTrailPoint(particle.position);
+      if (Math.hypot(rc[0] - particleXZ.x, rc[1] - particleXZ.y) < .45) settleAtNearest();
+      return;
+    }
     const gradient = gradientAt(particleXZ.x, particleXZ.y);
     const thermal = CONFIG.physics.noiseScale * temperature * (.72 + .28 * Math.sin(phaseTime * 2.1));
     velocity.multiplyScalar(Math.pow(CONFIG.physics.momentum, fixedDt));
@@ -607,7 +619,8 @@ export function createTerrain(container, opts = {}) {
       linewidth: trail.material.linewidth, res: [trail.material.resolution.x, trail.material.resolution.y],
       instanceCount: trail.geometry.instanceCount, glowScale: glow.scale.x, glowOpacity: +glow.material.opacity.toFixed(2),
       poolVisible: pool.visible, poolOpacity: +pool.material.opacity.toFixed(2), ballRadius: particle.geometry.parameters.radius,
-      refusalActive, slammed, alert: +alert.toFixed(2), camActive: !!camTween, camDist: +camera.position.distanceTo(controls.target).toFixed(1)
+      refusalActive, slammed, alert: +alert.toFixed(2), camActive: !!camTween, camDist: +camera.position.distanceTo(controls.target).toFixed(1),
+      wallPeakY: +(heightAt(8.8, -6.2) - 2.4).toFixed(2), avgPeakY: +(heightAt(-2.15, 0.7) - 2.4).toFixed(2), camY: +camera.position.y.toFixed(1)
     }),
     on,
     destroy() {
