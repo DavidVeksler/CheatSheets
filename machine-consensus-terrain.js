@@ -10,13 +10,19 @@ const CONFIG = {
   baseHeight: 3.15,
   texture: 0.11,
   physics: { gravity: 1.72, momentum: 0.925, noiseScale: 0.34 },
+  // Indices 6 (raw-corpus) and 7 (refusal) power the safeguard demo. Base: harmful
+  // content is a real pit (it exists in the corpus) and no refusal basin exists.
+  // Post-training: that pit inverts into a wall (negative depth) and a deep refusal
+  // basin opens beside it, so the answer is diverted into "Refused" instead.
   basins: [
     { label: 'Mainstream view', center: [-2.15, 0.7], sigma: [2.15, 1.55], depth: 3.25 },
     { label: 'Expert niche', center: [2.5, -3.15], sigma: [1.5, 1.95], depth: 2.30 },
     { label: 'Contrarian', center: [3.9, 2.45], sigma: [1.75, 1.20], depth: 2.15 },
     { label: 'Fringe', center: [-0.2, 5.25], sigma: [1.08, 1.42], depth: 1.58 },
     { label: 'Institutional default', center: [-5.8, -4.75], sigma: [1.7, 1.25], depth: 2.48 },
-    { label: 'Long-tail surprise', center: [6.35, -0.25], sigma: [1.15, 1.72], depth: 1.42 }
+    { label: 'Long-tail surprise', center: [6.35, -0.25], sigma: [1.15, 1.72], depth: 1.42 },
+    { label: 'Raw-corpus basin', center: [8.8, -6.2], sigma: [1.5, 1.5], depth: 2.6 },
+    { label: 'Refused', center: [7.0, -4.2], sigma: [1.3, 1.3], depth: 0.04 }
   ],
   rlhfBasins: [
     { label: 'Mainstream view', center: [-1.85, 0.6], sigma: [2.55, 1.88], depth: 4.28 },
@@ -24,13 +30,16 @@ const CONFIG = {
     { label: 'Contrarian', center: [3.25, 2.25], sigma: [2.75, 1.08], depth: 1.82 },
     { label: 'Fringe', center: [-0.1, 5.1], sigma: [1.48, 1.68], depth: 0.48 },
     { label: 'Institutional default', center: [-5.45, -4.5], sigma: [1.95, 1.42], depth: 2.75 },
-    { label: 'Long-tail surprise', center: [0.7, 1.35], sigma: [4.2, 0.7], depth: 1.12 }
+    { label: 'Long-tail surprise', center: [0.7, 1.35], sigma: [4.2, 0.7], depth: 1.12 },
+    { label: 'Raw-corpus basin', center: [8.8, -6.2], sigma: [1.8, 1.8], depth: -2.0 },
+    { label: 'Refused', center: [7.0, -4.2], sigma: [2.5, 2.2], depth: 4.2 }
   ],
   prompts: {
     safe: { drop: [-0.05, -0.2], nudge: [-0.16, 0.04] },
     steelman: { drop: [1.15, 1.45], nudge: [0.16, 0.13] },
     expert: { drop: [1.05, -0.95], nudge: [0.08, -0.17] },
-    fringe: { drop: [0.05, 3.3], nudge: [-0.02, 0.18] }
+    fringe: { drop: [0.05, 3.3], nudge: [-0.02, 0.18] },
+    refusal: { drop: [8.0, -5.6], nudge: [-0.06, 0.12] }
   }
 };
 
@@ -164,13 +173,13 @@ export function createTerrain(container, opts = {}) {
       vertexShader: `
         #include <fog_pars_vertex>
         uniform float uTime; uniform float uMorph; uniform float uSeed; uniform float uBaseHeight; uniform float uTexture;
-        uniform vec2 uCentersA[6]; uniform vec2 uSigmasA[6]; uniform float uDepthsA[6];
-        uniform vec2 uCentersB[6]; uniform vec2 uSigmasB[6]; uniform float uDepthsB[6];
+        uniform vec2 uCentersA[8]; uniform vec2 uSigmasA[8]; uniform float uDepthsA[8];
+        uniform vec2 uCentersB[8]; uniform vec2 uSigmasB[8]; uniform float uDepthsB[8];
         varying float vHeight; varying float vSlope; varying vec2 vCoord;
         float field(vec2 p) {
           float h=uBaseHeight+(sin(p.x*1.37+uSeed)*cos(p.y*1.11-uSeed)+.45*sin((p.x+p.y)*2.19+uSeed*2.0))*uTexture;
           h += .12*sin(p.x*.29)*cos(p.y*.35);
-          for(int i=0;i<6;i++) {
+          for(int i=0;i<8;i++) {
             vec2 c=mix(uCentersA[i],uCentersB[i],uMorph); vec2 s=mix(uSigmasA[i],uSigmasB[i],uMorph); float d=mix(uDepthsA[i],uDepthsB[i],uMorph);
             vec2 q=(p-c)/s; h -= d*exp(-.5*dot(q,q));
           }
@@ -393,7 +402,10 @@ export function createTerrain(container, opts = {}) {
 
   function settleAtNearest() {
     const nearest = nearestBasin();
-    setPhase('settled', `Settled in “${nearest.basin.label}”`);
+    let label = `Settled in “${nearest.basin.label}”`;
+    if (nearest.basin.label === 'Refused') label = 'Refused — post-training walls off this region';
+    else if (nearest.basin.label === 'Raw-corpus basin') label = 'No safeguard here — the base model would answer';
+    setPhase('settled', label);
     velocity.set(0, 0);
     glow.scale.set(2.6, 2.6, 1); glow.material.opacity = .9;
     const py = heightAt(particleXZ.x, particleXZ.y) - 2.4 + .06; // pool lies on the basin floor
