@@ -73,7 +73,7 @@ export function createTerrain(container, opts = {}) {
   const random = mulberry32(seed);
   const randomSigned = () => random() * 2 - 1;
   const maxTrail = reducedMotion ? 45 : 90;
-  let renderer, scene, camera, controls, terrain, particle, glow, trail, resizeObserver;
+  let renderer, scene, camera, controls, terrain, particle, glow, pool, trail, resizeObserver;
   let morph = 0, morphTween = null, activePrompt = null, phase = 'idle', phaseTime = 0, idleTime = 0;
   let particleXZ = new THREE.Vector2(), velocity = new THREE.Vector2(), dropStart = new THREE.Vector3(), trailPoints = [];
   let lastTime = performance.now(), lastRealFrame = lastTime, frameAccumulator = 0, frameSamples = 0, slowSeconds = 0;
@@ -187,13 +187,21 @@ export function createTerrain(container, opts = {}) {
         #include <fog_pars_fragment>
         uniform float uTime; uniform float uMotionFactor; varying float vHeight; varying float vSlope; varying vec2 vCoord;
         void main() {
-          float low=smoothstep(3.2,-.7,vHeight); float ridge=smoothstep(1.5,4.1,vHeight);
-          vec3 deep=vec3(.82,.30,.055); vec3 middle=vec3(.105,.19,.20); vec3 high=vec3(.045,.075,.085);
-          vec3 color=mix(high,middle,1.-ridge); color=mix(color,deep,low*.82);
-          float contour=1.-smoothstep(.025,.07,abs(fract(vHeight*.86)-.5));
-          color += contour*mix(vec3(.05,.16,.17),vec3(.52,.23,.05),low)*.34;
-          float shimmer=.5+.5*sin(uTime*.7+vCoord.x*.5+vCoord.y*.31); color += low*shimmer*vec3(.05,.022,.004)*uMotionFactor;
-          color *= .78+min(vSlope,.9)*.18;
+          float low=smoothstep(2.7,-.9,vHeight); float mid=smoothstep(3.5,.8,vHeight);
+          // near-black cool substrate; basins warm faintly from within
+          vec3 base=mix(vec3(.012,.028,.045),vec3(.02,.05,.072),mid);
+          base=mix(base,vec3(.05,.028,.014),low*.55);
+          // luminous contour lines read as topography AND a network mesh: cyan up high, amber deep
+          vec3 lineCol=mix(vec3(.18,.72,.95),vec3(1.2,.52,.14),low);
+          float major=1.-smoothstep(0.,.055,abs(fract(vHeight*1.15)-.5));
+          float minor=1.-smoothstep(0.,.09,abs(fract(vHeight*4.6)-.5));
+          float glowAmt=.55+1.1*low+.3*mid;
+          vec3 color=base+lineCol*(major*glowAmt+minor*.28*glowAmt);
+          // basin inner bloom (light pooling from within)
+          float shimmer=.6+.4*sin(uTime*.6+vCoord.x*.4+vCoord.y*.3);
+          color += low*low*vec3(1.,.42,.12)*(.4+.22*shimmer)*uMotionFactor;
+          // faint cool sheen on slopes so 3D form still reads between the lines
+          color += min(vSlope,1.5)*vec3(.015,.04,.055)*(1.-low)*.6;
           gl_FragColor=vec4(color,1.);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
@@ -224,10 +232,16 @@ export function createTerrain(container, opts = {}) {
   }
 
   function buildParticle() {
-    particle = new THREE.Mesh(new THREE.SphereGeometry(.24, 24, 24), new THREE.MeshBasicMaterial({ color: 0xffedc8, depthTest: false }));
+    particle = new THREE.Mesh(new THREE.SphereGeometry(.4, 28, 28), new THREE.MeshBasicMaterial({ color: 0xffedc8 }));
     particle.visible = false; particle.renderOrder = 10; scene.add(particle);
-    glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xf6a541, transparent: true, opacity: .75, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending }));
-    glow.scale.set(1.8, 1.8, 1); glow.visible = false; glow.renderOrder = 9; scene.add(glow);
+    // Halo around the ball. depthTest on (default) so ridges occlude it — reads as a 3D
+    // light source sitting in the terrain, not a flat decal pasted over everything.
+    glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xf6a541, transparent: true, opacity: .75, depthWrite: false, blending: THREE.AdditiveBlending }));
+    glow.scale.set(2.2, 2.2, 1); glow.visible = false; glow.renderOrder = 9; scene.add(glow);
+    // Horizontal disc that lies on the basin floor; the rising rim occludes its far edge,
+    // so the settled answer reads as light collecting *inside* the pocket.
+    pool = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ map: glowTexture(), color: 0xffb54f, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    pool.rotation.x = -Math.PI / 2; pool.visible = false; pool.renderOrder = 5; scene.add(pool);
     // Fat line: LineBasicMaterial.linewidth is ignored by WebGL, so a real screen-space
     // width needs Line2. Normal blending + a cream head keep it visible on the bright amber basin.
     const geometry = new LineGeometry();
@@ -269,7 +283,8 @@ export function createTerrain(container, opts = {}) {
     dropStart.set(particleXZ.x, heightAt(particleXZ.x, particleXZ.y) + 6.8, particleXZ.y);
     particle.position.copy(dropStart); glow.position.copy(dropStart);
     particle.visible = glow.visible = trail.visible = true;
-    particle.scale.setScalar(.01); glow.material.opacity = 0; glow.scale.set(1.8, 1.8, 1); trailPoints = [];
+    particle.scale.setScalar(.01); glow.material.opacity = 0; glow.scale.set(2.2, 2.2, 1);
+    pool.visible = false; pool.material.opacity = 0; trailPoints = [];
     setPhase('dropping', reroll ? 'Re-rolling the same prompt…' : 'Dropping prompt onto the terrain…');
   }
 
@@ -286,6 +301,7 @@ export function createTerrain(container, opts = {}) {
     if (phase === 'settled' && particle.visible) {
       const nudgeAngle = random() * Math.PI * 2, nudgeMag = .02 + random() * .02;
       velocity.set(Math.cos(nudgeAngle) * nudgeMag, Math.sin(nudgeAngle) * nudgeMag);
+      pool.visible = false; pool.material.opacity = 0;
       setPhase('descending', 'The terrain is moving under a settled answer…');
     } else if (els.state) {
       els.state.textContent = next ? 'Post-training is reshaping likely answers…' : 'Restoring the base landscape…';
@@ -322,6 +338,10 @@ export function createTerrain(container, opts = {}) {
       if (particle.visible) {
         const y = heightAt(particleXZ.x, particleXZ.y) - 2.4 + .23;
         particle.position.y = y; glow.position.copy(particle.position);
+      }
+      if (pool.visible) {
+        pool.material.opacity = Math.min(.85, pool.material.opacity + dt * 2.4);
+        pool.scale.setScalar(3.1 + Math.sin(totalTime * 1.4) * .14);
       }
       return;
     }
@@ -375,7 +395,10 @@ export function createTerrain(container, opts = {}) {
     const nearest = nearestBasin();
     setPhase('settled', `Settled in “${nearest.basin.label}”`);
     velocity.set(0, 0);
-    glow.scale.set(2.9, 2.9, 1); glow.material.opacity = .92; // pool where the answer collects
+    glow.scale.set(2.6, 2.6, 1); glow.material.opacity = .9;
+    const py = heightAt(particleXZ.x, particleXZ.y) - 2.4 + .06; // pool lies on the basin floor
+    pool.position.set(particleXZ.x, py, particleXZ.y);
+    pool.scale.setScalar(3.1); pool.material.opacity = 0; pool.visible = true;
     if (els.callout && els.calloutLabel) {
       els.calloutLabel.textContent = nearest.basin.label; els.callout.hidden = false;
       requestAnimationFrame(() => els.callout.classList.add('visible'));
@@ -521,7 +544,8 @@ export function createTerrain(container, opts = {}) {
     __inspect: () => ({
       visible: trail.visible, points: trailPoints.length,
       linewidth: trail.material.linewidth, res: [trail.material.resolution.x, trail.material.resolution.y],
-      instanceCount: trail.geometry.instanceCount, glowScale: glow.scale.x, glowOpacity: +glow.material.opacity.toFixed(2)
+      instanceCount: trail.geometry.instanceCount, glowScale: glow.scale.x, glowOpacity: +glow.material.opacity.toFixed(2),
+      poolVisible: pool.visible, poolOpacity: +pool.material.opacity.toFixed(2), ballRadius: particle.geometry.parameters.radius
     }),
     on,
     destroy() {
