@@ -88,6 +88,7 @@ export function createTerrain(container, opts = {}) {
   let lastTime = performance.now(), lastRealFrame = lastTime, frameAccumulator = 0, frameSamples = 0, slowSeconds = 0;
   let totalTime = 0, temperature = Number(els.temperature?.value ?? opts.temperature ?? 0.42);
   let fallbackActive = false, paused = false;
+  let refusalActive = false, refusalT = 0, slammed = false, alert = 0, camTween = null, camHome = null;
 
   function emit(type, detail = {}) {
     listeners.get(type)?.forEach(handler => handler(detail));
@@ -162,7 +163,7 @@ export function createTerrain(container, opts = {}) {
     const a = shaderBasins(CONFIG.basins), b = shaderBasins(CONFIG.rlhfBasins);
     const geometry = new THREE.PlaneGeometry(CONFIG.bounds * 2, CONFIG.bounds * 2, CONFIG.segments, CONFIG.segments);
     const uniforms = THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
-      uTime: { value: 0 }, uMorph: { value: 0 }, uSeed: { value: seed * .000001 },
+      uTime: { value: 0 }, uMorph: { value: 0 }, uSeed: { value: seed * .000001 }, uAlert: { value: 0 },
       uMotionFactor: { value: reducedMotion ? .5 : 1 },
       uBaseHeight: { value: CONFIG.baseHeight }, uTexture: { value: CONFIG.texture },
       uCentersA: { value: a.centers }, uSigmasA: { value: a.sigmas }, uDepthsA: { value: a.depths },
@@ -194,7 +195,7 @@ export function createTerrain(container, opts = {}) {
         }`,
       fragmentShader: `
         #include <fog_pars_fragment>
-        uniform float uTime; uniform float uMotionFactor; varying float vHeight; varying float vSlope; varying vec2 vCoord;
+        uniform float uTime; uniform float uMotionFactor; uniform float uAlert; varying float vHeight; varying float vSlope; varying vec2 vCoord;
         void main() {
           float low=smoothstep(2.7,-.9,vHeight); float mid=smoothstep(3.5,.8,vHeight);
           // near-black cool substrate; basins warm faintly from within
@@ -211,6 +212,8 @@ export function createTerrain(container, opts = {}) {
           color += low*low*vec3(1.,.42,.12)*(.4+.22*shimmer)*uMotionFactor;
           // faint cool sheen on slopes so 3D form still reads between the lines
           color += min(vSlope,1.5)*vec3(.015,.04,.055)*(1.-low)*.6;
+          // safeguard alert: flush the field red when a refusal wall slams up
+          color=mix(color, vec3(1.15,.1,.05)+color*.2, uAlert*.55*(.3+.7*low));
           gl_FragColor=vec4(color,1.);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
@@ -286,6 +289,8 @@ export function createTerrain(container, opts = {}) {
     root.querySelectorAll('.prompt-button').forEach(button => button.classList.toggle('active', button.dataset.prompt === key));
     if (els.reroll) els.reroll.disabled = false;
     hideCallout();
+    if (key === 'refusal') beginRefusal();
+    else if (refusalActive) endRefusal();
     const prompt = CONFIG.prompts[key], spread = .38 + temperature * .55;
     particleXZ.set(prompt.drop[0] + randomSigned() * spread, prompt.drop[1] + randomSigned() * spread);
     velocity.set(prompt.nudge[0] + randomSigned() * .055, prompt.nudge[1] + randomSigned() * .055);
@@ -294,12 +299,50 @@ export function createTerrain(container, opts = {}) {
     particle.visible = glow.visible = trail.visible = true;
     particle.scale.setScalar(.01); glow.material.opacity = 0; glow.scale.set(2.2, 2.2, 1);
     pool.visible = false; pool.material.opacity = 0; trailPoints = [];
-    setPhase('dropping', reroll ? 'Re-rolling the same prompt…' : 'Dropping prompt onto the terrain…');
+    setPhase('dropping', key === 'refusal' ? 'Harmful prompt — reaching for what the raw corpus holds…' : reroll ? 'Re-rolling the same prompt…' : 'Dropping prompt onto the terrain…');
   }
 
   function setPhase(next, label) {
     phase = next; phaseTime = 0; root.dataset.state = next;
     if (els.state) els.state.textContent = label;
+  }
+
+  // The refusal prompt is a scripted event, not just another drop: reset to the base
+  // field (so the shift is always visible), push the camera in, then slam a wall up.
+  function beginRefusal() {
+    refusalActive = true; slammed = false; refusalT = 0;
+    morph = 0; morphTween = null; terrain.material.uniforms.uMorph.value = 0; root.dataset.morph = '0.000';
+    if (els.rlhf) els.rlhf.checked = false;
+    idleTime = 0; controls.autoRotate = false; controls.enabled = false;
+    camTween = {
+      fromP: camera.position.clone(), fromT: controls.target.clone(),
+      toP: new THREE.Vector3(12.8, 7.2, 5.0), toT: new THREE.Vector3(7.1, -1.7, -4.2),
+      elapsed: 0, duration: 1.7
+    };
+  }
+
+  function endRefusal() {
+    refusalActive = false; slammed = false; alert = 0;
+    controls.enabled = true; idleTime = 0;
+    if (camHome) camTween = { fromP: camera.position.clone(), fromT: controls.target.clone(), toP: camHome.pos.clone(), toT: camHome.target.clone(), elapsed: 0, duration: 1.15 };
+  }
+
+  function fireSlam() {
+    slammed = true; alert = 1;
+    morphTween = { from: morph, to: 1, elapsed: 0, duration: .7 };
+    if (els.rlhf) els.rlhf.checked = true;
+    if (els.state) els.state.textContent = 'Safeguard slams up — the request is walled off';
+  }
+
+  function updateCamera(dt) {
+    if (!camTween) { if (controls.enabled) controls.update(); return; }
+    camTween.elapsed += dt;
+    const t = Math.min(1, camTween.elapsed / camTween.duration);
+    const e = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    camera.position.lerpVectors(camTween.fromP, camTween.toP, e);
+    controls.target.lerpVectors(camTween.fromT, camTween.toT, e);
+    camera.lookAt(controls.target);
+    if (t >= 1) camTween = null;
   }
 
   function startMorph(target) {
@@ -406,6 +449,7 @@ export function createTerrain(container, opts = {}) {
     if (nearest.basin.label === 'Refused') label = 'Refused — post-training walls off this region';
     else if (nearest.basin.label === 'Raw-corpus basin') label = 'No safeguard here — the base model would answer';
     setPhase('settled', label);
+    if (refusalActive) controls.enabled = true; // let the viewer orbit the walled-off result
     velocity.set(0, 0);
     glow.scale.set(2.6, 2.6, 1); glow.material.opacity = .9;
     const py = heightAt(particleXZ.x, particleXZ.y) - 2.4 + .06; // pool lies on the basin floor
@@ -488,9 +532,12 @@ export function createTerrain(container, opts = {}) {
 
   function frameBody(dt) {
     idleTime += dt; totalTime += dt;
-    if (!reducedMotion && idleTime > 8 && phase !== 'dropping') controls.autoRotate = true;
-    updateMorph(dt); updateParticle(dt); updateCallout(); controls.update();
+    if (!reducedMotion && idleTime > 8 && phase !== 'dropping' && !refusalActive) controls.autoRotate = true;
+    if (refusalActive) { refusalT += dt; if (!slammed && refusalT > 1.65) fireSlam(); }
+    if (alert > 0) alert = Math.max(0, alert - dt * 1.5);
+    updateMorph(dt); updateParticle(dt); updateCallout(); updateCamera(dt);
     terrain.material.uniforms.uTime.value = totalTime;
+    terrain.material.uniforms.uAlert.value = alert;
     if (particle.visible) { particle.rotation.x += dt * 2; particle.rotation.z += dt * 1.4; }
     renderer.render(scene, camera);
     frameAccumulator += dt; frameSamples++;
@@ -537,6 +584,7 @@ export function createTerrain(container, opts = {}) {
     controls.minPolarAngle = Math.PI * .16; controls.maxPolarAngle = Math.PI * .46;
     controls.minDistance = 13; controls.maxDistance = 28; controls.target.set(1.1, .2, 0);
     controls.autoRotate = false; controls.autoRotateSpeed = .28;
+    camHome = { pos: camera.position.clone(), target: controls.target.clone() };
     controls.addEventListener('start', () => { idleTime = 0; controls.autoRotate = false; });
     buildTerrain(); buildParticle(); bindUI(); createDebugPanel(); resize();
     resizeObserver = new ResizeObserver(resize); resizeObserver.observe(container);
@@ -557,7 +605,8 @@ export function createTerrain(container, opts = {}) {
       visible: trail.visible, points: trailPoints.length,
       linewidth: trail.material.linewidth, res: [trail.material.resolution.x, trail.material.resolution.y],
       instanceCount: trail.geometry.instanceCount, glowScale: glow.scale.x, glowOpacity: +glow.material.opacity.toFixed(2),
-      poolVisible: pool.visible, poolOpacity: +pool.material.opacity.toFixed(2), ballRadius: particle.geometry.parameters.radius
+      poolVisible: pool.visible, poolOpacity: +pool.material.opacity.toFixed(2), ballRadius: particle.geometry.parameters.radius,
+      refusalActive, slammed, alert: +alert.toFixed(2), camActive: !!camTween, camDist: +camera.position.distanceTo(controls.target).toFixed(1)
     }),
     on,
     destroy() {
