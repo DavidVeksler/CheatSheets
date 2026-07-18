@@ -73,7 +73,7 @@ export function createTerrain(container, opts = {}) {
   let renderer, scene, camera, controls, terrain, particle, glow, trail, resizeObserver;
   let morph = 0, morphTween = null, activePrompt = null, phase = 'idle', phaseTime = 0, idleTime = 0;
   let particleXZ = new THREE.Vector2(), velocity = new THREE.Vector2(), dropStart = new THREE.Vector3(), trailPoints = [];
-  let lastTime = performance.now(), frameAccumulator = 0, frameSamples = 0, slowSeconds = 0;
+  let lastTime = performance.now(), lastRealFrame = lastTime, frameAccumulator = 0, frameSamples = 0, slowSeconds = 0;
   let totalTime = 0, temperature = Number(els.temperature?.value ?? opts.temperature ?? 0.42);
   let fallbackActive = false, paused = false;
 
@@ -272,10 +272,16 @@ export function createTerrain(container, opts = {}) {
 
   function startMorph(target) {
     const next = THREE.MathUtils.clamp(Number(target), 0, 1);
-    morphTween = { from: morph, to: next, elapsed: 0, duration: 1.5 };
+    morphTween = { from: morph, to: next, elapsed: 0, duration: 2.6 };
     if (els.rlhf) els.rlhf.checked = next === 1;
     hideCallout();
-    if (els.state) els.state.textContent = next ? 'Post-training is reshaping likely answers…' : 'Restoring the base landscape…';
+    if (phase === 'settled' && particle.visible) {
+      const nudgeAngle = random() * Math.PI * 2, nudgeMag = .02 + random() * .02;
+      velocity.set(Math.cos(nudgeAngle) * nudgeMag, Math.sin(nudgeAngle) * nudgeMag);
+      setPhase('descending', 'The terrain is moving under a settled answer…');
+    } else if (els.state) {
+      els.state.textContent = next ? 'Post-training is reshaping likely answers…' : 'Restoring the base landscape…';
+    }
   }
 
   function updateMorph(dt) {
@@ -302,6 +308,13 @@ export function createTerrain(container, opts = {}) {
       particle.scale.setScalar(Math.min(1, t * 3)); glow.material.opacity = Math.min(.78, t * 1.3);
       glow.position.copy(particle.position);
       if (t >= 1) setPhase('descending', 'Rolling downhill toward a likely answer…');
+      return;
+    }
+    if (phase === 'settled') {
+      if (particle.visible) {
+        const y = heightAt(particleXZ.x, particleXZ.y) - 2.4 + .23;
+        particle.position.y = y; glow.position.copy(particle.position);
+      }
       return;
     }
     if (phase !== 'descending') return;
@@ -427,8 +440,8 @@ export function createTerrain(container, opts = {}) {
     renderer.setSize(width, height, false);
   }
 
-  function animate(now) {
-    const dt = Math.min((now - lastTime) / 1000, .05); lastTime = now; idleTime += dt; totalTime += dt;
+  function frameBody(dt) {
+    idleTime += dt; totalTime += dt;
     if (!reducedMotion && idleTime > 8 && phase !== 'dropping') controls.autoRotate = true;
     updateMorph(dt); updateParticle(dt); updateCallout(); controls.update();
     terrain.material.uniforms.uTime.value = totalTime;
@@ -443,6 +456,17 @@ export function createTerrain(container, opts = {}) {
       frameAccumulator = 0; frameSamples = 0;
       if (slowSeconds > 4.2) showFallback();
     }
+  }
+
+  function animate(now) {
+    const dt = Math.min((now - lastTime) / 1000, .05); lastTime = now; lastRealFrame = now;
+    frameBody(dt);
+  }
+
+  function step(ms = 16.7) {
+    if (fallbackActive) return;
+    if (!paused && performance.now() - lastRealFrame < 250) return;
+    frameBody(Math.min(ms / 1000, .05));
   }
 
   function pause() {
@@ -482,6 +506,7 @@ export function createTerrain(container, opts = {}) {
     getMode: () => fallbackActive ? 'fallback' : 'webgl',
     pause,
     resume,
+    step,
     on,
     destroy() {
       pause(); resizeObserver?.disconnect(); renderer?.dispose(); listeners.clear();
