@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<script>document.documentElement.classList.remove('no-js');</script>
+<title>Why LLMs Say What They Say — Machine Consensus Map</title>
+<meta name="description" content="An interactive map of how AI answers form: training data carves a landscape, your prompt picks the starting point, and the answer rolls downhill. Bias, explained three ways." />
+<meta name="keywords" content="why is AI biased, how do LLMs decide what to say, LLM bias explained, where do AI opinions come from, RLHF explained simply, AI alignment bias, training data bias, machine consensus" />
+<meta name="author" content="David Veksler" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#070a0c" />
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/machine-consensus.html" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;⌁&lt;/text&gt;&lt;/svg&gt;" />
+
+<meta property="og:title" content="Why LLMs Say What They Say — A Topographic Map of Machine Consensus" />
+<meta property="og:description" content="Training data carves a landscape. Your prompt picks the starting point. Watch an answer roll downhill, then reshape the terrain with post-training." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/machine-consensus.html" />
+<meta property="og:image" content="images/machine-consensus.png" />
+<meta property="og:image:alt" content="Glowing answer particle settled in an amber probability basin beneath the title Why LLMs Say What They Say" />
+<meta property="og:site_name" content="David Veksler Cheatsheets" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Why LLMs Say What They Say" />
+<meta name="twitter:description" content="An interactive topographic map of training-data bias, curation bias, and alignment bias." />
+<meta name="twitter:image" content="images/machine-consensus.png" />
+<meta name="twitter:image:alt" content="A glowing answer particle resting in the Mainstream view basin of a machine-consensus terrain" />
+<meta name="twitter:creator" content="@heroiclife" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Why LLMs Say What They Say — A Topographic Map of Machine Consensus",
+  "description": "An interactive explanation of how training data, prompt wording, sampling temperature, curation, and post-training alignment shape likely language-model answers.",
+  "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+  "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+  "datePublished": "2026-07-17",
+  "dateModified": "2026-07-17",
+  "keywords": "why is AI biased, LLM bias explained, machine consensus, training data bias, curation bias, alignment bias, RLHF explained simply"
+}
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+  }
+}
+</script>
+
+<style>
+@layer reset, tokens, base, layout, components, states, utilities;
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; }
+  img, svg { display: block; max-width: 100%; }
+  button, input { font: inherit; }
+}
+
+@layer tokens {
+  :root {
+    color-scheme: dark;
+    --night: #070a0c;
+    --night-2: #0b1013;
+    --panel: rgba(10, 14, 16, .91);
+    --ink: #f2eee4;
+    --muted: #a5ada8;
+    --faint: #6f7b78;
+    --amber: #d14d0e;
+    --amber-hot: #f6a541;
+    --glow: #ffb54f;
+    --particle: #ffedc8;
+    --ridge: #35565a;
+    --line: rgba(181, 199, 194, .18);
+    --line-hot: rgba(246, 165, 65, .42);
+    --serif: Georgia, 'Times New Roman', serif;
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    --measure: 65ch;
+    --header-h: 64px;
+  }
+}
+
+@layer base {
+  body {
+    min-width: 320px;
+    background: var(--night);
+    color: var(--ink);
+    font: 400 17px/1.68 var(--sans);
+    text-wrap: pretty;
+  }
+  a { color: var(--amber-hot); text-underline-offset: .18em; }
+  a:hover { color: var(--particle); }
+  h1, h2, h3 { margin: 0; font-family: var(--serif); font-weight: 500; text-wrap: balance; }
+  h2 { font-size: clamp(2.2rem, 5vw, 4.7rem); line-height: .98; letter-spacing: -.035em; }
+  h3 { font-size: clamp(1.25rem, 2vw, 1.65rem); line-height: 1.16; }
+  p { margin: 0 0 1.15em; }
+  ::selection { background: var(--amber); color: white; }
+  :focus-visible { outline: 3px solid var(--glow); outline-offset: 4px; }
+}
+
+@layer layout {
+  .site-header {
+    position: fixed; inset: 0 0 auto; z-index: 50;
+    height: var(--header-h); padding: 0 clamp(18px, 4vw, 64px);
+    display: flex; align-items: center; justify-content: space-between; gap: 22px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(7, 10, 12, .82); backdrop-filter: blur(16px);
+  }
+  .brand { display: inline-flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; font: 650 12px/1 var(--sans); letter-spacing: .13em; text-transform: uppercase; }
+  .brand-mark { width: 25px; height: 18px; border: 1px solid var(--line-hot); border-radius: 50%; transform: skewX(-18deg); box-shadow: inset 0 -5px 0 rgba(209,77,14,.24); }
+  .site-nav { display: flex; align-items: center; gap: clamp(14px, 2.4vw, 32px); }
+  .site-nav a { color: var(--muted); text-decoration: none; font-size: 12px; }
+  .site-nav a:hover { color: var(--ink); }
+  .verified { color: var(--faint); font: 10px/1.3 var(--mono); letter-spacing: .04em; }
+
+  .terrain-scroll { position: relative; }
+  .terrain-engine { position: sticky; top: 0; z-index: 0; width: 100%; height: 100svh; overflow: clip; background: var(--night); }
+  #scene { position: absolute; inset: 0; }
+  #scene canvas { width: 100%; height: 100%; display: block; }
+  .terrain-vignette { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(4,6,7,.82) 0%, rgba(4,6,7,.34) 32%, transparent 58%), linear-gradient(0deg, rgba(4,6,7,.78), transparent 28%); }
+  .scroll-content { position: relative; z-index: 2; margin-top: -100svh; }
+  .hero, .story-panel { min-height: 100svh; }
+  .hero { position: relative; height: 100svh; min-height: 640px; overflow: clip; display: flex; align-items: flex-start; padding: clamp(106px, 14vh, 150px) clamp(20px, 4vw, 64px) 178px; }
+  .hero-copy { width: min(610px, 47vw); }
+  .hero h1 { max-width: 10ch; font-size: clamp(3.8rem, 7.4vw, 7.4rem); line-height: .86; letter-spacing: -.06em; }
+  .hero h1 em { display: block; color: var(--amber-hot); font-weight: 500; }
+  .hero-dek { max-width: 42ch; margin-top: 26px; color: #d2d4cd; font-size: clamp(1rem, 1.45vw, 1.25rem); line-height: 1.55; }
+  .hero-thesis { margin-top: 20px; color: var(--particle); font: 500 clamp(1rem, 1.5vw, 1.3rem)/1.45 var(--serif); }
+  .hero-static { display: none; }
+
+  .static-section { position: relative; z-index: 5; min-height: 100svh; padding: clamp(90px, 12vw, 160px) clamp(20px, 7vw, 110px); background: var(--night-2); }
+  .static-section::before, .site-footer::before { content: ''; position: absolute; inset: 0 0 auto; height: 12px; opacity: .42; background: repeating-linear-gradient(170deg, transparent 0 8px, var(--ridge) 9px 10px, transparent 11px 18px); }
+  .section-grid { width: min(1260px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, 1.15fr); gap: clamp(50px, 8vw, 120px); align-items: center; }
+  .section-copy { max-width: var(--measure); }
+  .section-number { display: block; margin-bottom: 17px; color: var(--amber-hot); font: 600 10px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; }
+  .section-intro { margin-top: 28px; color: #c1c7c1; font-size: clamp(1rem, 1.5vw, 1.2rem); }
+
+  .interactive-section { position: relative; min-height: 230svh; padding: 18svh clamp(20px, 5vw, 74px) 22svh; pointer-events: none; }
+  .interactive-section .section-heading { width: min(520px, 42vw); margin-left: auto; padding: 28px 30px; background: rgba(7,10,12,.86); border: 1px solid var(--line); backdrop-filter: blur(14px); pointer-events: auto; }
+  .steps { width: min(460px, 39vw); margin: 48svh 0 0 auto; display: grid; gap: 62svh; }
+  .step { padding: 26px; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--ridge); box-shadow: 0 26px 80px rgba(0,0,0,.32); backdrop-filter: blur(18px); pointer-events: auto; transition: opacity .25s, transform .25s, border-color .25s; }
+  .step.is-active { border-left-color: var(--amber-hot); transform: translateX(-8px); }
+  .step-kicker { display: block; margin-bottom: 9px; color: var(--amber-hot); font: 600 9px/1.2 var(--mono); letter-spacing: .15em; text-transform: uppercase; }
+  .step p { margin: 11px 0 0; color: #c8cdc7; font-size: 15px; line-height: 1.58; }
+  .punchline { color: var(--particle) !important; font: 500 1.35rem/1.42 var(--serif) !important; }
+  .story-still { display: none; margin: 18px 0 0; }
+
+  .site-footer { position: relative; z-index: 5; padding: 78px clamp(20px, 7vw, 110px) 42px; background: #050708; border-top: 1px solid var(--line); }
+  .footer-grid { width: min(1180px, 100%); margin: 0 auto; display: grid; grid-template-columns: 1.25fr .75fr; gap: 70px; }
+  .footer-cta h2 { max-width: 12ch; font-size: clamp(2rem, 4vw, 3.9rem); }
+  .footer-cta p { max-width: 55ch; margin-top: 21px; color: var(--muted); }
+  .footer-links { display: grid; align-content: start; gap: 10px; }
+  .footer-links a { color: #c4cbc5; }
+  .footer-bottom { width: min(1180px, 100%); margin: 54px auto 0; padding-top: 22px; display: flex; justify-content: space-between; gap: 20px; color: var(--faint); border-top: 1px solid var(--line); font-size: 12px; }
+}
+
+@layer components {
+  .kicker { margin: 0 0 18px; color: var(--amber-hot); font: 650 10px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; }
+  .hero-cta { display: inline-flex; align-items: center; gap: 10px; margin-top: 14px; padding: 12px 16px; color: var(--ink); border: 1px solid var(--line-hot); text-decoration: none; font: 650 11px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; background: rgba(209,77,14,.12); }
+  .hero-cta::after { content: '↓'; color: var(--amber-hot); font-size: 17px; }
+  .state-readout { display: flex; align-items: center; gap: 9px; margin-top: 18px; color: #aeb6b0; font: 10px/1.3 var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+  .state-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-hot); box-shadow: 0 0 14px var(--glow); }
+  [data-state='dropping'] .state-dot, [data-state='descending'] .state-dot { animation: pulse 1s ease-in-out infinite; }
+
+  .prompt-dock { position: absolute; z-index: 8; right: clamp(20px, 4vw, 64px); bottom: 32px; width: min(690px, 58vw); color: var(--ink); border: 1px solid var(--line); background: rgba(7,10,12,.84); backdrop-filter: blur(18px); pointer-events: auto; }
+  .prompt-header { min-height: 32px; padding: 0 13px; display: flex; align-items: center; justify-content: space-between; color: var(--faint); border-bottom: 1px solid var(--line); font: 650 8px/1 var(--mono); letter-spacing: .16em; }
+  .prompt-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .prompt-button { min-height: 80px; padding: 13px; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; border: 0; border-right: 1px solid var(--line); background: transparent; color: #c7cbc5; text-align: left; font-size: 11px; line-height: 1.35; cursor: pointer; transition: background .25s, color .25s; }
+  .prompt-button:last-child { border-right: 0; }
+  .prompt-button:hover { color: var(--ink); background: rgba(255,255,255,.035); }
+  .prompt-button.active { color: #fff7e7; background: linear-gradient(180deg, rgba(242,166,64,.16), rgba(242,166,64,.04)); box-shadow: inset 0 2px var(--amber); }
+  .prompt-index { color: #6f7974; font: 500 8px/1 var(--mono); }
+  .prompt-button.active .prompt-index { color: var(--amber-hot); }
+  .control-strip { display: grid; grid-template-columns: 1fr 150px 112px; min-height: 56px; border-top: 1px solid var(--line); }
+  .temperature-control { padding: 0 13px; display: grid; grid-template-columns: auto 1fr 34px; gap: 10px; align-items: center; border-right: 1px solid var(--line); }
+  .control-label { color: #8d9690; font: 650 8px/1 var(--mono); letter-spacing: .1em; }
+  .temperature-control output { color: var(--amber-hot); font: 500 9px/1 var(--mono); text-align: right; }
+  input[type='range'] { width: 100%; height: 2px; appearance: none; background: linear-gradient(90deg, var(--amber) var(--fill, 28%), #2a3230 var(--fill, 28%)); }
+  input[type='range']::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; border: 2px solid #171b1a; border-radius: 50%; background: var(--amber-hot); box-shadow: 0 0 0 1px rgba(246,165,65,.4); }
+  .toggle-control { padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-right: 1px solid var(--line); cursor: pointer; }
+  .toggle-copy { display: grid; gap: 4px; }
+  .toggle-copy small { color: var(--faint); font-size: 8px; }
+  .toggle-control input { position: absolute; opacity: 0; }
+  .toggle-track { width: 33px; height: 18px; padding: 2px; flex: none; border-radius: 999px; background: #2a3230; transition: background .25s; }
+  .toggle-track span { width: 14px; height: 14px; display: block; border-radius: 50%; background: #89928c; transition: transform .25s, background .25s; }
+  .toggle-control input:checked + .toggle-track { background: rgba(209,77,14,.62); }
+  .toggle-control input:checked + .toggle-track span { transform: translateX(15px); background: var(--particle); }
+  .reroll { border: 0; background: transparent; color: #aab0ab; font: 650 9px/1 var(--mono); letter-spacing: .08em; cursor: pointer; }
+  .reroll:hover:not(:disabled) { color: var(--particle); background: rgba(255,255,255,.035); }
+  .reroll:disabled { opacity: .34; cursor: not-allowed; }
+
+  .basin-callout { position: absolute; z-index: 6; display: flex; align-items: center; pointer-events: none; opacity: 0; transform: translateY(8px); transition: opacity .35s, transform .35s; }
+  .basin-callout.visible { opacity: 1; transform: translateY(0); }
+  .callout-line { width: 36px; height: 1px; background: rgba(255,181,79,.7); }
+  .callout-card { padding: 8px 11px; display: grid; gap: 3px; background: rgba(8,10,10,.84); border: 1px solid rgba(255,181,79,.3); backdrop-filter: blur(12px); }
+  .callout-card small { color: #8f9690; font: 650 7px/1 var(--mono); letter-spacing: .14em; }
+  .callout-card strong { color: var(--particle); font: 500 13px/1.2 var(--serif); }
+  .terrain-key { position: absolute; z-index: 3; left: clamp(20px,4vw,64px); bottom: 34px; display: flex; gap: 18px; color: #697470; font: 8px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .key-dot { width: 7px; height: 7px; display: inline-block; margin-right: 5px; border-radius: 50%; }
+  .key-deep { background: var(--amber); box-shadow: 0 0 8px rgba(209,77,14,.6); }
+  .key-ridge { background: #254146; }
+
+  .annotated-terrain { position: relative; margin: 0; overflow: hidden; border: 1px solid var(--line); background: #06090a; box-shadow: 0 35px 90px rgba(0,0,0,.35); }
+  .annotated-terrain img { width: 100%; aspect-ratio: 16/10; object-fit: cover; opacity: .84; }
+  .terrain-label { position: absolute; padding: 5px 7px; color: #fff1d6; background: rgba(7,10,12,.78); border-left: 2px solid var(--amber-hot); font: 600 clamp(7px, .72vw, 10px)/1.2 var(--sans); box-shadow: 0 8px 24px rgba(0,0,0,.28); }
+  .terrain-label::before { content: ''; position: absolute; right: 100%; top: 50%; width: 20px; height: 1px; background: rgba(255,181,79,.65); }
+  .label-main { left: 28%; top: 48%; } .label-expert { left: 58%; top: 65%; } .label-contrarian { left: 66%; top: 28%; }
+  .label-fringe { left: 44%; top: 14%; } .label-institutional { left: 8%; top: 72%; } .label-long { left: 78%; top: 48%; }
+  figcaption { padding: 10px 13px; color: var(--faint); background: #080c0e; font: 10px/1.5 var(--mono); }
+  .basin-list { margin: 26px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 22px; list-style: none; }
+  .basin-list li { padding-left: 14px; color: #aeb6b0; border-left: 1px solid var(--line-hot); font-size: 14px; }
+  .basin-list strong { display: block; color: var(--ink); font-family: var(--serif); font-weight: 500; }
+
+  .bias-wrap { margin-top: 58px; overflow-x: auto; border: 1px solid var(--line); }
+  .bias-table { width: 100%; min-width: 980px; border-collapse: collapse; color: #c9cec8; font-size: 14px; line-height: 1.5; }
+  .bias-table caption { padding: 16px; color: var(--muted); text-align: left; font-size: 13px; }
+  .bias-table th, .bias-table td { padding: 19px 18px; vertical-align: top; border-right: 1px solid var(--line); border-top: 1px solid var(--line); }
+  .bias-table th:last-child, .bias-table td:last-child { border-right: 0; }
+  .bias-table thead th { color: #939c97; background: #080c0e; font: 650 9px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+  .bias-table tbody tr:nth-child(2n) { background: rgba(255,255,255,.018); }
+  .bias-name { min-width: 174px; }
+  .bias-name strong { display: block; color: var(--ink); font: 500 1.25rem/1.2 var(--serif); }
+  .bias-name span { color: var(--amber-hot); font: 650 8px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+  .profile { width: 118px; height: 42px; margin-top: 9px; }
+  .profile path { fill: none; stroke: var(--amber-hot); stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .profile .ground { stroke: var(--ridge); stroke-width: 1; }
+  .decision { color: var(--particle); }
+
+  .earthworks { margin-top: 34px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .earthwork { padding: 18px; border: 1px solid var(--line); background: rgba(6,9,10,.72); }
+  .earthwork .delta { display: block; margin-bottom: 8px; color: var(--amber-hot); font: 600 1rem/1 var(--mono); }
+  .earthwork strong { display: block; margin-bottom: 6px; font-family: var(--serif); font-weight: 500; }
+  .earthwork p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.48; }
+
+  .navigation-grid { margin-top: 46px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .nav-trick { padding: 20px; border: 1px solid var(--line); background: rgba(7,10,12,.75); }
+  .nav-trick b { display: block; margin-bottom: 7px; color: var(--ink); font: 500 1.08rem/1.2 var(--serif); }
+  .nav-trick p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.52; }
+  code { padding: .12em .34em; color: var(--particle); border: 1px solid rgba(246,165,65,.2); background: rgba(209,77,14,.12); font: .85em var(--mono); }
+
+  .limits-aside { width: min(960px, 100%); margin: 58px auto 0; padding: clamp(24px, 4vw, 50px); border: 1px solid var(--line-hot); background: linear-gradient(135deg, rgba(209,77,14,.07), rgba(53,86,90,.08)); }
+  .limits-aside h3 { margin-bottom: 18px; color: var(--particle); }
+  .mistakes { margin: 26px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 15px 30px; list-style: none; }
+  .mistakes li { padding: 0 0 0 16px; color: #b8c0ba; border-left: 2px solid var(--ridge); font-size: 14px; }
+  .mistakes strong { display: block; color: var(--ink); }
+
+  .related-grid { margin-top: 44px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .related-card { padding: 22px; color: inherit; border: 1px solid var(--line); background: #080c0e; text-decoration: none; }
+  .related-card:hover { border-color: var(--line-hot); }
+  .related-card strong { display: block; margin-bottom: 8px; color: var(--ink); font: 500 1.18rem/1.2 var(--serif); }
+  .related-card span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+  .motion-next { display: none; margin-top: 16px; padding: 10px 13px; color: var(--ink); border: 1px solid var(--line-hot); background: rgba(209,77,14,.12); cursor: pointer; font: 650 9px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .debug-toggle { position: absolute; z-index: 10; top: calc(var(--header-h) + 16px); right: 18px; width: 36px; height: 32px; color: var(--muted); border: 1px solid var(--line); background: rgba(7,10,12,.82); cursor: pointer; }
+  .debug-panel { position: fixed; z-index: 60; inset: 80px 22px 22px auto; width: min(330px, calc(100vw - 44px)); padding: 15px; overflow: auto; background: rgba(9,12,13,.96); border: 1px solid var(--line-hot); box-shadow: 0 24px 70px rgba(0,0,0,.5); }
+  .debug-heading { position: sticky; top: -15px; z-index: 2; margin: -15px -15px 12px; padding: 15px; display: flex; justify-content: space-between; background: rgba(9,12,13,.98); border-bottom: 1px solid var(--line); }
+  .debug-heading small { color: var(--amber-hot); font: 8px var(--mono); letter-spacing: .15em; }
+  .debug-heading strong { display: block; font-size: 15px; }
+  .debug-heading button { border: 0; background: none; color: var(--muted); font-size: 22px; cursor: pointer; }
+  .debug-group { padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .debug-group h3 { margin-bottom: 9px; color: #d7d8d0; font: 500 9px var(--mono); text-transform: uppercase; }
+  .debug-row { min-height: 27px; display: grid; grid-template-columns: 76px 1fr 40px; gap: 7px; align-items: center; }
+  .debug-row label { color: #8e9690; font-size: 9px; }
+  .debug-row output { color: #d9b981; font: 8px var(--mono); text-align: right; }
+  #fps { position: absolute; z-index: 10; top: calc(var(--header-h) + 17px); left: 18px; padding: 5px 7px; color: var(--amber-hot); background: #070a0c; font: 9px var(--mono); }
+}
+
+@layer states {
+  @keyframes pulse { 50% { opacity: .35; transform: scale(.75); } }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-cta, .related-card { transition: transform .25s, border-color .25s; }
+    .hero-cta:hover, .related-card:hover { transform: translateY(-2px); }
+  }
+  body.static-mode .terrain-engine { display: none; }
+  body.static-mode .scroll-content { margin-top: 0; }
+  body.static-mode .hero { background: linear-gradient(90deg, rgba(5,7,8,.94), rgba(5,7,8,.2)), url('images/machine-consensus-terrain-base.png') 56% 50% / cover no-repeat; }
+  body.static-mode .hero-static, body.static-mode .story-still { display: block; }
+  body.static-mode .prompt-dock { position: absolute; }
+  body.capture-social .site-header, body.capture-social .prompt-dock, body.capture-social .hero-cta, body.capture-social .state-readout, body.capture-social .terrain-key { display: none; }
+  body.capture-social .hero { padding-top: 88px; }
+  body.capture-terrain { overflow: hidden; }
+  body.capture-terrain .site-header, body.capture-terrain .scroll-content, body.capture-terrain .site-footer, body.capture-terrain .terrain-key, body.capture-terrain .basin-callout { display: none; }
+  body.capture-terrain .terrain-engine { position: fixed; inset: 0; height: 100vh; }
+  body.reduced-motion .motion-next { display: inline-block; }
+  body.reduced-motion .steps { gap: 28svh; }
+  .no-js .terrain-engine { display: none; }
+  .no-js .scroll-content { margin-top: 0; }
+  .no-js .hero { background: linear-gradient(90deg, rgba(5,7,8,.94), rgba(5,7,8,.2)), url('images/machine-consensus-terrain-base.png') 56% 50% / cover no-repeat; }
+  .no-js .story-still { display: block; }
+}
+
+@layer utilities {
+  .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
+}
+
+@media (max-width: 900px) {
+  .verified { display: none; }
+  .section-grid { grid-template-columns: 1fr; }
+  .interactive-section .section-heading, .steps { width: min(460px, 48vw); }
+  .earthworks { grid-template-columns: 1fr; }
+  .related-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 759px) {
+  :root { --header-h: 58px; }
+  body { font-size: 16px; }
+  .site-header { padding: 0 16px; }
+  .site-nav a:not(:last-child) { display: none; }
+  .terrain-engine { display: none; }
+  .scroll-content { margin-top: 0; }
+  .hero { min-height: 100svh; padding: 104px 18px 330px; background: linear-gradient(90deg, rgba(5,7,8,.92), rgba(5,7,8,.28)), url('images/machine-consensus-terrain-base.png') 58% 50% / cover no-repeat; }
+  .hero-copy { width: 100%; }
+  .hero h1 { font-size: clamp(3.2rem, 16vw, 5.4rem); }
+  .hero-dek { font-size: 1rem; }
+  .prompt-dock { position: absolute; inset: auto 14px 16px; width: auto; }
+  .prompt-grid { grid-template-columns: 1fr 1fr; }
+  .prompt-button { min-height: 58px; display: grid; grid-template-columns: 22px 1fr; align-items: center; }
+  .prompt-button:nth-child(2) { border-right: 0; }
+  .prompt-button:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .control-strip { grid-template-columns: 1fr 110px; }
+  .temperature-control { min-height: 48px; }
+  .toggle-control { border-right: 0; }
+  .toggle-copy small { display: none; }
+  .reroll { min-height: 38px; grid-column: 1 / -1; border-top: 1px solid var(--line); }
+  .static-section { min-height: auto; padding: 86px 18px; }
+  .section-grid { gap: 36px; }
+  .basin-list { grid-template-columns: 1fr; }
+  .terrain-label { font-size: 6px; }
+  .terrain-label::before { width: 10px; }
+  .interactive-section { min-height: auto; padding: 86px 18px; background: var(--night); pointer-events: auto; }
+  .interactive-section .section-heading, .steps { width: 100%; margin: 0; }
+  .interactive-section .section-heading { padding: 0 0 30px; border: 0; background: transparent; backdrop-filter: none; }
+  .steps { gap: 20px; }
+  .step { transform: none !important; }
+  .story-still { display: block; }
+  .story-still img { width: 100%; border: 1px solid var(--line); }
+  .navigation-grid, .mistakes { grid-template-columns: 1fr; }
+  .bias-wrap { margin-top: 34px; }
+  .related-grid, .footer-grid { grid-template-columns: 1fr; }
+  .footer-grid { gap: 35px; }
+  .footer-bottom { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .motion-next { display: inline-block; }
+  .steps { gap: 28svh; }
+}
+
+@media print {
+  :root { color-scheme: light; }
+  body { background: white; color: #161616; font-size: 10.5pt; }
+  .site-header, .terrain-engine, .prompt-dock, .motion-next, .debug-panel, .debug-toggle, #fps { display: none !important; }
+  .scroll-content { margin-top: 0; }
+  .hero, .story-panel, .static-section, .interactive-section { min-height: auto; padding: 24pt 0; background: white !important; color: #161616; break-inside: auto; }
+  .hero-copy, .interactive-section .section-heading, .steps, .section-grid { width: 100%; max-width: none; }
+  .hero h1 { font-size: 42pt; }
+  .hero-dek, .section-intro, .step p, .basin-list li, .nav-trick p, .mistakes li { color: #333; }
+  .steps { margin: 18pt 0 0; gap: 12pt; }
+  .step, .nav-trick, .limits-aside, .related-card { color: #161616; background: white; border-color: #777; box-shadow: none; break-inside: avoid; }
+  .story-still { display: block; break-inside: avoid; }
+  .annotated-terrain, .story-still img { max-width: 620px; border: 1px solid #777; }
+  .bias-wrap { overflow: visible; }
+  .bias-table { min-width: 0; font-size: 7.8pt; }
+  .site-footer { padding: 24pt 0; background: white; color: #161616; }
+  a { color: #222; }
+}
+</style>
+</head>
+
+<body>
+<header class="site-header">
+  <a class="brand" href="index.php" aria-label="David Veksler Cheatsheets home"><span class="brand-mark" aria-hidden="true"></span><span>David Veksler Cheatsheets</span></a>
+  <nav class="site-nav" aria-label="Site navigation">
+    <a href="index.php?category=AI%20%26%20Safety">AI &amp; Safety</a>
+    <a href="how-its-built.html">How it’s built</a>
+    <a href="index.php">All sheets</a>
+    <span class="verified">Last verified 2026-07-17</span>
+  </nav>
+</header>
+
+<main id="machine-consensus" data-terrain-root data-state="idle" data-terrain-mode="pending">
+  <div class="terrain-scroll">
+    <div class="terrain-engine" aria-label="Interactive three-dimensional landscape of likely language-model answers">
+      <div id="scene"></div>
+      <div class="terrain-vignette"></div>
+      <aside id="basin-callout" class="basin-callout" aria-live="polite" hidden>
+        <span class="callout-line"></span>
+        <span class="callout-card"><small>SETTLED IN</small><strong id="callout-label">Mainstream view</strong></span>
+      </aside>
+      <div class="terrain-key" aria-hidden="true"><span><i class="key-dot key-deep"></i>common answer</span><span><i class="key-dot key-ridge"></i>unlikely ridge</span></div>
+      <button id="debug-toggle" class="debug-toggle" type="button" aria-expanded="false" aria-controls="debug-panel" hidden><span aria-hidden="true">•••</span><span class="sr-only">Open terrain tuning controls</span></button>
+      <div id="fps" hidden aria-hidden="true"></div>
+    </div>
+
+    <div class="scroll-content">
+      <section class="hero" id="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="kicker">A topographic map of machine consensus</p>
+          <h1 id="page-title">Why LLMs Say <em>What They Say</em></h1>
+          <p class="hero-thesis">An AI model doesn’t have opinions. It has geometry.</p>
+          <p class="hero-dek">Training data carves a landscape. Your prompt picks the starting point. Then one possible answer rolls downhill through what the model learned to make likely.</p>
+          <a class="hero-cta" href="#prompt-dock">Drop a prompt</a>
+          <div class="state-readout" aria-live="polite"><span class="state-dot"></span><span id="state-text">Choose a prompt to begin</span></div>
+        </div>
+
+        <section class="prompt-dock" id="prompt-dock" aria-label="Terrain controls">
+          <div class="prompt-header"><span>DROP A PROMPT</span><span>04 STARTING COORDINATES</span></div>
+          <div class="prompt-grid">
+            <button class="prompt-button" type="button" data-prompt="safe"><span class="prompt-index">01</span><span>Is social media<br />safe for teens?</span></button>
+            <button class="prompt-button" type="button" data-prompt="steelman"><span class="prompt-index">02</span><span>Steelman the case<br />against social media</span></button>
+            <button class="prompt-button" type="button" data-prompt="expert"><span class="prompt-index">03</span><span>What do specialists<br />often overlook?</span></button>
+            <button class="prompt-button" type="button" data-prompt="fringe"><span class="prompt-index">04</span><span>What is the least<br />conventional take?</span></button>
+          </div>
+          <div class="control-strip">
+            <label class="temperature-control" for="temperature"><span class="control-label">TEMPERATURE</span><input id="temperature" type="range" min="0" max="1.5" value="0.42" step="0.01" /><output id="temperature-value" for="temperature">0.42</output></label>
+            <label class="toggle-control"><span class="toggle-copy"><span class="control-label">POST-TRAINING</span><small>reshape terrain</small></span><input id="rlhf" type="checkbox" /><span class="toggle-track" aria-hidden="true"><span></span></span></label>
+            <button id="reroll" class="reroll" type="button" disabled><span aria-hidden="true">↻</span> RE-ROLL</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="static-section" id="compressed" aria-labelledby="compressed-title">
+        <div class="section-grid">
+          <div class="section-copy">
+            <span class="section-number">01 · The landscape</span>
+            <h2 id="compressed-title">The terrain is compressed writing</h2>
+            <p class="section-intro">Imagine every recurring phrase, argument, association, omission, and style in the model’s training material pressed into one surface. Where many compatible continuations pile up, the terrain sinks into a basin. Where few fit, it rises into a ridge.</p>
+            <p>This is not a literal map inside the model. It is a useful compression of a harder idea: an answer is assembled from locally likely next pieces, conditioned on everything already written. The deepest region is not an average opinion and not a conclusion reached by detached reasoning. It is a region the learned system makes easy to enter and hard to leave.</p>
+            <ul class="basin-list" aria-label="Terrain basin labels">
+              <li><strong>Mainstream view</strong>Many familiar paths converge here.</li>
+              <li><strong>Expert niche</strong>Specialized language opens a narrower route.</li>
+              <li><strong>Contrarian</strong>A coherent minority frame has its own valley.</li>
+              <li><strong>Fringe</strong>A shallow pocket is reachable but unstable.</li>
+              <li><strong>Institutional default</strong>Official phrasing forms a dependable channel.</li>
+              <li><strong>Long-tail surprise</strong>A rare continuation can still connect.</li>
+            </ul>
+          </div>
+          <figure class="annotated-terrain">
+            <img src="images/machine-consensus-terrain-base.png" width="1200" height="750" alt="Amber and blue-green probability terrain annotated with six answer basins" />
+            <span class="terrain-label label-main">Mainstream view</span><span class="terrain-label label-expert">Expert niche</span><span class="terrain-label label-contrarian">Contrarian</span><span class="terrain-label label-fringe">Fringe</span><span class="terrain-label label-institutional">Institutional default</span><span class="terrain-label label-long">Long-tail surprise</span>
+            <figcaption>Height represents how difficult a continuation is to reach in this simplified model. Lower is more probable, not more true.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="interactive-section" id="generation" aria-labelledby="generation-title">
+        <div class="section-heading">
+          <span class="section-number">02 · Generation</span>
+          <h2 id="generation-title">Generation is rolling downhill</h2>
+          <p class="section-intro">The same learned terrain can produce different answers because the prompt places the first ball at different coordinates. Watch two phrasings of the same subject.</p>
+        </div>
+        <div class="steps">
+          <article class="step" data-action="safe">
+            <span class="step-kicker">Step 1 · place the prompt</span>
+            <h3>A broad question starts near broad language</h3>
+            <p>“Is social media safe for teens?” drops near familiar public discussion. The words in the prompt constrain which continuations fit before generation even starts.</p>
+            <button class="motion-next" type="button" data-run="safe">Run this step</button>
+            <figure class="story-still"><img src="images/machine-consensus-terrain-base.png" width="1200" height="750" alt="Static terrain showing the broad prompt rolling toward Mainstream view" /><figcaption>Broad prompt → a common basin.</figcaption></figure>
+          </article>
+          <article class="step" data-action="hold-safe">
+            <span class="step-kicker">Step 2 · settle</span>
+            <h3>Local probability compounds</h3>
+            <p>Each generated piece changes the slope under the next one. A slight early lean can become a coherent answer because later tokens must fit the path already taken.</p>
+            <button class="motion-next" type="button" data-run="hold-safe">Continue</button>
+          </article>
+          <article class="step" data-action="steelman">
+            <span class="step-kicker">Step 3 · change the coordinates</span>
+            <h3>Ask for a steelman</h3>
+            <p>Now the prompt requests the strongest case against the subject. The terrain has not changed. The starting position and initial nudge have.</p>
+            <button class="motion-next" type="button" data-run="steelman">Run this step</button>
+            <figure class="story-still"><img src="images/machine-consensus-terrain-steelman.png" width="1200" height="750" alt="Static terrain showing a steelman prompt settling in a different answer basin" /><figcaption>Steelman prompt → a different reachable basin.</figcaption></figure>
+          </article>
+          <article class="step" data-action="hold-steelman">
+            <span class="step-kicker">Step 4 · compare</span>
+            <h3>Same model, different answer</h3>
+            <p class="punchline">You didn’t change the model. You changed the coordinates.</p>
+            <button class="motion-next" type="button" data-run="hold-steelman">Continue</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="static-section" id="biases" aria-labelledby="bias-title">
+        <div class="section-copy">
+          <span class="section-number">03 · Accountability</span>
+          <h2 id="bias-title">Three things people call “bias”</h2>
+          <p class="section-intro">The word <em>bias</em> hides three different interventions, three different responsible groups, and three different ideas of a fix. Conflating them makes every argument about AI less precise.</p>
+        </div>
+        <div class="bias-wrap">
+          <table class="bias-table">
+            <caption>Separate the source of the slope before arguing about whether it should be changed.</caption>
+            <thead><tr><th scope="col">Kind</th><th scope="col">What causes it</th><th scope="col">Who is accountable</th><th scope="col">What “fixing it” means</th><th scope="col">Terrain metaphor</th></tr></thead>
+            <tbody>
+              <tr>
+                <th scope="row" class="bias-name"><span>Layer 1</span><strong>Corpus bias</strong><svg class="profile" viewBox="0 0 120 42" aria-hidden="true"><path class="ground" d="M1 9H119"/><path d="M1 9 C18 8 25 10 38 24 S58 39 72 19 S96 10 119 9"/></svg></th>
+                <td>Patterns and absences in the writing the model learned from. Repetition digs; silence leaves high ground.</td>
+                <td>Diffuse: authors, publishers, platforms, collectors, and the builders who choose the sampling mix.</td>
+                <td><span class="decision">Change the material:</span> add missing perspectives, rebalance sources, repair errors, and accept that every corpus boundary is a choice.</td>
+                <td><strong>Natural landscape.</strong> History deposited the layers before this model existed.</td>
+              </tr>
+              <tr>
+                <th scope="row" class="bias-name"><span>Layer 2</span><strong>Curation bias</strong><svg class="profile" viewBox="0 0 120 42" aria-hidden="true"><path class="ground" d="M1 9H119"/><path d="M1 9 C20 10 28 29 43 30 L52 30 L52 14 L69 14 L69 31 C88 29 94 10 119 9"/></svg></th>
+                <td>Selection, filtering, deduplication, labeling, and exclusion decide which parts of the available corpus become training material.</td>
+                <td>Dataset builders and model developers who set the inclusion rules and apply them.</td>
+                <td><span class="decision">Change the selection process:</span> expose provenance, audit criteria, test omissions, and revise filters whose side effects exceed their purpose.</td>
+                <td><strong>Selective erosion.</strong> Some deposits remain; others are cut away before training.</td>
+              </tr>
+              <tr>
+                <th scope="row" class="bias-name"><span>Layer 3</span><strong>Alignment bias</strong><svg class="profile" viewBox="0 0 120 42" aria-hidden="true"><path class="ground" d="M1 9H119"/><path d="M1 9 C18 9 25 13 34 29 S58 39 70 21 L77 9 L83 9 L83 30 C95 18 101 10 119 9"/></svg></th>
+                <td>Post-training objectives, preference judgments, rules, and product constraints reward some answer shapes and discourage others.</td>
+                <td>The actors who design the objective, supply judgments, set deployment rules, and approve the resulting behavior.</td>
+                <td><span class="decision">Change the earthworks:</span> revise objectives and evaluations, inspect tradeoffs, document the intended behavior, and govern who gets to choose it.</td>
+                <td><strong>Civil engineering.</strong> Basins are deepened, ridges raised, and channels redirected on purpose.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="interactive-section" id="earthmovers" aria-labelledby="earthmovers-title">
+        <div class="section-heading">
+          <span class="section-number">04 · Post-training</span>
+          <h2 id="earthmovers-title">The RLHF earthmovers</h2>
+          <p class="section-intro">Here, “RLHF” is shorthand for the broader post-training layer that steers model behavior. Toggle it and watch the validated demonstration edit three parts of the field.</p>
+          <div class="earthworks" aria-label="Terrain changes in the demonstration">
+            <div class="earthwork"><span class="delta">3.25 → 4.28</span><strong>Mainstream deepens</strong><p>More nearby paths are captured by the largest basin.</p></div>
+            <div class="earthwork"><span class="delta">1.58 → 0.48</span><strong>Fringe nearly flattens</strong><p>A once-reachable pocket becomes much easier to escape.</p></div>
+            <div class="earthwork"><span class="delta">σ [4.2, 0.7]</span><strong>Long tail becomes a channel</strong><p>A wide, narrow route feeds toward the main region.</p></div>
+          </div>
+        </div>
+        <div class="steps">
+          <article class="step" data-action="rlhf">
+            <span class="step-kicker">Move the earth</span>
+            <h3>The answer moves even after it settled</h3>
+            <p>Morph the terrain under the resting particle. It re-settles on the new field; a particle still descending follows the interpolated slope. Post-training changes what is easy to say, not just what is blocked at the end.</p>
+            <button class="motion-next" type="button" data-run="rlhf">Reshape the terrain</button>
+            <figure class="story-still"><img src="images/machine-consensus-terrain-rlhf.png" width="1200" height="750" alt="Static terrain after post-training deepens the mainstream basin and flattens the fringe basin" /><figcaption>Post-training earthworks: the same prompt now descends through a changed field.</figcaption></figure>
+          </article>
+          <article class="step" data-action="hold-rlhf">
+            <span class="step-kicker">The governance question</span>
+            <h3>Who audits the earthworks?</h3>
+            <p>Labs reshape models after training, and those edits are editorial decisions by private actors. Some are plainly useful; all create tradeoffs. The durable question is not whether shaping occurs, but who names the goal, sees the side effects, and can contest the result.</p>
+            <button class="motion-next" type="button" data-run="hold-rlhf">Continue</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="interactive-section" id="navigation" aria-labelledby="navigation-title">
+        <div class="section-heading">
+          <span class="section-number">05 · Steering</span>
+          <h2 id="navigation-title">Navigation tricks</h2>
+          <p class="section-intro">You can explore a model’s reachable terrain without pretending every basin deserves equal trust.</p>
+          <div class="navigation-grid">
+            <div class="nav-trick"><b>Adversarial phrasing</b><p>Requests such as <code>argue against</code> or <code>find the weakest assumption</code> supply a directed nudge. Use them to inspect an omitted path, not to certify it.</p></div>
+            <div class="nav-trick"><b>Personas</b><p>“Answer as a skeptical editor” activates language associated with that role. A persona is a coordinate shift, not an expert entering the room.</p></div>
+            <div class="nav-trick"><b>Temperature</b><p>Higher temperature adds sampling variance. The ball can escape a local route more often, but novelty and error rise together. It does not reveal hidden truth.</p></div>
+            <div class="nav-trick"><b>Re-roll</b><p>The same prompt can descend differently because generation samples a path. Compare rerolls to find what is stable, then verify important claims outside the model.</p></div>
+          </div>
+        </div>
+        <div class="steps">
+          <article class="step" data-action="fringe">
+            <span class="step-kicker">Raise temperature to 1.20</span>
+            <h3>Drop near the fringe</h3>
+            <p>A hotter run wanders more and settles less predictably. Re-roll it: the starting coordinates stay close, but the escape path varies. Variance is exploration, not evidence.</p>
+            <button class="motion-next" type="button" data-run="fringe">Run the hot drop</button>
+            <figure class="story-still"><img src="images/machine-consensus-terrain-fringe.png" width="1200" height="750" alt="Static high-temperature fringe prompt tracing a less predictable path across the terrain" /><figcaption>Temperature 1.20 + fringe prompt: more path variance, not more truth.</figcaption></figure>
+          </article>
+          <article class="step" data-action="reroll">
+            <span class="step-kicker">Same coordinates, another sample</span>
+            <h3>Re-roll, then compare</h3>
+            <p>If the answer changes sharply, you found an unstable region. If the framing persists across runs, you found a strong channel in the terrain. Neither result substitutes for checking the world.</p>
+            <button class="motion-next" type="button" data-run="reroll">Re-roll the prompt</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="static-section" id="limits" aria-labelledby="limits-title">
+        <div class="section-copy">
+          <span class="section-number">06 · Limits</span>
+          <h2 id="limits-title">Where the map lies</h2>
+          <p class="section-intro">A good metaphor makes one structure visible by hiding another. Keep the terrain, but keep its warning label attached.</p>
+        </div>
+        <aside class="limits-aside" aria-labelledby="mistakes-title">
+          <h3 id="mistakes-title">Common mistakes this picture invites</h3>
+          <p><strong>Consensus is not truth.</strong> The deepest basin can contain a widespread error. A shallow basin can contain the correct specialist answer. Probability describes what the model finds likely to continue, not what reality guarantees.</p>
+          <ul class="mistakes">
+            <li><strong>“The model averages opinions.”</strong> It predicts next pieces of text under context. The terrain compresses those conditional probabilities; it is not a poll.</li>
+            <li><strong>“The ball is the model reasoning.”</strong> The path represents sequential generation. Some paths can look like reasoning, but the picture does not establish an inner thinker.</li>
+            <li><strong>“There are six real basins.”</strong> Actual representations are high-dimensional and change with context. Six named regions make the demonstration legible; they are not discovered model anatomy.</li>
+            <li><strong>“Alignment only deletes answers.”</strong> Shaping can deepen, widen, flatten, or connect regions. It changes relative reachability across the field.</li>
+          </ul>
+        </aside>
+        <div class="related-grid" aria-label="Related AI and governance guides">
+          <a class="related-card" href="governing-agentic-ai.html"><strong>Governing Agentic AI</strong><span>Turn the earthworks question into review gates, named accountability, and observable behavior.</span></a>
+          <a class="related-card" href="agentic-ai.html"><strong>Agentic AI Field Guide</strong><span>Move from one generated answer to systems that plan, use tools, act, and fail in new ways.</span></a>
+          <a class="related-card" href="ai-frontier.html"><strong>The AI Frontier</strong><span>Place model capabilities and risks in the wider technical landscape without locking to one vendor.</span></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <aside id="debug-panel" class="debug-panel" aria-label="Live terrain tuning" hidden>
+    <div class="debug-heading"><div><small>LIVE CONTROLS</small><strong>Terrain tuning</strong></div><button id="debug-close" type="button" aria-label="Close tuning controls">×</button></div>
+    <p style="color:#7f8984;font-size:11px">Debug edits update the pre-alignment field. The shipped post-training state remains fixed.</p>
+    <div id="debug-fields"></div>
+  </aside>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-cta"><p class="kicker">From metaphor to governance</p><h2>Who gets to reshape the terrain?</h2><p>Use the governance field guide to turn that question into explicit objectives, accountable owners, review gates, and an audit trail.</p><a class="hero-cta" href="governing-agentic-ai.html">Open the governance guide</a></div>
+    <nav class="footer-links" aria-label="Footer navigation"><a href="index.php">All Cheatsheets</a><a href="index.php?category=AI%20%26%20Safety">AI &amp; Safety collection</a><a href="how-its-built.html">How this site is built</a><a href="history.php">Public change history</a><a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener noreferrer">Source on GitHub</a></nav>
+  </div>
+  <div class="footer-bottom"><span>David Veksler Cheatsheets · AI-generated, human-reviewed</span><span>Last verified: 2026-07-17</span></div>
+</footer>
+
+<script type="module">
+const root = document.querySelector('[data-terrain-root]');
+const hero = document.querySelector('#hero');
+const sceneContainer = document.querySelector('#scene');
+const engineRoot = document.querySelector('.terrain-engine');
+const query = new URLSearchParams(location.search);
+const reducedMotion = query.get('reduced') === '1' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+const mobile = matchMedia('(max-width: 759px)').matches;
+let terrainApi = null;
+let initPromise = null;
+
+if (reducedMotion) document.body.classList.add('reduced-motion');
+
+function webgl2Available() {
+  if (query.get('fallback') === '1') return false;
+  try { return !!document.createElement('canvas').getContext('webgl2', { failIfMajorPerformanceCaveat: true }); }
+  catch { return false; }
+}
+
+function activateStaticMode(reason = 'fallback') {
+  document.body.classList.add('static-mode');
+  root.dataset.terrainMode = 'fallback';
+  const state = document.querySelector('#state-text');
+  if (state) state.textContent = reason === 'mobile' ? 'Static sequence on small screens' : 'Static sequence: interactive rendering unavailable';
+}
+
+function track(eventName, parameters = {}) {
+  if (typeof window.gtag === 'function') window.gtag('event', eventName, parameters);
+  window.dispatchEvent(new CustomEvent(`machine-consensus:${eventName}`, { detail: parameters }));
+}
+
+async function ensureTerrain() {
+  if (terrainApi) return terrainApi;
+  if (initPromise) return initPromise;
+  if (mobile || !webgl2Available()) { activateStaticMode(mobile ? 'mobile' : 'fallback'); return null; }
+  initPromise = import('./machine-consensus-terrain.js').then(({ createTerrain }) => {
+    terrainApi = createTerrain(sceneContainer, {
+      root,
+      componentRoot: engineRoot,
+      seed: query.get('seed') || 'machine-consensus-story',
+      reducedMotion
+    });
+    window.__terrainApi = terrainApi;
+    terrainApi.on('settled', ({ basinLabel, basinIndex }) => track('terrain_settled', { basin_label: basinLabel, basin_index: basinIndex }));
+    terrainApi.on('fallback', () => activateStaticMode('fallback'));
+    new IntersectionObserver(([entry]) => entry.intersectionRatio >= .5 ? terrainApi.resume() : terrainApi.pause(), { threshold: [.5] }).observe(engineRoot);
+    return terrainApi;
+  }).catch(error => {
+    console.error('Terrain initialization failed:', error);
+    activateStaticMode('fallback');
+    return null;
+  });
+  return initPromise;
+}
+
+function setStaticPrompt(key) {
+  document.querySelectorAll('.prompt-button').forEach(button => button.classList.toggle('active', button.dataset.prompt === key));
+  const states = {
+    safe: 'Static view: broad prompt → Mainstream view',
+    steelman: 'Static view: steelman → a different basin',
+    expert: 'Static view: specialist framing → Expert niche',
+    fringe: 'Static view: unconventional framing → Fringe'
+  };
+  document.querySelector('#state-text').textContent = states[key];
+}
+
+async function runAction(action) {
+  document.querySelectorAll('.step').forEach(step => step.classList.toggle('is-active', step.dataset.action === action));
+  const api = await ensureTerrain();
+  if (!api) return;
+  switch (action) {
+    case 'safe': api.setMorph(0); api.setTemperature(.42); api.dropPrompt('safe'); break;
+    case 'steelman': api.setMorph(0); api.setTemperature(.42); api.dropPrompt('steelman'); break;
+    case 'rlhf': api.setMorph(1); track('terrain_morph', { target: 'post_training' }); break;
+    case 'fringe': api.setTemperature(1.2); api.dropPrompt('fringe'); break;
+    case 'reroll': api.reroll(); track('terrain_reroll', { prompt: 'fringe' }); break;
+  }
+}
+
+document.querySelectorAll('.prompt-button').forEach(button => {
+  button.addEventListener('click', async () => {
+    const key = button.dataset.prompt;
+    track('terrain_prompt_click', { prompt_key: key, terrain_mode: root.dataset.terrainMode });
+    if (root.dataset.terrainMode === 'fallback' || mobile) { setStaticPrompt(key); return; }
+    if (!terrainApi) {
+      const api = await ensureTerrain();
+      if (!api || api.getMode() === 'fallback') setStaticPrompt(key);
+      else api.dropPrompt(key);
+    }
+  });
+});
+
+document.querySelector('#temperature').addEventListener('input', event => {
+  document.querySelector('#temperature-value').value = Number(event.target.value).toFixed(2);
+  event.target.style.setProperty('--fill', `${Number(event.target.value) / 1.5 * 100}%`);
+  if (!terrainApi && !mobile) ensureTerrain().then(api => api?.setTemperature(event.target.value));
+});
+
+document.querySelector('#rlhf').addEventListener('change', event => {
+  track('terrain_morph_control', { enabled: event.target.checked });
+  if (!terrainApi && !mobile) ensureTerrain().then(api => api?.setMorph(event.target.checked ? 1 : 0));
+});
+
+document.querySelectorAll('.motion-next').forEach(button => button.addEventListener('click', () => runAction(button.dataset.run)));
+
+if (!reducedMotion && !mobile) {
+  const stepObserver = new IntersectionObserver(entries => {
+    entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio).forEach(entry => runAction(entry.target.dataset.action));
+  }, { threshold: .62 });
+  document.querySelectorAll('.step').forEach(step => stepObserver.observe(step));
+}
+
+if (mobile || !webgl2Available()) activateStaticMode(mobile ? 'mobile' : 'fallback');
+else new IntersectionObserver(([entry], observer) => {
+  if (entry.intersectionRatio >= .5) { ensureTerrain(); observer.disconnect(); }
+}, { threshold: [.5] }).observe(hero);
+
+if (query.get('capture')) {
+  if (query.get('capture') === 'social') document.body.classList.add('capture-social');
+  else document.body.classList.add('capture-terrain');
+  ensureTerrain().then(api => {
+    if (!api) return;
+    const capture = query.get('capture');
+    if (capture === 'base' || capture === 'social') { api.setMorph(0); api.setTemperature(.42); api.dropPrompt('safe'); }
+    if (capture === 'steelman') { api.setMorph(0); api.setTemperature(.42); api.dropPrompt('steelman'); }
+    if (capture === 'rlhf') { api.setMorph(1); api.setTemperature(.42); api.dropPrompt('safe'); }
+    if (capture === 'fringe') { api.setMorph(1); api.setTemperature(1.2); api.dropPrompt('fringe'); }
+  });
+}
+
+window.__terrainQA = { ensureTerrain, runAction, activateStaticMode, get api() { return terrainApi; } };
+</script>
+</body>
+</html>

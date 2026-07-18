@@ -19,6 +19,7 @@ return [
     'google-ai-studio-guide.html' => 'AI & Safety',
     'governing-agentic-ai.html' => 'AI & Safety',
     'how-its-built.html' => 'AI & Safety',
+    'machine-consensus.html' => 'AI & Safety',
     'p-doom-calculator.html' => 'AI & Safety',
     'p-doom-test-harness.html' => 'AI & Safety',
     'prompt-builder.html' => 'AI & Safety',
