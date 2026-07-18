@@ -31,7 +31,7 @@ const CONFIG = {
     { label: 'Fringe', center: [-0.1, 5.1], sigma: [1.48, 1.68], depth: 0.48 },
     { label: 'Institutional default', center: [-5.45, -4.5], sigma: [1.95, 1.42], depth: 2.75 },
     { label: 'Long-tail surprise', center: [0.7, 1.35], sigma: [4.2, 0.7], depth: 1.12 },
-    { label: 'Raw-corpus basin', center: [8.8, -6.2], sigma: [1.8, 1.8], depth: -2.0 },
+    { label: 'Raw-corpus basin', center: [8.8, -6.2], sigma: [2.1, 2.1], depth: -3.4 },
     { label: 'Refused', center: [7.0, -4.2], sigma: [2.5, 2.2], depth: 4.2 }
   ],
   prompts: {
@@ -328,10 +328,10 @@ export function createTerrain(container, opts = {}) {
   }
 
   function fireSlam() {
-    slammed = true; alert = 1;
-    morphTween = { from: morph, to: 1, elapsed: 0, duration: .7 };
+    slammed = true;
+    morphTween = { from: morph, to: 1, elapsed: 0, duration: 1.9, slam: true };
     if (els.rlhf) els.rlhf.checked = true;
-    if (els.state) els.state.textContent = 'Safeguard slams up — the request is walled off';
+    if (els.state) els.state.textContent = 'Safeguard wall rising — the request is walled off';
   }
 
   function updateCamera(dt) {
@@ -419,7 +419,7 @@ export function createTerrain(container, opts = {}) {
     const nearest = nearestBasin(), localGrad = gradient.length();
     const lowTempSettle = temperature < .9 && phaseTime > 2.5 && velocity.length() < .018 && localGrad < .12;
     const warmSettle = phaseTime > 7 + temperature * 2.2 && nearest.distance < (temperature > 1 ? 1.45 : 1.05);
-    if (lowTempSettle || warmSettle || phaseTime > 13) settleAtNearest();
+    if (!(morphTween && morphTween.slam) && (lowTempSettle || warmSettle || phaseTime > 13)) settleAtNearest();
   }
 
   function addTrailPoint(pos) {
@@ -534,7 +534,8 @@ export function createTerrain(container, opts = {}) {
     idleTime += dt; totalTime += dt;
     if (!reducedMotion && idleTime > 8 && phase !== 'dropping' && !refusalActive) controls.autoRotate = true;
     if (refusalActive) { refusalT += dt; if (!slammed && refusalT > 1.65) fireSlam(); }
-    if (alert > 0) alert = Math.max(0, alert - dt * 1.5);
+    if (morphTween?.slam) alert = Math.min(1, alert + dt * 4);   // ramp up as the wall rises
+    else if (alert > 0) alert = Math.max(0, alert - dt * .7);    // then fade over ~1.4s
     updateMorph(dt); updateParticle(dt); updateCallout(); updateCamera(dt);
     terrain.material.uniforms.uTime.value = totalTime;
     terrain.material.uniforms.uAlert.value = alert;
