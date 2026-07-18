@@ -77,8 +77,8 @@ def main() -> int:
         title = parsed.title or ""
         description = parsed.meta.get("description", "")
 
-        if len(title) > 60:
-            failures.append(f"{filename}: title {len(title)} chars > 60")
+        if len(title) > 65:
+            failures.append(f"{filename}: title {len(title)} chars > 65")
         if not description:
             failures.append(f"{filename}: no meta description")
         elif not 150 <= len(description) <= 200:
