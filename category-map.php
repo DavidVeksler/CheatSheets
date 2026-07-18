@@ -41,6 +41,7 @@ return [
     'modern-devops-pipelines.html' => 'Software & DevOps',
     'observability-logs-metrics-traces-slos.html' => 'Software & DevOps',
     'postgresql.html' => 'Software & DevOps',
+    'programming-language-design-tradeoffs.html' => 'Software & DevOps',
     'python-for-architects.html' => 'Software & DevOps',
     'scrum.html' => 'Software & DevOps',
     'software-development-guides.html' => 'Software & DevOps',

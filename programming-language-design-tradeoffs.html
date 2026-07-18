@@ -27,30 +27,208 @@
   "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
   "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
   "datePublished": "2026-07-14",
-  "dateModified": "2026-07-14",
+  "dateModified": "2026-07-18",
   "keywords": "programming language design tradeoffs, Rust, Go, Zig, Swift, TypeScript, Erlang, F#, Java, ownership vs garbage collection, choosing a programming language"
 }
 </script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23e7e0cf'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' font-family='Georgia,serif' fill='%23a94f38'%3E%7B%7D%3C/text%3E%3C/svg%3E"/>
+<style>
+  @layer guide {
+    :root {
+      --paper: #f6f2e8;
+      --paper-raised: #fbf8ef;
+      --ink: #2b2a26;
+      --body-ink: #3a382f;
+      --muted-readable: #756e58;
+      --gold-readable: #93601a;
+      --quiet-gold-readable: #75621f;
+      --accent: #a94f38;
+      --rule: #d8cdb2;
+      --section-gutter: 56px;
+    }
+    html { scroll-behavior: smooth; }
+    html,body{margin:0;padding:0;background:#e7e0cf;}
+    *{box-sizing:border-box;}
+    ::selection{background:var(--gold-readable);color:var(--paper);}
+    a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(169,79,56,.35);}
+    a:hover{color:#8a3c29;border-bottom-color:#8a3c29;}
+    :focus-visible { outline: 3px solid #2e7d74; outline-offset: 3px; }
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 10px;
+      left: 10px;
+      padding: 10px 14px;
+      background: var(--ink);
+      color: var(--paper);
+      border: 0;
+      transform: translateY(-160%);
+    }
+    .skip-link:focus { transform: translateY(0); }
+    .site-shell { min-height:100vh;background:#e7e0cf;padding:40px 16px 90px;font-family:Georgia,'Iowan Old Style','Palatino Linotype',serif; }
+    .field-guide { max-width:1000px;margin:0 auto;background:var(--paper);border:1px solid var(--rule);box-shadow:0 1px 0 #fffdf6 inset,0 24px 60px -30px rgba(43,42,38,.5); }
+    .masthead, main > section, .related-guides {
+      padding-left: var(--section-gutter) !important;
+      padding-right: var(--section-gutter) !important;
+    }
+    .masthead h1, main h2, main h3 { text-wrap: balance; }
+    .masthead p, main p, main li { text-wrap: pretty; }
+    section, details { scroll-margin-top: 64px; }
+    .section-nav {
+      position: sticky;
+      z-index: 20;
+      top: 0;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 10px var(--section-gutter);
+      background: rgba(246,242,232,.96);
+      border-bottom: 1px solid var(--rule);
+      scrollbar-width: thin;
+      backdrop-filter: blur(10px);
+    }
+    .section-nav a {
+      flex: 0 0 auto;
+      padding: 7px 9px;
+      border: 1px solid transparent;
+      color: #5f5948;
+      font: 600 11px/1 'SF Mono',ui-monospace,Menlo,monospace;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .section-nav a:hover,
+    .section-nav a:focus-visible {
+      color: var(--ink);
+      border-color: #b0a684;
+      background: var(--paper-raised);
+    }
+    [style*="color:#8b8368"] { color: var(--muted-readable) !important; }
+    [style*="color:#c0842e"] { color: var(--gold-readable) !important; }
+    [style*="color:#b19a52"] { color: var(--quiet-gold-readable) !important; }
+    .map-pan-hint { display: none; }
+    .specimen:focus-visible circle { stroke-width: 4; }
+    .constraint-count { min-height: 22px; }
+    .constraint-chip[aria-pressed="true"] {
+      background: var(--ink) !important;
+      color: var(--paper) !important;
+    }
+    .ledger-row {
+      transition: opacity .2s ease, filter .2s ease;
+    }
+    .ledger-row.is-filtered-out {
+      opacity: .24;
+      filter: grayscale(1);
+    }
+    .rivalry {
+      border: 0;
+      border-bottom: 1px solid #ddd2b8;
+      background: var(--paper);
+    }
+    .rivalry:nth-of-type(even) { background: #f3ede0; }
+    .rivalry-summary {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 24px var(--section-gutter);
+      cursor: pointer;
+      list-style: none;
+    }
+    .rivalry-summary::-webkit-details-marker { display: none; }
+    .rivalry-summary::after {
+      content: "+";
+      margin-left: auto;
+      color: var(--accent);
+      font: 600 22px/1 ui-monospace,monospace;
+    }
+    .rivalry[open] > .rivalry-summary::after { content: "−"; }
+    .rivalry-title { color: var(--ink); font: 400 25px/1.15 Georgia,serif; }
+    .rivalry-variable { font: 600 11.5px/1.3 'SF Mono',ui-monospace,monospace; letter-spacing:.06em; text-transform:uppercase; }
+    .rivalry-body { padding: 0 var(--section-gutter) 30px; }
+    .rivalry-summary:hover { background: rgba(216,205,178,.25); }
+    .table-scroll { scrollbar-color: #8f8875 transparent; scrollbar-width: thin; }
+    .no-script-note { margin: 10px 0 0; color: #6b6553; font: italic 400 14px/1.5 Georgia,serif; }
+
+    @media (max-width: 640px) {
+      :root { --section-gutter: 22px; }
+      html { scroll-behavior: auto; }
+      .site-shell { padding: 10px 8px 48px; }
+      .field-guide { width: 100%; }
+      .masthead { padding-top: 32px !important; padding-bottom: 30px !important; }
+      .masthead h1 { font-size: 35px !important; line-height: 1.04 !important; }
+      .masthead p { font-size: 17px !important; line-height: 1.58 !important; }
+      .masthead-kicker { align-items: flex-start !important; gap: 16px; }
+      .section-nav { padding: 8px 14px; }
+      main > section { padding-top: 32px !important; padding-bottom: 32px !important; }
+      main h2 { font-size: 29px !important; }
+      .map-pan-hint { display: block; margin: 10px 0 0; color: var(--muted-readable); font: italic 400 14px/1.45 Georgia,serif; }
+      .rivalry-summary { padding: 20px var(--section-gutter); }
+      .rivalry-title { flex-basis: calc(100% - 30px); font-size: 23px; }
+      .rivalry-summary::after { order: 2; margin-left: auto; }
+      .rivalry-variable { order: 3; flex-basis: 100%; }
+      .rivalry-body { padding: 0 var(--section-gutter) 24px; }
+      .stack-table { min-width: 0 !important; width: 100% !important; }
+      .stack-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      .stack-table tbody,
+      .stack-table tr,
+      .stack-table td { display: block; width: 100%; }
+      .stack-table tr { padding: 8px 0; border-bottom: 2px solid #d8cdb2; }
+      .stack-table tr:last-child { border-bottom: 0; }
+      .stack-table td {
+        display: grid;
+        grid-template-columns: minmax(82px, .42fr) minmax(0, 1fr);
+        align-items: start;
+        gap: 10px;
+        min-height: 0;
+        padding: 8px 12px !important;
+        border-bottom: 1px solid rgba(43,42,38,.1) !important;
+      }
+      .stack-table td:last-child { border-bottom: 0 !important; }
+      .stack-table td::before {
+        content: attr(data-label);
+        display: block;
+        margin: 1px 0 0;
+        color: var(--muted-readable);
+        font: 700 10px/1.3 'SF Mono',ui-monospace,monospace;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+
+    @media print {
+      html, body, .site-shell { background: #fff; }
+      .site-shell { padding: 0; }
+      .field-guide { max-width: none; border: 0; box-shadow: none; }
+      .skip-link, .section-nav, .map-pan-hint, .constraint-controls { display: none !important; }
+      .rivalry { display: block; break-inside: avoid; }
+      .rivalry > .rivalry-summary::after { display: none; }
+      .rivalry > .rivalry-body { display: block !important; }
+      section, table, tr { break-inside: avoid; }
+    }
+  }
+</style>
 </head>
 <body>
-<x-dc>
-<helmet>
-<style>
-  html,body{margin:0;padding:0;background:#e7e0cf;}
-  *{box-sizing:border-box;}
-  ::selection{background:#c0842e;color:#f6f2e8;}
-  a{color:#a94f38;text-decoration:none;border-bottom:1px solid rgba(169,79,56,.35);}
-  a:hover{color:#8a3c29;border-bottom-color:#8a3c29;}
-</style>
-</helmet>
+<a class="skip-link" href="#main-content">Skip to guide</a>
 
-<div style="min-height:100vh;background:#e7e0cf;padding:40px 16px 90px;font-family:Georgia,'Iowan Old Style','Palatino Linotype',serif;">
-<div style="max-width:1000px;margin:0 auto;background:#f6f2e8;border:1px solid #d8cdb2;box-shadow:0 1px 0 #fffdf6 inset,0 24px 60px -30px rgba(43,42,38,.5);">
+<div class="site-shell">
+<article class="field-guide">
 
 <!-- ============ MASTHEAD ============ -->
-<header style="padding:52px 56px 40px;border-bottom:3px double #2b2a26;position:relative;">
-  <div style="display:flex;justify-content:space-between;align-items:baseline;font:600 11.5px/1.4 'SF Mono',ui-monospace,Menlo,monospace;letter-spacing:.2em;text-transform:uppercase;color:#a94f38;">
+<header class="masthead" style="padding:52px 56px 40px;border-bottom:3px double #2b2a26;position:relative;">
+  <div class="masthead-kicker" style="display:flex;justify-content:space-between;align-items:baseline;font:600 11.5px/1.4 'SF Mono',ui-monospace,Menlo,monospace;letter-spacing:.2em;text-transform:uppercase;color:#a94f38;">
     <span>A Field Guide</span>
     <span style="color:#8b8368;">Software &amp; DevOps</span>
   </div>
@@ -61,8 +239,22 @@
   <div style="margin-top:26px;font:600 11px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#8b8368;">Last verified Jul 2026 · Global technical content · Ver. facts tagged inline</div>
 </header>
 
+<nav class="section-nav" aria-label="Guide sections">
+  <a href="#quick-reference">Quick reference</a>
+  <a href="#archipelago">Map</a>
+  <a href="#convergence">Convergence</a>
+  <a href="#constraint-ledger">Constraint ledger</a>
+  <a href="#rivalries">Rivalries</a>
+  <a href="#memory">Memory</a>
+  <a href="#deployment">Deployment</a>
+  <a href="#choosing">Choosing</a>
+  <a href="#mistakes">Mistakes</a>
+</nav>
+
+<main id="main-content">
+
 <!-- ============ QUICK REFERENCE CARD ============ -->
-<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+<section id="quick-reference" style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">Quick Reference</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 4px;">The one question that predicts a language</h2>
   <p style="font:italic 400 18px/1.5 Georgia,serif;color:#6b6553;margin:0 0 26px;">State the binding constraint. Read off the design DNA.</p>
@@ -103,12 +295,12 @@
 </section>
 
 <!-- ============ ARCHIPELAGO ============ -->
-<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+<section id="archipelago" style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">Plate I · The signature artifact</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">The Adaptation Archipelago</h2>
-  <p style="font:400 17px/1.6 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 20px;">Each island is a deployment niche. Languages are the specimens that adapted to live there; dashed currents trace the ancestry that carried genes between islands. Hover a specimen to read its binding constraint.</p>
+  <p style="font:400 17px/1.6 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 20px;">Each island is a deployment niche. Languages are the specimens that adapted to live there; dashed currents trace the ancestry that carried genes between islands. Hover, focus, or tap a specimen to read its binding constraint.</p>
 
-  <div style="overflow-x:auto;border:1px solid #d8cdb2;background:#eef3f2;">
+  <div class="map-scroll" style="overflow-x:auto;border:1px solid #d8cdb2;background:#eef3f2;">
   <svg viewBox="0 0 1000 560" style="display:block;min-width:820px;width:100%;height:auto;font-family:'SF Mono',ui-monospace,Menlo,monospace;">
     <defs>
       <pattern id="waves" width="46" height="26" patternUnits="userSpaceOnUse">
@@ -119,7 +311,7 @@
     <rect x="0" y="0" width="1000" height="560" fill="url(#waves)" opacity="0.55"/>
 
     <!-- ancestry currents -->
-    <g ref="{{ ancestryRef }}" stroke-dasharray="3 6" stroke-width="1.6" fill="none" opacity="0.55">
+    <g stroke-dasharray="3 6" stroke-width="1.6" fill="none" opacity="0.55">
       <path d="M760 175 C640 240 600 300 520 345" stroke="#2e7d74"/>
       <path d="M760 175 C560 210 360 250 220 300" stroke="#2e7d74"/>
       <path d="M180 175 C260 210 360 150 430 145" stroke="#c0842e"/>
@@ -174,75 +366,76 @@
     </g>
 
     <!-- SPECIMENS -->
-    <!-- helper: circle + label; data-note read on hover -->
-    <g style="cursor:default;" data-note="C — portable assembler for Unix; no runtime, you manage memory." onMouseEnter="{{ onSpec }}">
+    <!-- helper: circle + label; data-note read on pointer, focus, or keyboard activation -->
+    <g class="specimen" style="cursor:pointer;" data-note="C — portable assembler for Unix; no runtime, you manage memory.">
       <circle cx="118" cy="150" r="7" fill="#c0842e" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="118" y="172" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">C</text>
     </g>
-    <g style="cursor:default;" data-note="Zig — replace C, keep its transparency: no hidden control flow, no hidden allocations." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="Zig — replace C, keep its transparency: no hidden control flow, no hidden allocations.">
       <circle cx="182" cy="150" r="7" fill="#c0842e" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="182" y="172" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Zig</text>
     </g>
-    <g style="cursor:default;" data-note="Rust — must replace C++ with no runtime and no GC: safety proven at compile time." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="Rust — must replace C++ with no runtime and no GC: safety proven at compile time.">
       <circle cx="118" cy="360" r="7" fill="#c0842e" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="118" y="382" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Rust</text>
     </g>
-    <g style="cursor:default;" data-note="C++ — zero-overhead abstraction over C: you don't pay for what you don't use." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="C++ — zero-overhead abstraction over C: you don't pay for what you don't use.">
       <circle cx="188" cy="368" r="7" fill="#c0842e" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="188" y="390" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">C++</text>
     </g>
-    <g style="cursor:default;" data-note="Go — 10,000 engineers and sub-second builds at Google scale: deliberate boredom." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="Go — 10,000 engineers and sub-second builds at Google scale: deliberate boredom.">
       <circle cx="440" cy="150" r="7" fill="#4a6fa5" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="440" y="172" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Go</text>
     </g>
-    <g style="cursor:default;" data-note="Java — write once, run anywhere: a portable VM that can never be removed." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="Java — write once, run anywhere: a portable VM that can never be removed.">
       <circle cx="500" cy="158" r="7" fill="#4a6fa5" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="500" y="180" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Java</text>
     </g>
-    <g style="cursor:default;" data-note="C# — a better Java on Microsoft's terms; later the CLR's flagship language." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="C# — a better Java on Microsoft's terms; later the CLR's flagship language.">
       <circle cx="548" cy="148" r="7" fill="#4a6fa5" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="556" y="152" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">C#</text>
     </g>
-    <g style="cursor:default;" data-note="F# — an ML that must run on the CLR and consume every .NET library." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="F# — an ML that must run on the CLR and consume every .NET library.">
       <circle cx="440" cy="384" r="7" fill="#2e7d74" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="440" y="406" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">F#</text>
     </g>
-    <g style="cursor:default;" data-note="Kotlin — a nicer language, but it marries the JVM (and its platform types)." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="Kotlin — a nicer language, but it marries the JVM (and its platform types).">
       <circle cx="505" cy="392" r="7" fill="#4a6fa5" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="505" y="414" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Kotlin</text>
     </g>
-    <g style="cursor:default;" data-note="JavaScript — the browser's only language: single-threaded event loop, ship everywhere." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="JavaScript — the browser's only language: single-threaded event loop, ship everywhere.">
       <circle cx="258" cy="492" r="7" fill="#6b8f3d" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="258" y="514" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">JS</text>
     </g>
-    <g style="cursor:default;" data-note="TypeScript — must type the JavaScript that already exists: unsound by design." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="TypeScript — must type the JavaScript that already exists: unsound by design.">
       <circle cx="322" cy="492" r="7" fill="#6b8f3d" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="330" y="496" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">TS</text>
     </g>
-    <g style="cursor:default;" data-note="OCaml — a fast, pragmatic ML with its own sovereign runtime; multicore since 5.0 (2022)." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="OCaml — a fast, pragmatic ML with its own sovereign runtime; multicore since 5.0 (2022).">
       <circle cx="770" cy="165" r="7" fill="#2e7d74" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="770" y="187" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">OCaml</text>
     </g>
-    <g style="cursor:default;" data-note="Haskell — purely functional research vehicle: laziness and types as the whole point." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="Haskell — purely functional research vehicle: laziness and types as the whole point.">
       <circle cx="835" cy="158" r="7" fill="#2e7d74" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="843" y="162" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Haskell</text>
     </g>
-    <g style="cursor:default;" data-note="Swift — replace Objective-C and interop with Cocoa: ARC instead of a tracing GC." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="Swift — replace Objective-C and interop with Cocoa: ARC instead of a tracing GC.">
       <circle cx="720" cy="482" r="7" fill="#4a6fa5" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="720" y="504" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Swift</text>
     </g>
-    <g style="cursor:default;" data-note="Erlang / Elixir — nine-nines uptime on telecom switches: isolated processes, let it crash." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="Erlang / Elixir — nine-nines uptime on telecom switches: isolated processes, let it crash.">
       <circle cx="905" cy="340" r="7" fill="#a94f38" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="905" y="362" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Erlang</text>
     </g>
-    <g style="cursor:default;" data-note="Python — readable scripting glue: developer time over machine time, C for the hot loops." onMouseEnter="{{ onSpec }}">
+    <g class="specimen" style="cursor:pointer;" data-note="Python — readable scripting glue: developer time over machine time, C for the hot loops.">
       <circle cx="360" cy="300" r="7" fill="#6b8f3d" stroke="#2b2a26" stroke-width="1.3"/>
       <text x="360" y="322" text-anchor="middle" font-size="13" fill="#2b2a26" font-weight="700">Python</text>
     </g>
   </svg>
   </div>
+  <p class="map-pan-hint">Swipe the map horizontally. Tap or focus a language to read its binding constraint below.</p>
 
-  <div ref="{{ capRef }}" style="margin-top:14px;min-height:52px;padding:13px 18px;background:#efe8d4;border-left:3px solid #a94f38;font:italic 400 16.5px/1.5 Georgia,serif;color:#5a5443;">Hover a specimen to read its binding constraint.</div>
+  <div id="specimen-caption" aria-live="polite" style="margin-top:14px;min-height:52px;padding:13px 18px;background:#efe8d4;border-left:3px solid #a94f38;font:italic 400 16.5px/1.5 Georgia,serif;color:#5a5443;">Hover, focus, or tap a specimen to read its binding constraint.</div>
 
   <div style="display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font:600 11.5px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;color:#5a5443;">
     <span style="display:inline-flex;align-items:center;gap:7px;"><span style="width:11px;height:11px;border-radius:50%;background:#c0842e;border:1px solid #2b2a26;"></span>SYSTEMS</span>
@@ -254,7 +447,7 @@
 </section>
 
 <!-- ============ §1 THE MERGER ============ -->
-<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+<section id="convergence" style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§1 · Convergent evolution</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">The paradigm wars are over</h2>
   <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 22px;">The features people once argued about have converged. Every column below eventually grew every row — so if two languages both have pattern matching and lambdas, that tells you almost nothing about how they differ. The differences live in the <em>defaults</em> and the <em>constraints</em>, not the feature list.</p>
@@ -283,24 +476,25 @@
 </section>
 
 <!-- ============ §2 CONSTRAINT LEDGER + PICKER ============ -->
-<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+<section id="constraint-ledger" style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§2 · The heart of the guide</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">The Constraint Ledger</h2>
   <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 20px;">One row per language: what it was bred for, what the binding constraint bought, and what it cost. <strong>Toggle the constraints below</strong> — the ledger dims every language that can't satisfy them, leaving the survivors lit. This is decision support, not a summary: state your own non-negotiables and read the shortlist.</p>
 
-  <div ref="{{ chipbarRef }}" style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:8px;">
-    <button data-key="noRuntime" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">no runtime allowed</button>
-    <button data-key="noGcPause" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">GC pauses unacceptable</button>
-    <button data-key="staticBinary" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">single static binary</button>
-    <button data-key="fastCompile" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">compile speed critical</button>
-    <button data-key="bigTeam" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">huge team / high churn</button>
-    <button data-key="interop" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">interop JVM/.NET/JS/C</button>
-    <button data-key="uptime" onClick="{{ onChip }}" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">nine-nines uptime</button>
+  <div id="constraint-controls" class="constraint-controls" style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:8px;">
+    <button class="constraint-chip" type="button" data-key="noRuntime" aria-pressed="false" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">no runtime allowed</button>
+    <button class="constraint-chip" type="button" data-key="noGcPause" aria-pressed="false" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">GC pauses unacceptable</button>
+    <button class="constraint-chip" type="button" data-key="staticBinary" aria-pressed="false" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">single static binary</button>
+    <button class="constraint-chip" type="button" data-key="fastCompile" aria-pressed="false" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">compile speed critical</button>
+    <button class="constraint-chip" type="button" data-key="bigTeam" aria-pressed="false" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">huge team / high churn</button>
+    <button class="constraint-chip" type="button" data-key="interop" aria-pressed="false" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">interop JVM/.NET/JS/C</button>
+    <button class="constraint-chip" type="button" data-key="uptime" aria-pressed="false" style="cursor:pointer;font:600 12.5px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.03em;padding:9px 13px;border:1.5px solid #2b2a26;background:#f6f2e8;color:#2b2a26;border-radius:2px;">nine-nines uptime</button>
   </div>
   <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;min-height:22px;">
-    <button onClick="{{ onReset }}" style="cursor:pointer;font:600 11px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;padding:6px 10px;border:1px solid #b0a684;background:transparent;color:#8b8368;border-radius:2px;">Reset</button>
-    <span ref="{{ countRef }}" style="font:italic 400 15px/1.4 Georgia,serif;color:#a94f38;"></span>
+    <button id="constraint-reset" type="button" style="cursor:pointer;font:600 11px/1 'SF Mono',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;padding:6px 10px;border:1px solid #b0a684;background:transparent;color:#8b8368;border-radius:2px;">Reset</button>
+    <span id="constraint-count" class="constraint-count" role="status" aria-live="polite" style="font:italic 400 15px/1.4 Georgia,serif;color:#a94f38;"></span>
   </div>
+  <noscript><p class="no-script-note">Filtering requires JavaScript; the complete ledger remains visible below.</p></noscript>
 
   <div style="overflow-x:auto;border:1px solid #d8cdb2;">
     <table style="border-collapse:collapse;width:100%;min-width:820px;background:#fbf8ef;">
@@ -311,7 +505,7 @@
         <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">What it bought</th>
         <th style="font:600 11px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:11px 13px;border-bottom:2px solid #2b2a26;color:#2b2a26;">What it paid</th>
       </tr></thead>
-      <tbody ref="{{ tbodyRef }}" style="font:400 13.5px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
+      <tbody id="constraint-rows" style="font:400 13.5px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
         <tr data-tags="noRuntime noGcPause staticBinary" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#c0842e;"></span>Rust</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">2010, Mozilla</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">No runtime, no GC; replace C++ in a browser engine.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Memory safety with zero runtime cost.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Borrow-checker learning curve; slow compiles.</td></tr>
         <tr data-tags="bigTeam fastCompile staticBinary" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#4a6fa5;"></span>Go</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">2009, Google</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">10,000 engineers; sub-second builds; low onboarding.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Fast builds, easy concurrency, one binary.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Deliberate omissions; 12-yr wait for generics.</td></tr>
         <tr data-tags="noRuntime noGcPause staticBinary fastCompile" style="transition:opacity .2s;"><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);"><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#2b2a26;"><span style="width:9px;height:9px;border-radius:50%;background:#c0842e;"></span>Zig</span></td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);color:#6b6553;">2016, A. Kelley</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Replace C; keep total transparency.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">No hidden control flow / allocations; comptime.</td><td style="padding:11px 13px;border-bottom:1px solid rgba(43,42,38,.12);">Still pre-1.0 (0.16, Apr 2026); no safety proofs.</td></tr>
@@ -333,18 +527,19 @@
 </section>
 
 <!-- ============ §3 SIBLING RIVALRIES ============ -->
-<section style="padding:44px 56px 20px;border-bottom:1px solid #ddd2b8;">
+<section id="rivalries" style="padding:44px 56px 20px;border-bottom:1px solid #ddd2b8;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§3 · Isolating one variable at a time</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">The sibling rivalries</h2>
   <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 8px;">The cleanest way to see a constraint at work is to hold everything else fixed. Each pair below shares an ancestor and differs on exactly one island variable. The tables trace <em>design decisions</em> back to that variable &mdash; not feature checkboxes.</p>
 </section>
 
 <!-- Rivalry blocks -->
-<section style="padding:30px 56px;border-bottom:1px solid #ddd2b8;">
-  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px;">
-    <h3 style="font:400 25px/1.15 Georgia,serif;color:#2b2a26;margin:0;">F# vs OCaml</h3>
-    <span style="font:600 11.5px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#2e7d74;">Variable: host platform</span>
-  </div>
+<details class="rivalry" name="language-rivalries" open>
+  <summary class="rivalry-summary">
+    <span class="rivalry-title">F# vs OCaml</span>
+    <span class="rivalry-variable" style="color:#2e7d74;">Variable: host platform</span>
+  </summary>
+  <div class="rivalry-body">
   <p style="font:400 15.5px/1.55 Georgia,serif;color:#5a5443;max-width:70ch;margin:6px 0 16px;"><em>Same ancestor</em> (Caml / ML). <em>Different island</em>: OCaml keeps its own sovereign runtime; F# must live on the CLR. <em>Resulting beak</em>: hosted ML vs sovereign ML.</p>
   <div style="overflow-x:auto;border:1px solid #d8cdb2;">
     <table style="border-collapse:collapse;width:100%;min-width:620px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
@@ -363,13 +558,15 @@
       </tbody>
     </table>
   </div>
-</section>
+</div>
+</details>
 
-<section style="padding:30px 56px;border-bottom:1px solid #ddd2b8;background:#f3ede0;">
-  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px;">
-    <h3 style="font:400 25px/1.15 Georgia,serif;color:#2b2a26;margin:0;">Rust vs Go</h3>
-    <span style="font:600 11.5px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#a94f38;">Variable: is a runtime allowed?</span>
-  </div>
+<details class="rivalry" name="language-rivalries">
+  <summary class="rivalry-summary">
+    <span class="rivalry-title">Rust vs Go</span>
+    <span class="rivalry-variable" style="color:#a94f38;">Variable: is a runtime allowed?</span>
+  </summary>
+  <div class="rivalry-body">
   <p style="font:400 15.5px/1.55 Georgia,serif;color:#5a5443;max-width:72ch;margin:6px 0 16px;">The marquee rivalry. Both are modern &ldquo;systems-ish&rdquo; languages from the same era, but Go accepts a runtime (a garbage collector, a scheduler) and Rust forbids one. Nearly every visible difference between them descends from that single yes/no.</p>
   <div style="overflow-x:auto;border:1px solid #d8cdb2;">
     <table style="border-collapse:collapse;width:100%;min-width:640px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
@@ -389,13 +586,15 @@
       </tbody>
     </table>
   </div>
-</section>
+</div>
+</details>
 
-<section style="padding:30px 56px;border-bottom:1px solid #ddd2b8;">
-  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px;">
-    <h3 style="font:400 25px/1.15 Georgia,serif;color:#2b2a26;margin:0;">Go vs Erlang / BEAM</h3>
-    <span style="font:600 11.5px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#4a6fa5;">Variable: what does &ldquo;concurrency-first&rdquo; serve?</span>
-  </div>
+<details class="rivalry" name="language-rivalries">
+  <summary class="rivalry-summary">
+    <span class="rivalry-title">Go vs Erlang / BEAM</span>
+    <span class="rivalry-variable" style="color:#4a6fa5;">Variable: what does &ldquo;concurrency-first&rdquo; serve?</span>
+  </summary>
+  <div class="rivalry-body">
   <p style="font:400 15.5px/1.55 Georgia,serif;color:#5a5443;max-width:72ch;margin:6px 0 16px;">Both put concurrency at the center, but for different masters: Go optimizes for developer throughput on server fleets; the BEAM optimizes for never going down.</p>
   <div style="overflow-x:auto;border:1px solid #d8cdb2;">
     <table style="border-collapse:collapse;width:100%;min-width:620px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
@@ -413,13 +612,15 @@
       </tbody>
     </table>
   </div>
-</section>
+</div>
+</details>
 
-<section style="padding:30px 56px;border-bottom:1px solid #ddd2b8;background:#f3ede0;">
-  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px;">
-    <h3 style="font:400 25px/1.15 Georgia,serif;color:#2b2a26;margin:0;">Rust vs Zig</h3>
-    <span style="font:600 11.5px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#c0842e;">Variable: how do you get memory safety?</span>
-  </div>
+<details class="rivalry" name="language-rivalries">
+  <summary class="rivalry-summary">
+    <span class="rivalry-title">Rust vs Zig</span>
+    <span class="rivalry-variable" style="color:#c0842e;">Variable: how do you get memory safety?</span>
+  </summary>
+  <div class="rivalry-body">
   <p style="font:400 15.5px/1.55 Georgia,serif;color:#5a5443;max-width:72ch;margin:6px 0 16px;">Both refuse a garbage collector. Rust buys safety with a type system; Zig buys predictability with radical transparency and leaves safety to tooling and discipline.</p>
   <div style="overflow-x:auto;border:1px solid #d8cdb2;">
     <table style="border-collapse:collapse;width:100%;min-width:620px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
@@ -438,13 +639,15 @@
       </tbody>
     </table>
   </div>
-</section>
+</div>
+</details>
 
-<section style="padding:30px 56px 40px;border-bottom:1px solid #ddd2b8;">
-  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px;">
-    <h3 style="font:400 25px/1.15 Georgia,serif;color:#2b2a26;margin:0;">Kotlin vs Swift</h3>
-    <span style="font:600 11.5px/1.3 'SF Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#4a6fa5;">Variable: which legacy do you marry?</span>
-  </div>
+<details class="rivalry" name="language-rivalries">
+  <summary class="rivalry-summary">
+    <span class="rivalry-title">Kotlin vs Swift</span>
+    <span class="rivalry-variable" style="color:#4a6fa5;">Variable: which legacy do you marry?</span>
+  </summary>
+  <div class="rivalry-body">
   <p style="font:400 15.5px/1.55 Georgia,serif;color:#5a5443;max-width:72ch;margin:6px 0 16px;">Two &ldquo;modern app languages&rdquo; born within three years, each welded to an incumbent: Kotlin to the JVM and Java, Swift to Objective-C and Cocoa. The incumbent dictates their compromises.</p>
   <div style="overflow-x:auto;border:1px solid #d8cdb2;">
     <table style="border-collapse:collapse;width:100%;min-width:620px;background:#fbf8ef;font:400 14px/1.45 -apple-system,'Segoe UI',system-ui,sans-serif;color:#3a382f;">
@@ -462,10 +665,11 @@
       </tbody>
     </table>
   </div>
-</section>
+</div>
+</details>
 
 <!-- ============ §4 THE GC FORK ============ -->
-<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+<section id="memory" style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§4 · The single decision that shapes everything</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">The garbage-collection fork</h2>
   <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 20px;">How a language reclaims memory is the earliest, most load-bearing decision it makes &mdash; it decides which deployment targets are even reachable. There are four families, and a language lives inside one of them for life.</p>
@@ -489,7 +693,7 @@
 </section>
 
 <!-- ============ §5 SAME FEATURE FIVE REASONS ============ -->
-<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+<section id="feature-rationales" style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§5 · One concept, five constraints</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">Same feature, five reasons</h2>
   <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 20px;">&ldquo;It has concurrency&rdquo; is a checkbox. <em>Why</em> and <em>how</em> it has concurrency is the design. Here is one concept, implemented five different ways because five different constraints demanded it.</p>
@@ -514,7 +718,7 @@
 </section>
 
 <!-- ============ §6 DEPLOYMENT TARGET ============ -->
-<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+<section id="deployment" style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§6 · The island decides the beak</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">Deployment target &rarr; design DNA</h2>
   <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 20px;">Where the code has to run forbids some designs and demands others. Give an architect a target and they can predict the language family before anyone names it.</p>
@@ -541,7 +745,7 @@
 </section>
 
 <!-- ============ §7 UNSOUNDNESS AS STRATEGY ============ -->
-<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;background:#efe8d4;">
+<section id="wrong-right" style="padding:44px 56px;border-bottom:1px solid #ddd2b8;background:#efe8d4;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§7 · The contrarian section</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">When the &ldquo;wrong&rdquo; decision was the right one</h2>
   <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 24px;">The most instructive design decisions look like mistakes until you know the constraint. Each of these is routinely mocked and was, under its constraint, the rational choice.</p>
@@ -566,7 +770,7 @@
 </section>
 
 <!-- ============ §8 CHOOSING UNDER YOUR CONSTRAINTS ============ -->
-<section style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
+<section id="choosing" style="padding:44px 56px;border-bottom:1px solid #ddd2b8;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§8 · Decision support</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 6px;">Choosing under your constraints</h2>
   <p style="font:400 17px/1.62 Georgia,serif;color:#3a382f;max-width:64ch;margin:0 0 24px;">Don't compare feature lists. State your binding constraints, let them forbid what they forbid, and read the shortlist. Three worked examples, each ending at a named answer.</p>
@@ -599,7 +803,7 @@
 </section>
 
 <!-- ============ §9 COMMON MISTAKES ============ -->
-<section style="padding:44px 56px 54px;">
+<section id="mistakes" style="padding:44px 56px 54px;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">§9 · Anti-patterns</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 22px;">Common mistakes when choosing</h2>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;background:#ddd2b8;border:1px solid #ddd2b8;">
@@ -616,7 +820,7 @@
 </section>
 
 <!-- ============ RELATED FIELD GUIDES ============ -->
-<section style="padding:40px 56px 52px;border-top:3px double #2b2a26;">
+<section id="related" class="related-guides" style="padding:40px 56px 52px;border-top:3px double #2b2a26;">
   <div style="font:600 12px/1.4 'SF Mono',ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#a94f38;">Companion guides</div>
   <h2 style="font:400 33px/1.12 Georgia,serif;color:#2b2a26;letter-spacing:-.01em;margin:8px 0 20px;">Related cheatsheets</h2>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:#ddd2b8;border:1px solid #ddd2b8;">
@@ -639,73 +843,80 @@
   </div>
 </section>
 
+</main>
+</article>
 </div>
-</div>
-</x-dc>
-<script type="text/x-dc" data-dc-script>
-class Component extends DCLogic {
-  state = { selected: {} };
+<script>
+(() => {
+  const selected = new Set();
+  const chips = [...document.querySelectorAll('.constraint-chip')];
+  const rows = [...document.querySelectorAll('#constraint-rows tr[data-tags]')];
+  const count = document.getElementById('constraint-count');
+  const reset = document.getElementById('constraint-reset');
 
-  onChip = (e) => {
-    const key = e.currentTarget.getAttribute('data-key');
-    this.setState((s) => {
-      const sel = { ...s.selected };
-      if (sel[key]) delete sel[key]; else sel[key] = true;
-      return { selected: sel };
+  const applyFilter = () => {
+    let survivors = 0;
+    chips.forEach((chip) => {
+      chip.setAttribute('aria-pressed', String(selected.has(chip.dataset.key)));
     });
+    rows.forEach((row) => {
+      const tags = new Set((row.dataset.tags || '').split(' ').filter(Boolean));
+      const survives = [...selected].every((key) => tags.has(key));
+      row.classList.toggle('is-filtered-out', !survives);
+      row.classList.add('ledger-row');
+      if (survives) survivors += 1;
+    });
+    count.textContent = selected.size
+      ? `${survivors} of ${rows.length} languages survive these constraints`
+      : 'No filters selected; all languages shown';
   };
 
-  onReset = () => this.setState({ selected: {} });
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const key = chip.dataset.key;
+      if (selected.has(key)) selected.delete(key);
+      else selected.add(key);
+      applyFilter();
+    });
+  });
+  reset.addEventListener('click', () => {
+    selected.clear();
+    applyFilter();
+  });
+  applyFilter();
 
-  onSpec = (e) => {
-    if (this.capEl) this.capEl.textContent = e.currentTarget.getAttribute('data-note') || '';
+  const caption = document.getElementById('specimen-caption');
+  const showSpecimen = (specimen) => {
+    caption.textContent = specimen.dataset.note || '';
   };
-
-  applyFilter() {
-    const sel = Object.keys(this.state.selected);
-    // chips visual state
-    if (this.chipbar) {
-      this.chipbar.querySelectorAll('button[data-key]').forEach((b) => {
-        const on = !!this.state.selected[b.getAttribute('data-key')];
-        b.style.background = on ? '#2b2a26' : '#f6f2e8';
-        b.style.color = on ? '#f6f2e8' : '#2b2a26';
-      });
-    }
-    // rows
-    if (this.tbody) {
-      const rows = this.tbody.querySelectorAll('tr[data-tags]');
-      let survivors = 0;
-      rows.forEach((r) => {
-        const tags = (r.getAttribute('data-tags') || '').split(' ').filter(Boolean);
-        const ok = sel.every((k) => tags.includes(k));
-        r.style.opacity = ok ? '1' : '0.24';
-        r.style.filter = ok ? 'none' : 'grayscale(1)';
-        if (ok) survivors++;
-      });
-      if (this.countEl) {
-        this.countEl.textContent = sel.length
-          ? survivors + ' of ' + rows.length + ' languages survive these constraints'
-          : '';
+  document.querySelectorAll('.specimen').forEach((specimen) => {
+    specimen.setAttribute('tabindex', '0');
+    specimen.setAttribute('role', 'button');
+    specimen.setAttribute('aria-label', specimen.dataset.note || 'Programming language specimen');
+    specimen.setAttribute('aria-describedby', 'specimen-caption');
+    specimen.addEventListener('mouseenter', () => showSpecimen(specimen));
+    specimen.addEventListener('focus', () => showSpecimen(specimen));
+    specimen.addEventListener('click', () => showSpecimen(specimen));
+    specimen.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        showSpecimen(specimen);
       }
-    }
-  }
+    });
+  });
 
-  componentDidMount() { this.applyFilter(); }
-  componentDidUpdate() { this.applyFilter(); }
-
-  renderVals() {
-    return {
-      onChip: this.onChip,
-      onReset: this.onReset,
-      onSpec: this.onSpec,
-      chipbarRef: (el) => { this.chipbar = el; },
-      tbodyRef: (el) => { this.tbody = el; },
-      countRef: (el) => { this.countEl = el; },
-      capRef: (el) => { this.capEl = el; },
-      ancestryRef: (el) => { this.ancestryEl = el; },
-    };
-  }
-}
+  document.querySelectorAll('table').forEach((table) => {
+    const headers = [...table.querySelectorAll('thead th')].map((header) => header.textContent.trim());
+    if (!headers.length) return;
+    table.classList.add('stack-table');
+    table.parentElement.classList.add('table-scroll');
+    table.querySelectorAll('tbody tr').forEach((row) => {
+      [...row.children].forEach((cell, index) => {
+        cell.dataset.label = headers[index] || `Column ${index + 1}`;
+      });
+    });
+  });
+})();
 </script>
 </body>
 </html>
