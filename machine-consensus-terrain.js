@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Line2 } from 'three/addons/lines/Line2.js';
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const CONFIG = {
   bounds: 10.7,
@@ -225,10 +228,15 @@ export function createTerrain(container, opts = {}) {
     particle.visible = false; particle.renderOrder = 10; scene.add(particle);
     glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xf6a541, transparent: true, opacity: .75, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending }));
     glow.scale.set(1.8, 1.8, 1); glow.visible = false; glow.renderOrder = 9; scene.add(glow);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxTrail * 3), 3));
-    trail = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0xffb54f, transparent: true, opacity: reducedMotion ? .31 : .62, blending: THREE.AdditiveBlending }));
-    trail.visible = false; scene.add(trail);
+    // Fat line: LineBasicMaterial.linewidth is ignored by WebGL, so a real screen-space
+    // width needs Line2. Normal blending + a cream head keep it visible on the bright amber basin.
+    const geometry = new LineGeometry();
+    geometry.setPositions([0, 0, 0, 0, 0, 0]); geometry.setColors([0, 0, 0, 0, 0, 0]);
+    trail = new Line2(geometry, new LineMaterial({
+      linewidth: reducedMotion ? 3.4 : 5.2, vertexColors: true, transparent: true,
+      opacity: reducedMotion ? .55 : .92, depthTest: false, alphaToCoverage: false
+    }));
+    trail.visible = false; trail.renderOrder = 8; scene.add(trail);
   }
 
   function setTemperature(value) {
@@ -261,7 +269,7 @@ export function createTerrain(container, opts = {}) {
     dropStart.set(particleXZ.x, heightAt(particleXZ.x, particleXZ.y) + 6.8, particleXZ.y);
     particle.position.copy(dropStart); glow.position.copy(dropStart);
     particle.visible = glow.visible = trail.visible = true;
-    particle.scale.setScalar(.01); glow.material.opacity = 0; trailPoints = [];
+    particle.scale.setScalar(.01); glow.material.opacity = 0; glow.scale.set(1.8, 1.8, 1); trailPoints = [];
     setPhase('dropping', reroll ? 'Re-rolling the same prompt…' : 'Dropping prompt onto the terrain…');
   }
 
@@ -344,13 +352,14 @@ export function createTerrain(container, opts = {}) {
 
   function addTrailPoint(pos) {
     trailPoints.unshift(pos.clone()); if (trailPoints.length > maxTrail) trailPoints.pop();
-    const positions = trail.geometry.attributes.position.array;
-    for (let i = 0; i < maxTrail; i++) {
-      const point = trailPoints[Math.min(i, trailPoints.length - 1)] || pos;
-      positions[i * 3] = point.x; positions[i * 3 + 1] = point.y; positions[i * 3 + 2] = point.z;
+    const n = trailPoints.length; if (n < 2) return;
+    const positions = new Float32Array(n * 3), colors = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const p = trailPoints[i]; positions[i * 3] = p.x; positions[i * 3 + 1] = p.y; positions[i * 3 + 2] = p.z;
+      const t = 1 - i / (n - 1), b = .64 + .36 * t; // head (ball) cream & bright, tail stays a warm amber
+      colors[i * 3] = b; colors[i * 3 + 1] = b * (.6 + .35 * t); colors[i * 3 + 2] = b * (.28 + .56 * t);
     }
-    trail.geometry.attributes.position.needsUpdate = true;
-    trail.geometry.setDrawRange(0, trailPoints.length);
+    trail.geometry.setPositions(positions); trail.geometry.setColors(colors);
   }
 
   function nearestBasin() {
@@ -366,6 +375,7 @@ export function createTerrain(container, opts = {}) {
     const nearest = nearestBasin();
     setPhase('settled', `Settled in “${nearest.basin.label}”`);
     velocity.set(0, 0);
+    glow.scale.set(2.9, 2.9, 1); glow.material.opacity = .92; // pool where the answer collects
     if (els.callout && els.calloutLabel) {
       els.calloutLabel.textContent = nearest.basin.label; els.callout.hidden = false;
       requestAnimationFrame(() => els.callout.classList.add('visible'));
@@ -438,6 +448,7 @@ export function createTerrain(container, opts = {}) {
     camera.aspect = width / height; camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(devicePixelRatio, width < 760 ? 1.35 : 1.7));
     renderer.setSize(width, height, false);
+    trail?.material.resolution.set(width, height);
   }
 
   function frameBody(dt) {
@@ -507,6 +518,11 @@ export function createTerrain(container, opts = {}) {
     pause,
     resume,
     step,
+    __inspect: () => ({
+      visible: trail.visible, points: trailPoints.length,
+      linewidth: trail.material.linewidth, res: [trail.material.resolution.x, trail.material.resolution.y],
+      instanceCount: trail.geometry.instanceCount, glowScale: glow.scale.x, glowOpacity: +glow.material.opacity.toFixed(2)
+    }),
     on,
     destroy() {
       pause(); resizeObserver?.disconnect(); renderer?.dispose(); listeners.clear();
