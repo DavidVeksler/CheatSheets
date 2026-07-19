@@ -69,6 +69,10 @@ export function createTerrain(container, opts = {}) {
   const componentRoot = opts.componentRoot || container.closest('.terrain-engine') || container;
   const query = new URLSearchParams(location.search);
   const reducedMotion = opts.reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // On phones the canvas fills the hero, so orbit-drag would trap vertical scroll. Keep the
+  // terrain animating but hand touch back to the page (tap the prompt dock to drive it).
+  const mobile = opts.mobile ?? matchMedia('(max-width: 759px)').matches;
+  const allowControls = !mobile;
   const seedValue = opts.seed || query.get('seed') || 'machine-consensus-story';
   const seed = [...seedValue].reduce((acc, ch) => Math.imul(acc ^ ch.charCodeAt(0), 16777619), 2166136261) >>> 0;
   const listeners = new Map();
@@ -346,7 +350,7 @@ export function createTerrain(container, opts = {}) {
 
   function endRefusal() {
     refusalActive = false; slammed = false; slamArmed = false; alert = 0;
-    controls.enabled = true; idleTime = 0;
+    controls.enabled = allowControls; idleTime = 0;
     if (camHome) camTween = { fromP: camera.position.clone(), fromT: controls.target.clone(), toP: camHome.pos.clone(), toT: camHome.target.clone(), elapsed: 0, duration: 1.15 };
   }
 
@@ -496,7 +500,7 @@ export function createTerrain(container, opts = {}) {
     if (nearest.basin.label === 'Refused') label = 'Refused — post-training walls off this region';
     else if (nearest.basin.label === 'Raw-corpus basin') label = 'No safeguard here — the base model would answer';
     setPhase('settled', label);
-    if (refusalActive) controls.enabled = true; // let the viewer orbit the walled-off result
+    if (refusalActive) controls.enabled = allowControls; // let the viewer orbit the walled-off result
     velocity.set(0, 0);
     glow.scale.set(2.6, 2.6, 1); glow.material.opacity = .9;
     const py = heightAt(particleXZ.x, particleXZ.y) - 2.4 + .06; // pool lies on the basin floor
@@ -687,6 +691,8 @@ export function createTerrain(container, opts = {}) {
     controls.minPolarAngle = Math.PI * .16; controls.maxPolarAngle = Math.PI * .46;
     controls.minDistance = 13; controls.maxDistance = 28; controls.target.set(1.1, .2, 0);
     controls.autoRotate = false; controls.autoRotateSpeed = .28;
+    controls.enabled = allowControls;
+    if (mobile) renderer.domElement.style.touchAction = 'pan-y'; // let vertical swipes scroll the page
     camHome = { pos: camera.position.clone(), target: controls.target.clone() };
     controls.addEventListener('start', () => { idleTime = 0; controls.autoRotate = false; });
     buildTerrain(); buildParticle(); bindUI(); createDebugPanel(); resize();

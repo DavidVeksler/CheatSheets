@@ -357,9 +357,10 @@
   body { font-size: 16px; }
   .site-header { padding: 0 16px; }
   .site-nav a:not(:last-child) { display: none; }
-  .terrain-engine { display: none; }
-  .scroll-content { margin-top: 0; }
-  .hero { min-height: 100svh; padding: 104px 18px 330px; background: linear-gradient(90deg, rgba(5,7,8,.92), rgba(5,7,8,.28)), url('images/machine-consensus-terrain-base.png') 58% 50% / cover no-repeat; }
+  /* Live interactive terrain now renders in the hero on mobile. When JS falls back or is off,
+     the states-layer rules (body.static-mode / .no-js) still hide the canvas and restore the
+     static hero image, so this only affects the working-WebGL path. */
+  .hero { min-height: 100svh; padding: 104px 18px 330px; background: linear-gradient(180deg, rgba(6,9,11,.9), rgba(6,9,11,.42) 40%, rgba(6,9,11,.12) 64%, transparent 80%); }
   .hero-copy { width: 100%; }
   .hero h1 { font-size: clamp(3.2rem, 16vw, 5.4rem); }
   .hero-dek { font-size: 1rem; }
@@ -704,7 +705,7 @@ function track(eventName, parameters = {}) {
 }
 
 function scheduleAutoDrop(api) {
-  if (reducedMotion || mobile || api.getMode() !== 'webgl') return;
+  if (reducedMotion || api.getMode() !== 'webgl') return;
   setTimeout(() => {
     if (autoDropped || userInteracted) return;
     autoDropped = true;
@@ -723,13 +724,14 @@ function scheduleAutoDrop(api) {
 async function ensureTerrain() {
   if (terrainApi) return terrainApi;
   if (initPromise) return initPromise;
-  if (mobile || !webgl2Available()) { activateStaticMode(mobile ? 'mobile' : 'fallback'); return null; }
+  if (!webgl2Available()) { activateStaticMode('fallback'); return null; }
   initPromise = import('./machine-consensus-terrain.js').then(({ createTerrain }) => {
     terrainApi = createTerrain(sceneContainer, {
       root,
       componentRoot: engineRoot,
       seed: query.get('seed') || 'machine-consensus-story',
-      reducedMotion
+      reducedMotion,
+      mobile
     });
     window.__terrainApi = terrainApi;
     terrainApi.on('settled', ({ basinLabel, basinIndex }) => track('terrain_settled', { basin_label: basinLabel, basin_index: basinIndex }));
@@ -775,7 +777,7 @@ document.querySelectorAll('.prompt-button').forEach(button => {
     userInteracted = true;
     const key = button.dataset.prompt;
     track('terrain_prompt_click', { prompt_key: key, terrain_mode: root.dataset.terrainMode });
-    if (root.dataset.terrainMode === 'fallback' || mobile) { setStaticPrompt(key); return; }
+    if (root.dataset.terrainMode === 'fallback') { setStaticPrompt(key); return; }
     if (!terrainApi) {
       const api = await ensureTerrain();
       if (!api || api.getMode() === 'fallback') setStaticPrompt(key);
@@ -788,13 +790,13 @@ document.querySelector('#temperature').addEventListener('input', event => {
   userInteracted = true;
   document.querySelector('#temperature-value').value = Number(event.target.value).toFixed(2);
   event.target.style.setProperty('--fill', `${Number(event.target.value) / 1.5 * 100}%`);
-  if (!terrainApi && !mobile) ensureTerrain().then(api => api?.setTemperature(event.target.value));
+  if (!terrainApi) ensureTerrain().then(api => api?.setTemperature(event.target.value));
 });
 
 document.querySelector('#rlhf').addEventListener('change', event => {
   userInteracted = true;
   track('terrain_morph_control', { enabled: event.target.checked });
-  if (!terrainApi && !mobile) ensureTerrain().then(api => api?.setMorph(event.target.checked ? 1 : 0));
+  if (!terrainApi) ensureTerrain().then(api => api?.setMorph(event.target.checked ? 1 : 0));
 });
 
 document.querySelectorAll('.motion-next').forEach(button => button.addEventListener('click', () => runAction(button.dataset.run)));
@@ -808,7 +810,7 @@ if (!reducedMotion && !mobile) {
   document.querySelectorAll('.step').forEach(step => stepObserver.observe(step));
 }
 
-if (mobile || !webgl2Available()) activateStaticMode(mobile ? 'mobile' : 'fallback');
+if (!webgl2Available()) activateStaticMode('fallback');
 else new IntersectionObserver(([entry], observer) => {
   if (entry.intersectionRatio >= .5) { ensureTerrain(); observer.disconnect(); }
 }, { threshold: [.5] }).observe(hero);
