@@ -566,10 +566,12 @@ export function createTerrain(container, opts = {}) {
     const calloutWidth = Math.min(450, Math.max(320, rect.width * .36));
     const calloutHeight = Math.max(120, els.callout.getBoundingClientRect().height);
     const x = THREE.MathUtils.clamp((projected.x * .5 + .5) * rect.width, 24, rect.width - calloutWidth);
-    const dockTop = dockRect ? dockRect.top - rect.top : rect.height;
+    const dockOverlapsScene = dockRect && dockRect.bottom > rect.top && dockRect.top < rect.bottom;
+    const dockTop = dockOverlapsScene ? dockRect.top - rect.top : rect.height;
     const minY = 68;
     const maxY = Math.max(minY, Math.min(rect.height - calloutHeight - 24, dockTop - calloutHeight - 8));
-    const y = THREE.MathUtils.clamp((-projected.y * .5 + .5) * rect.height - 12, minY, maxY);
+    const particleY = (-projected.y * .5 + .5) * rect.height;
+    const y = THREE.MathUtils.clamp(particleY - calloutHeight / 2, minY, maxY);
     els.callout.style.left = `${x}px`; els.callout.style.top = `${y}px`;
   }
 
