@@ -16,7 +16,8 @@ This file owns the quality bar. The other Markdown docs divide the workflows —
 |---|---|
 | [`docs/content.md`](docs/content.md) | **Quick path: add / edit / publish a cheatsheet, front to back** — a thin index that routes into this file's content workflow, the local build/QA steps, and the SEO gate. |
 | [`docs/marketing.md`](docs/marketing.md) | **Quick path: SEO, promotion, measurement** — the SEO gate, discovery files, Search Console / Cloudflare measurement, promotion channels, and cross-linking pointers. |
-| [`CLAUDE.md`](CLAUDE.md) | Entry point → this file; also holds the **precomputed SRI hash table** for pinned CDN assets. |
+| [`docs/seo-progress.md`](docs/seo-progress.md) | **KPI / traffic history** — append-only measurement log (GSC + Cloudflare deltas, newest on top). The durable SEO working doc is `TODO/seo-planning.md`; this is the dated results log. |
+| [`CLAUDE.md`](CLAUDE.md) | Pointer only (`@AGENTS.md`) so Claude Code inlines this file. The SRI hash table it used to hold now lives under **Tech Baseline → Cached CDN dependencies** below. |
 | [`TODO/README.md`](TODO/README.md) | **Building a cheatsheet from a spec** in `TODO/` — binding implementation rules (numbers-are-anchors, outline-first, definition of done, design execution). |
 | `TODO/<topic>.md` | One spec per planned cheatsheet (content angle, sections, visual identity). Deleted after the build ships. |
 | [`TODO/SPEC-AUDIT.md`](TODO/SPEC-AUDIT.md) | **Writing or reviewing a spec** — spec-completeness criteria (search targeting, reader outcome, staleness register, etc.). |
@@ -104,6 +105,18 @@ Use native platform features over Bootstrap's JS wherever they're strictly bette
 - **Typography: `text-wrap: balance`** on headings, `text-wrap: pretty` on body copy.
 - **Motion: gate all animations and any View Transitions behind `@media (prefers-reduced-motion: no-preference)`.**
 - **Persistence:** `localStorage` for checkbox/progress state (existing pattern) — feature-detect and fail soft.
+
+### Cached CDN dependencies (SRI hashes)
+
+Precomputed `integrity` values for the pinned CDN assets, so they don't have to be recalculated each time. Computed from the real CDN bytes with `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`. **If you bump a version, recompute the hash for that file and update this table.**
+
+| Asset | Version | URL | integrity (sha384-…) |
+|---|---|---|---|
+| Bootstrap CSS | 5.3.8 | `https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css` | `sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB` |
+| Bootstrap JS (bundle) | 5.3.8 | `https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js` | `sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI` |
+| Bootstrap Icons CSS | 1.13.1 | `https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css` | `sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk` |
+
+All `<link>`/`<script>` CDN tags must carry `integrity="sha384-…" crossorigin="anonymous"`; load JS with `defer`. (Hashes last computed 2026-06-24.)
 
 ## Required Metadata Standards
 

@@ -78,7 +78,7 @@ grep -c "'$FILE'" index.php                                # expect 1 ($category
 grep -oE '<script[^>]*src=[^>]*>' "$FILE" | grep -v defer  # expect empty (all deferred)
 ```
 
-SRI note: use the precomputed hashes in `CLAUDE.md` for Bootstrap 5.3.8 / Icons 1.13.1.
+SRI note: use the precomputed hashes in `AGENTS.md` (Tech Baseline → Cached CDN dependencies) for Bootstrap 5.3.8 / Icons 1.13.1.
 For any *other* CDN asset, compute from real bytes
 (`curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`) — never recall a hash.
 
@@ -128,7 +128,7 @@ Serve locally (`python3 serve.py` or `nohup python3 -m http.server 8765 &`) and 
   Set `datePublished` from `git log --diff-filter=A --format=%cs -- "$FILE"`.
 - Missing `Last verified` → add the footer line **only after actually reviewing the page this
   run** (which an audit does). Match the muted footer style.
-- Bootstrap 5.3.2/5.3.3 → bump to 5.3.8 + Icons 1.13.1 with the CLAUDE.md SRI hashes; add
+- Bootstrap 5.3.2/5.3.3 → bump to 5.3.8 + Icons 1.13.1 with the AGENTS.md SRI hashes; add
   `defer`. Then run the browser check — old pages occasionally use removed/renamed behaviors.
 - Missing SRI on existing CDN tags → add computed hashes + `crossorigin="anonymous"`.
 - Broken internal links → remove the link or retarget to an existing page (do NOT create the

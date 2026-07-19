@@ -12,7 +12,7 @@ Device Cheat Sheet Generator
 *   **Images:** Assume images will be generated later. Use placeholders or CSS-based UI elements to represent hardware.
 
 ## 2. Project Architecture Compliance (Crucial)
-You must adhere to the metadata standards defined in the project's `CLAUDE.md`:
+You must adhere to the metadata standards defined in the project's `AGENTS.md`:
 1.  **SEO:** `<title>`, `<meta name="description">` (150-200 chars), `<meta name="keywords">`, `<link rel="canonical">`.
 2.  **Social:** Open Graph (`og:title`, `og:image`) and Twitter Card tags.
 3.  **Structured Data:** Valid JSON-LD `TechArticle` schema in the `<head>`.
