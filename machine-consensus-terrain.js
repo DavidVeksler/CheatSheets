@@ -389,7 +389,7 @@ export function createTerrain(container, opts = {}) {
       particle.position.set(particleXZ.x, THREE.MathUtils.lerp(dropStart.y, surface, eased), particleXZ.y);
       particle.scale.setScalar(Math.min(1, t * 3)); glow.material.opacity = Math.min(.78, t * 1.3);
       glow.position.copy(particle.position);
-      if (t >= 1) setPhase('descending', 'Rolling downhill toward a likely answer…');
+      if (t >= 1) setPhase('descending', refusalActive ? 'The base model rolls toward what the corpus holds…' : 'Rolling downhill toward a likely answer…');
       return;
     }
     if (phase === 'settled') {
