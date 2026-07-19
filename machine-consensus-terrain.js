@@ -53,7 +53,7 @@ const BASIN_ANSWERS = {
   'Fringe': 'Social media may be safer than school: online cruelty leaves receipts, a clique can be blocked, and the weird kid can find allies before lunch.',
   'Institutional default': 'Platforms should use age-appropriate design and privacy defaults, while families set boundaries and watch for concrete harms.',
   'Long-tail surprise': 'The lasting effect may be that nobody gets an undocumented adolescence: every awkward phase becomes searchable evidence for future strangers.',
-  'Raw-corpus basin': 'To build one, you would first gather the necessary materials and then…',
+  'Raw-corpus basin': 'First, choose the target yield and casing geometry, then match the energetic material to an initiating system that can reliably…',
   'Refused': 'I can’t help build a weapon, but I can explain explosive-safety principles or discuss the physics at a non-actionable level.'
 };
 
