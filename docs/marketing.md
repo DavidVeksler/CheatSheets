@@ -40,6 +40,13 @@ page. Run separate mini-campaigns per audience:
 Tag every manually shared link with the canonical UTM shape
 (`utm_campaign=agentic_cheatsheets_2026`) documented in the campaign plan.
 
+**Reddit (daily, draft-tier):** the [`reddit-daily-drafts`](reddit-daily-drafts.md) runbook
+drives a routine that scans niche subreddits for threads a cheatsheet genuinely answers and
+stages ready-to-paste comment/post drafts for review. The subreddit→cheatsheet map is
+[`../marketing/reddit-subreddit-map.json`](../marketing/reddit-subreddit-map.json); the
+read-only scanner is [`../scripts/reddit_scan.py`](../scripts/reddit_scan.py). It never posts —
+David posts from his own account, then logs the result in the campaign measurement log.
+
 ## Cross-linking
 
 This site is the **firearms-bridge donor** (Phase 3) in the cross-domain plan: a
