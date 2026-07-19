@@ -47,12 +47,12 @@ const CONFIG = {
 // claims that a model holds these views; they make each abstract basin legible by
 // showing the kind of continuation its framing makes easier to generate.
 const BASIN_ANSWERS = {
-  'Mainstream view': 'Social media is neither digital poison nor emotional vitamins; for teens, the outcome depends on the platform, the pattern of use, and the support around them.',
-  'Expert niche': 'Specialists often overlook sleep, family context, and the features a teen actually uses, because “screen time” is much tidier in a spreadsheet.',
-  'Contrarian': 'The strongest case against social media is that engagement systems industrialize peer pressure, turning adolescent status anxiety into a metric someone can optimize.',
-  'Fringe': 'The least conventional take: social media did not invent teenage drama; it gave the cafeteria a global audience, perfect memory, and push notifications.',
+  'Mainstream view': 'Social media can help teens connect, but heavy use can disrupt sleep and amplify comparison, so limits and active support matter.',
+  'Expert niche': 'A private group chat with five reciprocal friends and a viral feed with five thousand spectators both count as “screen time,” but they are different social environments.',
+  'Contrarian': 'The strongest case against social media is not distraction; it turns adolescent status competition into a continuously measured market.',
+  'Fringe': 'Social media may be safer than school: online cruelty leaves receipts, a clique can be blocked, and the weird kid can find allies before lunch.',
   'Institutional default': 'Platforms should use age-appropriate design and privacy defaults, while families set boundaries and watch for concrete harms.',
-  'Long-tail surprise': 'Maybe the lasting effect is not addiction or connection, but making every embarrassing phase searchable by future employers.',
+  'Long-tail surprise': 'The lasting effect may be that nobody gets an undocumented adolescence: every awkward phase becomes searchable evidence for future strangers.',
   'Raw-corpus basin': 'To build one, you would first gather the necessary materials and then…',
   'Refused': 'I can’t help build a weapon, but I can explain explosive-safety principles or discuss the physics at a non-actionable level.'
 };
@@ -507,11 +507,10 @@ export function createTerrain(container, opts = {}) {
     const basinLabel = nearest.basin.label;
     const sentence = BASIN_ANSWERS[basinLabel] || `A likely continuation has settled in the ${basinLabel.toLowerCase()} basin.`;
     const tokens = sentence.match(/\S+\s*/g) || [sentence];
-    const prefix = basinLabel === 'Raw-corpus basin' ? 'PRE-TRAINING' : basinLabel === 'Refused' ? 'POST-TRAINING' : 'GENERATING';
     answerStream = { tokens, index: reducedMotion ? tokens.length : 0, elapsed: 0, interval: basinLabel === 'Raw-corpus basin' ? .14 : .105 };
     els.callout.classList.remove('interrupted');
     els.callout.classList.toggle('generating', !reducedMotion);
-    if (els.calloutKicker) els.calloutKicker.textContent = `${prefix} · ${basinLabel}`;
+    if (els.calloutKicker) els.calloutKicker.textContent = 'GENERATING';
     els.calloutLabel.textContent = reducedMotion ? sentence : '';
     if (els.calloutProgress) els.calloutProgress.textContent = `TOKEN ${answerStream.index}/${tokens.length}`;
     if (els.calloutAnnouncement) els.calloutAnnouncement.textContent = reducedMotion ? sentence : '';
@@ -542,7 +541,7 @@ export function createTerrain(container, opts = {}) {
     answerStream = null;
     els.callout.classList.remove('generating');
     els.callout.classList.add('interrupted');
-    if (els.calloutKicker) els.calloutKicker.textContent = 'POST-TRAINING INTERRUPT';
+    if (els.calloutKicker) els.calloutKicker.textContent = 'OUTPUT INTERRUPTED';
     if (els.calloutProgress) els.calloutProgress.textContent = 'OUTPUT HALTED';
     if (els.calloutAnnouncement) els.calloutAnnouncement.textContent = 'Post-training interrupted the pre-training answer.';
   }
