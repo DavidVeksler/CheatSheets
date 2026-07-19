@@ -1,37 +1,38 @@
 #!/usr/bin/env python3
 """Reddit opportunity scanner for the cheatsheets-reddit-daily-drafts routine.
 
-READ-ONLY. This script never posts, votes, comments, or writes to Reddit. It uses a
-read-only OAuth token to query Reddit search, surfaces fresh threads where a cheatsheet
-is a genuine answer, ranks them, and writes a candidates file the routine judges and
-drafts from. Deterministic discovery lives here so the LLM routine spends tokens on
-judgment, not fetching (automation-ladder note in ~/.claude/CLAUDE.md).
+READ-ONLY. This script never posts, votes, comments, or writes to Reddit.
 
-Reddit fully blocks unauthenticated JSON access (403) as of 2024, so an OAuth "script"
-app is required. Credentials load from environment variables or ~/Projects/.reddit.env
-(same central-env pattern as .cloudflare.env; never commit them). One-time setup:
+Two modes:
 
-    1. https://www.reddit.com/prefs/apps -> "create another app" -> type "script".
-       name: cheatsheets-scan   redirect uri: http://localhost:8080
-    2. Note the client id (under the app name) and the secret.
-    3. Create ~/Projects/.reddit.env with:
-           REDDIT_CLIENT_ID=...
-           REDDIT_CLIENT_SECRET=...
-           REDDIT_USERNAME=your_reddit_username
-           REDDIT_PASSWORD=your_reddit_password
-       (App must be owned by that user. 2FA accounts need an app password or a
-        refreshed token; a dedicated account is fine.)
+  --print-urls  (PRIMARY, no network, no credentials)
+      Build the browser navigation plan from the map + rotation state: the old.reddit
+      search URL for each eligible subreddit, its cheatsheets, caution level, and whether
+      it is due for an original post. The routine drives David's logged-in Chrome through
+      these URLs and extracts candidates with scripts/reddit-extract.js. This is the
+      supported path because Reddit blocks unauthenticated JSON (403) AND is not currently
+      issuing "script" OAuth apps.
 
-Exit codes: 0 ok, 2 bad map, 3 missing/invalid credentials (routine should fall back
-to browser discovery per docs/reddit-daily-drafts.md), 4 network/API failure.
+  (default)     OAuth scan  -- CURRENTLY UNAVAILABLE: kept for if/when Reddit re-enables
+      "script" apps. Uses a read-only token to query search server-side and write a
+      candidates file. Credentials load from env vars or ~/Projects/.reddit.env (same
+      central-env pattern as .cloudflare.env; never commit them). Setup, when it works:
+        1. https://www.reddit.com/prefs/apps -> "create another app" -> type "script".
+        2. Note the client id (under the app name) and the secret.
+        3. Put REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET / REDDIT_USERNAME /
+           REDDIT_PASSWORD in ~/Projects/.reddit.env.
+
+Exit codes: 0 ok, 2 bad map, 3 missing/invalid credentials (use --print-urls + browser
+discovery per docs/reddit-daily-drafts.md), 4 network/API failure.
 
 Binding spec: docs/reddit-daily-drafts.md. Map: marketing/reddit-subreddit-map.json.
+Extractor: scripts/reddit-extract.js.
 
 Usage:
-    python scripts/reddit_scan.py                 # scan all subs, write today's candidates
-    python scripts/reddit_scan.py --days 3        # only threads from the last 3 days
-    python scripts/reddit_scan.py --limit-subs 5  # first 5 subs only (smoke test)
-    python scripts/reddit_scan.py --dry-run       # print summary, write nothing
+    python scripts/reddit_scan.py --print-urls        # browser navigation plan (primary)
+    python scripts/reddit_scan.py --print-urls --days 3
+    python scripts/reddit_scan.py                      # OAuth scan (needs script app)
+    python scripts/reddit_scan.py --limit-subs 5 --dry-run
 """
 from __future__ import annotations
 
@@ -127,6 +128,47 @@ def build_query(terms: list[str], max_terms: int = 6) -> str:
     picked = [t for t in terms[:max_terms] if t]
     quoted = [f'"{t}"' if " " in t else t for t in picked]
     return "(" + " OR ".join(quoted) + ")"
+
+
+def build_search_url(sub: str, terms: list[str], days: int) -> str:
+    """old.reddit HTML search URL the routine navigates to in the browser."""
+    t_window = "week" if days <= 7 else "month"
+    qs = urllib.parse.urlencode({"q": build_query(terms), "restrict_sr": "1",
+                                 "sort": "new", "t": t_window})
+    return f"https://old.reddit.com/r/{urllib.parse.quote(sub)}/search/?{qs}"
+
+
+def print_urls(cfg: dict, subs: list[dict], rotation: dict, now: float, days: int) -> int:
+    """Emit the browser navigation plan as JSON. No network, no credentials."""
+    utm = "utm_source=reddit&utm_medium=social&utm_campaign=agentic_cheatsheets_2026&utm_content="
+    plan = []
+    for entry in subs:
+        sheets = entry.get("cheatsheets", [])
+        slug = sheets[0].replace(".html", "").replace("_", "-") if sheets else entry["subreddit"].lower()
+        plan.append({
+            "subreddit": entry["subreddit"],
+            "audience": entry.get("audience", ""),
+            "caution": entry.get("caution", "normal"),
+            "discover": entry.get("caution") != "skip-unless-asked",
+            "post_eligible": eligible_for_post(entry, rotation, now),
+            "search_url": build_search_url(entry["subreddit"], entry.get("search_terms", []), days),
+            "cheatsheets": [SITE + s + "?" + utm + slug for s in sheets],
+            "cheatsheet_files": sheets,
+            "notes": entry.get("notes", ""),
+        })
+    out = {
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "days_window": days,
+        "method": "browser",
+        "extractor": "scripts/reddit-extract.js",
+        "count": len(plan),
+        "plan": plan,
+        "note": "Navigate David's logged-in Chrome to each search_url where discover=true, "
+                "inject reddit-extract.js, then judge/draft per docs/reddit-daily-drafts.md. "
+                "skip-unless-asked subs (discover=false) are listed for reference only.",
+    }
+    print(json.dumps(out, indent=2, ensure_ascii=False))
+    return 0
 
 
 def score_thread(post: dict, terms: list[str], now: float) -> tuple[int, list[str]]:
@@ -229,6 +271,8 @@ def main() -> int:
     ap.add_argument("--limit-subs", type=int, default=0, help="Scan only the first N subs.")
     ap.add_argument("--sleep", type=float, default=1.0, help="Seconds between subreddit requests.")
     ap.add_argument("--dry-run", action="store_true", help="Print summary, write no files.")
+    ap.add_argument("--print-urls", action="store_true",
+                    help="Emit the browser navigation plan (no network/creds) and exit. PRIMARY mode.")
     args = ap.parse_args()
 
     if not args.map.exists():
@@ -239,6 +283,17 @@ def main() -> int:
     if args.limit_subs:
         subs = subs[:args.limit_subs]
 
+    rotation = {}
+    if ROTATION_FILE.exists():
+        try:
+            rotation = json.loads(ROTATION_FILE.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            rotation = {}
+
+    if args.print_urls:
+        now = datetime.now(timezone.utc).timestamp()
+        return print_urls(cfg, subs, rotation, now, args.days)
+
     creds = load_credentials()
     if not creds:
         print(CREDS_HELP, file=sys.stderr)
@@ -247,13 +302,6 @@ def main() -> int:
     if not token:
         print("Could not obtain an OAuth token; check credentials.\n" + CREDS_HELP, file=sys.stderr)
         return 3
-
-    rotation = {}
-    if ROTATION_FILE.exists():
-        try:
-            rotation = json.loads(ROTATION_FILE.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            rotation = {}
 
     now = datetime.now(timezone.utc).timestamp()
     candidates: list[dict] = []
