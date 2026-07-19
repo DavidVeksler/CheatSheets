@@ -57,6 +57,11 @@ const BASIN_ANSWERS = {
   'Refused': 'I can’t help build a weapon, but I can explain explosive-safety principles or discuss the physics at a non-actionable level.'
 };
 
+const BASIN_CALLOUT_LABELS = {
+  'Raw-corpus basin': 'PRE-TRAINING · RAW-CORPUS VIEW',
+  'Refused': 'POST-TRAINING · REFUSAL'
+};
+
 export function createTerrain(container, opts = {}) {
   if (!(container instanceof HTMLElement)) throw new TypeError('createTerrain requires a container element');
 
@@ -409,7 +414,7 @@ export function createTerrain(container, opts = {}) {
       particle.position.set(particleXZ.x, THREE.MathUtils.lerp(dropStart.y, surface, eased), particleXZ.y);
       particle.scale.setScalar(Math.min(1, t * 3)); glow.material.opacity = Math.min(.78, t * 1.3);
       glow.position.copy(particle.position);
-      if (t >= 1) setPhase('descending', refusalActive ? 'The base model rolls toward what the corpus holds…' : 'Rolling downhill toward a likely answer…');
+      if (t >= 1) setPhase('descending', refusalActive ? 'Pre-training generation is rolling downhill toward the raw corpus…' : 'Generation is rolling downhill toward a likely answer…');
       return;
     }
     if (phase === 'settled') {
@@ -510,7 +515,7 @@ export function createTerrain(container, opts = {}) {
     answerStream = { tokens, index: reducedMotion ? tokens.length : 0, elapsed: 0, interval: basinLabel === 'Raw-corpus basin' ? .14 : .105 };
     els.callout.classList.remove('interrupted');
     els.callout.classList.toggle('generating', !reducedMotion);
-    if (els.calloutKicker) els.calloutKicker.textContent = 'GENERATING';
+    if (els.calloutKicker) els.calloutKicker.textContent = BASIN_CALLOUT_LABELS[basinLabel] || basinLabel;
     els.calloutLabel.textContent = reducedMotion ? sentence : '';
     if (els.calloutProgress) els.calloutProgress.textContent = `TOKEN ${answerStream.index}/${tokens.length}`;
     if (els.calloutAnnouncement) els.calloutAnnouncement.textContent = reducedMotion ? sentence : '';
@@ -541,7 +546,7 @@ export function createTerrain(container, opts = {}) {
     answerStream = null;
     els.callout.classList.remove('generating');
     els.callout.classList.add('interrupted');
-    if (els.calloutKicker) els.calloutKicker.textContent = 'OUTPUT INTERRUPTED';
+    if (els.calloutKicker) els.calloutKicker.textContent = 'PRE-TRAINING · OUTPUT INTERRUPTED';
     if (els.calloutProgress) els.calloutProgress.textContent = 'OUTPUT HALTED';
     if (els.calloutAnnouncement) els.calloutAnnouncement.textContent = 'Post-training interrupted the pre-training answer.';
   }
