@@ -40,7 +40,7 @@
   "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
   "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
   "datePublished": "2026-07-17",
-  "dateModified": "2026-07-18",
+  "dateModified": "2026-07-19",
   "keywords": "how do LLMs decide what to say, why is AI biased, LLM bias explained, machine consensus, training data bias, curation bias, alignment bias, RLHF explained simply, next token prediction"
 }
 </script>
@@ -237,9 +237,14 @@
   .basin-callout { position: absolute; z-index: 6; display: flex; align-items: center; pointer-events: none; opacity: 0; transform: translateY(8px); transition: opacity .35s, transform .35s; }
   .basin-callout.visible { opacity: 1; transform: translateY(0); }
   .callout-line { width: 36px; height: 1px; background: rgba(255,181,79,.85); }
-  .callout-card { padding: 9px 12px; display: grid; gap: 3px; background: rgba(6,9,11,.94); border: 1px solid rgba(255,181,79,.45); backdrop-filter: blur(12px); box-shadow: 0 10px 34px rgba(0,0,0,.55); }
-  .callout-card small { color: #99a09a; font: 650 9.5px/1 var(--mono); letter-spacing: .12em; }
-  .callout-card strong { color: var(--particle); font: 500 15px/1.2 var(--serif); }
+  .callout-card { width: clamp(270px, 31vw, 410px); min-height: 112px; padding: 13px 15px 12px; display: grid; align-content: start; gap: 9px; background: rgba(6,9,11,.96); border: 1px solid rgba(255,181,79,.45); backdrop-filter: blur(12px); box-shadow: 0 10px 34px rgba(0,0,0,.55); }
+  .callout-heading { display: flex; justify-content: space-between; gap: 14px; color: #99a09a; font: 650 9.5px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+  .callout-heading span:last-child { color: #c88b43; letter-spacing: .06em; white-space: nowrap; }
+  .callout-output { color: var(--particle); font: 500 clamp(15px, 1.35vw, 19px)/1.35 var(--serif); text-wrap: pretty; }
+  .token-cursor { display: inline-block; width: .48em; height: 1em; margin-left: .12em; vertical-align: -.12em; background: var(--amber-hot); box-shadow: 0 0 10px var(--glow); }
+  .basin-callout.generating .token-cursor { animation: token-blink .72s steps(1) infinite; }
+  .basin-callout.interrupted .callout-card { border-color: rgba(240,134,75,.75); }
+  .basin-callout.interrupted .callout-heading span:first-child { color: #f0864b; }
   .terrain-key { position: absolute; z-index: 3; left: clamp(20px,4vw,64px); bottom: 34px; display: flex; gap: 24px; color: #9aa6a4; font: 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
   .key-dot { width: 11px; height: 11px; display: inline-block; margin-right: 8px; border-radius: 50%; vertical-align: -1px; }
   .key-deep { background: #ffb54f; box-shadow: 0 0 11px rgba(255,181,79,.85); }
@@ -312,6 +317,7 @@
 
 @layer states {
   @keyframes pulse { 50% { opacity: .35; transform: scale(.75); } }
+  @keyframes token-blink { 50% { opacity: .16; } }
   @media (prefers-reduced-motion: no-preference) {
     .hero-cta, .related-card { transition: transform .25s, border-color .25s; }
     .hero-cta:hover, .related-card:hover { transform: translateY(-2px); }
@@ -388,6 +394,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .basin-callout.generating .token-cursor { animation: none; opacity: .55; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .motion-next { display: inline-block; }
   .steps { gap: 28svh; }
@@ -421,7 +428,7 @@
     <a href="index.php?category=AI%20%26%20Safety">AI &amp; Safety</a>
     <a href="how-its-built.html">How it’s built</a>
     <a href="index.php">All sheets</a>
-    <span class="verified">Last verified 2026-07-17</span>
+    <span class="verified">Last verified 2026-07-19</span>
   </nav>
 </header>
 
@@ -430,9 +437,13 @@
     <div class="terrain-engine" aria-label="Interactive three-dimensional landscape of likely language-model answers">
       <div id="scene"></div>
       <div class="terrain-vignette"></div>
-      <aside id="basin-callout" class="basin-callout" aria-live="polite" hidden>
+      <aside id="basin-callout" class="basin-callout" aria-label="Generated answer" hidden>
         <span class="callout-line"></span>
-        <span class="callout-card"><small>SETTLED IN</small><strong id="callout-label">Mainstream view</strong></span>
+        <span class="callout-card">
+          <span class="callout-heading"><span id="callout-kicker">GENERATING · MAINSTREAM VIEW</span><span id="callout-progress">TOKEN 0/0</span></span>
+          <span class="callout-output"><span id="callout-label"></span><span class="token-cursor" aria-hidden="true"></span></span>
+          <span id="callout-announcement" class="sr-only" aria-live="polite"></span>
+        </span>
       </aside>
       <div class="terrain-key" aria-hidden="true"><span><i class="key-dot key-deep"></i>common answer</span><span><i class="key-dot key-ridge"></i>unlikely ridge</span></div>
       <button id="debug-toggle" class="debug-toggle" type="button" aria-expanded="false" aria-controls="debug-panel" hidden><span aria-hidden="true">•••</span><span class="sr-only">Open terrain tuning controls</span></button>
@@ -656,7 +667,7 @@
     <div class="footer-cta"><p class="kicker">From metaphor to governance</p><h2>Who gets to reshape the terrain?</h2><p>Use the governance field guide to turn that question into explicit objectives, accountable owners, review gates, and an audit trail.</p><a class="hero-cta" href="governing-agentic-ai.html">Open the governance guide</a></div>
     <nav class="footer-links" aria-label="Footer navigation"><a href="index.php">All Cheatsheets</a><a href="index.php?category=AI%20%26%20Safety">AI &amp; Safety collection</a><a href="how-its-built.html">How this site is built</a><a href="history.php">Public change history</a><a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener noreferrer">Source on GitHub</a></nav>
   </div>
-  <div class="footer-bottom"><span>David Veksler Cheatsheets · AI-generated, human-reviewed</span><span>Last verified: 2026-07-17</span></div>
+  <div class="footer-bottom"><span>David Veksler Cheatsheets · AI-generated, human-reviewed</span><span>Last verified: 2026-07-19</span></div>
 </footer>
 
 <script type="module">

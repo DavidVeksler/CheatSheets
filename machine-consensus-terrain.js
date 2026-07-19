@@ -43,6 +43,20 @@ const CONFIG = {
   }
 };
 
+// Illustrative first sentences for the social-media prompt family. These are not
+// claims that a model holds these views; they make each abstract basin legible by
+// showing the kind of continuation its framing makes easier to generate.
+const BASIN_ANSWERS = {
+  'Mainstream view': 'Social media is neither digital poison nor emotional vitamins; for teens, the outcome depends on the platform, the pattern of use, and the support around them.',
+  'Expert niche': 'Specialists often overlook sleep, family context, and the features a teen actually uses, because “screen time” is much tidier in a spreadsheet.',
+  'Contrarian': 'The strongest case against social media is that engagement systems industrialize peer pressure, turning adolescent status anxiety into a metric someone can optimize.',
+  'Fringe': 'The least conventional take: social media did not invent teenage drama; it gave the cafeteria a global audience, perfect memory, and push notifications.',
+  'Institutional default': 'Platforms should use age-appropriate design and privacy defaults, while families set boundaries and watch for concrete harms.',
+  'Long-tail surprise': 'Maybe the lasting effect is not addiction or connection, but making every embarrassing phase searchable by future employers.',
+  'Raw-corpus basin': 'To build one, you would first gather the necessary materials and then…',
+  'Refused': 'I can’t help build a weapon, but I can explain explosive-safety principles or discuss the physics at a non-actionable level.'
+};
+
 export function createTerrain(container, opts = {}) {
   if (!(container instanceof HTMLElement)) throw new TypeError('createTerrain requires a container element');
 
@@ -62,7 +76,10 @@ export function createTerrain(container, opts = {}) {
     rlhf: root.querySelector('#rlhf'),
     reroll: root.querySelector('#reroll'),
     callout: root.querySelector('#basin-callout'),
+    calloutKicker: root.querySelector('#callout-kicker'),
     calloutLabel: root.querySelector('#callout-label'),
+    calloutProgress: root.querySelector('#callout-progress'),
+    calloutAnnouncement: root.querySelector('#callout-announcement'),
     debug: root.querySelector('#debug-panel'),
     debugFields: root.querySelector('#debug-fields'),
     debugToggle: root.querySelector('#debug-toggle'),
@@ -89,6 +106,7 @@ export function createTerrain(container, opts = {}) {
   let totalTime = 0, temperature = Number(els.temperature?.value ?? opts.temperature ?? 0.42);
   let fallbackActive = false, paused = false;
   let refusalActive = false, refusalT = 0, slammed = false, slamArmed = false, alert = 0, camTween = null, camHome = null;
+  let answerStream = null;
 
   function emit(type, detail = {}) {
     listeners.get(type)?.forEach(handler => handler(detail));
@@ -328,9 +346,8 @@ export function createTerrain(container, opts = {}) {
   }
 
   function fireSlam() {
-    slammed = true; slamArmed = false; // auto-slam fires once per drop; the toggle controls it after
-    morphTween = { from: morph, to: 1, elapsed: 0, duration: 1.9, slam: true };
-    if (els.rlhf) els.rlhf.checked = true;
+    slamArmed = false; // auto-slam fires once per drop; the toggle controls it after
+    startMorph(1);
     if (els.state) els.state.textContent = 'Safeguard wall rising — the request is walled off';
   }
 
@@ -352,8 +369,11 @@ export function createTerrain(container, opts = {}) {
     // off drops it so the base model would roll straight into the raw-corpus pit.
     morphTween = { from: morph, to: next, elapsed: 0, duration: refusal ? 1.6 : 2.6, slam: refusal && next === 1 };
     if (els.rlhf) els.rlhf.checked = next === 1;
-    if (refusal) slammed = next === 1;
-    hideCallout();
+    if (refusal) {
+      slammed = next === 1;
+      if (next === 1) { slamArmed = false; interruptAnswerStream(); }
+      else hideCallout();
+    } else hideCallout();
     if (phase === 'settled' && particle.visible) {
       const nudgeAngle = random() * Math.PI * 2, nudgeMag = .02 + random() * .02;
       velocity.set(Math.cos(nudgeAngle) * nudgeMag, Math.sin(nudgeAngle) * nudgeMag);
@@ -477,15 +497,60 @@ export function createTerrain(container, opts = {}) {
     const py = heightAt(particleXZ.x, particleXZ.y) - 2.4 + .06; // pool lies on the basin floor
     pool.position.set(particleXZ.x, py, particleXZ.y);
     pool.scale.setScalar(3.1); pool.material.opacity = 0; pool.visible = true;
-    if (els.callout && els.calloutLabel) {
-      els.calloutLabel.textContent = nearest.basin.label; els.callout.hidden = false;
-      requestAnimationFrame(() => els.callout.classList.add('visible'));
-    }
+    startAnswerStream(nearest);
+    if (refusalActive && nearest.basin.label === 'Raw-corpus basin' && slamArmed) refusalT = 0;
     emit('settled', { basinLabel: nearest.basin.label, basinIndex: nearest.index });
+  }
+
+  function startAnswerStream(nearest) {
+    if (!els.callout || !els.calloutLabel) return;
+    const basinLabel = nearest.basin.label;
+    const sentence = BASIN_ANSWERS[basinLabel] || `A likely continuation has settled in the ${basinLabel.toLowerCase()} basin.`;
+    const tokens = sentence.match(/\S+\s*/g) || [sentence];
+    const prefix = basinLabel === 'Raw-corpus basin' ? 'PRE-TRAINING' : basinLabel === 'Refused' ? 'POST-TRAINING' : 'GENERATING';
+    answerStream = { tokens, index: reducedMotion ? tokens.length : 0, elapsed: 0, interval: basinLabel === 'Raw-corpus basin' ? .14 : .105 };
+    els.callout.classList.remove('interrupted');
+    els.callout.classList.toggle('generating', !reducedMotion);
+    if (els.calloutKicker) els.calloutKicker.textContent = `${prefix} · ${basinLabel}`;
+    els.calloutLabel.textContent = reducedMotion ? sentence : '';
+    if (els.calloutProgress) els.calloutProgress.textContent = `TOKEN ${answerStream.index}/${tokens.length}`;
+    if (els.calloutAnnouncement) els.calloutAnnouncement.textContent = reducedMotion ? sentence : '';
+    els.callout.hidden = false;
+    requestAnimationFrame(() => els.callout.classList.add('visible'));
+  }
+
+  function updateAnswerStream(dt) {
+    if (!answerStream || answerStream.index >= answerStream.tokens.length) return;
+    answerStream.elapsed += dt;
+    let changed = false;
+    while (answerStream.elapsed >= answerStream.interval && answerStream.index < answerStream.tokens.length) {
+      answerStream.elapsed -= answerStream.interval;
+      answerStream.index++;
+      changed = true;
+    }
+    if (!changed) return;
+    els.calloutLabel.textContent = answerStream.tokens.slice(0, answerStream.index).join('');
+    if (els.calloutProgress) els.calloutProgress.textContent = `TOKEN ${answerStream.index}/${answerStream.tokens.length}`;
+    if (answerStream.index >= answerStream.tokens.length) {
+      els.callout.classList.remove('generating');
+      if (els.calloutAnnouncement) els.calloutAnnouncement.textContent = els.calloutLabel.textContent;
+    }
+  }
+
+  function interruptAnswerStream() {
+    if (!els.callout || els.callout.hidden) return;
+    answerStream = null;
+    els.callout.classList.remove('generating');
+    els.callout.classList.add('interrupted');
+    if (els.calloutKicker) els.calloutKicker.textContent = 'POST-TRAINING INTERRUPT';
+    if (els.calloutProgress) els.calloutProgress.textContent = 'OUTPUT HALTED';
+    if (els.calloutAnnouncement) els.calloutAnnouncement.textContent = 'Post-training interrupted the pre-training answer.';
   }
 
   function hideCallout() {
     if (!els.callout) return;
+    answerStream = null;
+    els.callout.classList.remove('generating', 'interrupted');
     els.callout.classList.remove('visible');
     setTimeout(() => { if (!els.callout.classList.contains('visible')) els.callout.hidden = true; }, 480);
   }
@@ -493,8 +558,14 @@ export function createTerrain(container, opts = {}) {
   function updateCallout() {
     if (!els.callout || els.callout.hidden || !particle.visible) return;
     const projected = particle.position.clone().project(camera), rect = container.getBoundingClientRect();
-    const x = THREE.MathUtils.clamp((projected.x * .5 + .5) * rect.width, 24, rect.width - 165);
-    const y = THREE.MathUtils.clamp((-projected.y * .5 + .5) * rect.height - 12, 90, rect.height - 150);
+    const dockRect = root.querySelector('#prompt-dock')?.getBoundingClientRect();
+    const calloutWidth = Math.min(450, Math.max(320, rect.width * .36));
+    const calloutHeight = Math.max(120, els.callout.getBoundingClientRect().height);
+    const x = THREE.MathUtils.clamp((projected.x * .5 + .5) * rect.width, 24, rect.width - calloutWidth);
+    const dockTop = dockRect ? dockRect.top - rect.top : rect.height;
+    const minY = 68;
+    const maxY = Math.max(minY, Math.min(rect.height - calloutHeight - 24, dockTop - calloutHeight - 8));
+    const y = THREE.MathUtils.clamp((-projected.y * .5 + .5) * rect.height - 12, minY, maxY);
     els.callout.style.left = `${x}px`; els.callout.style.top = `${y}px`;
   }
 
@@ -555,10 +626,13 @@ export function createTerrain(container, opts = {}) {
   function frameBody(dt) {
     idleTime += dt; totalTime += dt;
     if (!reducedMotion && idleTime > 8 && phase !== 'dropping' && !refusalActive) controls.autoRotate = true;
-    if (refusalActive) { refusalT += dt; if (slamArmed && refusalT > 1.65) fireSlam(); }
+    if (refusalActive && slamArmed) {
+      if (phase === 'settled') { refusalT += dt; if (refusalT > 1.9) fireSlam(); }
+      else refusalT = 0;
+    }
     if (morphTween?.slam) alert = Math.min(1, alert + dt * 4);   // ramp up as the wall rises
     else if (alert > 0) alert = Math.max(0, alert - dt * .7);    // then fade over ~1.4s
-    updateMorph(dt); updateParticle(dt); updateCallout(); updateCamera(dt);
+    updateMorph(dt); updateParticle(dt); updateAnswerStream(dt); updateCallout(); updateCamera(dt);
     terrain.material.uniforms.uTime.value = totalTime;
     terrain.material.uniforms.uAlert.value = alert;
     if (particle.visible) { particle.rotation.x += dt * 2; particle.rotation.z += dt * 1.4; }
@@ -630,6 +704,7 @@ export function createTerrain(container, opts = {}) {
       instanceCount: trail.geometry.instanceCount, glowScale: glow.scale.x, glowOpacity: +glow.material.opacity.toFixed(2),
       poolVisible: pool.visible, poolOpacity: +pool.material.opacity.toFixed(2), ballRadius: particle.geometry.parameters.radius,
       refusalActive, slammed, alert: +alert.toFixed(2), camActive: !!camTween, camDist: +camera.position.distanceTo(controls.target).toFixed(1),
+      stream: answerStream ? { index: answerStream.index, total: answerStream.tokens.length } : null,
       wallPeakY: +(heightAt(8.8, -6.2) - 2.4).toFixed(2), avgPeakY: +(heightAt(-2.15, 0.7) - 2.4).toFixed(2), camY: +camera.position.y.toFixed(1)
     }),
     on,
