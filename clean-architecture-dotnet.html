@@ -29,7 +29,7 @@
       "author": { "@type": "Person", "name": "David Veksler (AI Generated)" },
       "publisher": { "@type": "Organization", "name": "David Veksler Cheatsheets" },
       "datePublished": "2025-06-10",
-      "dateModified": "2026-07-14",
+      "dateModified": "2026-07-21",
       "keywords": "Clean Architecture Introduction, Why Clean Architecture, .NET, Web API, ASP.NET Core, C#, Software Architecture, DDD, Best Practices, Visual Studio Setup"
     }
     </script>
@@ -1123,6 +1123,38 @@ public class ProductsController : ControllerBase
 </div>
 </div>
 <!-- Project Structure Example & Visual Studio Setup -->
+<!-- Request Flow -->
+<div class="schema-container section-layers-overview">
+<h2 class="section-title"><i class="bi bi-arrow-repeat"></i> How a Request Flows Through a .NET Clean Architecture Solution</h2>
+<div class="info-card card-application-layer">
+<div class="card-header"><i class="bi bi-signpost-2-fill"></i> A Single HTTP Request, End to End</div>
+<div class="card-body">
+<p>The clearest way to understand Clean Architecture in .NET is to trace one request through the layers. Dependencies point <strong>inward</strong>, but control flows <strong>outward then back</strong>: the outer Web API calls into the Application layer, which reaches the Infrastructure layer only through interfaces the inner layers own. Consider <code>POST /api/products</code> in an ASP.NET Core Web API:</p>
+<ol>
+<li><strong>Presentation (Web API):</strong> a thin controller or minimal-API endpoint model-binds the request, then dispatches a <code>CreateProductCommand</code> through MediatR. It contains no business logic.</li>
+<li><strong>Application:</strong> a <code>CreateProductCommandHandler</code> runs the use case. A MediatR pipeline behavior validates the command with FluentValidation first. The handler talks to persistence only through an interface such as <code>IProductRepository</code> — an abstraction defined in the inner layers, never a concrete <code>DbContext</code>.</li>
+<li><strong>Domain:</strong> the handler constructs or mutates a <code>Product</code> entity, which enforces its own invariants (a negative price throws). Enterprise rules live here and depend on nothing else in the solution.</li>
+<li><strong>Infrastructure:</strong> at runtime the DI container has injected the EF Core-backed <code>ProductRepository</code> that implements <code>IProductRepository</code>. It translates the operation to SQL and persists via <code>ApplicationDbContext</code>. The Application layer never knows EF Core is behind the interface.</li>
+<li><strong>Back out:</strong> the handler returns a DTO; the endpoint maps it to an HTTP <code>201 Created</code>. Global exception-handling middleware in Presentation turns domain/application exceptions into consistent problem responses.</li>
+</ol>
+<details class="details-toggle" id="detailsRequestFlow">
+<summary>Where EF Core, CQRS, MediatR, and DI actually sit <i class="bi bi-chevron-down"></i></summary>
+<div class="collapse-content">
+<h6>The one-line placement map:</h6>
+<ul>
+<li><strong>The Dependency Rule:</strong> source-code dependencies only point inward. Domain depends on nothing; Application depends on Domain; Infrastructure and Presentation depend inward on Application/Domain. Inner layers define interfaces; outer layers implement them (Dependency Inversion).</li>
+<li><strong>EF Core:</strong> lives entirely in <em>Infrastructure</em> (<code>DbContext</code>, migrations, entity configurations, repository implementations). The Domain and Application layers reference only interfaces, so the database can be swapped without touching business rules.</li>
+<li><strong>CQRS:</strong> lives in <em>Application</em> as separate command and query models. Commands change state and return little; queries read and can bypass the domain model for efficient read DTOs.</li>
+<li><strong>MediatR:</strong> the in-process mediator in <em>Application</em> that routes commands/queries to handlers and hosts cross-cutting <strong>pipeline behaviors</strong> (validation, logging, transactions). It decouples the sender (a controller) from the handler.</li>
+<li><strong>Dependency Injection:</strong> wired in the <em>Presentation</em> layer's <code>Program.cs</code> — the Composition Root. It is the one place allowed to know every concrete type, binding <code>IProductRepository</code> to <code>ProductRepository</code> and so on.</li>
+</ul>
+<div class="callout"><strong>Litmus test:</strong> if adding a database column forces a change in your Domain or Application project, a dependency is pointing the wrong way. Only Infrastructure should care.</div>
+</div>
+</details>
+</div>
+</div>
+</div>
+<!-- Project Structure -->
 <div class="schema-container section-project-structure">
 <h2 class="section-title"><i class="bi bi-diagram-3-fill"></i> Project Structure & Visual Studio Setup</h2>
 <div class="info-card card-project-structure">
@@ -1250,6 +1282,43 @@ YourProjectSolution.sln
 </div>
 </div>
 </div>
+<!-- CLI Scaffold -->
+<div class="schema-container section-project-structure">
+<h2 class="section-title"><i class="bi bi-terminal-fill"></i> Scaffold the Solution with the .NET CLI</h2>
+<div class="info-card card-project-structure">
+<div class="card-header"><i class="bi bi-clipboard2-check"></i> Copy-Paste Setup (dotnet CLI)</div>
+<div class="card-body">
+<p>The same four-project layout, built from the command line. The <code>add reference</code> order is what enforces the Dependency Rule: references only ever point inward.</p>
+<pre><code class="language-bash"># 1. Solution + projects (Domain and Application are class libraries)
+dotnet new sln -n Commerce
+dotnet new classlib -n Commerce.Domain
+dotnet new classlib -n Commerce.Application
+dotnet new classlib -n Commerce.Infrastructure
+dotnet new webapi   -n Commerce.WebApi
+
+dotnet sln add Commerce.Domain Commerce.Application Commerce.Infrastructure Commerce.WebApi
+
+# 2. Wire references INWARD only (this is the architecture)
+dotnet add Commerce.Application  reference Commerce.Domain
+dotnet add Commerce.Infrastructure reference Commerce.Application   # to implement its interfaces
+dotnet add Commerce.WebApi       reference Commerce.Application Commerce.Infrastructure  # composition root
+# NOTE: Commerce.Domain references nothing else in the solution.
+
+# 3. Packages land in the layer that owns the concern
+dotnet add Commerce.Infrastructure package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add Commerce.Infrastructure package Microsoft.EntityFrameworkCore.Design
+dotnet add Commerce.Application  package MediatR            # in-process CQRS mediator (see licensing note below)
+dotnet add Commerce.Application  package FluentValidation   # MIT-licensed
+
+# 4. EF Core migration (run from the solution root; note the two project flags)
+dotnet ef migrations add InitialCreate \
+  --project Commerce.Infrastructure --startup-project Commerce.WebApi
+dotnet ef database update \
+  --project Commerce.Infrastructure --startup-project Commerce.WebApi</code></pre>
+<div class="callout"><strong>Why <code>--project</code> and <code>--startup-project</code> differ:</strong> the <code>DbContext</code> lives in Infrastructure (<code>--project</code>), but EF needs the app's DI configuration and connection string, which live in the Web API composition root (<code>--startup-project</code>). Pointing both at one project is the most common EF migration failure in a layered solution.</div>
+</div>
+</div>
+</div>
 <!-- Best Practices & Considerations -->
 <div class="schema-container section-best-practices">
 <h2 class="section-title"><i class="bi bi-award-fill"></i> Best Practices &amp; Considerations</h2>
@@ -1276,6 +1345,27 @@ YourProjectSolution.sln
 <li><em>Presentation Layer:</em> Integration tests (testing API endpoints, e.g., using `WebApplicationFactory`).</li>
 </ul>
 </li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Common Mistakes & Anti-Patterns -->
+<div class="schema-container section-best-practices">
+<h2 class="section-title"><i class="bi bi-exclamation-triangle-fill"></i> Common Mistakes &amp; Anti-Patterns</h2>
+<div class="info-card card-best-practices">
+<div class="card-header"><i class="bi bi-x-octagon-fill"></i> Where Clean Architecture in .NET Goes Wrong</div>
+<div class="card-body">
+<p>Most failed Clean Architecture projects are not too little structure but the wrong structure. These are the recurring mistakes and the fix for each:</p>
+<ul>
+<li><strong>Anemic domain, fat services:</strong> entities become bags of public setters while all logic sits in Application "services." <em>Fix:</em> push invariants into the Domain (private setters, behavior methods); the Application layer should orchestrate, not own business rules.</li>
+<li><strong>Referencing EF Core from Domain or Application:</strong> adding <code>Microsoft.EntityFrameworkCore</code> to an inner project, or decorating entities with EF attributes. <em>Fix:</em> keep the ORM in Infrastructure; configure mappings with <code>IEntityTypeConfiguration</code>, not attributes on domain types.</li>
+<li><strong>Leaking <code>IQueryable</code> out of repositories:</strong> returning <code>IQueryable&lt;T&gt;</code> pushes EF translation concerns into upper layers and breaks the abstraction. <em>Fix:</em> return materialized results or use the specification pattern; the query is fully defined in Infrastructure.</li>
+<li><strong>Interfaces in the wrong layer:</strong> defining <code>IProductRepository</code> in Infrastructure defeats dependency inversion. <em>Fix:</em> the abstraction belongs to the inner layer that consumes it (Domain or Application); Infrastructure only implements it.</li>
+<li><strong>DTOs bleeding into the Domain:</strong> reusing API request/response models as entities couples business rules to the wire format. <em>Fix:</em> map between DTOs and domain types at the Application boundary.</li>
+<li><strong>Over-engineering a CRUD app:</strong> four projects, MediatR, and repositories for a two-table admin tool is pure overhead. <em>Fix:</em> Clean Architecture pays off for complex, long-lived domains; a simple CRUD service can stay a single project.</li>
+<li><strong>Repository-over-<code>DbContext</code> that adds nothing:</strong> a generic <code>Repository&lt;T&gt;</code> wrapping <code>DbSet&lt;T&gt;</code> 1:1 just hides a capable API. <em>Fix:</em> use repositories for real aggregate boundaries, or query <code>DbContext</code> directly in query handlers.</li>
+<li><strong>Business logic in controllers:</strong> validation, branching, and orchestration in the Presentation layer. <em>Fix:</em> keep controllers thin — bind, dispatch a command/query, map the result.</li>
+<li><strong>Circular or lateral project references:</strong> Infrastructure referencing Presentation, or two feature projects referencing each other. <em>Fix:</em> enforce the inward-only direction with an architecture test (NetArchTest or ArchUnitNET) in CI so a bad reference fails the build.</li>
 </ul>
 </div>
 </div>
@@ -1313,7 +1403,7 @@ YourProjectSolution.sln
     </a>
   </div>
   <p class="mb-2">
-    © 2026 David Veksler · Compiled &amp; expanded based on Robert C. Martin's architectural patterns and .NET implementation guides. Last verified: July 4, 2026. CDN dependencies, library versions, and licensing information verified current.
+    © 2026 David Veksler · Compiled &amp; expanded based on Robert C. Martin's architectural patterns and .NET implementation guides. Last verified: July 21, 2026. CDN dependencies, library versions, and licensing information verified current.
   </p>
   <div>
     <a class="mx-2 link-secondary" href="https://www.linkedin.com/in/davidveksler/" target="_blank" title="David Veksler on LinkedIn">
