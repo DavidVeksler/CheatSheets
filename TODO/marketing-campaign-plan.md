@@ -117,7 +117,9 @@ Body:
 ## Human publishing queue
 
 These actions affect external accounts or community reputation and therefore remain intentionally
-unexecuted in the repository:
+unexecuted in the repository. **Copy-paste-ready versions of every post below (filled community
+templates + exact tracked UTM URLs) are staged in
+[`../marketing/ready-to-post.md`](../marketing/ready-to-post.md)** so posting is friction-free:
 
 - [ ] Publish the LinkedIn flagship post with the tracked build-story URL.
 - [ ] Make one quiet niche share, starting with the Baofeng quick reference; record the post URL and
