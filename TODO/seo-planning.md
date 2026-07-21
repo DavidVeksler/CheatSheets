@@ -91,7 +91,12 @@ unchanged; still under the title/consolidation freeze until the 2026-08-06 check
   cheat sheet", position 2, 20% CTR) but sits at page-level position 20.7 — long-tail coverage gap.
   Dev spokes ranking far back: `databases` 26.6, `dotnet-cheatsheet` 24.6, `postgresql` 22.7,
   `clean-architecture-dotnet` 30.7, `aws-vs-azure` 53.6, `git-scm` 51.7. Content/coverage signals to
-  review after 2026-08-06, not listing fixes.
+  review after 2026-08-06, not listing fixes. **Diagnosed and specced 2026-07-21 in
+  [`dev-spoke-content-plan.md`](dev-spoke-content-plan.md)** — per-page query families, root-cause
+  (authority/depth, not titles), and ready-to-execute content actions. Key calls: Tier 1 =
+  `azure-devops` (thin, add best-practices section) + `dotnet-cheatsheet` (add C# keywords table, 408
+  impr @ pos 28); `postgresql` is already deep+fresh so its pos-45 is off-page, **not** a content
+  gap — do not add words there.
 - **Fix shipped this pulse (freeze-safe):** the three pillars launched 2026-07-15
   (`ai-models-compared`, `ai-safety-existential-risk`, `rockets-and-spaceflight`) had been omitted
   from `llms.txt`; added them to the AI-crawler discovery index in their category sections. Only the
@@ -403,3 +408,9 @@ scope). Two durable notes preserved for the next pillar:
   baseline; Perplexity up) and verified live infra (404s fixed, caching present). Staged copy-paste
   marketing posts with tracked UTM URLs in `marketing/ready-to-post.md`. Flag: the 08-06 checkpoint
   scheduled task is not visible from this macOS session (Windows desktop registry) — confirm it exists.
+- 2026-07-21 — Prepped the post-freeze dev-spoke content work: pulled 90-day page×query data, diagnosed
+  each under-ranking dev spoke, and wrote `TODO/dev-spoke-content-plan.md` (ready-to-execute after
+  2026-08-06). Root cause is authority/depth, not titles (every page already has its head keyword in
+  its title yet ranks pos 40–87). Tier 1: `azure-devops` (thin — add best-practices section) and
+  `dotnet-cheatsheet` (add a C# keywords table for the 408-impr "c# keywords cheat sheet" query).
+  Explicitly excluded `postgresql` from content work (already 18k words + fresh; its pos-45 is off-page).
