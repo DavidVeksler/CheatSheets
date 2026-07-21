@@ -145,6 +145,7 @@ return [
 
     // Engineering & Science
     'ai-accelerator-comparison.html' => 'Engineering & Science',
+    'ai-datacenter-infrastructure.html' => 'Engineering & Science',
     'ai-infrastructure-numbers.html' => 'Engineering & Science',
     'automotive-innovation-timeline.html' => 'Engineering & Science',
     'boom-supersonic.html' => 'Engineering & Science',

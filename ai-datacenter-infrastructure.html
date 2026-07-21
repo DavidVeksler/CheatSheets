@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Data Centers: Chips, Power, Cooling &amp; Scale</title>
+  <meta name="description" content="How AI data centers work, layer by layer: the chips and accelerators, the grid-to-GPU power chain, cooling limits, the numbers that matter, and community impact — a hub linking every deep dive.">
+  <meta name="keywords" content="ai data center, ai infrastructure, data center power chain, ai accelerators, data center cooling, semiconductor manufacturing, ai compute buildout, gpu data center">
+  <meta name="author" content="David Veksler (AI Generated)">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/ai-datacenter-infrastructure.html">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.86em' font-size='82'%3E%F0%9F%8F%AD%3C/text%3E%3C/svg%3E">
+
+  <meta property="og:title" content="AI Data Centers: Chips, Power, Cooling &amp; Scale">
+  <meta property="og:description" content="How AI data centers actually work, layer by layer: chips and accelerators, the grid-to-GPU power chain, cooling limits, the numbers that matter, and community impact.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/ai-datacenter-infrastructure.html">
+  <meta property="og:image" content="images/ai-datacenter-infrastructure.png">
+  <meta property="og:image:alt" content="AI data center infrastructure hub: chips, power, cooling, scale and community impact">
+  <meta property="og:site_name" content="David Veksler Cheatsheets">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Data Centers: Chips, Power, Cooling &amp; Scale">
+  <meta name="twitter:description" content="How AI data centers actually work, layer by layer: chips and accelerators, the grid-to-GPU power chain, cooling limits, the numbers that matter, and community impact.">
+  <meta name="twitter:image" content="images/ai-datacenter-infrastructure.png">
+  <meta name="twitter:image:alt" content="AI data center infrastructure hub">
+  <meta name="twitter:creator" content="@heroiclife">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": ["TechArticle", "CollectionPage"],
+    "headline": "AI Data Centers: Chips, Power, Cooling & Scale",
+    "description": "How AI data centers work end to end, layer by layer: semiconductor manufacturing, AI accelerators, the grid-to-GPU power chain, cooling thresholds, the order-of-magnitude numbers, what they actually run, and community impact.",
+    "image": "https://cheatsheets.davidveksler.com/images/ai-datacenter-infrastructure.png",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-07-21",
+    "dateModified": "2026-07-21",
+    "keywords": "ai data center, ai infrastructure, data center power chain, ai accelerators, data center cooling, semiconductor manufacturing",
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "AI Data Center & Infrastructure Cheat Sheets",
+      "numberOfItems": 7,
+      "itemListElement": [
+        {"@type": "ListItem", "position": 1, "url": "https://cheatsheets.davidveksler.com/semiconductor-manufacturing.html", "name": "Semiconductor Manufacturing: Wafer to Chip"},
+        {"@type": "ListItem", "position": 2, "url": "https://cheatsheets.davidveksler.com/ai-accelerator-comparison.html", "name": "AI Accelerator Comparison"},
+        {"@type": "ListItem", "position": 3, "url": "https://cheatsheets.davidveksler.com/datacenter-power-chain.html", "name": "The Data Center Power Chain"},
+        {"@type": "ListItem", "position": 4, "url": "https://cheatsheets.davidveksler.com/datacenter-cooling-thresholds.html", "name": "Data Center Cooling Thresholds"},
+        {"@type": "ListItem", "position": 5, "url": "https://cheatsheets.davidveksler.com/ai-infrastructure-numbers.html", "name": "AI Infrastructure Numbers Everyone Should Know"},
+        {"@type": "ListItem", "position": 6, "url": "https://cheatsheets.davidveksler.com/data-center-myths.html", "name": "Stop Calling Them AI Data Centers"},
+        {"@type": "ListItem", "position": 7, "url": "https://cheatsheets.davidveksler.com/data-center-community-impact.html", "name": "Data Center Coming to Your Town?"}
+      ]
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: light-dark(#eef3fa, #080c14);
+      --surface: light-dark(#ffffff, #101725);
+      --surface-2: light-dark(#e6edf7, #172234);
+      --text: light-dark(#0e1626, #e8eefb);
+      --muted: light-dark(#4a5670, #a4b1cf);
+      --line: light-dark(#cdd8ea, #26344c);
+      --brand: light-dark(#0369a1, #38bdf8);
+      --brand-2: light-dark(#075985, #7dd3fc);
+      --accent: light-dark(#b45309, #fbbf24);
+      --good: light-dark(#0f7a52, #4ade80);
+      --shadow: light-dark(0 18px 50px rgba(15,40,90,.15), 0 18px 48px rgba(0,0,0,.5));
+      --radius: 10px;
+    }
+    [data-theme="light"] { color-scheme: light; --bg:#eef3fa; --surface:#fff; --surface-2:#e6edf7; --text:#0e1626; --muted:#4a5670; --line:#cdd8ea; --brand:#0369a1; --brand-2:#075985; --accent:#b45309; --good:#0f7a52; --shadow:0 18px 50px rgba(15,40,90,.15); }
+    [data-theme="dark"] { color-scheme: dark; --bg:#080c14; --surface:#101725; --surface-2:#172234; --text:#e8eefb; --muted:#a4b1cf; --line:#26344c; --brand:#38bdf8; --brand-2:#7dd3fc; --accent:#fbbf24; --good:#4ade80; --shadow:0 18px 48px rgba(0,0,0,.5); }
+
+    @layer page {
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin:0; color:var(--text);
+        background:
+          radial-gradient(circle at 15% 0%, color-mix(in srgb, var(--brand) 20%, transparent), transparent 30rem),
+          radial-gradient(circle at 88% 6%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 26rem),
+          var(--bg);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height:1.58; text-wrap:pretty;
+      }
+      a { color:var(--brand); text-underline-offset:.2em; }
+      a:hover { color:var(--accent); }
+      h1,h2,h3 { color:var(--brand-2); line-height:1.06; text-wrap:balance; }
+      img { max-width:100%; }
+      .skip-link { position:absolute; inset:.75rem auto auto 1rem; z-index:10; transform:translateY(-160%); padding:.6rem .9rem; border-radius:999px; background:var(--brand-2); color:var(--bg); }
+      .skip-link:focus { transform:none; }
+      .site-shell { width:min(1180px, calc(100% - 32px)); margin-inline:auto; }
+
+      .hero { position:relative; overflow:clip; isolation:isolate; background:linear-gradient(135deg, rgba(8,12,20,.97), rgba(3,105,161,.72) 60%, rgba(8,12,20,.97)), var(--surface); color:#eaf4ff; }
+      .hero::after { content:""; position:absolute; inset:auto 0 0; z-index:-1; height:9rem; background:linear-gradient(transparent, var(--bg)); }
+      .hero-inner { max-width:min(1180px, calc(100% - 32px)); padding-block:4.5rem 6.5rem; }
+      .eyebrow { display:inline-flex; align-items:center; gap:.5rem; width:fit-content; margin-bottom:1rem; padding:.35rem .7rem; border:1px solid rgba(255,255,255,.25); border-radius:999px; color:#cfe8ff; background:rgba(255,255,255,.08); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.78rem; }
+      h1 { margin:0; color:#f4faff; font-size:clamp(2.3rem,5.5vw,4.4rem); max-width:18ch; }
+      .hero .lead { max-width:66ch; margin:1.2rem 0 0; color:#d9e9fb; font-size:clamp(1.05rem,2vw,1.28rem); }
+      .hero-actions { display:flex; flex-wrap:wrap; gap:.8rem; margin-top:1.6rem; }
+      .hero-button { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; min-height:44px; padding:.72rem 1.05rem; border-radius:999px; border:1px solid rgba(255,255,255,.28); color:#06263c; background:#bfe3ff; font-weight:800; text-decoration:none; }
+      .hero-button.secondary { color:#eaf4ff; background:rgba(255,255,255,.08); }
+
+      .content-band { padding-block:3rem 4.5rem; }
+      .section-heading { margin-bottom:1.3rem; }
+      .section-heading h2 { margin:0; font-size:clamp(1.8rem,3vw,2.6rem); }
+      .section-heading p { margin:.4rem 0 0; color:var(--muted); max-width:72ch; }
+
+      .panel { border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow); padding:1.25rem 1.35rem; margin-bottom:2.5rem; }
+      .table-scroll { overflow-x:auto; }
+      table.compare { width:100%; border-collapse:collapse; min-width:680px; }
+      table.compare th, table.compare td { padding:.6rem .7rem; text-align:left; border-bottom:1px solid var(--line); vertical-align:top; }
+      table.compare thead th { color:var(--brand-2); font-size:.82rem; letter-spacing:.03em; text-transform:uppercase; }
+      table.compare tbody tr:hover { background:color-mix(in srgb, var(--brand) 8%, transparent); }
+      table.compare td .layer-tag { display:inline-flex; align-items:center; gap:.4rem; font-weight:800; color:var(--brand-2); }
+      table.compare td .layer-tag i { color:var(--accent); }
+
+      .axes { display:grid; grid-template-columns:repeat(3,1fr); gap:.85rem; margin-bottom:2.5rem; }
+      .axis { padding:1.05rem; border:1px solid var(--line); border-radius:var(--radius); background:color-mix(in srgb, var(--surface) 90%, transparent); }
+      .axis span { color:var(--accent); font-size:.78rem; font-weight:900; letter-spacing:.05em; text-transform:uppercase; }
+      .axis strong { display:block; margin:.3rem 0 .35rem; color:var(--brand-2); font-size:1.02rem; }
+      .axis p { margin:0; color:var(--muted); font-size:.92rem; }
+
+      .guide-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap:1rem; }
+      .guide-card { position:relative; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); box-shadow:0 8px 28px color-mix(in srgb,#000 12%,transparent); }
+      .thumb { display:block; aspect-ratio:1200/630; overflow:hidden; border-bottom:1px solid var(--line); background:var(--surface-2); }
+      .thumb img { width:100%; height:100%; object-fit:cover; }
+      .card-body { display:flex; flex:1; flex-direction:column; gap:.7rem; padding:1rem; }
+      .card-body h3 { margin:0; font-size:1.2rem; }
+      .card-body p { margin:0; color:var(--muted); }
+      .tag-row { display:flex; flex-wrap:wrap; gap:.4rem; }
+      .tag { display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:999px; padding:.2rem .5rem; background:var(--surface-2); color:var(--muted); font-size:.74rem; font-weight:800; }
+      .read-link { display:inline-flex; align-items:center; gap:.45rem; width:fit-content; margin-top:auto; color:var(--brand-2); font-weight:900; text-decoration:none; }
+      .read-link:hover { color:var(--accent); }
+      .related-note { margin-top:2.5rem; padding:1rem 1.15rem; border:1px dashed var(--line); border-radius:var(--radius); color:var(--muted); background:color-mix(in srgb,var(--surface) 70%,transparent); }
+
+      .theme-button { min-height:38px; border:1px solid var(--line); border-radius:999px; background:var(--surface-2); color:var(--text); font-weight:800; display:inline-flex; align-items:center; gap:.45rem; padding:.48rem .85rem; }
+      footer { padding-block:2.5rem; border-top:1px solid var(--line); color:var(--muted); background:color-mix(in srgb,var(--surface) 54%,transparent); }
+      footer p { margin:0; }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .guide-card,.thumb img,.hero-button,.theme-button { transition:transform .2s ease, box-shadow .2s ease, color .2s ease, background .2s ease; }
+        .guide-card:hover { transform:translateY(-3px); box-shadow:0 16px 38px color-mix(in srgb,#000 20%,transparent); }
+        .guide-card:hover .thumb img { transform:scale(1.03); }
+      }
+      @media (max-width:900px){ .axes { grid-template-columns:repeat(2,1fr);} }
+      @media (max-width:560px){ .axes { grid-template-columns:1fr;} .hero-inner{ padding-block:3rem 5rem;} }
+      @media print {
+        body { background:#fff; color:#000; }
+        .hero-actions,.theme-button { display:none; }
+        .hero { color:#000; background:#fff; } .hero h1,.hero .lead,h1,h2,h3 { color:#000; }
+        .guide-grid { display:block; } .guide-card { break-inside:avoid; margin-bottom:1rem; box-shadow:none; } .thumb { display:none; }
+      }
+    }
+    /* Unlayered overrides: Bootstrap Reboot is unlayered and beats @layer rules,
+       so re-assert brand link + button colors here (unlayered wins over layered). */
+    a { color: var(--brand); }
+    a:hover { color: var(--accent); }
+    .read-link { color: var(--brand-2); }
+    .read-link:hover { color: var(--accent); }
+    .hero-button { color: #06263c; }
+    .hero-button.secondary { color: #eaf4ff; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#stack">Skip to the stack map</a>
+
+  <header class="hero">
+    <div class="site-shell hero-inner">
+      <div class="eyebrow"><i class="bi bi-hdd-rack"></i> AI infrastructure hub</div>
+      <h1>AI Data Centers: Chips, Power, Cooling &amp; Scale</h1>
+      <p class="lead">Behind every AI model is a physical machine the size of a warehouse. This hub walks that machine layer by layer &mdash; from the silicon in the fab, up through the accelerators, the grid-to-GPU power chain, and the cooling that keeps it alive, out to the electricity bills and water it draws from the town next door &mdash; and routes you to the deep dive for each.</p>
+      <div class="hero-actions">
+        <a class="hero-button" href="#stack"><i class="bi bi-diagram-3"></i> See the stack map</a>
+        <a class="hero-button secondary" href="#guides"><i class="bi bi-grid-3x3-gap"></i> Browse the guides</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="content-band">
+    <div class="site-shell">
+
+      <div class="d-flex justify-content-end mb-3">
+        <button class="theme-button" id="themeToggle" type="button" aria-label="Toggle theme"><i class="bi bi-moon-stars"></i></button>
+      </div>
+
+      <!-- CORE ARTIFACT: the stack map -->
+      <section id="stack" class="panel">
+        <div class="section-heading">
+          <h2>The AI data center stack, layer by layer</h2>
+          <p>An AI data center is not one thing &mdash; it is seven stacked engineering problems, each with its own binding constraint. Read top to bottom to follow a watt of power from the substation to a training run, or jump straight to the layer you came for.</p>
+        </div>
+        <div class="table-scroll">
+          <table class="compare">
+            <thead>
+              <tr><th scope="col">Layer</th><th scope="col">The question it answers</th><th scope="col">Deep dive</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="layer-tag"><i class="bi bi-cpu"></i> The chip</span></td><td>How is the silicon that runs AI actually made, and why is leading-edge capacity so scarce?</td><td><a href="semiconductor-manufacturing.html">Semiconductor Manufacturing</a></td></tr>
+              <tr><td><span class="layer-tag"><i class="bi bi-gpu-card"></i> The accelerator</span></td><td>Which GPU or custom chip, and how do NVIDIA, AMD, Google and AWS silicon really compare?</td><td><a href="ai-accelerator-comparison.html">AI Accelerator Comparison</a></td></tr>
+              <tr><td><span class="layer-tag"><i class="bi bi-plug"></i> The power chain</span></td><td>How does grid power actually reach a rack of GPUs &mdash; and why is interconnection the bottleneck?</td><td><a href="datacenter-power-chain.html">Data Center Power Chain</a></td></tr>
+              <tr><td><span class="layer-tag"><i class="bi bi-thermometer-half"></i> Cooling</span></td><td>At what rack density does air cooling stop working, and when must you go to liquid?</td><td><a href="datacenter-cooling-thresholds.html">Cooling Thresholds</a></td></tr>
+              <tr><td><span class="layer-tag"><i class="bi bi-123"></i> The numbers</span></td><td>kW per rack, MW per 10,000 GPUs, PUE/WUE, capex per megawatt &mdash; the orders of magnitude.</td><td><a href="ai-infrastructure-numbers.html">AI Infrastructure Numbers</a></td></tr>
+              <tr><td><span class="layer-tag"><i class="bi bi-clipboard-data"></i> What they run</span></td><td>Is it really "all AI"? What share of data center load is actually AI vs. everything else?</td><td><a href="data-center-myths.html">Stop Calling Them AI Data Centers</a></td></tr>
+              <tr><td><span class="layer-tag"><i class="bi bi-house-gear"></i> The neighbors</span></td><td>Do they raise electric bills, create jobs, drain water? Every local claim, graded by evidence.</td><td><a href="data-center-community-impact.html">A Data Center Comes to Town</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- CORE ARTIFACT 2: the binding constraints -->
+      <div class="section-heading">
+        <h2>Where the buildout actually binds</h2>
+        <p>The AI compute race is usually reported as a chip shortage. On the ground, the harder ceilings are power, heat, and permits &mdash; and they arrive in this order.</p>
+      </div>
+      <div class="axes">
+        <div class="axis"><span>Silicon</span><strong>Leading-edge fab capacity</strong><p>Advanced chips and their high-bandwidth memory come from a handful of fabs and packaging lines. Capacity, not design, gates supply.</p></div>
+        <div class="axis"><span>Power</span><strong>Getting connected to the grid</strong><p>A large campus can want as much power as a small city. The multi-year interconnection queue, not the utility bill, is the real wait.</p></div>
+        <div class="axis"><span>Heat</span><strong>Watts per rack</strong><p>As racks pass the density where moving air can carry the heat away, liquid cooling stops being optional and becomes the design.</p></div>
+        <div class="axis"><span>Land &amp; water</span><strong>Local license to operate</strong><p>Siting runs into electricity rates, water for cooling, and community pushback &mdash; often the slowest constraint of all.</p></div>
+        <div class="axis"><span>Capital</span><strong>Dollars per megawatt</strong><p>Capex scales with megawatts, not square feet. The infrastructure numbers page puts real figures on each order of magnitude.</p></div>
+        <div class="axis"><span>Reality</span><strong>Not all of it is AI</strong><p>Most existing data center load is the ordinary plumbing of the internet. Separating hype from load is its own field guide.</p></div>
+      </div>
+
+      <!-- SPOKE INDEX -->
+      <div id="guides" class="section-heading">
+        <h2>AI data center &amp; infrastructure cheat sheets</h2>
+        <p>The full deep-dive references behind the stack map above, in build order &mdash; chip to community.</p>
+      </div>
+      <div class="guide-grid">
+        <article class="guide-card">
+          <a class="thumb" href="semiconductor-manufacturing.html"><img src="images/semiconductor-manufacturing.png" alt="Semiconductor manufacturing cheatsheet preview" loading="lazy"></a>
+          <div class="card-body">
+            <div class="tag-row"><span class="tag">Silicon</span><span class="tag">EUV</span><span class="tag">Fab</span></div>
+            <h3>Semiconductor Manufacturing: Wafer to Chip</h3>
+            <p>Wafer growth, lithography, deposition, etch, doping, packaging, yield, and fab economics &mdash; why leading-edge silicon is the scarcest link.</p>
+            <a class="read-link" href="semiconductor-manufacturing.html">Open guide <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </article>
+        <article class="guide-card">
+          <a class="thumb" href="ai-accelerator-comparison.html"><img src="images/ai-accelerator-comparison.png" alt="AI accelerator comparison cheatsheet preview" loading="lazy"></a>
+          <div class="card-body">
+            <div class="tag-row"><span class="tag">GPU</span><span class="tag">TPU</span><span class="tag">HBM</span></div>
+            <h3>AI Accelerator Comparison</h3>
+            <p>NVIDIA, AMD, Google TPU and AWS silicon compared on dense compute, HBM, bandwidth, interconnect, and power &mdash; with transparent efficiency math.</p>
+            <a class="read-link" href="ai-accelerator-comparison.html">Open guide <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </article>
+        <article class="guide-card">
+          <a class="thumb" href="datacenter-power-chain.html"><img src="images/datacenter-power-chain.png" alt="Data center power chain cheatsheet preview" loading="lazy"></a>
+          <div class="card-body">
+            <div class="tag-row"><span class="tag">Grid</span><span class="tag">UPS</span><span class="tag">Interconnection</span></div>
+            <h3>The Data Center Power Chain</h3>
+            <p>Grid to GPU: interconnection queues, substations, switchgear, UPS, busways, and rack PDUs &mdash; plus behind-the-meter gas and SMRs.</p>
+            <a class="read-link" href="datacenter-power-chain.html">Open guide <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </article>
+        <article class="guide-card">
+          <a class="thumb" href="datacenter-cooling-thresholds.html"><img src="images/datacenter-cooling-thresholds.png" alt="Data center cooling thresholds cheatsheet preview" loading="lazy"></a>
+          <div class="card-body">
+            <div class="tag-row"><span class="tag">Cooling</span><span class="tag">Liquid</span><span class="tag">kW/rack</span></div>
+            <h3>Data Center Cooling Thresholds</h3>
+            <p>The decision ladder from air to containment to rear-door to direct-to-chip to immersion, with reconciled kW/rack thresholds and PUE evidence.</p>
+            <a class="read-link" href="datacenter-cooling-thresholds.html">Open guide <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </article>
+        <article class="guide-card">
+          <a class="thumb" href="ai-infrastructure-numbers.html"><img src="images/ai-infrastructure-numbers.png" alt="AI infrastructure numbers cheatsheet preview" loading="lazy"></a>
+          <div class="card-body">
+            <div class="tag-row"><span class="tag">Numbers</span><span class="tag">PUE</span><span class="tag">Capex</span></div>
+            <h3>AI Infrastructure Numbers Everyone Should Know</h3>
+            <p>kW per rack, watts per GPU, PUE and WUE bands, MW per 10K GPUs, capex per megawatt, and time-to-power &mdash; the order-of-magnitude anchors.</p>
+            <a class="read-link" href="ai-infrastructure-numbers.html">Open guide <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </article>
+        <article class="guide-card">
+          <a class="thumb" href="data-center-myths.html"><img src="images/data-center-myths.png" alt="Stop calling them AI data centers field guide preview" loading="lazy"></a>
+          <div class="card-body">
+            <div class="tag-row"><span class="tag">Load</span><span class="tag">Electricity</span><span class="tag">Fact-check</span></div>
+            <h3>Stop Calling Them AI Data Centers</h3>
+            <p>AI is only about a quarter of what data centers run &mdash; the rest is the plumbing of modern civilization. A fact-checked reference on load and electricity.</p>
+            <a class="read-link" href="data-center-myths.html">Open guide <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </article>
+        <article class="guide-card">
+          <a class="thumb" href="data-center-community-impact.html"><img src="images/data-center-community-impact.png" alt="Data center community impact fact sheet preview" loading="lazy"></a>
+          <div class="card-body">
+            <div class="tag-row"><span class="tag">Bills</span><span class="tag">Jobs</span><span class="tag">Water</span></div>
+            <h3>Data Center Coming to Your Town?</h3>
+            <p>Do data centers raise electric bills? How many jobs do they really create? Booster and opponent claims, each graded against published evidence.</p>
+            <a class="read-link" href="data-center-community-impact.html">Open guide <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </article>
+      </div>
+
+      <p class="related-note">
+        <i class="bi bi-signpost-2"></i> <strong>What powers all this?</strong> The buildout is colliding with the grid &mdash; see
+        <a href="nuclear-power-reactor-types.html">Nuclear Reactor Types</a> (including SMRs) and
+        <a href="deaths-per-terawatt-hour.html">Deaths per Terawatt-Hour</a> for the energy side. Curious about the models these
+        machines train rather than the machines themselves? See <a href="ai-frontier.html">Frontier AI Labs</a> and
+        <a href="ai-models-compared.html">AI Models Compared</a>.
+      </p>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="site-shell d-flex flex-wrap justify-content-between gap-2">
+      <p>Last verified: 2026-07-21</p>
+      <p><a href="index.php">All cheatsheets</a> &middot; <a href="how-its-built.html">How this site is built</a></p>
+    </div>
+    <p class="cheatsheets-build-note small" data-site-build-note style="margin:1rem auto 0;max-width:72ch;text-align:center;">
+      One person + AI agents build and maintain this collection through public specs, QA gates, and git history.
+      <a href="how-its-built.html" title="See how this cheatsheet collection is built">How this site is built</a>
+      <span aria-hidden="true">&middot;</span>
+      <a href="https://github.com/DavidVeksler/CheatSheets" target="_blank" rel="noopener noreferrer" title="View the public CheatSheets source repository on GitHub">Source on GitHub</a>
+    </p>
+  </footer>
+
+  <script>
+    (() => {
+      const themeToggle = document.getElementById("themeToggle");
+      const storageKey = "ai-datacenter-infrastructure-theme";
+      const applyTheme = (theme) => {
+        if (theme === "light" || theme === "dark") {
+          document.documentElement.dataset.theme = theme;
+          localStorage.setItem(storageKey, theme);
+        } else {
+          delete document.documentElement.dataset.theme;
+          localStorage.removeItem(storageKey);
+        }
+        const active = document.documentElement.dataset.theme || "auto";
+        themeToggle.innerHTML = active === "dark" ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+      };
+      themeToggle.addEventListener("click", () => {
+        const current = document.documentElement.dataset.theme || "auto";
+        applyTheme(current === "dark" ? "light" : "dark");
+      });
+      applyTheme(localStorage.getItem(storageKey));
+    })();
+  </script>
+</body>
+</html>
