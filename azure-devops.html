@@ -44,7 +44,7 @@
         }
       },
       "datePublished": "2024-06-15",
-      "dateModified": "2026-07-14",
+      "dateModified": "2026-07-21",
       "keywords": "DevOps, CI/CD, Azure DevOps, Azure Boards, Azure Repos, Azure Pipelines, Azure Test Plans, Azure Artifacts, Terraform, SonarQube, IaC, Git, Automation, Security"
     }
   </script>
@@ -77,6 +77,7 @@
             --devops-color-iac: #7B42BC;       /* Terraform Purple */
             --devops-color-security: #D73A49;  /* Security Red */
             --devops-color-monitoring: #28A745;/* Monitoring Green */
+            --devops-color-practices: #00A4A6; /* Best Practices Teal */
 
             --db-category-color: var(--bs-primary); /* Default */
         }
@@ -179,6 +180,7 @@
         .section-iac, .card-iac { --db-category-color: var(--devops-color-iac); }
         .section-security, .card-security { --db-category-color: var(--devops-color-security); }
         .section-monitoring, .card-monitoring { --db-category-color: var(--devops-color-monitoring); }
+        .section-practices, .card-practices { --db-category-color: var(--devops-color-practices); }
 
         footer { border-top: 1px solid var(--schema-border-color); padding-top: 2rem; margin-top: 2rem; color: var(--text-color-secondary); font-size: 0.9em; }
         footer a { color: var(--text-color-secondary); text-decoration: none; }
@@ -209,6 +211,204 @@
    </div>
   </div>
   <main class="container" id="main-container">
+   <!-- 0. Azure DevOps Best Practices -->
+   <div class="schema-container section-practices" data-section-id="section-practices" data-section-name="Best Practices">
+    <h2 class="section-title">
+     Azure DevOps Best Practices
+    </h2>
+    <p class="text-secondary" style="margin:-1rem 0 1.5rem;max-width:900px;">
+     The rules that separate a healthy Azure DevOps setup from an expensive mess. Every policy and check name below is current on Microsoft Learn as of July 2026. If you only adopt one section of this cheatsheet, adopt this one.
+    </p>
+    <div class="row g-4">
+     <div class="col-lg-6">
+      <div class="info-card card-practices" id="card-bp-branching">
+       <div class="card-body d-flex flex-column">
+        <h5>
+         <i class="bi bi-shield-check"></i>
+         Branch Policies &amp; PR Gates
+        </h5>
+        <div class="card-content-wrapper">
+         <p class="summary">
+          Protect <code>main</code> with policy, not etiquette. A protected branch cannot be pushed to directly; every change arrives through a pull request that must clear the gates you configure.
+         </p>
+         <button aria-controls="collapseBpBranching" aria-expanded="false" class="btn btn-outline-secondary btn-sm details-toggle" data-bs-target="#collapseBpBranching" data-bs-toggle="collapse" type="button">
+          Details
+          <i class="bi bi-chevron-down"></i>
+         </button>
+        </div>
+        <div class="collapse collapse-content" id="collapseBpBranching">
+         <h6>The policies worth turning on:</h6>
+         <ul>
+          <li><strong>Require a minimum number of reviewers:</strong> set 1–2; enable "reset approvals on new pushes" so a re-review is forced after changes, and block self-approval.</li>
+          <li><strong>Require linked work items:</strong> guarantees every commit traces back to a Board item.</li>
+          <li><strong>Require comment resolution:</strong> a PR cannot complete while review comments are still open.</li>
+          <li><strong>Build validation:</strong> link the CI pipeline; the PR is blocked unless it builds and tests pass. This is your first hard quality gate.</li>
+          <li><strong>Status checks:</strong> require external signals (SonarQube quality gate, security scan) to report success before merge.</li>
+          <li><strong>Limit merge types:</strong> standardize on squash or rebase to keep <code>main</code> history linear and readable.</li>
+          <li><strong>Automatically include reviewers:</strong> auto-add the owning team via path filters so the right eyes always see the change.</li>
+         </ul>
+         <div class="callout callout-danger">
+          <strong>Anti-pattern:</strong> granting "bypass policies when completing pull requests" broadly. Reserve bypass for a tiny break-glass group and audit its use.
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="col-lg-6">
+      <div class="info-card card-practices" id="card-bp-pipeline-security">
+       <div class="card-body d-flex flex-column">
+        <h5>
+         <i class="bi bi-lock"></i>
+         Pipeline Security
+        </h5>
+        <div class="card-content-wrapper">
+         <p class="summary">
+          Your pipeline runs with credentials and touches production. Treat it as a privileged system, not a build script. Most breaches here come from long-lived secrets and over-scoped permissions.
+         </p>
+         <button aria-controls="collapseBpPipelineSecurity" aria-expanded="false" class="btn btn-outline-secondary btn-sm details-toggle" data-bs-target="#collapseBpPipelineSecurity" data-bs-toggle="collapse" type="button">
+          Details
+          <i class="bi bi-chevron-down"></i>
+         </button>
+        </div>
+        <div class="collapse collapse-content" id="collapseBpPipelineSecurity">
+         <h6>Hardening checklist:</h6>
+         <ul>
+          <li><strong>Workload identity federation:</strong> replace secret-based Azure service connections with federated (OIDC) connections so there is no stored secret to leak or rotate.</li>
+          <li><strong>Secrets in Key Vault only:</strong> reference them through a variable group linked to Key Vault; never store secrets in YAML or plaintext variables. Secret variables are masked in logs.</li>
+          <li><strong>Protect shared resources:</strong> put approvals and checks on service connections, agent pools, and variable groups, not just environments, so a rogue pipeline cannot borrow them.</li>
+          <li><strong>Scope the token:</strong> set the job authorization scope to <em>project</em> (not collection) and grant the build service the least access it needs.</li>
+          <li><strong>Pin and scan:</strong> pin task and container image versions; run SAST/SCA (GHAzDO CodeQL, dependency scanning) as a required check.</li>
+          <li><strong>Guard <code>pull_request</code> triggers:</strong> do not expose secrets to pipelines triggered by forks or untrusted contributors.</li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="col-lg-6">
+      <div class="info-card card-practices" id="card-bp-environments">
+       <div class="card-body d-flex flex-column">
+        <h5>
+         <i class="bi bi-diagram-2"></i>
+         Environments, Approvals &amp; Checks
+        </h5>
+        <div class="card-content-wrapper">
+         <p class="summary">
+          Model each deployment target (Dev, QA, Prod) as an Azure Pipelines <em>environment</em>, then attach approvals and checks. This is how you get manual gates, deployment history, and blast-radius control.
+         </p>
+         <button aria-controls="collapseBpEnvironments" aria-expanded="false" class="btn btn-outline-secondary btn-sm details-toggle" data-bs-target="#collapseBpEnvironments" data-bs-toggle="collapse" type="button">
+          Details
+          <i class="bi bi-chevron-down"></i>
+         </button>
+        </div>
+        <div class="collapse collapse-content" id="collapseBpEnvironments">
+         <h6>The checks you can stack on an environment:</h6>
+         <ul>
+          <li><strong>Approvals:</strong> require named people or groups to sign off before the stage runs; approvers cannot be the person who queued the run.</li>
+          <li><strong>Branch control:</strong> only allow deployment from an approved branch such as <code>main</code>.</li>
+          <li><strong>Business hours:</strong> defer production deploys to a safe window.</li>
+          <li><strong>Invoke REST API / Azure Function:</strong> call an external gate (change management, test results) and pass only on success.</li>
+          <li><strong>Query Azure Monitor alerts:</strong> block promotion if the target is currently unhealthy.</li>
+          <li><strong>Required template &amp; evaluate artifact:</strong> enforce that the pipeline extends an approved template and that artifacts meet policy.</li>
+          <li><strong>Exclusive lock:</strong> serialize deployments so two runs cannot hit the same environment at once.</li>
+         </ul>
+         <div class="callout callout-danger">
+          <strong>Continuous Delivery vs Deployment:</strong> Delivery = automatic to a staging environment, human approval to prod. Deployment = automatic all the way to prod. Choose per service; do not default every service to fully automatic prod without strong test coverage.
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="col-lg-6">
+      <div class="info-card card-practices" id="card-bp-workitems">
+       <div class="card-body d-flex flex-column">
+        <h5>
+         <i class="bi bi-kanban"></i>
+         Work-Item Hygiene &amp; Traceability
+        </h5>
+        <div class="card-content-wrapper">
+         <p class="summary">
+          The value of Boards is end-to-end traceability: idea → work item → branch → PR → build → release. That chain only exists if the team keeps items honest and linked.
+         </p>
+         <button aria-controls="collapseBpWorkitems" aria-expanded="false" class="btn btn-outline-secondary btn-sm details-toggle" data-bs-target="#collapseBpWorkitems" data-bs-toggle="collapse" type="button">
+          Details
+          <i class="bi bi-chevron-down"></i>
+         </button>
+        </div>
+        <div class="collapse collapse-content" id="collapseBpWorkitems">
+         <h6>Practices that keep Boards trustworthy:</h6>
+         <ul>
+          <li><strong>One backlog, prioritized:</strong> a single ordered product backlog beats five personal to-do lists. Rank ruthlessly.</li>
+          <li><strong>Definition of Done:</strong> encode it on the board (tests, docs, review) so "done" means the same thing to everyone.</li>
+          <li><strong>Area &amp; iteration paths:</strong> configure them up front; they drive team assignment, sprint scoping, and every velocity report.</li>
+          <li><strong>WIP limits:</strong> cap in-progress columns to expose bottlenecks instead of hiding them.</li>
+          <li><strong>Link everything:</strong> enforce work-item linking via branch policy (above) so traceability is automatic, not aspirational.</li>
+          <li><strong>Right-size items:</strong> a User Story should fit inside a sprint; anything bigger is a Feature that needs splitting.</li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="col-lg-6">
+      <div class="info-card card-practices" id="card-bp-iac">
+       <div class="card-body d-flex flex-column">
+        <h5>
+         <i class="bi bi-filetype-tf"></i>
+         Infrastructure-as-Code Gates
+        </h5>
+        <div class="card-content-wrapper">
+         <p class="summary">
+          Infrastructure changes are the highest-blast-radius thing a pipeline does. Gate them harder than application code: a human should see exactly what will change before it changes.
+         </p>
+         <button aria-controls="collapseBpIac" aria-expanded="false" class="btn btn-outline-secondary btn-sm details-toggle" data-bs-target="#collapseBpIac" data-bs-toggle="collapse" type="button">
+          Details
+          <i class="bi bi-chevron-down"></i>
+         </button>
+        </div>
+        <div class="collapse collapse-content" id="collapseBpIac">
+         <h6>The safe IaC pipeline shape:</h6>
+         <ul>
+          <li><strong>Plan then approve then apply:</strong> <code>terraform plan</code> (or <code>bicep what-if</code>) publishes an artifact; a manual approval on the environment gates <code>terraform apply</code> against that exact plan.</li>
+          <li><strong>Remote state with locking:</strong> store <code>tfstate</code> in an Azure Storage backend; locking prevents two runs from corrupting it. Never keep state on a local disk.</li>
+          <li><strong>Least-privilege deploy identity:</strong> the IaC service connection gets only the roles it needs on the target subscription, scoped per environment.</li>
+          <li><strong>Policy as code:</strong> run Azure Policy / OPA / <code>tfsec</code> checks as required status checks so non-compliant infra fails the PR.</li>
+          <li><strong>No portal drift:</strong> ban manual changes in the Azure Portal; reconcile drift by re-running the pipeline, not by clicking.</li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="col-lg-6">
+      <div class="info-card card-practices" id="card-bp-reliability">
+       <div class="card-body d-flex flex-column">
+        <h5>
+         <i class="bi bi-speedometer2"></i>
+         Pipeline Reliability &amp; Speed
+        </h5>
+        <div class="card-content-wrapper">
+         <p class="summary">
+          A slow, flaky pipeline gets bypassed, and a bypassed pipeline protects nothing. Keep CI fast and deterministic so the team trusts the gates instead of routing around them.
+         </p>
+         <button aria-controls="collapseBpReliability" aria-expanded="false" class="btn btn-outline-secondary btn-sm details-toggle" data-bs-target="#collapseBpReliability" data-bs-toggle="collapse" type="button">
+          Details
+          <i class="bi bi-chevron-down"></i>
+         </button>
+        </div>
+        <div class="collapse collapse-content" id="collapseBpReliability">
+         <h6>Keep it fast and boring:</h6>
+         <ul>
+          <li><strong>YAML pipelines only:</strong> versioned, reviewed, and diffable. The classic UI editor is unversioned click-ops; migrate off it.</li>
+          <li><strong>Reusable templates:</strong> factor shared steps into templates so 30 pipelines change in one place.</li>
+          <li><strong>Cache dependencies:</strong> use the Cache task for NuGet/npm to cut minutes off every run.</li>
+          <li><strong>Fail fast, run in parallel:</strong> split independent jobs; put the cheapest checks (lint, unit) first.</li>
+          <li><strong>Quarantine flaky tests:</strong> a test that fails randomly trains people to hit re-run. Fix or isolate it.</li>
+          <li><strong>Set retention:</strong> configure artifact and run retention so storage and noise do not grow without bound.</li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
    <!-- 1. Agile Planning (Azure Boards) -->
    <div class="schema-container section-plan" data-section-id="section-plan" data-section-name="Plan">
     <h2 class="section-title">
@@ -1201,7 +1401,8 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
 
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            const yearEl = document.getElementById('currentYear');
+            if (yearEl) yearEl.textContent = new Date().getFullYear();
 
             const searchBox = document.getElementById('search-box');
             const categoryFiltersContainer = document.getElementById('category-filters');
@@ -1356,7 +1557,7 @@
     © 2026 David Veksler · Compiled &amp; expanded based on Microsoft Azure documentation and CI/CD implementation guides.
   </p>
   <p class="mb-2 text-muted" style="font-size:0.8em;">
-    Last verified: 2026-07-04
+    Last verified: 2026-07-21
   </p>
   <div>
     <a class="mx-2 link-secondary" href="https://www.linkedin.com/in/davidveksler/" target="_blank" title="David Veksler on LinkedIn">
