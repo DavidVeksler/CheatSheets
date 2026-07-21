@@ -349,11 +349,16 @@ scope). Two durable notes preserved for the next pillar:
   (pos 2–6).** Any future AI pillar must diff its target queries against ai-frontier's and re-word
   on overlap. The two shipped AI hubs (`ai-models-compared`, `ai-safety-existential-risk`) were
   scoped this way.
-- **Next candidate not yet built:** an AI-infrastructure / datacenter pillar over
-  `ai-accelerator-comparison`, `ai-infrastructure-numbers`, `datacenter-*`,
-  `semiconductor-manufacturing` (currently in Engineering & Science). The aerospace pillar's
-  "frontier hardware" aside links `humanoid-robots` (61K impr) and `tesla-products` (89K impr)
-  without absorbing them, so they remain free to seed a separate hardware pillar later.
+- **P5 shipped 2026-07-21 — `ai-datacenter-infrastructure.html`:** the AI-infrastructure / datacenter
+  pillar over `ai-accelerator-comparison`, `ai-infrastructure-numbers`, `datacenter-power-chain`,
+  `datacenter-cooling-thresholds`, `data-center-myths`, `data-center-community-impact`, and
+  `semiconductor-manufacturing`. Layer-by-layer stack map + constraints grid + keyword-anchored spoke
+  index; CollectionPage+ItemList schema; reciprocal backlinks in all 7 spokes; llms.txt now covers the
+  pillar + all 7 spokes (5 had been missing). Own measurement baseline from 2026-07-21 on the
+  `ai data center / ai infrastructure / data center power` family. Committed, not pushed.
+- **Next candidate (not built):** a humanoid/hardware pillar. The aerospace pillar's "frontier
+  hardware" aside links `humanoid-robots` (61K impr) and `tesla-products` (89K impr) without absorbing
+  them, so they remain free to seed a separate hardware pillar later.
 
 ## Log
 
@@ -393,3 +398,8 @@ scope). Two durable notes preserved for the next pillar:
   2026-08-06). Found and fixed a discovery gap: the three new pillars were missing from `llms.txt`;
   added them. Queued post-freeze content/coverage work for under-ranking dev spokes (azure-devops,
   databases, postgresql, aws-vs-azure, git-scm, clean-architecture, dotnet).
+- 2026-07-21 — Built **P5**, the AI-infrastructure/datacenter pillar (`ai-datacenter-infrastructure.html`),
+  freeze-safe as new content. Ran an interim Cloudflare AI-crawler pull (~1,068/day, down from ~1,510
+  baseline; Perplexity up) and verified live infra (404s fixed, caching present). Staged copy-paste
+  marketing posts with tracked UTM URLs in `marketing/ready-to-post.md`. Flag: the 08-06 checkpoint
+  scheduled task is not visible from this macOS session (Windows desktop registry) — confirm it exists.
