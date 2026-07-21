@@ -260,7 +260,7 @@
     "name": "David Veksler Cheatsheets"
   },
   "datePublished": "2025-04-26",
-  "dateModified": "2026-07-14"
+  "dateModified": "2026-07-21"
 }
 </script>
 </head>
@@ -276,6 +276,116 @@
    </p>
   </header>
   <div class="container" id="main-container">
+   <!-- 0. DATABASE COMPARISON CHART -->
+   <div class="schema-container cat-concept" data-section-id="section-comparison">
+    <h2 class="section-title" id="section-comparison">
+     Database Comparison Chart
+    </h2>
+    <p style="max-width:900px;margin:-0.5rem 0 1.25rem;color:var(--text-color-secondary);">
+     One scannable matrix of the major database families — relational, document, key-value, wide-column, graph, search, analytical, time-series, and vector — against the decision criteria that actually drive the choice. Read the <strong>Best fit</strong> and <strong>Watch out for</strong> columns together: the mistake is almost never picking a "bad" database, it is using a good one for the wrong workload. Engine versions verified July 2026.
+    </p>
+    <div class="table-responsive">
+     <table class="table table-bordered table-hover align-middle" style="background:#fff;">
+      <thead class="table-light">
+       <tr>
+        <th scope="col">Family</th>
+        <th scope="col">Data model</th>
+        <th scope="col">Query / access</th>
+        <th scope="col">Consistency &amp; scaling</th>
+        <th scope="col">Best fit</th>
+        <th scope="col">Watch out for</th>
+        <th scope="col">Leading engines (2026)</th>
+       </tr>
+      </thead>
+      <tbody>
+       <tr>
+        <th scope="row">Relational (SQL)</th>
+        <td>Tables, rows, fixed schema, foreign keys</td>
+        <td>SQL; rich joins &amp; ad-hoc queries</td>
+        <td>Strong ACID; scales up, reads out via replicas; sharding is manual</td>
+        <td>Transactions, reporting, anything with relationships and integrity rules — the safe default</td>
+        <td>High write throughput across many nodes; rapidly-changing schema</td>
+        <td>PostgreSQL 18, MySQL 8.4 LTS, SQL Server 2025, MariaDB 12 LTS, SQLite</td>
+       </tr>
+       <tr>
+        <th scope="row">Document</th>
+        <td>Self-describing JSON/BSON documents</td>
+        <td>Document API + secondary indexes; aggregation pipeline</td>
+        <td>Tunable; horizontal scaling via sharding built in</td>
+        <td>Evolving schemas, content/catalog data, per-entity aggregates</td>
+        <td>Many-to-many joins; cross-document transactions (supported but not the strength)</td>
+        <td>MongoDB 8.0, Couchbase, Amazon DocumentDB</td>
+       </tr>
+       <tr>
+        <th scope="row">Key-Value</th>
+        <td>Opaque value keyed by a unique key</td>
+        <td>GET/SET by key; near-O(1) lookups</td>
+        <td>In-memory speed (sub-ms); scales horizontally; often eventual</td>
+        <td>Caching, sessions, rate limiting, leaderboards, queues</td>
+        <td>Querying by value or range; durable system-of-record use</td>
+        <td>Redis 8 (tri-licensed, now AGPLv3), Valkey (BSD fork), Memcached</td>
+       </tr>
+       <tr>
+        <th scope="row">Wide-Column</th>
+        <td>Rows with dynamic column families, partitioned by key</td>
+        <td>CQL-style; queries must match the partition key</td>
+        <td>Tunable consistency; linear write scaling across many nodes</td>
+        <td>Massive write volume, time-ordered/IoT data, always-on multi-region</td>
+        <td>Ad-hoc queries and joins — you design tables per query, not per entity</td>
+        <td>Apache Cassandra 5.0, ScyllaDB, HBase, Bigtable</td>
+       </tr>
+       <tr>
+        <th scope="row">Graph</th>
+        <td>Nodes and relationships as first-class, with properties</td>
+        <td>Cypher / Gremlin; cheap multi-hop traversals</td>
+        <td>Strong within a node; scaling out is harder than other families</td>
+        <td>Social graphs, fraud rings, recommendations, dependency/impact analysis</td>
+        <td>Simple tabular data or bulk analytics over all rows</td>
+        <td>Neo4j (5.26 LTS / CalVer 2025–2026), Memgraph, Amazon Neptune</td>
+       </tr>
+       <tr>
+        <th scope="row">Search</th>
+        <td>Inverted-index documents with analyzers</td>
+        <td>Full-text queries, relevance ranking, facets, aggregations</td>
+        <td>Near-real-time; horizontally sharded; eventually consistent</td>
+        <td>Text search, log/observability analytics, faceted product search</td>
+        <td>System-of-record duties or strong transactional guarantees</td>
+        <td>Elasticsearch, OpenSearch</td>
+       </tr>
+       <tr>
+        <th scope="row">Analytical / Columnar</th>
+        <td>Column-oriented storage, heavy compression</td>
+        <td>SQL scans/aggregations over billions of rows</td>
+        <td>Read-optimized OLAP; scales scans across nodes/cores</td>
+        <td>Dashboards, aggregations, event analytics, ad-hoc BI</td>
+        <td>Frequent single-row updates/deletes and OLTP transactions</td>
+        <td>ClickHouse, DuckDB (embedded), Apache Druid</td>
+       </tr>
+       <tr>
+        <th scope="row">Time-Series</th>
+        <td>Timestamped measurements keyed by series/tags</td>
+        <td>SQL or purpose-built API; downsampling &amp; retention policies</td>
+        <td>Append-optimized; automatic partitioning by time</td>
+        <td>Metrics, monitoring, sensor/IoT streams, financial ticks</td>
+        <td>Relational workloads or heavy cross-entity joins</td>
+        <td>TimescaleDB (on PostgreSQL), InfluxDB, Prometheus</td>
+       </tr>
+       <tr>
+        <th scope="row">Vector</th>
+        <td>High-dimension embeddings + metadata</td>
+        <td>Approximate nearest-neighbor (ANN) search by similarity</td>
+        <td>Index-dependent (HNSW/IVF); recall traded against latency</td>
+        <td>Semantic search, RAG, recommendations, image/audio similarity</td>
+        <td>Exact lookups, transactions, or when a SQL DB's vector extension already suffices</td>
+        <td>pgvector 0.8 (in PostgreSQL), Milvus 2.5, Qdrant 1.18, Weaviate 1.37, Pinecone (managed)</td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <p style="max-width:900px;color:var(--text-color-secondary);font-size:0.95rem;">
+     <strong>Start here:</strong> reach for relational first and only move off it for a specific reason — scale, access pattern, or data shape that SQL handles poorly. Many teams get the best of both by staying on PostgreSQL and adding an extension (JSONB for documents, <code>pgvector</code> for embeddings, TimescaleDB for time-series) before adopting a second engine to operate.
+    </p>
+   </div>
    <!-- 1. FOUNDATIONAL CONCEPTS -->
    <div class="schema-container cat-concept" data-section-id="section-concepts">
     <h2 class="section-title" id="section-concepts">
@@ -4084,7 +4194,7 @@ document.addEventListener('DOMContentLoaded', () => {
     </a>
   </div>
   <p class="mb-2">
-    © 2026 David Veksler · Compiled &amp; expanded based on relational database theory and NoSQL database documentation. Last verified: 2026-07-04.
+    © 2026 David Veksler · Compiled &amp; expanded based on relational database theory and NoSQL database documentation. Last verified: 2026-07-21.
   </p>
   <div>
     <a class="mx-2 link-secondary" href="https://www.linkedin.com/in/davidveksler/" target="_blank" title="David Veksler on LinkedIn">
