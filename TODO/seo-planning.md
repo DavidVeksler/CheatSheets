@@ -75,6 +75,28 @@ The broad AI page still supplies scale, while task-shaped niche references still
 CTR. Keep the niche-utility topic gate; do not read low CTR on SERP-feature-heavy broad queries as a
 site-wide quality verdict.
 
+## Fresh pulse — last 28 days (2026-06-23 → 2026-07-20)
+
+Pulled 2026-07-21. Full numbers in [`docs/seo-progress.md`](../docs/seo-progress.md). Strategy
+unchanged; still under the title/consolidation freeze until the 2026-08-06 checkpoint.
+
+- `ai-frontier.html`: **158 clicks / 51,150 impressions / 0.31% CTR / position 9.0** — clicks and
+  position both improving across the last three pulses (138→158 clicks; 9.9→9.0 position). Frontier-AI
+  query family holds positions 2–6.
+- `baofeng-uv5r-quick-ref.html`: 59 / 1,493 / 3.95% / 7.7. `orbital-rockets-comparison.html`: 31 /
+  9,897 / 0.31% / 10.0. `shabbat-services-cheatsheet.html`: 30 / 603 / 4.98% / 8.2.
+- New/notable: `global_cuisine_guide.html` (20 clicks, new to top pages), `ham-radio-technician.html`
+  (17 clicks, 5.67% CTR), `yudkowsky-rationality-ai-cheatsheet.html` (10 clicks, position 5.9).
+- **Post-freeze striking-distance queue:** `azure-devops.html` wins its head term ("azure devops
+  cheat sheet", position 2, 20% CTR) but sits at page-level position 20.7 — long-tail coverage gap.
+  Dev spokes ranking far back: `databases` 26.6, `dotnet-cheatsheet` 24.6, `postgresql` 22.7,
+  `clean-architecture-dotnet` 30.7, `aws-vs-azure` 53.6, `git-scm` 51.7. Content/coverage signals to
+  review after 2026-08-06, not listing fixes.
+- **Fix shipped this pulse (freeze-safe):** the three pillars launched 2026-07-15
+  (`ai-models-compared`, `ai-safety-existential-risk`, `rockets-and-spaceflight`) had been omitted
+  from `llms.txt`; added them to the AI-crawler discovery index in their category sections. Only the
+  upgraded `software-development-guides.html` had been present.
+
 ## Full audit — 2026-07-09
 
 A 180-day pull (2026-01-10 → 2026-07-08) plus a parsed metadata sweep of the then-current 151-file
@@ -366,3 +388,8 @@ scope). Two durable notes preserved for the next pillar:
   one pillar per commit, not pushed. Removed the completed P1–P4 build specs from this doc. Each hub
   starts its own measurement baseline from 2026-07-15. Note: overwrote a prior untracked P1 file
   (unrecoverable — never git-added).
+- 2026-07-21 — Fresh 28-day GSC pulse (recorded above + in `docs/seo-progress.md`). `ai-frontier`
+  still climbing (158 clicks / position 9.0). No title/consolidation changes (freeze holds until
+  2026-08-06). Found and fixed a discovery gap: the three new pillars were missing from `llms.txt`;
+  added them. Queued post-freeze content/coverage work for under-ranking dev spokes (azure-devops,
+  databases, postgresql, aws-vs-azure, git-scm, clean-architecture, dotnet).
