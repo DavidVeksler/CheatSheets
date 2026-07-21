@@ -37,9 +37,11 @@ No build step — serve the static files and verify in a real browser
 python3 -m http.server 8765     # then load http://127.0.0.1:8765/<file>.html
 ```
 
-Assert: console clean (a `favicon.ico` 404 is the only allowed error), Bootstrap
-loaded (`typeof window.bootstrap !== 'undefined'` so a bad SRI hash can't pass
-silently), interactive bits work, light + dark themes both render.
+Assert: console clean (a `favicon.ico` 404 is the only allowed error), any CDN
+framework loaded (e.g. for Bootstrap, `typeof window.bootstrap !== 'undefined'` so
+a bad SRI hash can't pass silently), interactive bits work, light + dark themes
+both render. (Design approach is a free choice now — see AGENTS.md > *Design
+approach*; Bootstrap is one option, not a requirement.)
 
 ## The gate that must pass
 

@@ -90,25 +90,42 @@ These cheatsheets are AI-generated and increasingly AI-consumed, so wrong specif
 
 ## Tech Baseline
 
-### Framework
-- **Bootstrap 5.3.x — pin the current stable (5.3.8 as of 2026-06).** Bootstrap 6 is not yet stable; do not target it. Bootstrap is retained for visual consistency across the 47+ existing files — do not rip it out wholesale.
-- Add **Subresource Integrity (`integrity` + `crossorigin`)** to all CDN `<link>`/`<script>` tags. Load JS with `defer`.
-- Bootstrap Icons via CDN, pinned.
+### Design approach — choose per cheatsheet (creativity encouraged)
 
-### Modern Platform Baseline (prefer these — all Baseline-supported in 2026)
-Use native platform features over Bootstrap's JS wherever they're strictly better. Highest-value swaps:
-- **Exclusive accordions: native `<details name="group">` + `<summary>`.** Zero JS, prints fully expanded-capable, works without JS, accessible by default. This replaces Bootstrap collapse for the core collapsible pattern — and satisfies the "works without JS" requirement for free.
-- **Theming: `color-scheme` + the `light-dark()` CSS function**, honoring `prefers-color-scheme` automatically. Offer an optional manual override via `[data-theme]` (a tiny JS shim or `:has()`), not a hand-rolled dual stylesheet.
-- **Layout: CSS Grid + container queries** for the card grid, so cards respond to their container, not just the viewport.
-- **Specificity: wrap custom CSS in `@layer`** so it sits cleanly above Bootstrap without `!important` wars.
-- **`:has()`** for state-driven styling without JS.
-- **Typography: `text-wrap: balance`** on headings, `text-wrap: pretty` on body copy.
-- **Motion: gate all animations and any View Transitions behind `@media (prefers-reduced-motion: no-preference)`.**
-- **Persistence:** `localStorage` for checkbox/progress state (existing pattern) — feature-detect and fail soft.
+**There is no single mandated framework.** Bootstrap was the historical default and stays fully supported, but it is now **one option on a menu, not a requirement.** Pick the approach that best serves the *topic* and the *reader*, and give a sheet its own visual identity when the subject warrants it — a Vim reference and a Stoicism reference should not look identical. The only thing that stays constant across every sheet is the **Invariant Layer** below; framework, layout system, and aesthetic are all free choices.
+
+| Approach | Reach for it when | Notes / cost |
+|---|---|---|
+| **Bootstrap 5.3.x** (incumbent) | Editing an existing Bootstrap page; a dense table/card reference where you want zero design risk and fast assembly. | Pinned 5.3.8 + SRI (table below). The safe, fast default for a plain reference. Don't rip Bootstrap out of the 47+ existing files wholesale. |
+| **Vanilla + modern CSS platform** (no framework) — *recommended default for new creative sheets* | You want a distinctive look, full control, and the lightest payload. Grid + container queries + `@layer` + `light-dark()` cover most of what Bootstrap did. | Zero CDN framework weight; most room for a bespoke identity. |
+| **Utility-first (Tailwind)** | Fast iteration on a custom design; you think in utilities. | The Play CDN compiles in-browser (heavier, dev-oriented) — acceptable for a standalone page, but prefer a pinned prebuilt sheet + SRI where practical. |
+| **Classless / minimal CSS** (Pico, Simple.css, Water.css) | Text-heavy editorial/academic topics where semantic HTML should just look good with near-zero markup noise. | Pin + SRI. Good fit for philosophy/finance "essay-as-reference" pages. |
+| **Bespoke themed design system** (layers on any of the above) | The topic has a strong visual metaphor: terminal/CRT for CLI & security, blueprint/graph-paper for engineering, editorial print for philosophy, tactical HUD for gear. | This is the main creativity lever. Commit to the metaphor consistently across the page. |
+
+**How to choose:** match the aesthetic to the subject, weigh the payload, and don't reach for Bootstrap reflexively. When you want a genuinely distinctive interface, invoke the **`frontend-design` skill** for design direction before writing markup. When in doubt for a plain reference table, Bootstrap remains the safe, fast choice.
+
+**Icons** are likewise a free choice: Bootstrap Icons (pinned + SRI), inline SVG, an emoji set, or none.
+
+### Invariant Layer (holds for EVERY approach)
+
+Whatever design you pick, these are non-negotiable — they are what keep a page fast, accessible, durable, and coherent with the rest of the corpus:
+
+- **Self-contained standalone HTML** — embedded CSS/JS, no build step, static-host friendly.
+- **SRI on every CDN asset.** Any `<link>`/`<script>` pulled from a CDN (Bootstrap, Tailwind, Pico, an icon set — anything) carries `integrity="sha384-…" crossorigin="anonymous"`, and JS loads with `defer`. Compute the hash from the real bytes (see Build & Verify); if the asset isn't in the cached table below, compute and add it.
+- **Modern platform baseline** (all Baseline-supported in 2026) — use these regardless of framework, in preference to a framework's JS where they're strictly better:
+  - **Exclusive accordions: native `<details name="group">` + `<summary>`** — zero JS, prints fully-expandable, works without JS, accessible by default (satisfies the "works without JS" requirement for free).
+  - **Theming: `color-scheme` + `light-dark()`**, honoring `prefers-color-scheme`; optional manual override via `[data-theme]` (`:has()` or a tiny JS shim), not a hand-rolled dual stylesheet.
+  - **Layout: CSS Grid + container queries** so components respond to their container, not just the viewport.
+  - **Specificity: wrap custom CSS in `@layer`** so it sits cleanly above any framework without `!important` wars.
+  - **`:has()`** for state-driven styling without JS.
+  - **Typography: `text-wrap: balance`** on headings, `text-wrap: pretty` on body copy.
+  - **Motion: gate all animations and View Transitions behind `@media (prefers-reduced-motion: no-preference)`.**
+  - **Persistence:** `localStorage` for checkbox/progress state — feature-detect and fail soft.
+- **Works without JS, responsive, WCAG 2.2 AA, print-correct, and within the Core Web Vitals targets** — as specified in their own sections below. None of these relax with the design choice.
 
 ### Cached CDN dependencies (SRI hashes)
 
-Precomputed `integrity` values for the pinned CDN assets, so they don't have to be recalculated each time. Computed from the real CDN bytes with `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`. **If you bump a version, recompute the hash for that file and update this table.**
+Precomputed `integrity` values for the **Bootstrap-family** CDN assets (used by the incumbent design approach), so they don't have to be recalculated each time. Computed from the real CDN bytes with `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`. **If you bump a version, recompute the hash for that file and update this table.** A sheet built with a different approach (Tailwind, Pico, etc.) computes SRI for its own CDN assets the same way — add them here if they'll recur.
 
 | Asset | Version | URL | integrity (sha384-…) |
 |---|---|---|---|
@@ -264,7 +281,7 @@ Deferred. Do **not** add affiliate links in the current pass. When implemented, 
 
 Concrete steps from past builds that make a cheatsheet correct on the first pass — do these before claiming "done":
 
-- **Compute SRI hashes from the real files — never recall them or trust a summarizer/WebFetch.** Pin the current Bootstrap (**5.3.8**) and Icons (**1.13.1**), then hash the actual CDN bytes:
+- **Compute SRI hashes from the real files — never recall them or trust a summarizer/WebFetch.** For whatever CDN assets the chosen design approach uses, hash the actual bytes (Bootstrap **5.3.8** / Icons **1.13.1** are pre-cached in the table above):
   ```bash
   curl -sL https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css | openssl dgst -sha384 -binary | openssl base64 -A
   ```
@@ -273,20 +290,20 @@ Concrete steps from past builds that make a cheatsheet correct on the first pass
   ```bash
   nohup python3 -m http.server 8765 >/tmp/serve.log 2>&1 &   # a `(cmd &)` subshell can fail to bind; use nohup
   ```
-  Load `http://127.0.0.1:8765/<file>.html` and assert: console is clean (a `favicon.ico` 404 is the only acceptable error); Bootstrap actually loaded (`typeof window.bootstrap !== 'undefined'`) so a bad SRI hash can't pass silently; CSS custom props resolve.
+  Load `http://127.0.0.1:8765/<file>.html` and assert: console is clean (a `favicon.ico` 404 is the only acceptable error); any CDN framework actually loaded (e.g. for Bootstrap, `typeof window.bootstrap !== 'undefined'`) so a bad SRI hash can't pass silently; CSS custom props resolve.
 - **Exercise the interactive bits.** For checklist/progress pages, toggle checkboxes via `dispatchEvent(new Event('change'))` and confirm the progress count + `localStorage` keys update; confirm copy buttons map 1:1 to command blocks. Check both light and dark themes.
 - **Generate and optimize the preview image yourself at 1200×630** (matches `og:image`/`twitter:image`): resize viewport to 1200×630, pick the theme that flatters the topic (dark for tech), hide floating controls (e.g. `themeToggle`, `backTop`), scroll to top, screenshot to `images/{filename}.png`, then run ImageOptim on that PNG before finishing. `generate-image-previews.py` remains the batch fallback.
 - **Clean up** stray screenshots and kill the `http.server` before committing.
 
 ### Reusable interactive patterns
-- **Saved-progress checklist** (the recurring "hook"): native `<details>` task cards, each with a `.task-check` checkbox + a `data-task` id; persist state to `localStorage` under a per-page prefix; a sticky Bootstrap progress bar reads done/total; a Reset button clears the keys. `stopPropagation` on the checkbox so ticking it doesn't toggle the `<details>`. Reference: `linux-server-hardening.html`, `privacy-data-broker-opt-out.html`.
+- **Saved-progress checklist** (the recurring "hook"): native `<details>` task cards, each with a `.task-check` checkbox + a `data-task` id; persist state to `localStorage` under a per-page prefix; a sticky progress bar (Bootstrap's, or a hand-rolled one) reads done/total; a Reset button clears the keys. `stopPropagation` on the checkbox so ticking it doesn't toggle the `<details>`. Reference: `linux-server-hardening.html`, `privacy-data-broker-opt-out.html`.
 - **Paste-ready command blocks:** a `.cmd` wrapper with an optional `.cmd-label`, a `<pre><code>`, and a copy button using the Clipboard API with an `execCommand('copy')` fallback; flash a checkmark on success. Reference: `linux-server-hardening.html`.
 
 ## Theme & Styling
 
 - Clean, modern, responsive. Color theming suited to subject (dark for tech, light for academic).
 - Dark/light via `color-scheme` + `light-dark()`; respect `prefers-color-scheme`, optional manual toggle.
-- Custom CSS variables under `@layer`; consistent Bootstrap components for shared chrome.
+- Custom CSS variables under `@layer`; keep shared chrome (header, nav, footer, cards) visually consistent within a page whatever framework or hand-rolled system it uses.
 - Hover/animation effects gated behind `prefers-reduced-motion`.
 
 ## Accessibility (target WCAG 2.2 AA)
@@ -301,7 +318,7 @@ Concrete steps from past builds that make a cheatsheet correct on the first pass
 ## Performance (Core Web Vitals)
 
 - Targets: **LCP < 2.5s, INP < 200ms** (INP replaced FID in 2024), **CLS < 0.1**.
-- `defer` all JS; lazy-load non-critical images; keep CDN payload minimal (only the Bootstrap JS components actually used).
+- `defer` all JS; lazy-load non-critical images; keep CDN payload minimal (ship only the framework components/utilities actually used, or none at all with a hand-rolled approach).
 - Inline critical CSS is acceptable given the standalone model.
 
 ## Testing Checklist
@@ -318,7 +335,7 @@ Comprehensiveness & accuracy:
 - [ ] Volatile facts dated; visible `Last verified` line; `dateModified` is real
 
 Platform & delivery:
-- [ ] Bootstrap pinned to current 5.3.x with SRI; JS deferred
+- [ ] Design approach chosen deliberately (see the menu); any CDN framework pinned with SRI; JS deferred
 - [ ] Collapsibles use native `<details name>`; theming via `light-dark()`
 - [ ] All metadata blocks present and valid; JSON-LD matches visible content
 - [ ] No FAQ/HowTo schema added for rich-result purposes

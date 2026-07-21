@@ -7,7 +7,8 @@ Interactive HTML cheatsheet collection covering technology, philosophy, AI, cryp
 
 ### Key Components
 1. **Standalone HTML Files** (47+) - Self-contained cheatsheets with embedded CSS/JS
-   - Bootstrap 5.3.3 via CDN, Bootstrap Icons
+   - **Design approach is a free choice per sheet** (see AGENTS.md > *Design approach — choose per cheatsheet*): Bootstrap 5.3.8 is the incumbent/safe default, but vanilla modern CSS, Tailwind, classless CSS, or a bespoke themed system are all fair game. Only the *Invariant Layer* (self-contained HTML, SRI on CDN assets, native `<details>`, `light-dark()`, a11y, print, CWV) is mandatory.
+   - Bootstrap Icons, inline SVG, emoji, or no icons — also a free choice.
    - Interactive features: collapsible sections, filters, localStorage persistence
    - Print-optimized styles
 
@@ -105,7 +106,7 @@ Or use PHP built-in: `php -S localhost:8000`
 ## Project-Specific Patterns
 
 ### HTML Structure Convention
-- Use `<details>`/`<summary>` or Bootstrap collapse for sections
+- Use native `<details>`/`<summary>` for collapsible sections (part of the Invariant Layer; preferred over any framework's collapse JS)
 - Add toggle controls with localStorage persistence
 - Include print-specific CSS (`@media print`)
 - External links: `target="_blank"`
@@ -132,8 +133,8 @@ Files are auto-discovered via `scandir()`, filtered by `$excludedItems` array.
 - URLs: `https://cheatsheets.davidveksler.com/{filename}.html`
 
 ## External Dependencies
-- **Bootstrap 5.3.3** (CDN) - UI framework
-- **Bootstrap Icons** (CDN) - Icon library
+- **Bootstrap 5.3.8** (CDN, pinned + SRI) - UI framework for the incumbent design approach (optional per sheet; other approaches may use Tailwind, Pico, or no framework)
+- **Bootstrap Icons 1.13.1** (CDN) - Icon library (optional)
 - **Playwright** (optional) - Screenshot generation
 - **BeautifulSoup4** (optional) - HTML parsing
 - **lxml** (optional) - Faster HTML parsing
