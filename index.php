@@ -310,6 +310,10 @@ if (is_readable($popularityFile)) {
     <!-- Sitemap reference for search engines -->
     <link rel="sitemap" type="application/xml" href="<?php echo htmlspecialchars($baseUrl); ?>sitemap.php">
 
+    <!-- LLM / AI answer-engine discovery: curated summary + full machine-readable index -->
+    <link rel="alternate" type="text/plain" title="Cheatsheets LLM summary" href="https://cheatsheets.davidveksler.com/llms.txt">
+    <link rel="alternate" type="text/plain" title="Cheatsheets full LLM context" href="https://cheatsheets.davidveksler.com/llms-full.txt">
+
     <!-- === Open Graph / Facebook / LinkedIn === -->
     <meta property="og:title" content="David Veksler's Cheatsheets | Governed Agentic-AI Output at Scale">
     <meta property="og:description" content="80+ interactive references produced by a governed Claude Code pipeline — a version-controlled spec as acceptance criteria, a self-verification gate, and a public git audit trail. A working exhibit of agentic-AI architecture and information design at scale.">
