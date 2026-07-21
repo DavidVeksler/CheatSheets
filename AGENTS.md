@@ -119,6 +119,7 @@ Whatever design you pick, these are non-negotiable — they are what keep a page
   - **`:has()`** for state-driven styling without JS.
   - **Typography: `text-wrap: balance`** on headings, `text-wrap: pretty` on body copy.
   - **Motion: gate all animations and View Transitions behind `@media (prefers-reduced-motion: no-preference)`.**
+  - **Avoid fixed full-viewport `mix-blend-mode` / `backdrop-filter` overlays.** A `position:fixed` full-screen blend or blur layer (e.g. a CRT/scanline overlay, a frosted sticky bar over the whole page) wedges scroll compositing in some renderers — content beyond the fold stops painting — and costs real scroll performance. Bake textures into a normal (non-fixed) `background` layer on the element instead, and prefer a solid/semi-opaque sticky bar over `backdrop-filter`. (Learned redesigning `versioncontrol.html`.)
   - **Persistence:** `localStorage` for checkbox/progress state — feature-detect and fail soft.
 - **Works without JS, responsive, WCAG 2.2 AA, print-correct, and within the Core Web Vitals targets** — as specified in their own sections below. None of these relax with the design choice.
 
