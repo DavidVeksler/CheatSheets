@@ -45,3 +45,49 @@ pulse (the pre-registered decision checkpoint is 2026-08-06). No title/consolida
 - **Optimization shipped this pulse (freeze-safe, not a title change):** added the three new pillars
   (`ai-models-compared`, `ai-safety-existential-risk`, `rockets-and-spaceflight`) to `llms.txt`; they
   had been omitted from the AI-crawler discovery index when they launched 2026-07-15.
+
+### Interim AI-crawler pull — Cloudflare, 7 days (2026-07-14 → 2026-07-20)
+
+Pulled 2026-07-21, host-filtered to `cheatsheets.davidveksler.com`, zone `davidveksler.com` (Free).
+Method note: the free plan caps `httpRequestsAdaptiveGroups` at a 1-day range and ~8-day retention,
+so this is 7 individual 1-day queries summed (2026-07-13 had already rolled off). Interim datapoint
+between the 2026-07-11 baseline and the 2026-08-06 checkpoint, captured now because the window
+otherwise disappears.
+
+| User agent | Requests (7d) | vs. 2026-07-11 baseline |
+|---|---|---|
+| ChatGPT-User | 4,925 | down (6,945) |
+| Bytespider | 1,029 | ~flat (1,184) |
+| PerplexityBot | 651 | **up ~2x (341)** |
+| Amazonbot | 415 | down (600) |
+| Applebot | 186 | down (278) |
+| DuckAssistBot | 80 | up (65) |
+| GPTBot | 51 | down (102) |
+| ClaudeBot | 45 | down (135) |
+| Claude-User | 35 | down (63) |
+| OAI-SearchBot | 29 | down (186) |
+| GoogleOther | 19 | down (620) |
+| MistralAI | 16 | ~flat |
+| **TOTAL** | **7,481 (~1,068/day)** | down from ~10,573 (~1,510/day) |
+
+- **Total AI run-rate is down ~30% week-over-week**, driven mostly by ChatGPT-User and the
+  Google/OAI search-indexers; **PerplexityBot roughly doubled**. Treat as one noisy week, not a trend —
+  ChatGPT-User volume tracks how often pages surface in live answers and swings. The real read comes
+  at the 2026-08-06 checkpoint against the same method.
+- `ai-frontier.html` remains the #1 fetched page (1,574 ChatGPT-User fetches), followed by `/` (656),
+  `humanoid-robots.html` (440), `bitcoin-whitepaper.html` (244), `orbital-rockets-comparison.html`
+  (190), `boom-supersonic.html` (182). The citability play still concentrates on the same flagships.
+
+### Infra verification — 2026-07-21
+
+- **404 handling is fixed:** `/no-such-page-xyz-test` returns `404 text/html`; `robots.txt` returns
+  `200 text/plain`. The AGENTS.md known-issue (404s served as 200 homepage HTML) is resolved live.
+- **Caching headers live:** cheatsheet HTML sends `cache-control: public, max-age=1800`; images send a
+  long-lived cache (`max-age=315360000`). Both fine; the image TTL differs from the documented
+  `max-age=604800, immutable` but is benign.
+- **`llms.txt` fix is committed but NOT yet live** — the live file still shows 0 of the 3 new pillars.
+  Needs a deploy to reach the crawlers.
+- **Checkpoint scheduled task not verifiable from this session.** The macOS `scheduled-tasks` MCP
+  reports zero tasks; the routine fleet (incl. `cheatsheets-pivot-checkpoint`) lives in the Windows
+  desktop-app registry, which a darwin session can't see. Confirm on the Windows box that the
+  one-time 2026-08-06 task is still present and enabled. Not recreated here (duplicate risk).
