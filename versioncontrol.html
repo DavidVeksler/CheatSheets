@@ -1,40 +1,31 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Modern Version Control: Git, Mercurial &amp; Hosting</title>
 <link href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;🔄&lt;/text&gt;&lt;/svg&gt;" rel="icon"/>
-<!-- SEO Meta Description -->
-<meta content="An interactive cheatsheet comparing Git and Mercurial plus hosting platforms (GitHub, GitLab, Bitbucket, Azure DevOps): core concepts and key workflows." name="description"/>
-<meta content="Git, Mercurial, DVCS, Version Control, Source Control, GitHub, GitLab, Bitbucket, Azure DevOps, Cheatsheet, Branching, Merging, CI/CD, Hosting Platform" name="keywords"/>
-<!-- Canonical URL -->
+<meta content="An interactive cheatsheet comparing Git and Mercurial plus hosting platforms (GitHub, GitLab, Bitbucket, Azure DevOps): core concepts, key workflows, and how to choose." name="description"/>
+<meta content="Git, Mercurial, DVCS, Version Control, Source Control, GitHub, GitLab, Bitbucket, Azure DevOps, Cheatsheet, Branching, Merging, CI/CD, Hosting Platform, jj, Jujutsu" name="keywords"/>
 <link href="https://cheatsheets.davidveksler.com/versioncontrol.html" rel="canonical"/>
-<!-- Social Media Metadata -->
 <meta content="Modern Version Control: Git, Mercurial &amp; Hosting" property="og:title"/>
-<meta content="An interactive cheatsheet comparing Git and Mercurial plus hosting platforms (GitHub, GitLab, Bitbucket, Azure DevOps): core concepts and key workflows." property="og:description"/>
+<meta content="An interactive cheatsheet comparing Git and Mercurial plus hosting platforms (GitHub, GitLab, Bitbucket, Azure DevOps): core concepts, key workflows, and how to choose." property="og:description"/>
 <meta content="website" property="og:type"/>
 <meta content="https://cheatsheets.davidveksler.com/versioncontrol.html" property="og:url"/>
-<meta content="David Veksler Cheatsheets" property="og:site_name"/> <!-- Example Site Name -->
-<!-- <meta property="og:image" content="https://cheatsheets.davidveksler.com/images/source-control-tree-preview.png"> --> <!-- Placeholder OG image URL -->
+<meta content="David Veksler Cheatsheets" property="og:site_name"/>
+<meta property="og:image:alt" content="Terminal-styled cheatsheet: Modern Version Control (Git, Mercurial) and hosting platforms"/>
+<meta content="images/versioncontrol.png" property="og:image"/>
 <meta content="summary_large_image" name="twitter:card"/>
 <meta content="Modern Version Control: Git, Mercurial &amp; Hosting" name="twitter:title"/>
-<meta content="An interactive cheatsheet comparing Git and Mercurial plus hosting platforms (GitHub, GitLab, Bitbucket, Azure DevOps): core concepts and key workflows." name="twitter:description"/>
-<!-- <meta name="twitter:image" content="https://cheatsheets.davidveksler.com/images/source-control-tree-preview.png"> --> <!-- Placeholder Twitter image URL -->
-<!-- If you have a Twitter handle associated with the site: <meta name="twitter:site" content="@YourTwitterHandle"> -->
+<meta content="An interactive cheatsheet comparing Git and Mercurial plus hosting platforms (GitHub, GitLab, Bitbucket, Azure DevOps): core concepts, key workflows, and how to choose." name="twitter:description"/>
+<meta content="images/versioncontrol.png" name="twitter:image"/>
 <meta content="@HeroicLife" name="twitter:creator"/>
-<link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" rel="stylesheet"/>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"/>
-<!-- Link to your specific CSS for the history tree styling -->
-<link href="history_tree_style.css" rel="stylesheet"/>
-<meta property="og:image:alt" content="Interactive Cheatsheet: Modern Version Control (Git, Mercurial) &amp; Hosting Platforms">
-<meta content="images/versioncontrol.png" property="og:image"/><meta content="images/versioncontrol.png" name="twitter:image"/><script type="application/ld+json">
+<script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "TechArticle",
   "headline": "Modern Version Control: Git, Mercurial & Hosting",
-  "description": "An interactive cheatsheet comparing Git and Mercurial plus hosting platforms (GitHub, GitLab, Bitbucket, Azure DevOps): core concepts and key workflows.",
+  "description": "An interactive cheatsheet comparing Git and Mercurial plus hosting platforms (GitHub, GitLab, Bitbucket, Azure DevOps): core concepts, key workflows, and how to choose.",
   "author": {
     "@type": "Person",
     "name": "David Veksler (AI Generated)"
@@ -44,447 +35,556 @@
     "name": "David Veksler Cheatsheets"
   },
   "datePublished": "2025-04-28",
-  "dateModified": "2026-07-14",
-  "keywords": "Git, Mercurial, DVCS, Version Control, Source Control, GitHub, GitLab, Bitbucket, Azure DevOps, Cheatsheet, Branching, Merging, CI/CD, Hosting Platform"
+  "dateModified": "2026-07-21",
+  "keywords": "Git, Mercurial, DVCS, Version Control, Source Control, GitHub, GitLab, Bitbucket, Azure DevOps, Cheatsheet, Branching, Merging, CI/CD, Hosting Platform, jj, Jujutsu"
 }
 </script>
+<style>
+/* ============================================================
+   Design approach: bespoke terminal / phosphor-CRT theme.
+   Vanilla modern CSS, no framework. Self-contained.
+   Invariant layer: native <details>, light-dark() theming,
+   Grid + container queries, @layer, prefers-reduced-motion,
+   localStorage (theme), works without JS, WCAG AA, print.
+   ============================================================ */
+@layer reset, tokens, base, layout, components, motion, print;
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+  h1, h2, h3, h4, h5, h6, p, ul, ol { margin: 0; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--phosphor-bright); outline-offset: 2px; border-radius: 3px; }
+}
+
+@layer tokens {
+  :root { color-scheme: light dark; }
+  :root[data-theme="dark"]  { color-scheme: dark; }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root {
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+
+    --bg:         light-dark(#eef1ea, #0b0f14);
+    --window:     light-dark(#fbfcf8, #0d1117);
+    --panel:      light-dark(#ffffff, #11161d);
+    --panel-2:    light-dark(#f2f4ee, #161c24);
+    --ink:        light-dark(#1b1f23, #c9d1d9);
+    --dim:        light-dark(#57606a, #8b949e);
+    --faint:      light-dark(#6e7781, #6a7480);
+    --border:     light-dark(#d3d9cc, #263040);
+    --border-lit: light-dark(#b9c2ac, #30363d);
+
+    --phosphor:        light-dark(#1a7f37, #3fb950);
+    --phosphor-bright: light-dark(#0f6b2c, #56d364);
+    --amber:           light-dark(#8a5a00, #d29922);
+    --cyan:            light-dark(#0550ae, #79c0ff);
+    --link:            light-dark(#0969da, #58a6ff);
+    --danger:          light-dark(#b62324, #f85149);
+
+    --dot-r: #ff5f56; --dot-y: #ffbd2e; --dot-g: #27c93f;
+
+    --glow: light-dark(none, 0 0 8px rgba(63,185,80,.35));
+    --shadow: light-dark(0 10px 30px rgba(40,50,30,.12), 0 16px 44px rgba(0,0,0,.55));
+    --radius: 10px;
+  }
+}
+
+@layer base {
+  body {
+    font-family: var(--mono);
+    background:
+      radial-gradient(1200px 600px at 80% -10%, color-mix(in oklab, var(--phosphor) 10%, transparent), transparent 60%),
+      var(--bg);
+    background-attachment: scroll;
+    color: var(--ink);
+    line-height: 1.6;
+    font-size: clamp(15px, 0.9rem + 0.2vw, 17px);
+    padding: clamp(12px, 3vw, 40px);
+    min-height: 100vh;
+  }
+  ::selection { background: color-mix(in oklab, var(--phosphor) 40%, transparent); color: var(--ink); }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted color-mix(in oklab, var(--link) 60%, transparent); }
+  a:hover { color: var(--phosphor-bright); border-bottom-color: currentColor; }
+  code, kbd { font-family: var(--mono); }
+  p { text-wrap: pretty; }
+  h1, h2, h3, h4, h5 { text-wrap: balance; line-height: 1.25; }
+}
+
+@layer layout {
+  .term {
+    max-width: 1180px; margin-inline: auto;
+    /* Faint scanline texture baked into the window (no fixed/blend layer — keeps scroll cheap) */
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 2px, color-mix(in oklab, var(--ink) 4%, transparent) 2px 3px),
+      var(--window);
+    border: 1px solid var(--border-lit);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: clip;
+  }
+  .term-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: linear-gradient(var(--panel-2), var(--panel));
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .dots { display: flex; gap: 8px; }
+  .dots span { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .dots .r { background: var(--dot-r); } .dots .y { background: var(--dot-y); } .dots .g { background: var(--dot-g); }
+  .term-title { flex: 1; text-align: center; color: var(--dim); font-size: .82em; letter-spacing: .02em; }
+  .term-title b { color: var(--phosphor); font-weight: 600; }
+  .theme-btn {
+    font-family: var(--mono); font-size: .78em; cursor: pointer;
+    background: var(--panel); color: var(--dim);
+    border: 1px solid var(--border-lit); border-radius: 6px; padding: 4px 9px;
+  }
+  .theme-btn:hover { color: var(--phosphor); border-color: var(--phosphor); }
+
+  main { padding: clamp(18px, 3vw, 40px); }
+  .intro { margin-bottom: 30px; }
+  .grid {
+    container-type: inline-size;
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  }
+  section { margin-block: clamp(30px, 5vw, 52px); scroll-margin-top: 70px; }
+}
+
+@layer components {
+  /* Shell prompt line */
+  .prompt { color: var(--dim); font-size: .92em; display: flex; flex-wrap: wrap; gap: .5ch; align-items: baseline; }
+  .prompt::before { content: "❯"; color: var(--phosphor); font-weight: 700; }
+  .prompt .cmd { color: var(--ink); }
+  .prompt .flag { color: var(--amber); }
+
+  h1 {
+    font-size: clamp(1.5rem, 1rem + 2.4vw, 2.4rem);
+    letter-spacing: -.01em; margin: 4px 0 10px;
+    color: var(--phosphor-bright); text-shadow: var(--glow);
+  }
+  h1 .caret { display: inline-block; width: .6ch; background: var(--phosphor-bright); color: transparent; margin-left: 2px; }
+  .lead { color: var(--dim); max-width: 70ch; }
+
+  /* Section headers as commands */
+  .sec-head { margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-lit); }
+  .sec-head h2 {
+    font-size: clamp(1.15rem, .9rem + 1vw, 1.6rem); color: var(--ink);
+    display: flex; align-items: baseline; gap: .6ch;
+  }
+  .sec-head h2::before { content: "$"; color: var(--phosphor); font-weight: 700; }
+  .sec-head .hint { color: var(--faint); font-size: .82em; margin-top: 4px; }
+  .sec-head .comment { color: var(--faint); }
+
+  /* Output card */
+  .block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border-lit);
+    border-radius: 8px; padding: 16px 18px;
+    transition: border-color .18s ease, transform .18s ease;
+  }
+  .block:hover { border-left-color: var(--phosphor); }
+  .block > h3 { font-size: 1.02rem; color: var(--phosphor); display: flex; align-items: baseline; gap: .5ch; }
+  .block > h3 .tag { color: var(--faint); font-weight: 400; font-size: .78em; }
+  .block .summary { margin-top: 8px; color: var(--ink); }
+  .block.accent-git    { border-left-color: #f1502f; }
+  .block.accent-hg     { border-left-color: #999; }
+  .block.accent-github { border-left-color: light-dark(#24292f,#adbac7); }
+  .block.accent-gitlab { border-left-color: #fc6d26; }
+  .block.accent-bucket { border-left-color: #2684ff; }
+  .block.accent-azure  { border-left-color: #0078d4; }
+  .block.wide { grid-column: 1 / -1; }
+
+  .kw { color: var(--phosphor-bright); border-bottom: 1px dotted color-mix(in oklab, var(--phosphor) 55%, transparent); }
+  code {
+    background: var(--panel-2); color: var(--amber);
+    padding: .08em .4em; border-radius: 4px; font-size: .9em;
+    border: 1px solid var(--border);
+  }
+
+  /* Details / expandable */
+  details { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 4px; }
+  details > summary {
+    cursor: pointer; list-style: none; color: var(--phosphor); font-size: .86em;
+    padding: 8px 0 4px; display: flex; align-items: center; gap: .5ch; user-select: none;
+  }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before { content: "▶"; font-size: .7em; transition: transform .15s ease; color: var(--dim); }
+  details[open] > summary::before { transform: rotate(90deg); color: var(--phosphor); }
+  details > summary:hover { color: var(--phosphor-bright); }
+  .details-body { padding: 6px 2px 10px; color: var(--ink); }
+  .details-body h6 {
+    text-transform: uppercase; letter-spacing: .08em; font-size: .72rem;
+    color: var(--amber); margin: 14px 0 4px;
+  }
+  .details-body h6:first-child { margin-top: 4px; }
+  .details-body ul, .details-body ol { padding-left: 1.4em; margin: 4px 0; }
+  .details-body li { margin: 3px 0; }
+  .details-body li::marker { color: var(--phosphor); }
+  .details-body p { margin: 4px 0; color: var(--dim); }
+  .details-body strong { color: var(--ink); }
+
+  /* Quick reference table */
+  .qref { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: clip; }
+  .qref-head { padding: 10px 16px; border-bottom: 1px solid var(--border); color: var(--dim); font-size: .82em; }
+  .qref-head b { color: var(--phosphor); }
+  table.cmd-table { width: 100%; border-collapse: collapse; font-size: .9em; }
+  .cmd-table th, .cmd-table td { text-align: left; padding: 9px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .cmd-table th { color: var(--amber); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+  .cmd-table tr:last-child td { border-bottom: none; }
+  .cmd-table td:first-child { white-space: nowrap; }
+  .cmd-table td code { display: inline-block; }
+  .cmd-table td:last-child { color: var(--dim); }
+
+  /* callout for jj / watch item */
+  .callout { border-left: 3px solid var(--amber); background: color-mix(in oklab, var(--amber) 8%, var(--panel)); padding: 12px 16px; border-radius: 6px; margin-top: 12px; }
+  .callout b { color: var(--amber); }
+
+  footer { border-top: 1px solid var(--border); padding: 26px clamp(18px,3vw,40px); color: var(--dim); font-size: .86em; }
+  footer a { color: var(--link); }
+  .foot-links { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 12px; }
+  .verified { color: var(--faint); font-size: .82em; }
+  .related { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border); }
+  .related strong { color: var(--phosphor); }
+  .related a { margin-right: 14px; display: inline-block; }
+  .build-note { margin-top: 16px; max-width: 72ch; color: var(--faint); font-size: .82em; }
+}
+
+@layer motion {
+  @media (prefers-reduced-motion: no-preference) {
+    h1 .caret { animation: blink 1.1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .block:hover { transform: translateY(-2px); }
+    main > section { animation: rise .5s both; }
+    main > section:nth-of-type(2) { animation-delay: .05s; }
+    main > section:nth-of-type(3) { animation-delay: .1s; }
+    main > section:nth-of-type(4) { animation-delay: .15s; }
+    main > section:nth-of-type(5) { animation-delay: .2s; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  }
+}
+
+@layer print {
+  @media print {
+    body { padding: 0; background: #fff; color: #000; font-size: 11px; }
+    .term-bar, .theme-btn { display: none !important; }
+    .term { box-shadow: none; border: none; max-width: none; background: #fff; }
+    details { open: true; }
+    details > summary { display: none; }
+    .details-body { display: block !important; }
+    .block { break-inside: avoid; border: 1px solid #ccc; }
+    a { color: #000; border: none; }
+  }
+}
+</style>
 </head>
 <body>
-<header class="page-header container">
-<h1><i class="bi bi-git"></i> Modern Version Control Cheatsheet</h1>
-<p class="lead">Explore Git, Mercurial, &amp; Hosting Platforms using an interactive visual tree.</p>
+<div class="term">
+<header class="term-bar">
+  <span class="dots" aria-hidden="true"><span class="r"></span><span class="y"></span><span class="g"></span></span>
+  <span class="term-title"><b>davidveksler</b>@cheatsheets: <b>~/version-control</b></span>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle light and dark theme">◐ theme</button>
 </header>
-<div class="history-container container">
-<!-- The visual trunk line -->
-<div class="history-trunk"></div>
-<!-- Node 1: Foundational Concepts -->
-<section class="history-node" id="section-concepts">
-<!-- Branch line connects node-dot to card -->
-<div class="branch-line"></div>
-<!-- Card containing the content for this node -->
-<div class="section-card card shadow-sm">
-<div class="card-body">
-<h2 class="section-title-inline"><i class="bi bi-lightbulb"></i> Foundational Concepts</h2>
-<div class="section-content">
-<!-- Inner cards using Bootstrap grid -->
-<div class="row">
-<div class="col-lg-4 col-md-6 mb-3">
-<div class="info-card" id="card-dvcs">
-<div class="card-body">
-<h5><i class="bi bi-diagram-3"></i> DVCS Philosophy</h5>
-<div class="card-content-wrapper">
-<p class="summary"><span class="term">Distributed Version Control Systems</span> (DVCS) like Git &amp; Mercurial give every developer a <span class="term">full repository copy</span>, enabling offline work, faster operations, and flexible workflows.</p>
-<button aria-controls="collapseConcept1" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapseConcept1" data-bs-toggle="collapse" type="button">
-                                                Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseConcept1">
-<h6>Core Idea</h6><p>Unlike older Centralized VCS (like SVN or CVS) where developers checked out files from a single central server, DVCS provides each user with a complete, independent copy (clone) of the entire repository history.</p><h6>Key Advantages</h6><ul><li><strong>Offline Work:</strong> Commit, branch, view history, and merge without needing a network connection.</li><li><strong>Performance:</strong> Most operations (commit, branch, merge, diff) are local and thus significantly faster.</li><li><strong>Redundancy:</strong> Every clone is effectively a full backup of the repository.</li><li><strong>Workflow Flexibility:</strong> Enables complex branching strategies and collaboration models (e.g., pull requests).</li><li><strong>Collaboration:</strong> Easily share changes between any two repositories, not just client-server.</li></ul><h6>Shift from Centralized</h6><p>The move to DVCS addressed key limitations of CVCS, particularly around branching/merging complexity, performance bottlenecks, and reliance on network connectivity.</p>
-</div>
-</div>
-</div>
-<div class="col-lg-4 col-md-6 mb-3">
-<div class="info-card" id="card-repository">
-<div class="card-body">
-<h5><i class="bi bi-archive"></i> Repository (Repo)</h5>
-<div class="card-content-wrapper">
-<p class="summary">A collection of <span class="term">files</span> and the <span class="term">history</span> of their changes. In DVCS, you have a local copy and interact with remote copies (e.g., on GitHub).</p>
-<button aria-controls="collapseConcept2" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapseConcept2" data-bs-toggle="collapse" type="button">
-                                                Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseConcept2">
-<h6>What it Contains</h6><p>A repository stores all the files belonging to a project, plus the complete history of modifications made to those files over time. This history is typically stored as a series of <span class="term">commits</span>.</p><h6>Local vs. Remote</h6><ul><li><strong>Local Repository:</strong> The full copy residing on your own computer. This is where you do your work: edit files, commit changes, create branches.</li><li><strong>Remote Repository:</strong> A copy hosted on a server (e.g., GitHub, GitLab, a company server). Used for collaboration, backup, and sharing code with others. A common conventional name for the primary remote is <code>origin</code>.</li></ul><h6>Operations</h6><p>You typically <span class="term">clone</span> a remote repository to create your local copy, <span class="term">pull</span> changes from a remote, and <span class="term">push</span> your local changes to a remote. <span class="term">Fetch</span> retrieves changes without merging.</p>
-</div>
-</div>
-</div>
-<div class="col-lg-4 col-md-6 mb-3">
-<div class="info-card" id="card-commit">
-<div class="card-body">
-<h5><i class="bi bi-check2-circle"></i> Commit</h5>
-<div class="card-content-wrapper">
-<p class="summary">A <span class="term">snapshot</span> of your project's tracked files at a specific point in time, saved to the repository's history. Each commit has a unique ID (e.g., Git SHA-1 hash) and a message.</p>
-<button aria-controls="collapseConcept3" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapseConcept3" data-bs-toggle="collapse" type="button">
-                                                Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseConcept3">
-<h6>Purpose</h6><p>Commits are the fundamental building blocks of a project's history. They represent saved states that you can reference, revert to, or compare against.</p><h6>Components</h6><ul><li><strong>Snapshot:</strong> Records the state of all tracked files at that moment. DVCS like Git often store this efficiently, only recording changes relative to previous commits.</li><li><strong>Metadata:</strong> Includes the author, committer, timestamp, and a unique identifier (e.g., a SHA-1 hash in Git).</li><li><strong>Parent(s):</strong> Points to the preceding commit(s). A standard commit has one parent; a merge commit has two or more.</li><li><strong>Commit Message:</strong> A description written by the author explaining the changes made in the commit. Crucial for understanding history.</li></ul><h6>Workflow (Git Example)</h6><p>Typically, you modify files, <span class="term">stage</span> the specific changes you want to include (<code>git add</code>), and then <span class="term">commit</span> them with a message (<code>git commit</code>).</p>
-</div>
-</div>
-</div>
-<div class="col-lg-4 col-md-6 mb-3">
-<div class="info-card" id="card-branch">
-<div class="card-body">
-<h5><i class="bi bi-diagram-2"></i> Branch</h5>
-<div class="card-content-wrapper">
-<p class="summary">An <span class="term">independent line of development</span>. Branches allow you to work on features or fixes without affecting the main codebase (e.g., <code>main</code> or <code>master</code>).</p>
-<button aria-controls="collapseConcept4" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapseConcept4" data-bs-toggle="collapse" type="button">
-                                                Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseConcept4">
-<h6>Concept</h6><p>Think of a branch as a movable pointer to a specific commit. When you create a branch, you create a new pointer. As you make commits on that branch, the pointer moves forward along with your changes.</p><h6>Why Use Branches?</h6><ul><li><strong>Isolation:</strong> Develop features, experiment, or fix bugs without destabilizing the main line of code.</li><li><strong>Parallel Development:</strong> Multiple team members can work on different features simultaneously on separate branches.</li><li><strong>Organization:</strong> Keep related changes grouped together (e.g., a 'feature/user-login' branch).</li><li><strong>Workflow Enablement:</strong> Basis for workflows like Gitflow or GitHub Flow, often involving Pull/Merge Requests.</li></ul><h6>Common Operations (Git)</h6><p>Creating a branch (<code>git branch feature-x</code>), switching to it (<code>git checkout feature-x</code> or the newer <code>git switch feature-x</code>), making commits, and eventually merging it back.</p>
-</div>
-</div>
-</div>
-<div class="col-lg-4 col-md-6 mb-3">
-<div class="info-card" id="card-merge">
-<div class="card-body">
-<h5><i class="bi bi-bezier2"></i> Merge</h5>
-<div class="card-content-wrapper">
-<p class="summary">The process of <span class="term">combining changes</span> from different branches back into one. Resolves differences between the development histories.</p>
-<button aria-controls="collapseConcept5" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapseConcept5" data-bs-toggle="collapse" type="button">
-                                                Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseConcept5">
-<h6>Goal</h6><p>To integrate work done on a separate branch (e.g., a feature branch) into another branch (e.g., <code>main</code>).</p><h6>How it Works</h6><p>VCS tools analyze the histories of the branches being merged. </p><ul><li><strong>Fast-Forward Merge:</strong> If the target branch hasn't diverged (no new commits since the feature branch was created), the target branch pointer simply moves forward to the source branch's latest commit. Simple and results in a linear history.</li><li><strong>Three-Way Merge (or Merge Commit):</strong> If both branches have diverged, the VCS finds a common ancestor commit and combines the changes from both branches since that ancestor. This typically creates a new <span class="term">merge commit</span> with two parents, explicitly showing where the histories were combined.</li></ul><h6>Merge Conflicts</h6><p>Occur when both branches modified the same part of the same file differently. The VCS cannot automatically decide which change to keep, requiring manual intervention by the developer to resolve the conflict before completing the merge.</p><h6>Alternatives</h6><p><span class="term">Rebasing</span> (e.g., <code>git rebase</code>) is another way to integrate changes. It rewrites the history of one branch on top of another, creating a linear history but potentially causing issues if the branch has already been shared. It has different tradeoffs compared to merging regarding history clarity and collaboration safety.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Node 2: DVCS Systems (Branched Off - indicated by style/border) -->
-<section class="history-node branch-off" id="section-dvcs">
-<div class="branch-line"></div>
-<div class="section-card card shadow-sm">
-<div class="card-body">
-<h2 class="section-title-inline"><i class="bi bi-git"></i> Distributed VCS</h2>
-<div class="section-content">
-<div class="row">
-<div class="col-lg-6 mb-3">
-<div class="info-card vcs-git" id="card-git">
-<div class="card-body">
-<h5><i class="bi bi-git"></i> Git (<a href="https://git-scm.com/" target="_blank">git-scm.com</a>)</h5>
-<div class="card-content-wrapper">
-<p class="summary">The <span class="term">dominant DVCS</span>, known for speed, flexibility, powerful branching/merging, and a vast ecosystem. Features a <span class="term">staging area</span> (index) for crafting commits.</p>
-<button aria-controls="collapseGit" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapseGit" data-bs-toggle="collapse" type="button">
-                                                Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseGit">
-<h6>Philosophy &amp; Core</h6><p>Designed by Linus Torvalds for Linux kernel development. Focuses on performance, data integrity (content-addressable storage using SHA-1 hashes), and robust support for non-linear workflows (branching and merging).</p><h6>Key Features</h6><ul><li><strong>Staging Area (Index):</strong> An intermediate step between your working directory and the repository history. Allows you to selectively stage parts of files to craft precise, logical commits.</li><li><strong>Branching Model:</strong> Extremely lightweight and fast branching and merging are core strengths.</li><li><strong>Distributed Nature:</strong> Every clone is a full repository, facilitating offline work and peer-to-peer sharing.</li><li><strong>Performance:</strong> Most operations are very fast as they are performed locally.</li><li><strong>Flexibility:</strong> Supports diverse workflows (Gitflow, GitHub Flow, etc.). Commands like <code>rebase</code> allow history manipulation (powerful, but use with care on shared branches).</li><li><strong>Large File Support:</strong> Handles large binary files better with extensions like <a href="https://git-lfs.github.com/" target="_blank">Git Large File Storage (LFS)</a>.</li></ul><h6>Common Commands</h6><p><code>git clone</code>, <code>git add</code>, <code>git commit</code>, <code>git status</code>, <code>git log</code>, <code>git branch</code>, <code>git checkout</code> / <code>git switch</code>, <code>git merge</code>, <code>git rebase</code>, <code>git pull</code>, <code>git push</code>, <code>git fetch</code>.</p><h6>Strengths</h6><ul><li>Industry standard; huge community and ecosystem.</li><li>Extensive tooling and platform support (GitHub, GitLab, etc.).</li><li>Excellent performance for most common operations.</li><li>Powerful and flexible branching/merging.</li><li>Staging area allows granular commit control.</li></ul><h6>Tradeoffs</h6><ul><li>Steeper initial learning curve for some concepts (staging area, reset, rebase).</li><li>Command-line interface can feel complex due to numerous options.</li><li>Default handling of very large binaries isn't ideal without LFS.</li></ul><h6>Use Cases</h6><p>Software development of all sizes, open-source projects, infrastructure as code, documentation, collaborative writing - essentially anywhere tracking changes to text-based files is needed.</p>
-</div>
-</div>
-</div>
-<div class="col-lg-6 mb-3">
-<div class="info-card vcs-mercurial" id="card-mercurial">
-<div class="card-body">
-<h5><i class="bi bi-infinity"></i> Mercurial (Hg) (<a href="https://www.mercurial-scm.org/" target="_blank">mercurial-scm.org</a>)</h5>
-<div class="card-content-wrapper">
-<p class="summary">A DVCS focused on <span class="term">simplicity</span>, ease of use, and performance. Often considered more intuitive than Git initially, but less widely used today.</p>
-<button aria-controls="collapseHg" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapseHg" data-bs-toggle="collapse" type="button">
-                                                Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseHg">
-<h6>Philosophy &amp; Core</h6><p>Designed with user-friendliness and interface consistency as high priorities. Aims to provide powerful DVCS features with a simpler command set and conceptual model compared to Git's defaults.</p><h6>Key Features</h6><ul><li><strong>Simpler Interface:</strong> Commands are often perceived as more consistent and intuitive (e.g., no staging area by default; <code>hg commit</code> commits all tracked changes).</li><li><strong>Branching Concepts:</strong> Supports multiple ways to handle parallel lines of development (named branches, bookmarks, anonymous heads). Named branches are permanent parts of history, unlike Git branches which are just pointers. This can offer power but also cause confusion.</li><li><strong>Extensibility:</strong> Core functionality can be extended via built-in extensions (e.g., `rebase`, `histedit` for history modification, `largefiles` for binary file support).</li><li><strong>Performance:</strong> Generally excellent performance, comparable to Git.</li><li><strong>Windows Support:</strong> Historically known for strong native Windows support.</li></ul><h6>Common Commands</h6><p><code>hg clone</code>, <code>hg add</code>, <code>hg commit</code> (or <code>hg ci</code>), <code>hg status</code>, <code>hg log</code>, <code>hg branch</code>, <code>hg update</code> (switches branches/commits), <code>hg merge</code>, <code>hg pull</code>, <code>hg push</code>, <code>hg heads</code>.</p><h6>Strengths</h6><ul><li>Potentially easier initial learning curve for basic workflows.</li><li>More consistent command-line interface structure.</li><li>Good performance.</li><li>Built-in web interface (<code>hg serve</code>).</li></ul><h6>Tradeoffs</h6><ul><li>Significantly smaller community and ecosystem compared to Git.</li><li>No major hosting platform support: Bitbucket fully removed all Hg repositories in July 2020 (permanently deleted by March 2022); GitHub never supported it; GitLab requires workarounds.</li><li>Multiple branching models (named branches vs bookmarks) can be confusing.</li><li>Some advanced operations require enabling non-default extensions.</li></ul><h6>Use Cases</h6><p>Legacy projects, specific large organizations (e.g., Meta/Facebook historically used it internally before transitioning to their own Sapling system), teams that strongly prefer its model over Git and manage their own hosting.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Node 3: Platforms (Branched Off - indicated by style/border) -->
-<section class="history-node branch-off" id="section-platforms">
-<div class="branch-line"></div>
-<div class="section-card card shadow-sm">
-<div class="card-body">
-<h2 class="section-title-inline"><i class="bi bi-hdd-stack"></i> Hosting Platforms</h2>
-<div class="section-content">
-<div class="row">
-<div class="col-lg-3 col-md-6 mb-3">
-<div class="info-card platform-github" id="card-github">
-<div class="card-body">
-<h5><i class="bi bi-github"></i> GitHub (<a href="https://github.com/" target="_blank">github.com</a>)</h5>
-<div class="card-content-wrapper">
-<p class="summary">The most popular platform for hosting Git repositories. Strong focus on <span class="term">collaboration</span>, <span class="term">open source</span>, and developer community features.</p>
-<button aria-controls="collapsePlatform1" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapsePlatform1" data-bs-toggle="collapse" type="button">
-                                                Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapsePlatform1">
-<h6>Core Offerings</h6><p>Git repository hosting, Pull Requests (code review/merge workflow), issue tracking, project management (Projects v2 - boards/tables), CI/CD (GitHub Actions), package hosting (Packages), wikis, security scanning (Dependabot, Code Scanning), large community.</p><h6>Key Features</h6><ul><li><strong>Pull Requests:</strong> Central mechanism for collaborative code review and merging.</li><li><strong>GitHub Actions:</strong> Powerful, integrated CI/CD and workflow automation platform defined in YAML files within the repo.</li><li><strong>Community Focus:</strong> The de facto hub for open-source projects; social coding features (following, starring, forks).</li><li><strong>Marketplace:</strong> Integrations with numerous third-party developer tools.</li><li><strong>Codespaces:</strong> Cloud-based development environments accessible via browser or VS Code.</li><li><strong>Copilot:</strong> AI pair programmer deeply integrated into the developer workflow.</li></ul><h6>Strengths</h6><ul><li>Massive user base and network effect.</li><li>Generally excellent UI/UX, considered intuitive by many.</li><li>Powerful and flexible GitHub Actions CI/CD.</li><li>Generous free tier for public and private repositories, including Actions minutes for public repos.</li><li>Strong focus on security features (Dependabot, code scanning).</li></ul><h6>Tradeoffs</h6><ul><li>Owned by Microsoft (a potential concern for some).</li><li>CI/CD minutes/storage limits on free/lower tiers can be restrictive for large private projects.</li><li>Integrated project management features may be less comprehensive than specialized tools like Jira or Azure Boards for complex needs.</li></ul>
-</div>
-</div>
-</div>
-<div class="col-lg-3 col-md-6 mb-3">
-<div class="info-card platform-gitlab" id="card-gitlab">
-<div class="card-body">
-<h5><i class="bi bi-gitlab"></i> GitLab (<a href="https://gitlab.com/" target="_blank">gitlab.com</a>)</h5>
-<div class="card-content-wrapper">
-<p class="summary">An <span class="term">integrated DevOps platform</span> built around Git hosting. Offers a wide toolchain from planning to monitoring. <span class="term">Self-hosting</span> option available.</p>
-<button aria-controls="collapsePlatform2" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapsePlatform2" data-bs-toggle="collapse" type="button">
-                                                Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapsePlatform2">
-<h6>Core Offerings</h6><p>Git repository hosting, Merge Requests (their term for PRs), issue tracking with boards, powerful integrated CI/CD (GitLab CI/CD), container registry, extensive security scanning (SAST, DAST, dependency, secrets), monitoring features, planning tools (Epics, Roadmaps), wiki.</p><h6>Key Features</h6><ul><li><strong>Single Application:</strong> Aims to provide the entire DevOps lifecycle within one platform, reducing toolchain complexity.</li><li><strong>GitLab CI/CD:</strong> Highly integrated, powerful, and configurable CI/CD using a <code>.gitlab-ci.yml</code> file. Runners can be shared or self-hosted.</li><li><strong>Self-Managed Option:</strong> Can be installed on your own infrastructure (Community Edition is open source, Enterprise Edition offers more features).</li><li><strong>Security Focus (DevSecOps):</strong> Comprehensive suite of security scanning tools integrated into the development workflow and MRs.</li><li><strong>Auto DevOps:</strong> Opinionated pipeline for automating build, test, deploy, and monitoring for simple projects.</li></ul><h6>Strengths</h6><ul><li>All-in-one DevOps platform can simplify tooling.</li><li>Mature and powerful built-in CI/CD is a core strength.</li><li>Strong security features integrated throughout the lifecycle.</li><li>Viable and popular self-hosting option with the open-source Community Edition.</li><li>Transparent development and release process.</li></ul><h6>Tradeoffs</h6><ul><li>The sheer number of features can make the UI feel complex or overwhelming initially.</li><li>UI/UX sometimes perceived as less polished than GitHub by some users.</li><li>Free tier CI/CD limits may be reached quickly by active teams.</li><li>Self-hosting requires operational overhead (maintenance, scaling, security).</li></ul>
-</div>
-</div>
-</div>
-<div class="col-lg-3 col-md-6 mb-3">
-<div class="info-card platform-bitbucket" id="card-bitbucket">
-<div class="card-body">
-<h5><i class="bi bi-bitbucket"></i> Bitbucket Cloud (<a href="https://bitbucket.org/" target="_blank">bitbucket.org</a>)</h5>
-<div class="card-content-wrapper">
-<p class="summary">Atlassian's Git hosting platform. Known for excellent <span class="term">integration</span> with other Atlassian tools like <span class="term">Jira and Trello</span>. (Mercurial support deprecated).</p>
-<button aria-controls="collapsePlatform3" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapsePlatform3" data-bs-toggle="collapse" type="button">
-                                                Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapsePlatform3">
-<h6>Core Offerings</h6><p>Git repository hosting (Mercurial support was fully removed in July 2020; all existing Hg repos were permanently deleted by March 2022), Pull Requests, integrated CI/CD (Bitbucket Pipelines), code search, deep issue tracking integration (Jira), project tracking integration (Trello).</p><h6>Key Features</h6><ul><li><strong>Atlassian Ecosystem Integration:</strong> Seamless workflow between Bitbucket commits/PRs and Jira issues is its main draw. Also integrates with Trello, Confluence, Opsgenie etc.</li><li><strong>Bitbucket Pipelines:</strong> Integrated CI/CD configured via a <code>bitbucket-pipelines.yml</code> file within the repository.</li><li><strong>Code Insights:</strong> Allows surfacing information from scanning/testing tools directly within Pull Requests.</li><li><strong>Free Tier:</strong> Offers free private repositories for small teams (up to 5 users), including CI/CD minutes.</li><li><strong>Deployment tracking:</strong> Integrates deployment information back into Jira issues.</li></ul><h6>Strengths</h6><ul><li>Unbeatable integration if your team is heavily invested in the Atlassian suite (Jira especially).</li><li>Competitive pricing, potentially cost-effective for small teams needing private repos and basic CI/CD.</li><li>Simple and effective built-in CI/CD with Pipelines for many common use cases.</li><li>Clean and straightforward user interface.</li></ul><h6>Tradeoffs</h6><ul><li>Smaller developer community compared to GitHub or GitLab.</li><li>CI/CD (Pipelines) may be less flexible or powerful than GitHub Actions or GitLab CI for very complex scenarios.</li><li>Fewer built-in features compared to GitLab's all-in-one approach (relies more on integrating other Atlassian tools).</li><li>Less focus on open-source community features than GitHub.</li><li>Mercurial support is fully gone — all Hg repos were permanently deleted in 2020–2022.</li></ul><h6>Use Cases</h6><p>Teams already using Jira extensively for project management, organizations standardized on Atlassian tools, small teams looking for cost-effective private repositories with integrated CI/CD.</p>
-</div>
-</div>
-</div>
-<div class="col-lg-3 col-md-6 mb-3">
-<div class="info-card platform-azure" id="card-azure-devops">
-<div class="card-body">
-<h5><i class="bi bi-microsoft"></i> Azure DevOps (<a href="https://azure.microsoft.com/en-us/products/devops/" target="_blank">azure.microsoft.com</a>)</h5>
-<div class="card-content-wrapper">
-<p class="summary">Microsoft's suite of DevOps services, including <span class="term">Azure Repos</span> for Git hosting. Strong integration with Azure cloud and other DevOps services.</p>
-<button aria-controls="collapsePlatform4" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapsePlatform4" data-bs-toggle="collapse" type="button">
-                                                Details <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapsePlatform4">
-<h6>Core Offerings (Suite)</h6><p>Azure DevOps Services is a suite including: <strong>Azure Repos</strong> (Git hosting, TFVC also supported), <strong>Azure Pipelines</strong> (CI/CD), <strong>Azure Boards</strong> (Agile planning, work item tracking), <strong>Azure Test Plans</strong>, and <strong>Azure Artifacts</strong> (package management).</p><h6>Key Features (Focus on Repos &amp; Pipelines)</h6><ul><li><strong>Integrated Suite:</strong> Provides tools across the development lifecycle, similar in scope to GitLab but within the Microsoft Azure ecosystem. Services can often be used independently.</li><li><strong>Azure Repos:</strong> Unlimited private Git repositories. Also supports Microsoft's legacy centralized VCS (Team Foundation Version Control - TFVC).</li><li><strong>Azure Pipelines:</strong> Very powerful and flexible CI/CD system. Supports building/deploying almost anywhere (Azure, AWS, GCP, on-prem). Can be defined with YAML or a classic visual editor.</li><li><strong>Azure Boards:</strong> Mature and highly customizable Agile planning and work tracking tools (comparable to Jira).</li><li><strong>Enterprise Focus:</strong> Strong support for granular permissions, branch policies, auditing, and integration with Azure Active Directory (now Microsoft Entra ID).</li></ul><h6>Strengths</h6><ul><li>Excellent integration with Azure cloud services for build and deployment.</li><li>Mature, powerful, and flexible CI/CD (Azure Pipelines).</li><li>Comprehensive and customizable work tracking features (Azure Boards).</li><li>Strong enterprise governance, security policies, and access control features.</li><li>Generous free tier for small teams (up to 5 users) and open source projects (more users, parallel jobs).</li><li>Continued support for TFVC for teams migrating from older Microsoft VCS.</li></ul><h6>Tradeoffs</h6><ul><li>UI can feel complex or slightly dated compared to GitHub/GitLab, especially navigating between the different services (Repos, Pipelines, Boards).</li><li>Less prominent in the general open-source community compared to GitHub.</li><li>Can feel heavily tied to the Microsoft ecosystem, although Pipelines are platform-agnostic.</li><li>The split between different services (Repos, Pipelines, Boards) might feel less unified than GitLab's single-application approach for some users.</li></ul><h6>Use Cases</h6><p>Organizations heavily invested in Microsoft Azure, enterprise teams needing strong governance/planning tools, teams migrating from TFVC, projects requiring complex CI/CD pipelines regardless of deployment target.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Node 4: Workflows (Back on Main Trunk) -->
-<section class="history-node" id="section-workflows">
-<div class="branch-line"></div>
-<div class="section-card card shadow-sm">
-<div class="card-body">
-<h2 class="section-title-inline"><i class="bi bi-diagram-3-fill"></i> Key Workflows</h2>
-<div class="section-content">
-<div class="row">
-<div class="col-lg-4 col-md-6 mb-3">
-<div class="info-card workflow-branching" id="card-workflow-branching">
-<div class="card-body">
-<h5><i class="bi bi-diagram-3-fill"></i> Branching Strategies</h5>
-<div class="card-content-wrapper">
-<p class="summary">Defined patterns for using branches to manage development, releases, and fixes. Common examples include <span class="term">Gitflow</span>, <span class="term">GitHub Flow</span>, and <span class="term">Trunk-Based Development</span>.</p>
-<button aria-controls="collapseWorkflow1" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapseWorkflow1" data-bs-toggle="collapse" type="button">
-                                                Explore <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseWorkflow1">
-<h6>Common Strategies</h6><ul><li><strong><a href="https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow" target="_blank">Gitflow</a>:</strong> A robust model with dedicated branches: `main` (production releases), `develop` (integration), `feature/*` (new work), `release/*` (release prep), `hotfix/*` (urgent production fixes). Good for projects with distinct, scheduled releases. Can be complex.</li><li><strong><a href="https://docs.github.com/en/get-started/quickstart/github-flow" target="_blank">GitHub Flow</a>:</strong> A simpler model optimized for continuous deployment. `main` is always deployable. New work happens in feature branches created from `main`. Changes are merged back into `main` via Pull Request and typically deployed immediately.</li><li><strong><a href="https://about.gitlab.com/topics/version-control/what-is-gitlab-flow/" target="_blank">GitLab Flow</a>:</strong> Similar to GitHub Flow but adds more flexibility, often including environment branches (e.g., `production`, `staging`) or release branches, bridging the gap between continuous deployment and versioned releases.</li><li><strong><a href="https://trunkbaseddevelopment.com/" target="_blank">Trunk-Based Development (TBD)</a>:</strong> Developers work in very short-lived feature branches or commit directly to the main line (`trunk`/`main`). Relies heavily on feature flags, comprehensive automated testing, and robust CI/CD pipelines. Aims for continuous integration and fast feedback.</li></ul><p>The best strategy depends on team size, release cadence, deployment practices, required stability guarantees, and team discipline.</p>
-</div>
-</div>
-</div>
-<div class="col-lg-4 col-md-6 mb-3">
-<div class="info-card workflow-pr" id="card-workflow-pr">
-<div class="card-body">
-<h5><i class="bi bi-git"></i> Pull/Merge Requests (PR/MR)</h5>
-<div class="card-content-wrapper">
-<p class="summary">A core collaboration feature on hosting platforms to propose changes from one branch to another, facilitating <span class="term">code review</span>, discussion, automated checks, and <span class="term">controlled merging</span>.</p>
-<button aria-controls="collapseWorkflow2" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapseWorkflow2" data-bs-toggle="collapse" type="button">
-                                                Explore <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseWorkflow2">
-<h6>Process Overview</h6><ol><li>A developer creates a feature branch, makes commits locally, and pushes the branch to the remote platform.</li><li>The developer opens a Pull Request (GitHub, Bitbucket, Azure Repos) or Merge Request (GitLab) targeting the desired integration branch (e.g., `main` or `develop`).</li><li>Team members (reviewers) examine the code changes ('diff'), leave comments, ask questions, and request modifications.</li><li>Automated checks configured via CI/CD (builds, tests, linters, security scans) run against the proposed changes, reporting status back to the PR/MR.</li><li>Discussion and code updates occur until the changes are approved and all checks pass.</li><li>Finally, an authorized user merges the changes into the target branch, often directly via the platform's UI, which usually closes the PR/MR.</li></ol><h6>Benefits</h6><ul><li><strong>Code Quality:</strong> Facilitates peer review to catch bugs, improve design, ensure coding standards, and enforce consistency.</li><li><strong>Knowledge Sharing:</strong> Team members learn from each other's code and gain context on changes across the project.</li><li><strong>Gatekeeping:</strong> Acts as a checkpoint, ensuring changes meet quality standards and pass automated checks before entering critical branches.</li><li><strong>Discussion Record:</strong> Provides a valuable history of decisions, discussions, and context related to specific changes.</li></ul>
-</div>
-</div>
-</div>
-<div class="col-lg-4 col-md-6 mb-3">
-<div class="info-card workflow-cicd" id="card-workflow-cicd">
-<div class="card-body">
-<h5><i class="bi bi-gear-wide-connected"></i> CI/CD Integration</h5>
-<div class="card-content-wrapper">
-<p class="summary">VCS events (like pushes or PRs) trigger <span class="term">Continuous Integration</span> (automated build/test) and <span class="term">Continuous Delivery/Deployment</span> pipelines, automating the software delivery process.</p>
-<button aria-controls="collapseWorkflow3" aria-expanded="false" class="btn btn-outline-primary details-toggle" data-bs-target="#collapseWorkflow3" data-bs-toggle="collapse" type="button">
-                                                Explore <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseWorkflow3">
-<h6>Continuous Integration (CI)</h6><p>The practice of frequently merging all developers' working copies to a shared mainline (e.g., `main` or `develop`), several times a day. Each merge triggers an automated build and execution of automated tests.</p><ul><li><strong>Trigger:</strong> Typically runs on every push to any branch, or specifically on pushes/updates to PRs/MRs targeting key branches.</li><li><strong>Goal:</strong> Detect integration errors, build failures, and test regressions as early as possible in the development cycle.</li><li><strong>Benefit:</strong> Provides a fast feedback loop to developers, reduces integration problems ("merge hell"), and improves overall code quality and stability.</li></ul><h6>Continuous Delivery / Continuous Deployment (CD)</h6><p>Extends CI by automating the release process beyond just building and testing.</p><ul><li><strong>Continuous Delivery:</strong> Automatically builds, tests, and prepares code changes for release to production. The pipeline ensures the software *can* be released at any time, but the final deployment to production usually requires a manual approval step.</li><li><strong>Continuous Deployment:</strong> Automatically deploys every validated change that passes the full CI/CD pipeline directly to production without human intervention. Requires high confidence in automated testing and infrastructure.</li><li><strong>Trigger:</strong> Typically runs after CI succeeds on specific branches (e.g., merge to `main`) or upon creation of tags.</li><li><strong>Benefit:</strong> Enables faster, more frequent, and more reliable releases; reduces manual deployment effort and associated errors.</li></ul><h6>Role of VCS &amp; Platforms</h6><p>The VCS (Git) and the Hosting Platform (GitHub, GitLab, etc.) are central. VCS events (push, merge, tag creation) act as the primary triggers for CI/CD pipelines. Platforms provide integrated CI/CD tools (Actions, GitLab CI, Pipelines) or integrate tightly with external tools (like Jenkins, CircleCI, etc.). The pipeline definitions are often stored as code (e.g., YAML files) within the repository itself.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Node 5: Choosing Tools (Back on Main Trunk) -->
-<section class="history-node" id="section-choosing">
-<div class="branch-line"></div>
-<div class="section-card card shadow-sm">
-<div class="card-body">
-<h2 class="section-title-inline"><i class="bi bi-check2-square"></i> Choosing Tools</h2>
-<div class="section-content">
-<div class="row">
-<div class="col-12 mb-3">
-<div class="info-card choosing-card" id="card-choosing">
-<div class="card-body">
-<h5 class="text-center"><i class="bi bi-check2-square"></i> System &amp; Platform Selection Factors</h5>
-<div class="card-content-wrapper">
-<p class="summary text-center">Generally, choose <span class="term">Git</span> due to its ubiquity. Select a <span class="term">Hosting Platform</span> based on ecosystem integration (Atlassian, Microsoft, Open Source), desired feature depth (CI/CD, security, project management), community vs. enterprise focus, self-hosting needs, and pricing.</p>
-<button aria-controls="collapseChoosing" aria-expanded="false" class="btn btn-outline-primary details-toggle mx-auto d-block" data-bs-target="#collapseChoosing" data-bs-toggle="collapse" type="button">
-                                                Key Factors <i class="bi bi-chevron-down"></i>
-</button>
-</div>
-</div>
-<div class="collapse collapse-content" id="collapseChoosing">
-<h6>Choosing the VCS System (Git vs. Mercurial vs. Jujutsu)</h6><ul><li><strong>Default Choice:</strong> <span class="term">Git</span>. It's the overwhelming industry standard. Choosing Git ensures maximum compatibility, community support, available talent, tooling options, and platform choices.</li><li><strong>Consider Mercurial Only If:</strong> You have a strong, specific reason, such as maintaining large legacy Hg projects. Note that no major hosting platform supports new Hg repos, and former heavy users like Meta have moved to alternatives (Meta now uses their own Sapling system).</li><li><strong>Watch:</strong> <a href="https://github.com/jj-vcs/jj" target="_blank" rel="noopener noreferrer">jj-vcs/jj</a> — a Git-compatible VCS gaining significant traction (used internally at Google; 30.1k GitHub stars; v0.43.0 as of July 2026). It offers a simpler mental model (no staging area, first-class conflict handling, anonymous branches) while reading/writing Git repositories natively — allowing gradual adoption alongside Git. Still pre-1.0 with ecosystem gaps (limited IDE integration, no Git submodule support), but production-ready for individual developers and small teams.</li></ul><h6>Choosing the Hosting Platform (GitHub vs. GitLab vs. Bitbucket vs. Azure DevOps)</h6><ul><li><strong>Ecosystem Integration:</strong> How well does it fit with your other tools?
-                <ul>
-<li><span class="term">Bitbucket:</span> Best for deep Atlassian (Jira, Confluence) integration.</li>
-<li><span class="term">Azure DevOps:</span> Best for deep Microsoft Azure and Microsoft Entra ID integration.</li>
-<li><span class="term">GitHub:</span> Strong integrations via Marketplace, excellent for open source workflows.</li>
-<li><span class="term">GitLab:</span> Aims to *be* the ecosystem (all-in-one).</li>
-</ul></li>
-<li><strong>Feature Set &amp; Depth:</strong> What capabilities are crucial?
-                <ul>
-<li><span class="term">GitLab:</span> Most comprehensive built-in feature set across the DevOps lifecycle (especially strong CI/CD and integrated security scanning).</li>
-<li><span class="term">Azure DevOps:</span> Very mature and powerful Pipelines (CI/CD) and Boards (planning).</li>
-<li><span class="term">GitHub:</span> Excellent Actions (CI/CD), leading community features, strong security addons (Dependabot, Code Scanning), integrated Packages and Codespaces.</li>
-<li><span class="term">Bitbucket:</span> Core Git hosting, solid Pipelines (CI/CD), primary strength is Jira integration.</li>
-</ul></li>
-<li><strong>Hosting Model:</strong> Cloud SaaS vs. Self-Managed?
-                <ul>
-<li><span class="term">GitLab:</span> Strong offering for both SaaS and self-managed (Community/Enterprise editions).</li>
-<li><span class="term">GitHub:</span> Primarily SaaS, but offers GitHub Enterprise Server for self-hosting.</li>
-<li><span class="term">Azure DevOps:</span> Primarily SaaS (Services), but Azure DevOps Server exists for on-premise (less common now).</li>
-<li><span class="term">Bitbucket:</span> Cloud (SaaS) and Data Center (self-managed).</li>
-</ul></li>
-<li><strong>Community vs. Enterprise Focus:</strong>
-<ul>
-<li><span class="term">GitHub:</span> Leader in open source and general developer community. Strong enterprise offering too.</li>
-<li><span class="term">GitLab:</span> Strong in both, appeals to companies wanting an integrated platform.</li>
-<li><span class="term">Azure DevOps:</span> Historically strong enterprise focus, good free tiers attract smaller teams/OSS too.</li>
-<li><span class="term">Bitbucket:</span> Traditionally strong with SMBs and enterprises using Atlassian products.</li>
-</ul></li>
-<li><strong>Pricing &amp; Tiers:</strong> Carefully compare free tier limitations (users, private repos, CI/CD minutes, storage) and the costs of paid plans based on your team size and expected usage.</li>
-<li><strong>User Interface &amp; Experience (UI/UX):</strong> This is subjective. Explore the interfaces or use free tiers to see which platform your team finds most intuitive and pleasant to work with.</li></ul><h6>Standardization vs. Polyglot</h6><p>While technically possible to use different platforms for different needs (e.g., GitHub for open source, Azure DevOps for internal enterprise apps), most organizations find it beneficial to standardize on one primary platform for consistency, billing simplification, user management, and unified workflow, potentially integrating specific best-of-breed tools if necessary.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-</div> <!-- /history-container -->
-
-<script crossorigin="anonymous" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-        // JS for Collapse Chevron Toggle
-        document.addEventListener('DOMContentLoaded', () => {
-            const collapseToggles = document.querySelectorAll('.details-toggle');
-            collapseToggles.forEach(button => {
-                const targetId = button.getAttribute('data-bs-target');
-                if (!targetId) return;
-
-                const targetCollapse = document.querySelector(targetId);
-                const icon = button.querySelector('.bi'); // Get the icon inside the button
-
-                if (targetCollapse && icon) {
-                    // Function to update icon based on collapse state
-                    const updateIcon = () => {
-                        if (targetCollapse.classList.contains('show')) {
-                            icon.classList.remove('bi-chevron-down');
-                            icon.classList.add('bi-chevron-up');
-                            button.setAttribute('aria-expanded', 'true');
-                        } else {
-                            icon.classList.remove('bi-chevron-up');
-                            icon.classList.add('bi-chevron-down');
-                             button.setAttribute('aria-expanded', 'false');
-                        }
-                    };
-
-                    // Set initial icon state
-                    updateIcon();
-
-                    // Listen to Bootstrap collapse events to toggle icon
-                    targetCollapse.addEventListener('show.bs.collapse', updateIcon);
-                    targetCollapse.addEventListener('hide.bs.collapse', updateIcon);
-                }
-            });
-
-            // Optional: Simple hover effect for the main section node cards for visual feedback
-            const sectionCards = document.querySelectorAll('.section-card');
-             sectionCards.forEach(card => {
-                 card.addEventListener('mouseenter', () => {
-                     card.classList.add('shadow-lg'); // Add more prominent shadow on hover
-                 });
-                 card.addEventListener('mouseleave', () => {
-                    card.classList.remove('shadow-lg');
-                 });
-             });
-        });
-    </script>
-  <footer class="container text-center pb-3">
-  <div class="mb-3">
-    <a class="mx-2" href="git-scm.html" target="_blank" title="Git Scm">
-      <i class="bi bi-code"></i>
-      Git Scm
-    </a>
-    <a class="mx-2" href="databases.html" target="_blank" title="Databases">
-      <i class="bi bi-code"></i>
-      Databases
-    </a>
+<main>
+  <div class="intro">
+    <p class="prompt"><span class="cmd">man</span> version-control</p>
+    <h1>Modern Version Control<span class="caret" aria-hidden="true">_</span></h1>
+    <p class="lead">Git, Mercurial &amp; the hosting platforms that wrap them — core concepts, the daily workflows, and how to choose. Every section expands with <span class="kw">Details</span>.</p>
   </div>
-  <p class="mb-2">
-    © 2026 David Veksler · Compiled &amp; expanded based on software configuration management research and SCM best practices.
+
+  <!-- QUICK REFERENCE -->
+  <section id="section-quickref" aria-labelledby="qref-h">
+    <div class="sec-head">
+      <h2 id="qref-h">quick-ref <span class="comment"># the 20% of Git you run all day</span></h2>
+    </div>
+    <div class="qref">
+      <div class="qref-head">Everyday <b>Git</b> commands — the highest-frequency lookups</div>
+      <table class="cmd-table">
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>git clone &lt;url&gt;</code></td><td>Copy a remote repo (+ full history) locally</td></tr>
+          <tr><td><code>git status</code></td><td>Show staged / unstaged / untracked changes</td></tr>
+          <tr><td><code>git add -p</code></td><td>Interactively stage hunks into the index</td></tr>
+          <tr><td><code>git commit -m "…"</code></td><td>Snapshot staged changes with a message</td></tr>
+          <tr><td><code>git switch -c feat/x</code></td><td>Create + move to a new branch (modern <code>checkout -b</code>)</td></tr>
+          <tr><td><code>git pull --rebase</code></td><td>Fetch + replay your commits on top (linear history)</td></tr>
+          <tr><td><code>git push -u origin HEAD</code></td><td>Push current branch, set upstream tracking</td></tr>
+          <tr><td><code>git log --oneline --graph</code></td><td>Compact visual history</td></tr>
+          <tr><td><code>git restore --staged &lt;f&gt;</code></td><td>Unstage a file (keep working-tree edits)</td></tr>
+          <tr><td><code>git stash</code> / <code>git stash pop</code></td><td>Shelve dirty changes, then reapply them</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FOUNDATIONAL CONCEPTS -->
+  <section id="section-concepts" aria-labelledby="concepts-h">
+    <div class="sec-head">
+      <h2 id="concepts-h">git help concepts</h2>
+      <p class="hint">The mental model shared by every DVCS.</p>
+    </div>
+    <div class="grid">
+      <article class="block" id="card-dvcs">
+        <h3>DVCS Philosophy</h3>
+        <p class="summary"><span class="kw">Distributed Version Control Systems</span> (DVCS) like Git &amp; Mercurial give every developer a <span class="kw">full repository copy</span>, enabling offline work, faster operations, and flexible workflows.</p>
+        <details><summary>Details</summary><div class="details-body">
+          <h6>Core Idea</h6><p>Unlike older Centralized VCS (like SVN or CVS) where developers checked out files from a single central server, DVCS provides each user with a complete, independent copy (clone) of the entire repository history.</p>
+          <h6>Key Advantages</h6><ul><li><strong>Offline Work:</strong> Commit, branch, view history, and merge without needing a network connection.</li><li><strong>Performance:</strong> Most operations (commit, branch, merge, diff) are local and thus significantly faster.</li><li><strong>Redundancy:</strong> Every clone is effectively a full backup of the repository.</li><li><strong>Workflow Flexibility:</strong> Enables complex branching strategies and collaboration models (e.g., pull requests).</li><li><strong>Collaboration:</strong> Easily share changes between any two repositories, not just client-server.</li></ul>
+          <h6>Shift from Centralized</h6><p>The move to DVCS addressed key limitations of CVCS, particularly around branching/merging complexity, performance bottlenecks, and reliance on network connectivity.</p>
+        </div></details>
+      </article>
+
+      <article class="block" id="card-repository">
+        <h3>Repository <span class="tag">(repo)</span></h3>
+        <p class="summary">A collection of <span class="kw">files</span> and the <span class="kw">history</span> of their changes. In DVCS, you have a local copy and interact with remote copies (e.g., on GitHub).</p>
+        <details><summary>Details</summary><div class="details-body">
+          <h6>What it Contains</h6><p>A repository stores all the files belonging to a project, plus the complete history of modifications made to those files over time. This history is typically stored as a series of <span class="kw">commits</span>.</p>
+          <h6>Local vs. Remote</h6><ul><li><strong>Local Repository:</strong> The full copy residing on your own computer. This is where you do your work: edit files, commit changes, create branches.</li><li><strong>Remote Repository:</strong> A copy hosted on a server (e.g., GitHub, GitLab, a company server). Used for collaboration, backup, and sharing code. A common conventional name for the primary remote is <code>origin</code>.</li></ul>
+          <h6>Operations</h6><p>You typically <span class="kw">clone</span> a remote repository to create your local copy, <span class="kw">pull</span> changes from a remote, and <span class="kw">push</span> your local changes to a remote. <span class="kw">Fetch</span> retrieves changes without merging.</p>
+        </div></details>
+      </article>
+
+      <article class="block" id="card-commit">
+        <h3>Commit</h3>
+        <p class="summary">A <span class="kw">snapshot</span> of your project's tracked files at a point in time, saved to history. Each commit has a unique ID (e.g., Git SHA-1 hash) and a message.</p>
+        <details><summary>Details</summary><div class="details-body">
+          <h6>Purpose</h6><p>Commits are the fundamental building blocks of a project's history. They represent saved states that you can reference, revert to, or compare against.</p>
+          <h6>Components</h6><ul><li><strong>Snapshot:</strong> Records the state of all tracked files at that moment. Git stores this efficiently, only recording changes relative to previous commits.</li><li><strong>Metadata:</strong> Author, committer, timestamp, and a unique identifier (a SHA-1 hash in Git).</li><li><strong>Parent(s):</strong> Points to the preceding commit(s). A standard commit has one parent; a merge commit has two or more.</li><li><strong>Commit Message:</strong> A description explaining the changes. Crucial for understanding history.</li></ul>
+          <h6>Workflow (Git)</h6><p>Typically, you modify files, <span class="kw">stage</span> the changes you want to include (<code>git add</code>), and then <span class="kw">commit</span> them with a message (<code>git commit</code>).</p>
+        </div></details>
+      </article>
+
+      <article class="block" id="card-branch">
+        <h3>Branch</h3>
+        <p class="summary">An <span class="kw">independent line of development</span>. Branches let you work on features or fixes without affecting the main codebase (e.g., <code>main</code>).</p>
+        <details><summary>Details</summary><div class="details-body">
+          <h6>Concept</h6><p>Think of a branch as a movable pointer to a specific commit. When you create a branch, you create a new pointer. As you make commits, the pointer moves forward with your changes.</p>
+          <h6>Why Use Branches?</h6><ul><li><strong>Isolation:</strong> Develop features, experiment, or fix bugs without destabilizing the main line.</li><li><strong>Parallel Development:</strong> Multiple people work on different features simultaneously.</li><li><strong>Organization:</strong> Keep related changes grouped (e.g., a <code>feature/user-login</code> branch).</li><li><strong>Workflow Enablement:</strong> Basis for Gitflow, GitHub Flow, etc., often involving Pull/Merge Requests.</li></ul>
+          <h6>Common Operations (Git)</h6><p>Create (<code>git branch feature-x</code>), switch (<code>git switch feature-x</code>), commit, then merge back.</p>
+        </div></details>
+      </article>
+
+      <article class="block" id="card-merge">
+        <h3>Merge</h3>
+        <p class="summary">The process of <span class="kw">combining changes</span> from different branches back into one, reconciling divergent histories.</p>
+        <details><summary>Details</summary><div class="details-body">
+          <h6>Goal</h6><p>To integrate work done on a separate branch (e.g., a feature branch) into another (e.g., <code>main</code>).</p>
+          <h6>How it Works</h6><ul><li><strong>Fast-Forward Merge:</strong> If the target branch hasn't diverged, its pointer simply moves forward to the source's latest commit. Linear history.</li><li><strong>Three-Way Merge (Merge Commit):</strong> If both diverged, the VCS finds a common ancestor and combines changes since then, creating a new <span class="kw">merge commit</span> with two parents.</li></ul>
+          <h6>Merge Conflicts</h6><p>Occur when both branches modified the same part of the same file differently. The VCS can't auto-decide, requiring manual resolution before completing the merge.</p>
+          <h6>Alternatives</h6><p><span class="kw">Rebasing</span> (<code>git rebase</code>) rewrites one branch's history on top of another for a linear result — but avoid it on already-shared branches.</p>
+        </div></details>
+      </article>
+    </div>
+  </section>
+
+  <!-- DISTRIBUTED VCS -->
+  <section id="section-dvcs" aria-labelledby="dvcs-h">
+    <div class="sec-head">
+      <h2 id="dvcs-h">ls /usr/bin/{git,hg}</h2>
+      <p class="hint">The two mainstream distributed systems — and one to watch.</p>
+    </div>
+    <div class="grid">
+      <article class="block accent-git" id="card-git">
+        <h3>Git <span class="tag">git-scm.com</span></h3>
+        <p class="summary">The <span class="kw">dominant DVCS</span>: speed, flexibility, powerful branching/merging, and a vast ecosystem. Features a <span class="kw">staging area</span> (index) for crafting commits. <a href="https://git-scm.com/" target="_blank" rel="noopener">git-scm.com</a></p>
+        <details><summary>Details</summary><div class="details-body">
+          <h6>Philosophy &amp; Core</h6><p>Designed by Linus Torvalds for Linux kernel development. Focuses on performance, data integrity (content-addressable storage via SHA-1 hashes), and robust non-linear workflows.</p>
+          <h6>Key Features</h6><ul><li><strong>Staging Area (Index):</strong> Stage parts of files to craft precise, logical commits.</li><li><strong>Branching Model:</strong> Extremely lightweight, fast branching and merging.</li><li><strong>Distributed:</strong> Every clone is a full repository.</li><li><strong>Performance:</strong> Most operations are local and fast.</li><li><strong>Flexibility:</strong> Supports Gitflow, GitHub Flow, etc.; <code>rebase</code> allows history editing (use with care on shared branches).</li><li><strong>Large Files:</strong> Handled via <a href="https://git-lfs.github.com/" target="_blank" rel="noopener">Git LFS</a>.</li></ul>
+          <h6>Common Commands</h6><p><code>clone</code>, <code>add</code>, <code>commit</code>, <code>status</code>, <code>log</code>, <code>branch</code>, <code>switch</code>, <code>merge</code>, <code>rebase</code>, <code>pull</code>, <code>push</code>, <code>fetch</code>.</p>
+          <h6>Tradeoffs</h6><ul><li>Steeper learning curve for staging area, reset, rebase.</li><li>CLI can feel complex due to many options.</li><li>Default binary handling isn't ideal without LFS.</li></ul>
+          <h6>Use Cases</h6><p>Software of all sizes, open source, infrastructure as code, docs — anywhere you track changes to text files.</p>
+        </div></details>
+      </article>
+
+      <article class="block accent-hg" id="card-mercurial">
+        <h3>Mercurial <span class="tag">(hg)</span></h3>
+        <p class="summary">A DVCS focused on <span class="kw">simplicity</span> and ease of use. Often felt more intuitive than Git initially, but far less used today. <a href="https://www.mercurial-scm.org/" target="_blank" rel="noopener">mercurial-scm.org</a></p>
+        <details><summary>Details</summary><div class="details-body">
+          <h6>Philosophy &amp; Core</h6><p>Designed with user-friendliness and interface consistency as priorities — powerful DVCS features with a simpler command set than Git's defaults.</p>
+          <h6>Key Features</h6><ul><li><strong>Simpler Interface:</strong> No staging area by default; <code>hg commit</code> commits all tracked changes.</li><li><strong>Branching Concepts:</strong> Named branches, bookmarks, anonymous heads. Named branches are permanent parts of history — powerful but confusing.</li><li><strong>Extensibility:</strong> Extensions add <code>rebase</code>, <code>histedit</code>, <code>largefiles</code>.</li><li><strong>Performance:</strong> Generally excellent, comparable to Git.</li><li><strong>Windows Support:</strong> Historically strong.</li></ul>
+          <h6>Common Commands</h6><p><code>hg clone</code>, <code>hg add</code>, <code>hg commit</code>, <code>hg status</code>, <code>hg log</code>, <code>hg branch</code>, <code>hg update</code>, <code>hg merge</code>, <code>hg pull</code>, <code>hg push</code>, <code>hg heads</code>.</p>
+          <h6>Tradeoffs</h6><ul><li>Far smaller community and ecosystem than Git.</li><li>No major hosting: Bitbucket removed all Hg repos in July 2020 (deleted by March 2022); GitHub never supported it; GitLab needs workarounds.</li><li>Multiple branching models can confuse.</li></ul>
+          <h6>Use Cases</h6><p>Legacy projects and a few large orgs. Meta used it internally before building its own Sapling system.</p>
+        </div></details>
+      </article>
+    </div>
+    <div class="callout">
+      <b>▲ Watch — Jujutsu (jj):</b> a Git-compatible VCS gaining real traction (used internally at Google; ~30k GitHub stars; v0.43.0 as of July 2026). Simpler mental model — no staging area, first-class conflict handling, anonymous branches — while reading/writing Git repos natively for gradual adoption. Still pre-1.0 with gaps (limited IDE integration, no submodule support), but production-ready for individuals and small teams. <a href="https://github.com/jj-vcs/jj" target="_blank" rel="noopener noreferrer">jj-vcs/jj</a>
+    </div>
+  </section>
+
+  <!-- HOSTING PLATFORMS -->
+  <section id="section-platforms" aria-labelledby="platforms-h">
+    <div class="sec-head">
+      <h2 id="platforms-h">git remote -v <span class="comment"># where repos live</span></h2>
+      <p class="hint">The four platforms that host Git and wrap it in collaboration + CI/CD.</p>
+    </div>
+    <div class="grid">
+      <article class="block accent-github" id="card-github">
+        <h3>GitHub</h3>
+        <p class="summary">The most popular Git host. Strong focus on <span class="kw">collaboration</span>, <span class="kw">open source</span>, and developer community. <a href="https://github.com/" target="_blank" rel="noopener">github.com</a></p>
+        <details><summary>Details</summary><div class="details-body">
+          <h6>Core Offerings</h6><p>Git hosting, Pull Requests, issues, Projects (boards/tables), CI/CD (GitHub Actions), Packages, wikis, security scanning (Dependabot, Code Scanning).</p>
+          <h6>Key Features</h6><ul><li><strong>Pull Requests:</strong> Central code-review + merge mechanism.</li><li><strong>Actions:</strong> Powerful integrated CI/CD in YAML.</li><li><strong>Community:</strong> The de facto hub for open source.</li><li><strong>Codespaces:</strong> Cloud dev environments.</li><li><strong>Copilot:</strong> AI pair programmer.</li></ul>
+          <h6>Strengths</h6><ul><li>Massive user base / network effect.</li><li>Excellent UI/UX; flexible Actions CI/CD.</li><li>Generous free tier; strong security features.</li></ul>
+          <h6>Tradeoffs</h6><ul><li>Owned by Microsoft (a concern for some).</li><li>CI/CD limits on lower tiers can bite large private projects.</li><li>Built-in project management less deep than Jira/Azure Boards.</li></ul>
+        </div></details>
+      </article>
+
+      <article class="block accent-gitlab" id="card-gitlab">
+        <h3>GitLab</h3>
+        <p class="summary">An <span class="kw">integrated DevOps platform</span> around Git hosting — planning to monitoring. <span class="kw">Self-hosting</span> available. <a href="https://gitlab.com/" target="_blank" rel="noopener">gitlab.com</a></p>
+        <details><summary>Details</summary><div class="details-body">
+          <h6>Core Offerings</h6><p>Git hosting, Merge Requests, issues + boards, integrated CI/CD, container registry, extensive security scanning (SAST, DAST, dependency, secrets), monitoring, Epics/Roadmaps, wiki.</p>
+          <h6>Key Features</h6><ul><li><strong>Single Application:</strong> The whole DevOps lifecycle in one platform.</li><li><strong>GitLab CI/CD:</strong> Highly integrated via <code>.gitlab-ci.yml</code>; shared or self-hosted runners.</li><li><strong>Self-Managed:</strong> Install on your own infra (open-source CE, paid EE).</li><li><strong>DevSecOps:</strong> Security scanning throughout MRs.</li><li><strong>Auto DevOps:</strong> Opinionated build/test/deploy/monitor pipeline.</li></ul>
+          <h6>Strengths</h6><ul><li>All-in-one simplifies tooling; mature built-in CI/CD.</li><li>Strong integrated security; viable self-hosting (CE).</li></ul>
+          <h6>Tradeoffs</h6><ul><li>Feature volume can overwhelm the UI.</li><li>UX sometimes seen as less polished than GitHub.</li><li>Self-hosting adds operational overhead.</li></ul>
+        </div></details>
+      </article>
+
+      <article class="block accent-bucket" id="card-bitbucket">
+        <h3>Bitbucket Cloud</h3>
+        <p class="summary">Atlassian's Git host, known for deep <span class="kw">Jira and Trello</span> integration. (Mercurial support removed.) <a href="https://bitbucket.org/" target="_blank" rel="noopener">bitbucket.org</a></p>
+        <details><summary>Details</summary><div class="details-body">
+          <h6>Core Offerings</h6><p>Git hosting (Mercurial fully removed July 2020; Hg repos deleted by March 2022), Pull Requests, integrated CI/CD (Pipelines), code search, deep Jira/Trello integration.</p>
+          <h6>Key Features</h6><ul><li><strong>Atlassian Ecosystem:</strong> Seamless Bitbucket ↔ Jira flow is the main draw.</li><li><strong>Pipelines:</strong> CI/CD via <code>bitbucket-pipelines.yml</code>.</li><li><strong>Code Insights:</strong> Surfaces scan/test results in PRs.</li><li><strong>Free Tier:</strong> Free private repos for small teams (up to 5 users).</li></ul>
+          <h6>Strengths</h6><ul><li>Unbeatable if invested in Atlassian (especially Jira).</li><li>Competitive pricing; clean, simple UI.</li></ul>
+          <h6>Tradeoffs</h6><ul><li>Smaller community than GitHub/GitLab.</li><li>Pipelines less flexible for very complex scenarios.</li><li>Fewer built-ins than GitLab; Mercurial support is gone.</li></ul>
+        </div></details>
+      </article>
+
+      <article class="block accent-azure" id="card-azure-devops">
+        <h3>Azure DevOps</h3>
+        <p class="summary">Microsoft's DevOps suite, including <span class="kw">Azure Repos</span> for Git. Strong Azure and Entra ID integration. <a href="https://azure.microsoft.com/en-us/products/devops/" target="_blank" rel="noopener">azure.microsoft.com</a></p>
+        <details><summary>Details</summary><div class="details-body">
+          <h6>Core Offerings (Suite)</h6><p><strong>Azure Repos</strong> (Git + legacy TFVC), <strong>Azure Pipelines</strong> (CI/CD), <strong>Azure Boards</strong> (Agile planning), <strong>Azure Test Plans</strong>, <strong>Azure Artifacts</strong> (packages).</p>
+          <h6>Key Features</h6><ul><li><strong>Integrated Suite:</strong> Tools across the lifecycle; usable independently.</li><li><strong>Azure Repos:</strong> Unlimited private Git repos; also supports TFVC.</li><li><strong>Azure Pipelines:</strong> Powerful CI/CD, deploy anywhere (Azure/AWS/GCP/on-prem), YAML or visual.</li><li><strong>Azure Boards:</strong> Mature, customizable planning (Jira-comparable).</li><li><strong>Enterprise:</strong> Granular permissions, branch policies, auditing, Entra ID.</li></ul>
+          <h6>Strengths</h6><ul><li>Excellent Azure integration; mature Pipelines &amp; Boards.</li><li>Strong governance; generous free tier for small teams / OSS.</li></ul>
+          <h6>Tradeoffs</h6><ul><li>UI can feel dated / fragmented across services.</li><li>Less prominent in open source; feels Microsoft-centric.</li></ul>
+        </div></details>
+      </article>
+    </div>
+  </section>
+
+  <!-- KEY WORKFLOWS -->
+  <section id="section-workflows" aria-labelledby="workflows-h">
+    <div class="sec-head">
+      <h2 id="workflows-h">git flow --help</h2>
+      <p class="hint">How teams actually turn commits into shipped software.</p>
+    </div>
+    <div class="grid">
+      <article class="block" id="card-workflow-branching">
+        <h3>Branching Strategies</h3>
+        <p class="summary">Patterns for using branches to manage development, releases, and fixes — <span class="kw">Gitflow</span>, <span class="kw">GitHub Flow</span>, <span class="kw">Trunk-Based Development</span>.</p>
+        <details><summary>Explore</summary><div class="details-body">
+          <h6>Common Strategies</h6><ul>
+            <li><strong><a href="https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow" target="_blank" rel="noopener">Gitflow</a>:</strong> Dedicated <code>main</code>, <code>develop</code>, <code>feature/*</code>, <code>release/*</code>, <code>hotfix/*</code> branches. Good for scheduled releases; can be complex.</li>
+            <li><strong><a href="https://docs.github.com/en/get-started/quickstart/github-flow" target="_blank" rel="noopener">GitHub Flow</a>:</strong> <code>main</code> always deployable; feature branches merge via PR and deploy immediately.</li>
+            <li><strong><a href="https://about.gitlab.com/topics/version-control/what-is-gitlab-flow/" target="_blank" rel="noopener">GitLab Flow</a>:</strong> Adds environment/release branches, bridging continuous deployment and versioned releases.</li>
+            <li><strong><a href="https://trunkbaseddevelopment.com/" target="_blank" rel="noopener">Trunk-Based Development</a>:</strong> Very short-lived branches or direct commits to <code>main</code>; relies on feature flags, automated testing, robust CI/CD.</li>
+          </ul>
+          <p>The best strategy depends on team size, release cadence, deployment practices, and discipline.</p>
+        </div></details>
+      </article>
+
+      <article class="block" id="card-workflow-pr">
+        <h3>Pull / Merge Requests</h3>
+        <p class="summary">The core collaboration feature to propose changes between branches — enabling <span class="kw">code review</span>, discussion, automated checks, and <span class="kw">controlled merging</span>.</p>
+        <details><summary>Explore</summary><div class="details-body">
+          <h6>Process Overview</h6><ol><li>Create a feature branch, commit locally, push to the remote.</li><li>Open a PR (GitHub/Bitbucket/Azure) or MR (GitLab) targeting the integration branch.</li><li>Reviewers examine the diff, comment, request changes.</li><li>CI/CD checks (builds, tests, linters, scans) report status to the PR/MR.</li><li>Discussion + updates continue until approved and green.</li><li>An authorized user merges into the target branch, closing the PR/MR.</li></ol>
+          <h6>Benefits</h6><ul><li><strong>Code Quality:</strong> Peer review catches bugs, enforces standards.</li><li><strong>Knowledge Sharing:</strong> Team learns context across the project.</li><li><strong>Gatekeeping:</strong> Ensures changes pass checks before critical branches.</li><li><strong>Discussion Record:</strong> Durable history of decisions.</li></ul>
+        </div></details>
+      </article>
+
+      <article class="block" id="card-workflow-cicd">
+        <h3>CI/CD Integration</h3>
+        <p class="summary">VCS events (pushes, PRs) trigger <span class="kw">Continuous Integration</span> (auto build/test) and <span class="kw">Continuous Delivery/Deployment</span> pipelines.</p>
+        <details><summary>Explore</summary><div class="details-body">
+          <h6>Continuous Integration (CI)</h6><p>Frequently merge working copies to a shared mainline; each merge triggers an automated build + tests.</p><ul><li><strong>Trigger:</strong> On push, or on PR/MR updates to key branches.</li><li><strong>Goal:</strong> Detect integration/build/test failures early.</li><li><strong>Benefit:</strong> Fast feedback; less "merge hell."</li></ul>
+          <h6>Continuous Delivery / Deployment (CD)</h6><ul><li><strong>Delivery:</strong> Auto build/test/prepare; final production deploy needs manual approval.</li><li><strong>Deployment:</strong> Every validated change auto-deploys to production — requires high test confidence.</li><li><strong>Trigger:</strong> After CI succeeds on specific branches or on tag creation.</li></ul>
+          <h6>Role of VCS &amp; Platforms</h6><p>VCS events act as pipeline triggers. Platforms provide integrated CI/CD (Actions, GitLab CI, Pipelines) or integrate with Jenkins/CircleCI. Pipeline definitions live as YAML in the repo.</p>
+        </div></details>
+      </article>
+    </div>
+  </section>
+
+  <!-- CHOOSING -->
+  <section id="section-choosing" aria-labelledby="choosing-h">
+    <div class="sec-head">
+      <h2 id="choosing-h">which vcs &amp;&amp; which host</h2>
+      <p class="hint">Decision guidance — start here if you're setting up a new project.</p>
+    </div>
+    <div class="grid">
+      <article class="block wide" id="card-choosing">
+        <h3>System &amp; Platform Selection Factors</h3>
+        <p class="summary">Default to <span class="kw">Git</span> for its ubiquity. Pick a <span class="kw">hosting platform</span> by ecosystem integration (Atlassian, Microsoft, open source), feature depth (CI/CD, security, planning), community vs. enterprise focus, self-hosting needs, and pricing.</p>
+        <details><summary>Key Factors</summary><div class="details-body">
+          <h6>Choosing the VCS (Git vs. Mercurial vs. jj)</h6><ul>
+            <li><strong>Default:</strong> <span class="kw">Git</span> — the overwhelming standard; maximum compatibility, community, talent, tooling, platform choice.</li>
+            <li><strong>Mercurial only if:</strong> you maintain large legacy Hg projects. No major host supports new Hg repos; former heavy users (Meta) moved on.</li>
+            <li><strong>Watch <a href="https://github.com/jj-vcs/jj" target="_blank" rel="noopener noreferrer">jj</a>:</strong> Git-compatible, simpler model, gradual adoption alongside Git. Pre-1.0 but usable for individuals/small teams.</li>
+          </ul>
+          <h6>Choosing the Host</h6><ul>
+            <li><strong>Ecosystem:</strong> Bitbucket → Atlassian/Jira; Azure DevOps → Microsoft/Entra ID; GitHub → open source + Marketplace; GitLab → be the whole ecosystem.</li>
+            <li><strong>Feature depth:</strong> GitLab most comprehensive built-in; Azure mature Pipelines/Boards; GitHub leading Actions + community + security add-ons; Bitbucket core hosting + Jira.</li>
+            <li><strong>Hosting model:</strong> GitLab strong SaaS + self-managed; GitHub mainly SaaS (+ Enterprise Server); Azure mainly SaaS; Bitbucket Cloud + Data Center.</li>
+            <li><strong>Community vs. enterprise:</strong> GitHub leads open source; GitLab strong both; Azure enterprise-leaning; Bitbucket SMB + Atlassian shops.</li>
+            <li><strong>Pricing:</strong> Compare free-tier limits (users, private repos, CI/CD minutes, storage) against your size and usage.</li>
+            <li><strong>UI/UX:</strong> Subjective — trial the free tiers with your team.</li>
+          </ul>
+          <h6>Standardization vs. Polyglot</h6><p>You can mix platforms, but most orgs standardize on one for consistency, billing, user management, and unified workflow — integrating best-of-breed tools where needed.</p>
+        </div></details>
+      </article>
+    </div>
+  </section>
+</main>
+<footer>
+  <div class="foot-links">
+    <a href="git-scm.html">▸ Git SCM cheatsheet</a>
+    <a href="databases.html">▸ Databases</a>
+    <a href="https://cheatsheets.davidveksler.com/">▸ All cheatsheets</a>
+    <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener">▸ LinkedIn</a>
+  </div>
+  <p>© 2026 David Veksler · Compiled &amp; expanded from software configuration management research and SCM best practices.</p>
+  <p class="verified">Last verified: 2026-07-04.</p>
+  <div class="related" data-seo-related-links aria-label="Related Software &amp; DevOps cheatsheets">
+    <strong>Related Software &amp; DevOps:</strong><br>
+    <a href="software-development-guides.html" target="_blank" rel="noopener" title="Software Development Guides hub">Part of: Software Development Guides hub</a>
+    <a href="sql-performance-tuning.html" target="_blank" rel="noopener" title="SQL Performance Tuning">SQL Performance Tuning</a>
+    <a href="ubuntu-linux-for-ai-developers.html" target="_blank" rel="noopener" title="Ubuntu Linux for AI &amp; Agentic Developers">Ubuntu Linux for AI Developers</a>
+    <a href="aws-vs-azure.html" target="_blank" rel="noopener" title="AWS vs Azure (2026)">AWS vs Azure (2026)</a>
+    <a href="azure-devops.html" target="_blank" rel="noopener" title="Azure DevOps Cheatsheet">Azure DevOps Cheatsheet</a>
+  </div>
+  <p class="build-note" data-site-build-note>
+    One person + AI agents build and maintain this collection through public specs, QA gates, and git history.
+    <a href="how-its-built.html" title="See how this cheatsheet collection is built">How this site is built</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://github.com/DavidVeksler/CheatSheets" target="_blank" rel="noopener noreferrer" title="View the public CheatSheets source repository on GitHub">Source on GitHub</a>
   </p>
-  <p class="mb-2 text-muted small">Last verified: 2026-07-04.</p>
-  <div>
-    <a class="mx-2 link-secondary" href="https://www.linkedin.com/in/davidveksler/" target="_blank" title="David Veksler on LinkedIn">
-      <i class="bi bi-linkedin"></i>
-      LinkedIn
-    </a>
-    <a class="mx-2 link-secondary" href="https://cheatsheets.davidveksler.com/" title="Browse All Cheatsheets">
-      <i class="bi bi-collection"></i>
-      All Cheatsheets
-    </a>
-  </div>
-
-<div class="related-cheatsheets mb-3" data-seo-related-links aria-label="Related Software &amp; DevOps cheatsheets">
-  <strong>Related Software &amp; DevOps:</strong><br>
-    <a class="mx-2" href="software-development-guides.html" target="_blank" rel="noopener" title="Open Software Development Guides: Architecture, .NET &amp; DevOps"><i class="bi bi-diagram-3" aria-hidden="true"></i> Part of: Software Development Guides hub</a>
-    <a class="mx-2" href="sql-performance-tuning.html" target="_blank" rel="noopener" title="Open SQL Performance Tuning: Indexes, Plans &amp; Joins"><i class="bi bi-journal-text" aria-hidden="true"></i> SQL Performance Tuning: Indexes, Plans &amp; Joins</a>
-    <a class="mx-2" href="ubuntu-linux-for-ai-developers.html" target="_blank" rel="noopener" title="Open Ubuntu Linux for AI &amp; Agentic Developers: Setup &amp; Workflow"><i class="bi bi-journal-text" aria-hidden="true"></i> Ubuntu Linux for AI &amp; Agentic Developers: Setup &amp; Workflow</a>
-    <a class="mx-2" href="aws-vs-azure.html" target="_blank" rel="noopener" title="Open AWS vs Azure (2026): Cloud Architect&apos;s Comparison"><i class="bi bi-journal-text" aria-hidden="true"></i> AWS vs Azure (2026): Cloud Architect&apos;s Comparison</a>
-    <a class="mx-2" href="azure-devops.html" target="_blank" rel="noopener" title="Open Azure DevOps Cheatsheet: From Boards to Pipelines"><i class="bi bi-journal-text" aria-hidden="true"></i> Azure DevOps Cheatsheet: From Boards to Pipelines</a>
-    <a class="mx-2" href="software-development-guides.html" target="_blank" rel="noopener" title="Open Software Development Guides: developer cheat sheets by role"><i class="bi bi-diagram-3" aria-hidden="true"></i> Software Development Guides</a>
-</div>
-
-<p class="cheatsheets-build-note small" data-site-build-note style="margin:1rem auto 0;max-width:72ch;text-align:center;">
-  One person + AI agents build and maintain this collection through public specs, QA gates, and git history.
-  <a href="how-its-built.html" title="See how this cheatsheet collection is built">How this site is built</a>
-  <span aria-hidden="true">·</span>
-  <a href="https://github.com/DavidVeksler/CheatSheets" target="_blank" rel="noopener noreferrer" title="View the public CheatSheets source repository on GitHub">Source on GitHub</a>
-</p>
 </footer>
+</div>
+<script>
+  // Theme toggle — override prefers-color-scheme, persist in localStorage. Fail soft.
+  (function () {
+    var root = document.documentElement, KEY = 'vc-theme';
+    try {
+      var saved = localStorage.getItem(KEY);
+      if (saved) root.setAttribute('data-theme', saved);
+    } catch (e) {}
+    function current() {
+      var t = root.getAttribute('data-theme');
+      if (t) return t;
+      return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    var btn = document.getElementById('themeBtn');
+    if (btn) btn.addEventListener('click', function () {
+      var next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem(KEY, next); } catch (e) {}
+    });
+  })();
+</script>
 </body>
 </html>
