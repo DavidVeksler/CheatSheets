@@ -25,11 +25,10 @@ This file owns the quality bar. The other Markdown docs divide the workflows —
 | [`TODO/seo-planning.md`](TODO/seo-planning.md) | **Planning SEO work** — durable doc (not deleted after one pass) tracking the Search Console baseline, striking-distance opportunities, and open questions. Pull fresh GSC data before trusting numbers more than a few weeks old. |
 | [`deploy/DEPLOY.md`](deploy/DEPLOY.md) | **Deploying to production** — the guarded `./deploy.sh` pipeline (preflight → validate → confirm → push → live verify), remotes, flags, the pre-push hook, and manual fallback. Deploy via the script, not raw `git push production`. |
 | [`weekly-freshness-update.md`](weekly-freshness-update.md) | The scheduled **fact-drift job** — worker instructions for refreshing one dated cheatsheet per run. Owns fact verification; the audit above only checks the freshness *machinery* exists. |
-| [`Device Cheat Sheet Generator.md`](Device%20Cheat%20Sheet%20Generator.md) | Standalone generator prompt for hardware/device guides (radios, appliances, tools). Predates this file — where they conflict, this file wins. |
 | [`README.md`](README.md) | Public repo readme (minimal). |
-| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | GitHub Copilot's summary of this repo. Duplicates rather than points here, so it drifts (e.g. it still says Bootstrap 5.3.3) — treat this file as authoritative; sync that one when touching it. |
+| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | GitHub Copilot's summary of this repo. Duplicates rather than points here, so it drifts — treat this file as authoritative; sync that one when touching it. |
 
-Non-Markdown but load-bearing: `SEO_PROMPT.txt` (footer cross-linking procedure), `PROMPT2.txt` (legacy generator prompt).
+Non-Markdown but load-bearing: `SEO_PROMPT.txt` (footer cross-linking procedure).
 
 ## Generation Protocol (read first)
 

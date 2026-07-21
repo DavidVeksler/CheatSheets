@@ -14,7 +14,6 @@ $excludedItems = [
     'LICENSE',
     'README.md',
     'PROMPT.txt',
-    'PROMPT2.txt',
     'CLAUDE.md',
     'generate-image-previews.py',
     'sitemap.php',
