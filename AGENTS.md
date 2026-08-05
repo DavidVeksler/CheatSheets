@@ -83,7 +83,7 @@ These cheatsheets are AI-generated and increasingly AI-consumed, so wrong specif
 
 - **Verify, don't recall.** Any version number, price, API signature, default, limit, benchmark, or date MUST be checked against a primary source (official docs, the spec, the vendor) before it goes in. If you can't verify it, omit it or flag the uncertainty explicitly — never fabricate a plausible-looking number.
 - **Date volatile facts.** Tag anything that drifts with "as of <Mon YYYY>" or a version tag inline, so staleness is visible rather than silent.
-- **Show freshness.** Include a visible `Last verified: YYYY-MM-DD` line in the page footer/header, and set `dateModified` in JSON-LD to the real edit date.
+- **Show freshness.** Include a visible `Last verified: YYYY-MM-DD` line in the page footer/header, and set `dateModified` in JSON-LD to the real edit date. This dates the *content* (facts, prices, versions of the thing being documented) — it is not a place to mention the page's own build tooling. Readers don't care which CSS framework or icon set rendered the page, so never append things like "Bootstrap 5.3.8", "Icons 1.13.1", or "SRI hashes computed from CDN bytes" to visible footer/freshness text. That detail belongs only in HTML comments and the SRI table below, never in reader-facing copy.
 - **Structured data must match visible content** — never describe in schema what isn't on the page.
 - **Prefer primary sources** over aggregators, SEO blogs, and forum posts.
 
