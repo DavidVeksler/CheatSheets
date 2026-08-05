@@ -463,7 +463,11 @@ footer a:hover { color: var(--scan); }
 
                     scene.add(model);
 
-                    controls.target.copy(new THREE.Vector3(model.position.x, model.position.y + scaledBox.getSize(new THREE.Vector3()).y / 2, model.position.z));
+                    // model.position already re-centers x/z to 0 and drops the bottom to y=0,
+                    // so the true world-space center is (0, height/2, 0), not model.position
+                    // offset by height/2 (that double-counted the recentering shift and aimed
+                    // the camera above the model, which is why it rendered low in the frame).
+                    controls.target.set(0, scaledBox.getSize(new THREE.Vector3()).y / 2, 0);
                     controls.update();
 
                     model.traverse((child) => {
