@@ -131,8 +131,13 @@ blocks, and inline **SVG `<title>`** elements pollute a naïve `<title>` match. 
 
 ## Current next step
 
-The only pre-registered action is the 2026-08-06 measurement checkpoint below. Do not make another
-query-driven title or consolidation change before that result unless a correctness defect appears.
+**The 2026-08-06 checkpoint has run — verdict CONTINUE INVESTING, freeze lifted.** See
+"Decision checkpoint — verdict" below. Next actions, in order:
+
+1. Diagnose the two guard-rail flags (`martial-arts-cheatsheet`, `postgresql`) with a page×query
+   pull before any further title work.
+2. Execute Tier 1 of [`dev-spoke-content-plan.md`](dev-spoke-content-plan.md), now unblocked.
+3. Connect `analytics-mcp` (GA4 property 543339529) so the AI-referral leg is measurable again.
 
 Tooling note: the 2026-07-14 `list_sitemaps` API call still errors with `cannot unmarshal string into
 … warnings of type int64`. This is an MCP-server parsing bug, not evidence of a sitemap defect; check
@@ -252,11 +257,169 @@ judged against pre-registered criteria, not vibes.
   personal-study ones; freshness job and existing pages stay. **Do not delete or prune
   anything** — per the site-goals ground rule, non-goal-3 pages are not judged on traffic.
 
-**Verdict (pending):** _to be written at the checkpoint._
+### Verdict — **CONTINUE INVESTING** (2026-08-06)
 
-A one-time scheduled task (`cheatsheets-pivot-checkpoint`, Claude scheduled-tasks, fires
-2026-08-06 09:00 local) runs this checkpoint automatically: GSC re-pull, AI-distribution
-re-pull, verdict written here, committed but not pushed.
+Ran 2026-08-06 by the `cheatsheets-pivot-checkpoint` scheduled task. The rule is met on the
+**WP1-clicks leg**: clicks rose materially and aggregate position improved rather than fell.
+The AI-distribution leg is roughly flat-to-slightly-up and did **not** independently clear the
+"clearly above ~1,500/day" bar, so it neither carries nor blocks the verdict.
+
+**Windows.** GSC data ends 2026-08-04, so the comparison is 27-day windows, not 28:
+after = **2026-07-09 → 2026-08-04**, before = **2026-06-12 → 2026-07-08**. `ai-frontier.html`
+uses its own 26-day windows per the measurement adjustment: after = 2026-07-10 → 2026-08-04,
+before = 2026-06-14 → 2026-07-09.
+
+#### (1) WP1 pages — primary metric
+
+The WP1 set is the 15 pages in `4a8383b` plus `judo.html` from the `51abbba` correction = 16.
+
+| Metric | Before | After | Δ |
+|---|---|---|---|
+| Clicks, all 16 | 286 | **383** | **+97 (+33.9%)** |
+| Clicks, excluding `ai-frontier` | 154 | **176** | **+22 (+14.3%)** |
+| Impression-weighted avg position, all 16 | 10.93 | **10.17** | **+0.76 better** |
+| Impressions, all 16 | 86,261 | 80,094 | −7.1% |
+
+Per page (clicks before→after, position before→after):
+
+| Page | Clicks | Position | Impressions |
+|---|---|---|---|
+| ai-frontier | 132 → 207 | 10.07 → **8.30** | 45,878 → 44,003 |
+| orbital-rockets-comparison | 44 → 46 | 10.42 → **9.57** | 12,002 → 11,652 |
+| ashihara-karate | 24 → 24 | 8.57 → 8.36 | 2,065 → 2,183 |
+| google-ai-studio-guide | 12 → 19 | 10.52 → **9.25** | 2,424 → 2,886 |
+| operator-loadouts | 16 → 19 | 7.44 → 7.82 | 1,711 → 1,621 |
+| tesla-products | 7 → 15 | 12.61 → 13.40 | 2,040 → 1,892 |
+| judo | 15 → 11 | 14.27 → 13.78 | 719 → 1,528 |
+| anapanasati-mindfulness-of-breathing | 8 → 10 | 16.34 → 15.12 | 662 → 716 |
+| martial-arts-cheatsheet | 10 → 9 | 7.01 → **18.29** ⚠️ | 6,524 → 848 |
+| clean-architecture-dotnet | 4 → 7 | 29.58 → 29.83 | 459 → 712 |
+| compression-algorithms | 5 → 7 | 17.94 → 20.33 | 1,576 → 1,399 |
+| postgresql | 2 → 4 | 13.13 → **27.82** ⚠️ | 2,528 → 2,309 |
+| databases | 6 → 3 | 26.54 → 27.52 | 402 → 490 |
+| humanoid-robots | 1 → 2 | 18.84 → **9.98** | 1,909 → 4,524 |
+| bitcoin-whitepaper | 0 → 0 | 10.40 → **7.57** | 3,172 → 2,585 |
+| javascript-for-architects | 0 → 0 | 23.93 → 20.50 | 2,190 → 746 |
+
+Nine of sixteen pages improved position; the aggregate guard-rail passes on an
+impression-weighted basis (10.93 → 10.17). The unweighted per-page mean drifts the other way
+(14.85 → 15.46) entirely because of the two flagged pages below — that is a two-page problem,
+not a set-wide one.
+
+**Guard-rail flags (two pages, revert candidates — diagnose before acting):**
+
+- ⚠️ **`martial-arts-cheatsheet.html`** — position 7.01 → 18.29 with impressions collapsing
+  6,524 → 848 (−87%). Clicks held (10 → 9). An impressions collapse *plus* a position drop is
+  the signature of losing one high-volume head query, not of a title losing broad relevance —
+  the same SERP-feature dynamic already documented for `judo.html`. Pull page×query for this
+  page before reverting; the rewrite may be innocent.
+- ⚠️ **`postgresql.html`** — position 13.13 → 27.82 at roughly flat impressions
+  (2,528 → 2,309), clicks 2 → 4. This is the cleanest revert candidate of the two: impressions
+  held, so the page still surfaces, it just ranks worse. Note this page is already excluded
+  from content work per `dev-spoke-content-plan.md` (deep + fresh; its ranking problem was
+  judged off-page), which makes a title revert the cheap first thing to try.
+
+Six other pages slipped position by <2.5 places (clean-architecture-dotnet, operator-loadouts,
+tesla-products, databases, compression-algorithms) — all within noise, and four of them gained
+clicks. No action.
+
+#### (2) `ai-frontier.html` — its own baseline
+
+| Metric | Before (06-14 → 07-09) | After (07-10 → 08-04) | Δ |
+|---|---|---|---|
+| Clicks | 127 | **204** | **+61%** |
+| Impressions | 45,724 | 40,697 | −11% |
+| CTR | 0.28% | **0.50%** | **+79%** |
+| Avg position | 9.92 | **8.29** | **+1.63 better** |
+
+Fewer impressions, far more clicks, better position — the query-aligned rewrite is working
+exactly as intended. The frontier-AI query family confirms it:
+
+| Query | Before (clicks / pos) | After (clicks / pos) |
+|---|---|---|
+| frontier ai labs list | 2 / 7.79 | **21 / 2.55** |
+| list of frontier ai labs | 2 / 6.12 | **7 / 2.32** |
+| frontier labs list | 2 / 5.45 | **5 / 1.90** |
+| top frontier ai labs | — | 4 / 5.21 |
+| ai frontier labs list | 1 / 4.92 | 3 / 2.11 |
+| list of frontier labs | — | 3 / 2.15 |
+| frontier ai companies | 7 / 5.36 | 8 / 5.01 |
+| frontier model providers | 5 / 3.19 | 2 / 1.78 |
+| list of frontier ai models | 4 / 4.85 | 3 / 4.47 |
+
+The "…labs list" cluster went from position 5–8 to position 2–3 and now supplies the bulk of
+the page's clicks. Fragment URLs (`#title-openai`, `#title-anthropic`, …) carried 23,690
+impressions and 2 clicks in the after window — SERP-feature exposure, as previously ruled, not
+a blue-link CTR failure.
+
+#### (3) AI distribution
+
+**Cloudflare crawler run-rate, 7 days 2026-07-30 → 2026-08-05** (same method as the
+2026-07-11 baseline; free-plan history cap forces a one-day-per-request loop):
+
+| User agent | Requests (7d) | vs. 2026-07-11 baseline |
+|---|---|---|
+| ChatGPT-User | 7,135 | 6,945 (+2.7%) |
+| Bytespider | 1,646 | 1,184 (+39%) |
+| PerplexityBot | 841 | 341 (**+147%**) |
+| Amazonbot | 550 | 600 (−8%) |
+| Applebot | 181 | 278 (−35%) |
+| OAI-SearchBot | 173 | 186 (−7%) |
+| DuckAssistBot | 133 | 65 (+105%) |
+| Claude-User | 128 | 63 (+103%) |
+| ClaudeBot | 88 | 135 (−35%) |
+| GPTBot | 75 | 102 (−26%) |
+| Google-Extended | 71 | not separately reported |
+| Claude-SearchBot | 50 | not separately reported |
+| meta-externalagent / CCBot / MistralAI | 49 | 54 |
+| GoogleOther | 9 | 620 (−99%) |
+| Perplexity-User / cohere | 0 | — |
+| **Total** | **11,129** (≈1,590/day) | 10,573 (≈1,510/day), **+5.3%** |
+
+ChatGPT-User is 64% of the total (was 66%). Top ChatGPT-User pages: `ai-frontier.html` 1,664,
+`humanoid-robots.html` 1,226, `/` 560, `ai-coding-agents-compared.html` 544,
+`starlink-satellite-anatomy.html` 350, `boom-supersonic.html` 322. PerplexityBot's top real
+page is again `ai-frontier.html` (123).
+
+Read: the run-rate **recovered** from the 2026-07-21 interim dip (~1,068/day) to slightly above
+the July baseline. +5.3% is *not* "clearly above ~1,500/day" — call the crawler leg **flat**.
+The genuine movement is compositional: Perplexity, DuckDuckGo AI, and Claude-User roughly
+doubled off small bases while `GoogleOther` all but vanished (that agent's baseline was mostly
+`history.php` + `/cdn-cgi/*` noise, so its collapse is not a content signal). `humanoid-robots`
+doubled its ChatGPT-User pull and `ai-coding-agents-compared` entered the top four — both are
+new AI-side demand not visible in Google clicks.
+
+⚠️ **GA4 referral leg not re-pulled this run — source unavailable, not a null result.** The
+`analytics-mcp` server is not connected in the scheduled-task session and no GA4 credential
+exists on disk (the only Google service account present,
+`search-console-mcp@gen-lang-client-0919305470`, is Search Console-scoped). The 90-day AI-referral
+number is therefore **unknown**, not zero, and the 7-referrals/90d baseline stands unrefreshed.
+This does not change the verdict: the WP1 leg alone satisfies the rule, and the pre-registered
+downshift trigger requires *both* legs flat-to-down. **Action:** connect `analytics-mcp` (GA4
+property 543339529) before the next checkpoint, or the referral half of the AI thesis stays
+unmeasurable.
+
+#### Decision
+
+**CONTINUE INVESTING.** WP1 clicks +33.9% (+14.3% excluding `ai-frontier`) with
+impression-weighted position improving 10.93 → 10.17 clears the primary criterion on its own.
+`ai-frontier` is the standout (+61% clicks, +1.63 position, CTR nearly doubled) and validates
+query-aligned titling as the repeatable lever. AI distribution is flat in volume but shifting
+in composition; it neither supports nor blocks the call this quarter.
+
+Consequences:
+
+1. **The title/consolidation freeze is lifted.** The queued post-freeze work in
+   [`dev-spoke-content-plan.md`](dev-spoke-content-plan.md) (Tier 1: `azure-devops`
+   best-practices section, `dotnet-cheatsheet` C# keywords table) is now unblocked.
+2. **Two guard-rail flags to diagnose first**, before any new title work:
+   `martial-arts-cheatsheet` and `postgresql` (details above). Pull page×query for each; revert
+   the title only if the diagnosis implicates it.
+3. **Nothing is deleted or pruned** — per the site-goals ground rule, non-goal-3 pages are not
+   judged on traffic.
+4. **Fix the GA4 gap** before the next checkpoint so the referral leg is measurable.
+
+The one-time scheduled task (`cheatsheets-pivot-checkpoint`) has now fired and can be retired.
 
 ## AI frontier implementation — 2026-07-10
 
@@ -414,3 +577,17 @@ scope). Two durable notes preserved for the next pillar:
   its title yet ranks pos 40–87). Tier 1: `azure-devops` (thin — add best-practices section) and
   `dotnet-cheatsheet` (add a C# keywords table for the 408-impr "c# keywords cheat sheet" query).
   Explicitly excluded `postgresql` from content work (already 18k words + fresh; its pos-45 is off-page).
+- 2026-08-06 — **Ran the pre-registered decision checkpoint. Verdict: CONTINUE INVESTING.** WP1 pages
+  286 → 383 clicks (+33.9%; +14.3% excluding `ai-frontier`) with impression-weighted position
+  improving 10.93 → 10.17, so the primary criterion passes on its own. `ai-frontier` on its own
+  baseline: 127 → 204 clicks (+61%), CTR 0.28% → 0.50%, position 9.92 → 8.29; the "frontier ai labs
+  list" cluster moved from position 5–8 to 2–3. AI crawler run-rate 11,129/7d (~1,590/day) vs. the
+  ~1,510/day baseline — recovered from the 07-21 dip but only +5.3%, so the AI leg is judged **flat**
+  (Perplexity +147%, Claude-User +103%, DuckAssistBot +105% off small bases; `GoogleOther` collapsed
+  99%, but its baseline was `history.php`/`cdn-cgi` noise). **GA4 referral leg not re-pulled — source
+  unavailable, not zero:** no `analytics-mcp` server in the scheduled-task session and no GA4
+  credential on disk. Flagged two guard-rail failures for diagnosis before revert:
+  `martial-arts-cheatsheet` (pos 7.01 → 18.29, impressions −87% — looks like a lost head query, not a
+  title defect) and `postgresql` (pos 13.13 → 27.82 at flat impressions — the cleaner revert
+  candidate). Freeze lifted; `dev-spoke-content-plan.md` Tier 1 unblocked. Nothing pruned. Windows
+  were 27 days, not 28, because GSC data ends 2026-08-04.
