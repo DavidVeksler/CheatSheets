@@ -62,8 +62,24 @@ If `TODAY` is not supplied, get the current date before doing anything else.
    Do **not** rewrite sections, restructure, or redesign.
 4. **One file only.** Never create or modify any other file.
 5. **Structured data must match visible content.** Only set a `dateModified` / "Last verified"
-   stamp to `TODAY` **because you actually reviewed the content this run** (which you always do).
-   Never bump the date without reviewing.
+   stamp to `TODAY` **because you actually reviewed the content this run**. Never bump the date
+   without reviewing.
+6. **A stamp is a claim about verification, so an unverified run must not stamp.** If you could
+   not reach a primary source for this file's volatile facts — the search budget ran out, the
+   sources were unreachable, the tool errored — then **leave every existing date exactly as you
+   found it** and report the file as unverified. Do not bump `dateModified`, do not bump the
+   visible "Last verified" line, and do not add one. A stale-but-honest date is recoverable; a
+   fresh date on unverified content is a lie the next run will trust.
+7. **Never overwrite a real provenance note with a failure message.** If a file carries a note
+   recording what was checked and when, and you could not verify it this run, leave the note
+   alone. Put "could not verify" in your **report**, never in the page.
+
+   Rules 6 and 7 are not hypothetical. On 2026-07-26 the session's 200-call web-search budget was
+   exhausted 9 batches in; the remaining Workers kept "succeeding" while doing zero verification,
+   and five files had their stamps bumped with nothing checked behind them — two of which
+   overwrote a genuine provenance note with "could not verify". All five had to be reverted.
+   Silent false provenance is a worse outcome than an incomplete run, so when in doubt, stamp
+   nothing and say so.
 
 ---
 
@@ -158,25 +174,36 @@ Pick the working set by **staleness × volatility**:
 - **Skip** anything updated in the last **~30 days** (already fresh).
 - Rotate so every dated file is revisited within a few weeks rather than all at once.
 
-**Known dated set in this repo** (verify against current files; the repo grows):
+**Do not maintain the dated set by hand. Compute it:**
 
-> AI/ML: `ai-frontier`, `ai-progress-dashboard`, `ai-risk-timeline`, `agi-development-guide`,
-> `airisk`, `aisafety`, `p-doom-calculator`, `prompt-builder`, `google-ai-studio-guide`,
-> `humanoid-robots`.
-> Tech/software: `dotnet-cheatsheet`, `clean-architecture-dotnet`, `postgresql`, `databases`,
-> `azure-devops`, `aws-vs-azure`, `modern-devops-pipelines`, `python-for-architects`,
-> `javascript-for-architects`, `post-quantum-cryptography`, `git-scm`, `versioncontrol`,
-> `compression-algorithms`.
-> Products/hardware/markets: `tesla-products`, `orbital-rockets-comparison`, `boom-supersonic`,
-> `automotive-innovation-timeline`, `bitcoin-exchanges-cards`, `bitcoin-self-custody-guide`,
-> `bitcoin-wallet`, `modern-firearms`, `operator-loadouts`, `future-of-warfare-technology`,
-> `engineering-materials-future`, `geoengineering-approaches`, `housing-comparison`,
-> `home-maintenance-guide`, `handgun-calibers`, `engineering-metals-selection`,
-> `ham-radio-technician`, `veterinary-diagnostics`, `privacy-data-broker-opt-out`,
-> `lifestyle-calculator`.
+```sh
+python scripts/freshness_scan.py            # this run's batch, oldest-first
+python scripts/freshness_scan.py --all      # full ranking, no batch cut
+python scripts/freshness_scan.py --json     # machine-readable
+```
 
-A robust automated selector can rank by `dateModified` age: `git log -1 --format=%cs -- <file>`
-or the in-file `dateModified`, oldest first.
+The script is read-only: it never edits a file, never hits the network, and never bumps a date.
+It ranks every root `*.html` by the age of its in-file `dateModified` (falling back to a visible
+"Last verified" line, then to the file's last git commit date), drops anything refreshed inside
+`--min-age-days` (30 by default), holds back the §7 evergreen topics, and cuts the result to a
+batch that fits the search budget.
+
+**This replaced a hand-typed list, because the list drifted into being wrong.** It named ~43
+files when the repo held 173, and it omitted the entire AI-models / AI-datacenter cluster — the
+fastest-drifting content in the repo. A list of files living in prose is exactly the thing that
+should be computed.
+
+**The budget is a hard constraint, not a guideline.** At §2's ceiling of ~15 searches per Worker
+against a 200-call session cap (`CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION`, shared across the
+Selector *and* every Worker), only about **12 files** can be dispatched per run. The script
+refuses to emit a larger plan rather than let the late Workers starve and stamp unverified files
+(see §4.6). If a bigger batch is genuinely wanted, raise the cap first, then pass `--limit`.
+
+**Known cadence problem, worth a decision:** as of 2026-08-08 the corpus sits in near-lockstep
+around 25 days old, so once it crosses the 30-day threshold roughly 164 files become eligible
+against a 12-file batch — about 14 weeks to complete a single pass. Either raise the search cap,
+run the job more often than weekly, or accept that the selector is a staleness *triage* rather
+than a full sweep. Do not "solve" it by dispatching more Workers than the budget supports.
 
 ---
 
