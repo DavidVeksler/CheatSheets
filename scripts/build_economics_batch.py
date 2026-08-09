@@ -532,6 +532,87 @@ def build_economic_systems() -> str:
         "Mercantilism", "Free-market capitalism", "Social democracy",
         "State socialism", "State capitalism", "Corporatist economics",
     ]
+    coordination = [
+        {
+            "id": "free-market", "name": "Free-market capitalism", "x": 215, "y": 128,
+            "trade": "Generally open: imports are consumer goods and productive inputs, while exports pay for them.",
+            "labor": "Workers and employers contract in labor markets; independent unions may bargain without receiving state production quotas.",
+            "case": "Post-1948 West German market reforms, with the 1957 competition law constraining cartels.",
+            "confusion": "Not corporatism: subsidies, protected incumbents, and political credit allocation weaken the profit-and-loss test.",
+        },
+        {
+            "id": "social-democracy", "name": "Social democracy", "x": 330, "y": 205,
+            "trade": "Usually open trade paired with adjustment assistance, product rules, and a large social-insurance system.",
+            "labor": "Independent unions, sector bargaining, and statutory protections shape wages inside a predominantly private economy.",
+            "case": "Sweden's postwar model, especially the combination of private exporters and centralized bargaining from the 1950s–1980s.",
+            "confusion": "Not state socialism: redistribution and public services do not by themselves replace private capital markets.",
+        },
+        {
+            "id": "mercantilism", "name": "Mercantilism", "x": 395, "y": 300,
+            "trade": "Exports are promoted and imports restricted unless they provide strategic inputs or strengthen state capacity.",
+            "labor": "Workers remain subjects of a commercial state; guild, settlement, and poor-law rules historically limited movement.",
+            "case": "England under the Navigation Acts of 1651 and 1660 through the eighteenth century.",
+            "confusion": "Not merely protectionism: the larger logic subordinates commerce to state power, reserves, shipping, and strategic rivalry.",
+        },
+        {
+            "id": "state-capitalism", "name": "State capitalism", "x": 710, "y": 278,
+            "trade": "Export-led and selectively protected, with managed technology access and strategic industrial policy.",
+            "labor": "Private labor markets coexist with state-sector employment and politically bounded union organization.",
+            "case": "China after the 1978 reform opening, especially its state-owned firms and directed banking in the 2000s–2020s.",
+            "confusion": "Not a command economy: consumer prices can be market-set while state finance steers strategic investment.",
+        },
+        {
+            "id": "corporatism", "name": "Corporatist economics", "x": 590, "y": 405,
+            "trade": "Bilateral clearing, exchange controls, autarky goals, and state-approved strategic imports.",
+            "labor": "Independent unions are abolished or absorbed into compulsory, state-supervised sector bodies.",
+            "case": "Fascist Italy after the 1927 Labour Charter; Nazi Germany after the 1936 Four Year Plan.",
+            "confusion": "Not laissez-faire: legal title may stay private even when political authorities decide wages, entry, credit, and output.",
+        },
+        {
+            "id": "state-socialism", "name": "State socialism", "x": 845, "y": 455,
+            "trade": "A state foreign-trade monopoly allocates imports and exports according to the production plan.",
+            "labor": "The state is the dominant employer; labor is allocated administratively and independent bargaining is absent.",
+            "case": "The USSR from the first Five-Year Plan in 1928 through dissolution in 1991.",
+            "confusion": "Not a welfare state: the defining change is state command of productive assets and investment, not the presence of benefits.",
+        },
+    ]
+    coordination_buttons = "".join(
+        f'<button type="button" class="coord-button" data-system="{item["id"]}" aria-pressed="false">{esc(item["name"])}</button>'
+        for item in coordination
+    )
+    coordination_nodes = "".join(
+        f'''<g class="coord-node" data-system="{item["id"]}" data-label="{esc(item["name"])}">
+<circle cx="{item["x"]}" cy="{item["y"]}" r="11"/><text x="{item["x"] + 18}" y="{item["y"] + 5}">{esc(item["name"])}</text></g>'''
+        for item in coordination
+    )
+    coordination_panels = "".join(
+        f'''<article class="coord-panel" data-coord-panel="{item["id"]}" hidden>
+<h3>{esc(item["name"])}</h3><dl><div><dt>Trade posture</dt><dd>{esc(item["trade"])}</dd></div><div><dt>Labor model</dt><dd>{esc(item["labor"])}</dd></div><div><dt>Canonical case</dt><dd>{esc(item["case"])}</dd></div><div><dt>Common misclassification</dt><dd>{esc(item["confusion"])}</dd></div></dl></article>'''
+        for item in coordination
+    )
+    coordination_fallback = table(
+        ["System", "Trade posture", "Labor model", "Canonical case", "Common misclassification"],
+        [[item["name"], item["trade"], item["labor"], item["case"], item["confusion"]] for item in coordination],
+        cls="coord-fallback-table",
+    )
+    coordination_map = f'''
+<section class="coord-map" aria-labelledby="coord-title">
+<div class="stamp">CONCEPTUAL MAP · NOT A SCORE</div><h2 id="coord-title">How do economic systems coordinate?</h2>
+<p class="section-note">Select a system to inspect its institutions. Horizontal position moves from mostly private toward mostly state-directed capital; vertical position moves from market prices toward administrative price formation. Positions are qualitative ideal types, not measured scores, and real economies combine institutions.</p>
+<div class="coord-controls no-print" role="group" aria-label="Choose an economic system">{coordination_buttons}</div>
+<div class="coord-plot-wrap">
+<svg class="coord-plot" viewBox="0 0 1000 550" role="img" aria-labelledby="coord-svg-title coord-svg-desc">
+<title id="coord-svg-title">Conceptual map of six economic systems</title><desc id="coord-svg-desc">A qualitative two-axis map. Capital ownership runs from mostly private on the left to mostly state-directed on the right. Price formation runs from mostly market prices at the top to mostly administrative prices at the bottom.</desc>
+<defs><marker id="coord-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs>
+<g class="coord-grid" aria-hidden="true"><path d="M120 60V485H930"/><path d="M322 60V485M525 60V485M727 60V485M120 166H930M120 272H930M120 378H930"/></g>
+<g class="coord-axes" aria-hidden="true"><path d="M120 510H930" marker-end="url(#coord-arrow)"/><path d="M92 60V485" marker-end="url(#coord-arrow)"/><text x="120" y="540">MOSTLY PRIVATE CAPITAL</text><text x="930" y="540" text-anchor="end">MOSTLY STATE-DIRECTED CAPITAL</text><text x="62" y="62" transform="rotate(-90 62 62)" text-anchor="end">MARKET PRICE FORMATION</text><text x="62" y="485" transform="rotate(-90 62 485)">ADMINISTRATIVE PRICE FORMATION</text></g>
+<g class="coord-quadrants" aria-hidden="true"><text x="140" y="88">DECENTRALIZED EXCHANGE</text><text x="910" y="88" text-anchor="end">STATE-GUIDED MARKETS</text></g>
+<g class="coord-nodes">{coordination_nodes}</g>
+</svg></div>
+<div class="coord-detail" aria-live="polite" aria-label="Selected economic system details">{coordination_panels}</div>
+<div class="coord-fallback"><h3>All six systems</h3><p>This table preserves the comparison when JavaScript is unavailable.</p>{coordination_fallback}</div>
+</section>
+<script>(()=>{{const map=document.querySelector('.coord-map');if(!map)return;const buttons=[...map.querySelectorAll('.coord-button')];const nodes=[...map.querySelectorAll('.coord-node')];const panels=[...map.querySelectorAll('[data-coord-panel]')];const select=id=>{{buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.system===id)));nodes.forEach(node=>{{const active=node.dataset.system===id;node.classList.toggle('is-active',active);node.setAttribute('aria-pressed',String(active))}});panels.forEach(panel=>panel.hidden=panel.dataset.coordPanel!==id)}};buttons.forEach(button=>button.addEventListener('click',()=>select(button.dataset.system)));nodes.forEach(node=>{{node.setAttribute('role','button');node.setAttribute('tabindex','0');node.setAttribute('aria-label',`Select ${{node.dataset.label}}`);node.addEventListener('click',()=>select(node.dataset.system));node.addEventListener('keydown',event=>{{if(event.key==='Enter'||event.key===' '){{event.preventDefault();select(node.dataset.system)}}}})}});map.classList.add('is-interactive');select('free-market')}})();</script>'''
     matrix = [
         ["Purpose", "Increase state power through a trade surplus and strategic reserves", "Coordinate voluntary exchange through private property and profit/loss", "Combine private markets with social insurance and bargaining institutions", "Execute a political production plan and replace capital markets", "Use markets while the state controls strategic capital and national objectives", "Organize private owners and labor into state-supervised sectors"],
         ["Capital ownership", "Crown-chartered or politically privileged merchants; farms and shops remain private", "Private individuals, partnerships, cooperatives, and firms", "Mostly private firms; public ownership concentrated in selected services", "State owns or directs major productive assets; private capital is marginal or prohibited", "Mixed, but state firms and state-guided finance dominate strategic sectors", "Nominally private, conditional on political direction and cartel membership"],
@@ -650,7 +731,7 @@ def build_economic_systems() -> str:
         ("Trade deficits are not a score", "A deficit can accompany capital inflow and rising consumption; a surplus can reflect weak domestic demand. The balance alone does not measure living standards."),
     ])
 
-    content = f'''
+    content = f'''{coordination_map}
 <section class="matrix-section" aria-labelledby="quick"><div class="stamp">QUICK REFERENCE · 6 SYSTEMS × 12 TESTS</div><h2 id="quick">The master matrix</h2><p class="section-note">Read down a column for a system; read across a row to settle a comparison. Hover a row to hold your place. No real economy occupies a pure column.</p>{master}</section>
 <section aria-labelledby="difference"><h2 id="difference">What's the difference between mercantilism and capitalism?</h2><div class="callout"><strong>Short answer:</strong> Mercantilism asks how commerce can strengthen the state against rival states; capitalism asks how private owners and customers can coordinate production through prices and profit/loss. Mercantilism treats imports as a potential national loss and producer privilege as strategy. Capitalism treats imports as goods received and competition, including foreign competition, as a discipline on producers.</div>{head_to_head}</section>
 <section aria-labelledby="deep"><h2 id="deep">Six systems at working depth</h2><p class="section-note">Each card gives a usable definition, an implementation, named policies, a text, an outcome, and the confusion to avoid.</p>{details}</section>
@@ -658,7 +739,9 @@ def build_economic_systems() -> str:
 <section aria-labelledby="classify"><h2 id="classify">Classify a real economy</h2><p class="section-note">Use ownership, price formation, trade, and credit direction. The final column gives a defensible classification instead of “it's complicated.”</p>{classify}</section>
 <section aria-labelledby="mistakes"><h2 id="mistakes">Common mistakes and anti-patterns</h2><div class="card-grid">{mistakes}</div></section>'''
     theme = r'''
-@layer base{:root{--accent:light-dark(#7b2630,#e2a55f);--accent2:light-dark(#1e4d6b,#79b7d4)}body{background-image:linear-gradient(90deg,transparent 97%,color-mix(in srgb,var(--line) 30%,transparent) 97%),linear-gradient(color-mix(in srgb,var(--line) 12%,transparent) 1px,transparent 1px);background-size:100% 100%,100% 28px}.hero{background:linear-gradient(135deg,color-mix(in srgb,var(--paper) 87%,var(--accent) 13%),var(--paper))}.stamp{display:inline-block;border:2px solid var(--accent);color:var(--accent);padding:5px 8px;transform:rotate(-.5deg);font:800 .75rem ui-monospace,Consolas,monospace;letter-spacing:.08em;margin-bottom:12px}.master-matrix thead th:not(:first-child){min-width:190px;border-top:7px solid var(--accent)}.master-matrix tbody th{font-family:Georgia,serif}.matrix-section .table-wrap{border-width:2px}}
+@layer base{:root{--accent:light-dark(#7b2630,#e2a55f);--accent2:light-dark(#1e4d6b,#79b7d4)}body{background-image:linear-gradient(90deg,transparent 97%,color-mix(in srgb,var(--line) 30%,transparent) 97%),linear-gradient(color-mix(in srgb,var(--line) 12%,transparent) 1px,transparent 1px);background-size:100% 100%,100% 28px}.hero{background:linear-gradient(135deg,color-mix(in srgb,var(--paper) 87%,var(--accent) 13%),var(--paper))}.stamp{display:inline-block;border:2px solid var(--accent);color:var(--accent);padding:5px 8px;transform:rotate(-.5deg);font:800 .75rem ui-monospace,Consolas,monospace;letter-spacing:.08em;margin-bottom:12px}.master-matrix thead th:not(:first-child){min-width:190px;border-top:7px solid var(--accent)}.master-matrix tbody th{font-family:Georgia,serif}.matrix-section .table-wrap{border-width:2px}.coord-map{margin-top:36px}.coord-controls{display:none;flex-wrap:wrap;gap:8px;margin:18px 0 12px}.coord-map.is-interactive .coord-controls{display:flex}.coord-button{border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:700 .78rem ui-monospace,Consolas,monospace;padding:8px 12px;cursor:pointer}.coord-button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--paper)}.coord-button:focus-visible,.coord-node:focus-visible{outline:3px solid var(--accent);outline-offset:3px}.coord-plot-wrap{overflow-x:auto;border:2px solid var(--line);border-radius:16px;background:color-mix(in srgb,var(--paper) 94%,var(--accent2) 6%);box-shadow:var(--shadow)}.coord-plot{display:block;min-width:720px;width:100%;height:auto}.coord-grid path:first-child,.coord-axes path{stroke:var(--ink);stroke-width:2;fill:none}.coord-grid path:not(:first-child){stroke:color-mix(in srgb,var(--line) 62%,transparent);stroke-width:1;stroke-dasharray:5 7;fill:none}.coord-axes text,.coord-quadrants text{fill:var(--muted);font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.05em}.coord-quadrants text{opacity:.8}.coord-plot marker path{fill:var(--ink)}.coord-node{cursor:default}.coord-map.is-interactive .coord-node{cursor:pointer}.coord-node circle{fill:var(--accent2);stroke:var(--paper);stroke-width:4}.coord-node text{fill:var(--ink);font:800 14px ui-sans-serif,system-ui,sans-serif;paint-order:stroke;stroke:var(--paper);stroke-width:5;stroke-linejoin:round}.coord-map.is-interactive .coord-node:hover circle,.coord-map.is-interactive .coord-node:focus circle,.coord-node.is-active circle{fill:var(--accent);stroke:var(--ink);stroke-width:5}.coord-node.is-active text{fill:var(--accent)}.coord-detail{margin-top:14px}.coord-panel{border-left:6px solid var(--accent);border-radius:12px;background:var(--panel);padding:16px 18px;box-shadow:var(--shadow)}.coord-panel h3{margin:0 0 12px}.coord-panel dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0}.coord-panel dl div{border-top:1px solid var(--line);padding-top:9px}.coord-panel dt{color:var(--accent);font:800 .75rem ui-monospace,Consolas,monospace;letter-spacing:.06em;text-transform:uppercase}.coord-panel dd{margin:5px 0 0;color:var(--muted);font-size:.92rem}.coord-map.is-interactive .coord-fallback{display:none}.coord-fallback{margin-top:18px}.coord-fallback-table th:not(:first-child){min-width:230px}}
+@media(max-width:700px){.coord-panel dl{grid-template-columns:1fr}.coord-controls{gap:6px}.coord-button{font-size:.72rem;padding:7px 9px}}
+@media print{.coord-controls,.coord-detail{display:none!important}.coord-map.is-interactive .coord-fallback{display:block!important}.coord-plot-wrap{box-shadow:none}.coord-plot{min-width:0}.coord-fallback-table th:not(:first-child){min-width:0}}
 '''
     sources = '''<ol>
 <li><a href="https://oll.libertyfund.org/titles/smith-an-inquiry-into-the-nature-and-causes-of-the-wealth-of-nations-cannan-ed-vol-2">Adam Smith, <cite>Wealth of Nations</cite>, vol. II, Book IV (1776)</a> for the mercantile-system critique.</li>
@@ -682,6 +765,216 @@ def build_economic_systems() -> str:
 
 
 def build_political_ideologies() -> str:
+    fingerprint_dimensions = [
+        ("economic", "Economic intervention", [
+            "Minimal / voluntary", "Rule-setting / reform", "Regulate / insure",
+            "Selective intervention", "Welfare / bargaining", "Ownership change", "Strategic direction",
+        ]),
+        ("redistribution", "Redistribution", [
+            "Reject / minimal", "Limited minimum", "Progressive insurance",
+            "Universal benefits", "Ownership change", "Citizen / family priority",
+        ]),
+        ("liberty", "Civil liberty", [
+            "Strong presumption", "Rights + enforcement", "Liberal constitutional",
+            "Democratic, views vary", "Order / security qualified",
+        ]),
+        ("trade", "Trade", [
+            "Unilateral openness", "Rules-based openness", "Liberalize by reform",
+            "Managed for labor", "Movement-internal range", "Strategic protection",
+        ]),
+        ("immigration", "Immigration", [
+            "Free / radically expanded", "Generally freer", "Managed openness",
+            "Not a defining plank", "Movement-internal range", "Restriction / assimilation",
+        ]),
+        ("authority", "Authority", [
+            "Rights-limited state", "Constitutional administration", "Democratic social institutions",
+            "Inherited institutions", "Democratic economic control", "Sovereign nation",
+        ]),
+    ]
+    fingerprint_profiles = {
+        "classical": {
+            "name": "Classical liberal",
+            "portrait": "General law, private property, open exchange, and a strong presumption against privilege.",
+            "economic": ("Rule-setting / reform", "Protect property, competition, and public goods; resist privilege."),
+            "redistribution": ("Limited minimum", "Views range from proportional tax to a limited social minimum."),
+            "liberty": ("Strong presumption", "Strong speech, conscience, due process, and association."),
+            "trade": ("Unilateral openness", "Open trade as exchange and peace, with genuine-security exceptions."),
+            "immigration": ("Generally freer", "Generally freer movement, subject to legal-order and fiscal debates."),
+            "authority": ("Rights-limited state", "Consent, general law, individual rights, and separated powers."),
+        },
+        "modern-liberal": {
+            "name": "Modern US liberal",
+            "portrait": "Equal citizenship and civil liberty backed by regulation, social insurance, and public provision.",
+            "economic": ("Regulate / insure", "Regulate markets, manage demand, insure risks, and correct exclusion or externalities."),
+            "redistribution": ("Progressive insurance", "Progressive taxes with targeted and universal benefits."),
+            "liberty": ("Rights + enforcement", "Strong rights plus antidiscrimination enforcement."),
+            "trade": ("Rules-based openness", "Rules-based trade with labor and environmental conditions."),
+            "immigration": ("Managed openness", "Legal immigration, humanitarian protection, and integration."),
+            "authority": ("Constitutional administration", "Democratic legitimacy, equal citizenship, and expert administration."),
+        },
+        "libertarian": {
+            "name": "Libertarian",
+            "portrait": "A strict presumption against coercion, extending market and civil liberty beyond classical-liberal practice.",
+            "economic": ("Minimal / voluntary", "A rights-protection state or stateless legal order, with broad privatization."),
+            "redistribution": ("Reject / minimal", "Minimal taxes; some accept land or consumption taxes, while others reject compulsory tax."),
+            "liberty": ("Strong presumption", "Very strong protection of speech, privacy, bodily autonomy, and due process."),
+            "trade": ("Unilateral openness", "Unilateral free trade; capital and migration are generally open."),
+            "immigration": ("Free / radically expanded", "Free movement or radically expanded legal migration."),
+            "authority": ("Rights-limited state", "Pre-political individual rights; state power must be strictly justified."),
+        },
+        "neoliberal": {
+            "name": "Neoliberal program",
+            "portrait": "A policy program of macroeconomic stability, competition, openness, and credibility-enhancing institutions.",
+            "economic": ("Rule-setting / reform", "Stable macro rules, competition, privatization, and openness."),
+            "redistribution": ("Limited minimum", "A broad tax base, fiscal discipline, and targeted safety nets."),
+            "liberty": ("Liberal constitutional", "Usually liberal constitutionalism; the program itself is economic."),
+            "trade": ("Liberalize by reform", "Tariff reduction, competitive exchange rates, and openness to foreign direct investment."),
+            "immigration": ("Not a defining plank", "Labor mobility is often favored, but immigration is not a defining plank."),
+            "authority": ("Constitutional administration", "Constitutional government plus technocratic, credibility-enhancing institutions."),
+        },
+        "conservative": {
+            "name": "Conservative",
+            "portrait": "Inherited institutions, order, and prudence, with market, communitarian, and nationalist wings.",
+            "economic": ("Selective intervention", "Markets plus order, family policy, defense, and selective protection."),
+            "redistribution": ("Citizen / family priority", "Market wings favor lower taxes; communitarian wings favor family and industrial subsidies."),
+            "liberty": ("Order / security qualified", "Free institutions are qualified by order, tradition, or security concerns."),
+            "trade": ("Movement-internal range", "The family ranges from free trade to strategic protection."),
+            "immigration": ("Movement-internal range", "Positions range from skills-based limits to restriction for cultural continuity."),
+            "authority": ("Inherited institutions", "Nation, constitution, religion, inherited institutions, and prudence."),
+        },
+        "social-democrat": {
+            "name": "Social democrat",
+            "portrait": "Capitalist production combined with universal services, broad taxation, unions, and parliamentary democracy.",
+            "economic": ("Welfare / bargaining", "Private markets with unions, universal services, and broad taxes."),
+            "redistribution": ("Universal benefits", "High broad-based taxes fund universal social insurance."),
+            "liberty": ("Liberal constitutional", "Liberal-democratic rights plus social rights."),
+            "trade": ("Rules-based openness", "Open trade with bargaining standards and adjustment policy."),
+            "immigration": ("Managed openness", "Managed openness with labor standards and welfare-eligibility rules."),
+            "authority": ("Democratic social institutions", "Parliamentary democracy, unions, and social citizenship."),
+        },
+        "democratic-socialist": {
+            "name": "Democratic socialist",
+            "portrait": "Political democracy extended into ownership and workplaces through public, cooperative, or worker control.",
+            "economic": ("Ownership change", "Democratize ownership through public, cooperative, or worker control."),
+            "redistribution": ("Ownership change", "Redistribution plus ownership change and workplace democracy."),
+            "liberty": ("Democratic, views vary", "Democratic rights are central, though views on speech and party power vary."),
+            "trade": ("Managed for labor", "Managed trade protects labor and democratic planning."),
+            "immigration": ("Movement-internal range", "Views range from solidarity and refuge to labor-market planning."),
+            "authority": ("Democratic economic control", "Democratic control of both the economy and the state."),
+        },
+        "national-conservative": {
+            "name": "National conservative",
+            "portrait": "National sovereignty and continuity pursued through border control, executive capacity, and industrial strategy.",
+            "economic": ("Strategic direction", "Direct trade, finance, and industry toward national resilience."),
+            "redistribution": ("Citizen / family priority", "Benefits prioritize citizens and families, alongside protection and industrial subsidies."),
+            "liberty": ("Order / security qualified", "Civil liberty may yield to national cohesion and executive capacity."),
+            "trade": ("Strategic protection", "Tariffs, local-content rules, and strategic supply chains."),
+            "immigration": ("Restriction / assimilation", "Restriction and assimilation are core program elements."),
+            "authority": ("Sovereign nation", "The sovereign nation, historic community, and elected executive."),
+        },
+    }
+    fallback_rows = [
+        [
+            profile["name"],
+            *(profile[key][0] for key, _, _ in fingerprint_dimensions),
+        ]
+        for profile in fingerprint_profiles.values()
+    ]
+    fingerprint_fallback = table(
+        ["Ideology", *(label for _, label, _ in fingerprint_dimensions)],
+        fallback_rows,
+        cls="fingerprint-fallback-table",
+    )
+    fingerprint_payload = json.dumps({
+        "dimensions": [
+            {"key": key, "label": label, "bins": bins}
+            for key, label, bins in fingerprint_dimensions
+        ],
+        "profiles": fingerprint_profiles,
+    }).replace("</", "<\\/")
+    fingerprint_script = r'''
+<script>(()=>{
+const host=document.querySelector('[data-fingerprint]');
+if(!host)return;
+const payload=JSON.parse(host.querySelector('[data-fingerprint-data]').textContent);
+const explorer=host.querySelector('.fingerprint-explorer');
+const selects=[host.querySelector('#fingerprint-a'),host.querySelector('#fingerprint-b')];
+const tracks=host.querySelector('.fingerprint-tracks');
+const details=host.querySelector('.fingerprint-details');
+const status=host.querySelector('.fingerprint-status');
+const entries=Object.entries(payload.profiles);
+for(const select of selects){
+  for(const [key,profile] of entries){
+    const option=document.createElement('option');option.value=key;option.textContent=profile.name;select.append(option);
+  }
+}
+selects[0].value='classical';selects[1].value='modern-liberal';
+function detailCard(profile,letter){
+  const article=document.createElement('article');article.className=`fingerprint-card fingerprint-card-${letter.toLowerCase()}`;
+  const heading=document.createElement('h3');heading.textContent=`${letter} · ${profile.name}`;article.append(heading);
+  const portrait=document.createElement('p');portrait.textContent=profile.portrait;article.append(portrait);
+  const list=document.createElement('dl');
+  for(const dimension of payload.dimensions){
+    const term=document.createElement('dt');term.textContent=dimension.label;
+    const definition=document.createElement('dd');definition.textContent=profile[dimension.key][1];
+    list.append(term,definition);
+  }
+  article.append(list);return article;
+}
+function render(){
+  const a=payload.profiles[selects[0].value],b=payload.profiles[selects[1].value];
+  tracks.replaceChildren();
+  for(const dimension of payload.dimensions){
+    const row=document.createElement('div');row.className='fingerprint-track';row.style.setProperty('--bins',dimension.bins.length);
+    row.setAttribute('role','group');
+    row.setAttribute('aria-label',`${dimension.label}: A, ${a.name}, is ${a[dimension.key][0]}; B, ${b.name}, is ${b[dimension.key][0]}.`);
+    const heading=document.createElement('h3');heading.textContent=dimension.label;row.append(heading);
+    for(const bin of dimension.bins){
+      const cell=document.createElement('div');cell.className='fingerprint-bin';
+      const label=document.createElement('span');label.className='fingerprint-bin-label';label.textContent=bin;cell.append(label);
+      [['A',a],['B',b]].forEach(([letter,profile])=>{
+        if(profile[dimension.key][0]!==bin)return;
+        const marker=document.createElement('span');marker.className=`fingerprint-marker marker-${letter.toLowerCase()}`;
+        marker.textContent=letter;marker.title=`${profile.name}: ${profile[dimension.key][1]}`;
+        marker.setAttribute('aria-label',marker.title);cell.append(marker);
+      });
+      row.append(cell);
+    }
+    tracks.append(row);
+  }
+  details.replaceChildren(detailCard(a,'A'),detailCard(b,'B'));
+  status.textContent=`Comparing ${a.name} with ${b.name}.`;
+}
+selects.forEach((select,index)=>select.addEventListener('change',()=>{
+  const other=selects[index===0?1:0];
+  if(select.value===other.value)other.value=select.dataset.previous;
+  select.dataset.previous=select.value;other.dataset.previous=other.value;render();
+}));
+selects[0].dataset.previous=selects[0].value;selects[1].dataset.previous=selects[1].value;
+explorer.hidden=false;host.classList.add('fingerprint-ready');render();
+})();</script>'''
+    fingerprint = f'''
+<section class="fingerprint" aria-labelledby="fingerprint-title" data-fingerprint>
+<div class="plate">INTERACTIVE ATLAS · COMPARE TWO TRADITIONS</div>
+<h2 id="fingerprint-title">Ideology fingerprint explorer</h2>
+<p class="section-note">Choose two traditions to compare six independent questions. Every position is a named category taken from the master matrix, not a score: spacing is categorical, and the rows must not be added into a single left–right ranking.</p>
+<div class="fingerprint-explorer no-print" hidden>
+  <div class="fingerprint-controls">
+    <label class="fingerprint-select select-a"><span>A · First ideology</span><select id="fingerprint-a"></select></label>
+    <label class="fingerprint-select select-b"><span>B · Second ideology</span><select id="fingerprint-b"></select></label>
+    <p class="fingerprint-key" aria-hidden="true"><span class="fingerprint-marker marker-a">A</span><span class="fingerprint-marker marker-b">B</span> Same cell means the traditions share a broad category, not an identical policy.</p>
+  </div>
+  <p class="sr-only fingerprint-status" aria-live="polite"></p>
+  <div class="fingerprint-track-scroller" tabindex="0" role="region" aria-label="Six categorical ideology comparison tracks"><div class="fingerprint-tracks"></div></div>
+  <div class="fingerprint-details"></div>
+</div>
+<div class="fingerprint-fallback">
+  <p class="callout"><strong>Static comparison:</strong> JavaScript is optional. This table gives the named category for all eight traditions; the full statements appear in the master matrix below.</p>
+  {fingerprint_fallback}
+</div>
+<script type="application/json" data-fingerprint-data>{fingerprint_payload}</script>
+{fingerprint_script}
+</section>'''
     translation = table(
         ["Label", "United States", "United Kingdom", "Continental Europe", "Latin America", "Academic / historical"],
         [
@@ -763,6 +1056,7 @@ def build_political_ideologies() -> str:
     ])
 
     content = f'''
+{fingerprint}
 <section aria-labelledby="translate"><div class="plate">PLATE I · TRANSLATE BEFORE YOU ARGUE</div><h2 id="translate">What does “liberal” mean here?</h2><p class="section-note">A label is a local dialect. Each cell states the normal center of gravity, not a membership test; named parties are examples, not exact embodiments.</p>{translation}</section>
 <section class="page-break" aria-labelledby="lineage"><h2 id="lineage">How one word split into rival traditions</h2><p class="section-note">The dated nodes are the signature map. On small screens the same lineage appears as a linear list immediately below it.</p>{lineage_svg}</section>
 <section aria-labelledby="matrix"><h2 id="matrix">The master matrix: eight ideologies, ten tests</h2><p class="section-note">Systems answer who owns capital. Ideologies answer what political authority should do. That is why a liberal, conservative, or socialist movement can operate inside more than one economic arrangement.</p>{master}</section>
@@ -770,7 +1064,8 @@ def build_political_ideologies() -> str:
 <section aria-labelledby="neoliberal"><h2 id="neoliberal">“Neoliberal”: the word, the program, and the epithet</h2><div class="card-grid"><div class="card"><h3>1938: renewal project</h3><p>The Colloque Walter Lippmann in Paris debated how liberalism should answer monopoly, mass democracy, depression, and totalitarian planning. Its participants did not share one modern program.</p></div><div class="card"><h3>1989: policy list</h3><p>John Williamson used “Washington Consensus” for ten reform areas he thought Washington institutions broadly supported for crisis-hit Latin America. The list below is narrower than later uses.</p></div><div class="card"><h3>1990s+: critical epithet</h3><p>Writers expanded “neoliberal” to cover globalization, austerity, privatization, technocracy, financialization, or market reasoning itself. Ask for the policy, institution, time, and author.</p></div></div>{consensus}</section>
 <section aria-labelledby="mistakes"><h2 id="mistakes">Common mistakes</h2><div class="card-grid">{mistakes}</div></section>'''
     theme = r'''
-@layer base{:root{--accent:light-dark(#6b3b15,#dfaa67);--accent2:light-dark(#265b63,#6fc4c7)}body{background-image:radial-gradient(circle at 18% 8%,color-mix(in srgb,var(--accent) 8%,transparent),transparent 26%),linear-gradient(90deg,transparent 49.8%,color-mix(in srgb,var(--line) 18%,transparent) 50%,transparent 50.2%);background-size:auto,42px 42px}.plate{font:800 .74rem ui-monospace,Consolas,monospace;letter-spacing:.15em;border-block:1px solid var(--line);padding:8px 0;color:var(--accent);margin-bottom:14px}.lineage{margin:0;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.lineage svg{width:100%;height:auto}.lineage .links path{stroke:var(--line);stroke-width:3}.lineage .node rect{fill:var(--panel);stroke:var(--line);stroke-width:2;rx:8}.lineage .node text{fill:var(--ink);font:700 13px ui-monospace,Consolas,monospace}.lineage .node text:nth-of-type(n+2){font-weight:500;fill:var(--muted)}.lineage .root rect{stroke:#96734e}.lineage .social rect{stroke:#9a5062}.lineage .liberty rect{stroke:#477f72}.lineage .market rect{stroke:#4d708e}.lineage .order rect{stroke:#8b7049}.lineage figcaption{color:var(--muted);font-size:.85rem}.lineage-list{display:none}.master-matrix thead th:not(:first-child){min-width:185px}@media(max-width:600px){.lineage svg{display:none}.lineage-list{display:block;padding-left:24px}.lineage-list li{margin:.55em 0}}}
+@layer base{:root{--accent:light-dark(#6b3b15,#dfaa67);--accent2:light-dark(#265b63,#6fc4c7)}body{background-image:radial-gradient(circle at 18% 8%,color-mix(in srgb,var(--accent) 8%,transparent),transparent 26%),linear-gradient(90deg,transparent 49.8%,color-mix(in srgb,var(--line) 18%,transparent) 50%,transparent 50.2%);background-size:auto,42px 42px}.plate{font:800 .74rem ui-monospace,Consolas,monospace;letter-spacing:.15em;border-block:1px solid var(--line);padding:8px 0;color:var(--accent);margin-bottom:14px}.fingerprint{margin-top:18px}.fingerprint-explorer{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}.fingerprint-controls{display:grid;grid-template-columns:minmax(210px,1fr) minmax(210px,1fr) minmax(260px,1.15fr);gap:12px;align-items:end;padding:16px;border-bottom:1px solid var(--line)}.fingerprint-select{display:grid;gap:5px;font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.fingerprint-select span{color:var(--muted)}.fingerprint-select select{width:100%;min-height:44px;border:2px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);padding:8px 34px 8px 10px;font-size:1rem;font-weight:700;text-transform:none;letter-spacing:normal}.fingerprint-select select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}.select-a select{border-color:light-dark(#9a5062,#e58aa2)}.select-b select{border-color:light-dark(#397687,#72c7da)}.fingerprint-key{display:flex;align-items:center;gap:7px;margin:0;color:var(--muted);font-size:.8rem}.fingerprint-marker{display:inline-grid;place-items:center;flex:0 0 auto;width:25px;height:25px;border-radius:50%;color:#fff;font:900 .75rem/1 ui-monospace,Consolas,monospace;box-shadow:0 0 0 2px var(--panel)}.marker-a{background:light-dark(#8c3349,#d85f80)}.marker-b{background:light-dark(#236779,#36a8c1)}.fingerprint-track-scroller{overflow-x:auto;padding:16px;scrollbar-color:var(--line) transparent}.fingerprint-track-scroller:focus-visible{outline:3px solid var(--accent);outline-offset:-4px}.fingerprint-tracks{min-width:780px;display:grid;gap:10px}.fingerprint-track{display:grid;grid-template-columns:150px repeat(var(--bins),minmax(92px,1fr));align-items:stretch}.fingerprint-track h3{display:flex;align-items:center;margin:0;padding:8px 12px 8px 0;font:800 .82rem/1.2 ui-monospace,Consolas,monospace;color:var(--ink)}.fingerprint-bin{position:relative;display:grid;place-content:center;grid-template-columns:repeat(2,25px);gap:3px;min-height:72px;padding:27px 5px 7px;border-block:1px solid var(--line);border-left:1px solid color-mix(in srgb,var(--line) 60%,transparent);background:color-mix(in srgb,var(--panel) 92%,var(--accent2) 8%)}.fingerprint-bin:first-of-type{border-radius:8px 0 0 8px}.fingerprint-bin:last-child{border-right:1px solid var(--line);border-radius:0 8px 8px 0}.fingerprint-bin-label{position:absolute;inset:5px 4px auto;color:var(--muted);font-size:.64rem;line-height:1.15;text-align:center}.fingerprint-details{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 16px}.fingerprint-card{border:1px solid var(--line);border-top-width:4px;border-radius:10px;padding:14px;background:var(--paper)}.fingerprint-card-a{border-top-color:light-dark(#8c3349,#d85f80)}.fingerprint-card-b{border-top-color:light-dark(#236779,#36a8c1)}.fingerprint-card h3{margin:0 0 6px;font-size:1.2rem}.fingerprint-card p{margin:0 0 10px;color:var(--muted);font-size:.88rem}.fingerprint-card dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 10px;margin:0;font-size:.78rem}.fingerprint-card dt{font-weight:800}.fingerprint-card dd{margin:0;color:var(--muted)}.fingerprint-ready .fingerprint-fallback{display:none}.fingerprint-fallback-table{min-width:1050px}.lineage{margin:0;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.lineage svg{width:100%;height:auto}.lineage .links path{stroke:var(--line);stroke-width:3}.lineage .node rect{fill:var(--panel);stroke:var(--line);stroke-width:2;rx:8}.lineage .node text{fill:var(--ink);font:700 13px ui-monospace,Consolas,monospace}.lineage .node text:nth-of-type(n+2){font-weight:500;fill:var(--muted)}.lineage .root rect{stroke:#96734e}.lineage .social rect{stroke:#9a5062}.lineage .liberty rect{stroke:#477f72}.lineage .market rect{stroke:#4d708e}.lineage .order rect{stroke:#8b7049}.lineage figcaption{color:var(--muted);font-size:.85rem}.lineage-list{display:none}.master-matrix thead th:not(:first-child){min-width:185px}@media(max-width:850px){.fingerprint-controls{grid-template-columns:1fr 1fr}.fingerprint-key{grid-column:1/-1}.fingerprint-details{grid-template-columns:1fr}.fingerprint-card dl{grid-template-columns:1fr}.fingerprint-card dd{margin-bottom:5px}}@media(max-width:600px){.fingerprint-controls{grid-template-columns:1fr}.fingerprint-key{grid-column:auto}.fingerprint-track-scroller{padding:12px}.fingerprint-details{padding:0 12px 12px}.lineage svg{display:none}.lineage-list{display:block;padding-left:24px}.lineage-list li{margin:.55em 0}}}
+@media print{.fingerprint-explorer{display:none!important}.fingerprint-fallback{display:block!important}.fingerprint-fallback .callout{display:none}.fingerprint-fallback-table{min-width:0;font-size:5.5pt}}
 '''
     sources = '''<ol>
 <li><a href="https://plato.stanford.edu/entries/liberalism/">Stanford Encyclopedia of Philosophy, “Liberalism” (revised 2026)</a> and <a href="https://plato.stanford.edu/entries/libertarianism/">“Libertarianism”</a> for doctrine families and their internal disputes.</li>
@@ -801,6 +1096,39 @@ def build_states_vs_countries(states: list[StateRow], countries: list[dict]) -> 
     ms_rpp_pc = ms.gdp_pc / (ms.rpp / 100)
     uk_final_income_usd = 41_900 / fx
     uk_consumption_usd = 24_154 / fx
+    nominal_max = max(ms.gdp_pc, uk_nominal_pc)
+    adjusted_max = max(ms_rpp_pc, uk["ppp_pc"])
+    nominal_winner = "Mississippi" if ms.gdp_pc > uk_nominal_pc else "United Kingdom"
+    adjusted_winner = "Mississippi" if ms_rpp_pc > uk["ppp_pc"] else "United Kingdom"
+    nominal_gap = abs(ms.gdp_pc - uk_nominal_pc) / min(ms.gdp_pc, uk_nominal_pc) * 100
+    adjusted_gap = abs(ms_rpp_pc - uk["ppp_pc"]) / min(ms_rpp_pc, uk["ppp_pc"]) * 100
+    flip_chart = f'''
+<section class="flip-chart" aria-labelledby="flip-chart-title">
+  <div class="board-label">MISSISSIPPI ↔ UNITED KINGDOM · 2024 GDP PER RESIDENT</div>
+  <h2 id="flip-chart-title">Change the price lens; change the winner</h2>
+  <p class="section-note">Nominal output puts the two economies nearly level, with Mississippi just ahead. Apply each source's price-level method and the UK moves ahead. This is GDP per resident, not household income or consumption.</p>
+  <figure>
+    <div class="flip-panels">
+      <article class="flip-panel">
+        <header><div><span class="flip-measure">01 · MARKET EXCHANGE RATES</span><h3>Nominal GDP per resident</h3></div><strong class="flip-winner">{nominal_winner} +{nominal_gap:.1f}%</strong></header>
+        <div class="bar-pair">
+          <div class="bar-entry"><span class="bar-name">Mississippi</span><div class="bar-track" aria-hidden="true"><i class="bar-fill bar-ms" style="width:{ms.gdp_pc / nominal_max * 100:.2f}%"></i></div><strong>{money(ms.gdp_pc)}</strong></div>
+          <div class="bar-entry"><span class="bar-name">United Kingdom</span><div class="bar-track" aria-hidden="true"><i class="bar-fill bar-uk" style="width:{uk_nominal_pc / nominal_max * 100:.2f}%"></i></div><strong>{money(uk_nominal_pc)}</strong></div>
+        </div>
+        <p class="method-note">Current U.S. dollars · UK output converted at the 2024 market exchange rate</p>
+      </article>
+      <article class="flip-panel">
+        <header><div><span class="flip-measure">02 · SEPARATE PRICE ADJUSTMENTS</span><h3>Price-adjusted GDP per resident</h3></div><strong class="flip-winner">{adjusted_winner} +{adjusted_gap:.1f}%</strong></header>
+        <div class="bar-pair">
+          <div class="bar-entry"><span class="bar-name">Mississippi</span><div class="bar-track" aria-hidden="true"><i class="bar-fill bar-ms" style="width:{ms_rpp_pc / adjusted_max * 100:.2f}%"></i></div><strong>{money(ms_rpp_pc)}*</strong></div>
+          <div class="bar-entry"><span class="bar-name">United Kingdom</span><div class="bar-track" aria-hidden="true"><i class="bar-fill bar-uk" style="width:{uk['ppp_pc'] / adjusted_max * 100:.2f}%"></i></div><strong>Intl${uk['ppp_pc']:,.0f}</strong></div>
+        </div>
+        <p class="method-note">*Mississippi estimate: nominal GDP ÷ BEA RPP ({ms.rpp:.1f}) · UK: World Bank current international dollars</p>
+      </article>
+    </div>
+    <figcaption><strong>Read across each row only.</strong> Its winner is normalized to 100%, so there is no shared axis between accounting bases. BEA regional price parities and World Bank international PPP use separately constructed baskets and universes; the second comparison is an informative approximation, not a harmonized series.</figcaption>
+  </figure>
+</section>'''
     verdict_rows = [
         ["Nominal GDP per person (2024)", money(ms.gdp_pc), money(uk_nominal_pc), "Mississippi" if ms.gdp_pc > uk_nominal_pc else "United Kingdom", "Output converted at market exchange rates"],
         ["PPP / price-adjusted GDP per person (2024)", money(ms_rpp_pc), money(uk["ppp_pc"]), "Mississippi" if ms_rpp_pc > uk["ppp_pc"] else "United Kingdom", "Output after price-level adjustment; state side uses BEA RPP"],
@@ -866,6 +1194,7 @@ def build_states_vs_countries(states: list[StateRow], countries: list[dict]) -> 
         ("Picking the measure after seeing the winner", "Decide whether the claim is about scale, production per person, purchasing power, median resources, or consumption before opening the data."),
     ])
     content = f'''
+{flip_chart}
 <section aria-labelledby="verdict"><div class="board-label">MSY ↔ GBR · FIVE MEASURES · 2024 VINTAGE</div><h2 id="verdict">Is Mississippi really richer than the UK?</h2><p class="section-note">Sometimes on output per person; not as a general statement about residents. The measure changes the claim, and the last row refuses a fake apples-to-oranges ranking.</p>{verdict}</section>
 <section aria-labelledby="worked"><h2 id="worked">Worked example: watch the answer flip</h2><div class="departures">{step_html}</div></section>
 <section class="page-break" aria-labelledby="matches"><h2 id="matches">Which country matches each U.S. state's economy?</h2><p class="section-note">Nearest whole national economy by absolute difference in 2024 current-dollar GDP. This is the classic headline comparison, with both numbers and the gap exposed.</p>{match_table}</section>
@@ -873,8 +1202,9 @@ def build_states_vs_countries(states: list[StateRow], countries: list[dict]) -> 
 <section aria-labelledby="why"><h2 id="why">Why the measures disagree</h2><div class="card-grid">{explanations}</div></section>
 <section aria-labelledby="mistakes"><h2 id="mistakes">Common mistakes</h2><div class="card-grid">{mistakes}</div></section>'''
     theme = r'''
-@layer base{:root{--accent:light-dark(#a64f14,#ffb44c);--accent2:light-dark(#165d78,#70d0ee);--paper:light-dark(#f2f5f4,#07131f);--panel:light-dark(#ffffff,#0d2232);--ink:light-dark(#14212a,#edf6f8);--line:light-dark(#93a2a7,#29475a)}body{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background-image:linear-gradient(color-mix(in srgb,var(--line) 13%,transparent) 1px,transparent 1px);background-size:100% 26px}h1,h2,h3{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.board-label{display:inline-block;background:var(--ink);color:var(--paper);padding:8px 12px;letter-spacing:.11em;font-weight:800}.verdict-table td:nth-child(2),.verdict-table td:nth-child(3),.verdict-table td:nth-child(4){font-variant-numeric:tabular-nums;font-weight:800}.departures{border:2px solid var(--line);background:var(--panel);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.flip-row{display:grid;grid-template-columns:70px 1fr;gap:16px;padding:16px;border-bottom:1px dashed var(--line)}.flip-row:last-child{border-bottom:0}.flip-no{font-size:2rem;color:var(--accent);font-variant-numeric:tabular-nums}.flip-row h3{margin:0 0 5px}.flip-row p{margin:0}.match-table td:nth-child(2),.match-table td:nth-child(4),.match-table td:nth-child(5){font-variant-numeric:tabular-nums;white-space:nowrap}@media(max-width:600px){.flip-row{grid-template-columns:42px 1fr;gap:9px}.flip-no{font-size:1.4rem}}}
+@layer base{:root{--accent:light-dark(#a64f14,#ffb44c);--accent2:light-dark(#165d78,#70d0ee);--paper:light-dark(#f2f5f4,#07131f);--panel:light-dark(#ffffff,#0d2232);--ink:light-dark(#14212a,#edf6f8);--line:light-dark(#93a2a7,#29475a)}body{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background-image:linear-gradient(color-mix(in srgb,var(--line) 13%,transparent) 1px,transparent 1px);background-size:100% 26px}h1,h2,h3{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.board-label{display:inline-block;background:var(--ink);color:var(--paper);padding:8px 12px;letter-spacing:.11em;font-weight:800}.flip-chart{margin-top:26px}.flip-chart figure{margin:0}.flip-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.flip-panel{padding:20px;background:var(--panel);border:2px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.flip-panel header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding-bottom:14px;border-bottom:1px dashed var(--line)}.flip-panel h3{margin:3px 0 0;font-size:1.2rem}.flip-measure{color:var(--muted);font-size:.72rem;font-weight:800;letter-spacing:.08em}.flip-winner{flex:0 0 auto;padding:7px 9px;background:color-mix(in srgb,var(--accent) 14%,var(--panel));border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));color:var(--accent);font-size:.78rem;text-transform:uppercase}.bar-pair{display:grid;gap:13px;margin:18px 0}.bar-entry{display:grid;grid-template-columns:minmax(8.5rem,1fr) minmax(100px,2.4fr) auto;gap:10px;align-items:center;font-variant-numeric:tabular-nums}.bar-name{font-weight:800}.bar-track{height:18px;background:color-mix(in srgb,var(--line) 22%,transparent);border:1px solid var(--line);overflow:hidden}.bar-fill{display:block;height:100%}.bar-ms{background:var(--accent)}.bar-uk{background:var(--accent2)}.method-note{margin:0;color:var(--muted);font-size:.78rem;line-height:1.45}.flip-chart figcaption{max-width:112ch;margin:12px 0 0;padding:10px 12px;border-left:4px solid var(--accent2);background:color-mix(in srgb,var(--accent2) 8%,transparent);color:var(--muted);font-size:.82rem}.flip-chart figcaption strong{color:var(--ink)}.verdict-table td:nth-child(2),.verdict-table td:nth-child(3),.verdict-table td:nth-child(4){font-variant-numeric:tabular-nums;font-weight:800}.departures{border:2px solid var(--line);background:var(--panel);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.flip-row{display:grid;grid-template-columns:70px 1fr;gap:16px;padding:16px;border-bottom:1px dashed var(--line)}.flip-row:last-child{border-bottom:0}.flip-no{font-size:2rem;color:var(--accent);font-variant-numeric:tabular-nums}.flip-row h3{margin:0 0 5px}.flip-row p{margin:0}.match-table td:nth-child(2),.match-table td:nth-child(4),.match-table td:nth-child(5){font-variant-numeric:tabular-nums;white-space:nowrap}@media(max-width:850px){.flip-panels{grid-template-columns:1fr}}@media(max-width:600px){.flip-panel{padding:14px}.flip-panel header{display:block}.flip-winner{display:inline-block;margin-top:10px}.bar-entry{grid-template-columns:1fr auto}.bar-track{grid-column:1/-1;grid-row:2}.flip-row{grid-template-columns:42px 1fr;gap:9px}.flip-no{font-size:1.4rem}}}
 @media(prefers-reduced-motion:no-preference){@layer base{.flip-row{animation:arrival .35s both;animation-timeline:view();animation-range:entry 0 entry 25%}@keyframes arrival{from{opacity:.35;transform:translateY(8px)}to{opacity:1;transform:none}}}}
+@media print{@layer base{.flip-chart{break-inside:avoid}.flip-panels{grid-template-columns:1fr 1fr}.flip-panel{padding:10pt}.bar-track{border-color:#555;background:#eee}.bar-ms{background:#a64f14}.bar-uk{background:#165d78}.flip-chart figcaption{border-color:#165d78;background:#f3f3f3}}}
 '''
     sources = f'''<ol>
 <li><a href="https://apps.bea.gov/iTable/?ReqID=70&amp;step=1">U.S. Bureau of Economic Analysis, SAGDP1</a>: 2024 current-dollar and real GDP by state; <a href="https://apps.bea.gov/itable/?ReqID=70&amp;step=1">BEA regional price parities</a> for 2024.</li>
