@@ -20,7 +20,7 @@ Where this file and AGENTS.md disagree, AGENTS.md wins.
 2. Write `topic-subtopic.html` in root using the Modern Platform Baseline and **all**
    metadata blocks (title, meta description, canonical, OG/X, TechArticle JSON-LD).
    JSON-LD must match visible content; set a real `Last verified` date.
-3. Add the file to the `$categoryMap` array in `index.php`, or it lands under "Other"
+3. Add the file to the `$categoryMap` array in `category-map.php`, or it lands under "Other"
    (AGENTS.md > *Adding New Cheatsheets*).
 4. Generate + optimize the `images/{filename}.png` preview.
 5. Commit the `.html` + its `images/*.png` by explicit path. One cheatsheet per commit.
@@ -42,6 +42,10 @@ framework loaded (e.g. for Bootstrap, `typeof window.bootstrap !== 'undefined'` 
 a bad SRI hash can't pass silently), interactive bits work, light + dark themes
 both render. (Design approach is a free choice now — see AGENTS.md > *Design
 approach*; Bootstrap is one option, not a requirement.)
+
+For the annually refreshed economics comparison batch, run
+`python scripts/build_economics_batch.py`; source vintages and fallback behavior are
+documented in [`economics-data-refresh.md`](economics-data-refresh.md).
 
 ## The gate that must pass
 

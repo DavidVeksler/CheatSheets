@@ -16,6 +16,7 @@ This file owns the quality bar. The other Markdown docs divide the workflows —
 |---|---|
 | [`docs/content.md`](docs/content.md) | **Quick path: add / edit / publish a cheatsheet, front to back** — a thin index that routes into this file's content workflow, the local build/QA steps, and the SEO gate. |
 | [`docs/marketing.md`](docs/marketing.md) | **Quick path: SEO, promotion, measurement** — the SEO gate, discovery files, Search Console / Cloudflare measurement, promotion channels, and cross-linking pointers. |
+| [`docs/economics-data-refresh.md`](docs/economics-data-refresh.md) | **Refreshing economics comparison data** — generator command, source vintages, pinned-series safeguards, election-cycle rebuild, and QA checklist. |
 | [`docs/seo-progress.md`](docs/seo-progress.md) | **KPI / traffic history** — append-only measurement log (GSC + Cloudflare deltas, newest on top). The durable SEO working doc is `TODO/seo-planning.md`; this is the dated results log. |
 | [`CLAUDE.md`](CLAUDE.md) | Pointer only (`@AGENTS.md`) so Claude Code inlines this file. The SRI hash table it used to hold now lives under **Tech Baseline → Cached CDN dependencies** below. |
 | [`TODO/README.md`](TODO/README.md) | **Building a cheatsheet from a spec** in `TODO/` — binding implementation rules (numbers-are-anchors, outline-first, definition of done, design execution). |

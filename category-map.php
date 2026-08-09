@@ -119,6 +119,13 @@ return [
     'weight-loss-levers.html' => 'Health & Fitness',
     'weightloss-cheatsheet.html' => 'Health & Fitness',
 
+    // Economics & Politics
+    'capitalism.html' => 'Economics & Politics',
+    'economic-systems-compared.html' => 'Economics & Politics',
+    'political-ideologies-compared.html' => 'Economics & Politics',
+    'red-vs-blue-state-economies.html' => 'Economics & Politics',
+    'us-states-vs-countries-gdp.html' => 'Economics & Politics',
+
     // Philosophy & Religion
     'anatta-not-self.html' => 'Philosophy & Religion',
     'anapanasati-mindfulness-of-breathing.html' => 'Philosophy & Religion',
@@ -126,7 +133,6 @@ return [
     'buddhism-core-principles.html' => 'Philosophy & Religion',
     'buddhism.html' => 'Philosophy & Religion',
     'buddhist-work-leadership.html' => 'Philosophy & Religion',
-    'capitalism.html' => 'Philosophy & Religion',
     'comparative-religion-map.html' => 'Philosophy & Religion',
     'conscious-leadership-contexts.html' => 'Philosophy & Religion',
     'craving-desire-habit-loops.html' => 'Philosophy & Religion',

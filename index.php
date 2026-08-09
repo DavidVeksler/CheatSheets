@@ -46,6 +46,7 @@ $categoryStyles = [
     'Firearms & Military'     => ['color' => '#3f6212', 'bg' => '#ecfccb', 'icon' => 'bi-crosshair2'],
     'Radio'                   => ['color' => '#1e40af', 'bg' => '#dbeafe', 'icon' => 'bi-broadcast-pin'],
     'Health & Fitness'        => ['color' => '#065f46', 'bg' => '#d1fae5', 'icon' => 'bi-heart-pulse-fill'],
+    'Economics & Politics'    => ['color' => '#7c2d12', 'bg' => '#ffedd5', 'icon' => 'bi-bar-chart-line-fill'],
     'Philosophy & Religion'   => ['color' => '#6b21a8', 'bg' => '#f3e8ff', 'icon' => 'bi-yin-yang'],
     'Engineering & Science'   => ['color' => '#0c4a6e', 'bg' => '#e0f2fe', 'icon' => 'bi-gear-fill'],
     'Home & Lifestyle'        => ['color' => '#0f766e', 'bg' => '#ccfbf1', 'icon' => 'bi-house-heart-fill'],
