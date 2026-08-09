@@ -274,7 +274,9 @@ def state_map_svg(states: list[StateRow]) -> str:
             return hawaii_fit(inset(point))
         return lower_fit(albers(point))
 
-    side = {row.name: ("trump" if row.side == "Red" else "harris") for row in states}
+    rows_by_name = {row.name: row for row in states}
+    gdp_values = [row.gdp_pc for row in states]
+    gdp_min, gdp_max = min(gdp_values), max(gdp_values)
     paths = []
     for name in sorted(geometry):
         commands = []
@@ -285,10 +287,14 @@ def state_map_svg(states: list[StateRow]) -> str:
                     "M" + "L".join(f"{x:.1f},{y:.1f}" for x, y in projected) + "Z"
                 )
         label = html.escape(name, quote=True)
+        value = rows_by_name[name].gdp_pc
+        percentage = (value - gdp_min) / (gdp_max - gdp_min) * 100
+        value_label = f"${value:,.0f} GDP per resident"
         paths.append(
-            f'<path class="state-shape side-{side[name]}" data-state="{label}" '
-            f'role="button" tabindex="0" aria-label="{label}" d="{"".join(commands)}">'
-            f'<title>{label}</title></path>'
+            f'<path class="state-shape metric-value" data-state="{label}" '
+            f'role="button" tabindex="0" aria-label="{label}: {value_label}" '
+            f'style="fill:color-mix(in srgb,var(--map-low) {100 - percentage:.1f}%,var(--map-high) {percentage:.1f}%)" '
+            f'd="{"".join(commands)}"><title>{label}: {value_label}</title></path>'
         )
     return "".join(paths)
 
@@ -929,7 +935,8 @@ def build_red_blue(states: list[StateRow]) -> str:
         for row in state_only
     }
     state_options = "".join(
-        f'<option value="{html.escape(row.name, quote=True)}">{html.escape(row.name)}</option>'
+        f'<option value="{html.escape(row.name, quote=True)}"'
+        f'{" selected" if row.name == "California" else ""}>{html.escape(row.name)}</option>'
         for row in sorted(state_only, key=lambda item: item.name)
     )
     score_rows = [
@@ -1013,6 +1020,10 @@ def build_red_blue(states: list[StateRow]) -> str:
     ])
     red_names = ", ".join(sorted(RED_STATES))
     blue_names = ", ".join(sorted(set(STATE_FIPS) - RED_STATES - {"District of Columbia"}))
+    gdp_ranked = sorted(state_only, key=lambda row: row.gdp_pc, reverse=True)
+    gdp_low, gdp_high = gdp_ranked[-1], gdp_ranked[0]
+    california = next(row for row in state_only if row.name == "California")
+    california_gdp_rank = gdp_ranked.index(california) + 1
     map_script = r'''<script>(()=>{
 const data=__MAP_DATA__;
 const money=value=>`${value<0?"-":""}$${Math.abs(Math.round(value)).toLocaleString("en-US")}`;
@@ -1059,9 +1070,10 @@ function buildLegend(metric){
       item.append(swatch,document.createTextNode(label));legend.append(item);
     });return;
   }
-  legend.append(document.createTextNode("Lowest"));
-  for(let index=1;index<=5;index++){const swatch=document.createElement("i");swatch.className=`map-swatch q${index}`;swatch.setAttribute("aria-hidden","true");legend.append(swatch)}
-  legend.append(document.createTextNode("Highest"));
+  const low=document.createElement("span");low.textContent=`Low · ${metrics[metric].format(ranking.at(-1)[1][metric])}`;
+  const gradient=document.createElement("i");gradient.className="map-gradient";gradient.setAttribute("aria-hidden","true");
+  const high=document.createElement("span");high.textContent=`High · ${metrics[metric].format(ranking[0][1][metric])}`;
+  legend.append(low,gradient,high);
 }
 function render(){
   const metric=metricSelect.value;
@@ -1069,10 +1081,15 @@ function render(){
   const ascending=[...ranking].reverse();
   paths.forEach(path=>{
     const name=path.dataset.state;const row=data[name];const value=valueFor(name,metric);
-    path.classList.remove("side-trump","side-harris","q1","q2","q3","q4","q5","no-data");
+    path.classList.remove("side-trump","side-harris","metric-value","no-data");path.style.removeProperty("fill");
     if(metric==="side") path.classList.add(row.winner==="Trump"?"side-trump":"side-harris");
     else if(!Number.isFinite(value)) path.classList.add("no-data");
-    else path.classList.add(`q${Math.min(5,Math.floor(ascending.findIndex(item=>item[0]===name)/ascending.length*5)+1)}`);
+    else{
+      const minimum=ascending[0][1][metric];const maximum=ranking[0][1][metric];
+      const percentage=maximum===minimum?50:(value-minimum)/(maximum-minimum)*100;
+      path.classList.add("metric-value");
+      path.style.fill=`color-mix(in srgb,var(--map-low) ${(100-percentage).toFixed(1)}%,var(--map-high) ${percentage.toFixed(1)}%)`;
+    }
     const label=`${name}: ${value==null?"not reported":metrics[metric].format(value)}`;
     path.setAttribute("aria-label",label);path.querySelector("title").textContent=label;
   });
@@ -1096,7 +1113,7 @@ document.documentElement.classList.add("js");render();setSelected(selected);
 })();</script>'''.replace("__MAP_DATA__", json.dumps(map_data, separators=(",", ":")))
 
     content = f'''
-<section class="map-stage" aria-labelledby="economy-map-title"><div class="data-years"><strong>Data years:</strong> GDP, RPP, ACS, migration, unemployment 2024 · tax burden 2022 · federal balance FFY 2023 · grouping fixed by 2024 presidential winner until the 2028 election.</div><div class="score-label">INTERACTIVE STATE MAP · 50 STATES</div><h2 id="economy-map-title">See the comparison state by state</h2><p class="section-note">Choose a measure, then hover, focus, or select a state for its exact value. Color shows rank, not whether a policy or party caused the result.</p><div class="map-toolbar no-print"><label for="economy-metric">Map measure<select id="economy-metric"><option value="side">2024 presidential winner</option><option value="gdp_pc">GDP per resident</option><option value="rpp_income">RPP-adjusted median income</option><option value="growth">Real GDP growth, 2019–24</option><option value="migration">Domestic migration</option><option value="unemployment">Unemployment</option><option value="tax">State-local tax burden</option><option value="poverty">Official poverty rate</option><option value="bop">Federal balance per resident</option></select></label><label for="economy-state">Selected state<select id="economy-state">{state_options}</select></label></div><div class="map-grid"><figure class="map-figure"><svg class="economy-map" viewBox="0 0 975 610" role="img" aria-labelledby="economy-map-svg-title economy-map-svg-desc"><title id="economy-map-svg-title">United States economic comparison map</title><desc id="economy-map-svg-desc">The 50 states are grouped by the 2024 presidential winner. With JavaScript, choose an economic measure and inspect exact state values.</desc>{map_svg}</svg><div class="map-tooltip" id="map-tooltip" role="tooltip" hidden></div><figcaption id="map-legend" class="map-legend"><span class="map-legend-item"><i class="map-swatch side-trump" aria-hidden="true"></i>Trump · 31 states</span><span class="map-legend-item"><i class="map-swatch side-harris" aria-hidden="true"></i>Harris · 19 states</span></figcaption></figure><aside class="map-detail" aria-live="polite"><span class="map-detail-kicker">Selected state</span><strong id="map-detail-name">California</strong><span id="map-detail-winner">Harris won in 2024</span><span class="map-detail-value" id="map-detail-value">Harris</span><span id="map-detail-rank">Election result is a grouping key, not a causal claim.</span></aside></div><noscript><p class="section-note">The default map shows the 2024 election grouping. The full data for every measure remains available in the ledger below.</p></noscript></section>
+<section class="map-stage" aria-labelledby="economy-map-title"><div class="data-years"><strong>Data years:</strong> GDP, RPP, ACS, migration, unemployment 2024 · tax burden 2022 · federal balance FFY 2023 · grouping fixed by 2024 presidential winner until the 2028 election.</div><div class="score-label">INTERACTIVE STATE MAP · 50 STATES</div><h2 id="economy-map-title">See the comparison state by state</h2><p class="section-note">Choose a measure, then hover, focus, or select a state for its exact value. Color runs continuously from the lowest to highest state value; it does not show whether a policy or party caused the result.</p><div class="map-toolbar no-print"><label for="economy-metric">Map measure<select id="economy-metric"><option value="gdp_pc" selected>GDP per resident</option><option value="side">2024 presidential winner</option><option value="rpp_income">RPP-adjusted median income</option><option value="growth">Real GDP growth, 2019–24</option><option value="migration">Domestic migration</option><option value="unemployment">Unemployment</option><option value="tax">State-local tax burden</option><option value="poverty">Official poverty rate</option><option value="bop">Federal balance per resident</option></select></label><label for="economy-state">Selected state<select id="economy-state">{state_options}</select></label></div><div class="map-grid"><figure class="map-figure"><svg class="economy-map" viewBox="0 0 975 610" role="img" aria-labelledby="economy-map-svg-title economy-map-svg-desc"><title id="economy-map-svg-title">United States GDP per resident map</title><desc id="economy-map-svg-desc">The 50 states are shaded on a continuous scale from the lowest to highest 2024 GDP per resident. With JavaScript, choose another measure and inspect exact state values.</desc>{map_svg}</svg><div class="map-tooltip" id="map-tooltip" role="tooltip" hidden></div><figcaption id="map-legend" class="map-legend"><span>Low · {money(gdp_low.gdp_pc)}</span><i class="map-gradient" aria-hidden="true"></i><span>High · {money(gdp_high.gdp_pc)}</span></figcaption></figure><aside class="map-detail" aria-live="polite"><span class="map-detail-kicker">Selected state</span><strong id="map-detail-name">California</strong><span id="map-detail-winner">Harris won in 2024</span><span class="map-detail-value" id="map-detail-value">{money(california.gdp_pc)}</span><span id="map-detail-rank">2024 GDP per resident · rank {california_gdp_rank} of 50 by value</span></aside></div><noscript><p class="section-note">The default map shows 2024 GDP per resident. The full data for every measure remains available in the ledger below.</p></noscript></section>
 <section aria-labelledby="rule"><h2 id="rule">Classification rule</h2><p><strong>Trump states ({len(RED_STATES)}):</strong> {red_names}.</p><p><strong>Harris states (19):</strong> {blue_names}. DC appears in the ledger but not pooled state results.</p><p>Arizona, Georgia, Michigan, Nevada, Pennsylvania, and Wisconsin changed from Biden in 2020 to Trump in 2024. No purple category is used.</p></section>
 <section class="stadium" aria-labelledby="score"><div class="score-label">NATIONAL BOX SCORE · SAME WEIGHT, SAME TYPE</div><h2 id="score">Red vs blue state economies: the scoreboard</h2><p class="section-note">Neutral slate and bronze replace emotional red/blue color coding. Each row answers a different question; no composite “winner” is calculated.</p>{scoreboard}</section>
 <section aria-labelledby="flips"><h2 id="flips">The verdict flips when the measure changes</h2>{flips}</section>
@@ -1107,7 +1124,7 @@ document.documentElement.classList.add("js");render();setSelected(selected);
 <section aria-labelledby="mistakes"><h2 id="mistakes">Common mistakes</h2><div class="card-grid">{mistakes}</div></section>{map_script}'''
     theme = r'''
 @layer base{:root{--accent:light-dark(#735a2a,#ffc85c);--accent2:light-dark(#41576b,#9db7cc);--paper:light-dark(#f4f0e7,#11161b);--panel:light-dark(#fffdf7,#1a2229);--ink:light-dark(#18212a,#f0f2f3);--line:light-dark(#9aa1a5,#3b464e)}body{font-variant-numeric:tabular-nums}.data-years{border:2px solid var(--line);background:var(--panel);padding:12px 14px;margin-bottom:22px}.score-label{font:900 .75rem ui-monospace,Consolas,monospace;letter-spacing:.14em;color:var(--accent)}.stadium{border:3px solid var(--line);padding:clamp(12px,3vw,28px);border-radius:16px;background:radial-gradient(circle at 50% 0,color-mix(in srgb,var(--accent) 12%,transparent),transparent 42%),var(--panel)}.scoreboard thead th:nth-child(2){box-shadow:inset 0 7px var(--accent2)}.scoreboard thead th:nth-child(3){box-shadow:inset 0 7px var(--accent)}.scoreboard td:nth-child(2),.scoreboard td:nth-child(3){font:800 1.05rem ui-monospace,Consolas,monospace;white-space:nowrap}.ledger-table{font-size:.78rem}.ledger-table td:not(:first-child){white-space:nowrap}.hero h1{max-width:15ch}}
-@layer base{.map-stage{margin-top:0;padding:clamp(16px,3vw,30px);border:2px solid var(--line);border-radius:16px;background:var(--panel)}.map-stage .data-years{margin:-1px -1px 24px}.map-toolbar{display:none;gap:12px;flex-wrap:wrap;margin:20px 0}.js .map-toolbar{display:flex}.map-toolbar label{display:grid;gap:5px;color:var(--muted);font-size:.82rem;font-weight:800}.map-toolbar select{min-width:min(280px,80vw);padding:9px 34px 9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}.map-toolbar select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}.map-grid{display:grid;grid-template-columns:minmax(0,3fr) minmax(210px,1fr);gap:clamp(16px,3vw,30px);align-items:center}.map-figure{position:relative;margin:0;min-width:0}.economy-map{display:block;width:100%;height:auto;overflow:visible}.state-shape{stroke:var(--paper);stroke-width:1.25;vector-effect:non-scaling-stroke;cursor:pointer}.state-shape.side-trump,.map-swatch.side-trump{fill:var(--accent2);background:var(--accent2)}.state-shape.side-harris,.map-swatch.side-harris{fill:var(--accent);background:var(--accent)}.state-shape.q1,.map-swatch.q1{fill:color-mix(in srgb,var(--accent2) 85%,var(--panel));background:color-mix(in srgb,var(--accent2) 85%,var(--panel))}.state-shape.q2,.map-swatch.q2{fill:color-mix(in srgb,var(--accent2) 55%,var(--panel));background:color-mix(in srgb,var(--accent2) 55%,var(--panel))}.state-shape.q3,.map-swatch.q3{fill:color-mix(in srgb,var(--accent2) 22%,var(--accent) 22%,var(--panel));background:color-mix(in srgb,var(--accent2) 22%,var(--accent) 22%,var(--panel))}.state-shape.q4,.map-swatch.q4{fill:color-mix(in srgb,var(--accent) 55%,var(--panel));background:color-mix(in srgb,var(--accent) 55%,var(--panel))}.state-shape.q5,.map-swatch.q5{fill:color-mix(in srgb,var(--accent) 85%,var(--panel));background:color-mix(in srgb,var(--accent) 85%,var(--panel))}.state-shape.no-data{fill:var(--line)}.state-shape:hover,.state-shape:focus-visible,.state-shape.is-selected{stroke:var(--ink);stroke-width:3;outline:none}.map-legend{min-height:28px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:.82rem}.map-legend-item{display:inline-flex;align-items:center;gap:6px}.map-swatch{display:inline-block;width:18px;height:12px;border:1px solid var(--line)}.map-detail{display:grid;gap:8px;padding:22px;border-left:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--panel))}.map-detail-kicker{font:800 .75rem ui-monospace,Consolas,monospace;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}.map-detail strong{font-size:clamp(1.45rem,3vw,2.25rem);line-height:1.05}.map-detail-value{font:900 clamp(1.5rem,4vw,2.7rem) ui-monospace,Consolas,monospace;color:var(--accent2);overflow-wrap:anywhere}.map-tooltip{position:absolute;z-index:2;max-width:260px;padding:7px 9px;border:1px solid var(--line);background:var(--ink);color:var(--paper);font-size:.8rem;pointer-events:none;box-shadow:0 6px 20px #0003}.map-tooltip[hidden]{display:none}@media(max-width:760px){.map-grid{grid-template-columns:1fr}.map-detail{border-left:0;border-top:3px solid var(--accent)}.map-toolbar label,.map-toolbar select{width:100%;min-width:0}}@media(prefers-reduced-motion:no-preference){.state-shape{transition:fill .18s ease,stroke-width .18s ease}}}
+@layer base{.map-stage{--map-low:light-dark(#dce9f0,#263640);--map-high:light-dark(#0b5678,#7bd7f4);margin-top:0;padding:clamp(16px,3vw,30px);border:2px solid var(--line);border-radius:16px;background:var(--panel)}.map-stage .data-years{margin:-1px -1px 24px}.map-toolbar{display:none;gap:12px;flex-wrap:wrap;margin:20px 0}.js .map-toolbar{display:flex}.map-toolbar label{display:grid;gap:5px;color:var(--muted);font-size:.82rem;font-weight:800}.map-toolbar select{min-width:min(280px,80vw);padding:9px 34px 9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}.map-toolbar select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}.map-grid{display:grid;grid-template-columns:minmax(0,3fr) minmax(210px,1fr);gap:clamp(16px,3vw,30px);align-items:center}.map-figure{position:relative;margin:0;min-width:0}.economy-map{display:block;width:100%;height:auto;overflow:visible}.state-shape{stroke:var(--paper);stroke-width:1.25;vector-effect:non-scaling-stroke;cursor:pointer}.state-shape.side-trump,.map-swatch.side-trump{fill:var(--accent2);background:var(--accent2)}.state-shape.side-harris,.map-swatch.side-harris{fill:var(--accent);background:var(--accent)}.state-shape.no-data{fill:var(--line)}.state-shape:hover,.state-shape:focus-visible,.state-shape.is-selected{stroke:var(--ink);stroke-width:3;outline:none}.map-legend{min-height:28px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:.82rem}.map-legend-item{display:inline-flex;align-items:center;gap:6px}.map-swatch{display:inline-block;width:18px;height:12px;border:1px solid var(--line)}.map-gradient{display:inline-block;width:min(190px,42vw);height:12px;border:1px solid var(--line);background:linear-gradient(90deg,var(--map-low),var(--map-high))}.map-detail{display:grid;gap:8px;padding:22px;border-left:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--panel))}.map-detail-kicker{font:800 .75rem ui-monospace,Consolas,monospace;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}.map-detail strong{font-size:clamp(1.45rem,3vw,2.25rem);line-height:1.05}.map-detail-value{font:900 clamp(1.5rem,4vw,2.7rem) ui-monospace,Consolas,monospace;color:var(--accent2);overflow-wrap:anywhere}.map-tooltip{position:absolute;z-index:2;max-width:260px;padding:7px 9px;border:1px solid var(--line);background:var(--ink);color:var(--paper);font-size:.8rem;pointer-events:none;box-shadow:0 6px 20px #0003}.map-tooltip[hidden]{display:none}@media(max-width:760px){.map-grid{grid-template-columns:1fr}.map-detail{border-left:0;border-top:3px solid var(--accent)}.map-toolbar label,.map-toolbar select{width:100%;min-width:0}}@media(prefers-reduced-motion:no-preference){.state-shape{transition:fill .18s ease,stroke-width .18s ease}}}
 '''
     sources = f'''<ol>
 <li><a href="https://www.bea.gov/data/gdp/gdp-state">BEA GDP by state</a>: 2024 current-dollar GDP and 2019–24 real GDP; <a href="https://apps.bea.gov/itable/?ReqID=70&amp;step=1">BEA RPP</a>: 2024 regional price levels.</li>
