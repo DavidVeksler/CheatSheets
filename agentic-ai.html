@@ -85,11 +85,20 @@ html[data-theme="light"] { color-scheme: light; }
     .dropcap::first-letter { float: left; font-size: 3.2em; line-height: 0.85; padding: 0.06em 0.12em 0 0; color: var(--oxide); font-family: var(--serif-display); }
   }
 
-  .toc { max-width: 46rem; margin: 1.4rem auto 0; columns: 2; column-gap: 2.5rem; font-size: 0.92rem; padding: 0 1rem; }
+  .toc { max-width: 60rem; margin: 1.4rem auto 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.2rem; font-size: 0.88rem; padding: 0 1rem; }
+  .toc-group { min-width: 0; }
+  .toc-group h2 { font-size: 0.78rem; font-variant-caps: small-caps; letter-spacing: 0.1em; color: var(--oxide); margin: 0 0 0.35rem; }
   .toc a { display: flex; gap: 0.5rem; text-decoration: none; color: var(--ink); border-bottom: 1px dotted var(--rule); padding: 0.22rem 0; }
   .toc a:hover { color: var(--oxide); }
   .toc .n { font-variant-caps: small-caps; color: var(--brass); min-width: 2.4rem; font-family: var(--serif-display); }
-  @media (max-width: 640px) { .toc { columns: 1; } }
+  @media (max-width: 760px) { .toc { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 440px) { .toc { grid-template-columns: 1fr; } }
+
+  .reader-router { border-left: 3px double var(--brass); padding: 0.25rem 0 0.25rem 1rem; margin: 1.5rem 0 0.2rem; max-width: 65ch; }
+  .reader-router p { margin: 0.25rem 0; }
+  .part-header { text-align: center; border-top: 4px double var(--rule); border-bottom: 1px solid var(--rule); padding: 0.9rem 0 0.7rem; margin: 3.4rem 0 -1.7rem; }
+  .part-header .pnum { display: block; font-variant-caps: small-caps; letter-spacing: 0.16em; font-size: 0.78rem; color: var(--ink-soft); }
+  .part-header h2 { font-variant-caps: small-caps; letter-spacing: 0.1em; font-size: 1.25rem; margin: 0.15rem 0 0; color: var(--oxide); }
 
   .ladder { border-left: 4px solid var(--brass); border-right: 4px solid var(--brass); padding: 0.4rem 0; margin: 1.5rem 0; background:
     repeating-linear-gradient(45deg, transparent 0 7px, color-mix(in srgb, var(--rule) 22%, transparent) 7px 8px); }
@@ -120,8 +129,8 @@ html[data-theme="light"] { color-scheme: light; }
   .specimen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.1rem; margin: 1.4rem 0; }
   .specimen { background: var(--paper-raised); border: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -6px; padding: 1.1rem 1rem 0.9rem; position: relative; break-inside: avoid; }
   .specimen .pin { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--oxide) 60%, white), var(--oxide)); border: 1px solid var(--ink-soft); margin: 0 auto 0.6rem; }
-  .specimen h3 { font-style: italic; font-weight: 400; font-size: 1.08rem; text-align: center; margin: 0; }
-  .specimen .common { display: block; text-align: center; font-variant-caps: small-caps; letter-spacing: 0.09em; font-size: 0.78rem; color: var(--ink-soft); border-bottom: 1px solid var(--rule); padding-bottom: 0.5rem; margin-bottom: 0.5rem; }
+  .specimen h3 { font-weight: 500; font-size: 1.08rem; text-align: center; margin: 0; }
+  .specimen .common { display: block; text-align: center; font-style: italic; font-size: 0.85rem; color: var(--ink-soft); border-bottom: 1px solid var(--rule); padding-bottom: 0.5rem; margin-bottom: 0.5rem; }
   .specimen dl { font-size: 0.86rem; margin: 0; }
   .specimen dt { font-variant-caps: small-caps; letter-spacing: 0.06em; font-weight: 500; color: var(--ink-soft); float: left; margin-right: 0.45rem; }
   .specimen dd { border-bottom: 1px solid var(--rule); padding: 0.2rem 0 0.3rem; margin: 0; }
@@ -162,7 +171,7 @@ html[data-theme="light"] { color-scheme: light; }
   .theme-toggle:hover { color: var(--oxide); border-color: var(--oxide); }
 
   main { max-width: 60rem; margin: 0 auto; padding: 0 1.1rem 3rem; }
-  section { scroll-margin-top: 1rem; }
+  section, [id] { scroll-margin-top: 1rem; }
   .footnote-block { border-top: 1px solid var(--rule); margin-top: 2.5rem; padding-top: 0.9rem; font-size: 0.85rem; color: var(--ink-soft); }
   :focus-visible { outline: 2px solid var(--oxide); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) {
@@ -171,7 +180,7 @@ html[data-theme="light"] { color-scheme: light; }
 @media print {
   .theme-toggle, .toc { display: none; }
   body { font-size: 11pt; }
-  .plate-caption, .specimen, .receipt, .loop-stage { break-inside: avoid; }
+  .part-header, .plate-caption, .specimen, .receipt, .loop-stage { break-inside: avoid; }
   details.rung { break-inside: avoid; }
   a { color: inherit; text-decoration: none; }
 }
@@ -188,183 +197,54 @@ html[data-theme="light"] { color-scheme: light; }
 </header>
 
 <nav class="toc" aria-label="Table of plates">
-  <a href="#ladder"><span class="n">Pl. I</span> The Autonomy Ladder</a>
-  <a href="#vocabulary"><span class="n">Pl. II</span> The Specimen Index (Vocabulary)</a>
-  <a href="#loop"><span class="n">Pl. III</span> The Agent Loop</a>
-  <a href="#patterns"><span class="n">Pl. IV</span> Do You Even Need an Agent?</a>
-  <a href="#context"><span class="n">Pl. V</span> Context Engineering</a>
-  <a href="#tools"><span class="n">Pl. VI</span> Tools &amp; Integration</a>
-  <a href="#failures"><span class="n">Pl. VII</span> A Taxonomy of Failure Modes</a>
-  <a href="#security"><span class="n">Pl. VIII</span> Security &amp; Governance</a>
-  <a href="#evals"><span class="n">Pl. IX</span> Evals &amp; Observability</a>
-  <a href="#antipatterns"><span class="n">Pl. X</span> Anti-Patterns</a>
-  <a href="#adoption"><span class="n">Pl. XI</span> The Naturalist's Progress</a>
-  <a href="#receipts"><span class="n">Pl. XII</span> Field Notes: The Receipts</a>
+  <div class="toc-group">
+    <h2>Part One — Determination</h2>
+    <a href="#patterns"><span class="n">Pl. I</span> Do You Even Need an Agent?</a>
+    <a href="#ladder"><span class="n">Pl. II</span> The Autonomy Ladder</a>
+    <a href="#adoption"><span class="n">Pl. III</span> The Naturalist's Progress</a>
+  </div>
+  <div class="toc-group">
+    <h2>Part Two — Anatomy &amp; Husbandry</h2>
+    <a href="#loop"><span class="n">Pl. IV</span> The Agent Loop</a>
+    <a href="#context"><span class="n">Pl. V</span> Context Engineering</a>
+    <a href="#tools"><span class="n">Pl. VI</span> Tools &amp; Integration</a>
+  </div>
+  <div class="toc-group">
+    <h2>Part Three — Pathology &amp; Containment</h2>
+    <a href="#failures"><span class="n">Pl. VII</span> Failure Modes</a>
+    <a href="#security"><span class="n">Pl. VIII</span> Security &amp; Governance</a>
+    <a href="#evals"><span class="n">Pl. IX</span> Evals &amp; Observability</a>
+  </div>
+  <div class="toc-group">
+    <h2>Part Four — Provenance</h2>
+    <a href="#receipts"><span class="n">Pl. X</span> Field Notes: The Receipts</a>
+    <a href="#vocabulary"><span class="n">App. A</span> The Specimen Index</a>
+    <a href="#related"><span class="n">App. B</span> Companion Volumes</a>
+  </div>
 </nav>
 
 <main>
 
-<p class="dropcap" style="margin-top:2.2rem; max-width:65ch;">The specimens catalogued herein were not observed from a safe distance. Every pattern, failure mode, and guardrail on this page was collected in the field: from <a href="how-its-built.html">a publishing pipeline of 170 standalone reference pages</a> run by governed agents, from <a href="https://davidveksler.com/david/ai-strategy.html?ref=cheatsheets">an AI delivery platform built inside a regulated commercial lender</a>, and from <a href="https://github.com/DavidVeksler?tab=repositories">open tooling</a> published along the way. The literature is cited where it is good — <a href="https://www.anthropic.com/engineering/building-effective-agents" rel="noopener">Anthropic's pattern catalogue</a>, <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" rel="noopener">Willison's lethal trifecta</a> — but the ordering principle of this guide is what survives contact with production.</p>
+<p class="dropcap" style="margin-top:2.2rem; max-width:65ch;">The specimens catalogued herein were not observed from a safe distance. Every pattern, failure mode, and guardrail on this page was collected in the field; the three expeditions and their evidence are recorded in <a href="#receipts">Plate X</a>. The literature is cited where it is good — <a href="https://www.anthropic.com/engineering/building-effective-agents" rel="noopener">Anthropic's pattern catalogue</a>, <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" rel="noopener">Willison's lethal trifecta</a> — but the ordering principle of this guide is what survives contact with production.</p>
 
 <p style="max-width:65ch;">One deliberate omission: you will find <strong>no model names, prices, context-window sizes, or benchmark scores</strong> here. Those rot in months; the anatomy below drifts in years. For the volatile layer, see the companion pages: <a href="ai-model-picker.html">which model to use</a>, <a href="ai-model-api-pricing.html">what it costs</a>, <a href="ai-coding-agents-compared.html">which coding agent</a>, and <a href="open-weight-ai-models.html">open-weight options</a>.</p>
 
+<div class="reader-router" aria-label="Reader routes">
+  <p>Building alone, on your first agent? Begin with <a href="#part-one">Part One</a>, then learn the organism in <a href="#part-two">Part Two</a>.</p>
+  <p>Leading a team adopting agents? Read <a href="#part-one">Part One</a>, then go directly to containment in <a href="#part-three">Part Three</a>.</p>
+  <p>Reviewing someone else's agent for security? Start with <a href="#failures">Plate VII</a> and <a href="#security">Plate VIII</a>.</p>
+  <p>Deciding whether to fund this at all? Examine <a href="#ladder">Plate II</a>, <a href="#adoption">Plate III</a>, and <a href="#security">Plate VIII</a>.</p>
+</div>
+
+<header class="part-header" id="part-one">
+  <span class="pnum">Part One</span>
+  <h2>Determination</h2>
+</header>
+
 <!-- ══════════════ PLATE I ══════════════ -->
-<section id="ladder" aria-labelledby="ladder-h">
-  <div class="plate-caption">
-    <span class="pnum">Plate I</span>
-    <h2 id="ladder-h">The Autonomy Ladder</h2>
-    <p class="pdesc">Six degrees of delegation, with the guardrails each rung demands. Read bottom-up, as ladders are climbed. Click a rung for its full entry.</p>
-  </div>
-
-  <p style="max-width:65ch;">The single most useful question in agentic AI is not "which framework?" but <strong>"which rung?"</strong> Each rung trades reliability for leverage, and each is <em>earned</em> by the guardrails of the rung below it. Most production incidents are a system operating one rung above what its guardrails support — an L4 demo running with L1 discipline.</p>
-
-  <div class="ladder" id="ladder-plate">
-    <details class="rung" name="ladder" id="l5">
-      <summary><span class="lvl">L5</span><span class="rname">Unattended standing automation</span><span class="rbinom">Automaton perpetuum</span><span class="guard">Runs on a schedule or trigger with no human at runtime — kill switch or it doesn't ship.</span></summary>
-      <div class="rbody">
-        <p><strong>What it is:</strong> an agent invoked by cron, webhook, or queue with nobody watching. Example: a weekly freshness job that re-verifies one dated reference page per run and commits the fix — but does not deploy it.</p>
-        <p><strong>Earned by:</strong> L3's independent verification <em>and</em> L4's tracing, plus a drafts-only write posture: the agent may propose, commit, or draft; a human owns every write to a system of record.</p>
-        <p><strong>Dominant failure:</strong> silent drift — the task, the data, or the model changes and nobody notices for weeks; plus prompt injection with no human in the loop to catch it.</p>
-        <ul>
-          <li>Hard kill switch, tested, documented, reachable in under a minute.</li>
-          <li>Drafts-only default: output lands as a draft/PR/commit, never directly in the record.</li>
-          <li>Anomaly alerts on cost, runtime, output size, and failure rate.</li>
-          <li>Scheduled human review of samples — unattended ≠ unaudited.</li>
-        </ul>
-      </div>
-    </details>
-    <details class="rung" name="ladder" id="l4">
-      <summary><span class="lvl">L4</span><span class="rname">Orchestrated subagent fleet</span><span class="rbinom">Cohors agentum</span><span class="guard">An orchestrator decomposes work and delegates — traces on every run.</span></summary>
-      <div class="rbody">
-        <p><strong>What it is:</strong> a lead agent breaks a task down and spawns workers (Anthropic's <em>orchestrator-workers</em> pattern, made recursive). Example: one worker per cheatsheet spec, with the parent owning all shared files and the batch commit.</p>
-        <p><strong>Earned by:</strong> disjoint ownership (no two agents write the same file), per-agent least-privilege scopes, and per-run traces you can actually read.</p>
-        <p><strong>Dominant failure:</strong> cross-agent contamination and cost multiplication — one polluted summary poisons every downstream worker, and token spend scales with fleet size whether or not quality does.</p>
-        <ul>
-          <li>Reconcile by artifacts (files exist, tests pass), never by trusting worker summaries.</li>
-          <li>Token/cost budget per run with a hard stop.</li>
-          <li>Shared state owned by exactly one agent — usually the parent.</li>
-        </ul>
-      </div>
-    </details>
-    <details class="rung" name="ladder" id="l3">
-      <summary><span class="lvl">L3</span><span class="rname">Multi-step, self-verifying agent</span><span class="rbinom">Agentum verificans</span><span class="guard">Plans, acts, and checks its own work before reporting — evals before autonomy.</span></summary>
-      <div class="rbody">
-        <p><strong>What it is:</strong> an agent that treats "done" as a claim to be tested: it builds the page, then loads it in a browser and asserts the console is clean before saying so.</p>
-        <p><strong>Earned by:</strong> a verification step that is <em>independent of the generation step</em> (run the tests, load the page, diff the output) and an eval set that catches regressions when the prompt or model changes.</p>
-        <p><strong>Dominant failure:</strong> hallucinated success — self-grading is the same model marking its own homework; it passes what it wrote because it wrote it.</p>
-        <ul>
-          <li>Verification must observe artifacts, not read the agent's own claims.</li>
-          <li>Budget caps on iterations — a verify-fix loop without a ceiling is a money printer in reverse.</li>
-        </ul>
-      </div>
-    </details>
-    <details class="rung" name="ladder" id="l2">
-      <summary><span class="lvl">L2</span><span class="rname">Tool-calling agent</span><span class="rbinom">Agentum instrumentatum</span><span class="guard">The model acts through tools in a loop while a human watches — least privilege required.</span></summary>
-      <div class="rbody">
-        <p><strong>What it is:</strong> the canonical agent per Anthropic's definition — the LLM directs its own tool use based on environmental feedback. Example: a coding agent given read/write on one repo and a test runner, supervised in a terminal.</p>
-        <p><strong>Earned by:</strong> typed, scoped tools; read-only as the default posture; a sandbox for anything that executes.</p>
-        <p><strong>Dominant failure:</strong> the confused deputy — the agent's permissions exceed the task's needs, and an attacker (or an accident) spends the difference.</p>
-        <ul>
-          <li>Grant per-task scopes, not account-wide ones; every connector is attack surface.</li>
-          <li>Destructive operations prompt for confirmation; irreversible ones require it.</li>
-        </ul>
-      </div>
-    </details>
-    <details class="rung" name="ladder" id="l1">
-      <summary><span class="lvl">L1</span><span class="rname">LLM in the loop</span><span class="rbinom">Machina consulta</span><span class="guard">A human prompts, reads, and applies every output — validation against a known source of truth.</span></summary>
-      <div class="rbody">
-        <p><strong>What it is:</strong> chat-assisted work — drafting, summarizing, explaining — where the human is the executor. Most real-world AI use lives here, and much of it productively.</p>
-        <p><strong>Earned by:</strong> nothing technical; it's the floor for model use. The discipline is human: outputs get validated against a source of truth before they're acted on.</p>
-        <p><strong>Dominant failure:</strong> ungrounded copy/paste — fluent output pasted into decisions, contracts, and code without verification.</p>
-        <ul>
-          <li>Never paste model output into a system of record without checking the load-bearing facts.</li>
-        </ul>
-      </div>
-    </details>
-    <details class="rung" name="ladder" id="l0">
-      <summary><span class="lvl">L0</span><span class="rname">Deterministic script</span><span class="rbinom">Scriptum determinatum</span><span class="guard">No model, no surprises — the rung most agent projects should have stayed on.</span></summary>
-      <div class="rbody">
-        <p><strong>What it is:</strong> cron, CI, SQL, a shell script. Example: this site's popularity scores refresh on a schedule via a plain script — no agent involved, because none is needed.</p>
-        <p><strong>Why it's on the ladder:</strong> as the null hypothesis. If the task can be fully specified, L0 beats every rung above it on cost, latency, and reliability — an agent that could be a cron job is a defect, not an achievement.</p>
-        <p><strong>Dominant failure:</strong> brittleness — it breaks loudly on input it wasn't written for. (Loud breakage is a feature; note the contrast with L5's silent drift.)</p>
-      </div>
-    </details>
-  </div>
-
-  <p style="font-size:0.92rem; max-width:65ch;"><strong>Reading the ladder:</strong> climb only when the rung below is boring — L2 when validated chat output becomes repetitive, L3 when supervision becomes rubber-stamping, L4 when one context window can't hold the work, L5 when the human adds no information. Descend at the first unexplained failure.</p>
-  <p style="font-size:0.92rem; max-width:65ch;">This ladder measures <em>one</em> agent's autonomy on <em>one</em> task. A second, orthogonal axis measures the practitioner's own role as the fleet scales from one agent to a thousand — see <a href="#adoption">Plate XI, The Naturalist's Progress</a>. Both must be climbed, and trust must lead the count on each.</p>
-</section>
-
-<!-- ══════════════ PLATE II ══════════════ -->
-<section id="vocabulary" aria-labelledby="vocab-h">
-  <div class="plate-caption">
-    <span class="pnum">Plate II</span>
-    <h2 id="vocab-h">The Specimen Index</h2>
-    <p class="pdesc">Eighteen terms of art, each with the practical gotcha the marketing copy omits. The quick reference for the rest of the guide.</p>
-  </div>
-  <div class="twrap">
-    <table class="ftable">
-      <thead><tr><th scope="col">Term</th><th scope="col">Definition</th><th scope="col">The gotcha it hides</th></tr></thead>
-      <tbody>
-        <tr><td class="term">Agent</td><td>A system where the LLM dynamically directs its own process and tool use to accomplish a task (Anthropic's definition).</td><td>Autonomy is a cost you pay, not a feature you get — you trade latency, spend, and predictability for flexibility.</td></tr>
-        <tr><td class="term">Workflow</td><td>LLM calls and tools orchestrated through <em>predefined code paths</em> — the developer decides the steps.</td><td>Most things sold as "agents" are workflows, and that's a compliment: predefined paths are cheaper and more debuggable.</td></tr>
-        <tr><td class="term">Harness</td><td>The scaffolding around the model: loop, tools, permissions, context management, retries.</td><td>Harness quality dominates model quality for agent reliability — upgrading the model won't fix a leaky harness.</td></tr>
-        <tr><td class="term">Tool / function calling</td><td>The model emits a structured call; your code executes it and returns the result to the context.</td><td>The model never "runs" anything — your executor does. Every safety property lives in the executor, not the model.</td></tr>
-        <tr><td class="term">MCP</td><td>Model Context Protocol — an open standard for connecting tools and data sources to any agent; the de facto interop layer.<span class="dagger"> † as of Jul 2026</span></td><td>A connector is a capability grant. Treat every MCP server as part of your attack surface and scope it accordingly.</td></tr>
-        <tr><td class="term">Skill</td><td>A reusable, versioned instruction file (e.g. <code>SKILL.md</code>) an agent loads to perform a specific procedure.</td><td>Skills are prompts, and prompts are code: unreviewed skills are unreviewed code running against your data.</td></tr>
-        <tr><td class="term">Subagent</td><td>A child agent spawned with its own fresh context to handle a delegated slice of work.</td><td>Isolation is the point — a subagent that shares the parent's full context inherits the parent's confusion.</td></tr>
-        <tr><td class="term">Orchestrator</td><td>The lead agent (or plain code) that decomposes work, delegates to workers, and synthesizes results.</td><td>The orchestrator is a single point of failure; a bad decomposition wastes the whole fleet's spend.</td></tr>
-        <tr><td class="term">Context window</td><td>The model's finite working memory: everything it can currently see, measured in tokens.</td><td>It's a budget, not a bucket — effective attention degrades before the hard limit is reached.</td></tr>
-        <tr><td class="term">Compaction</td><td>Summarizing a long conversation into a shorter artifact so work can continue in a fresh window.</td><td>Compaction is lossy by design. Anything not written to a durable note may silently vanish at the boundary.</td></tr>
-        <tr><td class="term">Memory</td><td>State persisted outside the context window — files, databases, vector stores — reloaded on demand.</td><td>Memory is an input like any other: stale or poisoned memories are injected confidently into future runs.</td></tr>
-        <tr><td class="term">Eval</td><td>A repeatable test suite for model behavior: task in, output scored against expectations.</td><td>An eval you run once is a demo. Evals earn their keep as regression suites when prompts and models change.</td></tr>
-        <tr><td class="term">Trace</td><td>The full record of one run: every prompt, tool call, result, and token count, inspectable after the fact.</td><td>Without traces, every incident report begins with "we think." You cannot debug what you didn't record.</td></tr>
-        <tr><td class="term">Human-in-the-loop</td><td>A checkpoint where a person reviews or approves before the system proceeds.</td><td>HITL is an architectural property, not a policy memo — if the system <em>can</em> skip the human, eventually it will.</td></tr>
-        <tr><td class="term">Guardrail</td><td>A hard constraint enforced outside the model: permission scopes, budget caps, output filters, allowlists.</td><td>Instructions are not guardrails. "Please don't delete files" is a wish; a read-only mount is a guardrail.</td></tr>
-        <tr><td class="term">Sandbox</td><td>An isolated execution environment (container, VM, worktree) where agent actions can't reach production.</td><td>A sandbox with production credentials mounted inside it is a stage set, not a sandbox.</td></tr>
-        <tr><td class="term">System of record</td><td>The authoritative store of business state — the ledger, the CRM, the production database.</td><td>The one thing an agent platform must never compete with. Agents draft <em>near</em> the record; humans write <em>to</em> it.</td></tr>
-        <tr><td class="term">Kill switch</td><td>A tested, documented way to halt an automation immediately.</td><td>If you've never actually flipped it, you don't have one — you have a comforting diagram.</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<!-- ══════════════ PLATE III ══════════════ -->
-<section id="loop" aria-labelledby="loop-h">
-  <div class="plate-caption">
-    <span class="pnum">Plate III</span>
-    <h2 id="loop-h">The Agent Loop</h2>
-    <p class="pdesc">The five-stage anatomy shared by every member of the genus — and what characteristically breaks at each stage.</p>
-  </div>
-
-  <p style="max-width:65ch;">Strip away the frameworks and every agent is the same organism: a loop that gathers context, plans, acts through tools, verifies, and iterates until done (or stopped). Diagnose failures by stage — each has a signature pathology.</p>
-
-  <div class="loop-stage">
-    <h3><span class="snum">i.</span>Gather context</h3>
-    <p style="font-size:0.95rem; margin:0;">The agent assembles what it needs: instructions, files, search results, memory. <strong>Breaks when:</strong> context is stale, bloated, or wrong — garbage retrieval yields confident garbage downstream. <strong>Mitigate:</strong> just-in-time retrieval over bulk pre-loading; curate what enters the window as deliberately as what enters a database (see <a href="#context">Plate V</a>).</p>
-  </div>
-  <div class="loop-stage">
-    <h3><span class="snum">ii.</span>Plan</h3>
-    <p style="font-size:0.95rem; margin:0;">The model decomposes the task and commits to an approach. <strong>Breaks when:</strong> it overcommits to a bad plan early and spends the whole budget executing it faithfully. <strong>Mitigate:</strong> make the plan an inspectable artifact (a written outline, a todo list) that code or humans can review before execution burns tokens.</p>
-  </div>
-  <div class="loop-stage">
-    <h3><span class="snum">iii.</span>Act</h3>
-    <p style="font-size:0.95rem; margin:0;">Tool calls: edit the file, run the query, call the API. <strong>Breaks when:</strong> tools are over-privileged, non-idempotent, or return errors the model can't interpret. <strong>Mitigate:</strong> least-privilege scopes, idempotent operations where possible, error messages written for the model to act on (see <a href="#tools">Plate VI</a>).</p>
-  </div>
-  <div class="loop-stage">
-    <h3><span class="snum">iv.</span>Verify</h3>
-    <p style="font-size:0.95rem; margin:0;">The claim "done" gets tested. <strong>Breaks when:</strong> the stage is skipped, or the model grades its own homework. <strong>Mitigate:</strong> verification must observe independent artifacts — tests pass, the page renders, the file exists with the right contents — never the agent's self-report.</p>
-  </div>
-  <div class="loop-stage">
-    <h3><span class="snum">v.</span>Iterate or report</h3>
-    <p style="font-size:0.95rem; margin:0;">Loop on failure, report on success. <strong>Breaks when:</strong> the loop has no ceiling (runaway cost) or the report is rosier than the run (hallucinated success). <strong>Mitigate:</strong> iteration and budget caps with a hard stop; summaries that cite artifacts, not adjectives.</p>
-  </div>
-</section>
-
-<!-- ══════════════ PLATE IV ══════════════ -->
 <section id="patterns" aria-labelledby="patterns-h">
   <div class="plate-caption">
-    <span class="pnum">Plate IV</span>
+    <span class="pnum">Plate I</span>
     <h2 id="patterns-h">Do You Even Need an Agent?</h2>
     <p class="pdesc">A dichotomous key: match your task's shape to the cheapest architecture that solves it. The canonical pattern names follow Anthropic's catalogue.<span class="dagger"> † Dec 2024, still current Jul 2026</span></p>
   </div>
@@ -384,11 +264,192 @@ html[data-theme="light"] { color-scheme: light; }
         <tr><td>Output quality improves with critique against clear criteria</td><td><strong>Evaluator-optimizer</strong> (workflow)</td><td>One model generates, another critiques, loop until the rubric passes.</td><td>Without a crisp rubric it converges on confident mediocrity.</td></tr>
         <tr><td>Open-ended task; steps depend on what the environment says back</td><td><strong>A single agent</strong> (L2–L3)</td><td>This is the genuine agent use case: tool feedback determines the next step.</td><td>Pay the autonomy tax knowingly: latency, cost, variance all rise.</td></tr>
         <tr><td>Breadth exceeding one context window (research, audits, migrations)</td><td><strong>Multi-agent fleet</strong> (L4)</td><td>Parallel workers with fresh windows cover ground one context can't hold.</td><td>Token multiplication; contamination via shared summaries.</td></tr>
-        <tr><td>Recurring task, nobody available at runtime</td><td><strong>Standing automation</strong> (L5)</td><td>Leverage compounds when the human adds no information per run.</td><td>Everything in the L5 entry of <a href="#ladder">Plate I</a>. Kill switch first.</td></tr>
+        <tr><td>Recurring task, nobody available at runtime</td><td><strong>Standing automation</strong> (L5)</td><td>Leverage compounds when the human adds no information per run.</td><td>Everything in the L5 entry of <a href="#ladder">Plate II</a>. Kill switch first.</td></tr>
       </tbody>
     </table>
   </div>
   <p style="font-size:0.92rem; max-width:65ch;"><strong>Decision heuristic:</strong> if you can draw the flowchart in advance, it's a workflow — build the flowchart. Reserve agents for tasks where the flowchart can only be discovered by doing the task.</p>
+</section>
+
+<!-- ══════════════ PLATE II ══════════════ -->
+<section id="ladder" aria-labelledby="ladder-h">
+  <div class="plate-caption">
+    <span class="pnum">Plate II</span>
+    <h2 id="ladder-h">The Autonomy Ladder</h2>
+    <p class="pdesc">Six degrees of delegation, with the guardrails each rung demands. Read bottom-up, as ladders are climbed. Click a rung for its full entry.</p>
+  </div>
+
+  <p style="max-width:65ch;">The single most useful question in agentic AI is not "which framework?" but <strong>"which rung?"</strong> Each rung trades reliability for leverage, and each is <em>earned</em> by the guardrails of the rung below it. Most production incidents are a system operating one rung above what its guardrails support — an L4 demo running with L1 discipline.</p>
+
+  <div class="ladder" id="ladder-plate">
+    <details class="rung" name="ladder" id="l5">
+      <summary><span class="lvl">L5</span><span class="rname">Unattended standing automation</span><span class="rbinom">Automaton perpetuum</span><span class="guard">Runs on a schedule or trigger with no human at runtime — kill switch or it doesn't ship.</span></summary>
+      <div class="rbody">
+        <p><strong>What it is:</strong> an agent invoked by cron, webhook, or queue with nobody watching. Example: a weekly freshness job that re-verifies one dated reference page per run and commits the fix — but does not deploy it.</p>
+        <p><strong>Earned by:</strong> L3's independent verification <em>and</em> L4's tracing, plus a drafts-only write posture: the agent may propose, commit, or draft; a human owns every write to a system of record.</p>
+        <p><strong>Dominant failure:</strong> silent drift — the task, the data, or the model changes and nobody notices for weeks; plus prompt injection with no human in the loop to catch it. See <a href="#failure-silent">the silent failure</a> and <a href="#failure-injection">prompt injection</a>.</p>
+        <ul>
+          <li>Hard kill switch, tested, documented, reachable in under a minute.</li>
+          <li>Drafts-only default: output lands as a draft/PR/commit, never directly in the record.</li>
+          <li>Anomaly alerts on cost, runtime, output size, and failure rate.</li>
+          <li>Scheduled human review of samples — unattended ≠ unaudited.</li>
+        </ul>
+      </div>
+    </details>
+    <details class="rung" name="ladder" id="l4">
+      <summary><span class="lvl">L4</span><span class="rname">Orchestrated subagent fleet</span><span class="rbinom">Cohors agentum</span><span class="guard">An orchestrator decomposes work and delegates — traces on every run.</span></summary>
+      <div class="rbody">
+        <p><strong>What it is:</strong> a lead agent breaks a task down and spawns workers (Anthropic's <em>orchestrator-workers</em> pattern, made recursive). Example: one worker per cheatsheet spec, with the parent owning all shared files and the batch commit.</p>
+        <p><strong>Earned by:</strong> disjoint ownership (no two agents write the same file), per-agent least-privilege scopes, and per-run traces you can actually read.</p>
+        <p><strong>Dominant failure:</strong> cross-agent contamination and cost multiplication — one polluted summary poisons every downstream worker, and token spend scales with fleet size whether or not quality does. See <a href="#failure-contamination">cross-agent contamination</a> and <a href="#failure-runaway">the runaway loop</a>.</p>
+        <ul>
+          <li>Reconcile by artifacts (files exist, tests pass), never by trusting worker summaries.</li>
+          <li>Token/cost budget per run with a hard stop.</li>
+          <li>Shared state owned by exactly one agent — usually the parent.</li>
+        </ul>
+      </div>
+    </details>
+    <details class="rung" name="ladder" id="l3">
+      <summary><span class="lvl">L3</span><span class="rname">Multi-step, self-verifying agent</span><span class="rbinom">Agentum verificans</span><span class="guard">Plans, acts, and checks its own work before reporting — evals before autonomy.</span></summary>
+      <div class="rbody">
+        <p><strong>What it is:</strong> an agent that treats "done" as a claim to be tested: it builds the page, then loads it in a browser and asserts the console is clean before saying so.</p>
+        <p><strong>Earned by:</strong> a verification step that is <em>independent of the generation step</em> (run the tests, load the page, diff the output) and an eval set that catches regressions when the prompt or model changes.</p>
+        <p><strong>Dominant failure:</strong> hallucinated success — self-grading is the same model marking its own homework; it passes what it wrote because it wrote it. See <a href="#failure-hallucinated">the hallucinated success</a>.</p>
+        <ul>
+          <li>Verification must observe artifacts, not read the agent's own claims.</li>
+          <li>Budget caps on iterations — a verify-fix loop without a ceiling is a money printer in reverse.</li>
+        </ul>
+      </div>
+    </details>
+    <details class="rung" name="ladder" id="l2">
+      <summary><span class="lvl">L2</span><span class="rname">Tool-calling agent</span><span class="rbinom">Agentum instrumentatum</span><span class="guard">The model acts through tools in a loop while a human watches — least privilege required.</span></summary>
+      <div class="rbody">
+        <p><strong>What it is:</strong> the canonical agent per Anthropic's definition — the LLM directs its own tool use based on environmental feedback. Example: a coding agent given read/write on one repo and a test runner, supervised in a terminal.</p>
+        <p><strong>Earned by:</strong> typed, scoped tools; read-only as the default posture; a sandbox for anything that executes.</p>
+        <p><strong>Dominant failure:</strong> the confused deputy — the agent's permissions exceed the task's needs, and an attacker (or an accident) spends the difference. See <a href="#failure-deputy">the confused deputy</a>.</p>
+        <ul>
+          <li>Grant per-task scopes, not account-wide ones; every connector is attack surface.</li>
+          <li>Destructive operations prompt for confirmation; irreversible ones require it.</li>
+        </ul>
+      </div>
+    </details>
+    <details class="rung" name="ladder" id="l1">
+      <summary><span class="lvl">L1</span><span class="rname">LLM in the loop</span><span class="rbinom">Machina consulta</span><span class="guard">A human prompts, reads, and applies every output — validation against a known source of truth.</span></summary>
+      <div class="rbody">
+        <p><strong>What it is:</strong> chat-assisted work — drafting, summarizing, explaining — where the human is the executor. Most real-world AI use lives here, and much of it productively.</p>
+        <p><strong>Earned by:</strong> nothing technical; it's the floor for model use. The discipline is human: outputs get validated against a source of truth before they're acted on.</p>
+        <p><strong>Dominant failure:</strong> ungrounded copy/paste — fluent output pasted into decisions, contracts, and code without verification. See <a href="#failure-bias">automation bias</a>.</p>
+        <ul>
+          <li>Never paste model output into a system of record without checking the load-bearing facts.</li>
+        </ul>
+      </div>
+    </details>
+    <details class="rung" name="ladder" id="l0">
+      <summary><span class="lvl">L0</span><span class="rname">Deterministic script</span><span class="rbinom">Scriptum determinatum</span><span class="guard">No model, no surprises — the rung most agent projects should have stayed on.</span></summary>
+      <div class="rbody">
+        <p><strong>What it is:</strong> cron, CI, SQL, a shell script. Example: this site's popularity scores refresh on a schedule via a plain script — no agent involved, because none is needed.</p>
+        <p><strong>Why it's on the ladder:</strong> as the null hypothesis. If the task can be fully specified, L0 beats every rung above it on cost, latency, and reliability — an agent that could be a cron job is a defect, not an achievement.</p>
+        <p><strong>Dominant failure:</strong> brittleness — it breaks loudly on input it wasn't written for. (Loud breakage is a feature; note the contrast with L5's silent drift.) See <a href="#failure-silent">the silent failure</a> for the more dangerous alternative.</p>
+      </div>
+    </details>
+  </div>
+
+  <p style="font-size:0.92rem; max-width:65ch;"><strong>Reading the ladder:</strong> climb only when the rung below is boring — L2 when validated chat output becomes repetitive, L3 when supervision becomes rubber-stamping, L4 when one context window can't hold the work, L5 when the human adds no information. Descend at the first unexplained failure.</p>
+  <p style="font-size:0.92rem; max-width:65ch;">This ladder measures <em>one</em> agent's autonomy on <em>one</em> task. A second, orthogonal axis measures the practitioner's own role as the fleet scales from one agent to a thousand — see <a href="#adoption">Plate III, The Naturalist's Progress</a>. Both must be climbed, and trust must lead the count on each.</p>
+</section>
+
+<!-- ══════════════ PLATE III ══════════════ -->
+<section id="adoption" aria-labelledby="adoption-h">
+  <div class="plate-caption">
+    <span class="pnum">Plate III</span>
+    <h2 id="adoption-h">The Naturalist's Progress</h2>
+    <p class="pdesc">A second axis, orthogonal to the Autonomy Ladder: how the practitioner's own role metamorphoses as the fleet scales by orders of magnitude — and which bottleneck moves next.</p>
+  </div>
+
+  <p style="max-width:65ch;"><a href="#ladder">Plate II</a> ranks how far you trust <em>one</em> agent on <em>one</em> task. This plate ranks something orthogonal: how many agents you run at once, and what that makes <em>you</em>. As the count climbs by orders of magnitude — one, ten, a hundred, a thousand — your job stops being "write the code" and becomes, in turn, to review it, to engineer the context and trust that make review rare, and finally to choose what gets built at all. The bottleneck migrates with you, and each step up is earned by <strong>trust in the loop, never by adding agents</strong>. Scale the fleet before the loop is trustworthy and you have not multiplied output — you have multiplied the review queue.</p>
+
+  <div class="twrap">
+    <table class="ftable">
+      <thead><tr><th scope="col">Fleet</th><th scope="col">Your role</th><th scope="col">What it looks like</th><th scope="col">The bottleneck now</th><th scope="col">What earns the next order of magnitude</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="term">~0<br><span class="rbinom">Hortus clausus</span></td>
+          <td><strong>The gated yard</strong> — pre-adoption</td>
+          <td>Access is gated or process-heavy; only older, lighter models are approved; there is no path to host or ship what an agent produces, so outputs die on the local machine.</td>
+          <td>Legacy security and approval processes; decisions driven by cost-per-token containment rather than outcomes; no technical voice in the room where autonomy is judged.</td>
+          <td>Executive alignment and a secure, sanctioned launch path — someone accountable clears the blockers and opens a governed door.</td>
+        </tr>
+        <tr>
+          <td class="term">~1<br><span class="rbinom">Socius par</span></td>
+          <td><strong>The pair</strong> — you and one agent</td>
+          <td>One human, one agent, mostly supervised — a fast pair programmer. One session at a time; you review nearly every change before it merges. A task that used to fill an afternoon now fits between meetings.</td>
+          <td>Your attention. Low trust means you read everything and never look away; the work is synchronous — you sit and watch it work instead of moving on to the next thing.</td>
+          <td>A self-verification loop you actually trust — tests, build, lint, end-to-end checks — plus non-blocking permissions, so you can stop watching keystrokes and start reviewing results.</td>
+        </tr>
+        <tr>
+          <td class="term">~10<br><span class="rbinom">Magister cohortis</span></td>
+          <td><strong>The orchestrator</strong></td>
+          <td>You run five to ten agents at once, each isolated in its own worktree, jumping between them. Each checks its own work — tests, build, lint, security scan — before you see it. You review final diffs, not keystrokes, and the maintenance backlog starts shrinking.</td>
+          <td>Review. You hand-write far less code and instead inspect many streams of it; steering and reviewing now fill the hours that writing used to.</td>
+          <td>Let agents pull their own context (read the code, the docs, the discussions); automate code and security review; break recurring work into named loops and routines.</td>
+        </tr>
+        <tr>
+          <td class="term">~100<br><span class="rbinom">Praefectus praefectorum</span></td>
+          <td><strong>Manager of managers</strong> — an org tree</td>
+          <td>Agents write nearly all the code. The tree is too deep to babysit. "Did you read the code?" becomes <em>"what context was the model missing, and how do we supply it next time?"</em> Maintenance that used to wait for a spare hour now runs continuously in the background.</td>
+          <td>Trust in the loop, and your team's decision throughput. The trap: scaling agent count before the loop has earned widespread trust.</td>
+          <td>Scaled automation of domain-specific work — migrations, fuzzing, feature-building, feedback remediation — with token economics watched deliberately as usage climbs.</td>
+        </tr>
+        <tr>
+          <td class="term">~1,000+<br><span class="rbinom">Rector intentionis</span></td>
+          <td><strong>Steering by intent</strong></td>
+          <td>The loop is closed; most agents are kicked off by other agents. Hundreds to thousands run at once; you steer by intent and monitor by exception. A quarter-long migration becomes a workflow you start and check on.</td>
+          <td>Identifying which work is worth automating, and enforcing the right guardrails for each <em>kind</em> of work.</td>
+          <td>— the top of this axis. Growth is now in the breadth of automated domains, not the depth of the tree.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:0.92rem; max-width:65ch;"><strong>The test that governs every step:</strong> "is this something an engineer would have done?" — if yes, it is a candidate to automate; if no, adding an agent will not rescue it. Watch where value migrates: from writing code, to reviewing it, to engineering the context that makes review rare, to deciding what should exist at all. The two ladders interlock — you cannot honestly run a hundred agents (this plate) while each is stuck at hand-held <a href="#ladder">L1–L2 autonomy</a> (Plate II). Climb both; climb the trust before the count.</p>
+</section>
+
+<header class="part-header" id="part-two">
+  <span class="pnum">Part Two</span>
+  <h2>Anatomy &amp; Husbandry</h2>
+</header>
+
+<!-- ══════════════ PLATE IV ══════════════ -->
+<section id="loop" aria-labelledby="loop-h">
+  <div class="plate-caption">
+    <span class="pnum">Plate IV</span>
+    <h2 id="loop-h">The Agent Loop</h2>
+    <p class="pdesc">The five-stage anatomy shared by every member of the genus — and what characteristically breaks at each stage.</p>
+  </div>
+
+  <p style="max-width:65ch;"><strong>"The framework will handle it."</strong> Abstractions promise to absorb the hard parts. Understand the loop underneath: frameworks hide the very layers — context, permissions, verification — where failures live.</p>
+
+  <p style="max-width:65ch;">Strip away the frameworks and every agent is the same organism: a loop that gathers context, plans, acts through tools, verifies, and iterates until done (or stopped). Diagnose failures by stage — each has a signature pathology.</p>
+
+  <div class="loop-stage">
+    <h3><span class="snum">i.</span>Gather context</h3>
+    <p style="font-size:0.95rem; margin:0;">The agent assembles what it needs: instructions, files, search results, memory. <strong>Breaks when:</strong> context is stale, bloated, or wrong — garbage retrieval yields confident garbage downstream. See <a href="#failure-context">context rot</a>. <strong>Mitigate:</strong> just-in-time retrieval over bulk pre-loading; curate what enters the window as deliberately as what enters a database (see <a href="#context">Plate V</a>).</p>
+  </div>
+  <div class="loop-stage">
+    <h3><span class="snum">ii.</span>Plan</h3>
+    <p style="font-size:0.95rem; margin:0;">The model decomposes the task and commits to an approach. <strong>Breaks when:</strong> it overcommits to a bad plan early and spends the whole budget executing it faithfully. See <a href="#failure-contamination">cross-agent contamination</a>. <strong>Mitigate:</strong> make the plan an inspectable artifact (a written outline, a todo list) that code or humans can review before execution burns tokens.</p>
+  </div>
+  <div class="loop-stage">
+    <h3><span class="snum">iii.</span>Act</h3>
+    <p style="font-size:0.95rem; margin:0;">Tool calls: edit the file, run the query, call the API. <strong>Breaks when:</strong> tools are over-privileged, non-idempotent, or return errors the model can't interpret. See <a href="#failure-deputy">the confused deputy</a>. <strong>Mitigate:</strong> least-privilege scopes, idempotent operations where possible, error messages written for the model to act on (see <a href="#tools">Plate VI</a>).</p>
+  </div>
+  <div class="loop-stage">
+    <h3><span class="snum">iv.</span>Verify</h3>
+    <p style="font-size:0.95rem; margin:0;">The claim "done" gets tested. <strong>Breaks when:</strong> the stage is skipped, or the model grades its own homework. See <a href="#failure-hallucinated">the hallucinated success</a>. <strong>Mitigate:</strong> verification must observe independent artifacts — tests pass, the page renders, the file exists with the right contents — never the agent's self-report.</p>
+  </div>
+  <div class="loop-stage">
+    <h3><span class="snum">v.</span>Iterate or report</h3>
+    <p style="font-size:0.95rem; margin:0;">Loop on failure, report on success. <strong>Breaks when:</strong> the loop has no ceiling (runaway cost) or the report is rosier than the run (hallucinated success). See <a href="#failure-runaway">the runaway loop</a>. <strong>Mitigate:</strong> iteration and budget caps with a hard stop; summaries that cite artifacts, not adjectives.</p>
+  </div>
 </section>
 
 <!-- ══════════════ PLATE V ══════════════ -->
@@ -445,6 +506,11 @@ html[data-theme="light"] { color-scheme: light; }
 </section>
 
 <!-- ══════════════ PLATE VII ══════════════ -->
+<header class="part-header" id="part-three">
+  <span class="pnum">Part Three</span>
+  <h2>Pathology &amp; Containment</h2>
+</header>
+
 <section id="failures" aria-labelledby="failures-h">
   <div class="plate-caption">
     <span class="pnum">Plate VII</span>
@@ -452,123 +518,149 @@ html[data-theme="light"] { color-scheme: light; }
     <p class="pdesc">Twelve specimens, pinned. Each caught at least once in the wild by the author. Learn the detection signal before you meet the specimen.</p>
   </div>
 
+  <p id="antipatterns" style="max-width:65ch;"><strong>Prompt-patching instead of root cause.</strong> Appending "do NOT do X again" is one line and feels like a fix. Diagnose the stage: wrong context, wrong tool contract, or missing verification will not be cured by scolding the model.</p>
+
   <div class="specimen-grid">
-    <article class="specimen">
+    <article class="specimen" id="failure-hallucinated">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Successus hallucinatus</h3>
-      <span class="common">the hallucinated success</span>
+      <h3>the hallucinated success</h3>
+      <span class="common">Successus hallucinatus</span>
       <dl>
+        <dt>Stage</dt><dd>Verify</dd>
         <dt>Observed in</dt><dd>agents reporting "done, all tests pass" on work never performed or tests never run.</dd>
+        <dt>Why it happens</dt><dd>a fluent self-report is cheaper than checking the world, and the harness accepts testimony as evidence.</dd>
         <dt>Detection</dt><dd>verify artifacts exist and tests actually executed; never grade by the agent's summary.</dd>
         <dt>Antidote</dt><dd>independent verification step; reports must cite checkable artifacts.</dd>
       </dl>
     </article>
-    <article class="specimen">
+    <article class="specimen" id="failure-silent">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Defectus silens</h3>
-      <span class="common">the silent failure</span>
+      <h3>the silent failure</h3>
+      <span class="common">Defectus silens</span>
       <dl>
+        <dt>Stage</dt><dd>Act</dd>
         <dt>Observed in</dt><dd>catch-blocks and fallbacks that swallow errors, returning defaults the agent treats as real data.</dd>
+        <dt>Why it happens</dt><dd>fallbacks keep the demonstration moving, so the harness rewards continuity while concealing loss of truth.</dd>
         <dt>Detection</dt><dd>audit fallback paths; alert when fallback rate rises above baseline.</dd>
         <dt>Antidote</dt><dd>fail loudly to the trace; a wrong answer is worse than a visible error.</dd>
       </dl>
     </article>
-    <article class="specimen">
+    <article class="specimen" id="failure-runaway">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Circulus pretiosus</h3>
-      <span class="common">the runaway loop</span>
+      <h3>the runaway loop</h3>
+      <span class="common">Circulus pretiosus</span>
       <dl>
+        <dt>Stage</dt><dd>Iterate or report</dd>
         <dt>Observed in</dt><dd>retry/fix cycles with no ceiling — the agent burns budget re-attempting a task it cannot complete.</dd>
+        <dt>Why it happens</dt><dd>costs are invisible per-run and shocking per-month.</dd>
         <dt>Detection</dt><dd>cost and iteration alarms; watch for repeated near-identical tool calls.</dd>
         <dt>Antidote</dt><dd>hard caps on iterations, tokens, and wall-clock, with a defined give-up behavior.</dd>
       </dl>
     </article>
-    <article class="specimen">
+    <article class="specimen" id="failure-context">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Contextus putrescens</h3>
-      <span class="common">context rot</span>
+      <h3>context rot</h3>
+      <span class="common">Contextus putrescens</span>
       <dl>
+        <dt>Stage</dt><dd>Gather context</dd>
         <dt>Observed in</dt><dd>long sessions where quality decays as the window fills with stale results and dead ends.</dd>
+        <dt>Why it happens</dt><dd>each turn preserves debris because forgetting feels risky; yesterday's results crowd out today's evidence.</dd>
         <dt>Detection</dt><dd>output quality inversely tracks context length; late-session instructions get ignored.</dd>
         <dt>Antidote</dt><dd>compaction, note files, fresh windows for new phases (Plate V).</dd>
       </dl>
     </article>
-    <article class="specimen">
+    <article class="specimen" id="failure-middle">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Medius amissus</h3>
-      <span class="common">lost in the middle</span>
+      <h3>lost in the middle</h3>
+      <span class="common">Medius amissus</span>
       <dl>
+        <dt>Stage</dt><dd>Gather context</dd>
         <dt>Observed in</dt><dd>critical facts buried mid-window getting less attention than the start and end.</dd>
+        <dt>Why it happens</dt><dd>finite attention favors the edges of a long window while load-bearing facts sink into its middle.</dd>
         <dt>Detection</dt><dd>the agent contradicts something it was told 40,000 tokens ago.</dd>
         <dt>Antidote</dt><dd>restate load-bearing constraints near the point of use; keep prompts lean.</dd>
       </dl>
     </article>
-    <article class="specimen">
+    <article class="specimen" id="failure-injection">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Iniectio promptorum</h3>
-      <span class="common">prompt injection</span>
+      <h3>prompt injection</h3>
+      <span class="common">Iniectio promptorum</span>
       <dl>
+        <dt>Stage</dt><dd>Gather context</dd>
         <dt>Observed in</dt><dd>instructions hidden in fetched pages, emails, and documents, executed as if from the operator.</dd>
+        <dt>Why it happens</dt><dd>the model receives operator and attacker text in the same channel and cannot reliably infer authority from prose alone.</dd>
         <dt>Detection</dt><dd>agent behavior pivots after ingesting untrusted content; unexplained outbound calls.</dd>
         <dt>Antidote</dt><dd>treat all fetched content as data; break the lethal trifecta (Plate VIII).</dd>
       </dl>
     </article>
-    <article class="specimen">
+    <article class="specimen" id="failure-deputy">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Legatus confusus</h3>
-      <span class="common">the confused deputy</span>
+      <h3>the confused deputy</h3>
+      <span class="common">Legatus confusus</span>
       <dl>
+        <dt>Stage</dt><dd>Act</dd>
         <dt>Observed in</dt><dd>over-privileged connectors: the agent's permissions exceed the task, and the surplus gets spent.</dd>
+        <dt>Why it happens</dt><dd>broad grants make the demo smoother.</dd>
         <dt>Detection</dt><dd>audit grants vs. task needs; flag tools never used by the intended workflow.</dd>
         <dt>Antidote</dt><dd>least privilege per task; read-only defaults; scoped, expiring credentials.</dd>
       </dl>
     </article>
-    <article class="specimen">
+    <article class="specimen" id="failure-contamination">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Contaminatio cohortis</h3>
-      <span class="common">cross-agent contamination</span>
+      <h3>cross-agent contamination</h3>
+      <span class="common">Contaminatio cohortis</span>
       <dl>
+        <dt>Stage</dt><dd>Plan</dd>
         <dt>Observed in</dt><dd>multi-agent fleets where one worker's error enters a shared summary and poisons every consumer.</dd>
+        <dt>Why it happens</dt><dd>fleets sound sophisticated.</dd>
         <dt>Detection</dt><dd>the same wrong fact appears in independent workers' outputs.</dd>
         <dt>Antidote</dt><dd>provenance on shared state; reconcile against source artifacts, not summaries.</dd>
       </dl>
     </article>
-    <article class="specimen">
+    <article class="specimen" id="failure-memory">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Memoria corrupta</h3>
-      <span class="common">the poisoned memory</span>
+      <h3>the poisoned memory</h3>
+      <span class="common">Memoria corrupta</span>
       <dl>
+        <dt>Stage</dt><dd>Gather context</dd>
         <dt>Observed in</dt><dd>persistent memory that stores an error (or an injected instruction) and replays it every session.</dd>
+        <dt>Why it happens</dt><dd>remembering appears additive, while review, expiry, and deletion look like work that can wait.</dd>
         <dt>Detection</dt><dd>the same mistake recurs across fresh sessions; memory diffs show unreviewed writes.</dd>
         <dt>Antidote</dt><dd>review memory writes; make memories inspectable, dated, and deletable.</dd>
       </dl>
     </article>
-    <article class="specimen">
+    <article class="specimen" id="failure-evals">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Evaluatio inflata</h3>
-      <span class="common">eval overfitting</span>
+      <h3>eval overfitting</h3>
+      <span class="common">Evaluatio inflata</span>
       <dl>
+        <dt>Stage</dt><dd>Verify</dd>
         <dt>Observed in</dt><dd>systems tuned to a static eval set until the score is excellent and the product is not.</dd>
+        <dt>Why it happens</dt><dd>evals feel like a milestone, not a practice.</dd>
         <dt>Detection</dt><dd>eval scores rise while user complaints hold steady.</dd>
         <dt>Antidote</dt><dd>rotate fresh eval cases from production traces; hold out a sealed set.</dd>
       </dl>
     </article>
-    <article class="specimen">
+    <article class="specimen" id="failure-bias">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Fides automatica</h3>
-      <span class="common">automation bias</span>
+      <h3>automation bias</h3>
+      <span class="common">Fides automatica</span>
       <dl>
+        <dt>Stage</dt><dd>Verify</dd>
         <dt>Observed in</dt><dd>human reviewers rubber-stamping agent output because it's usually right — until it isn't.</dd>
+        <dt>Why it happens</dt><dd>fluent language reads as competence and loyalty.</dd>
         <dt>Detection</dt><dd>approval rates near 100% with review times near zero.</dd>
         <dt>Antidote</dt><dd>make review cheap but real: diffs not walls of text; sample audits with teeth.</dd>
       </dl>
     </article>
-    <article class="specimen">
+    <article class="specimen" id="failure-tools">
       <div class="pin" aria-hidden="true"></div>
-      <h3>Instrumenta luxurians</h3>
-      <span class="common">tool sprawl</span>
+      <h3>tool sprawl</h3>
+      <span class="common">Instrumenta luxurians</span>
       <dl>
+        <dt>Stage</dt><dd>Act</dd>
         <dt>Observed in</dt><dd>agents wired to every available connector "just in case," degrading selection and widening attack surface.</dd>
+        <dt>Why it happens</dt><dd>each new connector looks like optional capacity, while its selection cost and attack surface remain dispersed.</dd>
         <dt>Detection</dt><dd>tool-choice errors rise with catalogue size; most tools show zero usage.</dd>
         <dt>Antidote</dt><dd>curate per task; load tool schemas on demand; delete unused grants.</dd>
       </dl>
@@ -612,97 +704,29 @@ html[data-theme="light"] { color-scheme: light; }
   <div class="entry"><span class="ename">1 · Trace every run.</span> Full prompt, every tool call and result, token counts, cost, outcome — queryable after the fact. <em>Test:</em> can you reconstruct last Tuesday's weird output in under ten minutes? <span class="gotcha"><span class="glabel">gotcha</span> — traces added "later" arrive after the incident that needed them.</span></div>
   <div class="entry"><span class="ename">2 · Build the eval set before granting autonomy.</span> Twenty realistic tasks with graded expected outcomes beats zero; grow it from production failures. <span class="gotcha"><span class="glabel">gotcha</span> — evals written only from the happy path certify a system that's never been disagreed with.</span></div>
   <div class="entry"><span class="ename">3 · Re-run evals on every prompt or model change.</span> Prompts are code; this is their CI. <em>Example:</em> a one-word system-prompt edit silently changing refusal behavior — caught only because the suite ran on commit. <span class="gotcha"><span class="glabel">gotcha</span> — model version bumps are breaking changes wearing a minor-version costume.</span></div>
-  <div class="entry"><span class="ename">4 · Set budgets with hard stops.</span> Cost, latency, and iteration ceilings per run, enforced by the harness. <span class="gotcha"><span class="glabel">gotcha</span> — an alert without a stop is a notification that money is on fire.</span></div>
+  <div class="entry"><span class="ename">4 · Set budgets with hard stops.</span> Cost, latency, and iteration ceilings per run, enforced by the harness. <span class="gotcha"><span class="glabel">gotcha</span> — an alert without a stop is a notification that money is on fire. A budget without a tested kill switch leaves nobody able to halt misbehavior; build and <em>test</em> the stop before the start (Plate II, L5).</span></div>
   <div class="entry"><span class="ename">5 · Run canaries on standing automations.</span> A known-answer task on schedule; when the canary degrades, the fleet is degrading. <span class="gotcha"><span class="glabel">gotcha</span> — canaries must exercise the real path, including tools — a ping is not a canary.</span></div>
   <div class="entry"><span class="ename">6 · Observability has two jobs — keep both.</span> Debugging (what did this run do?) and adoption measurement (is this system earning its keep?). The second is the one that gets skipped, and then the platform can't defend its budget. <em>Field note from the lender engagement:</em> instrument adoption from day one.</div>
   <div class="entry"><span class="ename">7 · Measure the human layer too.</span> Approval rates, edit distance on drafts, time-to-review. <em>Example:</em> ~100% approval at ~0 seconds review is not success; it's <span class="binom">Fides automatica</span> (Plate VII).</div>
 </section>
 
+<aside aria-labelledby="first-thirty-days-h">
+  <div class="plate-caption">
+    <span class="pnum">Field Practice</span>
+    <h2 id="first-thirty-days-h">The First Thirty Days</h2>
+  </div>
+  <p style="max-width:65ch;">Begin with instruments, not autonomy. For the first week, run representative tasks by hand at L1 and record a complete trace for each: input, context gathered, tool calls proposed, output, human corrections, and final outcome. From those traces, write twenty eval cases drawn from work people actually perform, including refusals, ambiguous inputs, stale data, and tool errors. For the next two weeks, keep the organism at L1–L2 under direct observation. Grant each trial only the files, records, and actions that its task requires; let every output land as a draft. Re-run the evals whenever instructions or tools change, and record cost, latency, review time, and failure by loop stage. In the fourth week, choose one narrow, reversible task for L3. Promote it only when verification observes independent artifacts — a passing test, rendered page, reconciled record, or expected file — rather than accepting the agent's report. One trustworthy loop is a breeding pair; twenty impressive demos are a cabinet of curiosities.</p>
+</aside>
+
+<header class="part-header" id="part-four">
+  <span class="pnum">Part Four</span>
+  <h2>Provenance</h2>
+</header>
+
 <!-- ══════════════ PLATE X ══════════════ -->
-<section id="antipatterns" aria-labelledby="anti-h">
-  <div class="plate-caption">
-    <span class="pnum">Plate X</span>
-    <h2 id="anti-h">Common Mistakes &amp; Anti-Patterns</h2>
-    <p class="pdesc">Invasive species: ten patterns that colonize agent projects, and what belongs in the habitat instead.</p>
-  </div>
-  <div class="twrap">
-    <table class="ftable">
-      <thead><tr><th scope="col">Anti-pattern</th><th scope="col">Why it happens</th><th scope="col">Instead</th></tr></thead>
-      <tbody>
-        <tr><td><strong>The agent that should be a cron job</strong></td><td>Agents are exciting; scripts are not.</td><td>Run the Plate IV key honestly. L0 is a victory, not a compromise.</td></tr>
-        <tr><td><strong>Demo-driven autonomy</strong></td><td>The demo worked once, so it ships at L4.</td><td>Grant the rung the guardrails support, not the rung the demo suggested.</td></tr>
-        <tr><td><strong>"The framework will handle it"</strong></td><td>Abstractions promise to absorb the hard parts.</td><td>Understand the loop underneath (Plate III). Frameworks hide the very layers — context, permissions, verification — where failures live.</td></tr>
-        <tr><td><strong>Unbounded tool permissions</strong></td><td>Broad grants make the demo smoother.</td><td>Least privilege per task; every grant is attack surface (Plates VI, VIII).</td></tr>
-        <tr><td><strong>Evals as a launch gate, then never again</strong></td><td>Evals feel like a milestone, not a practice.</td><td>Evals are CI for behavior — they run on every change, forever (Plate IX).</td></tr>
-        <tr><td><strong>Multi-agent as a status symbol</strong></td><td>Fleets sound sophisticated.</td><td>Multi-agent buys breadth beyond one context window; it costs coordination and contamination. Buy it only when single-window fails.</td></tr>
-        <tr><td><strong>Ignoring token economics</strong></td><td>Costs are invisible per-run and shocking per-month.</td><td>Cost per successful task is a first-class metric next to accuracy.</td></tr>
-        <tr><td><strong>No kill switch</strong></td><td>Nobody plans for their own automation misbehaving.</td><td>Build and <em>test</em> the stop before the start (Plate I, L5).</td></tr>
-        <tr><td><strong>Anthropomorphic trust</strong></td><td>Fluent language reads as competence and loyalty.</td><td>Trust the way you trust a process, not a person: through controls, verification, and track record.</td></tr>
-        <tr><td><strong>Prompt-patching instead of root cause</strong></td><td>Appending "do NOT do X again" is one line and feels like a fix.</td><td>Diagnose the stage (Plate III). Wrong context, wrong tool contract, or missing verification won't be fixed by scolding the model.</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<!-- ══════════════ PLATE XI ══════════════ -->
-<section id="adoption" aria-labelledby="adoption-h">
-  <div class="plate-caption">
-    <span class="pnum">Plate XI</span>
-    <h2 id="adoption-h">The Naturalist's Progress</h2>
-    <p class="pdesc">A second axis, orthogonal to the Autonomy Ladder: how the practitioner's own role metamorphoses as the fleet scales by orders of magnitude — and which bottleneck moves next.</p>
-  </div>
-
-  <p style="max-width:65ch;"><a href="#ladder">Plate I</a> ranks how far you trust <em>one</em> agent on <em>one</em> task. This plate ranks something orthogonal: how many agents you run at once, and what that makes <em>you</em>. As the count climbs by orders of magnitude — one, ten, a hundred, a thousand — your job stops being "write the code" and becomes, in turn, to review it, to engineer the context and trust that make review rare, and finally to choose what gets built at all. The bottleneck migrates with you, and each step up is earned by <strong>trust in the loop, never by adding agents</strong>. Scale the fleet before the loop is trustworthy and you have not multiplied output — you have multiplied the review queue.</p>
-
-  <div class="twrap">
-    <table class="ftable">
-      <thead><tr><th scope="col">Fleet</th><th scope="col">Your role</th><th scope="col">What it looks like</th><th scope="col">The bottleneck now</th><th scope="col">What earns the next order of magnitude</th></tr></thead>
-      <tbody>
-        <tr>
-          <td class="term">~0<br><span class="rbinom">Hortus clausus</span></td>
-          <td><strong>The gated yard</strong> — pre-adoption</td>
-          <td>Access is gated or process-heavy; only older, lighter models are approved; there is no path to host or ship what an agent produces, so outputs die on the local machine.</td>
-          <td>Legacy security and approval processes; decisions driven by cost-per-token containment rather than outcomes; no technical voice in the room where autonomy is judged.</td>
-          <td>Executive alignment and a secure, sanctioned launch path — someone accountable clears the blockers and opens a governed door.</td>
-        </tr>
-        <tr>
-          <td class="term">~1<br><span class="rbinom">Socius par</span></td>
-          <td><strong>The pair</strong> — you and one agent</td>
-          <td>One human, one agent, mostly supervised — a fast pair programmer. One session at a time; you review nearly every change before it merges. A task that used to fill an afternoon now fits between meetings.</td>
-          <td>Your attention. Low trust means you read everything and never look away; the work is synchronous — you sit and watch it work instead of moving on to the next thing.</td>
-          <td>A self-verification loop you actually trust — tests, build, lint, end-to-end checks — plus non-blocking permissions, so you can stop watching keystrokes and start reviewing results.</td>
-        </tr>
-        <tr>
-          <td class="term">~10<br><span class="rbinom">Magister cohortis</span></td>
-          <td><strong>The orchestrator</strong></td>
-          <td>You run five to ten agents at once, each isolated in its own worktree, jumping between them. Each checks its own work — tests, build, lint, security scan — before you see it. You review final diffs, not keystrokes, and the maintenance backlog starts shrinking.</td>
-          <td>Review. You hand-write far less code and instead inspect many streams of it; steering and reviewing now fill the hours that writing used to.</td>
-          <td>Let agents pull their own context (read the code, the docs, the discussions); automate code and security review; break recurring work into named loops and routines.</td>
-        </tr>
-        <tr>
-          <td class="term">~100<br><span class="rbinom">Praefectus praefectorum</span></td>
-          <td><strong>Manager of managers</strong> — an org tree</td>
-          <td>Agents write nearly all the code. The tree is too deep to babysit. "Did you read the code?" becomes <em>"what context was the model missing, and how do we supply it next time?"</em> Maintenance that used to wait for a spare hour now runs continuously in the background.</td>
-          <td>Trust in the loop, and your team's decision throughput. The trap: scaling agent count before the loop has earned widespread trust.</td>
-          <td>Scaled automation of domain-specific work — migrations, fuzzing, feature-building, feedback remediation — with token economics watched deliberately as usage climbs.</td>
-        </tr>
-        <tr>
-          <td class="term">~1,000+<br><span class="rbinom">Rector intentionis</span></td>
-          <td><strong>Steering by intent</strong></td>
-          <td>The loop is closed; most agents are kicked off by other agents. Hundreds to thousands run at once; you steer by intent and monitor by exception. A quarter-long migration becomes a workflow you start and check on.</td>
-          <td>Identifying which work is worth automating, and enforcing the right guardrails for each <em>kind</em> of work.</td>
-          <td>— the top of this axis. Growth is now in the breadth of automated domains, not the depth of the tree.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <p style="font-size:0.92rem; max-width:65ch;"><strong>The test that governs every step:</strong> "is this something an engineer would have done?" — if yes, it is a candidate to automate; if no, adding an agent will not rescue it. Watch where value migrates: from writing code, to reviewing it, to engineering the context that makes review rare, to deciding what should exist at all. The two ladders interlock — you cannot honestly run a hundred agents (this plate) while each is stuck at hand-held <a href="#ladder">L1–L2 autonomy</a> (Plate I). Climb both; climb the trust before the count.</p>
-</section>
-
-<!-- ══════════════ PLATE XII ══════════════ -->
 <section id="receipts" aria-labelledby="receipts-h">
   <div class="plate-caption">
-    <span class="pnum">Plate XII</span>
+    <span class="pnum">Plate X</span>
     <h2 id="receipts-h">Field Notes: The Receipts</h2>
     <p class="pdesc">The expeditions this guide was collected on. Each entry is a case study with a lesson, verifiable by following the link.</p>
   </div>
@@ -732,6 +756,7 @@ html[data-theme="light"] { color-scheme: light; }
 
   <div class="byline">
     <p style="margin-bottom:0.1rem;">Compiled in the field by <strong>David Veksler</strong> — applied-AI engineer; platforms and architecture for regulated environments.</p>
+    <p style="margin-bottom:0.1rem;">He designs governed AI platforms and operating models for regulated teams; leaders building or repairing an AI-governance program, agent platform, or delivery function are invited to get in touch.</p>
     <div class="links">
       <a href="https://davidveksler.com/?ref=cheatsheets" rel="noopener"><i class="bi bi-globe2" aria-hidden="true"></i> More of David's work</a>
       <a href="https://www.linkedin.com/in/davidveksler/" rel="noopener"><i class="bi bi-linkedin" aria-hidden="true"></i> LinkedIn</a>
@@ -740,10 +765,44 @@ html[data-theme="light"] { color-scheme: light; }
   </div>
 </section>
 
-<!-- ══════════════ RELATED ══════════════ -->
+<!-- ══════════════ APPENDIX A ══════════════ -->
+<section id="vocabulary" aria-labelledby="vocab-h">
+  <div class="plate-caption">
+    <span class="pnum">Appendix A</span>
+    <h2 id="vocab-h">The Specimen Index</h2>
+    <p class="pdesc">Eighteen terms of art, each with the practical gotcha the marketing copy omits. The quick reference for the rest of the guide.</p>
+  </div>
+  <div class="twrap">
+    <table class="ftable">
+      <thead><tr><th scope="col">Term</th><th scope="col">Definition</th><th scope="col">The gotcha it hides</th></tr></thead>
+      <tbody>
+        <tr><td class="term">Agent</td><td>A system where the LLM dynamically directs its own process and tool use to accomplish a task (Anthropic's definition).</td><td>Autonomy is a cost you pay, not a feature you get — you trade latency, spend, and predictability for flexibility.</td></tr>
+        <tr><td class="term">Workflow</td><td>LLM calls and tools orchestrated through <em>predefined code paths</em> — the developer decides the steps.</td><td>Most things sold as "agents" are workflows, and that's a compliment: predefined paths are cheaper and more debuggable.</td></tr>
+        <tr><td class="term">Harness</td><td>The scaffolding around the model: loop, tools, permissions, context management, retries.</td><td>Harness quality dominates model quality for agent reliability — upgrading the model won't fix a leaky harness.</td></tr>
+        <tr><td class="term">Tool / function calling</td><td>The model emits a structured call; your code executes it and returns the result to the context.</td><td>The model never "runs" anything — your executor does. Every safety property lives in the executor, not the model.</td></tr>
+        <tr><td class="term">MCP</td><td>Model Context Protocol — an open standard for connecting tools and data sources to any agent; the de facto interop layer.<span class="dagger"> † as of Jul 2026</span></td><td>A connector is a capability grant. Treat every MCP server as part of your attack surface and scope it accordingly.</td></tr>
+        <tr><td class="term">Skill</td><td>A reusable, versioned instruction file (e.g. <code>SKILL.md</code>) an agent loads to perform a specific procedure.</td><td>Skills are prompts, and prompts are code: unreviewed skills are unreviewed code running against your data.</td></tr>
+        <tr><td class="term">Subagent</td><td>A child agent spawned with its own fresh context to handle a delegated slice of work.</td><td>Isolation is the point — a subagent that shares the parent's full context inherits the parent's confusion.</td></tr>
+        <tr><td class="term">Orchestrator</td><td>The lead agent (or plain code) that decomposes work, delegates to workers, and synthesizes results.</td><td>The orchestrator is a single point of failure; a bad decomposition wastes the whole fleet's spend.</td></tr>
+        <tr><td class="term">Context window</td><td>The model's finite working memory: everything it can currently see, measured in tokens.</td><td>It's a budget, not a bucket — effective attention degrades before the hard limit is reached.</td></tr>
+        <tr><td class="term">Compaction</td><td>Summarizing a long conversation into a shorter artifact so work can continue in a fresh window.</td><td>Compaction is lossy by design. Anything not written to a durable note may silently vanish at the boundary.</td></tr>
+        <tr><td class="term">Memory</td><td>State persisted outside the context window — files, databases, vector stores — reloaded on demand.</td><td>Memory is an input like any other: stale or poisoned memories are injected confidently into future runs.</td></tr>
+        <tr><td class="term">Eval</td><td>A repeatable test suite for model behavior: task in, output scored against expectations.</td><td>An eval you run once is a demo. Evals earn their keep as regression suites when prompts and models change.</td></tr>
+        <tr><td class="term">Trace</td><td>The full record of one run: every prompt, tool call, result, and token count, inspectable after the fact.</td><td>Without traces, every incident report begins with "we think." You cannot debug what you didn't record.</td></tr>
+        <tr><td class="term">Human-in-the-loop</td><td>A checkpoint where a person reviews or approves before the system proceeds.</td><td>HITL is an architectural property, not a policy memo — if the system <em>can</em> skip the human, eventually it will.</td></tr>
+        <tr><td class="term">Guardrail</td><td>A hard constraint enforced outside the model: permission scopes, budget caps, output filters, allowlists.</td><td>Instructions are not guardrails. "Please don't delete files" is a wish; a read-only mount is a guardrail.</td></tr>
+        <tr><td class="term">Sandbox</td><td>An isolated execution environment (container, VM, worktree) where agent actions can't reach production.</td><td>A sandbox with production credentials mounted inside it is a stage set, not a sandbox.</td></tr>
+        <tr><td class="term">System of record</td><td>The authoritative store of business state — the ledger, the CRM, the production database.</td><td>The one thing an agent platform must never compete with. Agents draft <em>near</em> the record; humans write <em>to</em> it.</td></tr>
+        <tr><td class="term">Kill switch</td><td>A tested, documented way to halt an automation immediately.</td><td>If you've never actually flipped it, you don't have one — you have a comforting diagram.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════ APPENDIX B ══════════════ -->
 <section id="related" aria-labelledby="related-h">
   <div class="plate-caption">
-    <span class="pnum">Appendix</span>
+    <span class="pnum">Appendix B</span>
     <h2 id="related-h">Companion Volumes</h2>
     <p class="pdesc">Where this guide deliberately stops, these begin.</p>
   </div>
@@ -759,7 +818,7 @@ html[data-theme="light"] { color-scheme: light; }
 </section>
 
 <div class="footnote-block">
-  <p style="margin:0;">† Volatile facts on this page are tagged inline with their verification date. Pattern names and the workflow/agent distinction follow <a href="https://www.anthropic.com/engineering/building-effective-agents" rel="noopener">Anthropic, "Building Effective Agents"</a> (Dec 2024; re-verified Jul 2026). The lethal trifecta follows <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" rel="noopener">Simon Willison</a> (Jun 2025). The adoption-curve framing in Plate XI adapts Boris Cherny's "Steps of AI Adoption" (2026), generalized away from any single vendor's tooling. Case-study figures are from the linked primary sources. Last verified: 2026-08-09.</p>
+  <p style="margin:0;">† Volatile facts on this page are tagged inline with their verification date. Pattern names and the workflow/agent distinction follow <a href="https://www.anthropic.com/engineering/building-effective-agents" rel="noopener">Anthropic, "Building Effective Agents"</a> (Dec 2024; re-verified Jul 2026). The lethal trifecta follows <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" rel="noopener">Simon Willison</a> (Jun 2025). The adoption-curve framing in Plate III adapts Boris Cherny's "Steps of AI Adoption" (2026), generalized away from any single vendor's tooling. Case-study figures are from the linked primary sources. Last verified: 2026-08-09.</p>
 </div>
 
 <div class="related-cheatsheets mb-3" data-seo-related-links aria-label="Related AI &amp; Safety cheatsheets" style="margin-top:2rem; font-size:0.88rem;">
