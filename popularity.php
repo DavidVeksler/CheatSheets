@@ -39,6 +39,14 @@ if (is_readable($cacheFile)) {
     }
 }
 
+/* ---------- Category map (single source of truth: filename => category) ---------- */
+$categoryMap = require __DIR__ . '/category-map.php';
+
+/* ---------- Cumulative (never-decayed) lifetime view counts + 90-day history ---------- */
+$totalViews        = $popData['totalViews'] ?? [];
+$totalViewsHistory = $popData['totalViewsHistory'] ?? [];
+ksort($totalViewsHistory); // chronological, oldest first
+
 /* ---------- Helpers ---------- */
 function h(?string $s): string {
     return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
@@ -78,7 +86,56 @@ if ($rankedCount > 0) {
         ? $scoreVals[$mid]
         : ($scoreVals[$mid - 1] + $scoreVals[$mid]) / 2;
 }
-$top3Share = $totalScore > 0 ? round(array_sum(array_slice($scoreVals, 0, 3)) / $totalScore * 100, 1) : 0;
+$top3Share  = $totalScore > 0 ? round(array_sum(array_slice($scoreVals, 0, 3)) / $totalScore * 100, 1) : 0;
+$top10Share = $totalScore > 0 ? round(array_sum(array_slice($scoreVals, 0, 10)) / $totalScore * 100, 1) : 0;
+
+/* ---------- All-time (never-decayed) view total ---------- */
+$totalViewsAllTime = array_sum($totalViews);
+
+/* ---------- Coverage: published cheatsheets with zero recorded views ---------- */
+// Mirrors index.php's own $excludedItems — the one other place that decides what counts as a real cheatsheet.
+$excludedFromCoverage = ['etz-chaim-tree-of-life.html'];
+$allHtmlFiles = array_filter(glob(__DIR__ . '/*.html') ?: [], fn($p) => is_file($p));
+$allHtmlNames = array_map('basename', $allHtmlFiles);
+$allHtmlNames = array_values(array_diff($allHtmlNames, $excludedFromCoverage));
+$totalPageCount = count($allHtmlNames);
+$untrackedPages = array_values(array_diff($allHtmlNames, array_keys($scores)));
+$untrackedCount = count($untrackedPages);
+
+/* ---------- Category breakdown: sum of decayed scores per category ---------- */
+$categoryTotals = [];
+foreach ($scores as $filename => $score) {
+    $cat = $categoryMap[$filename] ?? 'Other';
+    $categoryTotals[$cat] = ($categoryTotals[$cat] ?? 0) + $score;
+}
+arsort($categoryTotals);
+$categoryRows = [];
+foreach ($categoryTotals as $cat => $catScore) {
+    $categoryRows[] = [
+        'category' => $cat,
+        'score'    => $catScore,
+        'pct'      => $totalScore > 0 ? round($catScore / $totalScore * 100, 1) : 0,
+    ];
+}
+$maxCategoryScore = $categoryRows ? $categoryRows[0]['score'] : 1.0;
+
+/* ---------- Trending now: today's raw views far outpacing the page's accumulated score ---------- */
+$dailyViewsRaw = $popData['dailyViews'] ?? [];
+$trending = [];
+foreach ($dailyViewsRaw as $filename => $dayCount) {
+    if ($dayCount < 5) continue; // filter noise from single-digit blips
+    $baseScore = $scores[$filename] ?? 0.0;
+    $priorScore = max($baseScore - $dayCount, 0.0); // score before today's contribution
+    $surge = ($priorScore + 1) > 0 ? $dayCount / ($priorScore + 1) : $dayCount;
+    $trending[] = [
+        'filename' => $filename,
+        'title'    => $metaCache[$filename]['title'] ?? filename_to_title($filename),
+        'today'    => $dayCount,
+        'surge'    => $surge,
+    ];
+}
+usort($trending, fn($a, $b) => $b['surge'] <=> $a['surge']);
+$trending = array_slice($trending, 0, 5);
 
 /* ---------- Build ranked rows ---------- */
 $rows = [];
@@ -141,6 +198,28 @@ foreach ($dailyViews as $filename => $count) {
         'pct'      => $totalDailyViews > 0 ? round($count / $totalDailyViews * 100, 1) : 0,
     ];
 }
+
+/* ---------- 90-day site-wide traffic trend (sparkline) ---------- */
+$historyVals   = array_values($totalViewsHistory);
+$historyDays   = count($historyVals);
+$maxHistoryVal = $historyVals ? max(max($historyVals), 1) : 1;
+$sparkWidth  = 600;
+$sparkHeight = 60;
+$sparkPoints = '';
+if ($historyDays > 1) {
+    $pts = [];
+    foreach ($historyVals as $idx => $val) {
+        $x = round($idx / ($historyDays - 1) * $sparkWidth, 1);
+        $y = round($sparkHeight - ($val / $maxHistoryVal) * $sparkHeight, 1);
+        $pts[] = "$x,$y";
+    }
+    $sparkPoints = implode(' ', $pts);
+}
+$historyTotal = array_sum($historyVals);
+$historyDates = array_keys($totalViewsHistory);
+$historySpanLabel = $historyDays > 0
+    ? (date('M j', strtotime($historyDates[0])) . ' – ' . date('M j', strtotime($historyDates[$historyDays - 1])))
+    : '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -400,6 +479,30 @@ foreach ($dailyViews as $filename => $count) {
                     <div class="lbl">Rising stars (&le;30d old)</div>
                 </div>
             </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="num"><?php echo number_format($totalDailyViews); ?></div>
+                    <div class="lbl">Views yesterday</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="num"><?php echo number_format($totalViewsAllTime); ?></div>
+                    <div class="lbl">All-time views tracked</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="num"><?php echo $top10Share; ?>&thinsp;%</div>
+                    <div class="lbl">Top 10 share of views</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="num"><?php echo number_format($untrackedCount); ?> <span class="muted" style="font-size:.9rem;">/ <?php echo number_format($totalPageCount); ?></span></div>
+                    <div class="lbl">Pages with zero views</div>
+                </div>
+            </div>
         </div>
 
         <!-- Explanation callout -->
@@ -407,8 +510,20 @@ foreach ($dailyViews as $filename => $count) {
             <i class="bi bi-info-circle me-1"></i>
             Each day's raw view count is added to the score after multiplying existing values by <strong>29/30</strong>.
             After 30 days a single visit contributes ~37 % of its original weight, so this reflects
-            <em>consistently popular</em> pages — not one-day spikes. Scores reset to zero over ~3 months of inactivity.            
+            <em>consistently popular</em> pages — not one-day spikes. Scores reset to zero over ~3 months of inactivity.
+            <br>"All-time views tracked" accumulates from the day this counter was added and does not include
+            views from before then.
         </div>
+
+        <!-- 90-day traffic trend -->
+        <?php if ($historyDays > 1): ?>
+        <div class="mini-panel mb-4">
+            <h2><i class="bi bi-graph-up-arrow"></i>Site-wide Traffic <span class="mini-age">(<?php echo h($historySpanLabel); ?> · <?php echo number_format($historyTotal); ?> views)</span></h2>
+            <svg viewBox="0 0 <?php echo $sparkWidth; ?> <?php echo $sparkHeight; ?>" preserveAspectRatio="none" style="width:100%; height:70px; display:block;" role="img" aria-label="Daily site-wide view count over the last <?php echo $historyDays; ?> days">
+                <polyline points="<?php echo h($sparkPoints); ?>" fill="none" stroke="var(--bar-fill)" stroke-width="2" vector-effect="non-scaling-stroke" />
+            </svg>
+        </div>
+        <?php endif; ?>
 
         <!-- Rising stars / Score distribution / Top referrers -->
         <div class="row g-3 mb-4">
@@ -458,6 +573,41 @@ foreach ($dailyViews as $filename => $count) {
                                 <?php echo h($day['title']); ?>
                             </a>
                             <span class="mini-value"><?php echo number_format($day['count']); ?></span>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category breakdown / Trending now -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-6">
+                <div class="mini-panel">
+                    <h2><i class="bi bi-tags-fill"></i>By Category</h2>
+                    <?php foreach ($categoryRows as $cr): $w = round($cr['score'] / $maxCategoryScore * 100, 1); ?>
+                    <div class="dist-row" style="grid-template-columns: 9rem 1fr 2.6rem;">
+                        <span class="dist-label" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="<?php echo h($cr['category']); ?>"><?php echo h($cr['category']); ?></span>
+                        <div class="dist-track"><div class="dist-fill" style="--bar-w: <?php echo $w; ?>%"></div></div>
+                        <span class="dist-count"><?php echo $cr['pct']; ?>&thinsp;%</span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="mini-panel">
+                    <h2><i class="bi bi-fire"></i>Trending Now <span class="mini-age">(today's views vs. accumulated score)</span></h2>
+                    <?php if (empty($trending)): ?>
+                        <p class="mini-empty mb-0">No pages surging above the noise floor right now.</p>
+                    <?php else: ?>
+                        <?php foreach ($trending as $t): ?>
+                        <div class="mini-row">
+                            <span class="mini-icon"><i class="bi bi-graph-up"></i></span>
+                            <a class="mini-label" href="<?php echo h($t['filename']); ?>" target="_blank" title="<?php echo h($t['title']); ?>">
+                                <?php echo h($t['title']); ?>
+                            </a>
+                            <span class="mini-value"><?php echo number_format($t['today']); ?> today</span>
                         </div>
                         <?php endforeach; ?>
                     <?php endif; ?>

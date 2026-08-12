@@ -13,7 +13,11 @@ Run this once a day (e.g. via GitHub Actions). Each run:
   3. Adds yesterday's raw counts on top of the decayed scores.
   4. Also stores yesterday's raw (undecayed) counts as "dailyViews", a simple
      last-24-hours view count used for the popularity page's daily panel.
-  5. Saves result back to popularity.json.
+  5. Adds yesterday's raw counts to "totalViews", a cumulative (never-decayed)
+     lifetime view counter per page, and to "totalViewsHistory", a per-day
+     total-site view count keyed by ISO date (kept for the last 90 days) so
+     the popularity page can chart a trend line.
+  6. Saves result back to popularity.json.
 
 The decay means a page visited 1,000 times today will score ~630 after 15 days,
 ~370 after 30 days, ~50 after 90 days – natural "trending" window.
@@ -121,10 +125,13 @@ def load_popularity() -> dict:
     if os.path.exists(POPULARITY_FILE):
         try:
             with open(POPULARITY_FILE, encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                data.setdefault("totalViews", {})
+                data.setdefault("totalViewsHistory", {})
+                return data
         except (json.JSONDecodeError, OSError):
             pass
-    return {"lastUpdated": None, "scores": {}, "dailyViews": {}}
+    return {"lastUpdated": None, "scores": {}, "dailyViews": {}, "totalViews": {}, "totalViewsHistory": {}}
 
 
 def save_popularity(data: dict) -> None:
@@ -173,12 +180,26 @@ def main() -> None:
     # Prune near-zero entries to keep the file lean
     scores = {k: round(v, 4) for k, v in scores.items() if v >= 0.1}
 
+    # Cumulative, never-decayed lifetime view counter per page
+    total_views: dict[str, int] = popularity.get("totalViews", {})
+    for filename, count in new_counts.items():
+        total_views[filename] = total_views.get(filename, 0) + count
+
+    # Per-day total-site view count, kept for the last 90 days (trend line)
+    history: dict[str, int] = popularity.get("totalViewsHistory", {})
+    history[yesterday] = sum(new_counts.values())
+    cutoff = (date.today() - timedelta(days=90)).isoformat()
+    history = {d: v for d, v in history.items() if d >= cutoff}
+
     popularity["lastUpdated"] = today
     popularity["scores"] = scores
     popularity["dailyViews"] = dict(new_counts)  # raw, undecayed — last complete 24h
+    popularity["totalViews"] = total_views
+    popularity["totalViewsHistory"] = history
 
     save_popularity(popularity)
-    print(f"Saved {len(scores)} page scores and {len(new_counts)} daily view counts to popularity.json — done.")
+    print(f"Saved {len(scores)} page scores, {len(new_counts)} daily view counts, "
+          f"{len(total_views)} lifetime totals to popularity.json — done.")
 
 
 if __name__ == "__main__":
