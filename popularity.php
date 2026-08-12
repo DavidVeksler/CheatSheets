@@ -262,7 +262,15 @@ $historySpanLabel = $historyDays > 0
         .stat-box {
           background: var(--surface); border: 1px solid var(--border);
           border-radius: .5rem; padding: 1rem 1.2rem; height: 100%;
+          display: flex; align-items: center; gap: .85rem;
         }
+        .stat-icon {
+          flex-shrink: 0; width: 2.6rem; height: 2.6rem; border-radius: .65rem;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1.25rem; background: var(--accent-bg); color: var(--accent);
+        }
+        .stat-icon.gold { background: #fef3c7; color: var(--gold); }
+        .stat-body { min-width: 0; }
         .stat-box .num { font-size: 1.7rem; font-weight: 700; line-height: 1.1; }
         .stat-box .lbl { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; margin-top: .15rem; }
 
@@ -433,74 +441,110 @@ $historySpanLabel = $historyDays > 0
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num"><?php echo number_format($rankedCount); ?></div>
-                    <div class="lbl">Pages tracked</div>
+                    <span class="stat-icon"><i class="bi bi-collection-fill"></i></span>
+                    <div class="stat-body">
+                        <div class="num"><?php echo number_format($rankedCount); ?></div>
+                        <div class="lbl">Pages tracked</div>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num"><?php echo number_format((int) $maxScore); ?></div>
-                    <div class="lbl">Top page score</div>
+                    <span class="stat-icon gold"><i class="bi bi-trophy-fill"></i></span>
+                    <div class="stat-body">
+                        <div class="num"><?php echo number_format((int) $maxScore); ?></div>
+                        <div class="lbl">Top page score</div>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num"><?php echo number_format((int) $totalScore); ?></div>
-                    <div class="lbl">Total score sum</div>
+                    <span class="stat-icon"><i class="bi bi-layers-fill"></i></span>
+                    <div class="stat-body">
+                        <div class="num"><?php echo number_format((int) $totalScore); ?></div>
+                        <div class="lbl">Total score sum</div>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num" style="font-size:1.1rem;"><?php echo $lastUpdated ? h($lastUpdated) : '—'; ?></div>
-                    <div class="lbl">Last updated</div>
+                    <span class="stat-icon"><i class="bi bi-calendar2-check-fill"></i></span>
+                    <div class="stat-body">
+                        <div class="num" style="font-size:1.1rem;"><?php echo $lastUpdated ? h($lastUpdated) : '—'; ?></div>
+                        <div class="lbl">Last updated</div>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num"><?php echo number_format($avgScore, 1); ?></div>
-                    <div class="lbl">Avg score / page</div>
+                    <span class="stat-icon"><i class="bi bi-bar-chart-line-fill"></i></span>
+                    <div class="stat-body">
+                        <div class="num"><?php echo number_format($avgScore, 1); ?></div>
+                        <div class="lbl">Avg score / page</div>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num"><?php echo number_format($medianScore, 1); ?></div>
-                    <div class="lbl">Median score</div>
+                    <span class="stat-icon"><i class="bi bi-distribute-vertical"></i></span>
+                    <div class="stat-body">
+                        <div class="num"><?php echo number_format($medianScore, 1); ?></div>
+                        <div class="lbl">Median score</div>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num"><?php echo $top3Share; ?>&thinsp;%</div>
-                    <div class="lbl">Top 3 share of views</div>
+                    <span class="stat-icon"><i class="bi bi-pie-chart-fill"></i></span>
+                    <div class="stat-body">
+                        <div class="num"><?php echo $top3Share; ?>&thinsp;%</div>
+                        <div class="lbl">Top 3 share of views</div>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num"><?php echo number_format($risingStarCount); ?></div>
-                    <div class="lbl">Rising stars (&le;30d old)</div>
+                    <span class="stat-icon"><i class="bi bi-rocket-takeoff-fill"></i></span>
+                    <div class="stat-body">
+                        <div class="num"><?php echo number_format($risingStarCount); ?></div>
+                        <div class="lbl">Rising stars (&le;30d old)</div>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num"><?php echo number_format($totalDailyViews); ?></div>
-                    <div class="lbl">Views yesterday</div>
+                    <span class="stat-icon"><i class="bi bi-eye-fill"></i></span>
+                    <div class="stat-body">
+                        <div class="num"><?php echo number_format($totalDailyViews); ?></div>
+                        <div class="lbl">Views yesterday</div>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num"><?php echo number_format($totalViewsAllTime); ?></div>
-                    <div class="lbl">All-time views tracked</div>
+                    <span class="stat-icon"><i class="bi bi-infinity"></i></span>
+                    <div class="stat-body">
+                        <div class="num"><?php echo number_format($totalViewsAllTime); ?></div>
+                        <div class="lbl">All-time views tracked</div>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num"><?php echo $top10Share; ?>&thinsp;%</div>
-                    <div class="lbl">Top 10 share of views</div>
+                    <span class="stat-icon"><i class="bi bi-pie-chart"></i></span>
+                    <div class="stat-body">
+                        <div class="num"><?php echo $top10Share; ?>&thinsp;%</div>
+                        <div class="lbl">Top 10 share of views</div>
+                    </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <div class="num"><?php echo number_format($untrackedCount); ?> <span class="muted" style="font-size:.9rem;">/ <?php echo number_format($totalPageCount); ?></span></div>
-                    <div class="lbl">Pages with zero views</div>
+                    <span class="stat-icon"><i class="bi bi-eye-slash-fill"></i></span>
+                    <div class="stat-body">
+                        <div class="num"><?php echo number_format($untrackedCount); ?> <span class="muted" style="font-size:.9rem;">/ <?php echo number_format($totalPageCount); ?></span></div>
+                        <div class="lbl">Pages with zero views</div>
+                    </div>
                 </div>
             </div>
         </div>
