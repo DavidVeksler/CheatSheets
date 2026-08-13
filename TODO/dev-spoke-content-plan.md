@@ -58,6 +58,12 @@ query family below once GSC range data is available again (see the tooling note 
 
 ## Tier 2 — moderate depth, competitive terms (targeted enrichment)
 
+**✅ Both pages in this tier also shipped 2026-07-21**, same day as Tier 1: `8cbc056`
+("Strengthen clean-architecture-dotnet for bare-topic '.net clean architecture'") and `f33bb0a`
+("Add database comparison chart to databases.html"). The whole plan — Tier 1 and Tier 2 — was
+executed the day it was written, well before the stated 2026-08-06 freeze lift. Re-pull each
+query family once GSC range data is available again.
+
 ### clean-architecture-dotnet.html
 - **Diagnosis:** the "cheat sheet" framing already ranks (`clean architecture cheat sheet` **pos
   6.0**), but the higher-volume bare-topic queries do not: `.net clean architecture` 201 impr @ pos
