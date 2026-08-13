@@ -132,16 +132,30 @@ blocks, and inline **SVG `<title>`** elements pollute a naïve `<title>` match. 
 ## Current next step
 
 **The 2026-08-06 checkpoint has run — verdict CONTINUE INVESTING, freeze lifted.** See
-"Decision checkpoint — verdict" below. Next actions, in order:
+"Decision checkpoint — verdict" below. Status as of 2026-08-12:
 
-1. Diagnose the two guard-rail flags (`martial-arts-cheatsheet`, `postgresql`) with a page×query
-   pull before any further title work.
-2. Execute Tier 1 of [`dev-spoke-content-plan.md`](dev-spoke-content-plan.md), now unblocked.
-3. Connect `analytics-mcp` (GA4 property 543339529) so the AI-referral leg is measurable again.
+1. ✅ **Tier 1 of `dev-spoke-content-plan.md` was already executed 2026-07-21** in commit
+   `4870e04` ("Expand Azure DevOps and C# reference sections") — both the Azure DevOps
+   Best Practices section and the C# Keywords Cheat Sheet table shipped, ahead of the freeze
+   actually lifting. Nothing left to do here; re-pull each query family once range data is
+   available again (see tooling note below) to measure lift.
+2. ⏳ **Still open: diagnose the two guard-rail flags** (`martial-arts-cheatsheet`, `postgresql`)
+   with a fresh page×query pull before any further title work — blocked on the tooling issue below.
+3. ⏳ Connect `analytics-mcp` (GA4 property 543339529) so the AI-referral leg is measurable again.
 
-Tooling note: the 2026-07-14 `list_sitemaps` API call still errors with `cannot unmarshal string into
-… warnings of type int64`. This is an MCP-server parsing bug, not evidence of a sitemap defect; check
-submission status in the Search Console web UI.
+⚠️ **Tooling note (2026-08-12): GSC range queries are currently non-functional, both via the
+`search-console` MCP tool and the live Search Console web UI.** Any query — API or a manual
+custom date range set through the UI's date picker (verified with David's own
+`heroic@gmail.com` account) — collapses to a single cached day, **2026-08-10**, with identical
+totals (39 clicks / 10.5K impressions / 13.3 avg. position) regardless of the requested
+`start_date`/`end_date`. This was confirmed three ways on the API side (totals, `date`-dimension,
+wide-range) and independently in the browser after explicitly setting a custom range. It is not a
+client-side bug to route around — the property genuinely isn't serving range data right now.
+**Do not trust any "28-day"/"90-day" pull from this session or until this is confirmed fixed** —
+re-verify with a `dimensions:["date"]` pull spanning several distinct dates before relying on a
+range number again. The 2026-07-14 `list_sitemaps` API call still separately errors with `cannot
+unmarshal string into … warnings of type int64`; that one is a known MCP-server parsing bug, not
+evidence of a sitemap defect — check submission status in the Search Console web UI instead.
 
 ## Closed decisions and implementation evidence
 
@@ -577,6 +591,14 @@ scope). Two durable notes preserved for the next pillar:
   its title yet ranks pos 40–87). Tier 1: `azure-devops` (thin — add best-practices section) and
   `dotnet-cheatsheet` (add a C# keywords table for the 408-impr "c# keywords cheat sheet" query).
   Explicitly excluded `postgresql` from content work (already 18k words + fresh; its pos-45 is off-page).
+- 2026-08-12 — GSC check-in. Confirmed Tier 1 of `dev-spoke-content-plan.md` was already shipped
+  2026-07-21 (`4870e04`) — doc was stale, corrected. Traced `postgresql.html`'s guard-rail flag to
+  its exact cause: commit `4a8383b` (2026-07-09, WP1 metadata pass) changed the title from
+  "PostgreSQL Power User Cheatsheet - Advanced Guide for DBAs & Developers" (73 chars, over the
+  60-char standard) to "PostgreSQL Cheat Sheet: Commands, Tuning and Advanced SQL" (59 chars) —
+  this is the exact change coincident with the 13.13 → 27.82 position drop at flat impressions
+  recorded in the 08-06 checkpoint. Could not get fresh range data to confirm the drop persists
+  today (see tooling note below) — revert decision left open for David.
 - 2026-08-06 — **Ran the pre-registered decision checkpoint. Verdict: CONTINUE INVESTING.** WP1 pages
   286 → 383 clicks (+33.9%; +14.3% excluding `ai-frontier`) with impression-weighted position
   improving 10.93 → 10.17, so the primary criterion passes on its own. `ai-frontier` on its own

@@ -24,6 +24,11 @@ for pruning.
 
 ## Tier 1 — thin page + clear query gap + existing authority (highest ROI)
 
+**✅ Both pages in this tier shipped 2026-07-21 in commit `4870e04`** ("Expand Azure DevOps and
+C# reference sections"), ahead of the freeze technically lifting on 2026-08-06. Re-pull each
+query family below once GSC range data is available again (see the tooling note in
+`seo-planning.md`) to measure lift against the pre-change baseline recorded here.
+
 ### azure-devops.html
 - **Diagnosis:** thinnest page in the cluster (**2,784 words**, no "best practices" section) yet it
   **wins "azure devops cheat sheet" at position 2.1 (22.7% CTR)**. Authority is proven; the page is
