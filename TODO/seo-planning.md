@@ -598,7 +598,17 @@ scope). Two durable notes preserved for the next pillar:
   60-char standard) to "PostgreSQL Cheat Sheet: Commands, Tuning and Advanced SQL" (59 chars) —
   this is the exact change coincident with the 13.13 → 27.82 position drop at flat impressions
   recorded in the 08-06 checkpoint. Could not get fresh range data to confirm the drop persists
-  today (see tooling note below) — revert decision left open for David.
+  today (see tooling note below). **David chose to revert** rather than wait; shipped in
+  `a385796` — new title "PostgreSQL Power User Cheat Sheet for DBAs & Devs" (49 chars, compliant)
+  recovers the pre-WP1 audience framing and also fixes a title/H1 mismatch introduced by the WP1
+  change (H1 still read "PostgreSQL Power User Cheatsheet" while the title said something
+  unrelated). Description/keywords left untouched — the WP1 rewrite fixed a real defect there
+  (doubled-space typo, over-length emoji-laden original), so only the title regressed.
+  **New measurement baseline from 2026-08-12**, separate from the WP1 table above: re-pull this
+  page's `postgres cheat sheet` / `postgresql commands cheat sheet` / `psql cheat sheet` query
+  family once GSC range queries work again, compare position against the post-WP1 27.82 and the
+  pre-WP1 13.13. `martial-arts-cheatsheet.html`'s flag is still open — undiagnosed, no title
+  changed there this session.
 - 2026-08-06 — **Ran the pre-registered decision checkpoint. Verdict: CONTINUE INVESTING.** WP1 pages
   286 → 383 clicks (+33.9%; +14.3% excluding `ai-frontier`) with impression-weighted position
   improving 10.93 → 10.17, so the primary criterion passes on its own. `ai-frontier` on its own
