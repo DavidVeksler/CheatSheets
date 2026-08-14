@@ -48,6 +48,7 @@ return [
     'sql-performance-tuning.html' => 'Software & DevOps',
     'ubuntu-linux-for-ai-developers.html' => 'Software & DevOps',
     'versioncontrol.html' => 'Software & DevOps',
+    'wordpress-to-static.html' => 'Software & DevOps',
 
     // Security & Privacy
     'linux-server-hardening.html' => 'Security & Privacy',

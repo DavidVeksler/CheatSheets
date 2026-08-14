@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WordPress to Static Site: Astro, Eleventy, Agent-Built HTML</title>
+  <meta name="description" content="A CMS is an editor, database, and theme engine. See how git, plain files, and AI agents replace them, with an SSG decision table and migration runbook.">
+  <meta name="keywords" content="wordpress to static site, astro vs eleventy, static site generator comparison, leaving wordpress, git as a cms, wordpress migration">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/wordpress-to-static.html">
+  <meta property="og:title" content="WordPress to Static Site: Astro, Eleventy, Agent-Built HTML">
+  <meta property="og:description" content="A field guide to replacing WordPress with git, plain files, build-time automation, and a static generator that fits the site.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/wordpress-to-static.html">
+  <meta property="og:image" content="images/wordpress-to-static.png">
+  <meta property="og:image:alt" content="Diagram showing WordPress editor, database, and theme jobs unplugged and reconnected to git, files, and an AI design agent">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="WordPress to Static Site: Astro, Eleventy, Agent-Built HTML">
+  <meta name="twitter:description" content="The SSG decision framework and operator runbook from five production WordPress exits.">
+  <meta name="twitter:image" content="images/wordpress-to-static.png">
+  <meta name="twitter:creator" content="@heroiclife">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Life After WordPress: Running Five Sites With No CMS",
+    "description": "A production-tested decision framework, migration playbook, and operator reference for replacing WordPress with Astro, Eleventy, Next.js static snapshots, or agent-built HTML.",
+    "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-08-14",
+    "dateModified": "2026-08-14",
+    "keywords": "wordpress to static site, Astro, Eleventy, Next.js, git as CMS, static site migration"
+  }
+  </script>
+  <style>
+    @layer reset, base, components, utilities;
+
+    @layer reset {
+      *, *::before, *::after { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; }
+      img, svg { display: block; max-width: 100%; }
+      table { border-collapse: collapse; }
+      button, input, textarea, select { font: inherit; }
+    }
+
+    @layer base {
+      :root {
+        color-scheme: dark light;
+        --bg: light-dark(#eef3f6, #0b0f12);
+        --surface: light-dark(#ffffff, #12181d);
+        --surface-2: light-dark(#e5edf2, #182128);
+        --ink: light-dark(#172127, #e6eef2);
+        --muted: light-dark(#53646e, #9fb0ba);
+        --line: light-dark(#b9c8d0, #2d3b44);
+        --wp: #0073aa;
+        --wp-dark: #23282d;
+        --git: light-dark(#146c43, #57d690);
+        --red: light-dark(#9f2837, #ff7585);
+        --amber: light-dark(#8a5a00, #ffc966);
+        --cyan: light-dark(#006e85, #5bd6ef);
+        --violet: light-dark(#6645a6, #bd9cff);
+        --shadow: light-dark(rgba(35, 40, 45, .13), rgba(0, 0, 0, .35));
+        --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --mono: "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      body {
+        background:
+          linear-gradient(90deg, color-mix(in srgb, var(--line) 20%, transparent) 1px, transparent 1px),
+          linear-gradient(color-mix(in srgb, var(--line) 20%, transparent) 1px, transparent 1px),
+          var(--bg);
+        background-size: 32px 32px;
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 1rem;
+        line-height: 1.58;
+      }
+
+      a { color: var(--cyan); text-underline-offset: .18em; }
+      a:hover { text-decoration-thickness: 2px; }
+      :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+      h1, h2, h3, h4 { line-height: 1.12; text-wrap: balance; }
+      h1 { margin: .35rem 0 1rem; font-size: clamp(2.3rem, 6vw, 5.5rem); letter-spacing: -.055em; }
+      h2 { margin: 0 0 1rem; font-size: clamp(1.75rem, 3.6vw, 3rem); letter-spacing: -.035em; }
+      h3 { margin: 0 0 .55rem; font-size: 1.2rem; }
+      p, li { text-wrap: pretty; }
+      code, kbd, pre, .mono { font-family: var(--mono); }
+      code { color: var(--git); }
+      pre {
+        margin: .75rem 0 0;
+        padding: .9rem 1rem;
+        border: 1px solid var(--line);
+        border-radius: .4rem;
+        background: light-dark(#f4f7f9, #090d10);
+        color: var(--ink);
+        overflow-x: auto;
+        white-space: pre;
+      }
+      .shell { width: min(1480px, calc(100% - 2rem)); margin-inline: auto; }
+      .measure { max-width: 82ch; }
+    }
+
+    @layer components {
+      .topline {
+        border-bottom: 1px solid var(--line);
+        background: color-mix(in srgb, var(--surface) 94%, transparent);
+      }
+      .topline .shell { display: flex; justify-content: space-between; gap: 1rem; padding-block: .65rem; }
+      .topline a { color: var(--ink); font-family: var(--mono); font-size: .82rem; text-decoration: none; }
+      .topline .status { color: var(--git); }
+
+      .hero { padding: clamp(2.5rem, 6vw, 6rem) 0 2.5rem; }
+      .eyebrow, .section-no {
+        color: var(--git);
+        font: 700 .78rem/1.2 var(--mono);
+        letter-spacing: .13em;
+        text-transform: uppercase;
+      }
+      .lede { max-width: 78ch; color: var(--muted); font-size: clamp(1.05rem, 1.8vw, 1.35rem); }
+      .thesis {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: .7rem 1rem;
+        border-left: 4px solid var(--wp);
+        background: var(--surface);
+        box-shadow: 0 9px 25px var(--shadow);
+        font-family: var(--mono);
+      }
+
+      .teardown-wrap {
+        margin: 2rem 0 0;
+        border: 1px solid var(--line);
+        border-radius: .75rem;
+        background: #0c1115;
+        box-shadow: 0 20px 55px rgba(0, 0, 0, .35);
+        overflow-x: auto;
+      }
+      .teardown { width: 100%; min-width: 820px; height: auto; }
+      .teardown text { font-family: var(--mono); }
+
+      .quick { padding: 1rem 0 3.5rem; }
+      .quick-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr); gap: 1rem; }
+      .panel, .card, .operator, .mistake {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: .65rem;
+        background: var(--surface);
+        box-shadow: 0 8px 22px var(--shadow);
+      }
+      .panel { padding: clamp(1rem, 2vw, 1.5rem); }
+      .panel h2 { font-size: 1.35rem; }
+      .fleet-strip { display: grid; gap: .65rem; }
+      .fleet-link {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: .5rem;
+        align-items: center;
+        padding: .65rem .75rem;
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--accent, var(--cyan));
+        border-radius: .35rem;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .fleet-link:hover { background: var(--surface-2); }
+      .fleet-link small { color: var(--muted); font-family: var(--mono); }
+
+      section { padding: clamp(3.25rem, 7vw, 6.5rem) 0; border-top: 1px solid var(--line); }
+      .section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .38fr); gap: 2rem; align-items: end; margin-bottom: 2rem; }
+      .section-head p { margin: 0; color: var(--muted); }
+      .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+      .card { padding: 1.25rem; border-top: 4px solid var(--accent, var(--git)); }
+      .card .tag, .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .18rem .48rem;
+        border: 1px solid currentColor;
+        border-radius: 999px;
+        color: var(--accent, var(--git));
+        font: 700 .7rem/1.25 var(--mono);
+        letter-spacing: .06em;
+        text-transform: uppercase;
+      }
+      .card p { margin-bottom: .55rem; }
+      .card .example { padding-top: .7rem; border-top: 1px dashed var(--line); color: var(--muted); font-size: .92rem; }
+      .strike { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 2px; }
+
+      .table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: .55rem; background: var(--surface); box-shadow: 0 8px 24px var(--shadow); }
+      table { width: 100%; min-width: 980px; font-size: .91rem; }
+      th, td { padding: .75rem .8rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+      th:last-child, td:last-child { border-right: 0; }
+      tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
+      thead th { position: sticky; top: 0; z-index: 1; background: var(--wp-dark); color: #f5f7f8; font-family: var(--mono); }
+      tbody th { width: 12.5rem; background: var(--surface-2); color: var(--ink); }
+      .yes { color: var(--git); font-weight: 700; }
+      .no { color: var(--red); font-weight: 700; }
+      .maybe { color: var(--amber); font-weight: 700; }
+      .table-note { margin: .75rem 0 0; color: var(--muted); font-size: .88rem; }
+
+      .decision-list, .runbook, .dynamic-grid, .infra-grid, .mistakes { display: grid; gap: 1rem; }
+      .decision-list { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 1rem; }
+      .decision { padding: 1rem; border: 1px solid var(--line); background: var(--surface); }
+      .decision strong { display: block; margin-bottom: .4rem; color: var(--cyan); }
+
+      .runbook { counter-reset: run; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .step { position: relative; min-width: 0; padding: 1.2rem 1.2rem 1.2rem 4rem; border: 1px solid var(--line); background: var(--surface); }
+      .step::before {
+        counter-increment: run;
+        content: counter(run, decimal-leading-zero);
+        position: absolute;
+        top: 1.15rem;
+        left: 1rem;
+        color: var(--git);
+        font: 800 1.1rem/1 var(--mono);
+      }
+      .step p { margin: .35rem 0; }
+      .gotcha { color: var(--red); font-size: .9rem; }
+      .gotcha::before { content: "GOTCHA  "; font: 800 .7rem/1 var(--mono); letter-spacing: .08em; }
+
+      .dynamic-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .dynamic-card { padding: 1rem; border: 1px solid var(--line); background: var(--surface); }
+      .dynamic-card .arrow { color: var(--git); font-family: var(--mono); }
+
+      .fleet-table td:first-child a { font-weight: 800; }
+      .deploy-a { color: var(--cyan); }
+      .deploy-b { color: var(--violet); }
+      .operator-stack { display: grid; gap: .8rem; }
+      details.operator { overflow: clip; }
+      details.operator summary {
+        display: grid;
+        grid-template-columns: minmax(240px, 1fr) auto auto;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem 1.2rem;
+        cursor: pointer;
+        list-style: none;
+        border-left: 7px solid var(--accent, var(--git));
+      }
+      details.operator summary::-webkit-details-marker { display: none; }
+      details.operator summary::after { content: "+"; color: var(--accent, var(--git)); font: 800 1.5rem/1 var(--mono); }
+      details.operator[open] summary::after { content: "−"; }
+      details.operator[open] summary { background: var(--surface-2); border-bottom: 1px solid var(--line); }
+      .operator-body { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; padding: 1.2rem; }
+      .operator-body h4 { margin: 0 0 .35rem; color: var(--accent, var(--cyan)); font: 800 .76rem/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+      .operator-body p, .operator-body ul { margin: 0; }
+      .operator-body ul { padding-left: 1.1rem; }
+      .rack-id { font-family: var(--mono); font-weight: 800; }
+
+      .infra-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .infra { padding: 1rem; border-top: 4px solid var(--accent, var(--cyan)); background: var(--surface); }
+
+      .mistakes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .mistake { padding: 1rem; border-left: 5px solid var(--red); }
+      .mistake strong { display: block; margin-bottom: .35rem; color: var(--red); }
+
+      .sources { columns: 2; column-gap: 3rem; }
+      .sources li { break-inside: avoid; margin-bottom: .6rem; }
+      .related { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; }
+      .related a { display: block; padding: .9rem; border: 1px solid var(--line); background: var(--surface); color: var(--ink); text-decoration: none; }
+      .related a:hover { border-color: var(--cyan); }
+
+      footer { padding: 2rem 0 3rem; border-top: 1px solid var(--line); color: var(--muted); }
+      footer .shell { display: grid; grid-template-columns: 1fr auto; gap: 1rem; }
+      footer p { margin: .25rem 0; }
+      .verified { color: var(--git); font-family: var(--mono); }
+    }
+
+    @layer utilities {
+      .muted { color: var(--muted); }
+      .wp { --accent: var(--wp); }
+      .astro { --accent: #ff5d01; }
+      .eleventy { --accent: var(--git); }
+      .next { --accent: var(--violet); }
+      .raw { --accent: var(--cyan); }
+      .cfw { --accent: #d8ab2d; }
+      .dv { --accent: #e06c75; }
+      .wr { --accent: #4bc0c8; }
+      .vellum { --accent: #a985e8; }
+      .wpai { --accent: #6dd58c; }
+      .nowrap { white-space: nowrap; }
+    }
+
+    @media (max-width: 1000px) {
+      .quick-grid, .section-head { grid-template-columns: 1fr; }
+      .cards, .dynamic-grid, .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .decision-list, .infra-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 650px) {
+      .shell { width: min(100% - 1rem, 1480px); }
+      .topline .shell, footer .shell { grid-template-columns: 1fr; flex-direction: column; }
+      .cards, .dynamic-grid, .runbook, .mistakes, .related, .operator-body, .decision-list, .infra-grid { grid-template-columns: 1fr; }
+      details.operator summary { grid-template-columns: 1fr auto; }
+      details.operator summary .badge { display: none; }
+      .hero { padding-top: 2rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+    @media print {
+      :root { color-scheme: light; }
+      body { background: #fff; color: #111; font-size: 9pt; }
+      .topline { display: none; }
+      section { padding: 1.2rem 0; break-inside: avoid; }
+      .panel, .card, .operator, .mistake, .table-wrap { box-shadow: none; }
+      details:not([open]) > *:not(summary) { display: block; }
+      a { color: #111; text-decoration: none; }
+      a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 7pt; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="topline" aria-label="Collection navigation">
+    <div class="shell">
+      <a href="index.php">← DAVID VEKSLER CHEATSHEETS</a>
+      <a class="status" href="#fleet">FLEET STATUS: 5 STATIC SITES / VERIFIED 2026-08-14</a>
+    </div>
+  </nav>
+
+  <header class="hero shell">
+    <p class="eyebrow">Operator reference · migration runbook · five production exits</p>
+    <h1>Life After WordPress:<br>Running Five Sites With No CMS</h1>
+    <p class="lede">WordPress was the right answer for a long time, and it remains the right answer when many nontechnical editors need a browser UI. But for an agent-operated site, its three core jobs now have simpler replacements that are versioned, inspectable, and portable.</p>
+    <p class="thesis"><span class="strike">CMS = editor + database + theme</span><br>new stack = git + files + model</p>
+
+    <figure class="teardown-wrap" aria-labelledby="teardown-caption">
+      <svg class="teardown" viewBox="0 0 1200 630" role="img" aria-labelledby="svg-title svg-desc">
+        <title id="svg-title">The CMS teardown</title>
+        <desc id="svg-desc">Three WordPress jobs, editor, database, and theme, are unplugged and connected to git, plain files, and an AI design agent.</desc>
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#10171c"/><stop offset="1" stop-color="#071014"/></linearGradient>
+          <linearGradient id="wpFade" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#0073aa"/><stop offset="1" stop-color="#00547d"/></linearGradient>
+          <linearGradient id="newFade" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#1e8f5b"/><stop offset="1" stop-color="#43c887"/></linearGradient>
+          <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#30404a" stroke-width="1" opacity=".38"/></pattern>
+        </defs>
+        <rect width="1200" height="630" rx="16" fill="url(#bg)"/>
+        <rect width="1200" height="630" rx="16" fill="url(#grid)"/>
+        <text x="60" y="62" fill="#8fa1ab" font-size="18" letter-spacing="4">THE DECOMMISSIONING</text>
+        <text x="60" y="102" fill="#f0f5f7" font-size="30" font-weight="800">UNPLUG THE CMS. KEEP THE JOBS.</text>
+        <text x="60" y="135" fill="#92a6b1" font-size="17">The interface changes. Editorial control, durable data, and design still exist.</text>
+
+        <g transform="translate(55 180)">
+          <rect width="330" height="112" rx="8" fill="#23282d" stroke="#48616f" stroke-width="2"/>
+          <rect width="12" height="112" rx="6" fill="url(#wpFade)"/>
+          <circle cx="52" cy="38" r="21" fill="#0073aa"/><text x="52" y="46" text-anchor="middle" fill="#fff" font-size="25" font-family="Georgia">W</text>
+          <text x="88" y="35" fill="#9eb0b9" font-size="13" letter-spacing="3">WORDPRESS JOB 01</text>
+          <text x="88" y="68" fill="#fff" font-size="27" font-weight="800">EDITOR</text>
+          <text x="88" y="92" fill="#81949e" font-size="14">wp-admin · roles · revisions</text>
+          <line x1="8" y1="106" x2="320" y2="8" stroke="#ff6678" stroke-width="4" opacity=".8"/>
+
+          <rect y="137" width="330" height="112" rx="8" fill="#23282d" stroke="#48616f" stroke-width="2"/>
+          <rect y="137" width="12" height="112" rx="6" fill="url(#wpFade)"/>
+          <circle cx="52" cy="175" r="21" fill="#0073aa"/><path d="M39 168h26v16H39zm4-5h18v5H43z" fill="#fff"/>
+          <text x="88" y="172" fill="#9eb0b9" font-size="13" letter-spacing="3">WORDPRESS JOB 02</text>
+          <text x="88" y="205" fill="#fff" font-size="27" font-weight="800">DATABASE</text>
+          <text x="88" y="229" fill="#81949e" font-size="14">MySQL · posts · builder data</text>
+          <line x1="8" y1="243" x2="320" y2="145" stroke="#ff6678" stroke-width="4" opacity=".8"/>
+
+          <rect y="274" width="330" height="112" rx="8" fill="#23282d" stroke="#48616f" stroke-width="2"/>
+          <rect y="274" width="12" height="112" rx="6" fill="url(#wpFade)"/>
+          <circle cx="52" cy="312" r="21" fill="#0073aa"/><path d="M39 301h26v22H39zm5 5h16v3H44zm0 7h11v3H44z" fill="#fff"/>
+          <text x="88" y="309" fill="#9eb0b9" font-size="13" letter-spacing="3">WORDPRESS JOB 03</text>
+          <text x="88" y="342" fill="#fff" font-size="27" font-weight="800">THEME</text>
+          <text x="88" y="366" fill="#81949e" font-size="14">PHP · CSS · builder UI</text>
+          <line x1="8" y1="380" x2="320" y2="282" stroke="#ff6678" stroke-width="4" opacity=".8"/>
+        </g>
+
+        <g fill="none" stroke="#4bd88e" stroke-width="5" filter="url(#glow)">
+          <path d="M395 236 C475 236 475 236 555 236"/>
+          <path d="M395 373 C475 373 475 373 555 373"/>
+          <path d="M395 510 C475 510 475 510 555 510"/>
+        </g>
+        <g fill="#4bd88e">
+          <path d="M548 226l18 10-18 10z"/><path d="M548 363l18 10-18 10z"/><path d="M548 500l18 10-18 10z"/>
+        </g>
+        <g fill="#0d1418" stroke="#4bd88e" stroke-width="3">
+          <rect x="435" y="217" width="42" height="38" rx="5"/><rect x="435" y="354" width="42" height="38" rx="5"/><rect x="435" y="491" width="42" height="38" rx="5"/>
+        </g>
+        <g fill="#4bd88e"><circle cx="446" cy="236" r="4"/><circle cx="466" cy="236" r="4"/><circle cx="446" cy="373" r="4"/><circle cx="466" cy="373" r="4"/><circle cx="446" cy="510" r="4"/><circle cx="466" cy="510" r="4"/></g>
+
+        <g transform="translate(570 180)">
+          <rect width="575" height="112" rx="8" fill="#12221b" stroke="#3fc987" stroke-width="2"/>
+          <rect width="12" height="112" rx="6" fill="url(#newFade)"/>
+          <circle cx="52" cy="56" r="24" fill="#163d2b" stroke="#4bd88e" stroke-width="2"/>
+          <circle cx="44" cy="48" r="5" fill="#4bd88e"/><circle cx="61" cy="42" r="5" fill="#4bd88e"/><circle cx="62" cy="69" r="5" fill="#4bd88e"/><path d="M47 48l10-5m-9 9l10 14" stroke="#4bd88e" stroke-width="3"/>
+          <text x="94" y="36" fill="#75dba8" font-size="13" letter-spacing="3">REPLACEMENT 01</text>
+          <text x="94" y="70" fill="#fff" font-size="30" font-weight="800">GIT IS THE EDITOR</text>
+          <text x="94" y="94" fill="#a7bbb0" font-size="14">diff · review · commit · rollback · audit trail</text>
+          <text x="530" y="67" text-anchor="end" fill="#4bd88e" font-size="19">+ PR</text>
+
+          <rect y="137" width="575" height="112" rx="8" fill="#12221b" stroke="#3fc987" stroke-width="2"/>
+          <rect y="137" width="12" height="112" rx="6" fill="url(#newFade)"/>
+          <circle cx="52" cy="193" r="24" fill="#163d2b" stroke="#4bd88e" stroke-width="2"/>
+          <path d="M39 181h27v7H39zm0 10h27v7H39zm0 10h27v7H39z" fill="#4bd88e"/>
+          <text x="94" y="173" fill="#75dba8" font-size="13" letter-spacing="3">REPLACEMENT 02</text>
+          <text x="94" y="207" fill="#fff" font-size="30" font-weight="800">FILES ARE THE DATABASE</text>
+          <text x="94" y="231" fill="#a7bbb0" font-size="14">content/*.md · data/*.json · evidence.json</text>
+
+          <rect y="274" width="575" height="112" rx="8" fill="#12221b" stroke="#3fc987" stroke-width="2"/>
+          <rect y="274" width="12" height="112" rx="6" fill="url(#newFade)"/>
+          <circle cx="52" cy="330" r="24" fill="#163d2b" stroke="#4bd88e" stroke-width="2"/>
+          <path d="M39 340l8-25 7 13 11-18 2 30z" fill="none" stroke="#4bd88e" stroke-width="3"/>
+          <text x="94" y="310" fill="#75dba8" font-size="13" letter-spacing="3">REPLACEMENT 03</text>
+          <text x="94" y="344" fill="#fff" font-size="30" font-weight="800">THE MODEL IS THE DESIGNER</text>
+          <text x="94" y="368" fill="#a7bbb0" font-size="14">spec · render · browser QA · iterate</text>
+        </g>
+        <text x="60" y="596" fill="#92a6b1" font-size="15">REQUEST TIME: quiet HTML</text>
+        <text x="1140" y="596" text-anchor="end" fill="#75dba8" font-size="15">BUILD TIME: where the motion moved</text>
+      </svg>
+      <figcaption id="teardown-caption" class="muted" style="padding:.8rem 1rem">The interface changes; the responsibilities do not. Preserve review, data integrity, design quality, and rollback explicitly.</figcaption>
+    </figure>
+  </header>
+
+  <main>
+    <section class="quick" id="quick-reference" aria-labelledby="quick-heading">
+      <div class="shell">
+        <p class="section-no">00 / Quick reference</p>
+        <h2 id="quick-heading">Should this site be static?</h2>
+        <div class="quick-grid">
+          <div class="panel">
+            <div class="table-wrap">
+              <table style="min-width:720px">
+                <thead><tr><th>Constraint</th><th>Static works when…</th><th>Keep a CMS/app when…</th></tr></thead>
+                <tbody>
+                  <tr><th>Publishing rate</th><td><span class="yes">✓</span> A build per change is acceptable, even dozens per day.</td><td><span class="no">✕</span> Sub-second publication or request-time inventory is required.</td></tr>
+                  <tr><th>Editors</th><td><span class="yes">✓</span> Editors can use git, a repository UI, or agents that open PRs.</td><td><span class="no">✕</span> Many nontechnical editors require visual drafts, roles, and scheduling.</td></tr>
+                  <tr><th>Personalization</th><td><span class="yes">✓</span> The document is the same for everyone; small widgets can call an API.</td><td><span class="no">✕</span> Most HTML differs by user, account, geography, or entitlements.</td></tr>
+                  <tr><th>Auth/accounts</th><td><span class="yes">✓</span> Auth is absent or isolated in an external service.</td><td><span class="no">✕</span> The core product is a signed-in dashboard or user-generated workspace.</td></tr>
+                  <tr><th>Forms</th><td><span class="yes">✓</span> A small PHP endpoint or edge Worker can validate and forward submissions.</td><td><span class="no">✕</span> Forms mutate complex relational state or power approval workflows.</td></tr>
+                  <tr><th>Search/comments</th><td><span class="yes">✓</span> A client index handles a bounded corpus; comments can be dropped or outsourced.</td><td><span class="no">✕</span> Search needs live permissions/ranking or discussion is the product.</td></tr>
+                  <tr><th>E-commerce</th><td><span class="maybe">△</span> Static product pages hand off checkout to a hosted commerce service.</td><td><span class="no">✕</span> Pricing, stock, carts, and fulfillment are request-time application logic.</td></tr>
+                  <tr><th>Operations</th><td><span class="yes">✓</span> Git, Node, CI, redirects, and server config are owned deliberately.</td><td><span class="no">✕</span> A managed CMS is cheaper than maintaining the build/deploy path.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <aside class="panel" aria-labelledby="fleet-strip-heading">
+            <h2 id="fleet-strip-heading">Fleet at a glance</h2>
+            <div class="fleet-strip">
+              <a class="fleet-link cfw" href="#cfw"><span>coloradofirearmswatch.org</span><small>Astro · rsync</small></a>
+              <a class="fleet-link dv" href="#david"><span>davidveksler.com</span><small>Astro · rsync</small></a>
+              <a class="fleet-link wr" href="#wallet"><span>WalletRecovery.info</span><small>11ty · push/build</small></a>
+              <a class="fleet-link vellum" href="#vellum"><span>vellum.capital</span><small>11ty · push/build</small></a>
+              <a class="fleet-link wpai" href="#whopays"><span>whopaysforai.org</span><small>Next/vinext · snapshot</small></a>
+            </div>
+            <p class="table-note">Exact versions, counts, commands, and deploy gates below were re-read from each repository on 2026-08-14.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section id="cms-teardown" aria-labelledby="teardown-heading">
+      <div class="shell">
+        <div class="section-head">
+          <div><p class="section-no">01 / Mental model</p><h2 id="teardown-heading">What does a CMS actually do?</h2></div>
+          <p>A CMS bundles several responsibilities behind one UI. A static migration succeeds when each responsibility gets an explicit new home.</p>
+        </div>
+        <div class="cards">
+          <article class="card wp"><span class="tag">Past: editor</span><h3>Browser editing hid change control</h3><p>WordPress provides roles, drafts, previews, revisions, and a Publish button. That is useful when the browser is the team’s shared workspace.</p><p class="example"><strong>Replacement:</strong> git commits are revisions, PRs are review, branch previews are drafts, and a deploy script is Publish. The approval boundary becomes inspectable.</p></article>
+          <article class="card eleventy"><span class="tag">Present: git</span><h3>Git becomes the editorial system</h3><p>A correction is a diff with an author, timestamp, review trail, and exact rollback point. Agents can propose changes without acquiring production credentials.</p><p class="example"><strong>Fleet proof:</strong> CFW’s scheduled watchers change versioned data through PRs; the public site changes only after review and deployment.</p></article>
+          <article class="card wp"><span class="tag">Past: database</span><h3>MySQL made content queryable, but opaque</h3><p>Posts and metadata are structured, but page builders often serialize layout into database fields. A visual Elementor page is difficult to grep, diff, or review as code.</p><p class="example"><strong>When to keep it:</strong> request-time relations, user writes, complex permissions, or a genuinely collaborative editorial database.</p></article>
+          <article class="card raw"><span class="tag">Present: files</span><h3>Plain files become durable data</h3><p>Markdown, HTML, JSON, YAML, and TypeScript modules are portable records. The repository holds content and the rules that render it.</p><p class="example"><strong>Fleet proof:</strong> CFW changed from <code>list-2026-05-15.json</code> to <code>list-2026-07-30.json</code>; the latter contains 872 entries. A fix is a reviewed patch, not a phpMyAdmin session.</p></article>
+          <article class="card wp"><span class="tag">Past: theme</span><h3>The theme bundled design decisions</h3><p>PHP templates, widgets, CSS, and page-builder controls let a human assemble pages without writing the underlying system.</p><p class="example"><strong>Cost:</strong> the abstraction becomes an obstacle when an agent must reason about serialized blocks, plugin shortcodes, and theme overrides together.</p></article>
+          <article class="card next"><span class="tag">Present: model</span><h3>The model works from source to rendered page</h3><p>An AI collaborator can create the design, implement it in plain source, render in a real browser, test at 375 px, and iterate against a binding spec.</p><p class="example"><strong>Boundary:</strong> the model is not the approval gate. Automated checks and a human-authorized deploy preserve the separation between drafting and publishing.</p></article>
+          <article class="card astro"><span class="tag">Control</span><h3>Build time replaces request time</h3><p>Pages, feeds, indexes, and route lists are computed once during a build. Visitors receive ordinary HTML instead of invoking PHP and database queries per request.</p><p class="example"><strong>Tradeoff:</strong> freshness now depends on rebuild triggers. A “static” fleet may run more cron and CI automation than the old site.</p></article>
+          <article class="card eleventy"><span class="tag">Portability</span><h3>The output is boring on purpose</h3><p>A complete build is a directory of HTML, CSS, images, feeds, and small scripts. nginx can serve it without framework-aware infrastructure.</p><p class="example"><strong>Fleet proof:</strong> all five sites terminate at a self-hosted nginx origin behind Cloudflare, without Pages, Vercel, or Netlify.</p></article>
+          <article class="card wp"><span class="tag">Fit, not dogma</span><h3>WordPress still wins some decisions</h3><p>Keep it when many people need a visual editor, plugins already solve the business workflow, or the organization cannot own a code-based publishing pipeline.</p><p class="example"><strong>Rule:</strong> migrate only when the new operating model is cheaper and clearer than the CMS it replaces.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="generator-choice" aria-labelledby="generator-heading">
+      <div class="shell">
+        <div class="section-head">
+          <div><p class="section-no">02 / Decision framework</p><h2 id="generator-heading">Which static site generator should I use?</h2></div>
+          <p>This is an operator comparison of the five stacks actually in use. Hugo, Jekyll, and Gatsby may also fit, but adding names does not improve this decision.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Criterion</th><th>Astro 7/5</th><th>Eleventy 3.1.6</th><th>Next.js 16 + vinext</th><th>Raw agent-written HTML</th><th>Stay on WordPress</th></tr></thead>
+            <tbody>
+              <tr><th>Mental model</th><td>File routes + components + build-time data; hydrate only named islands.</td><td>Transform a directory of templates and data into an output directory.</td><td>React App Router rendered through a Next-compatible Vite runtime, then crawled here.</td><td>The source file is the page; nginx serves it unchanged.</td><td>PHP application resolves requests from a database, theme, and plugins.</td></tr>
+              <tr><th>Templating</th><td><code>.astro</code> components, layouts, framework components, TypeScript.</td><td>Nunjucks, Liquid, Markdown, HTML, JS, and more; engines configurable per format.</td><td>React Server and Client Components in <code>app/</code>.</td><td>HTML + CSS + optional JS; includes require manual duplication or generation.</td><td>PHP theme templates, block editor, shortcodes, page builders.</td></tr>
+              <tr><th>Content formats</th><td>Markdown/MDX collections, JSON, APIs, custom content loaders.</td><td>Markdown, HTML, Nunjucks, JSON/YAML data, arbitrary template languages.</td><td>TypeScript/JS modules, fetched data, MDX with setup; this fleet uses TS.</td><td>Anything embedded or generated into the file.</td><td>Posts, pages, custom post types, media, fields, taxonomies.</td></tr>
+              <tr><th>900 pages from JSON</th><td><span class="yes">Strong.</span> <code>getStaticPaths()</code> plus typed loaders. CFW builds one route per record.</td><td><span class="yes">Strong.</span> Pagination/data cascade works, but custom relationships take code.</td><td><span class="yes">Strong.</span> Generate/discover route params, then prerender or crawl.</td><td><span class="maybe">Possible.</span> Write a generator script first; raw HTML alone has no loop.</td><td><span class="maybe">Possible.</span> Import records or write a plugin; runtime queries remain.</td></tr>
+              <tr><th>Client JS by default</th><td><span class="yes">None for static components.</span> JavaScript ships only with explicit <code>client:*</code> islands.</td><td><span class="yes">None.</span> Only authored scripts ship.</td><td><span class="maybe">Some.</span> Client Components and navigation/hydration can add bundles; Server Components do not.</td><td><span class="yes">None.</span> Only authored scripts ship.</td><td><span class="maybe">Varies.</span> Theme and plugins decide.</td></tr>
+              <tr><th>Interactivity</th><td>React/Vue/Svelte/etc. islands can coexist with static HTML.</td><td>Bring vanilla JS, Web Components, or an island helper; no prescribed client runtime.</td><td>React is first-class; easiest path if the static site may become an application.</td><td>Native HTML first; hand-author any behavior.</td><td>Plugin ecosystem and request-time PHP; broadest turnkey choice.</td></tr>
+              <tr><th>Build behavior here</th><td>Hundreds of data routes plus content; CI guards minimum page counts.</td><td>Dozens of imported posts/pages; simple one-command builds to <code>_site/</code>.</td><td>Build a runnable bundle, start locally, crawl deterministic routes into flat files.</td><td>No build unless validation, screenshots, or generation scripts are added.</td><td>No full-site build; each request executes the app unless cached.</td></tr>
+              <tr><th>Config surface</th><td>Moderate: integrations, content schemas/loaders, routes, client directives.</td><td>Small core, but the data cascade and template-engine interactions deserve care.</td><td>Largest: React, Next semantics, vinext/Vite, crawl rules, asset rewriting.</td><td>Tiny at first; duplication and custom tooling grow with the corpus.</td><td>Low for basic use; theme/plugin/server interactions grow operationally.</td></tr>
+              <tr><th>Learning curve</th><td>Comfortable for component-oriented frontend developers.</td><td>Fast for HTML/Markdown work; subtle configuration is the main edge.</td><td>Highest in this set: React, server/client boundaries, routing, runtime assumptions.</td><td>Lowest for one page; highest when inventing your own framework accidentally.</td><td>Lowest for nontechnical publishing; PHP/theme internals are a separate skill.</td></tr>
+              <tr><th>Agent friendliness</th><td><span class="yes">High.</span> Components and data are explicit, typed, and diffable.</td><td><span class="yes">Very high.</span> Imported bodies can remain plain while layouts stay templated.</td><td><span class="maybe">Medium-high.</span> Explicit code, but more layers and generated artifacts.</td><td><span class="yes">Highest per page.</span> The model can own the complete file.</td><td><span class="no">Low with builders.</span> Opaque DB blobs and plugin state resist diffs.</td></tr>
+              <tr><th>Ecosystem risk</th><td>Framework and integration majors can move; static output remains portable.</td><td>Small core and old-web defaults reduce lock-in; template packages can still drift.</td><td>Highest churn and dependency surface here; vinext adds compatibility risk.</td><td>Browser standards are durable; your bespoke conventions become the risk.</td><td>Mature, vast ecosystem; plugin abandonment and compatibility are recurring work.</td></tr>
+              <tr><th>Runtime/hosting</th><td>Default output is static; serve from any file server when no route opts into runtime rendering.</td><td>Static output directory; host almost anywhere.</td><td>Official static export exists, but this fleet instead snapshots a local vinext server.</td><td>Any static server.</td><td>Requires PHP + database unless a caching/export layer is added.</td></tr>
+              <tr><th>Best fit</th><td>Structured, data-heavy reference with selected interactive islands.</td><td>Content migration where imported Markdown/HTML should stay close to source.</td><td>React product that is static today but may gain application behavior.</td><td>One-off terminal reference, landing page, or deliberately standalone artifact.</td><td>Multi-editor publishing, plugin-centric commerce/workflows, low-code ownership.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">Versions are the locally resolved fleet versions on 2026-08-14: Astro 7.1.6 and 5.18.2; Eleventy 3.1.6; Next.js 16.3.0 with vinext 0.0.45 declared. Behavior is grounded in current official framework documentation and the repositories listed in Sources.</p>
+        <div class="decision-list" aria-label="Generator recommendations">
+          <div class="decision"><strong>Use Astro when…</strong> structured data generates many routes and only a few views need JavaScript. CFW proves the pattern with 872 firearm records, 64 counties, and React islands.</div>
+          <div class="decision"><strong>Use Eleventy when…</strong> the migration is mostly WordPress-exported Markdown/HTML and you want the content path nearly inert. WalletRecovery and Vellum prove both CommonJS and ESM forms.</div>
+          <div class="decision"><strong>Use Next when…</strong> React/App Router is already the product language or the site may grow into an app. WhoPaysForAI proves the static-snapshot route, and its empty schema warns against assuming scaffolding is live.</div>
+          <div class="decision"><strong>Use raw HTML when…</strong> one file is the product and a model can maintain the whole thing. This cheatsheet collection proves the terminal-reference shape.</div>
+          <div class="decision"><strong>Keep WordPress when…</strong> visual collaboration, browser-native scheduling, plugin workflows, or many editors matter more than source-level review.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="migration" aria-labelledby="migration-heading">
+      <div class="shell">
+        <div class="section-head">
+          <div><p class="section-no">03 / Ordered runbook</p><h2 id="migration-heading">How do I migrate WordPress to a static site?</h2></div>
+          <p>Run these as ten workstreams. A beautiful homepage is not a migration if old URLs, feeds, forms, or media break.</p>
+        </div>
+        <div class="runbook">
+          <article class="step"><h3>Inventory before exporting</h3><p>Capture published URLs, post types, taxonomies, forms, feeds, redirects, plugins that create public routes, and media references.</p><p><strong>Fleet example:</strong> preserve a crawler output and treat it as the expected-route set.</p><p class="gotcha">The WordPress menu is not a URL inventory. Search engines and backlinks know routes that navigation no longer exposes.</p></article>
+          <article class="step"><h3>Export WXR and retain it</h3><p>Use Tools → Export to download WordPress eXtended RSS. It can include posts, pages, custom post types, comments, fields, categories, tags, taxonomies, and users.</p><p><strong>Fleet example:</strong> Vellum retains <code>vellumcapital.WordPress.2026-07-10.xml</code> and exposes <code>npm run import:wordpress</code>.</p><p class="gotcha">WXR references media URLs; it is not necessarily a byte-for-byte archive of uploads.</p></article>
+          <article class="step"><h3>Choose the media survival strategy</h3><p><strong>Passthrough:</strong> copy the complete <code>wp-content</code> tree so old URLs survive. <strong>Rewrite:</strong> download selected assets, optimize them, and update HTML.</p><p><strong>Fleet example:</strong> Vellum passes root <code>wp-content/</code> through; WalletRecovery uses <code>download_media.py</code> and <code>optimize_images.py</code> for winning WebP derivatives.</p><p class="gotcha">Never rewrite URLs until every referenced byte is local and verified.</p></article>
+          <article class="step"><h3>Freeze the URL contract</h3><p>Centralize new permalink rules and turn every legacy route into a checked 301 or a deliberate 410. URL preservation is the SEO-critical path.</p><p><strong>Fleet example:</strong> WalletRecovery owns permalinks in <code>src/lib/routing.js</code> and checks 53 active rules in <code>deploy/redirects.map</code>; Vellum pairs <code>legacyRoutes.json</code> with nginx redirects.</p><p class="gotcha">A missing redirect map is not cleanup. It discards accumulated backlinks, bookmarks, and crawler history.</p></article>
+          <article class="step"><h3>Disable templating over imported bodies</h3><p>Third-party or WordPress-exported bodies may contain braces, shortcodes, or syntax that resembles executable templates.</p><pre><code>// Eleventy: treat imported Markdown as content, not code
+markdownTemplateEngine: false</code></pre><p><strong>Fleet example:</strong> WalletRecovery disables Markdown templating; Vellum disables both Markdown and HTML templating while <code>.njk</code> pages still render as Nunjucks.</p><p class="gotcha">The Eleventy default for Markdown and HTML preprocessing is Liquid. Leaving it on can mutate or execute imported text.</p></article>
+          <article class="step"><h3>Normalize dates and frontmatter</h3><p>Coerce WordPress strings such as <code>2026-07-09 14:30:00</code> to explicit UTC dates and validate required metadata.</p><p><strong>Fleet example:</strong> WalletRecovery’s custom YAML parser converts that form to <code>2026-07-09T14:30:00Z</code>.</p><p class="gotcha">Locale-dependent parsing can change dates across Windows, Linux, or server time zones.</p></article>
+          <article class="step"><h3>Replace dynamic features explicitly</h3><p>Assign a static-era answer to forms, search, comments, newsletters, account pages, and scheduled publication. See the next section.</p><p><strong>Fleet example:</strong> one PHP contact endpoint survives WalletRecovery’s exit; Vellum routes its investor inquiry to a Worker.</p><p class="gotcha">“Static” describes page delivery, not an obligation to delete every server or edge function.</p></article>
+          <article class="step"><h3>Own RSS, sitemap, robots, and AI routes</h3><p>Generate or hand-author discovery files and test their URLs and MIME types.</p><p><strong>Fleet example:</strong> Vellum uses <code>@11ty/eleventy-plugin-rss</code>; Astro sites use <code>@astrojs/sitemap</code>; WalletRecovery hand-builds feed/sitemap templates and serves <code>llms.txt</code> plus <code>llms-full.txt</code>.</p><p class="gotcha">A valid XML file at the wrong URL is still a broken feed.</p></article>
+          <article class="step"><h3>Put quality gates inside the build</h3><p>Make broken claims, SEO metadata, links, redirects, routes, schema, and asset references fail before transfer.</p><p><strong>Fleet example:</strong> davidveksler.com runs <code>lint-claims.mjs</code>, Astro build, then <code>seo-check.mjs</code> in one <code>npm run build</code>. WhoPaysForAI’s build runs its SEO checker too.</p><p class="gotcha">A check documented but not wired into CI/build will eventually be skipped.</p></article>
+          <article class="step"><h3>Cut over, verify, archive, decommission</h3><p>Build the final snapshot, swap the origin vhost/DNS path, test top routes and 404s through Cloudflare, preserve the export, then remove the old app.</p><p><strong>Fleet example:</strong> guarded deploy scripts verify distinctive live content; WhoPaysForAI byte-compares the public homepage to the local snapshot so stale cache fails closed.</p><p class="gotcha">Keep the old WordPress private until redirects, forms, feeds, and live verification pass. Then retire PHP/MySQL/plugin patching and the admin-login surface.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="dynamic" aria-labelledby="dynamic-heading">
+      <div class="shell">
+        <div class="section-head">
+          <div><p class="section-no">04 / The dynamic 10%</p><h2 id="dynamic-heading">How do you replace WordPress forms, search, and RSS?</h2></div>
+          <p>Keep the document static and isolate the mutation or query behind the smallest tool that can own it.</p>
+        </div>
+        <div class="dynamic-grid">
+          <article class="dynamic-card"><h3>Contact / lead form</h3><p><span class="arrow">need → answer:</span> validate one POST with a tiny PHP handler or edge Worker; verify Turnstile server-side.</p><p><strong>Fleet:</strong> WalletRecovery <code>api/contact.php</code>; Vellum <code>workers/investor-inquiry</code>.</p><p class="gotcha">A Turnstile widget without Siteverify validation protects nothing.</p></article>
+          <article class="dynamic-card"><h3>Search</h3><p><span class="arrow">need → answer:</span> ship a bounded JSON index and query it in the browser.</p><p><strong>Fleet:</strong> CFW uses Fuse.js 7 for the firearm lookup with a deliberately tuned threshold.</p><p class="gotcha">Do not ship private fields or a multi-megabyte corpus merely because client search is convenient.</p></article>
+          <article class="dynamic-card"><h3>Newsletter / alerts</h3><p><span class="arrow">need → answer:</span> accept subscriptions at the edge; let a reviewed workflow render and dispatch alerts.</p><p><strong>Fleet:</strong> CFW’s alert workflow is event-driven and writes evidence/status back through repository-controlled paths.</p><p class="gotcha">Subscriber PII never belongs in git.</p></article>
+          <article class="dynamic-card"><h3>Scheduled freshness</h3><p><span class="arrow">need → answer:</span> cron Actions fetch authoritative sources, diff versioned data, and open PRs or stage records.</p><p><strong>Fleet:</strong> CFW has four active scheduled watcher/recheck workflows plus an event-driven alert dispatcher; WhoPaysForAI ingests RSS twice daily into a JSONL corpus.</p><p class="gotcha">Scheduled ingest is not automatic truth. Keep provenance, anomaly limits, and publication gates.</p></article>
+          <article class="dynamic-card"><h3>Comments</h3><p><span class="arrow">need → answer:</span> drop them when they are not the product; otherwise outsource moderation and identity.</p><p><strong>Fleet:</strong> none of these static reference sites needs a local comment database.</p><p class="gotcha">A third-party comment widget adds privacy, performance, and moderation costs.</p></article>
+          <article class="dynamic-card"><h3>RSS / sitemap / robots</h3><p><span class="arrow">need → answer:</span> emit static discovery documents during the build from the same route/content data.</p><p><strong>Fleet:</strong> hand-built Nunjucks, Eleventy RSS plugin, and Astro sitemap integration all coexist.</p><p class="gotcha">Test generated URLs after redirects, not just XML syntax.</p></article>
+          <article class="dynamic-card"><h3>AI-agent discovery</h3><p><span class="arrow">need → answer:</span> publish a concise <code>llms.txt</code>, optionally a full content map, and link it from page metadata/robots.</p><p><strong>Fleet:</strong> WalletRecovery and Vellum treat both routes as first-class build outputs.</p><p class="gotcha">Discovery files summarize public content; they are not a place for prompts, secrets, or private runbooks.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="fleet" aria-labelledby="fleet-heading">
+      <div class="shell">
+        <div class="section-head">
+          <div><p class="section-no">05 / Fleet control board</p><h2 id="fleet-heading">Five sites, three generators, two deploy patterns</h2></div>
+          <p>Repository-authoritative snapshot as of 2026-08-14. The counts and versions will drift; the commands and approval boundaries are the durable part.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="fleet-table">
+            <thead><tr><th>Site</th><th>Generator</th><th>Content model</th><th>Scale</th><th>Build / test</th><th>Quality + CI</th><th>Deploy pattern</th><th>Dynamic companions</th><th>Primary gotcha</th></tr></thead>
+            <tbody>
+              <tr><td><a href="https://coloradofirearmswatch.org/">coloradofirearmswatch.org</a></td><td>Astro 7.1.6 + React 19 + Fuse.js 7</td><td><code>data/</code> JSON is primary; one <code>updates</code> Markdown collection</td><td>872 current firearm records; 64 counties; 6 litigation cases</td><td><code>npm run build</code><br><code>npm test</code></td><td>Vitest; CI requires ≥64 county and ≥100 firearm routes</td><td class="deploy-a">Guarded local build → rsync → cache purge → live verify</td><td>Watchers, alert dispatch, intake services</td><td>Ignore the stale Pages comment; deploy scripts are authoritative.</td></tr>
+              <tr><td><a href="https://www.davidveksler.com/">davidveksler.com</a></td><td>Astro 5.18.2</td><td><code>work/</code> + <code>pages/</code> Markdown; JSON evidence corpus</td><td>7 case studies; 6 pages; 46 evidence records</td><td><code>npm run build</code></td><td>Claims linter + Astro + SEO checker in the build</td><td class="deploy-a">Guarded local build → rsync exact mirror on bash → live verify</td><td>Separate AI Worker, outside site build</td><td>An uncited or invalid-status claim fails the build by design.</td></tr>
+              <tr><td><a href="https://walletrecovery.info/">WalletRecovery.info</a></td><td>Eleventy 3.1.6, CommonJS</td><td>28 Markdown pages + 49 posts; YAML frontmatter</td><td>77 content files; 53 checked redirect-map rules</td><td><code>npm run build</code><br><code>python scripts/check_links.py</code></td><td>Python link and redirect checkers</td><td class="deploy-b">Guarded <code>git push production</code>; server hook rebuilds</td><td>PHP contact handler + Turnstile</td><td>Branch is <code>master</code>; Markdown templating is off intentionally.</td></tr>
+              <tr><td><a href="https://vellum.capital/">vellum.capital</a></td><td>Eleventy 3.1.6, ESM</td><td>48 WordPress-exported HTML posts; 15 Nunjucks pages</td><td>44.4 MB WXR archive; complete legacy/media route preservation</td><td><code>npm run build</code><br><code>npm run check</code></td><td>Build validator + Worker tests</td><td class="deploy-b"><code>git push production main</code>; server hook builds and checks</td><td>Investor-inquiry Worker</td><td>Deploy Worker before site; both content template engines are off.</td></tr>
+              <tr><td><a href="https://whopaysforai.org/">whopaysforai.org</a></td><td>Next.js 16.3.0 via vinext; React 19.2.8</td><td>TypeScript modules; generated news module from JSONL</td><td>6,034 corpus records; generated module is 5,433 lines</td><td><code>npm run build</code><br><code>npm test</code><br><code>npm run check</code></td><td>SEO, lint, typecheck, Node tests, dependency audits</td><td class="deploy-a">Build → local server → crawl flat HTML → tar/rsync → byte verify</td><td>Intake Worker; twice-daily news ingest</td><td>D1/R2/Drizzle are unused scaffolding; never hand-edit generated news data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="operators" aria-labelledby="operators-heading">
+      <div class="shell">
+        <div class="section-head">
+          <div><p class="section-no">06 / Operator cards</p><h2 id="operators-heading">Open a repo cold and operate it</h2></div>
+          <p>These native accordions are mutually exclusive. Commands are safe local operations unless a deploy line explicitly says it crosses the human approval gate.</p>
+        </div>
+        <div class="operator-stack">
+          <details class="operator cfw" id="cfw" name="fleet" open>
+            <summary><span><span class="rack-id">RACK 01 · CFW</span><br><strong>Structured law/data reference with selective React islands</strong></span><span class="badge">Astro 7.1.6</span></summary>
+            <div class="operator-body">
+              <div><h4>Mental model</h4><p>Git is the database. Typed, absent-file-tolerant loaders read committed JSON at build time; React appears only on named interactive views.</p></div>
+              <div><h4>Add content</h4><p>Edit versioned JSON under <code>data/</code> for lists, counties, litigation, training, or burden records. Human-readable updates live in <code>src/content/updates/</code>.</p></div>
+              <div><h4>Local commands</h4><pre><code>npm run dev
+npm run build
+npm test</code></pre></div>
+              <div><h4>Deploy</h4><p><code>scripts/deploy.ps1</code> or <code>scripts/deploy.sh</code> builds, transfers, purges Cloudflare, and verifies. <strong>Explicit approval required.</strong></p></div>
+              <div><h4>Quality gate</h4><p>Vitest covers search/slug/contrast logic. CI fails if fewer than 64 county or 100 firearm routes build, catching empty-loader regressions.</p></div>
+              <div><h4>Sharp edges</h4><ul><li><code>astro.config.mjs</code> still contains an obsolete Cloudflare Pages comment.</li><li>Five operational automations surround the site: four scheduled watchers/rechecks plus event-driven alert dispatch.</li><li>Pipeline changes arrive through PRs; do not bypass provenance fields.</li></ul></div>
+            </div>
+          </details>
+
+          <details class="operator dv" id="david" name="fleet">
+            <summary><span><span class="rack-id">RACK 02 · DAVIDVEKSLER.COM</span><br><strong>Static portfolio where every material claim has evidence</strong></span><span class="badge">Astro 5.18.2</span></summary>
+            <div class="operator-body">
+              <div><h4>Mental model</h4><p>Markdown presents the work; <code>src/data/evidence.json</code> supplies the claim corpus and allowed status vocabulary.</p></div>
+              <div><h4>Add content</h4><p>Add a case study to <code>src/content/work/</code> or a page to <code>src/content/pages/</code>. Resolve every evidence id and date/grade the claim.</p></div>
+              <div><h4>Local commands</h4><pre><code>npm run dev
+npm run lint:claims
+npm run build</code></pre></div>
+              <div><h4>Deploy</h4><p>The guarded shell/PowerShell wrappers build and verify; the bash path rsyncs <code>dist/</code> with <code>--delete</code>. <strong>Explicit approval required.</strong></p></div>
+              <div><h4>Quality gate</h4><p><code>npm run build</code> means claims linter → Astro build → SEO checker. Current corpus: 7 work items, 6 pages, 46 evidence records.</p></div>
+              <div><h4>Sharp edges</h4><ul><li>Build failure on an uncited/invalid claim is the intended control.</li><li><code>/david/ai-strategy.html</code> is a noindexed redirect stub and deliberately excluded from sitemap.</li><li>The AI Worker is a separate layer, not part of this static build.</li></ul></div>
+            </div>
+          </details>
+
+          <details class="operator wr" id="wallet" name="fleet">
+            <summary><span><span class="rack-id">RACK 03 · WALLETRECOVERY.INFO</span><br><strong>WordPress content rebuilt as Markdown around explicit routing rules</strong></span><span class="badge">Eleventy 3.1.6</span></summary>
+            <div class="operator-body">
+              <div><h4>Mental model</h4><p>Editable content is 28 page and 49 post Markdown files. Layouts and data live under <code>src/</code>; <code>src/lib/routing.js</code> owns publication/permalinks.</p></div>
+              <div><h4>Add content</h4><p>Add <code>content/posts/&lt;slug&gt;.md</code> with YAML frontmatter and <code>status: publish</code>, then build and run the link checker.</p></div>
+              <div><h4>Local commands</h4><pre><code>npm run build
+python scripts/check_links.py
+python scripts/check_redirects.py</code></pre></div>
+              <div><h4>Deploy</h4><p><code>scripts/deploy.sh</code> is the preflight wrapper around <code>git push production</code>; the server hook rebuilds <code>master</code>. <strong>Explicit approval required.</strong></p></div>
+              <div><h4>Quality gate</h4><p>Python crawlers verify internal links/assets and the 53 active redirect-map rules. Build output is <code>_site/</code>.</p></div>
+              <div><h4>Sharp edges</h4><ul><li>The branch is <code>master</code>, not <code>main</code>.</li><li><code>markdownTemplateEngine: false</code> protects imported bodies.</li><li>A PHP contact endpoint and Turnstile remain; “no CMS” does not mean “no PHP file.”</li></ul></div>
+            </div>
+          </details>
+
+          <details class="operator vellum" id="vellum" name="fleet">
+            <summary><span><span class="rack-id">RACK 04 · VELLUM.CAPITAL</span><br><strong>WordPress-exported HTML preserved behind a small Nunjucks shell</strong></span><span class="badge">Eleventy 3.1.6</span></summary>
+            <div class="operator-body">
+              <div><h4>Mental model</h4><p>Forty-eight imported HTML posts remain close to source; 15 <code>.njk</code> pages and layouts provide the new site shell. Root <code>wp-content/</code> passes through unchanged.</p></div>
+              <div><h4>Add content</h4><p>For a post, edit/add <code>content/posts/*.html</code> with frontmatter. For a designed route, edit a Nunjucks page. Never run imported bodies through Nunjucks/Liquid.</p></div>
+              <div><h4>Local commands</h4><pre><code>npm run serve
+npm run build
+npm run check
+npm run test:worker</code></pre></div>
+              <div><h4>Deploy</h4><p>Deploy the investor-inquiry Worker first, then <code>git push production main</code>. The server hook runs install, build, check, and sync. <strong>Each is an approval gate.</strong></p></div>
+              <div><h4>Migration assets</h4><p>The 44.4 MB WXR export remains in-repo. <code>npm run import:wordpress</code> and <code>npm run import:media</code> preserve a reproducible path from source.</p></div>
+              <div><h4>Sharp edges</h4><ul><li>Both <code>htmlTemplateEngine</code> and <code>markdownTemplateEngine</code> are false.</li><li><code>legacyRoutes.json</code> and nginx redirects are load-bearing.</li><li>If the Worker is not live first, form POSTs reach a static-origin 404.</li></ul></div>
+            </div>
+          </details>
+
+          <details class="operator wpai" id="whopays" name="fleet">
+            <summary><span><span class="rack-id">RACK 05 · WHOPAYSFORAI.ORG</span><br><strong>React application source flattened into a verified static snapshot</strong></span><span class="badge">Next 16.3 / vinext</span></summary>
+            <div class="operator-body">
+              <div><h4>Mental model</h4><p>Routes are App Router modules; claims, grades, dates, and source URLs live in <code>app/lib/content.ts</code>. A deploy crawls the local vinext server into static files.</p></div>
+              <div><h4>Add content</h4><p>Edit authored TypeScript modules. The JSONL corpus is the news source of truth; <code>app/lib/news-data.ts</code> is deterministic generated output.</p></div>
+              <div><h4>Local commands</h4><pre><code>npm run dev
+npm run build
+npm test
+npm run check</code></pre></div>
+              <div><h4>Deploy</h4><p><code>scripts/deploy-server.ps1</code> calls the guarded shell path: build → start → crawl → verify → tar/rsync → public byte comparison. <strong>Explicit approval required.</strong></p></div>
+              <div><h4>News pipeline</h4><p>Twice-daily ingest appends pending items to a 6,034-record JSONL corpus and does not regenerate the public module. Review or a separately governed high-bar auto-approval path controls publication.</p></div>
+              <div><h4>Sharp edges</h4><ul><li><code>db/schema.ts</code> is literally <code>export {}</code>; D1 and R2 bindings are null.</li><li>Never hand-edit the 5,433-line generated <code>news-data.ts</code>.</li><li>A stale Cloudflare homepage causes the post-deploy byte check to fail closed.</li></ul></div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="infrastructure" aria-labelledby="infra-heading">
+      <div class="shell">
+        <div class="section-head">
+          <div><p class="section-no">07 / Shared infrastructure</p><h2 id="infra-heading">Where does “static” still have moving parts?</h2></div>
+          <p>All five sites use one self-hosted nginx origin behind Cloudflare. The fleet deliberately keeps the artifacts portable and the deploy gate human.</p>
+        </div>
+        <div class="infra-grid">
+          <article class="infra astro"><h3>Pattern A: local rsync</h3><p>CFW and davidveksler.com build on the workstation and transfer artifacts. Fast feedback; risk is workstation/server drift.</p></article>
+          <article class="infra next"><h3>Pattern A+: local snapshot</h3><p>WhoPaysForAI also runs and crawls the built server before transfer, then byte-verifies the public homepage.</p></article>
+          <article class="infra eleventy"><h3>Pattern B: push to build</h3><p>WalletRecovery and Vellum push source to a production remote; a server hook installs, builds, checks, and syncs. More reproducible; slower and Node-dependent.</p></article>
+          <article class="infra raw"><h3>Cloudflare is the edge</h3><p>DNS, caching, Turnstile, and small Workers sit in front. None of these sites depends on Pages, Vercel, or Netlify for artifact hosting.</p></article>
+          <article class="infra wp"><h3>One gate never automates</h3><p>Every repo uses <code>AGENTS.md</code> as canonical guidance and a <code>CLAUDE.md</code> pointer. Builds and drafts automate; production deployment requires explicit human authorization.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="mistakes" aria-labelledby="mistakes-heading">
+      <div class="shell">
+        <div class="section-head">
+          <div><p class="section-no">08 / Failure modes</p><h2 id="mistakes-heading">Common mistakes and anti-patterns</h2></div>
+          <p>Most failed migrations are not generator failures. They are missing contracts between content, URLs, automation, and deployment.</p>
+        </div>
+        <div class="mistakes">
+          <article class="mistake"><strong>1. Execute imported content as templates</strong>WordPress/third-party text can contain braces that explode the build or become injection. Disable the content-path engine; keep templating in controlled layouts.</article>
+          <article class="mistake"><strong>2. Drop old URLs</strong>Redesigning slugs without a complete, tested redirect map is an SEO extinction event. Preserve or 301 every valuable route.</article>
+          <article class="mistake"><strong>3. Trust comments over executable scripts</strong>CFW’s config still mentions Pages, while its guarded deploy scripts rsync to the actual origin. Code and current runbooks beat stale prose.</article>
+          <article class="mistake"><strong>4. Hand-edit generated files</strong>WhoPaysForAI’s news module and CFW’s emitted public data have source pipelines. Edit the corpus/input, regenerate, and commit the pair.</article>
+          <article class="mistake"><strong>5. Publish origin infrastructure details</strong>A Cloudflare-fronted site should not expose origin IPs, SSH identities, zone IDs, credentials, or real server paths in public docs.</article>
+          <article class="mistake"><strong>6. Assume scaffolding is production architecture</strong>A dependency or folder proves nothing. WhoPaysForAI contains Drizzle/D1/R2 starter code while the schema is empty and bindings are disabled.</article>
+          <article class="mistake"><strong>7. Deploy the site before its form Worker</strong>A static origin cannot answer the route by accident. Deploy and verify the Worker first, then publish HTML that points at it.</article>
+          <article class="mistake"><strong>8. Equate static with no moving parts</strong>The motion moved from every HTTP request to builds, scheduled watchers, ingest, review, cache, and deploy verification. Operate those explicitly.</article>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources" aria-labelledby="sources-heading">
+      <div class="shell">
+        <div class="section-head">
+          <div><p class="section-no">09 / Verification</p><h2 id="sources-heading">Primary sources and further reading</h2></div>
+          <p>Fleet facts come from each repository’s package manifest, resolved dependency tree, configuration, content directories, tests, workflows, and guarded deploy scripts.</p>
+        </div>
+        <ul class="sources">
+          <li><a href="https://wordpress.org/documentation/article/tools-export-screen/">WordPress Tools Export screen</a>: what WXR includes and how the XML export is created.</li>
+          <li><a href="https://developer.wordpress.org/advanced-administration/security/hardening/">WordPress hardening handbook</a>: the maintenance and attack-surface responsibilities a live installation retains.</li>
+          <li><a href="https://docs.astro.build/en/concepts/islands/">Astro islands architecture</a>: static HTML by default and explicit <code>client:*</code> hydration.</li>
+          <li><a href="https://docs.astro.build/en/reference/configuration-reference/#output">Astro output configuration</a>: <code>static</code> is the default output target.</li>
+          <li><a href="https://docs.astro.build/en/reference/content-loader-reference/">Astro Content Loader API</a>: build-time loaders and schema validation.</li>
+          <li><a href="https://www.11ty.dev/docs/config/#default-template-engine-for-markdown-files">Eleventy configuration</a>: Markdown/HTML default to Liquid and accept <code>false</code>.</li>
+          <li><a href="https://www.11ty.dev/docs/copy/">Eleventy passthrough copy</a>: preserving assets such as a legacy <code>wp-content</code> tree.</li>
+          <li><a href="https://www.11ty.dev/docs/languages/">Eleventy template languages</a>: supported source/template formats.</li>
+          <li><a href="https://nextjs.org/docs/app/guides/static-exports">Next.js static exports</a>: HTML per route, supported features, and request-time limitations.</li>
+          <li><a href="https://developers.cloudflare.com/turnstile/get-started/server-side-validation/">Cloudflare Turnstile Siteverify</a>: mandatory server-side token validation.</li>
+          <li><a href="https://github.com/DavidVeksler/CheatSheets">CheatSheets source</a>: this page, its QA gates, and the raw-HTML operating model.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="related" aria-labelledby="related-heading">
+      <div class="shell">
+        <p class="section-no">10 / Related operator references</p>
+        <h2 id="related-heading">Keep the adjacent contracts open</h2>
+        <div class="related">
+          <a href="how-its-built.html"><strong>How This Site Is Built</strong><br><span class="muted">The sibling governed-agent pipeline behind this raw-HTML collection.</span></a>
+          <a href="versioncontrol.html"><strong>Modern Version Control</strong><br><span class="muted">Branches, review, rollback, and why git can carry editorial control.</span></a>
+          <a href="git-scm.html"><strong>Git SCM</strong><br><span class="muted">The command-level reference for the new editor.</span></a>
+          <a href="javascript-for-architects.html"><strong>JavaScript for Architects</strong><br><span class="muted">Framework and runtime context for Astro, React, and build tooling.</span></a>
+          <a href="governing-agentic-ai.html"><strong>Governing Agentic AI</strong><br><span class="muted">Approval boundaries and controls for agent-authored changes.</span></a>
+          <a href="linux-server-hardening.html"><strong>Linux Server Hardening</strong><br><span class="muted">The operating discipline beneath the shared nginx origin.</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      <div>
+        <p><strong>Life After WordPress</strong> · A personal fleet operator’s guide, not an argument that every site should leave WordPress.</p>
+        <p>© 2026 <a href="https://www.davidveksler.com/?ref=cheatsheets">David Veksler</a> · <a href="index.php">All cheatsheets</a> · <a href="history.php">Change history</a></p>
+      </div>
+      <p class="verified">Last verified: 2026-08-14</p>
+    </div>
+  </footer>
+</body>
+</html>
