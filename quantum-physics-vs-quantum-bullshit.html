@@ -163,6 +163,38 @@
       .gotcha strong { color: var(--bull); }
       .wide { grid-column: 1 / -1; }
 
+      .depth-legend {
+        display: flex; flex-wrap: wrap; gap: .55rem; margin-bottom: 1rem;
+        background: var(--surface-2); border: 1px solid var(--line); padding: .75rem;
+      }
+      .depth-pill { display: inline-flex; align-items: center; gap: .45rem; font-size: .82rem; }
+      .depth-pill strong {
+        border: 1px solid currentColor; border-radius: 999px; color: var(--science);
+        font-family: var(--mono); font-size: .67rem; letter-spacing: .06em; padding: .18rem .48rem; text-transform: uppercase;
+      }
+      .depth-pill:nth-child(2) strong { color: var(--physics); }
+      .depth-pill:nth-child(3) strong { color: var(--warning); }
+      .depth-disclosure { background: var(--surface-2); margin-top: 1rem; }
+      .depth-disclosure summary {
+        color: var(--physics); font-family: var(--mono); font-size: .78rem;
+        letter-spacing: .04em; padding: .78rem .85rem; text-transform: uppercase;
+      }
+      .depth-disclosure[open] summary { background: color-mix(in srgb, var(--physics-soft) 60%, var(--surface)); }
+      .depth-body { padding: 0; }
+      .depth-level { display: grid; grid-template-columns: minmax(7.5rem, .24fr) minmax(0, 1fr); gap: 1rem; padding: 1rem; }
+      .depth-level + .depth-level { border-top: 1px solid var(--line); }
+      .depth-level h4 {
+        color: var(--science); font-family: var(--mono); font-size: .74rem;
+        letter-spacing: .07em; line-height: 1.35; text-transform: uppercase;
+      }
+      .depth-level:nth-child(2) h4 { color: var(--physics); }
+      .depth-level:nth-child(3) h4 { color: var(--warning); }
+      .level-copy { min-width: 0; }
+      .level-copy > * + * { margin-top: .58rem; }
+      .level-copy p { font-size: .9rem; }
+      .level-copy .equation { font-size: .78rem; margin-top: .65rem; white-space: normal; }
+      .level-copy .boundary { color: var(--muted); font-size: .84rem; }
+
       .tech-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
       .tech-card { background: var(--surface); border-top: 4px solid var(--science); padding: 1rem; }
       .tech-card:nth-child(3n + 2) { border-color: var(--physics); }
@@ -243,6 +275,7 @@
       .card-grid, .tech-grid, .decision-grid, .mistakes, .sources-grid { grid-template-columns: 1fr; }
       .wide { grid-column: auto; }
       .translator-head { padding-inline: .8rem; }
+      .depth-level { grid-template-columns: 1fr; gap: .45rem; }
     }
 
     @media (prefers-reduced-motion: no-preference) {
@@ -260,12 +293,17 @@
       h1 { font-size: 28pt; }
       .section { break-before: page; padding-top: 0; }
       .section-heading { margin-bottom: .8rem; }
-      .translator, .concept, .tech-card, details, .audit-script, .red-flags, .mistake { box-shadow: none; break-inside: avoid; }
+      .translator, .tech-card, .audit-script, .red-flags, .mistake { box-shadow: none; break-inside: avoid; }
+      .concept { break-inside: auto; }
+      .concept > h3 { break-after: avoid; }
+      .depth-disclosure { break-inside: auto; }
+      .depth-level { break-inside: avoid; }
       .table-scroll { overflow: visible; }
       table { min-width: 0; font-size: 8pt; }
       th, td { padding: .35rem; }
       details .details-body { display: block; }
       details:not([open]) > *:not(summary) { display: block; }
+      details::details-content { content-visibility: visible; display: block; }
       a { color: inherit; text-decoration: none; }
       footer { margin-top: 1rem; padding-bottom: 0; }
     }
@@ -350,7 +388,12 @@
     <section class="section" aria-labelledby="fundamentals-title">
       <div class="section-heading">
         <p class="section-number">01 / FUNDAMENTALS</p>
-        <div><h2 id="fundamentals-title">The mechanics, without the incense</h2><p class="section-intro">Five ideas do most of the work. Each has a mathematical statement, an experiment, and a boundary that popular explanations routinely erase.</p></div>
+        <div><h2 id="fundamentals-title">The mechanics, without the incense</h2><p class="section-intro">Five ideas do most of the work. Read each card for the 30-second answer, then open its explainer and stop at the depth that serves you.</p></div>
+      </div>
+      <div class="depth-legend" aria-label="Explanation depth guide">
+        <span class="depth-pill"><strong>High school</strong> physical picture, no calculus</span>
+        <span class="depth-pill"><strong>Undergraduate</strong> equations and a worked scale</span>
+        <span class="depth-pill"><strong>Graduate</strong> formal structure and its limits</span>
       </div>
       <div class="card-grid">
         <article class="concept">
@@ -359,6 +402,36 @@
           <span class="equation">Photon: E = hν · transition: ΔE = hν<br>h = 6.626 070 15 × 10⁻³⁴ J·s (exact)</span>
           <p class="example"><strong>Concrete example:</strong> An atom absorbs a photon only when its energy matches an allowed transition (within the transition's linewidth); emission then carries the corresponding frequency.</p>
           <p class="gotcha"><strong>Gotcha:</strong> “All energy comes in chunks” is too broad. A free particle can have a continuous energy spectrum, while a confined system commonly has discrete levels.</p>
+          <details class="depth-disclosure" name="mechanics-depth">
+            <summary>Open the layered explainer: intuition → spectral theory</summary>
+            <div class="depth-body">
+              <section class="depth-level" aria-labelledby="energy-high-school">
+                <h4 id="energy-high-school">High school · allowed notes</h4>
+                <div class="level-copy">
+                  <p>A guitar string fixed at both ends cannot hold just any standing-wave shape: only patterns that fit the endpoints persist. A bound electron is not a vibrating string or a planet in orbit, but the analogy captures the restriction—its quantum state must satisfy the atom's boundary conditions, leaving particular allowed energies.</p>
+                  <p>When an atom changes between two levels, the energy difference can be carried by a photon. The color is therefore a fingerprint of the gap: larger <code>ΔE</code> means higher frequency <code>ν</code>.</p>
+                  <p class="boundary"><strong>Keep straight:</strong> the electron does not travel through forbidden in-between energies along a little path. The state changes; the measured initial and final energies are the allowed values.</p>
+                </div>
+              </section>
+              <section class="depth-level" aria-labelledby="energy-undergraduate">
+                <h4 id="energy-undergraduate">Undergraduate · eigenvalue problem</h4>
+                <div class="level-copy">
+                  <p>For a time-independent system, solve the stationary Schrödinger equation. The Hamiltonian <code>Ĥ</code> contains kinetic and potential energy; acceptable wavefunctions obey the boundary and normalization conditions.</p>
+                  <span class="equation">Ĥ|n⟩ = Eₙ|n⟩ · ψₙ(t) = ψₙ(0)e<sup>−iEₙt/ℏ</sup></span>
+                  <p>For an electron in an ideal one-dimensional box of width <code>L = 1 nm</code>, <code>Eₙ = n²π²ℏ²/(2mL²)</code>. This gives <code>E₁ ≈ 0.376 eV</code> and <code>E₂ − E₁ ≈ 1.13 eV</code>. Removing the walls turns the idealized bound spectrum into a continuum of scattering energies.</p>
+                  <p class="boundary"><strong>Keep straight:</strong> the existence of two levels does not guarantee an optical transition. The perturbation and the states must also give a nonzero transition matrix element—a selection rule.</p>
+                </div>
+              </section>
+              <section class="depth-level" aria-labelledby="energy-graduate">
+                <h4 id="energy-graduate">Graduate · spectrum of Ĥ</h4>
+                <div class="level-copy">
+                  <p>A physical Hamiltonian is represented by a self-adjoint operator. Its spectral measure can contain point spectrum (normalizable eigenvectors), absolutely continuous spectrum (generalized scattering eigenstates), and more pathological components. “Quantized” usually points to the discrete part; it is not a claim that the operator's entire spectrum is a ladder.</p>
+                  <p>Transitions come from a time-dependent coupling <code>V(t)</code>. Rates depend on matrix elements such as <code>⟨f|V|i⟩</code>, the density of final states, and the drive's spectral content. Finite lifetime, Doppler motion, collisions, and instrument response broaden ideal delta-function lines.</p>
+                  <p class="boundary"><strong>Boundary of the slogan:</strong> <code>E = hν</code> gives a photon's energy. It does not say every system possesses one mystical “frequency,” nor that equal numerical frequencies force unrelated systems to exchange energy.</p>
+                </div>
+              </section>
+            </div>
+          </details>
         </article>
 
         <article class="concept">
@@ -367,6 +440,36 @@
           <span class="equation">de Broglie wavelength: λ = h / p</span>
           <p class="example"><strong>Concrete example:</strong> Send electrons through two slits one at a time: detections are discrete dots, but many dots build an interference pattern while the alternatives remain coherent and no physical record distinguishes the path.</p>
           <p class="gotcha"><strong>Gotcha:</strong> An electron is not a tiny classical ball that secretly turns into a water wave. “Wave” and “particle” are limited classical analogies for the observed behavior.</p>
+          <details class="depth-disclosure" name="mechanics-depth">
+            <summary>Open the layered explainer: dots → amplitudes</summary>
+            <div class="depth-body">
+              <section class="depth-level" aria-labelledby="duality-high-school">
+                <h4 id="duality-high-school">High school · one setup, two signatures</h4>
+                <div class="level-copy">
+                  <p>A detector records one localized click at a time—that is the particle-like signature. After many identically prepared electrons, the clicks form bright and dark bands—that is the wave-like interference signature. Neither picture alone predicts the whole experiment.</p>
+                  <p>Put a path detector at the slits and the bands disappear when the two paths become distinguishable. The apparatus changed the physical experiment; a person merely learning the result later is not the cause.</p>
+                  <p class="boundary"><strong>Keep straight:</strong> uncertainty about a secretly chosen slit is not enough. Interference requires coherent alternatives, and path-marking physically correlates those alternatives with different detector or environmental states.</p>
+                </div>
+              </section>
+              <section class="depth-level" aria-labelledby="duality-undergraduate">
+                <h4 id="duality-undergraduate">Undergraduate · add amplitudes first</h4>
+                <div class="level-copy">
+                  <p>For indistinguishable alternatives, add complex amplitudes and square only at the end. The cross term carries the relative phase and produces fringes.</p>
+                  <span class="equation">P(x) = |ψ₁(x) + ψ₂(x)|² = |ψ₁|² + |ψ₂|² + 2Re[ψ₁*ψ₂]</span>
+                  <p>If the paths become correlated with marker states, the joint state is <code>ψ₁|D₁⟩ + ψ₂|D₂⟩</code>. The interference term is multiplied by <code>⟨D₁|D₂⟩</code>: identical marker states preserve visibility; orthogonal, perfectly distinguishable markers remove it.</p>
+                  <p class="boundary"><strong>Scale check:</strong> matter-wave wavelength is <code>λ = h/p</code>. Increasing momentum shrinks <code>λ</code>, so resolving interference for massive, warm objects demands implausibly fine control of position and environmental coupling.</p>
+                </div>
+              </section>
+              <section class="depth-level" aria-labelledby="duality-graduate">
+                <h4 id="duality-graduate">Graduate · coherence in ρ</h4>
+                <div class="level-copy">
+                  <p>In a path basis, interference resides in off-diagonal density-matrix elements <code>ρ₁₂</code> and <code>ρ₂₁</code>. A channel that acquires which-path information suppresses those coherences even if no human reads the record. For two-path interferometers, appropriately defined fringe visibility and path distinguishability obey a complementarity tradeoff.</p>
+                  <p>Wave–particle “duality” is historical language, not an extra dynamical law. Nonrelativistic quantum mechanics assigns a state in Hilbert space and a measurement model; relativistic quantum field theory treats particles as excitations whose detection statistics derive from field observables.</p>
+                  <p class="boundary"><strong>Boundary of the slogan:</strong> changing the measurement changes which observable is operationally defined. It does not imply retroactive human intention rewriting an observer-independent macroscopic past.</p>
+                </div>
+              </section>
+            </div>
+          </details>
         </article>
 
         <article class="concept">
@@ -375,6 +478,37 @@
           <span class="equation">Position–momentum: Δx · Δp ≥ ℏ / 2<br>ℏ = h / 2π</span>
           <p class="example"><strong>Concrete example:</strong> Localizing an electron into a narrower wavepacket requires combining a wider range of wavelengths—and therefore momenta.</p>
           <p class="gotcha"><strong>Gotcha:</strong> A photon disturbing an electron illustrates measurement back-action, but it is not the principle's foundation. The bound follows from the state and operator algebra, even before a microscope enters the story.</p>
+          <details class="depth-disclosure" name="mechanics-depth">
+            <summary>Open the layered explainer: wavepackets → Robertson</summary>
+            <div class="depth-body">
+              <section class="depth-level" aria-labelledby="uncertainty-high-school">
+                <h4 id="uncertainty-high-school">High school · a short pulse needs many notes</h4>
+                <div class="level-copy">
+                  <p>A long, pure musical tone has a sharply defined frequency but extends for a long time. A short clap is localized in time but contains a broad range of frequencies. A particle wavepacket has the same Fourier tradeoff: making it narrow in position requires a broader mixture of wavelengths and therefore momenta.</p>
+                  <p>This spread exists in the prepared state. Better equipment can reduce added experimental error, but it cannot prepare a state with both spreads below the quantum bound.</p>
+                  <p class="boundary"><strong>Keep straight:</strong> uncertainty predicts a distribution over repeated, identically prepared trials. It does not mean “anything could happen” or that reality is fuzzy by an arbitrary amount.</p>
+                </div>
+              </section>
+              <section class="depth-level" aria-labelledby="uncertainty-undergraduate">
+                <h4 id="uncertainty-undergraduate">Undergraduate · Fourier width and commutator</h4>
+                <div class="level-copy">
+                  <p>Position-space and momentum-space wavefunctions are Fourier transforms. Their standard deviations obey <code>ΔxΔp ≥ ℏ/2</code>, consistent with the canonical commutator <code>[x̂,p̂] = iℏ</code>.</p>
+                  <span class="equation">If Δx = 1.00 nm, then Δp ≥ 5.27 × 10⁻²⁶ kg·m/s.<br>For an electron, that corresponds to Δv ≥ 5.79 × 10⁴ m/s in the nonrelativistic estimate.</span>
+                  <p>A Gaussian wavepacket with the appropriate phase structure saturates the position–momentum lower bound. Most states do not: the inequality gives a floor, not a promise of equality.</p>
+                  <p class="boundary"><strong>Keep straight:</strong> <code>Δ</code> is the standard deviation of an outcome distribution, not the resolution printed on one instrument's specification sheet.</p>
+                </div>
+              </section>
+              <section class="depth-level" aria-labelledby="uncertainty-graduate">
+                <h4 id="uncertainty-graduate">Graduate · Robertson and beyond</h4>
+                <div class="level-copy">
+                  <p>For a state <code>ρ</code> and suitable self-adjoint observables, Robertson's relation is</p>
+                  <span class="equation">ΔA · ΔB ≥ ½ |Tr(ρ[Â,B̂])|</span>
+                  <p>The Robertson–Schrödinger form adds a covariance term and can be strictly stronger. Domain conditions matter for unbounded operators. A zero expectation value of the commutator can make Robertson's lower bound trivial even when other uncertainty relations remain informative.</p>
+                  <p class="boundary"><strong>Conceptual boundary:</strong> preparation uncertainty, measurement error, and measurement-induced disturbance are distinct quantities with distinct relations. The textbook inequality above does not, by itself, prove a universal error-times-disturbance formula for every apparatus.</p>
+                </div>
+              </section>
+            </div>
+          </details>
         </article>
 
         <article class="concept">
@@ -383,6 +517,36 @@
           <span class="equation">State: |ψ⟩ = α|A⟩ + β|B⟩ · |α|² + |β|² = 1</span>
           <p class="example"><strong>Concrete example:</strong> Which-path information entangles a particle with a detector or environment; the visible interference fades as the alternatives become distinguishable.</p>
           <p class="gotcha"><strong>Gotcha:</strong> Schrödinger's cat exposes the measurement problem; it is not permission to declare contradictions literally true. Mesoscopic “cat states” exist in laboratories, while warm biological cats decohere fantastically fast.</p>
+          <details class="depth-disclosure" name="mechanics-depth">
+            <summary>Open the layered explainer: alternatives → reduced states</summary>
+            <div class="depth-body">
+              <section class="depth-level" aria-labelledby="superposition-high-school">
+                <h4 id="superposition-high-school">High school · phase is the fragile resource</h4>
+                <div class="level-copy">
+                  <p>A superposition is not ordinary ignorance such as a covered coin that is already heads or tails. The alternatives carry amplitudes with a relative phase, and that phase can change later detection probabilities through interference.</p>
+                  <p>Air molecules, thermal radiation, vibrations, and detectors constantly interact with large objects. They carry away path information, making the relative phase inaccessible locally. That is why a laboratory can preserve carefully isolated “cat states,” while an actual cat never displays dead–alive interference.</p>
+                  <p class="boundary"><strong>Keep straight:</strong> decoherence explains the rapid loss of observable interference. It does not mean consciousness arrived and chose an outcome.</p>
+                </div>
+              </section>
+              <section class="depth-level" aria-labelledby="superposition-undergraduate">
+                <h4 id="superposition-undergraduate">Undergraduate · entangle with the environment</h4>
+                <div class="level-copy">
+                  <p>An initially uncorrelated environment can record the alternatives through unitary evolution:</p>
+                  <span class="equation">(α|A⟩ + β|B⟩)|E₀⟩ → α|A⟩|E<sub>A</sub>⟩ + β|B⟩|E<sub>B</sub>⟩</span>
+                  <p>The system's interference term is weighted by <code>⟨E<sub>B</sub>|E<sub>A</sub>⟩</code>. When the environmental records are nearly orthogonal, local measurements behave almost like a classical probabilistic mixture even though the combined system–environment state still evolves quantum mechanically.</p>
+                  <p class="boundary"><strong>Keep straight:</strong> destroying interference need not destroy the global superposition. It disperses coherence into correlations that are practically impossible to reverse without controlling the environment.</p>
+                </div>
+              </section>
+              <section class="depth-level" aria-labelledby="superposition-graduate">
+                <h4 id="superposition-graduate">Graduate · trace out E</h4>
+                <div class="level-copy">
+                  <p>The effective state accessible to system-only observables is <code>ρ<sub>S</sub> = Tr<sub>E</sub>|Ψ<sub>SE</sub>⟩⟨Ψ<sub>SE</sub>|</code>. The interaction Hamiltonian determines a comparatively stable pointer basis; off-diagonal elements decay under the resulting open-system channel. Markovian approximations often produce a Lindblad master equation, but real environments can retain memory.</p>
+                  <p>The reduced state after decoherence is an improper mixture: it arises from tracing an entangled pure state, not from ignorance about a pre-existing local pure state. Operationally the distinction may be inaccessible locally, but it matters to foundations.</p>
+                  <p class="boundary"><strong>Measurement-problem boundary:</strong> decoherence explains preferred records and why interference vanishes for practical purposes. By itself it does not select one unique experienced outcome; interpretations or modified dynamics address that remaining step differently.</p>
+                </div>
+              </section>
+            </div>
+          </details>
         </article>
 
         <article class="concept wide">
@@ -391,6 +555,36 @@
           <span class="equation">Bell pair: |Φ⁺⟩ = (|00⟩ + |11⟩) / √2</span>
           <p class="example"><strong>Concrete example:</strong> Alice and Bob measure separated halves of a prepared Bell pair. Their combined records violate a Bell inequality under suitable settings, but each local record still looks random until ordinary, light-speed-limited communication compares them.</p>
           <p class="gotcha"><strong>Gotcha:</strong> Correlation is not a controllable signal. No choice by Alice lets her encode “YES” in Bob's local random outcomes, and an emotional bond is not a prepared, isolated two-particle state.</p>
+          <details class="depth-disclosure" name="mechanics-depth">
+            <summary>Open the layered explainer: paired results → Schmidt &amp; CHSH</summary>
+            <div class="depth-body">
+              <section class="depth-level" aria-labelledby="entanglement-high-school">
+                <h4 id="entanglement-high-school">High school · stronger than matching gloves</h4>
+                <div class="level-copy">
+                  <p>A classical pair of boxes can contain one left glove and one right glove. Opening one box reveals the other, but the answers were packed in advance. Entangled pairs can produce correlations across several alternative measurement settings that no single set of prepacked local answers reproduces.</p>
+                  <p>Each result is still locally random. Alice cannot choose her result, so Bob cannot inspect his results and read a message. They must later compare settings and outcomes over a normal communication channel to reveal the pattern.</p>
+                  <p class="boundary"><strong>Keep straight:</strong> “connected” is a metaphor. An experiment needs a joint preparation, defined measurements, coincidence records, and statistics—not two people reporting similar feelings.</p>
+                </div>
+              </section>
+              <section class="depth-level" aria-labelledby="entanglement-undergraduate">
+                <h4 id="entanglement-undergraduate">Undergraduate · nonfactorizable state</h4>
+                <div class="level-copy">
+                  <p>A pure bipartite state is entangled when it cannot be written <code>|ψ<sub>A</sub>⟩⊗|φ<sub>B</sub>⟩</code>. Every bipartite pure state admits a Schmidt decomposition; more than one nonzero Schmidt coefficient means entanglement.</p>
+                  <span class="equation">|Φ⁺⟩ = (|00⟩ + |11⟩)/√2 · ρ<sub>B</sub> = Tr<sub>A</sub>|Φ⁺⟩⟨Φ⁺| = I/2</span>
+                  <p>The Bell state is globally pure while either qubit alone is maximally mixed. In a CHSH experiment, local hidden-variable models obey <code>|S| ≤ 2</code>; quantum theory permits up to <code>2√2 ≈ 2.828</code> for suitable states and observables.</p>
+                  <p class="boundary"><strong>Keep straight:</strong> a Bell violation is a statement about a statistical experiment and its assumptions. One dramatic pair of matching outcomes proves nothing.</p>
+                </div>
+              </section>
+              <section class="depth-level" aria-labelledby="entanglement-graduate">
+                <h4 id="entanglement-graduate">Graduate · separability and no-signalling</h4>
+                <div class="level-copy">
+                  <p>A mixed bipartite state is separable only if it can be expressed as <code>ρ<sub>AB</sub> = Σ<sub>k</sub> p<sub>k</sub>ρ<sub>A</sub><sup>(k)</sup>⊗ρ<sub>B</sub><sup>(k)</sup></code>; otherwise it is entangled. Detecting that failure can require Bell inequalities, entanglement witnesses, or positive-map criteria, and not every entangled state violates a chosen Bell inequality.</p>
+                  <p>No-signalling follows because an unannounced local trace-preserving operation on Alice's subsystem does not change Bob's reduced state after Alice's outcomes are averaged. Conditioning on a selected Alice outcome can change Bob's conditional state, but learning which subset was selected requires a classical message.</p>
+                  <p class="boundary"><strong>Resource boundary:</strong> entanglement can enable teleportation, dense coding, and cryptographic protocols only with specified local operations, shared states, and classical communication. It is not a free-standing force, energy source, or semantic bond.</p>
+                </div>
+              </section>
+            </div>
+          </details>
         </article>
       </div>
     </section>
@@ -528,8 +722,11 @@
       </div>
       <div class="sources-grid">
         <p class="source-item"><strong>Constants &amp; quantization</strong><a href="https://www.nist.gov/si-redefinition/meet-constants">NIST · Meet the Constants</a><span>Exact Planck constant; energy exchanged in quanta.</span></p>
+        <p class="source-item"><strong>Worked-scale constants</strong><a href="https://physics.nist.gov/cuu/Constants/index.html">NIST · CODATA fundamental constants</a><span>Planck constant, reduced Planck constant, electron mass, and electronvolt conversion used in the numerical examples.</span></p>
         <p class="source-item"><strong>Interference &amp; measurement</strong><a href="https://www.nist.gov/publications/measurement-induced-decoherence-and-information-double-slit-interference">NIST · Double-slit decoherence</a><span>Which-path information, interference, and physical measurement.</span></p>
+        <p class="source-item"><strong>General uncertainty</strong><a href="https://doi.org/10.1103/PhysRev.34.163">Robertson (1929) · The Uncertainty Principle</a><span>The operator-commutator relation for arbitrary observables.</span></p>
         <p class="source-item"><strong>Entanglement boundary</strong><a href="https://www.nist.gov/blogs/taking-measure/quantum-leap-forward-how-tiny-particles-can-bring-us-exciting-new-tech">NIST · Quantum Leap Forward</a><span>Entanglement correlations and why they cannot communicate faster than light.</span></p>
+        <p class="source-item"><strong>Entanglement formalism</strong><a href="https://doi.org/10.1103/RevModPhys.81.865">Reviews of Modern Physics · Quantum entanglement</a><span>Separability, detection, Bell inequalities, and quantum-information resources.</span></p>
         <p class="source-item"><strong>Laser mechanism</strong><a href="https://www.nist.gov/nist-and-nobel/jan-hall/context-discovery-jan-hall">NIST · Context of a Discovery</a><span>Energy levels, stimulated emission, matching energy and phase.</span></p>
         <p class="source-item"><strong>MRI mechanism</strong><a href="https://www.nibib.nih.gov/science-education/science-topics/magnetic-resonance-imaging-mri">NIH/NIBIB · Magnetic Resonance Imaging</a><span>Proton alignment, radiofrequency excitation, and detected relaxation.</span></p>
         <p class="source-item"><strong>Smoke detectors</strong><a href="https://www.nrc.gov/reading-rm/doc-collections/fact-sheets/smoke-detectors">U.S. NRC · Smoke detector backgrounder</a><span>Am-241, alpha particles, ionization chambers, typical source amount.</span></p>
@@ -537,6 +734,7 @@
         <p class="source-item"><strong>QKD limits</strong><a href="https://www.nist.gov/cybersecurity-and-privacy/what-quantum-cryptography">NIST · What Is Quantum Cryptography?</a><span>Potential eavesdropper detection plus theoretical and implementation loopholes.</span></p>
         <p class="source-item"><strong>Radiation risk</strong><a href="https://www.fda.gov/radiation-emitting-products/medical-imaging/medical-x-ray-imaging">U.S. FDA · Medical X-ray Imaging</a><span>Ionizing radiation, DNA damage potential, dose-dependent risk, and benefit–risk balance.</span></p>
         <p class="source-item"><strong>Macroscopic superpositions</strong><a href="https://journals.aps.org/prl/pdf/10.1103/PhysRevLett.77.4887">Physical Review Letters · Progressive decoherence</a><span>Experimental mesoscopic cat states and observed decoherence.</span></p>
+        <p class="source-item"><strong>Open systems &amp; decoherence</strong><a href="https://doi.org/10.1103/RevModPhys.75.715">Reviews of Modern Physics · Decoherence and einselection</a><span>Reduced density matrices, environment-induced pointer states, and the quantum-to-classical transition.</span></p>
         <p class="source-item"><strong>Everettian interpretation</strong><a href="https://doi.org/10.1103/RevModPhys.29.454">Everett (1957) · Relative-State Formulation</a><span>The original published relative-state account.</span></p>
         <p class="source-item"><strong>QBism</strong><a href="https://arxiv.org/abs/1311.5253">Fuchs, Mermin &amp; Schack · Introduction to QBism</a><span>Agent-centered personalist probabilities and locality.</span></p>
       </div>
