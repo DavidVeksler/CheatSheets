@@ -190,6 +190,7 @@ return [
     'lawn-irrigation-watering-math.html' => 'Home & Lifestyle',
     'living-richly-guide.html' => 'Home & Lifestyle',
     'samsung-bespoke-oven-guide.html' => 'Home & Lifestyle',
+    'selfish-reasons-to-have-more-kids.html' => 'Home & Lifestyle',
     'the-glue-chart.html' => 'Home & Lifestyle',
     'the-household-numbers.html' => 'Home & Lifestyle',
 
