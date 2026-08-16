@@ -128,13 +128,15 @@
       .guide-card { position:relative; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); box-shadow:0 8px 28px color-mix(in srgb,#000 12%,transparent); }
       .thumb { display:block; aspect-ratio:1200/630; overflow:hidden; border-bottom:1px solid var(--line); background:var(--surface-2); }
       .thumb img { width:100%; height:100%; object-fit:cover; }
-      .card-body { display:flex; flex:1; flex-direction:column; gap:.7rem; padding:1rem; }
-      .card-body h3 { margin:0; font-size:1.2rem; }
-      .card-body p { margin:0; color:var(--muted); }
+      .guide-card-body { display:flex; flex:1; flex-direction:column; gap:.7rem; padding:1rem; }
+      .guide-card-body h3 { margin:0; font-size:1.2rem; }
+      .guide-card-body p { margin:0; color:var(--muted); }
       .tag-row { display:flex; flex-wrap:wrap; gap:.4rem; }
       .tag { display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:999px; padding:.2rem .5rem; background:var(--surface-2); color:var(--muted); font-size:.74rem; font-weight:800; }
-      .read-link { display:inline-flex; align-items:center; gap:.45rem; width:fit-content; margin-top:auto; color:var(--brand-2); font-weight:900; text-decoration:none; }
-      .read-link:hover { color:var(--accent); }
+      .read-link { display:inline-flex; align-items:center; justify-content:space-between; gap:.75rem; width:100%; min-height:44px; margin-top:auto; padding:.58rem .75rem; border:1px solid color-mix(in srgb,var(--brand) 30%,var(--line)); border-radius:.65rem; color:var(--brand-2); background:color-mix(in srgb,var(--brand) 9%,var(--surface)); font-weight:850; text-decoration:none; }
+      .read-link::after { content:""; position:absolute; inset:0; }
+      .guide-card:hover .read-link { border-color:var(--brand); color:var(--surface); background:var(--brand); }
+      .guide-card:focus-within { outline:3px solid color-mix(in srgb,var(--brand) 72%,white); outline-offset:3px; }
       .related-note { margin-top:2.5rem; padding:1rem 1.15rem; border:1px dashed var(--line); border-radius:var(--radius); color:var(--muted); background:color-mix(in srgb,var(--surface) 70%,transparent); }
 
       .theme-button { min-height:38px; border:1px solid var(--line); border-radius:999px; background:var(--surface-2); color:var(--text); font-weight:800; display:inline-flex; align-items:center; gap:.45rem; padding:.48rem .85rem; }
@@ -142,7 +144,7 @@
       footer p { margin:0; }
 
       @media (prefers-reduced-motion: no-preference) {
-        .guide-card,.thumb img,.hero-button,.theme-button { transition:transform .2s ease, box-shadow .2s ease, color .2s ease, background .2s ease; }
+        .guide-card,.thumb img,.read-link,.hero-button,.theme-button { transition:transform .2s ease, box-shadow .2s ease, color .2s ease, background .2s ease, border-color .2s ease; }
         .guide-card:hover { transform:translateY(-3px); box-shadow:0 16px 38px color-mix(in srgb,#000 20%,transparent); }
         .guide-card:hover .thumb img { transform:scale(1.03); }
       }
@@ -159,8 +161,15 @@
        so re-assert brand link + button colors here (unlayered wins over layered). */
     a { color: var(--brand); }
     a:hover { color: var(--accent); }
-    .read-link { color: var(--brand-2); }
-    .read-link:hover { color: var(--accent); }
+    /* Bootstrap's unlayered Reboot rules otherwise override the layered card
+       padding, heading scale, paragraph size, and link decoration. Keep these
+       hub-card rules unlayered so the component renders as designed. */
+    .guide-card-body { display:flex; flex:1; flex-direction:column; gap:.7rem; padding:1rem; }
+    .guide-card-body h3 { margin:0; color:var(--brand-2); font-size:1.2rem; line-height:1.28; }
+    .guide-card-body p { margin:0; color:var(--muted); font-size:.92rem; line-height:1.5; }
+    .read-link { color:var(--brand-2); text-decoration:none; }
+    .read-link:hover { color:var(--surface); }
+    .read-link:focus-visible { outline:0; }
     .hero-button { color: #1c0d3e; }
     .hero-button.secondary { color: #f2eeff; }
   </style>
@@ -231,75 +240,75 @@
       </div>
       <div class="guide-grid">
         <article class="guide-card">
-          <a class="thumb" href="ai-model-picker.html"><img src="images/ai-model-picker.png" alt="AI model picker cheatsheet preview" loading="lazy"></a>
-          <div class="card-body">
+          <div class="thumb"><img src="images/ai-model-picker.png" alt="AI model picker cheatsheet preview" loading="lazy"></div>
+          <div class="guide-card-body">
             <div class="tag-row"><span class="tag">Decision</span><span class="tag">Anthropic</span><span class="tag">OpenAI</span></div>
             <h3>Which AI Model Should I Use? Model Picker</h3>
             <p>Match Claude, GPT, and Gemini tiers to your task, latency budget, and cost ceiling &mdash; a straight decision guide, not a leaderboard.</p>
-            <a class="read-link" href="ai-model-picker.html">Open guide <i class="bi bi-arrow-right"></i></a>
+            <a class="read-link" href="ai-model-picker.html" aria-label="Open Which AI Model Should I Use? Model Picker">Open guide <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
           </div>
         </article>
         <article class="guide-card">
-          <a class="thumb" href="ai-model-api-pricing.html"><img src="images/ai-model-api-pricing.png" alt="AI model API pricing cheatsheet preview" loading="lazy"></a>
-          <div class="card-body">
+          <div class="thumb"><img src="images/ai-model-api-pricing.png" alt="AI model API pricing cheatsheet preview" loading="lazy"></div>
+          <div class="guide-card-body">
             <div class="tag-row"><span class="tag">Cost</span><span class="tag">API</span><span class="tag">Tokens</span></div>
             <h3>AI Model API Pricing</h3>
             <p>Input/output token pricing across GPT, Claude, and Gemini, with context limits and caching &mdash; work out the real bill before you commit.</p>
-            <a class="read-link" href="ai-model-api-pricing.html">Open guide <i class="bi bi-arrow-right"></i></a>
+            <a class="read-link" href="ai-model-api-pricing.html" aria-label="Open AI Model API Pricing">Open guide <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
           </div>
         </article>
         <article class="guide-card">
-          <a class="thumb" href="ai-coding-agents-compared.html"><img src="images/ai-coding-agents-compared.png" alt="AI coding agents compared cheatsheet preview" loading="lazy"></a>
-          <div class="card-body">
+          <div class="thumb"><img src="images/ai-coding-agents-compared.png" alt="AI coding agents compared cheatsheet preview" loading="lazy"></div>
+          <div class="guide-card-body">
             <div class="tag-row"><span class="tag">Coding</span><span class="tag">Agents</span><span class="tag">IDE</span></div>
             <h3>AI Coding Agents Compared</h3>
             <p>Claude Code, Cursor, Copilot and the rest &mdash; autonomy, editor fit, repo awareness, and where each coding agent actually earns its seat.</p>
-            <a class="read-link" href="ai-coding-agents-compared.html">Open guide <i class="bi bi-arrow-right"></i></a>
+            <a class="read-link" href="ai-coding-agents-compared.html" aria-label="Open AI Coding Agents Compared">Open guide <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
           </div>
         </article>
         <article class="guide-card">
-          <a class="thumb" href="open-weight-ai-models.html"><img src="images/open-weight-ai-models.png" alt="Open-weight AI models cheatsheet preview" loading="lazy"></a>
-          <div class="card-body">
+          <div class="thumb"><img src="images/open-weight-ai-models.png" alt="Open-weight AI models cheatsheet preview" loading="lazy"></div>
+          <div class="guide-card-body">
             <div class="tag-row"><span class="tag">Open weights</span><span class="tag">Local</span><span class="tag">Self-host</span></div>
             <h3>Open-Weight AI Models</h3>
             <p>gpt-oss, Qwen, Gemma, and Mistral: licenses, sizes, and how open weights stack up when you need control, privacy, or offline inference.</p>
-            <a class="read-link" href="open-weight-ai-models.html">Open guide <i class="bi bi-arrow-right"></i></a>
+            <a class="read-link" href="open-weight-ai-models.html" aria-label="Open Open-Weight AI Models">Open guide <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
           </div>
         </article>
         <article class="guide-card">
-          <a class="thumb" href="google-ai-studio-guide.html"><img src="images/google-ai-studio-guide.png" alt="Google AI Studio settings cheatsheet preview" loading="lazy"></a>
-          <div class="card-body">
+          <div class="thumb"><img src="images/google-ai-studio-guide.png" alt="Google AI Studio settings cheatsheet preview" loading="lazy"></div>
+          <div class="guide-card-body">
             <div class="tag-row"><span class="tag">Settings</span><span class="tag">Sampling</span><span class="tag">Gemini</span></div>
             <h3>Google AI Studio Settings</h3>
             <p>What temperature, top-p, top-k, and the advanced knobs actually do &mdash; tune output determinism and creativity with intent.</p>
-            <a class="read-link" href="google-ai-studio-guide.html">Open guide <i class="bi bi-arrow-right"></i></a>
+            <a class="read-link" href="google-ai-studio-guide.html" aria-label="Open Google AI Studio Settings">Open guide <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
           </div>
         </article>
         <article class="guide-card">
-          <a class="thumb" href="prompt-builder.html"><img src="images/prompt-builder.png" alt="System prompt builder cheatsheet preview" loading="lazy"></a>
-          <div class="card-body">
+          <div class="thumb"><img src="images/prompt-builder.png" alt="System prompt builder cheatsheet preview" loading="lazy"></div>
+          <div class="guide-card-body">
             <div class="tag-row"><span class="tag">Prompting</span><span class="tag">System prompt</span><span class="tag">Tool</span></div>
             <h3>System Prompt Builder</h3>
             <p>Build and stress-test a system prompt: role framing, hard constraints, structure, and the failure modes to check before you ship it.</p>
-            <a class="read-link" href="prompt-builder.html">Open guide <i class="bi bi-arrow-right"></i></a>
+            <a class="read-link" href="prompt-builder.html" aria-label="Open System Prompt Builder">Open guide <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
           </div>
         </article>
         <article class="guide-card">
-          <a class="thumb" href="machine-consensus.html"><img src="images/machine-consensus.png" alt="Why LLMs say what they say probability-terrain cheatsheet preview" loading="lazy"></a>
-          <div class="card-body">
+          <div class="thumb"><img src="images/machine-consensus.png" alt="Why LLMs say what they say probability-terrain cheatsheet preview" loading="lazy"></div>
+          <div class="guide-card-body">
             <div class="tag-row"><span class="tag">Model behavior</span><span class="tag">Bias</span><span class="tag">Sampling</span></div>
             <h3>Why LLMs Say What They Say</h3>
             <p>See how training data shapes likely answers, prompts move the starting point, sampling changes the path, and post-training reshapes what is easy to say.</p>
-            <a class="read-link" href="machine-consensus.html">Open interactive guide <i class="bi bi-arrow-right"></i></a>
+            <a class="read-link" href="machine-consensus.html" aria-label="Open Why LLMs Say What They Say interactive guide">Open interactive guide <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
           </div>
         </article>
         <article class="guide-card">
-          <a class="thumb" href="ai-progress-dashboard.html"><img src="images/ai-progress-dashboard.png" alt="AI progress dashboard preview" loading="lazy"></a>
-          <div class="card-body">
+          <div class="thumb"><img src="images/ai-progress-dashboard.png" alt="AI progress dashboard preview" loading="lazy"></div>
+          <div class="guide-card-body">
             <div class="tag-row"><span class="tag">Benchmarks</span><span class="tag">Trends</span><span class="tag">Live</span></div>
             <h3>AI Progress Live Dashboard</h3>
             <p>A live read on where model capability is heading, so your "which model" choice keeps up with a fast-moving frontier.</p>
-            <a class="read-link" href="ai-progress-dashboard.html">Open guide <i class="bi bi-arrow-right"></i></a>
+            <a class="read-link" href="ai-progress-dashboard.html" aria-label="Open AI Progress Live Dashboard">Open guide <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
           </div>
         </article>
       </div>
