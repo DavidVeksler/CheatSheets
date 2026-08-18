@@ -132,9 +132,9 @@ function render_diff(string $patch): string {
  * Routing
  * ------------------------------------------------------------------------- */
 $view   = 'list';
-$commit = isset($_GET['commit']) ? trim($_GET['commit']) : '';
-$file   = isset($_GET['file'])   ? trim($_GET['file'])   : '';
-$q      = isset($_GET['q'])      ? trim($_GET['q'])      : '';
+$commit = isset($_GET['commit']) ? trim(str_replace("\0", '', $_GET['commit'])) : '';
+$file   = isset($_GET['file'])   ? trim(str_replace("\0", '', $_GET['file']))   : '';
+$q      = isset($_GET['q'])      ? trim(str_replace("\0", '', $_GET['q']))      : '';
 $page   = max(1, (int) ($_GET['page'] ?? 1));
 
 $repoReady = git_ok();
