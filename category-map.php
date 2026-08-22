@@ -33,6 +33,7 @@ return [
     'clean-architecture-dotnet.html' => 'Software & DevOps',
     'compression-algorithms.html' => 'Software & DevOps',
     'databases.html' => 'Software & DevOps',
+    'discourse-administration.html' => 'Software & DevOps',
     'dotnet-cheatsheet.html' => 'Software & DevOps',
     'git-internals.html' => 'Software & DevOps',
     'git-scm.html' => 'Software & DevOps',

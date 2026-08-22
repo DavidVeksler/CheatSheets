@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discourse Administration &amp; Management Cheatsheet 2026</title>
+    <meta name="description" content="Operate a production Discourse forum: upgrades, backups, trust levels, permissions, themes, webhooks, API limits, AI triage, workflows, and failure recovery.">
+    <meta name="keywords" content="Discourse, forum administration, community management, Docker, PostgreSQL, Discourse AI, Discourse Theme CLI, DevOps, community strategy">
+    <link rel="canonical" href="https://cheatsheets.davidveksler.com/discourse-administration.html">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Discourse Administration &amp; Management Cheatsheet 2026">
+    <meta property="og:description" content="A production runbook for Discourse upgrades, recovery, permissions, customization, automation, and reporting.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://cheatsheets.davidveksler.com/discourse-administration.html">
+    <meta property="og:image" content="images/discourse-administration.png">
+    <meta property="og:image:alt" content="Discourse administration operations console with command cards, risk guidance, and a launch checklist">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Discourse Administration &amp; Management Cheatsheet 2026">
+    <meta name="twitter:description" content="A production runbook for Discourse upgrades, recovery, permissions, customization, automation, and reporting.">
+    <meta name="twitter:image" content="images/discourse-administration.png">
+    <meta name="twitter:creator" content="@heroiclife">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Discourse Administration & Management Cheatsheet 2026",
+      "description": "A production operations reference for Discourse upgrades, backups, trust and permissions, customization, APIs, AI triage, workflows, reporting, and recovery.",
+      "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+      "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+      "datePublished": "2026-08-21",
+      "dateModified": "2026-08-21",
+      "keywords": "Discourse, administration, community management, Docker, Discourse AI, Theme CLI"
+    }
+    </script>
+
+    <style>
+        @layer reset, variables, base, layout, components, utilities, print;
+
+        @layer variables {
+            :root {
+                color-scheme: light dark;
+
+                /* Typography */
+                --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+
+                /* Colors via light-dark() */
+                --bg-page: light-dark(#f8fafc, #0f172a);
+                --bg-card: light-dark(#ffffff, #1e293b);
+                --bg-code: light-dark(#f1f5f9, #020617);
+                --bg-mark: light-dark(#fef08a, #713f12);
+                --text-main: light-dark(#334155, #cbd5e1);
+                --text-heading: light-dark(#0f172a, #f8fafc);
+                --text-muted: light-dark(#64748b, #94a3b8);
+                --border-color: light-dark(#e2e8f0, #334155);
+
+                /* Accents */
+                --accent-primary: light-dark(#2563eb, #3b82f6);
+                --accent-primary-hover: light-dark(#1d4ed8, #60a5fa);
+                --accent-danger: light-dark(#dc2626, #ef4444);
+                --accent-success: light-dark(#16a34a, #22c55e);
+
+                /* Spacing & Radii */
+                --radius-sm: 0.375rem;
+                --radius-md: 0.5rem;
+                --radius-lg: 0.75rem;
+            }
+            :root[data-theme="light"] { color-scheme: light; }
+            :root[data-theme="dark"] { color-scheme: dark; }
+        }
+
+        @layer reset {
+            *, *::before, *::after { box-sizing: border-box; }
+            body { margin: 0; padding: 0; }
+            h1, h2, h3, h4, h5, h6, p { margin: 0; margin-bottom: 1rem; }
+            table { border-collapse: collapse; width: 100%; }
+        }
+
+        @layer base {
+            body {
+                font-family: var(--font-sans);
+                background-color: var(--bg-page);
+                color: var(--text-main);
+                line-height: 1.6;
+                text-wrap: pretty;
+            }
+            h1, h2, h3 {
+                color: var(--text-heading);
+                text-wrap: balance;
+                line-height: 1.2;
+            }
+            h1 { font-size: clamp(2rem, 5vw, 2.75rem); margin-bottom: 0.5rem; letter-spacing: -0.025em; }
+            h2 { font-size: 1.75rem; margin-top: 2.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border-color); }
+            h3 { font-size: 1.25rem; margin-top: 1.5rem; }
+
+            a { color: var(--accent-primary); text-decoration: none; }
+            a:hover { text-decoration: underline; color: var(--accent-primary-hover); }
+            :focus-visible { outline: 3px solid var(--accent-primary); outline-offset: 3px; }
+
+            code {
+                font-family: var(--font-mono);
+                background-color: var(--bg-code);
+                padding: 0.15em 0.3em;
+                border-radius: var(--radius-sm);
+                font-size: 0.875em;
+                color: var(--accent-primary);
+                overflow-wrap: anywhere;
+            }
+
+            pre {
+                background-color: var(--bg-code);
+                padding: 1rem;
+                border-radius: var(--radius-md);
+                overflow-x: auto;
+                border: 1px solid var(--border-color);
+            }
+            pre code { background: none; padding: 0; color: inherit; font-size: 0.85rem; overflow-wrap: normal; }
+
+            mark { background-color: var(--bg-mark); color: inherit; padding: 0 0.25rem; border-radius: var(--radius-sm); }
+        }
+
+        @layer layout {
+            .container {
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 2rem 1rem;
+            }
+            header { margin-bottom: 3rem; }
+            .meta-bar {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.75rem;
+                background-color: var(--bg-card);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-md);
+                font-size: 0.875rem;
+                color: var(--text-muted);
+            }
+
+            .grid-2 {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+                gap: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+        }
+
+        @layer components {
+            /* Definition Lists for Atomic Entries */
+            dl.atomic-list {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 1.25rem;
+            }
+            dl.atomic-list > div {
+                min-width: 0;
+                background: var(--bg-card);
+                padding: 1.25rem;
+                border-radius: var(--radius-md);
+                border: 1px solid var(--border-color);
+            }
+            dt {
+                font-weight: 700;
+                color: var(--text-heading);
+                font-size: 1.1rem;
+                margin-bottom: 0.25rem;
+            }
+            dd { margin: 0; }
+            .entry-def { display: block; margin-bottom: 0.75rem; }
+            .entry-example { display: block; min-width: 0; padding-left: 1rem; border-left: 3px solid var(--accent-primary); margin-bottom: 0.75rem; overflow-wrap: anywhere; }
+            .entry-gotcha { display: block; min-width: 0; padding-left: 1rem; border-left: 3px solid var(--accent-danger); font-size: 0.9em; overflow-wrap: anywhere; }
+            .entry-gotcha::before { content: "⚠️ Gotcha: "; font-weight: bold; }
+
+            /* Tables */
+            .table-wrapper { overflow-x: auto; margin-bottom: 1.5rem; }
+            table { min-width: 600px; }
+            th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+            th { background-color: var(--bg-card); font-weight: 600; color: var(--text-heading); }
+            tr:last-child td { border-bottom: none; }
+
+            /* Quick Reference Box */
+            .quick-ref {
+                background: var(--bg-card);
+                border-left: 4px solid var(--accent-primary);
+                padding: 1.5rem;
+                border-radius: var(--radius-md);
+                margin-bottom: 2rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            }
+
+            /* Code Blocks with Copy */
+            .cmd-block {
+                position: relative;
+                margin-bottom: 1rem;
+            }
+            .cmd-block pre { margin-bottom: 0; }
+            .copy-btn {
+                position: absolute;
+                top: 0.5rem;
+                right: 0.5rem;
+                background: var(--bg-page);
+                border: 1px solid var(--border-color);
+                color: var(--text-muted);
+                border-radius: var(--radius-sm);
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .copy-btn:hover { color: var(--accent-primary); border-color: var(--accent-primary); }
+
+            /* Native Details/Summary Accordions */
+            details {
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-md);
+                margin-bottom: 0.5rem;
+            }
+            summary {
+                padding: 1rem;
+                font-weight: 600;
+                cursor: pointer;
+                color: var(--text-heading);
+                list-style: none; /* Hide default arrow in modern browsers */
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            summary::-webkit-details-marker { display: none; }
+            summary::after {
+                content: "+";
+                font-size: 1.25rem;
+                font-weight: normal;
+                line-height: 1;
+                transition: transform 0.2s;
+            }
+            details[open] summary::after { transform: rotate(45deg); }
+            .details-content { padding: 0 1rem 1rem 1rem; border-top: 1px solid var(--border-color); margin-top: 0.5rem; }
+
+            /* Interactive Checklist */
+            .task-card {
+                display: flex;
+                align-items: flex-start;
+                gap: 1rem;
+                padding: 1rem;
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-md);
+                margin-bottom: 0.5rem;
+            }
+            .task-card input[type="checkbox"] {
+                margin-top: 0.25rem;
+                width: 1.1rem;
+                height: 1.1rem;
+                accent-color: var(--accent-success);
+                cursor: pointer;
+            }
+            .task-content { flex: 1; }
+            .progress-container {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                background: var(--bg-card);
+                padding: 1rem;
+                border-radius: var(--radius-md);
+                border: 1px solid var(--border-color);
+                margin-bottom: 1rem;
+                position: sticky;
+                top: 1rem;
+                z-index: 10;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+            .progress-bar-bg { flex: 1; height: 8px; background: var(--bg-page); border-radius: 4px; overflow: hidden; }
+            .progress-bar-fill { height: 100%; background: var(--accent-success); width: 0%; transition: width 0.3s ease; }
+            footer { margin-top: 3rem; padding-top: 2rem; border-top: 2px solid var(--border-color); }
+            .link-list { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; padding-left: 1.25rem; }
+        }
+
+        @layer utilities {
+            .text-sm { font-size: 0.875rem; }
+            .font-semibold { font-weight: 600; }
+            .mt-2 { margin-top: 0.5rem; }
+            .mb-0 { margin-bottom: 0; }
+            .text-center { text-align: center; }
+            .text-danger { color: var(--accent-danger); }
+            .text-muted { color: var(--text-muted); }
+
+            @media (max-width: 560px) {
+                .container { padding-inline: 0.75rem; }
+                .meta-bar, .progress-container { align-items: flex-start; }
+                .progress-container { flex-wrap: wrap; }
+                .progress-bar-bg { flex-basis: 100%; }
+                table { min-width: 540px; }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                *, *::before, *::after {
+                    animation-duration: 0.01ms !important;
+                    animation-iteration-count: 1 !important;
+                    transition-duration: 0.01ms !important;
+                    scroll-behavior: auto !important;
+                }
+            }
+        }
+
+        @layer print {
+            @media print {
+                :root { color-scheme: light; }
+                body { background: #fff; color: #111827; font-size: 9.5pt; }
+                .container { max-width: none; padding: 0; }
+                .copy-btn, .progress-container { display: none; }
+                .quick-ref, dl.atomic-list > div, details, .task-card { break-inside: avoid; box-shadow: none; }
+                h2, h3 { break-after: avoid; }
+                .table-wrapper { overflow: visible; }
+                table { min-width: 0; font-size: 8pt; }
+                th, td { padding: 0.35rem; }
+                details::details-content { content-visibility: visible; display: block; }
+                .details-content { display: block; }
+                a { color: inherit; text-decoration: none; }
+                pre { white-space: pre-wrap; }
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Discourse Administration &amp; Management</h1>
+        <p>The keep-open production runbook for upgrades, recovery, permissions, customization, APIs, automation, and community operations.</p>
+        <div class="meta-bar">
+            <span><strong>Target:</strong> Hosted and self-hosted operators</span>
+            <span><strong>Last verified:</strong> 2026-08-21</span>
+            <button id="themeToggle" class="copy-btn" style="position:static;" type="button" aria-label="Switch color theme">◐ Theme</button>
+        </div>
+    </header>
+
+    <main>
+    <!-- QUICK REFERENCE -->
+    <section class="quick-ref">
+        <h2 style="margin-top:0; border:none; padding-bottom:0;">⚡ Quick Reference: High-Frequency Actions</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Command / UI Path</th>
+                        <th>Context / Default Limit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Rebuild Container</strong></td>
+                        <td><code>cd /var/discourse && ./launcher rebuild app</code></td>
+                        <td>Back up first and capture terminal output; duration depends on plugins, data, and host capacity.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Create Admin via CLI</strong></td>
+                        <td><code>./launcher enter app<br>rake admin:create</code></td>
+                        <td>Server-console recovery path when email or authentication blocks every administrator.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Inspect Application Errors</strong></td>
+                        <td>Open <code>/logs</code> on your Discourse origin</td>
+                        <td>Start with Logster for HTTP 500s; hosted plans may require provider support.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Create CLI Backup</strong></td>
+                        <td><code>./launcher run app discourse backup</code></td>
+                        <td>Confirm upload scope and copy the backup off-host; test a restore separately.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API Rate Limits</strong></td>
+                        <td>Handle HTTP <code>429</code>; verify proxy client IPs</td>
+                        <td>Defaults as of Aug 2026: 200/IP/min; admin API 60/min shared across keys.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Theme CLI Sync</strong></td>
+                        <td><code>discourse_theme watch &lt;dir&gt;</code></td>
+                        <td>Use staging or a non-default theme and a scoped key; never commit credentials.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- PART 1: FUNDAMENTALS -->
+    <section>
+        <h2>1. Fundamentals: Identity & Trust Architecture</h2>
+        <p>Trust levels answer “how much can this account do?” Groups answer “which capabilities and spaces does this person need?” Staff still own policy, sanctions, and hard moderation calls.</p>
+
+        <dl class="atomic-list">
+            <div>
+                <dt>Trust Level System (TL0 - TL4)</dt>
+                <dd>
+                    <span class="entry-def">An automated promotion system based on engagement metrics (reading time, topics viewed, replies) that grants escalating privileges.</span>
+                    <span class="entry-example"><strong>Default TL0:</strong> at most 2 hyperlinks and 1 image per post. <strong>Default TL3:</strong> at least 50% of days visited in the rolling 100-day window plus reply, reading, like, and moderation-history criteria; reading requirements are capped at 500 topics and 20,000 posts.</span>
+                    <span class="entry-gotcha">TL3 can be earned and lost. TL4 is different: it is manual promotion by staff. Use a custom group when someone needs one capability without a wholesale trust-level promotion.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Group-Based Permissions</dt>
+                <dd>
+                    <span class="entry-def">Security architecture assigning read/write/reply access to custom groups rather than purely relying on Trust Levels.</span>
+                    <span class="entry-example">Create a <code>@beta-testers</code> group. In Category → Edit → Security, remove <code>everyone</code>, then grant <code>beta-testers</code> See/Reply/Create to make the category private to that group.</span>
+                    <span class="entry-gotcha">Avoid assigning specific users individual permissions. Always assign users to a Group, and apply permissions to the Group.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Anonymization vs. Deletion</dt>
+                <dd>
+                    <span class="entry-def">Anonymization removes account identity while preserving contributions; deletion removes the account and may require separate handling of authored posts.</span>
+                    <span class="entry-example">Use <strong>Anonymize User</strong> on the user’s admin page when policy calls for removing account identity while preserving contributions; Discourse replaces the username and removes fields such as email, name, date of birth, avatar, profile, API keys, and third-party auth links.</span>
+                    <span class="entry-gotcha">Anonymization is not a universal legal answer: authored posts, revisions, staff logs, and backups can still matter. Authenticate requests and follow a jurisdiction-specific retention and erasure policy.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Tags vs. Categories (Information Architecture)</dt>
+                <dd>
+                    <span class="entry-def">Categories provide access boundaries and major partitions; tags provide flexible, overlapping organization across topics.</span>
+                    <span class="entry-example">Instead of making <code>Support &gt; MacOS &gt; Version 15</code> (deep categories), make a <code>Support</code> category and mandate a Tag Group containing <code>#macos</code> and <code>#v15</code>.</span>
+                    <span class="entry-gotcha">Writing <code>#macos</code> in a post links to the tag; it does not apply the tag to the topic. Avoid many empty categories because they create ambiguous posting choices—not because of an invented database threshold.</span>
+                </dd>
+            </div>
+        </dl>
+    </section>
+
+    <!-- PART 2: OPERATIONS & RECOVERY -->
+    <section>
+        <h2>2. Production Operations &amp; Recovery</h2>
+        <p>Use the loop <strong>backup → change → observe → verify → retain rollback</strong>. Commands below assume the supported <code>discourse_docker</code> layout at <code>/var/discourse</code>.</p>
+
+        <dl class="atomic-list">
+            <div>
+                <dt>Standalone vs. Multiple Containers</dt>
+                <dd>
+                    <span class="entry-def">The standalone template minimizes operational complexity; separate <code>data.yml</code> and <code>web_only.yml</code> containers enable independent web builds, redundancy, and horizontal scaling.</span>
+                    <span class="entry-example">Stay standalone while one host meets capacity and recovery objectives. Split when measured CPU, database I/O, queue latency, storage, rebuild duration, or availability requirements justify operating PostgreSQL, Redis, web nodes, load balancing, and shared uploads separately.</span>
+                    <span class="entry-gotcha">There is no universal “1 million pageviews” cutover. Multi-container operation is more flexible but also more complex; rehearse migration and rollback from a current backup.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Logs &amp; Incident Triage</dt>
+                <dd>
+                    <span class="entry-def">Logster, Rails logs, container output, and proxy/database logs reveal different failure layers.</span>
+                    <span class="entry-example">For an HTTP 500, check <code>/logs</code>, then <code>./launcher logs app</code>, then <code>/var/discourse/shared/standalone/log/rails/production.log</code>. Capture rebuild output with <code>tee</code> while the rebuild runs.</span>
+                    <span class="entry-gotcha">Logs can contain email addresses, IPs, request data, and secrets. Redact before sharing and restrict access and retention.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Backups That Can Restore</dt>
+                <dd>
+                    <span class="entry-def">A backup is useful only when its upload scope, off-host copy, version compatibility, plugins, and restore procedure are known.</span>
+                    <span class="entry-example">Create a backup including uploads, download it off-host, build a sandbox on the same Discourse version, enable <code>allow restore</code>, restore, then verify login, posts, uploads, themes, and required plugins.</span>
+                    <span class="entry-gotcha">Backups contain users, settings, themes, and credential-equivalent material. Encrypt and access-control them. Plugin code itself comes from container configuration and must also be restored.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Signed Webhooks &amp; Scoped API Keys</dt>
+                <dd>
+                    <span class="entry-def">Webhooks push selected events to an HTTPS endpoint; separate API keys authorize calls back into Discourse.</span>
+                    <span class="entry-example">Create a webhook at <code>/admin/api/web_hooks/new</code>, choose only required events, set a secret, verify <code>X-Discourse-Event-Signature</code> as HMAC-SHA256 over the raw body, and use <strong>Ping</strong>. Give each integration its own minimal key.</span>
+                    <span class="entry-gotcha">Return quickly, queue work, and deduplicate retries. Never trust account/email payloads before signature verification or reuse one unrestricted admin key across services.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Rate Limits &amp; Reverse Proxies</dt>
+                <dd>
+                    <span class="entry-def">Discourse applies global per-IP and API-key-class throttles; clients must treat HTTP <code>429</code> as backpressure.</span>
+                    <span class="entry-example"><strong>Defaults verified Aug 2026:</strong> 200 requests/IP/minute and 50/IP/10 seconds; user API 20/minute and 2,880/day; admin API 60/minute shared across admin keys.</span>
+                    <span class="entry-gotcha">A proxy that forwards the wrong client IP can make every visitor appear to come from one address. Fix forwarding before raising limits; back off with jitter and retry only safe operations.</span>
+                </dd>
+            </div>
+        </dl>
+    </section>
+
+    <!-- PART 3: CUSTOMIZATION -->
+    <section>
+        <h2>3. UI Customization & Development</h2>
+
+        <h3>The Customization Hierarchy (Use Top to Bottom)</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Safety / Upgrade Risk</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1. Theme Components</strong></td>
+                        <td>Low risk (modular)</td>
+                        <td>Adding a custom search banner, social sharing icons, or bespoke layout tweaks. <em>Layer multiple onto any base theme.</em></td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Themes</strong></td>
+                        <td>Low–moderate risk</td>
+                        <td>Overarching color schemes and CSS variables. Rely on built-in color palette editor.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Official Plugins</strong></td>
+                        <td>Moderate (Managed by Discourse)</td>
+                        <td>Adding complex backend capabilities (Discourse AI, Solved, Calendar).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Third-Party Plugins</strong></td>
+                        <td>High risk (you own compatibility)</td>
+                        <td>Custom authentication layers, backend models, jobs, or deep API behavior. <em>Test every platform upgrade in staging.</em></td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. Core HTML Overrides</strong></td>
+                        <td><strong>Very high risk</strong></td>
+                        <td>A deliberate product fork with a dedicated upstream-merge owner—not routine site customization.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <dl class="atomic-list mt-2">
+            <div>
+                <dt>Discourse Theme CLI</dt>
+                <dd>
+                    <span class="entry-def">A command-line tool allowing developers to build themes locally in VS Code and hot-reload them to a live server via API.</span>
+                    <div class="entry-example">
+                        <div class="cmd-block">
+                            <button class="copy-btn" type="button" onclick="copyCode(this)">Copy</button>
+                            <pre><code>gem install discourse_theme
+discourse_theme new my-custom-component
+discourse_theme watch my-custom-component</code></pre>
+                        </div>
+                    </div>
+                    <span class="entry-gotcha">Live sync targets a real site. Use staging or a non-default development theme, a minimally scoped key, and never commit <code>.discourse_theme</code> credentials.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Plugin Outlets</dt>
+                <dd>
+                    <span class="entry-def">Designated hooks in the Discourse HTML/Handlebars templates where custom UI elements can be injected safely.</span>
+                    <span class="entry-example">Use the core developer toolbox to reveal available outlets, then target a current outlet such as <code>discovery-list-container-top</code> with a uniquely named connector.</span>
+                    <span class="entry-gotcha">Wrapper outlets can replace core content and accept only one active connector. Inspect the outlet arguments and smoke-test after platform updates.</span>
+                </dd>
+            </div>
+        </dl>
+    </section>
+
+    <!-- PART 4: AI & AUTOMATION -->
+    <section>
+        <h2>4. AI, Automation, Workflows &amp; Reporting</h2>
+        <p>Automate classification and routing before sanctions. Keep execution logs, narrow the scope, measure false positives, and preserve human review for irreversible actions.</p>
+
+        <dl class="atomic-list">
+            <div>
+                <dt>Discourse AI: Triage &amp; Classification</dt>
+                <dd>
+                    <span class="entry-def">AI triage uses an Agent through Discourse Automation to classify posts and conditionally tag, move, reply, or hide.</span>
+                    <span class="entry-example">Limit the rule to first topics in <code>Support</code>; instruct the Agent to return only <code>REVIEW</code> for likely credential exposure; set “Search for Text” to <code>REVIEW</code> and apply a moderator-review tag.</span>
+                    <span class="entry-gotcha">It requires Discourse AI plus Discourse Automation, incurs model cost, and can be wrong. Start with routing/tagging, sample outcomes, and bound input/output tokens.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>AI Search &amp; Related Topics</dt>
+                <dd>
+                    <span class="entry-def">Semantic similarity can surface conceptually related topics that do not share the same literal words.</span>
+                    <span class="entry-example">Test a known paraphrase set—“factory reset,” “wipe configuration,” and “restore defaults”—and compare semantic results with standard search before changing user-facing defaults.</span>
+                    <span class="entry-gotcha">Embedding the historical corpus is background work and provider-dependent. Monitor queues, cost, privacy terms, and result quality; do not promise a specific duplicate-reduction rate.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Discourse Automation</dt>
+                <dd>
+                    <span class="entry-def">Automation runs one supported script for a compatible trigger, schedule, or API call.</span>
+                    <span class="entry-example">Use a <code>user_added_to_group</code> trigger with a supported welcome-message script rather than writing a custom plugin for one notification.</span>
+                    <span class="entry-gotcha">Scripts support specific triggers; Automation is not a universal multi-step canvas. Verify the current script/trigger matrix in your instance.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Discourse Workflows</dt>
+                <dd>
+                    <span class="entry-def">Workflows is the new node-based builder for multi-step triggers, conditions, actions, external calls, delays, and flow control.</span>
+                    <span class="entry-example">On a new topic: check category → branch on required fields → call a ticket API → store the returned ID → reply with the case number; inspect executions before enabling broadly.</span>
+                    <span class="entry-gotcha"><strong>Availability as of Aug 2026:</strong> the official listing describes it as bundled with core and available on hosted Business/Enterprise plans; the July 2026 preview calls it experimental. Confirm current plan and version.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Data Explorer (Read-Only SQL)</dt>
+                <dd>
+                    <span class="entry-def">Data Explorer runs saved, read-only PostgreSQL queries against the live Discourse database for custom reporting.</span>
+                    <div class="entry-example">
+                        Find top readers who have not posted in 30 days; <code>time_read</code> is seconds:
+                        <div class="cmd-block">
+                            <button class="copy-btn" type="button" onclick="copyCode(this)">Copy</button>
+                            <pre><code>SELECT u.username,
+       us.days_visited,
+       ROUND(us.time_read / 3600.0, 1) AS hours_read
+FROM users u
+JOIN user_stats us ON us.user_id = u.id
+WHERE u.last_posted_at &lt; CURRENT_DATE - INTERVAL '30 days'
+ORDER BY us.time_read DESC
+LIMIT 20;</code></pre>
+                        </div>
+                    </div>
+                    <span class="entry-gotcha">Data Explorer is read-only and enforces a query timeout, but expensive scans still waste resources. Filter early, limit output, and run heavy reporting off-peak.</span>
+                </dd>
+            </div>
+        </dl>
+    </section>
+
+    <!-- PART 5: STRATEGY & ANTI-PATTERNS -->
+    <section>
+        <h2>5. Community Strategy &amp; Common Mistakes</h2>
+        <p>Forums earn repeat use when discussion produces durable, searchable knowledge and belonging. Choose friction, curation, and automation according to the community’s actual abuse and support patterns.</p>
+
+        <dl class="atomic-list">
+            <div>
+                <dt>Synthesis as a Service (Curation)</dt>
+                <dd>
+                    <span class="entry-def">Curation turns long-lived discussions into an accessible answer, decision record, or maintained reference.</span>
+                    <span class="entry-example">When a 100-post incident thread reaches a conclusion, draft a summary, have a domain owner verify it, and add the final remediation and date to the original post.</span>
+                    <span class="entry-gotcha">An AI summary can omit dissent or invent consensus. Keep links to the decisive posts and name the human reviewer.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>The Ecosystem Bridge (Chat vs. Forum)</dt>
+                <dd>
+                    <span class="entry-def">Chat supports fast coordination; Discourse preserves decisions and knowledge that must remain searchable.</span>
+                    <span class="entry-example">Use chat for the live incident room, then publish a Discourse postmortem containing timeline, root cause, remediation owner, and follow-up dates.</span>
+                    <span class="entry-gotcha">Do not copy private chat into a public topic without participant and data-classification review.</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Risk-Adjusted Onboarding</dt>
+                <dd>
+                    <span class="entry-def">Authentication and review friction should match the cost of abuse and the audience’s tolerance.</span>
+                    <span class="entry-example">A private customer forum can use DiscourseConnect tied to active product accounts; an open hobby forum may keep native signup, TL0 limits, watched words, and staff review.</span>
+                    <span class="entry-gotcha">SSO creates a new critical dependency and recovery path. Do not require identity providers that exclude legitimate members without a documented reason.</span>
+                </dd>
+            </div>
+        </dl>
+
+        <h3 class="text-danger">Common Anti-Patterns (What NOT to Do)</h3>
+        <details name="antipatterns">
+            <summary>Copying Default Guidelines Without Adapting Them</summary>
+            <div class="details-content">
+                Discourse provides a useful “civilized discourse” starting point, but it is not a substitute for community-specific rules, escalation, appeals, prohibited content, privacy, and governing-law review. Start from the template, name the actual policy owner, and version changes visibly.
+            </div>
+        </details>
+        <details name="antipatterns">
+            <summary>The API Consent Trap</summary>
+            <div class="details-content">
+                Forum participation does not automatically authorize marketing. Before syncing account data to a CRM, define a lawful basis, purpose, fields, retention, disclosure, opt-out/consent flow, and deletion propagation appropriate to the jurisdictions involved.
+            </div>
+        </details>
+        <details name="antipatterns">
+            <summary>Using the "Solved" Plugin Incorrectly</summary>
+            <div class="details-content">
+                A reply such as “Thanks, fixed it” is not a reusable solution. Let topic owners mark answers, but add staff/curator review for high-traffic support topics and move the actual fix into the accepted post or original post.
+            </div>
+        </details>
+        <details name="antipatterns">
+            <summary>Running <code>redis-cli FLUSHALL</code> as Generic Troubleshooting</summary>
+            <div class="details-content">
+                <code>FLUSHALL</code> deletes every database in that Redis instance and is not a supported cure for notifications or Sidekiq problems. Inspect <code>/sidekiq</code>, Logster, container output, and the failing job; remediate the specific subsystem instead.
+            </div>
+        </details>
+        <details name="antipatterns">
+            <summary>Upgrading Without an Off-Host Restore Test</summary>
+            <div class="details-content">
+                A green “backup complete” badge does not prove the file contains uploads, is downloadable, or restores with the current plugin set. Periodically restore into a version-compatible sandbox and record recovery time and missing dependencies.
+            </div>
+        </details>
+        <details name="antipatterns">
+            <summary>Letting AI Delete, Ban, or Disclose Without Review</summary>
+            <div class="details-content">
+                Classifiers are probabilistic and prompts may contain private data. Prefer reversible tags, moves, or hides; sample outcomes; track false positives; and require human authorization for irreversible sanctions or external disclosure.
+            </div>
+        </details>
+    </section>
+
+    <!-- INTERACTIVE VERIFICATION CHECKLIST -->
+    <section>
+        <h2>6. Pre-Launch / Audit Checklist</h2>
+        <p class="text-sm text-muted">Progress is saved locally to your browser.</p>
+
+        <div class="progress-container">
+            <span id="progress-text" class="font-semibold" aria-live="polite">0/8 Completed</span>
+            <div class="progress-bar-bg">
+                <div id="progress-fill" class="progress-bar-fill"></div>
+            </div>
+            <button class="copy-btn" style="position:static;" type="button" onclick="resetChecklist()">Reset</button>
+        </div>
+
+        <div class="task-card">
+            <input type="checkbox" id="chk-admins" class="task-check" data-task="admins" onchange="updateProgress()">
+            <div class="task-content">
+                <label for="chk-admins"><strong>Two Recovery-Capable Admins</strong></label>
+                <p class="mb-0 text-sm">Authentication is tested, server/provider recovery is documented, and emergency access is not held by one person.</p>
+            </div>
+        </div>
+        <div class="task-card">
+            <input type="checkbox" id="chk-groups" class="task-check" data-task="groups" onchange="updateProgress()">
+            <div class="task-content">
+                <label for="chk-groups"><strong>Category Permissions Tested</strong></label>
+                <p class="mb-0 text-sm">Anonymous, ordinary member, private-group, moderator, and admin accounts see exactly the intended areas.</p>
+            </div>
+        </div>
+        <div class="task-card">
+            <input type="checkbox" id="chk-backups" class="task-check" data-task="backups" onchange="updateProgress()">
+            <div class="task-content">
+                <label for="chk-backups"><strong>Off-Host Restore Completed</strong></label>
+                <p class="mb-0 text-sm">A current backup—including the intended upload scope—was restored into a version-compatible sandbox.</p>
+            </div>
+        </div>
+        <div class="task-card">
+            <input type="checkbox" id="chk-mail" class="task-check" data-task="mail" onchange="updateProgress()">
+            <div class="task-content">
+                <label for="chk-mail"><strong>Email Paths Verified</strong></label>
+                <p class="mb-0 text-sm">Registration, login, digest, bounce, and unsubscribe behavior were tested; email logs show expected delivery.</p>
+            </div>
+        </div>
+        <div class="task-card">
+            <input type="checkbox" id="chk-logs" class="task-check" data-task="logs" onchange="updateProgress()">
+            <div class="task-content">
+                <label for="chk-logs"><strong>Logs &amp; Alerts Reachable</strong></label>
+                <p class="mb-0 text-sm">Operators can reach Logster/provider logs, Sidekiq, host monitoring, and the incident contact path.</p>
+            </div>
+        </div>
+        <div class="task-card">
+            <input type="checkbox" id="chk-integrations" class="task-check" data-task="integrations" onchange="updateProgress()">
+            <div class="task-content">
+                <label for="chk-integrations"><strong>Keys &amp; Webhooks Scoped</strong></label>
+                <p class="mb-0 text-sm">Every integration has an owner, minimal permissions, signature check, retry policy, and rotation plan.</p>
+            </div>
+        </div>
+        <div class="task-card">
+            <input type="checkbox" id="chk-theme" class="task-check" data-task="theme" onchange="updateProgress()">
+            <div class="task-content">
+                <label for="chk-theme"><strong>Customizations Tested in Staging</strong></label>
+                <p class="mb-0 text-sm">The current core update passes theme, plugin, auth, composer, search, desktop, and mobile smoke tests.</p>
+            </div>
+        </div>
+        <div class="task-card">
+            <input type="checkbox" id="chk-automation" class="task-check" data-task="automation" onchange="updateProgress()">
+            <div class="task-content">
+                <label for="chk-automation"><strong>Automation Failure Modes Reviewed</strong></label>
+                <p class="mb-0 text-sm">AI, Automation, and Workflow rules are narrow, observable, reversible where possible, and human-owned.</p>
+            </div>
+        </div>
+    </section>
+
+    </main>
+
+    <footer>
+        <h2>Primary References</h2>
+        <p class="text-muted">Operational specifics were checked against first-party Discourse documentation and repositories on 2026-08-21. Defaults can be changed by administrators and may drift after publication.</p>
+        <ul class="link-list">
+            <li><a href="https://blog.discourse.org/2018/06/understanding-discourse-trust-levels/" target="_blank" rel="noopener">Trust levels and current defaults</a></li>
+            <li><a href="https://meta.discourse.org/t/understanding-groups-and-category-permissions/87678" target="_blank" rel="noopener">Groups and category permissions</a></li>
+            <li><a href="https://meta.discourse.org/t/admin-guide-to-tags-in-discourse/121041" target="_blank" rel="noopener">Admin guide to tags</a></li>
+            <li><a href="https://github.com/discourse/discourse_docker" target="_blank" rel="noopener">Official Docker repository</a></li>
+            <li><a href="https://meta.discourse.org/t/create-download-and-restore-a-backup-of-your-discourse-database/122710" target="_blank" rel="noopener">Create and restore backups</a></li>
+            <li><a href="https://meta.discourse.org/t/available-settings-for-global-rate-limits-and-throttling/78612" target="_blank" rel="noopener">Global rate limits</a></li>
+            <li><a href="https://meta.discourse.org/t/install-the-discourse-theme-cli-console-app-to-help-you-build-themes/82950" target="_blank" rel="noopener">Theme CLI</a></li>
+            <li><a href="https://meta.discourse.org/t/discourse-ai-ai-triage/281227" target="_blank" rel="noopener">Discourse AI triage</a></li>
+            <li><a href="https://meta.discourse.org/t/discourse-automation/195773" target="_blank" rel="noopener">Discourse Automation</a></li>
+            <li><a href="https://meta.discourse.org/t/discourse-workflows/407100" target="_blank" rel="noopener">Discourse Workflows</a></li>
+        </ul>
+
+        <h3>Related Cheatsheets</h3>
+        <ul class="link-list">
+            <li><a href="linux-server-hardening.html">Linux Server Hardening</a></li>
+            <li><a href="modern-devops-pipelines.html">Modern DevOps Pipelines</a></li>
+            <li><a href="observability-logs-metrics-traces-slos.html">Observability &amp; SLOs</a></li>
+            <li><a href="postgresql.html">PostgreSQL</a></li>
+            <li><a href="api-design-rest-graphql-grpc-webhooks.html">API Design &amp; Webhooks</a></li>
+        </ul>
+        <p class="text-sm text-muted"><strong>Last verified:</strong> 2026-08-21 · Recheck production defaults and feature availability before irreversible changes.</p>
+    </footer>
+
+</div>
+
+<script>
+    const safeStorage = (() => {
+        try {
+            const key = '__discourse_sheet_test__';
+            localStorage.setItem(key, key);
+            localStorage.removeItem(key);
+            return localStorage;
+        } catch (_) {
+            return null;
+        }
+    })();
+
+    const root = document.documentElement;
+    const themeToggle = document.getElementById('themeToggle');
+    const savedTheme = safeStorage?.getItem('discourse-theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') root.dataset.theme = savedTheme;
+
+    themeToggle.addEventListener('click', () => {
+        const current = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        safeStorage?.setItem('discourse-theme', next);
+    });
+
+    async function writeClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return;
+        }
+        const area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand('copy');
+        area.remove();
+    }
+
+    async function copyCode(btn) {
+        const codeBlock = btn.nextElementSibling.querySelector('code');
+        const originalText = btn.innerText;
+        try {
+            await writeClipboard(codeBlock.innerText);
+            btn.innerText = 'Copied!';
+            btn.style.color = 'var(--accent-success)';
+            btn.style.borderColor = 'var(--accent-success)';
+        } catch (_) {
+            btn.innerText = 'Select text';
+        }
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.color = '';
+            btn.style.borderColor = '';
+        }, 1600);
+    }
+
+    const prefix = 'discourse-admin-chk-';
+    const checkboxes = document.querySelectorAll('.task-check');
+    const progressText = document.getElementById('progress-text');
+    const progressFill = document.getElementById('progress-fill');
+
+    function updateProgress() {
+        let completed = 0;
+        checkboxes.forEach(chk => {
+            const key = prefix + chk.dataset.task;
+            if (chk.checked) {
+                completed++;
+                safeStorage?.setItem(key, 'true');
+            } else {
+                safeStorage?.removeItem(key);
+            }
+        });
+
+        progressText.innerText = `${completed}/${checkboxes.length} Completed`;
+        progressFill.style.width = `${(completed / checkboxes.length) * 100}%`;
+    }
+
+    function resetChecklist() {
+        checkboxes.forEach(chk => { chk.checked = false; });
+        updateProgress();
+    }
+
+    checkboxes.forEach(chk => {
+        chk.checked = safeStorage?.getItem(prefix + chk.dataset.task) === 'true';
+    });
+    updateProgress();
+</script>
+
+</body>
+</html>
