@@ -47,6 +47,13 @@ stages ready-to-paste comment/post drafts for review. The subreddit→cheatsheet
 read-only scanner is [`../scripts/reddit_scan.py`](../scripts/reddit_scan.py). It never posts —
 David posts from his own account, then logs the result in the campaign measurement log.
 
+## Newsletter
+
+Not live. [`newsletter.md`](newsletter.md) is the spec: Resend-backed monthly digest built
+from git history + `popularity.json`, double opt-in intake, draft-tier routine, David sends.
+Its KPI table (confirm/open/click/complaint rates) appends to `seo-progress.md` alongside the
+GSC and Cloudflare pull once it ships.
+
 ## Cross-linking
 
 This site is the **firearms-bridge donor** (Phase 3) in the cross-domain plan: a
