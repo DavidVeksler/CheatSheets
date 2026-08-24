@@ -1,156 +1,114 @@
 # AGENTS.md
 
-Cross-agent guidance for this repository. Read by Claude Code, Codex, and Cursor. If a tool needs its own file, point it here (`CLAUDE.md` → this file; `.cursorrules` → this file) so the standard lives in one place.
+Authoritative cross-agent guidance (Claude Code, Codex, Cursor). `CLAUDE.md` and `.cursorrules` point here.
 
 ## Project Overview
 
-A collection of interactive, standalone HTML cheatsheets covering technology, finance, philosophy, AI safety, crypto, martial arts, and more. Each file is a self-contained reference guide.
+A collection of standalone, interactive HTML cheatsheets covering technology, finance, philosophy, AI safety, crypto, martial arts, and more.
+**Core bar:** *Terminal reference* — high density, comprehensive coverage across edge cases, and zero factual fabrication. A competent practitioner must be able to perform real work from a single sheet without opening another tab.
 
-The defining quality bar is **comprehensiveness plus accuracy**. A cheatsheet here is a *terminal reference*: a competent practitioner should be able to do real work from a single page for the topic's common cases without opening another tab. Density and correctness win over brevity. The Content Comprehensiveness Standard and the Accuracy & Freshness Protocol below are hard acceptance criteria, not style suggestions.
+## Repository Governance
 
-## Repository documents (what governs what)
-
-This file owns the quality bar. The other Markdown docs divide the workflows — use the right one for the task:
-
-| Document | Use it when |
+| Document | Purpose / Workflow |
 |---|---|
-| [`docs/content.md`](docs/content.md) | **Quick path: add / edit / publish a cheatsheet, front to back** — a thin index that routes into this file's content workflow, the local build/QA steps, and the SEO gate. |
-| [`docs/marketing.md`](docs/marketing.md) | **Quick path: SEO, promotion, measurement** — the SEO gate, discovery files, Search Console / Cloudflare measurement, promotion channels, and cross-linking pointers. |
-| [`docs/economics-data-refresh.md`](docs/economics-data-refresh.md) | **Refreshing economics comparison data** — generator command, source vintages, pinned-series safeguards, election-cycle rebuild, and QA checklist. |
-| [`docs/newsletter.md`](docs/newsletter.md) | **Newsletter (SPEC, not implemented)** — the Resend-backed monthly newsletter: double opt-in intake, key-split security model, digest pipeline, draft-tier routine, DNS/compliance prerequisites. Extends the **Email signup endpoint** section below. |
-| [`docs/seo-progress.md`](docs/seo-progress.md) | **KPI / traffic history** — append-only measurement log (GSC + Cloudflare deltas, newest on top). The durable SEO working doc is `TODO/seo-planning.md`; this is the dated results log. |
-| [`CLAUDE.md`](CLAUDE.md) | Pointer only (`@AGENTS.md`) so Claude Code inlines this file. The SRI hash table it used to hold now lives under **Tech Baseline → Cached CDN dependencies** below. |
-| [`TODO/README.md`](TODO/README.md) | **Building a cheatsheet from a spec** in `TODO/` — binding implementation rules (numbers-are-anchors, outline-first, definition of done, design execution). |
-| `TODO/<topic>.md` | One spec per planned cheatsheet (content angle, sections, visual identity). Deleted after the build ships. |
-| [`TODO/SPEC-AUDIT.md`](TODO/SPEC-AUDIT.md) | **Writing or reviewing a spec** — spec-completeness criteria (search targeting, reader outcome, staleness register, etc.). |
-| [`TODO/CHEATSHEET-AUDIT.md`](TODO/CHEATSHEET-AUDIT.md) | **Reviewing an existing/shipped cheatsheet** — run this per-file conformance audit (metadata, SRI, content depth, site integration), with severity tiers, fix policy, and the corpus defect baseline. |
-| [`TODO/seo-planning.md`](TODO/seo-planning.md) | **Planning SEO work** — durable doc (not deleted after one pass) tracking the Search Console baseline, striking-distance opportunities, and open questions. Pull fresh GSC data before trusting numbers more than a few weeks old. |
-| [`deploy/DEPLOY.md`](deploy/DEPLOY.md) | **Deploying to production** — the guarded `./deploy.sh` pipeline (preflight → validate → confirm → push → live verify), remotes, flags, the pre-push hook, and manual fallback. Deploy via the script, not raw `git push production`. |
-| [`weekly-freshness-update.md`](weekly-freshness-update.md) | The scheduled **fact-drift job** — worker instructions for refreshing one dated cheatsheet per run. Owns fact verification; the audit above only checks the freshness *machinery* exists. |
-| [`README.md`](README.md) | Public repo readme (minimal). |
-| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | GitHub Copilot's summary of this repo. Duplicates rather than points here, so it drifts — treat this file as authoritative; sync that one when touching it. |
+| [`docs/content.md`](docs/content.md) | **Content workflow** — Quick path to add/edit/publish, local build/QA, SEO gate. |
+| [`docs/marketing.md`](docs/marketing.md) | **SEO & Promotion** — Discovery files, GSC/Cloudflare analytics, cross-linking. |
+| [`docs/economics-data-refresh.md`](docs/economics-data-refresh.md) | **Economics data** — Generator command, data vintages, pinned series, QA. |
+| [`docs/newsletter.md`](docs/newsletter.md) | **Newsletter spec** — Resend double opt-in, key-split security, digest routine. |
+| [`docs/seo-progress.md`](docs/seo-progress.md) | **SEO log** — Append-only KPI and traffic measurement history. |
+| [`CLAUDE.md`](CLAUDE.md) | Pointer only (`@AGENTS.md`). |
+| [`TODO/README.md`](TODO/README.md) | **Implementation spec rules** — Anchors, outline-first, definition of done. |
+| `TODO/<topic>.md` | One spec per planned cheatsheet (deleted after shipping). |
+| [`TODO/SPEC-AUDIT.md`](TODO/SPEC-AUDIT.md) | **Spec audit** — Search targeting, outcome, staleness register criteria. |
+| [`TODO/CHEATSHEET-AUDIT.md`](TODO/CHEATSHEET-AUDIT.md) | **Sheet audit** — Conformance audit, SRI checks, defect baseline. |
+| [`TODO/seo-planning.md`](TODO/seo-planning.md) | **SEO planning** — GSC baselines and striking-distance opportunities. |
+| [`deploy/DEPLOY.md`](deploy/DEPLOY.md) | **Deployment runbook** — `./deploy.sh` pipeline (preflight, validate, push, verify). |
+| [`weekly-freshness-update.md`](weekly-freshness-update.md) | Scheduled fact-drift refresh routine. |
+| [`README.md`](README.md) | Public repository readme. |
+| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | GitHub Copilot summary (sync when editing this file). |
+| `SEO_PROMPT.txt` | Footer cross-linking procedure. |
 
-Non-Markdown but load-bearing: `SEO_PROMPT.txt` (footer cross-linking procedure).
+---
 
-## Generation Protocol (read first)
+## Generation & Quality Protocol
 
-1. **Effort = High** (the Opus 4.8 default). Comprehensiveness comes from the spec in this file, not the effort dial — do not rely on Extra/Max to add coverage the spec already mandates. If a draft is thin, apply the standard harder.
-2. **Research before writing.** For any version-sensitive, fast-moving, or specific factual content, verify against primary sources via web search first (see Accuracy & Freshness). AI-generated cheatsheets are exactly where hallucinated specifics creep in — close that gap up front.
-3. **Outline to three depths, then fill** (see Coverage Contract). No section ships hollow.
-4. **Self-verify against the Testing Checklist** before finishing. The model is expected to run its own output through the checklist, not assume it passed.
+1. **Effort = High** (Opus 4.8 default).
+2. **Research primary sources first:** Verify every version, API signature, default, benchmark, limit, date, and price. Never fabricate or guess numbers.
+3. **Coverage contract (3 Depths):**
+   - **Fundamentals:** Mental models, core definitions (the 20% explaining 80%).
+   - **Working knowledge:** Syntax, commands, daily production patterns, decisions.
+   - **Edge & advanced:** Gotchas, failure modes, performance, internals.
+   - *No placeholders or TODOs.* Every outlined section must be fully populated (≥3 substantive entries per section).
+4. **Atomic entry rule:** Every entry must have:
+   - Precise 1-line definition/purpose.
+   - Concrete example with real-world values (no `foo`/`bar`).
+   - Quantified metrics (e.g., "~O(log n), sub-ms for n < 10⁶", explicit token prices, exact cutoffs/defaults).
+   - Gotcha, pitfall, or explicit "when NOT to use".
+5. **Breadth requirements:**
+   - Comparison table (criteria × alternatives) when 2+ options exist.
+   - Decision guidance ("Use X when...; Use Y when...").
+   - Common Mistakes / Anti-Patterns section (MANDATORY for technical sheets).
+   - Quick Reference block near top (high-frequency lookups).
+   - Density floor: 20+ substantive entries per sheet.
+6. **Freshness & Provenance:**
+   - Date volatile facts inline ("as of <Mon YYYY>" or version tag).
+   - Include visible `Last verified: YYYY-MM-DD` in header/footer (dates the *topic content*, never internal tooling/Bootstrap versions/SRI hashes).
+   - Set JSON-LD `dateModified` to match visible verification date.
 
-## Change Management
+---
 
-- **Commit every change, every run — unconditionally.** All changes to this project must be committed, including documentation and workflow updates. Keep commits scoped to the logical batch of work. Do not withhold a commit because the work feels incomplete, unpolished, or not yet audit-clean — commit what the run produced.
-- **The quality gate is deployment, not the commit.** Comprehensiveness, accuracy, and audit checks (Coverage Contract, Accuracy Protocol, CHEATSHEET-AUDIT) gate whether you *recommend deploying* a batch, not whether you commit it. Committed-but-not-yet-deployed is normal, safe state.
-- **Ask for deployment after every batch or completed piece of work.** Once a batch is committed, ask the user whether to deploy it. Do not push or deploy without the user's explicit approval.
-- **Deploy with the guarded pipeline, not raw `git push production`.** Push `main` to `origin` first, then run `./deploy.sh` (`./deploy.ps1` on PowerShell) — it runs preflight, local validation (SEO gate, link/asset integrity, JSON, `php -l`), a confirm prompt, the push, then live curl verification. Full runbook: [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
+## Change Management & Deployment
 
-Treat the Coverage Contract, Atomic Entry Rule, and Accuracy Protocol as binding acceptance criteria. A cheatsheet that violates them is not done, regardless of polish.
+- **Commit unconditionally:** Commit all work (including WIP, docs, scripts) per logical batch. Quality gates deployment, not commits.
+- **Never push unprompted:** Ask for user approval after committing before deploying.
+- **Deploy via pipeline:** Push `main` to `origin`, then run `./deploy.sh` (or `./deploy.ps1`). Pipeline runs preflight, local validation (SEO gate, links/assets, JSON, `php -l`), confirmation, push to `production`, and live `curl` verification. See [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
 
-## Content Comprehensiveness Standard (REQUIRED)
+---
 
-### Coverage contract — three depths
-Every cheatsheet MUST cover its topic at three depths:
-1. **Fundamentals** — definitions, mental model, the 20% that explains 80%.
-2. **Working knowledge** — the syntax, commands, patterns, and decisions a practitioner uses daily.
-3. **Edge & advanced** — gotchas, failure modes, performance characteristics, the things that trip up experienced people.
+## Tech Baseline & Invariant Layer
 
-Any section in the outline MUST be fully populated. No placeholder stubs, no "TODO," no "see the docs." If a section can't be filled, cut or merge it.
+### Design Approaches (Pick per Topic)
+- **Vanilla + Modern CSS Platform** (*Recommended for new sheets*): Lightest payload, full visual identity.
+- **Bootstrap 5.3.x**: Incumbent standard for dense card/table references. Do not rewrite existing sheets.
+- **Utility / Tailwind**: Rapid custom layouts via prebuilt sheet or CDN.
+- **Classless (Pico / Simple.css / Water.css)**: Semantic, clean text/essay references (philosophy, finance).
+- **Bespoke Themed**: Strong metaphors (terminal/CRT for security/CLI, blueprint for architecture). Use `frontend-design` skill for direction.
 
-### Atomic entry rule
-Every entry (concept, command, pattern, term, technique) MUST include:
-- A precise one-line definition or statement of purpose.
-- At least one **concrete** example with realistic values — never `foo`/`bar` when a real value teaches more.
-- Where applicable, a gotcha, pitfall, or explicit "when NOT to use this."
+### Non-Negotiable Technical Invariants
+- **Standalone HTML:** Single self-contained file (embedded CSS/JS), zero build step.
+- **SRI on CDN Assets:** Every `<link>`/`<script>` must include `integrity="sha384-..." crossorigin="anonymous"`. Load JS with `defer`.
+- **Modern CSS Baseline:**
+  - Accordions: Native `<details name="group">` + `<summary>` (no JS required, a11y & print native).
+  - Theming: `color-scheme` + `light-dark()` honoring `prefers-color-scheme`; optional `[data-theme]` toggle.
+  - Layout & Specificity: CSS Grid, container queries, custom CSS inside `@layer`.
+  - Typography: `text-wrap: balance` (headings), `text-wrap: pretty` (body).
+  - Motion: Gate animations behind `@media (prefers-reduced-motion: no-preference)`.
+  - Scroll Performance: Avoid fixed full-viewport `mix-blend-mode` or `backdrop-filter` (causes scroll compositing stalls; bake textures into element `background`).
+  - State: Native `localStorage` with feature-detection and soft fallback.
+- **Accessibility (WCAG 2.2 AA):** Semantic landmarks (`<main>`, `<nav>`, `<section>`), `:focus-visible`, contrast ≥4.5:1 (3:1 large UI), explicit `alt` text.
+- **Core Web Vitals:** LCP < 2.5s, INP < 200ms, CLS < 0.1.
 
-**Quantify everything quantifiable.** "Fast" → "~O(log n), sub-ms for n < 10⁶." "Expensive" → the actual price/token figure. "Large" → the actual cutoff. Real defaults, thresholds, limits, versions, complexity, latencies, rates.
-
-### Breadth requirements (include when the topic supports them)
-- **Comparison table** whenever 2+ alternatives exist — alternatives × decision criteria.
-- **Explicit decision guidance** — "use X when…, use Y when…."
-- **Common Mistakes / Anti-Patterns section** — MANDATORY for any technical topic.
-- **Quick Reference block** near the top — the highest-frequency lookups in one scannable table (the cheat-within-the-cheat).
-- Copy-paste-ready snippets, CLI flags, config keys with defaults, shortcuts where relevant.
-
-### Density floor
-Err toward over-inclusion: when uncertain whether an item belongs, include it. A finished cheatsheet should typically carry **20+ distinct substantive entries** and read as exhaustive for its scope. Any section with fewer than ~3 entries is either not a real section (fold it) or under-developed (expand it). **Thinness is a defect, not an aesthetic choice.**
-
-### Self-containment test (run before finishing)
-*"Could a competent practitioner do real work from this page alone for the common cases?"* If not, close the gap before shipping.
-
-## Accuracy & Freshness Protocol (REQUIRED)
-
-These cheatsheets are AI-generated and increasingly AI-consumed, so wrong specifics propagate. Hold the line:
-
-- **Verify, don't recall.** Any version number, price, API signature, default, limit, benchmark, or date MUST be checked against a primary source (official docs, the spec, the vendor) before it goes in. If you can't verify it, omit it or flag the uncertainty explicitly — never fabricate a plausible-looking number.
-- **Date volatile facts.** Tag anything that drifts with "as of <Mon YYYY>" or a version tag inline, so staleness is visible rather than silent.
-- **Show freshness.** Include a visible `Last verified: YYYY-MM-DD` line in the page footer/header, and set `dateModified` in JSON-LD to the real edit date. This dates the *content* (facts, prices, versions of the thing being documented) — it is not a place to mention the page's own build tooling. Readers don't care which CSS framework or icon set rendered the page, so never append things like "Bootstrap 5.3.8", "Icons 1.13.1", or "SRI hashes computed from CDN bytes" to visible footer/freshness text. That detail belongs only in HTML comments and the SRI table below, never in reader-facing copy.
-- **Structured data must match visible content** — never describe in schema what isn't on the page.
-- **Prefer primary sources** over aggregators, SEO blogs, and forum posts.
-
-## Tech Baseline
-
-### Design approach — choose per cheatsheet (creativity encouraged)
-
-**There is no single mandated framework.** Bootstrap was the historical default and stays fully supported, but it is now **one option on a menu, not a requirement.** Pick the approach that best serves the *topic* and the *reader*, and give a sheet its own visual identity when the subject warrants it — a Vim reference and a Stoicism reference should not look identical. The only thing that stays constant across every sheet is the **Invariant Layer** below; framework, layout system, and aesthetic are all free choices.
-
-| Approach | Reach for it when | Notes / cost |
-|---|---|---|
-| **Bootstrap 5.3.x** (incumbent) | Editing an existing Bootstrap page; a dense table/card reference where you want zero design risk and fast assembly. | Pinned 5.3.8 + SRI (table below). The safe, fast default for a plain reference. Don't rip Bootstrap out of the 47+ existing files wholesale. |
-| **Vanilla + modern CSS platform** (no framework) — *recommended default for new creative sheets* | You want a distinctive look, full control, and the lightest payload. Grid + container queries + `@layer` + `light-dark()` cover most of what Bootstrap did. | Zero CDN framework weight; most room for a bespoke identity. |
-| **Utility-first (Tailwind)** | Fast iteration on a custom design; you think in utilities. | The Play CDN compiles in-browser (heavier, dev-oriented) — acceptable for a standalone page, but prefer a pinned prebuilt sheet + SRI where practical. |
-| **Classless / minimal CSS** (Pico, Simple.css, Water.css) | Text-heavy editorial/academic topics where semantic HTML should just look good with near-zero markup noise. | Pin + SRI. Good fit for philosophy/finance "essay-as-reference" pages. |
-| **Bespoke themed design system** (layers on any of the above) | The topic has a strong visual metaphor: terminal/CRT for CLI & security, blueprint/graph-paper for engineering, editorial print for philosophy, tactical HUD for gear. | This is the main creativity lever. Commit to the metaphor consistently across the page. |
-
-**How to choose:** match the aesthetic to the subject, weigh the payload, and don't reach for Bootstrap reflexively. When you want a genuinely distinctive interface, invoke the **`frontend-design` skill** for design direction before writing markup. When in doubt for a plain reference table, Bootstrap remains the safe, fast choice.
-
-**Icons** are likewise a free choice: Bootstrap Icons (pinned + SRI), inline SVG, an emoji set, or none.
-
-### Invariant Layer (holds for EVERY approach)
-
-Whatever design you pick, these are non-negotiable — they are what keep a page fast, accessible, durable, and coherent with the rest of the corpus:
-
-- **Self-contained standalone HTML** — embedded CSS/JS, no build step, static-host friendly.
-- **SRI on every CDN asset.** Any `<link>`/`<script>` pulled from a CDN (Bootstrap, Tailwind, Pico, an icon set — anything) carries `integrity="sha384-…" crossorigin="anonymous"`, and JS loads with `defer`. Compute the hash from the real bytes (see Build & Verify); if the asset isn't in the cached table below, compute and add it.
-- **Modern platform baseline** (all Baseline-supported in 2026) — use these regardless of framework, in preference to a framework's JS where they're strictly better:
-  - **Exclusive accordions: native `<details name="group">` + `<summary>`** — zero JS, prints fully-expandable, works without JS, accessible by default (satisfies the "works without JS" requirement for free).
-  - **Theming: `color-scheme` + `light-dark()`**, honoring `prefers-color-scheme`; optional manual override via `[data-theme]` (`:has()` or a tiny JS shim), not a hand-rolled dual stylesheet.
-  - **Layout: CSS Grid + container queries** so components respond to their container, not just the viewport.
-  - **Specificity: wrap custom CSS in `@layer`** so it sits cleanly above any framework without `!important` wars.
-  - **`:has()`** for state-driven styling without JS.
-  - **Typography: `text-wrap: balance`** on headings, `text-wrap: pretty` on body copy.
-  - **Motion: gate all animations and View Transitions behind `@media (prefers-reduced-motion: no-preference)`.**
-  - **Avoid fixed full-viewport `mix-blend-mode` / `backdrop-filter` overlays.** A `position:fixed` full-screen blend or blur layer (e.g. a CRT/scanline overlay, a frosted sticky bar over the whole page) wedges scroll compositing in some renderers — content beyond the fold stops painting — and costs real scroll performance. Bake textures into a normal (non-fixed) `background` layer on the element instead, and prefer a solid/semi-opaque sticky bar over `backdrop-filter`. (Learned redesigning `versioncontrol.html`.)
-  - **Persistence:** `localStorage` for checkbox/progress state — feature-detect and fail soft.
-- **Works without JS, responsive, WCAG 2.2 AA, print-correct, and within the Core Web Vitals targets** — as specified in their own sections below. None of these relax with the design choice.
-
-### Cached CDN dependencies (SRI hashes)
-
-Precomputed `integrity` values for the **Bootstrap-family** CDN assets (used by the incumbent design approach), so they don't have to be recalculated each time. Computed from the real CDN bytes with `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`. **If you bump a version, recompute the hash for that file and update this table.** A sheet built with a different approach (Tailwind, Pico, etc.) computes SRI for its own CDN assets the same way — add them here if they'll recur.
+### Cached CDN Dependencies (SRI Hashes)
+Compute new hashes via `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`.
 
 | Asset | Version | URL | integrity (sha384-…) |
 |---|---|---|---|
 | Bootstrap CSS | 5.3.8 | `https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css` | `sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB` |
-| Bootstrap JS (bundle) | 5.3.8 | `https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js` | `sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI` |
-| Bootstrap Icons CSS | 1.13.1 | `https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css` | `sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk` |
+| Bootstrap JS | 5.3.8 | `https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js` | `sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI` |
+| Bootstrap Icons | 1.13.1 | `https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css` | `sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk` |
 
-All `<link>`/`<script>` CDN tags must carry `integrity="sha384-…" crossorigin="anonymous"`; load JS with `defer`. (Hashes last computed 2026-06-24.)
+---
 
-## Required Metadata Standards
+## Required Metadata & Discoverability
 
-Every cheatsheet must include all blocks below. JSON-LD MUST match the visible content.
-
-#### Essential SEO Tags
+### HTML Metadata Template
 ```html
 <title>Topic: Descriptive Subtitle</title>
 <meta name="description" content="150-200 char comprehensive description"/>
 <meta name="keywords" content="primary topic, technology stack, related concepts"/>
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/filename.html"/>
-```
 
-#### Open Graph + Twitter/X Card
-```html
+<!-- Open Graph & X Cards -->
 <meta property="og:title" content="Title"/>
 <meta property="og:description" content="Description"/>
 <meta property="og:type" content="website"/>
@@ -162,10 +120,8 @@ Every cheatsheet must include all blocks below. JSON-LD MUST match the visible c
 <meta name="twitter:description" content="Description"/>
 <meta name="twitter:image" content="images/filename.png"/>
 <meta name="twitter:creator" content="@heroiclife"/>
-```
 
-#### JSON-LD Structured Data (Required)
-```html
+<!-- JSON-LD -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -179,186 +135,3 @@ Every cheatsheet must include all blocks below. JSON-LD MUST match the visible c
   "keywords": "keyword list"
 }
 </script>
-```
-
-## Discoverability: Search + AI Answer Engines
-
-The consumption model has shifted. Optimize for both classic search and AI answer engines (Claude, ChatGPT, Perplexity, Gemini) that read structured data and clean semantics when indexing.
-
-- **Keep `TechArticle` JSON-LD.** It is valid, machine-readable, and consumed by AI crawlers.
-- **Do NOT add `FAQPage` or `HowTo` schema to chase rich results.** FAQ rich results were deprecated in Google Search on 2026-05-07 (tooling removed June–Aug 2026); HowTo since 2023. Both remain valid schema.org types but earn no SERP feature. Only include `FAQPage` if it mirrors a real, visible Q&A section on the page.
-- **There is no special schema that buys AI Overview / AI Mode inclusion.** The lever is genuinely good, accurate, self-contained content under clear headings — which is exactly what the Comprehensiveness Standard already enforces. Write answers that stand alone under a heading and are scannable; that is what answer engines extract.
-- Keep meta description (150–200 chars), canonical, keywords, OG/X tags, and descriptive image alt text.
-- **Repo-level (optional):** add `/llms.txt` summarizing the cheatsheet index for LLM crawlers.
-
-## Architecture
-
-- **Standalone HTML files** — each cheatsheet self-contained (embedded CSS/JS).
-- **`index.php`** — portfolio gallery; scans root for `.html`, extracts metadata (title/description/og:image/mtime), and assigns each file a category from the `$categoryMap` array (filename → category; unmapped files fall back to `'Other'`). Cards show an "Updated" date from `filemtime()`, default-sort newest-first, and support client-side category + text filtering.
-- **`sitemap.php`** — SEO sitemap with category-based priorities.
-- **`generate-image-previews.py`** — Playwright screenshot generation + metadata backfill; outputs `images/{filename}.png`.
-- **`how-its-built.html`** — the "How this site is built" engineering exhibit. Describes this very pipeline (spec, generation, self-verification gate, governance, tech choices) from real repo facts; cross-links `governing-agentic-ai.html` and `history.php`. Keep it in sync if the pipeline materially changes.
-- No build step. Static-hosting friendly. 47+ cheatsheets; recent additions include `lifestyle-calculator.html`, `clean-architecture-dotnet.html`.
-
-## Server Configuration (nginx)
-
-The site is plain PHP + static HTML with **no client-side routing and no pretty-URL rewriting** — every real route is a literal file (`index.php`, `history.php`, `popularity.php`, `sitemap.php`, `subscribe.php`, `robots.txt`, or a `topic.html` cheatsheet). There is no legitimate reason for the server to fall back to `index.php` for a request that doesn't match a real file.
-
-**Known misconfiguration to check for:** requests for nonexistent paths (including `/robots.txt` before it existed as a real file) were observed returning `HTTP 200` with the homepage HTML instead of a `404`. This is almost always one of:
-- an overly broad `try_files $uri $uri/ /index.php;` fallback (correct for SPA/front-controller frameworks, wrong here — nothing needs a catch-all front controller), or
-- an `error_page 404 = /index.php;` directive rewriting 404s into 200s.
-
-**Fix** — in the nginx server block for `cheatsheets.davidveksler.com` (Plesk: Hosting Settings → Apache & nginx Settings → Additional nginx directives; otherwise the vhost file directly):
-
-```nginx
-location / {
-    try_files $uri $uri/ =404;
-}
-```
-
-Remove any `error_page 404 = /index.php;` (or similar) override. PHP files still route through the existing `location ~ \.php$ { ... }` fastcgi block — this only changes what happens when `$uri` matches no real file or directory.
-
-**Verify after reloading** (`nginx -t && systemctl reload nginx`):
-```bash
-curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/robots.txt        # expect 200, text/plain
-curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/no-such-page-xyz   # expect 404
-```
-
-`robots.txt` is a real static file at the repo root (`Allow: /` + a `Sitemap:` pointer to `sitemap.php`) — no server rule is needed to generate it, only to stop swallowing its request into the PHP fallback.
-
-### Caching headers for static files
-
-The dynamic PHP endpoints (`index.php`, `sitemap.php`, `popularity.php`, `history.php`) send their own `Cache-Control` via `header()` in source. But every cheatsheet is a **literal static `.html` file** served directly by nginx, plus the `images/*.png` previews and any CSS/JS — none of those get a `Cache-Control` header from PHP, so as observed they were going out with only `Last-Modified` and `cf-cache-status: DYNAMIC`. Add explicit caching in the nginx server block (same location as the 404 fix above):
-
-```nginx
-location ~* \.(html)$ {
-    add_header Cache-Control "public, max-age=1800";
-}
-location ~* \.(png|jpe?g|gif|webp|svg|ico|css|js)$ {
-    add_header Cache-Control "public, max-age=604800, immutable";
-}
-```
-
-- Cheatsheet HTML gets a 30-minute TTL — edits land within a reasonable window without every page-load hitting the origin.
-- Images/CSS/JS get a 7-day `immutable` TTL — filenames don't change on edit (see [[public-repo-no-personal-data]]-adjacent note: there's no cache-busting query string in this repo), so if you edit an existing `images/{filename}.png` in place, force a refresh by renaming or bumping a query string, or accept a stale image for up to a week.
-
-**Verify after reloading:**
-```bash
-curl -sI https://cheatsheets.davidveksler.com/microservices.html | grep -i cache-control   # expect public, max-age=1800
-curl -sI https://cheatsheets.davidveksler.com/images/ai-frontier.png | grep -i cache-control  # expect public, max-age=604800, immutable
-```
-
-## Email signup endpoint
-
-> **Newsletter pipeline:** [`docs/newsletter.md`](docs/newsletter.md) is the full spec. Phases
-> 1–2 (this intake layer + the digest/broadcast pipeline scripts) are **code-complete but not
-> live** — Phase 0 (domain verification, DNS records, the env vars below) hasn't run yet, so
-> `subscribe.php` fails closed (503) until it does. Read the spec before changing any of this.
-
-The homepage (`index.php`) and `how-its-built.html` carry a lightweight, privacy-respecting email signup (one field + submit, no tracking scripts, no cookies, no third-party services). Both forms POST to **`subscribe.php`**, a same-origin native-PHP handler that implements double opt-in.
-
-**How it works** (`subscribe.php` + `lib/newsletter.php` + `lib/resend.php` + `confirm.php`):
-- Validates the address (`FILTER_VALIDATE_EMAIL`), rejects a tripped honeypot (`website` field), then **appends the address to `.subscribers.jsonl`** (an intake/audit log — *not* the sendable list) and emails the visitor a Resend-sent confirmation link.
-- The confirmation link carries a stateless HMAC token (no database). Clicking it hits `confirm.php`, which verifies the token and appends the address to `.confirmed.jsonl` — that file, pulled by `scripts/newsletter_sync.py`, is what actually reaches Resend. `.subscribers.jsonl` is never treated as the sendable list.
-- Also emails a notification to the owner via PHP `mail()`, regardless of whether the confirmation send succeeded (it's a heads-up that someone attempted to sign up, not proof they're confirmed).
-- Responds with JSON (`{ok, message|error}`) to `fetch` requests, or a small self-contained confirmation page to a plain no-JS form POST. Degrades gracefully without JavaScript.
-- **Fails closed** (503, records nothing) if `NEWSLETTER_TOKEN_SECRET` or `RESEND_SENDING_KEY` isn't set — double opt-in has no path to completion without both, so the endpoint refuses to collect an address it can never confirm rather than silently going nowhere.
-
-**Configuration:**
-- **`CHEATSHEET_NOTIFY_EMAIL`** — owner notification address. Unset just skips the notification.
-- **`NEWSLETTER_TOKEN_SECRET`** — 32+ random bytes, signs the confirm-link HMAC. Generate once (`openssl rand -base64 32`), set in the server environment, never in source or committed anywhere.
-- **`RESEND_SENDING_KEY`** — a **send-scoped** Resend API key (not the full-access key). This is the only Resend credential that ever runs on the web server; see `docs/newsletter.md` §2.2 for why the split matters.
-- **`NEWSLETTER_FROM_ADDRESS`** (optional) — defaults to `Cheatsheets <hello@updates.cheatsheets.davidveksler.com>`.
-- **`NEWSLETTER_REPLY_TO`** (optional) — defaults to none.
-- Set these in the vhost/`php-fpm` pool config, not `.htaccess` or source — this is a public repo.
-- `.subscribers.jsonl` and `.confirmed.jsonl` are both **gitignored** — never commit subscriber addresses (see [[public-repo-no-personal-data]]).
-- Requires a working `mail()` (sendmail/Postfix or the host's mail relay) for the owner notification only — the confirmation email goes through Resend, not `mail()`.
-- Spam protection is intentionally minimal (honeypot + email validation + double opt-in). Add rate-limiting or a CAPTCHA if abuse appears.
-
-The rest of the pipeline (`scripts/newsletter_digest.py`, `newsletter_sync.py`, `newsletter_broadcast.py`, `newsletter_send.py`, and the `cheatsheets-newsletter-monthly` routine) runs on the dev box, not the server — see `docs/newsletter.md` §8.
-
-## Phase 2 — Affiliate links (planned, NOT yet implemented)
-
-Deferred. Do **not** add affiliate links in the current pass. When implemented, apply this pattern to the ~6–8 commercial-intent sheets only: `bitcoin-exchanges-cards.html`, `bitcoin-wallet.html`, `baofeng-uv5r-ham-guide.html`, `baofeng-uv5r-quick-ref.html`, `modern-firearms.html`, `operator-loadouts.html`, `hot-tub-treatment.html`, `samsung-bespoke-oven-guide.html`.
-
-- **Disclose** every affiliate relationship with a clear, visible FTC-compliant disclosure on the page (not buried).
-- **No fabricated IDs.** Affiliate/tracking IDs come from a single config source (a PHP config var or documented placeholder), never invented or guessed — same discipline as the email endpoint and SRI hashes.
-- Keep links `rel="sponsored nofollow"` and only on genuinely commercial-intent pages; do not retrofit informational/reference sheets.
-
-## Adding New Cheatsheets
-
-1. Run the **Generation Protocol** (research → outline to three depths → fill to density floor → self-verify).
-2. Create `topic-subtopic.html` (lowercase, hyphens) in root, following the established pattern + Modern Platform Baseline.
-3. Include ALL metadata blocks; ensure JSON-LD matches visible content; set a real `Last verified` date.
-4. `index.php` and `sitemap.php` auto-discover the `.html` file — but **add the new file to the `$categoryMap` array in `index.php`** (`'topic-subtopic.html' => 'Category'`), or it shows up under "Other". Reuse an existing category label; only add a new one if nothing fits.
-5. Generate the preview image → `images/{filename}.png` (see **Build & Verify Workflow**).
-6. **Auto-commit when done.** Once the cheatsheet is written, verified in a browser, and its preview image exists, commit it to `main` directly — this repo ships cheatsheets straight to `main` (linear history, no PR/branch per file). One cheatsheet per commit, bundling the `.html` and its `images/*.png`. Message: `Add <topic> cheatsheet`, ending with the `Co-Authored-By` trailer. Do **not** push unless asked, and never stage `.claude/` or other unrelated working-tree changes — commit only the cheatsheet files by explicit path.
-
-## Build & Verify Workflow
-
-Concrete steps from past builds that make a cheatsheet correct on the first pass — do these before claiming "done":
-
-- **Compute SRI hashes from the real files — never recall them or trust a summarizer/WebFetch.** For whatever CDN assets the chosen design approach uses, hash the actual bytes (Bootstrap **5.3.8** / Icons **1.13.1** are pre-cached in the table above):
-  ```bash
-  curl -sL https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css | openssl dgst -sha384 -binary | openssl base64 -A
-  ```
-  Add `integrity="sha384-…" crossorigin="anonymous"` to every CDN `<link>`/`<script>`. A wrong hash silently blocks the asset — which is why you verify load (below).
-- **Verify in a real browser, don't just eyeball the markup.** `file://` is blocked by the Playwright MCP, so serve locally first:
-  ```bash
-  nohup python3 -m http.server 8765 >/tmp/serve.log 2>&1 &   # a `(cmd &)` subshell can fail to bind; use nohup
-  ```
-  Load `http://127.0.0.1:8765/<file>.html` and assert: console is clean (a `favicon.ico` 404 is the only acceptable error); any CDN framework actually loaded (e.g. for Bootstrap, `typeof window.bootstrap !== 'undefined'`) so a bad SRI hash can't pass silently; CSS custom props resolve.
-- **Exercise the interactive bits.** For checklist/progress pages, toggle checkboxes via `dispatchEvent(new Event('change'))` and confirm the progress count + `localStorage` keys update; confirm copy buttons map 1:1 to command blocks. Check both light and dark themes.
-- **Generate and optimize the preview image yourself at 1200×630** (matches `og:image`/`twitter:image`): resize viewport to 1200×630, pick the theme that flatters the topic (dark for tech), hide floating controls (e.g. `themeToggle`, `backTop`), scroll to top, screenshot to `images/{filename}.png`, then run ImageOptim on that PNG before finishing. `generate-image-previews.py` remains the batch fallback.
-- **Clean up** stray screenshots and kill the `http.server` before committing.
-
-### Reusable interactive patterns
-- **Saved-progress checklist** (the recurring "hook"): native `<details>` task cards, each with a `.task-check` checkbox + a `data-task` id; persist state to `localStorage` under a per-page prefix; a sticky progress bar (Bootstrap's, or a hand-rolled one) reads done/total; a Reset button clears the keys. `stopPropagation` on the checkbox so ticking it doesn't toggle the `<details>`. Reference: `linux-server-hardening.html`, `privacy-data-broker-opt-out.html`.
-- **Paste-ready command blocks:** a `.cmd` wrapper with an optional `.cmd-label`, a `<pre><code>`, and a copy button using the Clipboard API with an `execCommand('copy')` fallback; flash a checkmark on success. Reference: `linux-server-hardening.html`.
-
-## Theme & Styling
-
-- Clean, modern, responsive. Color theming suited to subject (dark for tech, light for academic).
-- Dark/light via `color-scheme` + `light-dark()`; respect `prefers-color-scheme`, optional manual toggle.
-- Custom CSS variables under `@layer`; keep shared chrome (header, nav, footer, cards) visually consistent within a page whatever framework or hand-rolled system it uses.
-- Hover/animation effects gated behind `prefers-reduced-motion`.
-
-## Accessibility (target WCAG 2.2 AA)
-
-- Semantic landmarks (`<main>`, `<nav>`, `<section>` with headings in order).
-- Visible focus (`:focus-visible`), full keyboard operability.
-- Contrast ≥ 4.5:1 for body text, 3:1 for large text/UI.
-- Native `<details>`/`<summary>` for collapsibles (a11y built in).
-- All images have meaningful `alt`; decorative images `alt=""`.
-- Honor `prefers-reduced-motion`.
-
-## Performance (Core Web Vitals)
-
-- Targets: **LCP < 2.5s, INP < 200ms** (INP replaced FID in 2024), **CLS < 0.1**.
-- `defer` all JS; lazy-load non-critical images; keep CDN payload minimal (ship only the framework components/utilities actually used, or none at all with a hand-rolled approach).
-- Inline critical CSS is acceptable given the standalone model.
-
-## Testing Checklist
-
-Comprehensiveness & accuracy:
-- [ ] Coverage contract met: fundamentals + working knowledge + edge/advanced
-- [ ] Atomic entry rule: every entry has definition + concrete example + gotcha where applicable
-- [ ] Quantified: vague qualifiers replaced with real numbers/defaults/complexity
-- [ ] Breadth: comparison tables, decision guidance, Common Mistakes section where supported
-- [ ] Quick Reference block present near top
-- [ ] Density floor: 20+ substantive entries; no section under ~3 entries
-- [ ] Self-containment test passed
-- [ ] **Accuracy gate: every version/price/limit/benchmark verified against a primary source; no fabricated specifics**
-- [ ] Volatile facts dated; visible `Last verified` line; `dateModified` is real
-
-Platform & delivery:
-- [ ] Design approach chosen deliberately (see the menu); any CDN framework pinned with SRI; JS deferred
-- [ ] Collapsibles use native `<details name>`; theming via `light-dark()`
-- [ ] All metadata blocks present and valid; JSON-LD matches visible content
-- [ ] No FAQ/HowTo schema added for rich-result purposes
-- [ ] Responsive (mobile/tablet/desktop) incl. container-query behavior
-- [ ] Print styles correct
-- [ ] Works without JS (native details, content visible)
-- [ ] WCAG 2.2 AA: landmarks, focus-visible, contrast, reduced-motion
-- [ ] Core Web Vitals targets plausibly met (LCP/INP/CLS)
-- [ ] Social previews render; image generated in `/images/`
