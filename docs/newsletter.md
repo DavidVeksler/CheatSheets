@@ -1,6 +1,8 @@
 # Newsletter — feature spec
 
-**Status:** SPEC — not implemented. Nothing in this document is live yet.
+**Status:** Phases 1–2 code-complete (2026-08-23), **not live**. Phase 0 (domain
+verification, DNS, keys, postal address) hasn't run, so `subscribe.php` fails closed
+until it does. See the phasing table in §9 for what exists vs what's still to build.
 **Owner:** David Veksler · **Drafted:** 2026-08-23 · **Provider:** [Resend](https://resend.com)
 
 Turns the existing signup form on `index.php` / `how-its-built.html` into a real,
@@ -140,10 +142,12 @@ stays there.
 | `newsletter/YYYY-MM.html` | One archive page per issue (full metadata, passes the SEO gate). |
 | `newsletter/YYYY-MM.email.html` | Email-safe HTML for the same issue. Not served. |
 | `newsletter/digest-YYYY-MM.json` | Deterministic raw material for the issue. Committed (it is the audit trail). |
-| `scripts/newsletter_digest.py` | Builds the digest JSON. Stdlib + the repo's existing bs4. No LLM. |
-| `scripts/newsletter_sync.py` | SSH-pulls `.confirmed.jsonl`, upserts Resend contacts, reports deltas. |
-| `scripts/newsletter_broadcast.py` | Creates the **draft** broadcast. Refuses to send. |
-| `scripts/newsletter_send.py` | The human gate: preflight → preview → `[y/N]` → send → verify. |
+| `newsletter/broadcast-YYYY-MM.json` | `{issue, broadcast_id, segment_id, subject, created, sent, sent_at?}` — written by `newsletter_broadcast.py`, updated in place by `newsletter_send.py`. Committed; it's the record of when (or whether) an issue actually sent. |
+| `scripts/newsletter_common.py` | Shared: `.resend.env` loader, minimal stdlib `resend_request()`, `newsletter_dir()`. |
+| `scripts/newsletter_digest.py` | Builds the digest JSON. Stdlib + the repo's existing bs4 (reuses `generate-metadata.py`'s extraction by import, not duplication). No LLM. |
+| `scripts/newsletter_sync.py` | SSH-pulls `.confirmed.jsonl`, upserts Resend contacts, reports deltas. Add-only — never unsubscribes or deletes. |
+| `scripts/newsletter_broadcast.py` | Creates the **draft** broadcast (`send` left at its default `false`; no `--send` flag exists on this script). Writes `newsletter/broadcast-<issue>.json` as the audit/handoff record for `newsletter_send.py`. |
+| `scripts/newsletter_send.py` | The human gate: preflight → preview → `[y/N]` → send → verify. Not run by the routine. |
 | `.claude/skills/cheatsheets-newsletter-monthly/SKILL.md` | The routine. |
 
 **Modified**
@@ -340,17 +344,21 @@ the broadcast status. Deploying the archive page stays on the normal `./deploy.s
 
 ## 9. Phasing
 
-| Phase | Scope | Done when |
-|---|---|---|
-| **0. Prerequisites** | Verify `updates.` subdomain in Resend, four DNS records, two API keys, `NEWSLETTER_TOKEN_SECRET` + `RESEND_SENDING_KEY` in the php-fpm env, postal address chosen, `confirmed`/`pending` segments created | A test email from Resend passes SPF+DKIM+DMARC at `mail-tester.com` (aim ≥ 9/10) |
-| **1. Intake** | `lib/resend.php`, `lib/newsletter.php`, `subscribe.php` changes, `confirm.php` | A real signup produces a confirmation email whose link flips the address into `.confirmed.jsonl`, with and without JS |
-| **2. Pipeline** | `newsletter_digest.py`, `newsletter_sync.py`, `newsletter_broadcast.py`, `newsletter_send.py`, the routine | A draft broadcast for the current month exists in Resend, built only from digest facts |
-| **3. Archive + conversion** | `newsletter.php`, archive pages, sitemap pass, signup copy | `newsletter.php` lists past issues and ranks for its own title; signup copy matches reality |
-| **4. Hardening** | Turnstile on the form, `resend-webhook.php` for `email.bounced` / `email.complained` / `suppression.added`, suppression reconciliation into the intake queue | Complaint and bounce events are recorded and reconciled without manual work |
+| Phase | Scope | Done when | Status |
+|---|---|---|---|
+| **0. Prerequisites** | Verify `updates.` subdomain in Resend, four DNS records, two API keys, `NEWSLETTER_TOKEN_SECRET` + `RESEND_SENDING_KEY` in the php-fpm env, postal address chosen, a Resend segment created (its id goes in `RESEND_SEGMENT_ID`) | A test email from Resend passes SPF+DKIM+DMARC at `mail-tester.com` (aim ≥ 9/10) | **Not started** — blocking §10 items unresolved |
+| **1. Intake** | `lib/resend.php`, `lib/newsletter.php`, `subscribe.php` changes, `confirm.php` | A real signup produces a confirmation email whose link flips the address into `.confirmed.jsonl`, with and without JS | **Code complete**, unverified live (needs Phase 0) |
+| **2. Pipeline** | `scripts/newsletter_digest.py`, `newsletter_sync.py`, `newsletter_broadcast.py`, `newsletter_send.py`, the `cheatsheets-newsletter-monthly` routine | A draft broadcast for the current month exists in Resend, built only from digest facts | **Code complete** — digest verified against real repo history (2026-09 issue: 8 new, 8 updated, 5 popular); sync/broadcast/send verified for error paths only, live Resend calls untested (needs Phase 0 credentials) |
+| **3. Archive + conversion** | `newsletter.php`, archive pages, sitemap pass, signup copy | `newsletter.php` lists past issues and ranks for its own title; signup copy matches reality | Not started |
+| **4. Hardening** | Turnstile on the form, `resend-webhook.php` for `email.bounced` / `email.complained` / `suppression.added`, suppression reconciliation into the intake queue | Complaint and bounce events are recorded and reconciled without manual work | Not started |
 
-Phases 1–2 are the minimum shippable newsletter. Phase 3 is where the compounding is
-(an indexable archive is both a conversion page and an AI-answer-engine surface).
-Phase 4 waits for evidence of abuse or bounce volume.
+Phases 1–2 are the minimum shippable newsletter, and their code is now in the repo.
+`newsletter_sync.py`'s contact-dedup logic in particular should be watched by hand on
+its first live run — Resend's public docs don't clearly state POST /contacts' behavior
+on an email that's already a contact elsewhere in the Global Contacts model (checked
+2026-08-23), so the script defends with a list-then-create pattern rather than assuming.
+Phase 3 is where the compounding is (an indexable archive is both a conversion page and
+an AI-answer-engine surface). Phase 4 waits for evidence of abuse or bounce volume.
 
 ---
 

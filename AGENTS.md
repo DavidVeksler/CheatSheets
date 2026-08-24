@@ -250,21 +250,32 @@ curl -sI https://cheatsheets.davidveksler.com/images/ai-frontier.png | grep -i c
 
 ## Email signup endpoint
 
-> **Planned successor:** [`docs/newsletter.md`](docs/newsletter.md) specs a real Resend-backed
-> newsletter on top of this form (double opt-in, unsubscribe, monthly digest). Not implemented
-> yet — the description below is the live behaviour. Read the spec before changing this endpoint.
+> **Newsletter pipeline:** [`docs/newsletter.md`](docs/newsletter.md) is the full spec. Phases
+> 1–2 (this intake layer + the digest/broadcast pipeline scripts) are **code-complete but not
+> live** — Phase 0 (domain verification, DNS records, the env vars below) hasn't run yet, so
+> `subscribe.php` fails closed (503) until it does. Read the spec before changing any of this.
 
-The homepage (`index.php`) and `how-its-built.html` carry a lightweight, privacy-respecting email signup (one field + submit, no tracking scripts, no cookies, no third-party services). Both forms POST to **`subscribe.php`**, a same-origin native-PHP handler.
+The homepage (`index.php`) and `how-its-built.html` carry a lightweight, privacy-respecting email signup (one field + submit, no tracking scripts, no cookies, no third-party services). Both forms POST to **`subscribe.php`**, a same-origin native-PHP handler that implements double opt-in.
 
-**How it works** (`subscribe.php`):
-- Validates the address (`FILTER_VALIDATE_EMAIL`), rejects a tripped honeypot (`website` field), then **appends the address to `.subscribers.jsonl`** (the source of truth) and **emails a notification** to the owner via PHP `mail()`.
-- Responds with JSON (`{ok, message|error}`) to `fetch` requests, or a small self-contained confirmation page to a plain no-JS form POST. So it degrades gracefully: without JavaScript the native POST still records the signup and shows a confirmation; with JS it confirms inline.
+**How it works** (`subscribe.php` + `lib/newsletter.php` + `lib/resend.php` + `confirm.php`):
+- Validates the address (`FILTER_VALIDATE_EMAIL`), rejects a tripped honeypot (`website` field), then **appends the address to `.subscribers.jsonl`** (an intake/audit log — *not* the sendable list) and emails the visitor a Resend-sent confirmation link.
+- The confirmation link carries a stateless HMAC token (no database). Clicking it hits `confirm.php`, which verifies the token and appends the address to `.confirmed.jsonl` — that file, pulled by `scripts/newsletter_sync.py`, is what actually reaches Resend. `.subscribers.jsonl` is never treated as the sendable list.
+- Also emails a notification to the owner via PHP `mail()`, regardless of whether the confirmation send succeeded (it's a heads-up that someone attempted to sign up, not proof they're confirmed).
+- Responds with JSON (`{ok, message|error}`) to `fetch` requests, or a small self-contained confirmation page to a plain no-JS form POST. Degrades gracefully without JavaScript.
+- **Fails closed** (503, records nothing) if `NEWSLETTER_TOKEN_SECRET` or `RESEND_SENDING_KEY` isn't set — double opt-in has no path to completion without both, so the endpoint refuses to collect an address it can never confirm rather than silently going nowhere.
 
-**Configuration (one env var):**
-- Set **`CHEATSHEET_NOTIFY_EMAIL`** in the server environment to the address that should receive new-signup notifications (e.g. in the vhost/`php-fpm` pool config, `.htaccess` `SetEnv`, or the hosting panel's env settings). **Do not hard-code the address in source** — this is a public repo. If it's unset, signups are still recorded to `.subscribers.jsonl`; only the notification email is skipped.
-- `.subscribers.jsonl` is **gitignored** — subscriber addresses must never be committed (public repo; see [[public-repo-no-personal-data]]).
-- Requires a working `mail()` (sendmail/Postfix or the host's mail relay). If `mail()` is unavailable or you outgrow a flat-file list, swap the notify/record block in `subscribe.php` for a provider API (Kit, Buttondown, MailerLite, or a WordPress newsletter plugin on `davidveksler.com`) — the form contract (`POST` with an `email` field, JSON or HTML response) stays the same.
-- Spam protection is intentionally minimal (honeypot + email validation). Add rate-limiting or a CAPTCHA if abuse appears.
+**Configuration:**
+- **`CHEATSHEET_NOTIFY_EMAIL`** — owner notification address. Unset just skips the notification.
+- **`NEWSLETTER_TOKEN_SECRET`** — 32+ random bytes, signs the confirm-link HMAC. Generate once (`openssl rand -base64 32`), set in the server environment, never in source or committed anywhere.
+- **`RESEND_SENDING_KEY`** — a **send-scoped** Resend API key (not the full-access key). This is the only Resend credential that ever runs on the web server; see `docs/newsletter.md` §2.2 for why the split matters.
+- **`NEWSLETTER_FROM_ADDRESS`** (optional) — defaults to `Cheatsheets <hello@updates.cheatsheets.davidveksler.com>`.
+- **`NEWSLETTER_REPLY_TO`** (optional) — defaults to none.
+- Set these in the vhost/`php-fpm` pool config, not `.htaccess` or source — this is a public repo.
+- `.subscribers.jsonl` and `.confirmed.jsonl` are both **gitignored** — never commit subscriber addresses (see [[public-repo-no-personal-data]]).
+- Requires a working `mail()` (sendmail/Postfix or the host's mail relay) for the owner notification only — the confirmation email goes through Resend, not `mail()`.
+- Spam protection is intentionally minimal (honeypot + email validation + double opt-in). Add rate-limiting or a CAPTCHA if abuse appears.
+
+The rest of the pipeline (`scripts/newsletter_digest.py`, `newsletter_sync.py`, `newsletter_broadcast.py`, `newsletter_send.py`, and the `cheatsheets-newsletter-monthly` routine) runs on the dev box, not the server — see `docs/newsletter.md` §8.
 
 ## Phase 2 — Affiliate links (planned, NOT yet implemented)
 
