@@ -199,15 +199,33 @@ rely on. Verify with a test broadcast to a small segment, or upgrade to Pro ($20
 
 ## 5. DNS and deliverability (Phase 0 — blocking)
 
-All records on Cloudflare for `updates.cheatsheets.davidveksler.com`, **proxy off
-(DNS only)** on every one:
+**Done (2026-08-24).** Domain `updates.cheatsheets.davidveksler.com` created in Resend
+(id `ede06e7b-8a45-4eb0-bef7-c70682bdf020`, region `us-east-1`) and all four records
+added to the `davidveksler.com` Cloudflare zone (id `3d96473d69977c5c828b3079d9b9869c`)
+via the API, **proxy off (DNS only)** on every one, confirmed resolving from two
+independent public resolvers (Cloudflare DoH, Google DoH):
 
-| Name | Type | Value |
-|---|---|---|
-| `send.updates.cheatsheets` | MX | from Resend (`feedback-smtp.<region>.amazonses.com`), priority 10 |
-| `send.updates.cheatsheets` | TXT | from Resend (`v=spf1 include:amazonses.com ~all`) |
-| `resend._domainkey.updates.cheatsheets` | TXT | DKIM public key from Resend |
-| `_dmarc.updates.cheatsheets` | TXT | `v=DMARC1; p=none; rua=mailto:<address>` — start at `p=none`, move to `quarantine` after a month of clean reports |
+| Name | Type | Value | Status |
+|---|---|---|---|
+| `send.updates.cheatsheets` | MX | `feedback-smtp.us-east-1.amazonses.com`, priority 10 | Live, resolving |
+| `send.updates.cheatsheets` | TXT | `v=spf1 include:amazonses.com ~all` | Live, resolving |
+| `resend._domainkey.updates.cheatsheets` | TXT | DKIM public key (see the domain object in Resend) | Live, resolving |
+| `_dmarc.updates.cheatsheets` | TXT | `v=DMARC1; p=none;` | Live, resolving — **no `rua=` yet**, see below |
+
+**Still open:**
+- Resend's own verification check was still `pending` (not yet flipped to `verified`)
+  as of the DNS work above, despite all three of its required records resolving
+  correctly — that's normal, Resend polls asynchronously. Check status with
+  `GET /domains/ede06e7b-8a45-4eb0-bef7-c70682bdf020` (or the dashboard) before relying
+  on this domain to send; do not assume verified without checking.
+- The DMARC record was added at the safe default `p=none` with **no `rua=` monitoring
+  address** — open question #2 in §10 (reply-to inbox) needs an answer first. Once
+  there's an inbox to point it at, update the TXT record to
+  `v=DMARC1; p=none; rua=mailto:<address>`, and move to `p=quarantine` after a month
+  of clean reports.
+- The `davidveksler.com` root domain was already a verified Resend domain before this
+  work (used for something else in the fleet) — unrelated to this subdomain, no
+  conflict, just noted for context.
 
 DMARC is not required for Resend verification but **is** required by Gmail/Yahoo bulk
 sender rules, along with SPF+DKIM alignment, one-click unsubscribe, and keeping the
@@ -346,7 +364,7 @@ the broadcast status. Deploying the archive page stays on the normal `./deploy.s
 
 | Phase | Scope | Done when | Status |
 |---|---|---|---|
-| **0. Prerequisites** | Verify `updates.` subdomain in Resend, four DNS records, two API keys, `NEWSLETTER_TOKEN_SECRET` + `RESEND_SENDING_KEY` in the php-fpm env, postal address chosen, a Resend segment created (its id goes in `RESEND_SEGMENT_ID`) | A test email from Resend passes SPF+DKIM+DMARC at `mail-tester.com` (aim ≥ 9/10) | **Not started** — blocking §10 items unresolved |
+| **0. Prerequisites** | Verify `updates.` subdomain in Resend, four DNS records, two API keys, `NEWSLETTER_TOKEN_SECRET` + `RESEND_SENDING_KEY` in the php-fpm env, postal address chosen, a Resend segment created (its id goes in `RESEND_SEGMENT_ID`) | A test email from Resend passes SPF+DKIM+DMARC at `mail-tester.com` (aim ≥ 9/10) | **In progress** — domain created + all 4 DNS records live (§5, 2026-08-24); still open: Resend verification flipping to `verified`, `RESEND_SENDING_KEY`, `NEWSLETTER_TOKEN_SECRET`, `RESEND_SEGMENT_ID`, postal address, DMARC `rua=` (§10) |
 | **1. Intake** | `lib/resend.php`, `lib/newsletter.php`, `subscribe.php` changes, `confirm.php` | A real signup produces a confirmation email whose link flips the address into `.confirmed.jsonl`, with and without JS | **Code complete**, unverified live (needs Phase 0) |
 | **2. Pipeline** | `scripts/newsletter_digest.py`, `newsletter_sync.py`, `newsletter_broadcast.py`, `newsletter_send.py`, the `cheatsheets-newsletter-monthly` routine | A draft broadcast for the current month exists in Resend, built only from digest facts | **Code complete** — digest verified against real repo history (2026-09 issue: 8 new, 8 updated, 5 popular); sync/broadcast/send verified for error paths only, live Resend calls untested (needs Phase 0 credentials) |
 | **3. Archive + conversion** | `newsletter.php`, archive pages, sitemap pass, signup copy | `newsletter.php` lists past issues and ranks for its own title; signup copy matches reality | Not started |
