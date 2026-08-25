@@ -91,3 +91,50 @@ otherwise disappears.
   reports zero tasks; the routine fleet (incl. `cheatsheets-pivot-checkpoint`) lives in the Windows
   desktop-app registry, which a darwin session can't see. Confirm on the Windows box that the
   one-time 2026-08-06 task is still present and enabled. Not recreated here (duplicate risk).
+
+## 2026-08-24 — GSC pulse + demand mining
+
+Pulled with the new [`scripts/gsc_query.py`](../scripts/gsc_query.py) (direct Search Analytics
+API, local aggregation). **GSC range queries are functional again** — the 2026-08-12 failure where
+every range collapsed to a single cached day has cleared, verified with a `date`-dimension pull
+returning 29 distinct days.
+
+### Site totals — 28 days (2026-07-25 → 2026-08-22)
+
+| Metric | Value |
+|---|---|
+| Clicks | **882** (~31.5/day) |
+| Impressions | **185,055** |
+| CTR | **0.48%** |
+| Avg. position | ~12.4 |
+
+### Top pages — same window
+
+| Page | Clicks | Impressions | CTR | Position |
+|---|---|---|---|---|
+| ai-frontier.html | 256 | 57,781 | 0.44% | 8.10 |
+| baofeng-uv5r-quick-ref.html | 72 | 1,860 | 3.87% | 8.46 |
+| brazilian-jiu-jitsu.html | 49 | 2,012 | 2.44% | 17.43 |
+| orbital-rockets-comparison.html | 44 | 11,208 | 0.39% | 9.84 |
+| shabbat-services-cheatsheet.html | 28 | 1,065 | 2.63% | 9.43 |
+| ham-radio-technician.html | 26 | 323 | **8.05%** | 13.95 |
+| google-ai-studio-guide.html | 24 | 2,898 | 0.83% | 8.83 |
+| starlink-satellite-anatomy.html | 22 | 2,088 | 1.05% | 13.48 |
+| ashihara-karate.html | 21 | 3,412 | 0.62% | 8.85 |
+| judo.html | 21 | 1,956 | 1.07% | 13.46 |
+| operator-loadouts.html | 21 | 1,695 | 1.24% | 8.74 |
+| azure-devops.html | 17 | 429 | 3.96% | 20.31 |
+
+`ai-frontier.html` improves for the fifth consecutive pulse (123 → 134 → 158 → 207 → 256 clicks;
+position 10.2 → 8.10). The niche-utility CTR pattern holds unchanged: task-shaped pages convert at
+2.6–8.1%, broad pages at 0.4–0.6% regardless of position.
+
+### Unclaimed demand — 90 days (2026-05-25 → 2026-08-22)
+
+81 queries with **zero clicks and ≥100 impressions**. Largest items: "martial arts guide" (11,654
+impressions @ 5.9 — SERP-feature absorption, resolves the open `martial-arts-cheatsheet` guard-rail
+flag as innocent), the month-stamped AI-release family (~2,400 impressions @ 5–12), the New Glenn
+head-to-head family (~2,300 @ 6–11), and "eid cheat sheet" (317 @ 8.7). Full triage and the
+resulting ten specs: [`TODO/niche-utility-batch-2026-08.md`](../TODO/niche-utility-batch-2026-08.md).
+
+AI-crawler and GA4 legs not re-pulled this session — no change to the 2026-08-06 figures.

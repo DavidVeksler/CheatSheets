@@ -139,11 +139,16 @@ blocks, and inline **SVG `<title>`** elements pollute a naïve `<title>` match. 
    Best Practices section and the C# Keywords Cheat Sheet table shipped, ahead of the freeze
    actually lifting. Nothing left to do here; re-pull each query family once range data is
    available again (see tooling note below) to measure lift.
-2. ⏳ **Still open: diagnose the two guard-rail flags** (`martial-arts-cheatsheet`, `postgresql`)
-   with a fresh page×query pull before any further title work — blocked on the tooling issue below.
+2. ✅ **`martial-arts-cheatsheet` guard-rail flag diagnosed 2026-08-24 — the title is innocent.**
+   A 90-day page×query pull shows the page holding **11,654 impressions at position 5.9 with zero
+   clicks** on the single query "martial arts guide". The impressions never disappeared; the
+   27-day checkpoint window clipped them. This is the `judo.html` SERP-feature signature, not a
+   title losing relevance. **Do not revert.** `postgresql` was already reverted 2026-08-12.
 3. ⏳ Connect `analytics-mcp` (GA4 property 543339529) so the AI-referral leg is measurable again.
 
-⚠️ **Tooling note (2026-08-12): GSC range queries are currently non-functional, both via the
+✅ **RESOLVED 2026-08-24 — see the 2026-08-24 pull below. Range queries work again; the note
+below is kept for the record.** ⚠️ **Tooling note (2026-08-12): GSC range queries were
+non-functional, both via the
 `search-console` MCP tool and the live Search Console web UI.** Any query — API or a manual
 custom date range set through the UI's date picker (verified with David's own
 `heroic@gmail.com` account) — collapses to a single cached day, **2026-08-10**, with identical
@@ -542,6 +547,63 @@ scope). Two durable notes preserved for the next pillar:
   hardware" aside links `humanoid-robots` (61K impr) and `tesla-products` (89K impr) without absorbing
   them, so they remain free to seed a separate hardware pillar later.
 
+## Fresh pull + demand mining — 2026-08-24
+
+Pulled 2026-08-24 with a new script, [`scripts/gsc_query.py`](../scripts/gsc_query.py), which
+talks to the Search Analytics API directly, keeps raw rows on disk, and prints only the
+aggregate asked for. It exists because the `search-console` MCP tool returns rows sorted by
+clicks straight into an agent's context, which makes exactly the analysis that matters here —
+high-impression *zero-click* queries — impractical. Use it for future pulls:
+
+```
+python scripts/gsc_query.py --days 90 --dim query --zero-click --min-impr 100 --sort impressions
+python scripts/gsc_query.py --days 90 --dim page query --query-contains "new glenn"
+```
+
+✅ **GSC range queries work again.** A `dimensions:["date"]` pull over 2026-07-25 → 2026-08-22
+returns 29 distinct days with distinct totals. The 2026-08-12 collapse-to-a-single-cached-day
+failure has cleared; range numbers are trustworthy. The `list_sitemaps` MCP unmarshal bug is a
+separate, still-open client issue.
+
+### Site health — 28 days (2026-07-25 → 2026-08-22)
+
+**882 clicks / 185,055 impressions / 0.48% CTR / position ~12.4.**
+
+- `ai-frontier.html`: **256 clicks / 57,781 impressions / 0.44% CTR / position 8.10** — the
+  climb continues across every pulse: 123 → 134 → 158 → 207 (26d) → 256.
+- Niche-utility pages still own CTR: `ham-radio-technician` 26 clicks @ **8.05%**,
+  `azure-devops` 17 @ 3.96%, `baofeng-uv5r-quick-ref` 72 @ 3.87%,
+  `shabbat-services-cheatsheet` 28 @ 2.63%, `veterinary-diagnostics` 8 @ 2.61%.
+- Movers: `brazilian-jiu-jitsu` 17 → **49 clicks**; `starlink-satellite-anatomy` (built 2026-07)
+  already at 22; `global_cuisine_guide` 20; `engineering-metals-selection` 14.
+
+### Demand mining — 90 days (2026-05-25 → 2026-08-22, 10,257 query rows)
+
+Method: rank by impressions, keep rows with **zero clicks and ≥100 impressions** — 81 queries
+where Google shows the site and nobody arrives. Sorted into three buckets: unclaimed demand a new
+page can serve, demand an existing page half-serves, and demand nothing can serve (SERP features).
+
+**Bucket 1 — new pages.** Ten specs written, with the per-spec evidence, the rejected candidates
+and the build order, in [`niche-utility-batch-2026-08.md`](niche-utility-batch-2026-08.md). The
+largest single item is the **AI model release log** (~2,400 impressions/90d across month-stamped
+release queries at positions 5–12, all zero clicks) — scoped explicitly off `ai-frontier`'s
+frontier-labs family, per the standing rule.
+
+**Bucket 2 — optimization queue (existing pages, not new ones):**
+
+| Item | Evidence | Action |
+|---|---|---|
+| `martial-arts-cheatsheet.html` | "martial arts guide": **11,654 impressions, position 5.9, 0 clicks** | Guard-rail flag resolved — SERP-feature absorption, not a title defect. Do not revert. |
+| `orbital-rockets-comparison.html` | New Glenn head-to-head family ≈2,300 impr/90d, 0 clicks, positions 6–11 | Answer-shape gap, not a title gap. Add a side-by-side dimensions block + to-scale visual **to this page**; a second rocket-size page would cannibalize it. |
+| `privacy-data-broker-opt-out.html` | "data broker been verified opt out" 239 @ 28.6; "www.checkpeople.com/opt-out" 121 @ 48.3 | Page has one H2. Add per-broker sections carrying the literal opt-out URL. |
+| `islam.html` | "sharia law" 289 @ 2.5, "sharia law rules" 219 @ 2.0, "what is sharia law" 218 @ 2.4 — all zero clicks | Measure before investing; position 2 with zero clicks is the SERP-feature signature. |
+| `cooking-guide.html` | 15,663 words, 4 clicks / 1,903 impr @ 20.1 | No lookup artifact. The batch's meat-temperature card is the fix; link it from the top of the guide. |
+| Dev spokes | "git commands" 504 @ 61.3, "c# keywords cheat sheet" 378 @ 27.9, "aws vs azure services" 212 @ 62.5, ".net clean architecture" 199 @ 39.6 | Unchanged diagnosis: authority, not titles (`dev-spoke-content-plan.md`). No new dev pages. |
+
+**Bucket 3 — do not chase.** "ashihara" (563 @ 9.9), the `ai-frontier` fragment URLs, and the
+position-1-to-2 zero-click rows above are SERP-feature/AI-Overview absorption. Chasing them with
+title work has no mechanism to succeed.
+
 ## Log
 
 - 2026-07-09 — Doc created, seeded with first GSC baseline pull (28-day window). No changes made yet.
@@ -623,3 +685,15 @@ scope). Two durable notes preserved for the next pillar:
   title defect) and `postgresql` (pos 13.13 → 27.82 at flat impressions — the cleaner revert
   candidate). Freeze lifted; `dev-spoke-content-plan.md` Tier 1 unblocked. Nothing pruned. Windows
   were 27 days, not 28, because GSC data ends 2026-08-04.
+- 2026-08-24 — **Fresh GSC pull + demand mining + 10 new specs.** Confirmed GSC range queries work
+  again (the 2026-08-12 tooling warning is resolved and marked as such above). Wrote
+  `scripts/gsc_query.py` so future pulls can mine zero-click demand without dumping 10k rows into an
+  agent's context. 28-day site health: 882 clicks / 185,055 impressions / 0.48% CTR, with
+  `ai-frontier` at 256 clicks / position 8.10 (fifth consecutive improving pulse). Mined the 90-day
+  query set for zero-click, ≥100-impression queries (81 of them) and split them into new-page demand,
+  optimization work, and SERP-feature noise. Diagnosed the open `martial-arts-cheatsheet` guard-rail
+  flag: 11,654 impressions at position 5.9 with zero clicks on "martial arts guide" — the title is
+  innocent, do not revert. Specced ten niche-utility cheatsheets in
+  `TODO/niche-utility-batch-2026-08.md` plus one file per sheet, all passing the title/description
+  constraints of `scripts/seo_check.py` at spec time. Build order is seasonal-first: the High Holiday
+  services follow-along has a hard 2026-09-01 deadline.
