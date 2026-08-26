@@ -656,6 +656,14 @@ if (is_readable($popularityFile)) {
             .hero-glow { transition: none; }
         }
     </style>
+    <!-- Clarity tracking code for https://cheatsheets.davidveksler.com/ -->
+    <script>
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "y8ixg9wg4h");
+    </script>
 </head>
 <body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
