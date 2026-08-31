@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wallet Recovery Forensics: Feasibility, Paths, and Search Math</title><meta name="description" content="Triage lost crypto wallets safely: derivation-path diagnosis, BIP39 checksum search spaces, KDF cost math, recovery tools, device/media forensics, scam detection, and prevention."><meta name="keywords" content="wallet recovery, BIP39 missing word, derivation path, crypto recovery scam, btcrecover">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/wallet-recovery-forensics.html">
+<meta property="og:title" content="Wallet Recovery Forensics: Feasibility, Paths, and Search Math"><meta property="og:description" content="Triage lost crypto wallets safely: derivation-path diagnosis, BIP39 checksum search spaces, KDF cost math, recovery tools, device/media forensics, scam detection, and prevention."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/wallet-recovery-forensics.html"><meta property="og:image" content="images/wallet-recovery-forensics.png"><meta property="og:image:alt" content="Wallet recovery feasibility matrix with candidate-space and KDF cost math">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Wallet Recovery Forensics: Feasibility, Paths, and Search Math"><meta name="twitter:description" content="Triage lost crypto wallets safely: derivation-path diagnosis, BIP39 checksum search spaces, KDF cost math, recovery tools, device/media forensics, scam detection, and prevention."><meta name="twitter:image" content="images/wallet-recovery-forensics.png"><meta name="twitter:creator" content="@heroiclife">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Wallet Recovery Forensics: Feasibility, Paths, and Search Math","description":"Triage lost crypto wallets safely: derivation-path diagnosis, BIP39 checksum search spaces, KDF cost math, recovery tools, device/media forensics, scam detection, and prevention.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-08-31","dateModified":"2026-08-31","keywords":"wallet recovery, BIP39 missing word, derivation path, crypto recovery scam, btcrecover"}</script><style>
+@layer reset, tokens, base, layout, components, print;
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --paper: light-dark(#faf9f7, #0f172a); --surface: light-dark(#ffffff, #182235);
+    --surface-2: light-dark(#f4f1ed, #111c2e); --ink: light-dark(#172033, #e7edf6);
+    --muted: light-dark(#586273, #a9b5c7); --line: light-dark(#d8d3cc, #334155);
+    --accent: light-dark(#86198f, #e879f9); --accent-soft: light-dark(#fae8ff, #3b1641);
+    --safe: light-dark(#166534, #86efac); --safe-bg: light-dark(#dcfce7, #12351f);
+    --warn: light-dark(#92400e, #fcd34d); --warn-bg: light-dark(#fef3c7, #3b2a0d);
+    --danger: light-dark(#991b1b, #fca5a5); --danger-bg: light-dark(#fee2e2, #401719);
+    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+}
+@layer reset { *,*::before,*::after{box-sizing:border-box} body,h1,h2,h3,p{margin:0} table{border-collapse:collapse} }
+@layer base {
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;text-wrap:pretty}
+  a{color:var(--accent);font-weight:650;text-decoration-thickness:.08em;text-underline-offset:.18em}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  code,.mono,td:nth-child(n+2){font-family:var(--mono);font-variant-numeric:tabular-nums}
+  h1,h2,h3{text-wrap:balance;line-height:1.15} h1{font-size:clamp(2rem,6vw,4.25rem);letter-spacing:-.045em;max-width:18ch}
+  h2{font-size:clamp(1.45rem,3vw,2.15rem);margin-bottom:1rem} h3{font-size:1.02rem;letter-spacing:.015em}
+  p+p{margin-top:.72rem}
+}
+@layer layout {
+  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}.masthead{padding:2.2rem 0 1.5rem;border-bottom:1px solid var(--line)}
+  .eyebrow{color:var(--accent);font:700 .76rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem}
+  .dek{color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);max-width:72ch;margin-top:1rem}
+  .meta{display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:1.2rem;color:var(--muted);font:600 .78rem/1.4 var(--mono)}
+  nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 94%,transparent);border-bottom:1px solid var(--line)}
+  nav .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.65rem 0}nav a{white-space:nowrap;font-size:.82rem}
+  main{padding:1.5rem 0 4rem}.sheet-section{margin-top:clamp(2.2rem,6vw,4.5rem);scroll-margin-top:4rem}
+  .section-note{color:var(--muted);max-width:85ch;margin-bottom:1rem}.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:.8rem}
+}
+@layer components {
+  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.2rem .55rem;font:800 .72rem/1 var(--mono);white-space:nowrap}
+  .signal.safe{color:var(--safe);background:var(--safe-bg)}.signal.warn{color:var(--warn);background:var(--warn-bg)}.signal.danger{color:var(--danger);background:var(--danger-bg)}
+  .quick{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--accent);padding:clamp(1rem,3vw,2rem);box-shadow:0 16px 36px rgba(15,23,42,.08)}
+  .quick h2{display:flex;align-items:center;gap:.6rem}.quick h2::before{content:"CONTROL REGISTER";font:800 .64rem/1 var(--mono);letter-spacing:.1em;color:var(--paper);background:var(--accent);padding:.38rem .5rem}
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}table{width:100%;min-width:720px;font-size:.86rem}
+  th,td{padding:.72rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{position:sticky;top:0;background:var(--surface-2);font:800 .72rem/1.25 var(--sans);letter-spacing:.04em;text-transform:uppercase}
+  tbody tr:hover{background:var(--accent-soft)}td:first-child{font-family:var(--sans);font-weight:760;min-width:12rem}tbody tr:last-child td{border-bottom:0}
+  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0}.entry h3{border-left:3px solid var(--accent);padding-left:.65rem;margin-bottom:.65rem}
+  .entry p{font-size:.9rem}.example,.gotcha{padding:.65rem;border-left:2px solid var(--safe);background:var(--safe-bg)}.gotcha{border-color:var(--danger);background:var(--danger-bg)}
+  .checklist ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:.5rem;counter-reset:steps}.checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);padding:.8rem}.checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:800 .7rem/1 var(--mono);margin-right:.55rem}
+  .sources ul{list-style:none;padding:0;display:grid;gap:.5rem}.sources li{display:grid;grid-template-columns:minmax(16rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}.sources span{color:var(--muted);font-size:.86rem}
+  .related{margin-top:4rem;border:1px solid var(--line);padding:1rem;background:var(--surface-2)}.related h2{font-size:1rem}.related div{display:flex;flex-wrap:wrap;gap:.55rem 1rem}.related a{font-size:.84rem}
+  .equation{font:800 clamp(1rem,3vw,1.55rem)/1.4 var(--mono);padding:1rem;border:1px dashed var(--accent);background:var(--accent-soft);overflow-wrap:anywhere}
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}.flow div{position:relative;padding:1rem;background:var(--surface);border:1px solid var(--line);min-height:7rem}.flow b{display:block;color:var(--accent);font:800 .7rem/1 var(--mono);margin-bottom:.5rem}.flow p{font-size:.83rem}
+  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}.print-only{display:none}
+}
+@layer print {
+  @media print{nav{display:none}.shell{width:100%}.sheet-section{break-inside:avoid;margin-top:1.3rem}.entry{break-inside:avoid}a{color:inherit}.print-only{display:block}.table-wrap{overflow:visible}table{min-width:0;font-size:7.7pt}th{position:static}}
+  @media(max-width:600px){.shell{width:min(100% - 1rem,1180px)}.masthead{padding-top:1.2rem}.sources li{grid-template-columns:1fr}.quick{padding:.8rem}.table-wrap{margin-inline:-.5rem}.entry-grid{grid-template-columns:1fr}}
+}
+</style></head>
+<body><header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance · engineering reference</p><h1>Wallet recovery forensics</h1><p class="dek">Recovery is constraint engineering. First prove the wallet is not merely scanning the wrong path; then divide the remaining candidate space by a measured guess rate and accept the answer.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<nav aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#recovery-feasibility-triage">Recovery feasibility triage</a><a href="#the-wallet-is-often-looking-in-the-wrong-place">The wallet is often looking in the wrong place</a><a href="#bip39-search-space-math">BIP39 search-space math</a><a href="#format-and-tool-register">Format and tool register</a><a href="#device-media--estate-cases">Device, media &amp; estate cases</a><a href="#recovery-scam-red-flags">Recovery scam red flags</a><a href="#safe-recovery-and-prevention-checklist">Safe recovery and prevention checklist</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
+<main class="shell"><section class="quick" id="quick-reference" aria-labelledby="quick-title"><h2 id="quick-title">Feasibility before tools</h2><p class="equation">candidate space ÷ measured guesses per second = wall-clock seconds</p><div class="flow"><div><b>1 · PRESERVE</b><p>Work on verified copies; stop destructive retries.</p></div><div><b>2 · IDENTIFY</b><p>Format, wallet version, chain, script, path.</p></div><div><b>3 · SCAN</b><p>Rule out wrong path/account/passphrase state.</p></div><div><b>4 · CONSTRAIN</b><p>Write exact token/mask/position assumptions.</p></div><div><b>5 · BENCHMARK</b><p>Exact KDF on named hardware.</p></div><div><b>6 · STOP</b><p>Reject runs whose cost exceeds rational value.</p></div></div><p class="callout"><strong>No secret, no exploit, no recovery.</strong> Blockchain transparency does not let anyone derive an unconstrained private key.</p></section>
+    <section class="sheet-section" aria-labelledby="recovery-feasibility-triage">
+      <h2 id="recovery-feasibility-triage">Recovery feasibility triage</h2>
+      <p class="section-note">Never type a seed into a website. Work on copies, isolate secrets, record every transformation, and move recovered funds to a newly generated wallet after verification.</p>
+      <div class="table-wrap" role="region" aria-label="Recovery feasibility triage" tabindex="0">
+        <table><thead><tr><th scope="col">Case</th><th scope="col">Secret exposure</th><th scope="col">Constraint</th><th scope="col">First safe action</th><th scope="col">Verdict</th></tr></thead><tbody><tr><td>Valid seed, wrong path</td><td>None</td><td>Known wallet/era/address</td><td>Offline path + script matrix scan</td><td><span class="signal safe">LIKELY</span></td></tr><tr><td>One missing 12-word position</td><td>Seed candidates</td><td>11 known words + checksum</td><td>Enumerate 2,048 words; checksum prunes</td><td><span class="signal safe">TRACTABLE</span></td></tr><tr><td>One missing word, unknown position</td><td>Seed candidates</td><td>11 words + 12 positions</td><td>Enumerate positions × wordlist; checksum</td><td><span class="signal safe">TRACTABLE</span></td></tr><tr><td>Two missing words</td><td>Seed candidates</td><td>10 known + positions</td><td>Compute exact combinations before hardware</td><td><span class="signal warn">MEASURE</span></td></tr><tr><td>Remembered password structure</td><td>Encrypted wallet copy</td><td>Mask/token grammar</td><td>Benchmark KDF on copy; checkpoint</td><td><span class="signal warn">DEPENDS</span></td></tr><tr><td>Unknown BIP39 passphrase</td><td>Seed remains valid</td><td>No length/word constraints</td><td>Build honest candidate model</td><td><span class="signal danger">OFTEN INFEASIBLE</span></td></tr><tr><td>Lost seed + intact unlocked device</td><td>Live device</td><td>Export/transfer window</td><td>Isolate and move using native UI</td><td><span class="signal warn">TIME CRITICAL</span></td></tr><tr><td>Lost seed + locked/wiped hardware</td><td>Device</td><td>PIN retry/chip model</td><td>Stop attempts; document device/version</td><td><span class="signal danger">SPECIALIST / NO</span></td></tr><tr><td>Deleted wallet file</td><td>Disk image</td><td>Blocks not overwritten</td><td>Power down; forensic image; carve copy</td><td><span class="signal warn">UNCERTAIN</span></td></tr><tr><td>No key, seed, file, device or constraints</td><td>None</td><td>Unconstrained key space</td><td>Do not pay anyone</td><td><span class="signal danger">IMPOSSIBLE</span></td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="the-wallet-is-often-looking-in-the-wrong-place">
+      <h2 id="the-wallet-is-often-looking-in-the-wrong-place">The wallet is often looking in the wrong place</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Derivation path</h3>
+          <p>The same seed creates different accounts under different purpose, coin, account, change, and index values.</p>
+          <p class="example"><strong>Concrete use:</strong> Scan <code>m/44'/0'/0'</code>, <code>m/49'/0'/0'</code>, <code>m/84'/0'/0'</code>, and <code>m/86'/0'/0'</code> only in an offline, systematic plan.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Random path guessing loses coverage and evidence.</p>
+        </article>
+        <article class="entry">
+          <h3>Script type</h3>
+          <p>Legacy, wrapped SegWit, native SegWit, and Taproot encode different output scripts and addresses.</p>
+          <p class="example"><strong>Concrete use:</strong> Match a known historical receive address before scanning balances.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A valid seed can show zero when the wallet defaults to the wrong script family.</p>
+        </article>
+        <article class="entry">
+          <h3>BIP39 passphrase</h3>
+          <p>Every passphrase—including empty—derives a valid but unrelated wallet.</p>
+          <p class="example"><strong>Concrete use:</strong> Test remembered spelling, normalization, spaces, case and language from a constrained list.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> There is no checksum that tells you the passphrase is “close.”</p>
+        </article>
+        <article class="entry">
+          <h3>Account/index range</h3>
+          <p>Funds can sit beyond a wallet's default account or lookahead range.</p>
+          <p class="example"><strong>Concrete use:</strong> Persist last-used indexes and scan beyond known activity only with a bounded range.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> An unused gap can make later addresses invisible.</p>
+        </article>
+        <article class="entry">
+          <h3>Wrong chain/coin type</h3>
+          <p>Shared curve/address formats do not imply shared derivation or asset state.</p>
+          <p class="example"><strong>Concrete use:</strong> Identify wallet software/version and the actual chain transaction history first.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Importing into a lookalike chain can expose keys without finding funds.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section" aria-labelledby="bip39-search-space-math">
+      <h2 id="bip39-search-space-math">BIP39 search-space math</h2>
+      <p class="section-note">BIP39: entropy is 128–256 bits, words index a 2,048-word list, checksum length is ENT/32, and seed derivation uses PBKDF2-HMAC-SHA512 with 2,048 iterations. Checksum pruning is not password security.</p>
+      <div class="table-wrap" role="region" aria-label="BIP39 search-space math" tabindex="0">
+        <table><thead><tr><th scope="col">Known information</th><th scope="col">Raw candidates</th><th scope="col">Checksum effect</th><th scope="col">Operational reading</th></tr></thead><tbody><tr><td>12 words, one unknown at known position</td><td>2,048</td><td>12-word checksum accepts ~1/16</td><td>~128 valid mnemonics before address check</td></tr><tr><td>12 words, one unknown position</td><td>12 × 2,048 = 24,576</td><td>Many duplicates/invalid; verify systematically</td><td>Small</td></tr><tr><td>12 words, two known positions missing</td><td>2,048² = 4,194,304</td><td>Checksum reduces valid mnemonics ~16×</td><td>Benchmark; often tractable</td></tr><tr><td>12 known words, order unknown</td><td>12! = 479,001,600</td><td>Checksum ~16× pruning</td><td>Large but constrain with remembered positions</td></tr><tr><td>24 words, one unknown at known position</td><td>2,048</td><td>24-word checksum accepts ~1/256</td><td>~8 valid mnemonics before address check</td></tr><tr><td>8-char lowercase password</td><td>26⁸ = 208,827,064,576</td><td>No mnemonic checksum</td><td>KDF speed decides; don't assume feasible</td></tr><tr><td>4 Diceware-like unknown words from 7,776 list</td><td>7,776⁴ ≈ 3.66×10¹⁵</td><td>No helpful checksum</td><td>Infeasible at most wallet KDF rates</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="format-and-tool-register">
+      <h2 id="format-and-tool-register">Format and tool register</h2>
+      <p class="section-note">Benchmark your exact extracted hash/KDF on named hardware. The governing equation is candidates ÷ measured guesses/second = seconds; compare cost and time with value at stake.</p>
+      <div class="table-wrap" role="region" aria-label="Format and tool register" tabindex="0">
+        <table><thead><tr><th scope="col">Format/problem</th><th scope="col">Cost function</th><th scope="col">Tool class</th><th scope="col">Required input</th><th scope="col">Gotcha</th></tr></thead><tbody><tr><td>BIP39 mnemonic/passphrase</td><td>PBKDF2-HMAC-SHA512 × 2,048</td><td>btcrecover / custom offline verifier</td><td>Known address/xpub + constraints</td><td>Every passphrase yields a wallet</td></tr><tr><td>Bitcoin Core wallet encryption</td><td>Version/wallet dependent</td><td>bitcoin2john + hashcat/John; source-specific</td><td>Copy of wallet file</td><td>Do not benchmark an unknown format guess</td></tr><tr><td>Ethereum keystore</td><td>scrypt or PBKDF2 parameters embedded in JSON</td><td>hashcat/John modes</td><td>Keystore copy + exact KDF params</td><td>Memory cost limits parallelism</td></tr><tr><td>Browser-extension vault</td><td>Version-dependent PBKDF2/other KDF</td><td>Format extractor + cracker</td><td>Vault + creating version</td><td>Iteration counts change across versions</td></tr><tr><td>Wrong HD path</td><td>Derivation + address lookup</td><td>Electrum/descriptor/xpub scanner</td><td>Seed/xpub + known address</td><td>Never upload xpub for sensitive wallet privacy</td></tr><tr><td>Deleted file</td><td>Storage forensics</td><td>Read-only disk image + carving</td><td>Image, filesystem, time line</td><td>Continued use overwrites evidence</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="device-media--estate-cases">
+      <h2 id="device-media--estate-cases">Device, media &amp; estate cases</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Dead hardware, known seed</h3>
+          <p>The seed/descriptor is the wallet; replace the device and verify derived address before moving.</p>
+          <p class="example"><strong>Concrete use:</strong> Restore on a trusted spare, confirm a historical receive address, then migrate to fresh backup material.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Device brand does not bind funds if the interoperable backup is complete.</p>
+        </article>
+        <article class="entry">
+          <h3>Unknown PIN, no seed</h3>
+          <p>Retry counters and secure elements can turn experimentation into permanent wipe.</p>
+          <p class="example"><strong>Concrete use:</strong> Stop, photograph model/firmware/condition, and obtain a specialist feasibility opinion before another attempt.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Online videos for another revision can destroy the only remaining state.</p>
+        </article>
+        <article class="entry">
+          <h3>Damaged backup</h3>
+          <p>BIP39 wordlist, prefix uniqueness, position and checksum provide reconstruction constraints.</p>
+          <p class="example"><strong>Concrete use:</strong> Transcribe every plausible character/word from high-resolution images of the copy, not the original under repeated handling.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Cleaning chemicals and heat can erase remaining evidence.</p>
+        </article>
+        <article class="entry">
+          <h3>Estate access</h3>
+          <p>Legal authority and technical key access are independent requirements.</p>
+          <p class="example"><strong>Concrete use:</strong> Keep a sealed locator/instruction record outside the will; use distributed key arrangements and annual restore drills.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Publishing a seed in a probate document destroys secrecy.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section" aria-labelledby="recovery-scam-red-flags">
+      <h2 id="recovery-scam-red-flags">Recovery scam red flags</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Unsolicited contact</h3>
+          <p>Reply bots and impersonators target public loss reports.</p>
+          <p class="example"><strong>Concrete use:</strong> Independently locate official contact channels; do not continue in direct messages.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Claimed law-enforcement affiliation is not verification.</p>
+        </article>
+        <article class="entry">
+          <h3>Upfront unlock/tax fee</h3>
+          <p>A fake platform displays a balance then demands payment to release it.</p>
+          <p class="example"><strong>Concrete use:</strong> Do not pay; preserve messages, wallet addresses, domains and transaction evidence for reporting.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Additional payment compounds the loss and does not unlock a blockchain transfer.</p>
+        </article>
+        <article class="entry">
+          <h3>Seed validator/sync site</h3>
+          <p>The tool exfiltrates the only secret required to steal funds.</p>
+          <p class="example"><strong>Concrete use:</strong> Use reviewed open-source tools offline on an isolated system and a copy.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A professional-looking domain and TLS do not make seed entry safe.</p>
+        </article>
+        <article class="entry">
+          <h3>Guaranteed recovery</h3>
+          <p>No one can recover a mathematically unconstrained private key.</p>
+          <p class="example"><strong>Concrete use:</strong> Require a written feasibility model: candidate count, measured rate, time, cost and stop condition.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Confidence without constraints is sales fraud, not forensics.</p>
+        </article>
+        <article class="entry">
+          <h3>Second-wave recovery</h3>
+          <p>Victim lists are resold; a new actor claims to recover the first loss.</p>
+          <p class="example"><strong>Concrete use:</strong> Assume anyone citing private details may have bought them; verify independently and report.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Prior victimization increases targeting, not legitimacy.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section checklist" aria-labelledby="safe-recovery-and-prevention-checklist">
+      <h2 id="safe-recovery-and-prevention-checklist">Safe recovery and prevention checklist</h2>
+      <p class="section-note">The annual restore drill is the only evidence that a backup, passphrase, derivation metadata, and procedure form a real recovery system.</p>
+      <ol><li><span aria-hidden="true">□</span> Stop using the only device/media; make verified read-only copies or a forensic image.</li><li><span aria-hidden="true">□</span> Record wallet software, version, chain, script type, derivation path, known addresses, dates, and observed error.</li><li><span aria-hidden="true">□</span> Scan path/script/account matrix before any cracking attempt.</li><li><span aria-hidden="true">□</span> Compute candidate count and benchmark the exact KDF on named hardware before renting hardware.</li><li><span aria-hidden="true">□</span> Run tools offline; never disclose seed, passphrase, private key, or unrestricted wallet file.</li><li><span aria-hidden="true">□</span> Checkpoint long jobs and retain tested/excluded candidate sets.</li><li><span aria-hidden="true">□</span> After recovery, move funds to a fresh wallet whose backup was independently verified.</li><li><span aria-hidden="true">□</span> Store seed and passphrase in separate failure domains with durable, geographically redundant media.</li><li><span aria-hidden="true">□</span> Record descriptor/path/software metadata alongside—not secret inside—the recovery instructions.</li><li><span aria-hidden="true">□</span> Perform an annual restore to a spare device and verify a known first address.</li></ol>
+    </section>
+    <section class="sheet-section" aria-labelledby="common-mistakes--anti-patterns">
+      <h2 id="common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Only-copy experimentation</h3>
+          <p>A repair, parser or password attempt can corrupt the remaining evidence.</p>
+          <p class="example"><strong>Concrete use:</strong> Image first; hash source and working copy.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Recovery cannot be repeated without provenance.</p>
+        </article>
+        <article class="entry">
+          <h3>Cracking before scanning</h3>
+          <p>The seed may be correct under another path, script, account or passphrase state.</p>
+          <p class="example"><strong>Concrete use:</strong> Run the derivation matrix first.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Hardware spend cannot fix a wrong model.</p>
+        </article>
+        <article class="entry">
+          <h3>Seed entered online</h3>
+          <p>The attempt discloses spend authority.</p>
+          <p class="example"><strong>Concrete use:</strong> Use reviewed tools offline and move recovered funds.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A checker can steal later, not immediately.</p>
+        </article>
+        <article class="entry">
+          <h3>No stop condition</h3>
+          <p>Search expands indefinitely as memories become guesses.</p>
+          <p class="example"><strong>Concrete use:</strong> Precommit space, budget, benchmark and checkpoint.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Sunk cost is not new evidence.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section sources" aria-labelledby="sources">
+      <h2 id="sources">Primary sources &amp; scope</h2>
+      <p class="section-note">Operational and volatile claims were checked against these first-party documents on 2026-08-31. Examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
+      <ul><li><a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki" target="_blank" rel="noopener noreferrer">BIP 39</a><span>Mnemonic entropy, checksum, 2,048-word list and PBKDF2 parameters.</span></li><li><a href="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki" target="_blank" rel="noopener noreferrer">BIP 44</a><span>HD account hierarchy and gap-limit context.</span></li><li><a href="https://github.com/3rdIteration/btcrecover" target="_blank" rel="noopener noreferrer">btcrecover</a><span>Open-source local recovery tooling and documentation.</span></li><li><a href="https://www.fbi.gov/contact-us/field-offices/elpaso/news/fbi-tech-tuesday-building-a-defense-against-cryptocurrency-recovery-scams" target="_blank" rel="noopener noreferrer">FBI recovery-scam warning</a><span>Upfront-fee and impersonation warning signs.</span></li><li><a href="https://reportfraud.ftc.gov/" target="_blank" rel="noopener noreferrer">FTC scam reporting</a><span>US consumer fraud reporting channel.</span></li></ul>
+    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a><a href="bitcoin-self-custody-guide.html">Bitcoin self-custody <span aria-hidden="true">→</span></a><a href="bitcoin-wallet.html">Bitcoin wallet <span aria-hidden="true">→</span></a><a href="personal-cybersecurity.html">Personal cybersecurity <span aria-hidden="true">→</span></a></div></aside></main>
+<footer class="shell meta"><p>Last verified: 2026-08-31 · Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer></body></html>

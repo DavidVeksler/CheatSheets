@@ -42,6 +42,7 @@ $categoryStyles = [
     'Security & Privacy'      => ['color' => '#dc2626', 'bg' => '#fee2e2', 'icon' => 'bi-shield-lock-fill'],
     'Risk & Preparedness'     => ['color' => '#0f766e', 'bg' => '#ccfbf1', 'icon' => 'bi-activity'],
     'Bitcoin & Finance'       => ['color' => '#d97706', 'bg' => '#fef3c7', 'icon' => 'bi-currency-bitcoin'],
+    'Crypto Custody & Compliance' => ['color' => '#a21caf', 'bg' => '#fae8ff', 'icon' => 'bi-safe2-fill'],
     'Martial Arts & Strategy' => ['color' => '#9f1239', 'bg' => '#ffe4e6', 'icon' => 'bi-person-arms-up'],
     'Firearms & Military'     => ['color' => '#3f6212', 'bg' => '#ecfccb', 'icon' => 'bi-crosshair2'],
     'Radio'                   => ['color' => '#1e40af', 'bg' => '#dbeafe', 'icon' => 'bi-broadcast-pin'],

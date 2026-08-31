@@ -81,6 +81,17 @@ return [
     'lifestyle-calculator.html' => 'Bitcoin & Finance',
     'the-cliff-map.html' => 'Bitcoin & Finance',
 
+    // Crypto Custody & Compliance
+    'blockchain-deposits-withdrawals.html' => 'Crypto Custody & Compliance',
+    'crypto-compliance-architecture.html' => 'Crypto Custody & Compliance',
+    'crypto-exchange-architecture.html' => 'Crypto Custody & Compliance',
+    'custody-provider-integration.html' => 'Crypto Custody & Compliance',
+    'institutional-crypto-custody.html' => 'Crypto Custody & Compliance',
+    'mpc-wallet-architecture.html' => 'Crypto Custody & Compliance',
+    'post-quantum-custody-migration.html' => 'Crypto Custody & Compliance',
+    'stablecoin-payment-infrastructure.html' => 'Crypto Custody & Compliance',
+    'wallet-recovery-forensics.html' => 'Crypto Custody & Compliance',
+
     // Martial Arts & Strategy
     'art-of-war-sun-tzu.html' => 'Martial Arts & Strategy',
     'ashihara-karate.html' => 'Martial Arts & Strategy',

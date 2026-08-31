@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Post-Quantum Custody Migration: What Actually Breaks</title><meta name="description" content="Classify quantum-exposed holdings, compare post-quantum signature sizes, understand threshold-custody barriers, track Bitcoin BIPs 360/361, and sequence migration work."><meta name="keywords" content="post quantum crypto custody, Bitcoin quantum risk, BIP 360, BIP 361, ML-DSA blockchain, quantum exposed public key">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/post-quantum-custody-migration.html">
+<meta property="og:title" content="Post-Quantum Custody Migration: What Actually Breaks"><meta property="og:description" content="Classify quantum-exposed holdings, compare post-quantum signature sizes, understand threshold-custody barriers, track Bitcoin BIPs 360/361, and sequence migration work."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/post-quantum-custody-migration.html"><meta property="og:image" content="images/post-quantum-custody-migration.png"><meta property="og:image:alt" content="Post-quantum custody exposure inventory by Bitcoin output and account type">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Post-Quantum Custody Migration: What Actually Breaks"><meta name="twitter:description" content="Classify quantum-exposed holdings, compare post-quantum signature sizes, understand threshold-custody barriers, track Bitcoin BIPs 360/361, and sequence migration work."><meta name="twitter:image" content="images/post-quantum-custody-migration.png"><meta name="twitter:creator" content="@heroiclife">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Post-Quantum Custody Migration: What Actually Breaks","description":"Classify quantum-exposed holdings, compare post-quantum signature sizes, understand threshold-custody barriers, track Bitcoin BIPs 360/361, and sequence migration work.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-08-31","dateModified":"2026-08-31","keywords":"post quantum crypto custody, Bitcoin quantum risk, BIP 360, BIP 361, ML-DSA blockchain, quantum exposed public key"}</script><style>
+@layer reset, tokens, base, layout, components, print;
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --paper: light-dark(#faf9f7, #0f172a); --surface: light-dark(#ffffff, #182235);
+    --surface-2: light-dark(#f4f1ed, #111c2e); --ink: light-dark(#172033, #e7edf6);
+    --muted: light-dark(#586273, #a9b5c7); --line: light-dark(#d8d3cc, #334155);
+    --accent: light-dark(#86198f, #e879f9); --accent-soft: light-dark(#fae8ff, #3b1641);
+    --safe: light-dark(#166534, #86efac); --safe-bg: light-dark(#dcfce7, #12351f);
+    --warn: light-dark(#92400e, #fcd34d); --warn-bg: light-dark(#fef3c7, #3b2a0d);
+    --danger: light-dark(#991b1b, #fca5a5); --danger-bg: light-dark(#fee2e2, #401719);
+    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+}
+@layer reset { *,*::before,*::after{box-sizing:border-box} body,h1,h2,h3,p{margin:0} table{border-collapse:collapse} }
+@layer base {
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;text-wrap:pretty}
+  a{color:var(--accent);font-weight:650;text-decoration-thickness:.08em;text-underline-offset:.18em}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  code,.mono,td:nth-child(n+2){font-family:var(--mono);font-variant-numeric:tabular-nums}
+  h1,h2,h3{text-wrap:balance;line-height:1.15} h1{font-size:clamp(2rem,6vw,4.25rem);letter-spacing:-.045em;max-width:18ch}
+  h2{font-size:clamp(1.45rem,3vw,2.15rem);margin-bottom:1rem} h3{font-size:1.02rem;letter-spacing:.015em}
+  p+p{margin-top:.72rem}
+}
+@layer layout {
+  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}.masthead{padding:2.2rem 0 1.5rem;border-bottom:1px solid var(--line)}
+  .eyebrow{color:var(--accent);font:700 .76rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem}
+  .dek{color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);max-width:72ch;margin-top:1rem}
+  .meta{display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:1.2rem;color:var(--muted);font:600 .78rem/1.4 var(--mono)}
+  nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 94%,transparent);border-bottom:1px solid var(--line)}
+  nav .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.65rem 0}nav a{white-space:nowrap;font-size:.82rem}
+  main{padding:1.5rem 0 4rem}.sheet-section{margin-top:clamp(2.2rem,6vw,4.5rem);scroll-margin-top:4rem}
+  .section-note{color:var(--muted);max-width:85ch;margin-bottom:1rem}.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:.8rem}
+}
+@layer components {
+  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.2rem .55rem;font:800 .72rem/1 var(--mono);white-space:nowrap}
+  .signal.safe{color:var(--safe);background:var(--safe-bg)}.signal.warn{color:var(--warn);background:var(--warn-bg)}.signal.danger{color:var(--danger);background:var(--danger-bg)}
+  .quick{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--accent);padding:clamp(1rem,3vw,2rem);box-shadow:0 16px 36px rgba(15,23,42,.08)}
+  .quick h2{display:flex;align-items:center;gap:.6rem}.quick h2::before{content:"CONTROL REGISTER";font:800 .64rem/1 var(--mono);letter-spacing:.1em;color:var(--paper);background:var(--accent);padding:.38rem .5rem}
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}table{width:100%;min-width:720px;font-size:.86rem}
+  th,td{padding:.72rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{position:sticky;top:0;background:var(--surface-2);font:800 .72rem/1.25 var(--sans);letter-spacing:.04em;text-transform:uppercase}
+  tbody tr:hover{background:var(--accent-soft)}td:first-child{font-family:var(--sans);font-weight:760;min-width:12rem}tbody tr:last-child td{border-bottom:0}
+  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0}.entry h3{border-left:3px solid var(--accent);padding-left:.65rem;margin-bottom:.65rem}
+  .entry p{font-size:.9rem}.example,.gotcha{padding:.65rem;border-left:2px solid var(--safe);background:var(--safe-bg)}.gotcha{border-color:var(--danger);background:var(--danger-bg)}
+  .checklist ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:.5rem;counter-reset:steps}.checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);padding:.8rem}.checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:800 .7rem/1 var(--mono);margin-right:.55rem}
+  .sources ul{list-style:none;padding:0;display:grid;gap:.5rem}.sources li{display:grid;grid-template-columns:minmax(16rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}.sources span{color:var(--muted);font-size:.86rem}
+  .related{margin-top:4rem;border:1px solid var(--line);padding:1rem;background:var(--surface-2)}.related h2{font-size:1rem}.related div{display:flex;flex-wrap:wrap;gap:.55rem 1rem}.related a{font-size:.84rem}
+  .equation{font:800 clamp(1rem,3vw,1.55rem)/1.4 var(--mono);padding:1rem;border:1px dashed var(--accent);background:var(--accent-soft);overflow-wrap:anywhere}
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}.flow div{position:relative;padding:1rem;background:var(--surface);border:1px solid var(--line);min-height:7rem}.flow b{display:block;color:var(--accent);font:800 .7rem/1 var(--mono);margin-bottom:.5rem}.flow p{font-size:.83rem}
+  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}.print-only{display:none}
+}
+@layer print {
+  @media print{nav{display:none}.shell{width:100%}.sheet-section{break-inside:avoid;margin-top:1.3rem}.entry{break-inside:avoid}a{color:inherit}.print-only{display:block}.table-wrap{overflow:visible}table{min-width:0;font-size:7.7pt}th{position:static}}
+  @media(max-width:600px){.shell{width:min(100% - 1rem,1180px)}.masthead{padding-top:1.2rem}.sources li{grid-template-columns:1fr}.quick{padding:.8rem}.table-wrap{margin-inline:-.5rem}.entry-grid{grid-template-columns:1fr}}
+}
+</style></head>
+<body><header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance · engineering reference</p><h1>Post-quantum migration for digital asset custody</h1><p class="dek">Signatures break before hashes do. The useful work now is an exposure inventory, address hygiene, exportable metadata, and crypto-agile interfaces—not a confident prediction of “Q-day.”</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<nav aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#quantum-exposure-inventory">Quantum exposure inventory</a><a href="#primitive-impact">Primitive impact</a><a href="#post-quantum-signature-size-register">Post-quantum signature size register</a><a href="#two-attack-windows">Two attack windows</a><a href="#threshold-custody-migration-paths">Threshold custody migration paths</a><a href="#chain-dependency--governance">Chain dependency &amp; governance</a><a href="#migration-register">Migration register</a><a href="#timelines-stated-honestly">Timelines stated honestly</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
+<main class="shell"><section class="quick" id="quick-reference" aria-labelledby="quick-title"><h2 id="quick-title">Signatures break; hashes do not</h2>
+    <section class="sheet-section" aria-labelledby="primitive-triage">
+      <h2 id="primitive-triage">Primitive triage</h2>
+      <p class="section-note">Exposure is a property of published keys and spend history. Capability timing is uncertain; inventory and hygiene are not.</p>
+      <div class="table-wrap" role="region" aria-label="Primitive triage" tabindex="0">
+        <table><thead><tr><th scope="col">Question</th><th scope="col">If yes</th><th scope="col">Verdict</th></tr></thead><tbody><tr><td>Is an elliptic-curve public key already visible?</td><td>Long-range key-recovery target under a future CRQC</td><td><span class="signal danger">INVENTORY NOW</span></td></tr><tr><td>Is only a hash of the key/script visible and unused?</td><td>Long exposure is reduced until spend reveals it</td><td><span class="signal safe">NO REUSE</span></td></tr><tr><td>Does the chain validate a standardized PQ signature today?</td><td>Only then can a true scheme migration execute</td><td><span class="signal warn">CHAIN DEPENDENT</span></td></tr><tr><td>Does the custody quorum have a mature audited PQ threshold protocol?</td><td>Only then can threshold semantics survive directly</td><td><span class="signal warn">EMERGING</span></td></tr><tr><td>Can keys, paths and policy be exported/re-keyed without the vendor?</td><td>Migration remains operationally possible</td><td><span class="signal safe">TEST EXIT</span></td></tr></tbody></table>
+      </div>
+    </section></section>
+    <section class="sheet-section" aria-labelledby="quantum-exposure-inventory">
+      <h2 id="quantum-exposure-inventory">Quantum exposure inventory</h2>
+      <p class="section-note">Exposure is not present-day compromise. It identifies which assets would offer a future cryptographically relevant quantum computer an unbounded attack window.</p>
+      <div class="table-wrap" role="region" aria-label="Quantum exposure inventory" tabindex="0">
+        <table><thead><tr><th scope="col">Holding/output type</th><th scope="col">What is published at rest</th><th scope="col">Exposure moment</th><th scope="col">Long-range verdict</th><th scope="col">Action now</th></tr></thead><tbody><tr><td>Bitcoin P2PK</td><td>Raw public key</td><td>Creation</td><td><span class="signal danger">EXPOSED</span></td><td>Inventory and plan migration</td></tr><tr><td>Bitcoin P2PKH, never spent/reused</td><td>Hash of public key</td><td>Spend reveals key</td><td><span class="signal safe">HASH-SHIELDED</span></td><td>Do not reuse address</td></tr><tr><td>Bitcoin P2PKH after spend + reused balance</td><td>Public key in prior input</td><td>First spend</td><td><span class="signal danger">EXPOSED</span></td><td>Sweep to fresh non-reused output</td></tr><tr><td>Bitcoin P2WPKH, never spent/reused</td><td>Witness program hash</td><td>Spend reveals key</td><td><span class="signal safe">HASH-SHIELDED</span></td><td>Do not reuse address</td></tr><tr><td>Bitcoin P2SH/P2WSH unspent</td><td>Script hash</td><td>Spend reveals script/keys</td><td><span class="signal warn">DEPENDS</span></td><td>Inspect revealed history and reuse</td></tr><tr><td>Bitcoin P2TR</td><td>Tweaked Schnorr public key</td><td>Creation</td><td><span class="signal danger">EXPOSED AT REST</span></td><td>Include in exposed inventory</td></tr><tr><td>Proposed P2MR / BIP 360</td><td>Merkle root, no key path</td><td>Script-path spend</td><td><span class="signal warn">DRAFT</span></td><td>Track; not deployable consensus today</td></tr><tr><td>EVM account never sent</td><td>Address hash; key not directly published</td><td>First signature enables recovery</td><td><span class="signal safe">UNTIL SEND</span></td><td>Avoid reuse after outbound activity</td></tr><tr><td>EVM account that sent</td><td>Recoverable signer key from signature</td><td>First outbound transaction</td><td><span class="signal danger">EXPOSED</span></td><td>Inventory and migration dependency</td></tr><tr><td>Ed25519 account after signing</td><td>Public key/signature visible by chain design</td><td>Account/signature use</td><td><span class="signal danger">EXPOSED</span></td><td>Chain-specific inventory</td></tr><tr><td>xpub / wallet descriptor leak</td><td>Public derivation material</td><td>Export/disclosure</td><td><span class="signal danger">MANY KEYS EXPOSED</span></td><td>Treat as sensitive; rotate where feasible</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="primitive-impact">
+      <h2 id="primitive-impact">Primitive impact</h2>
+      <p class="section-note">“Quantum breaks Bitcoin mining” is the wrong operational model. The actionable custody inventory is signature schemes and public-key exposure.</p>
+      <div class="table-wrap" role="region" aria-label="Primitive impact" tabindex="0">
+        <table><thead><tr><th scope="col">Primitive</th><th scope="col">Role</th><th scope="col">Quantum effect</th><th scope="col">Operational consequence</th></tr></thead><tbody><tr><td>ECDSA / secp256k1</td><td>Bitcoin/EVM signatures</td><td>Shor breaks discrete-log assumption</td><td>Exposed public keys become key-recovery targets</td></tr><tr><td>Schnorr / secp256k1</td><td>Taproot signatures</td><td>Same curve assumption</td><td>Output key is exposed at rest</td></tr><tr><td>Ed25519 / EdDSA</td><td>Account/chain signatures</td><td>Elliptic-curve discrete log</td><td>Used accounts require chain migration</td></tr><tr><td>SHA-256</td><td>Hash commitments / PoW</td><td>Grover gives quadratic generic search speedup</td><td>256-bit hash retains large margin; signatures are priority</td></tr><tr><td>RIPEMD-160 / HASH160</td><td>Bitcoin key hash</td><td>Generic search speedup</td><td>Unspent hash-shielded outputs differ from raw-key outputs</td></tr><tr><td>Merkle commitments</td><td>Transaction/script/state commitments</td><td>Hash security reduction, not Shor break</td><td>Not the primary signing failure</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="post-quantum-signature-size-register">
+      <h2 id="post-quantum-signature-size-register">Post-quantum signature size register</h2>
+      <p class="section-note">Parameters were checked against FIPS 204/205. On-chain cost depends on future serialization and consensus weight rules; multiplying raw bytes by today's witness fee formula would be illustrative, not a deployable quote.</p>
+      <div class="table-wrap" role="region" aria-label="Post-quantum signature size register" tabindex="0">
+        <table><thead><tr><th scope="col">Scheme / parameter</th><th scope="col">Public key bytes</th><th scope="col">Signature bytes</th><th scope="col">Class</th><th scope="col">Custody reading</th></tr></thead><tbody><tr><td>ECDSA secp256k1 baseline</td><td>33 compressed</td><td>~71–73 DER</td><td>Classical</td><td>Compact; quantum-vulnerable</td></tr><tr><td>Schnorr BIP340 baseline</td><td>32</td><td>64</td><td>Classical</td><td>Compact; quantum-vulnerable</td></tr><tr><td>ML-DSA-44</td><td>1,312</td><td>2,420</td><td>NIST FIPS 204</td><td>~38× a 64-byte Schnorr signature</td></tr><tr><td>ML-DSA-65</td><td>1,952</td><td>3,309</td><td>NIST FIPS 204</td><td>Higher category; larger witness</td></tr><tr><td>ML-DSA-87</td><td>2,592</td><td>4,627</td><td>NIST FIPS 204</td><td>Largest ML-DSA standard set</td></tr><tr><td>SLH-DSA-SHA2-128s</td><td>32</td><td>7,856</td><td>NIST FIPS 205</td><td>Small key; very large signature</td></tr><tr><td>SLH-DSA-SHA2-128f</td><td>32</td><td>17,088</td><td>NIST FIPS 205</td><td>Faster family variant; larger signature</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="two-attack-windows">
+      <h2 id="two-attack-windows">Two attack windows</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Long-range</h3>
+          <p>An already published public key can be attacked for months or years without broadcasting anything.</p>
+          <p class="example"><strong>Concrete use:</strong> P2PK, P2TR, reused key-hash outputs, used accounts, and leaked xpubs enter the exposed inventory now.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Waiting for a mempool anomaly misses the quiet attack window.</p>
+        </article>
+        <article class="entry">
+          <h3>Short-range</h3>
+          <p>An attacker derives a key after spend broadcast and races a conflicting transaction before confirmation.</p>
+          <p class="example"><strong>Concrete use:</strong> Hash-shielded P2WPKH still needs a chain-level PQ signature path to close this window.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Moving to a fresh key-hash output only addresses long exposure.</p>
+        </article>
+        <article class="entry">
+          <h3>Present-day hygiene</h3>
+          <p>Reduce exposed reuse without claiming quantum safety.</p>
+          <p class="example"><strong>Concrete use:</strong> Stop address reuse, protect xpubs/descriptors, and sweep long-held reused balances through ordinary controlled ceremonies.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A rushed migration can cause a certain operational loss to hedge an uncertain future threat.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section" aria-labelledby="threshold-custody-migration-paths">
+      <h2 id="threshold-custody-migration-paths">Threshold custody migration paths</h2>
+      <p class="section-note">As of August 2026, NIST's MPTC program is actively collecting threshold schemes under IR 8214C. That is progress, not proof of mature interoperable custody deployments.</p>
+      <div class="table-wrap" role="region" aria-label="Threshold custody migration paths" tabindex="0">
+        <table><thead><tr><th scope="col">Path</th><th scope="col">Address continuity</th><th scope="col">Threshold quality</th><th scope="col">Chain dependency</th><th scope="col">Primary failure</th></tr></thead><tbody><tr><td>Classical threshold + separate PQ signature</td><td>Contract/script dependent</td><td>Hybrid, asymmetric</td><td>Needs verification rule</td><td>PQ key may reintroduce single point</td></tr><tr><td>Upgradeable smart-contract/account wallet</td><td>Can remain stable by contract design</td><td>Policy-level multisig possible</td><td>Chain VM + gas + governance</td><td>Upgrade/admin compromise</td></tr><tr><td>On-chain multisig of PQ keys</td><td>New output/account</td><td>Coarse m-of-n</td><td>PQ opcode/account validation</td><td>Large witness and visible policy</td></tr><tr><td>Threshold ML-DSA research</td><td>Potentially ordinary PQ signature</td><td>Research / emerging</td><td>Scheme support + mature implementation</td><td>Rejection sampling/MPC complexity</td></tr><tr><td>Stateful hash-based threshold</td><td>Scheme dependent</td><td>Operationally hazardous</td><td>State tracking</td><td>Backup rollback / one-time-key reuse</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="chain-dependency--governance">
+      <h2 id="chain-dependency--governance">Chain dependency &amp; governance</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>BIP 360 / P2MR</h3>
+          <p>Draft Pay-to-Merkle-Root removes Taproot's exposed key path and targets long-exposure resistance while retaining script trees.</p>
+          <p class="example"><strong>Concrete use:</strong> Track status and wallet/test-vector work; do not label current holdings P2MR.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A merged BIP document is not activated consensus.</p>
+        </article>
+        <article class="entry">
+          <h3>BIP 361</h3>
+          <p>Draft informational migration/sunset framework discusses restricting legacy vulnerable outputs after a future PQ output exists.</p>
+          <p class="example"><strong>Concrete use:</strong> Use it to model governance choices and legacy-coin policy, not a schedule.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Draft phase names and dates are not network commitments.</p>
+        </article>
+        <article class="entry">
+          <h3>Account abstraction</h3>
+          <p>A contract/account validation layer can make signature verification upgradeable without changing the user-facing account.</p>
+          <p class="example"><strong>Concrete use:</strong> Inventory upgrade authority, fallback path, validation gas and chain support.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Upgradability trades cryptographic rigidity for governance risk.</p>
+        </article>
+        <article class="entry">
+          <h3>Legacy exposed coins</h3>
+          <p>Freeze, rescue/burn, and do-nothing positions allocate theft, property and consensus risk differently.</p>
+          <p class="example"><strong>Concrete use:</strong> Represent the debate in board risk planning; do not assume an outcome.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Custodians cannot unilaterally choose chain consensus.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section" aria-labelledby="migration-register">
+      <h2 id="migration-register">Migration register</h2>
+      <p class="section-note">Planning inequality: required secrecy lifetime + migration duration > uncertain time to capability means inventory and agility work starts now—even when scheme replacement is blocked.</p>
+      <div class="table-wrap" role="region" aria-label="Migration register" tabindex="0">
+        <table><thead><tr><th scope="col">When</th><th scope="col">Control</th><th scope="col">Owner</th><th scope="col">Evidence</th><th scope="col">Blocked by</th></tr></thead><tbody><tr><td>Now</td><td>Inventory chain, scheme, output/account type, exposure, value and horizon</td><td>Custody engineering</td><td>Versioned cryptographic asset register</td><td>Nothing</td></tr><tr><td>Now</td><td>Ban address reuse and protect xpub/descriptor exports</td><td>Wallet platform</td><td>Policy test + monitoring</td><td>Nothing</td></tr><tr><td>Now</td><td>Sweep reused/exposed long-held outputs where ordinary risk permits</td><td>Custody operations</td><td>Approved migration/reconciliation</td><td>Fees and operational risk</td></tr><tr><td>Now</td><td>Record software, path, scheme, signer, export and recovery metadata</td><td>Platform + DR</td><td>Restore-tested inventory</td><td>Vendor access may limit</td></tr><tr><td>Now</td><td>Ask vendor for PQ roadmap and independent export/re-key path</td><td>Risk/procurement</td><td>Written response + exit test</td><td>Vendor capability</td></tr><tr><td>Next</td><td>Make signature scheme and serialization explicit in internal interfaces</td><td>Architecture</td><td>Multi-scheme test harness</td><td>Legacy assumptions</td></tr><tr><td>Next</td><td>Model byte/fee/capacity impact and migration batching</td><td>Chain operations</td><td>Scenario workbook</td><td>Final chain rules unknown</td></tr><tr><td>Next</td><td>Monitor NIST MPTC and chain proposals by status</td><td>Cryptography owner</td><td>Quarterly review</td><td>Standards/governance</td></tr><tr><td>Later</td><td>Deploy PQ or hybrid signing</td><td>Chain + custodian</td><td>Activated standard path + audited implementation</td><td>Consensus and mature threshold support</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section checklist" aria-labelledby="common-mistakes--anti-patterns">
+      <h2 id="common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</h2>
+      <p class="section-note">Calm inventory work is useful under every forecast. Panic procurement is useful under none.</p>
+      <ol><li><span aria-hidden="true">□</span> Do not claim 256-bit hash functions and proof-of-work fail the same way as elliptic-curve signatures.</li><li><span aria-hidden="true">□</span> Do not classify every address equally; inspect output/account type and spend/reuse history.</li><li><span aria-hidden="true">□</span> Do not treat a hardware wallet as a post-quantum control; it still emits the chain's signature scheme.</li><li><span aria-hidden="true">□</span> Do not classify Taproot like an unspent P2WPKH output; P2TR publishes a key at creation.</li><li><span aria-hidden="true">□</span> Do not assume an ECDSA threshold engine can swap in ML-DSA without a new protocol and chain rule.</li><li><span aria-hidden="true">□</span> Do not plan migration the chain cannot validate or wallets cannot receive.</li><li><span aria-hidden="true">□</span> Do not ignore public-key/signature bytes, block capacity, fee market, and consolidation scale.</li><li><span aria-hidden="true">□</span> Do not buy unverifiable “quantum-safe” branding or deploy an unstandardized scheme into production custody.</li><li><span aria-hidden="true">□</span> Do not put prediction-year precision into policy; use horizon + migration-duration scenarios.</li><li><span aria-hidden="true">□</span> Do not create present operational loss through rushed sweeps; use ordinary custody controls and reconciliation.</li></ol>
+    </section>
+    <section class="sheet-section" aria-labelledby="timelines-stated-honestly">
+      <h2 id="timelines-stated-honestly">Timelines stated honestly</h2>
+      <p class="section-note">Decision inequality: required security lifetime + credible migration duration versus an uncertain capability horizon. Uncertainty motivates reversible inventory work, not false precision.</p>
+      <div class="table-wrap" role="region" aria-label="Timelines stated honestly" tabindex="0">
+        <table><thead><tr><th scope="col">Timeline</th><th scope="col">What is factual</th><th scope="col">What remains uncertain</th><th scope="col">Planning use</th></tr></thead><tbody><tr><td>NIST transition</td><td>IR 8547 initial public draft describes federal transition planning</td><td>Draft may change; application guidance differs</td><td>Track status and agency-specific mandates</td></tr><tr><td>NIST standards</td><td>FIPS 204/205 final since August 2024</td><td>Blockchain consensus and threshold profiles</td><td>Use parameters for size/testing, not deployment claims</td></tr><tr><td>NIST threshold work</td><td>IR 8214C final January 2026; submissions/workshops active</td><td>Mature audited custody interoperability</td><td>Review annually; prototype off production path</td></tr><tr><td>Bitcoin proposals</td><td>BIPs 360/361 are Draft as of August 2026</td><td>Activation, signature choice, sunset policy, schedule</td><td>Inventory dependencies; promise no date</td></tr><tr><td>CRQC capability</td><td>No public machine breaks production ECC today</td><td>Whether/when capability exists</td><td>Use scenario ranges, not a forecast year</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section sources" aria-labelledby="sources">
+      <h2 id="sources">Primary sources &amp; scope</h2>
+      <p class="section-note">Operational and volatile claims were checked against these first-party documents on 2026-08-31. Examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
+      <ul><li><a href="https://csrc.nist.gov/pubs/fips/204/final" target="_blank" rel="noopener noreferrer">NIST FIPS 204 — ML-DSA</a><span>Standard parameter sets and byte encodings.</span></li><li><a href="https://csrc.nist.gov/pubs/fips/205/final" target="_blank" rel="noopener noreferrer">NIST FIPS 205 — SLH-DSA</a><span>Stateless hash-based signature standard.</span></li><li><a href="https://csrc.nist.gov/pubs/ir/8547/ipd" target="_blank" rel="noopener noreferrer">NIST IR 8547 draft</a><span>Federal transition planning; draft status is explicit.</span></li><li><a href="https://csrc.nist.gov/Projects/threshold-cryptography" target="_blank" rel="noopener noreferrer">NIST MPTC</a><span>IR 8214C and current threshold-standardization program.</span></li><li><a href="https://github.com/bitcoin/bips/blob/master/bip-0360.mediawiki" target="_blank" rel="noopener noreferrer">BIP 360 — P2MR</a><span>Draft long-exposure-resistant script-tree output.</span></li><li><a href="https://github.com/bitcoin/bips/blob/master/bip-0361.mediawiki" target="_blank" rel="noopener noreferrer">BIP 361 — migration/sunset</a><span>Draft informational legacy-signature migration framework.</span></li></ul>
+    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-cryptography.html">Post-quantum cryptography <span aria-hidden="true">→</span></a><a href="quantum-physics-vs-quantum-bullshit.html">Quantum physics vs hype <span aria-hidden="true">→</span></a><a href="bitcoin-self-custody-guide.html">Bitcoin self-custody <span aria-hidden="true">→</span></a></div></aside></main>
+<footer class="shell meta"><p>Last verified: 2026-08-31 · Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer></body></html>

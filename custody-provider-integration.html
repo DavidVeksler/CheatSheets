@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fireblocks &amp; Custody Provider Integration Patterns</title><meta name="description" content="Integrate Fireblocks and custody platforms safely: vault models, idempotent transaction APIs, co-signer callbacks, webhooks, status/sub-status handling, gas stations, and exit tests."><meta name="keywords" content="Fireblocks integration, custody API, webhook idempotency, API Co-Signer, crypto custody provider">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/custody-provider-integration.html">
+<meta property="og:title" content="Fireblocks &amp; Custody Provider Integration Patterns"><meta property="og:description" content="Integrate Fireblocks and custody platforms safely: vault models, idempotent transaction APIs, co-signer callbacks, webhooks, status/sub-status handling, gas stations, and exit tests."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/custody-provider-integration.html"><meta property="og:image" content="images/custody-provider-integration.png"><meta property="og:image:alt" content="Custody provider transaction lifecycle and webhook reconciliation state machine">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Fireblocks &amp; Custody Provider Integration Patterns"><meta name="twitter:description" content="Integrate Fireblocks and custody platforms safely: vault models, idempotent transaction APIs, co-signer callbacks, webhooks, status/sub-status handling, gas stations, and exit tests."><meta name="twitter:image" content="images/custody-provider-integration.png"><meta name="twitter:creator" content="@heroiclife">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Fireblocks & Custody Provider Integration Patterns","description":"Integrate Fireblocks and custody platforms safely: vault models, idempotent transaction APIs, co-signer callbacks, webhooks, status/sub-status handling, gas stations, and exit tests.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-08-31","dateModified":"2026-08-31","keywords":"Fireblocks integration, custody API, webhook idempotency, API Co-Signer, crypto custody provider"}</script><style>
+@layer reset, tokens, base, layout, components, print;
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --paper: light-dark(#faf9f7, #0f172a); --surface: light-dark(#ffffff, #182235);
+    --surface-2: light-dark(#f4f1ed, #111c2e); --ink: light-dark(#172033, #e7edf6);
+    --muted: light-dark(#586273, #a9b5c7); --line: light-dark(#d8d3cc, #334155);
+    --accent: light-dark(#86198f, #e879f9); --accent-soft: light-dark(#fae8ff, #3b1641);
+    --safe: light-dark(#166534, #86efac); --safe-bg: light-dark(#dcfce7, #12351f);
+    --warn: light-dark(#92400e, #fcd34d); --warn-bg: light-dark(#fef3c7, #3b2a0d);
+    --danger: light-dark(#991b1b, #fca5a5); --danger-bg: light-dark(#fee2e2, #401719);
+    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+}
+@layer reset { *,*::before,*::after{box-sizing:border-box} body,h1,h2,h3,p{margin:0} table{border-collapse:collapse} }
+@layer base {
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;text-wrap:pretty}
+  a{color:var(--accent);font-weight:650;text-decoration-thickness:.08em;text-underline-offset:.18em}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  code,.mono,td:nth-child(n+2){font-family:var(--mono);font-variant-numeric:tabular-nums}
+  h1,h2,h3{text-wrap:balance;line-height:1.15} h1{font-size:clamp(2rem,6vw,4.25rem);letter-spacing:-.045em;max-width:18ch}
+  h2{font-size:clamp(1.45rem,3vw,2.15rem);margin-bottom:1rem} h3{font-size:1.02rem;letter-spacing:.015em}
+  p+p{margin-top:.72rem}
+}
+@layer layout {
+  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}.masthead{padding:2.2rem 0 1.5rem;border-bottom:1px solid var(--line)}
+  .eyebrow{color:var(--accent);font:700 .76rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem}
+  .dek{color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);max-width:72ch;margin-top:1rem}
+  .meta{display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:1.2rem;color:var(--muted);font:600 .78rem/1.4 var(--mono)}
+  nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 94%,transparent);border-bottom:1px solid var(--line)}
+  nav .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.65rem 0}nav a{white-space:nowrap;font-size:.82rem}
+  main{padding:1.5rem 0 4rem}.sheet-section{margin-top:clamp(2.2rem,6vw,4.5rem);scroll-margin-top:4rem}
+  .section-note{color:var(--muted);max-width:85ch;margin-bottom:1rem}.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:.8rem}
+}
+@layer components {
+  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.2rem .55rem;font:800 .72rem/1 var(--mono);white-space:nowrap}
+  .signal.safe{color:var(--safe);background:var(--safe-bg)}.signal.warn{color:var(--warn);background:var(--warn-bg)}.signal.danger{color:var(--danger);background:var(--danger-bg)}
+  .quick{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--accent);padding:clamp(1rem,3vw,2rem);box-shadow:0 16px 36px rgba(15,23,42,.08)}
+  .quick h2{display:flex;align-items:center;gap:.6rem}.quick h2::before{content:"CONTROL REGISTER";font:800 .64rem/1 var(--mono);letter-spacing:.1em;color:var(--paper);background:var(--accent);padding:.38rem .5rem}
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}table{width:100%;min-width:720px;font-size:.86rem}
+  th,td{padding:.72rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{position:sticky;top:0;background:var(--surface-2);font:800 .72rem/1.25 var(--sans);letter-spacing:.04em;text-transform:uppercase}
+  tbody tr:hover{background:var(--accent-soft)}td:first-child{font-family:var(--sans);font-weight:760;min-width:12rem}tbody tr:last-child td{border-bottom:0}
+  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0}.entry h3{border-left:3px solid var(--accent);padding-left:.65rem;margin-bottom:.65rem}
+  .entry p{font-size:.9rem}.example,.gotcha{padding:.65rem;border-left:2px solid var(--safe);background:var(--safe-bg)}.gotcha{border-color:var(--danger);background:var(--danger-bg)}
+  .checklist ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:.5rem;counter-reset:steps}.checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);padding:.8rem}.checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:800 .7rem/1 var(--mono);margin-right:.55rem}
+  .sources ul{list-style:none;padding:0;display:grid;gap:.5rem}.sources li{display:grid;grid-template-columns:minmax(16rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}.sources span{color:var(--muted);font-size:.86rem}
+  .related{margin-top:4rem;border:1px solid var(--line);padding:1rem;background:var(--surface-2)}.related h2{font-size:1rem}.related div{display:flex;flex-wrap:wrap;gap:.55rem 1rem}.related a{font-size:.84rem}
+  .equation{font:800 clamp(1rem,3vw,1.55rem)/1.4 var(--mono);padding:1rem;border:1px dashed var(--accent);background:var(--accent-soft);overflow-wrap:anywhere}
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}.flow div{position:relative;padding:1rem;background:var(--surface);border:1px solid var(--line);min-height:7rem}.flow b{display:block;color:var(--accent);font:800 .7rem/1 var(--mono);margin-bottom:.5rem}.flow p{font-size:.83rem}
+  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}.print-only{display:none}
+}
+@layer print {
+  @media print{nav{display:none}.shell{width:100%}.sheet-section{break-inside:avoid;margin-top:1.3rem}.entry{break-inside:avoid}a{color:inherit}.print-only{display:block}.table-wrap{overflow:visible}table{min-width:0;font-size:7.7pt}th{position:static}}
+  @media(max-width:600px){.shell{width:min(100% - 1rem,1180px)}.masthead{padding-top:1.2rem}.sources li{grid-template-columns:1fr}.quick{padding:.8rem}.table-wrap{margin-inline:-.5rem}.entry-grid{grid-template-columns:1fr}}
+}
+</style></head>
+<body><header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance · engineering reference</p><h1>Custody provider integration</h1><p class="dek">A provider should be mapped into your model—not allowed to become it. Your immutable transaction ID, policy decision, ledger, polling reconciler, and exit package remain authoritative.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<nav aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#generic-provider-object-map">Generic provider object map</a><a href="#authentication-idempotency--webhooks">Authentication, idempotency &amp; webhooks</a><a href="#fireblocks-transaction-lifecycle">Fireblocks transaction lifecycle</a><a href="#failure-sub-status-operations">Failure sub-status operations</a><a href="#policy-callback--gas-station">Policy callback &amp; gas station</a><a href="#platform-due-diligence-register">Platform due-diligence register</a><a href="#go-live-integration-checklist">Go-live integration checklist</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
+<main class="shell"><section class="quick" id="quick-reference" aria-labelledby="quick-title"><h2 id="quick-title">Webhooks are hints; reconciliation is truth</h2><div class="flow"><div><b>01 · INTENT</b><p>Persist internal ID and ledger hold.</p></div><div><b>02 · CREATE</b><p>Send external/idempotency ID once.</p></div><div><b>03 · AUTHORIZE</b><p>Provider policy + independent callback.</p></div><div><b>04 · SIGN</b><p>Exact decoded payload only.</p></div><div><b>05 · OBSERVE</b><p>Webhook v2 into durable queue.</p></div><div><b>06 · RECONCILE</b><p>Poll provider + chain; settle actuals.</p></div></div><p class="equation">one internal intent → 0..n API attempts → 0..n chain hashes → exactly one final ledger outcome</p></section>
+    <section class="sheet-section" aria-labelledby="generic-provider-object-map">
+      <h2 id="generic-provider-object-map">Generic provider object map</h2>
+      <p class="section-note">Vendor terminology is dated August 2026. Build an anti-corruption layer so your ledger and state machine do not inherit vendor names.</p>
+      <div class="table-wrap" role="region" aria-label="Generic provider object map" tabindex="0">
+        <table><thead><tr><th scope="col">Generic concept</th><th scope="col">Fireblocks</th><th scope="col">BitGo</th><th scope="col">Coinbase Prime</th><th scope="col">Build invariant</th></tr></thead><tbody><tr><td>Custody container</td><td>Vault account / asset wallet</td><td>Wallet / enterprise</td><td>Portfolio / wallet / address group</td><td>Your internal account ID remains authoritative</td></tr><tr><td>Transfer intent</td><td>Transaction + <code>externalTxId</code></td><td>Transfer / send request</td><td>Onchain transaction</td><td>Client idempotency ID before API call</td></tr><tr><td>Policy</td><td>Policies / TAP terminology</td><td>Wallet/enterprise policy + webhook rule</td><td>Portfolio/user controls</td><td>Default deny in your domain too</td></tr><tr><td>Signer hook</td><td>API Co-Signer callback</td><td>Webhook policy / signing architecture</td><td>Platform-managed API flow</td><td>Independent payload-vs-ledger validation</td></tr><tr><td>Event</td><td>Webhook v2 transaction events</td><td>Wallet/transfer webhooks</td><td>WebSocket/REST state</td><td>Hint only; reconciler is truth</td></tr><tr><td>Chain evidence</td><td><code>txHash</code> + status/subStatus</td><td>Transfer hash/state</td><td>Transaction state</td><td>Many hashes may map to one intent</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="authentication-idempotency--webhooks">
+      <h2 id="authentication-idempotency--webhooks">Authentication, idempotency &amp; webhooks</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Separate credentials</h3>
+          <p>Read, create, approve/sign, policy-admin, and workspace-admin capabilities belong in different keys and stores.</p>
+          <p class="example"><strong>Concrete use:</strong> A reconciler key can list transactions but cannot create or approve one.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> One omnipotent key turns a reporting host into a withdrawal host.</p>
+        </article>
+        <article class="entry">
+          <h3>Signed request</h3>
+          <p>Bind method, path, body hash, nonce/time, and short expiry to the caller identity.</p>
+          <p class="example"><strong>Concrete use:</strong> Hash raw JSON bytes, issue JWT <code>jti=req_8291</code>, and reject clock skew outside the documented window.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Re-serializing JSON can change the signed bytes.</p>
+        </article>
+        <article class="entry">
+          <h3>Idempotent create</h3>
+          <p>Generate and persist the client external ID before the first network attempt.</p>
+          <p class="example"><strong>Concrete use:</strong> Retry <code>wd_8291</code> after timeout and query by the same ID before any second create.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A timeout has unknown outcome; blind retry can pay twice.</p>
+        </article>
+        <article class="entry">
+          <h3>Raw-body verification</h3>
+          <p>Verify webhook signature and timestamp over exact received bytes before parsing.</p>
+          <p class="example"><strong>Concrete use:</strong> Queue the verified envelope, return 2xx quickly, then process asynchronously.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Signing parsed JSON breaks when whitespace/key order changes.</p>
+        </article>
+        <article class="entry">
+          <h3>At-least-once consumer</h3>
+          <p>Deduplicate event IDs, tolerate reordering, and compare polled authoritative state.</p>
+          <p class="example"><strong>Concrete use:</strong> A late <code>PENDING_SIGNATURE</code> event cannot regress a locally reconciled <code>COMPLETED</code> transaction.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Webhook arrival order is not transaction order.</p>
+        </article>
+        <article class="entry">
+          <h3>Silence alarm</h3>
+          <p>No events can mean no activity or a broken integration; only polling distinguishes them.</p>
+          <p class="example"><strong>Concrete use:</strong> Poll every 60 seconds and alert when webhook silence exceeds 5 minutes while state changes exist.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A green HTTP endpoint does not prove events are arriving.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section" aria-labelledby="fireblocks-transaction-lifecycle">
+      <h2 id="fireblocks-transaction-lifecycle">Fireblocks transaction lifecycle</h2>
+      <p class="section-note">Fireblocks primary status and sub-status enums change. Parse unknown values safely, retain raw payload, and alert instead of crashing or treating unknown as success.</p>
+      <div class="table-wrap" role="region" aria-label="Fireblocks transaction lifecycle" tabindex="0">
+        <table><thead><tr><th scope="col">Status family</th><th scope="col">Meaning</th><th scope="col">Terminal?</th><th scope="col">Ledger action</th><th scope="col">Operator focus</th></tr></thead><tbody><tr><td>SUBMITTED / PENDING_*</td><td>Created; policy/approval/signing work remains</td><td>No</td><td>Reserve/hold only</td><td>Read exact current status and subStatus</td></tr><tr><td>QUEUED</td><td>Waiting for processing/resource</td><td>No</td><td>Keep hold</td><td>Queue age and dependency</td></tr><tr><td>BROADCASTING</td><td>Submission in progress</td><td>No</td><td>Keep hold; no settlement</td><td>Unknown hash/outcome window</td></tr><tr><td>CONFIRMING</td><td>On chain, confirmation policy pending</td><td>No</td><td>Attach hash/version</td><td>Reorg and replacement</td></tr><tr><td>COMPLETED</td><td>Provider completion criteria met</td><td>Yes for provider flow</td><td>Settle actual amount/fee after reconciliation</td><td>Verify chain evidence</td></tr><tr><td>BLOCKED</td><td>Policy/compliance stopped</td><td>Yes unless new intent</td><td>Release/retain hold per case</td><td>Rule number / sanctions context</td></tr><tr><td>REJECTED</td><td>User, AML, or workflow rejection</td><td>Yes</td><td>Release hold</td><td>Sub-status is the explanation</td></tr><tr><td>CANCELLED</td><td>Cancelled before completion</td><td>Yes</td><td>Release only after chain query</td><td>May have prior hash/state</td></tr><tr><td>FAILED</td><td>Provider/chain operation failed</td><td>Yes for this attempt</td><td>Reconcile; compensating entry</td><td>Fee, nonce, connectivity, authorization</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="failure-sub-status-operations">
+      <h2 id="failure-sub-status-operations">Failure sub-status operations</h2>
+      <p class="section-note">These are documented Fireblocks examples as read August 2026. Always store unknown sub-status strings verbatim.</p>
+      <div class="table-wrap" role="region" aria-label="Failure sub-status operations" tabindex="0">
+        <table><thead><tr><th scope="col">Sub-status</th><th scope="col">Likely domain</th><th scope="col">Response</th></tr></thead><tbody><tr><td>BLOCKED_BY_POLICY</td><td>Policy order / sanctions</td><td>Record rule, do not mutate policy to force retry</td></tr><tr><td>AUTHORIZATION_FAILED</td><td>API Co-Signer callback</td><td>Check authentication and callback availability</td></tr><tr><td>REJECTED_AML_SCREENING</td><td>Compliance</td><td>Freeze/route case; preserve provider evidence</td></tr><tr><td>AUTO_FREEZE</td><td>Transaction screening</td><td>Treat as blocked-property workflow</td></tr><tr><td>ADDRESS_WHITELISTING_SUSPENDED</td><td>Destination activation</td><td>Wait for configured activation; never bypass</td></tr><tr><td>ACTUAL_FEE_TOO_HIGH</td><td>Fee policy / market</td><td>Re-estimate within ceiling; create linked attempt</td></tr><tr><td>AMOUNT_TOO_SMALL</td><td>Dust/minimum/net fee</td><td>Reject before provider call using adapter limits</td></tr><tr><td>3RD_PARTY_PROCESSING</td><td>Exchange/network dependency</td><td>Poll provider and third party; do not duplicate</td></tr><tr><td>ON_PREMISE_CONNECTIVITY_ERROR</td><td>Self-hosted component</td><td>Fail closed and execute co-signer failover</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="policy-callback--gas-station">
+      <h2 id="policy-callback--gas-station">Policy callback &amp; gas station</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Independent callback</h3>
+          <p>Your code compares decoded vendor request to the immutable ledger intent before allowing the co-signer share to act.</p>
+          <p class="example"><strong>Concrete use:</strong> Require exact chain, source, destination, asset, amount, fee ceiling, case ID, and policy version.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> If callback and transaction creator share one credential/host, the independence is cosmetic.</p>
+        </article>
+        <article class="entry">
+          <h3>Critical-path availability</h3>
+          <p>Callback uptime becomes withdrawal signing uptime, so failure must be observable and closed.</p>
+          <p class="example"><strong>Concrete use:</strong> Deploy across two fault domains, use bounded timeouts, and test that timeout rejects rather than approves.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A fail-open callback nullifies the strongest integration control.</p>
+        </article>
+        <article class="entry">
+          <h3>Gas Station</h3>
+          <p>Fireblocks can auto-fuel EVM vault accounts so token sweeps have native gas.</p>
+          <p class="example"><strong>Concrete use:</strong> Enable <code>autoFuel</code> only on intended deposit vaults; monitor source balance and unexpected funding volume.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> The gas source can run dry exactly when sweep backlog peaks.</p>
+        </article>
+        <article class="entry">
+          <h3>Exit package</h3>
+          <p>Provider disappearance is a designed failure, not a contract footnote.</p>
+          <p class="example"><strong>Concrete use:</strong> Restore keys/shares, derivation data, policies, address inventory, pending transactions, and audit evidence in isolation.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Key export without path and address metadata may be unusable.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section" aria-labelledby="platform-due-diligence-register">
+      <h2 id="platform-due-diligence-register">Platform due-diligence register</h2>
+      <p class="section-note">No ranking or pricing. Capabilities are product/configuration specific and must be reverified in public docs and contracts; absence from a public page is not evidence of absence.</p>
+      <div class="table-wrap" role="region" aria-label="Platform due-diligence register" tabindex="0">
+        <table><thead><tr><th scope="col">Platform</th><th scope="col">Public integration surface</th><th scope="col">Custody/signing model to verify</th><th scope="col">Policy/signer hook</th><th scope="col">Exit question</th></tr></thead><tbody><tr><td>Fireblocks</td><td>REST/SDK + Webhooks v2</td><td>MPC-CMP / workspace configuration</td><td>Policies + API Co-Signer callback</td><td>Can customer reshare/export each wallet class?</td></tr><tr><td>BitGo</td><td>REST SDK + webhooks</td><td>Multisig/TSS by product</td><td>Wallet policies + webhook policy</td><td>Which keys and metadata remain customer-held?</td></tr><tr><td>Coinbase Prime</td><td>REST/FIX/WebSocket</td><td>Qualified-custody/platform paths</td><td>Portfolio/user controls</td><td>How are wallets and transaction history exported?</td></tr><tr><td>Copper</td><td>Public docs/API where available</td><td>MPC/custody product-specific</td><td>Verify documented policy hook</td><td>Independent recovery/export package?</td></tr><tr><td>Anchorage Digital</td><td>Public API/docs where available</td><td>Institutional custodian</td><td>Verify programmatic approval surface</td><td>Asset return and history format?</td></tr><tr><td>Dfns</td><td>API + webhooks</td><td>Wallet-as-a-service MPC</td><td>Policy/approval surface</td><td>Key export/reshare per network?</td></tr><tr><td>Turnkey</td><td>API + policy engine</td><td>Secure enclave / sub-organization model</td><td>Signed policy operations</td><td>Root quorum and export path?</td></tr><tr><td>Safe</td><td>Smart-contract accounts + SDK</td><td>On-chain owner threshold</td><td>Modules/guards</td><td>Can owners operate without hosted service?</td></tr><tr><td>Self-build</td><td>Your API</td><td>Chosen open protocol + HSM/enclave</td><td>Your policy/callback</td><td>You own every audit and chain adapter</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section checklist" aria-labelledby="go-live-integration-checklist">
+      <h2 id="go-live-integration-checklist">Go-live integration checklist</h2>
+      <p class="section-note">Buying signing infrastructure does not buy your ledger, reconciler, compliance placement, nonce allocator, support operation, or exit plan.</p>
+      <ol><li><span aria-hidden="true">□</span> Persist client idempotency ID before every create call and enforce database uniqueness.</li><li><span aria-hidden="true">□</span> Separate read, create, approve/sign, policy-admin, and workspace-admin credentials.</li><li><span aria-hidden="true">□</span> Verify request/webhook signatures over exact bytes; enforce timestamp and replay window.</li><li><span aria-hidden="true">□</span> Acknowledge events quickly, queue durably, deduplicate, and tolerate reordering.</li><li><span aria-hidden="true">□</span> Poll authoritative transaction state and chain evidence on a fixed cadence.</li><li><span aria-hidden="true">□</span> Handle unknown status/sub-status values without treating them as success.</li><li><span aria-hidden="true">□</span> Default deny in provider policy and in your own pre-sign callback.</li><li><span aria-hidden="true">□</span> Test callback timeout, authentication failure, regional outage, and failover.</li><li><span aria-hidden="true">□</span> Alert on webhook silence, stuck state age, queue depth, gas-source balance, and reconciler lag.</li><li><span aria-hidden="true">□</span> Execute a full export/exit restore, including paths, addresses, pending state and audit history.</li><li><span aria-hidden="true">□</span> Reconcile provider balances, chain balances, in-flight transfers, fees and ledger liabilities to zero.</li><li><span aria-hidden="true">□</span> Write stuck, rejected, replaced, reorged and provider-unavailable runbooks before customer funds.</li></ol>
+    </section>
+    <section class="sheet-section" aria-labelledby="common-mistakes--anti-patterns">
+      <h2 id="common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Webhook as truth</h3>
+          <p>Delivery can duplicate, reorder, delay, or disappear.</p>
+          <p class="example"><strong>Concrete use:</strong> Poll and reconcile.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Exactly-once is an application invariant, not a transport guarantee.</p>
+        </article>
+        <article class="entry">
+          <h3>Parsed-body signature</h3>
+          <p>The verified bytes differ from received bytes.</p>
+          <p class="example"><strong>Concrete use:</strong> Capture raw body first.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Framework middleware often destroys the evidence.</p>
+        </article>
+        <article class="entry">
+          <h3>Status without sub-status</h3>
+          <p>The actionable reason is discarded.</p>
+          <p class="example"><strong>Concrete use:</strong> Persist and route both.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> “Failed” cannot tell fee from policy from co-signer outage.</p>
+        </article>
+        <article class="entry">
+          <h3>Untested export</h3>
+          <p>Contractual capability may not restore a live wallet.</p>
+          <p class="example"><strong>Concrete use:</strong> Execute isolated exit annually.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Vendor failure is the worst time to discover format gaps.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section sources" aria-labelledby="sources">
+      <h2 id="sources">Primary sources &amp; scope</h2>
+      <p class="section-note">Operational and volatile claims were checked against these first-party documents on 2026-08-31. Examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
+      <ul><li><a href="https://developers.fireblocks.com/docs/capabilities" target="_blank" rel="noopener noreferrer">Fireblocks capabilities</a><span>Vaults, policies, transactions and Gas Station.</span></li><li><a href="https://developers.fireblocks.com/reference/transaction-webhooks" target="_blank" rel="noopener noreferrer">Fireblocks transaction webhooks</a><span>Current event fields and Webhooks v1 deprecation notice.</span></li><li><a href="https://developers.fireblocks.com/reference/sub-statuses" target="_blank" rel="noopener noreferrer">Fireblocks sub-statuses</a><span>Operational error and policy taxonomy.</span></li><li><a href="https://developers.bitgo.com/docs/policies-webhook/" target="_blank" rel="noopener noreferrer">BitGo webhook policy</a><span>Public transaction-policy callback behavior.</span></li><li><a href="https://docs.cdp.coinbase.com/prime/introduction/welcome" target="_blank" rel="noopener noreferrer">Coinbase Prime APIs</a><span>Public REST, FIX, WebSocket, custody and transaction surface.</span></li></ul>
+    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a></div></aside></main>
+<footer class="shell meta"><p>Last verified: 2026-08-31 · Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer></body></html>

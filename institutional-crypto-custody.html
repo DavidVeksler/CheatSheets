@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Institutional Crypto Custody: Tiers, Controls, and CCSS</title><meta name="description" content="Design institutional digital-asset custody tiers, hot-wallet float, policy engines, dual control, key ceremonies, disaster recovery, and a CCSS v9.0 control crosswalk."><meta name="keywords" content="institutional crypto custody, CCSS v9, hot warm cold wallet, key ceremony, policy engine">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/institutional-crypto-custody.html">
+<meta property="og:title" content="Institutional Crypto Custody: Tiers, Controls, and CCSS"><meta property="og:description" content="Design institutional digital-asset custody tiers, hot-wallet float, policy engines, dual control, key ceremonies, disaster recovery, and a CCSS v9.0 control crosswalk."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/institutional-crypto-custody.html"><meta property="og:image" content="images/institutional-crypto-custody.png"><meta property="og:image:alt" content="Institutional hot warm cold and deep-cold custody tier control register">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Institutional Crypto Custody: Tiers, Controls, and CCSS"><meta name="twitter:description" content="Design institutional digital-asset custody tiers, hot-wallet float, policy engines, dual control, key ceremonies, disaster recovery, and a CCSS v9.0 control crosswalk."><meta name="twitter:image" content="images/institutional-crypto-custody.png"><meta name="twitter:creator" content="@heroiclife">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Institutional Crypto Custody: Tiers, Controls, and CCSS","description":"Design institutional digital-asset custody tiers, hot-wallet float, policy engines, dual control, key ceremonies, disaster recovery, and a CCSS v9.0 control crosswalk.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-08-31","dateModified":"2026-08-31","keywords":"institutional crypto custody, CCSS v9, hot warm cold wallet, key ceremony, policy engine"}</script><style>
+@layer reset, tokens, base, layout, components, print;
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --paper: light-dark(#faf9f7, #0f172a); --surface: light-dark(#ffffff, #182235);
+    --surface-2: light-dark(#f4f1ed, #111c2e); --ink: light-dark(#172033, #e7edf6);
+    --muted: light-dark(#586273, #a9b5c7); --line: light-dark(#d8d3cc, #334155);
+    --accent: light-dark(#86198f, #e879f9); --accent-soft: light-dark(#fae8ff, #3b1641);
+    --safe: light-dark(#166534, #86efac); --safe-bg: light-dark(#dcfce7, #12351f);
+    --warn: light-dark(#92400e, #fcd34d); --warn-bg: light-dark(#fef3c7, #3b2a0d);
+    --danger: light-dark(#991b1b, #fca5a5); --danger-bg: light-dark(#fee2e2, #401719);
+    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+}
+@layer reset { *,*::before,*::after{box-sizing:border-box} body,h1,h2,h3,p{margin:0} table{border-collapse:collapse} }
+@layer base {
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;text-wrap:pretty}
+  a{color:var(--accent);font-weight:650;text-decoration-thickness:.08em;text-underline-offset:.18em}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  code,.mono,td:nth-child(n+2){font-family:var(--mono);font-variant-numeric:tabular-nums}
+  h1,h2,h3{text-wrap:balance;line-height:1.15} h1{font-size:clamp(2rem,6vw,4.25rem);letter-spacing:-.045em;max-width:18ch}
+  h2{font-size:clamp(1.45rem,3vw,2.15rem);margin-bottom:1rem} h3{font-size:1.02rem;letter-spacing:.015em}
+  p+p{margin-top:.72rem}
+}
+@layer layout {
+  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}.masthead{padding:2.2rem 0 1.5rem;border-bottom:1px solid var(--line)}
+  .eyebrow{color:var(--accent);font:700 .76rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem}
+  .dek{color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);max-width:72ch;margin-top:1rem}
+  .meta{display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:1.2rem;color:var(--muted);font:600 .78rem/1.4 var(--mono)}
+  nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 94%,transparent);border-bottom:1px solid var(--line)}
+  nav .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.65rem 0}nav a{white-space:nowrap;font-size:.82rem}
+  main{padding:1.5rem 0 4rem}.sheet-section{margin-top:clamp(2.2rem,6vw,4.5rem);scroll-margin-top:4rem}
+  .section-note{color:var(--muted);max-width:85ch;margin-bottom:1rem}.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:.8rem}
+}
+@layer components {
+  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.2rem .55rem;font:800 .72rem/1 var(--mono);white-space:nowrap}
+  .signal.safe{color:var(--safe);background:var(--safe-bg)}.signal.warn{color:var(--warn);background:var(--warn-bg)}.signal.danger{color:var(--danger);background:var(--danger-bg)}
+  .quick{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--accent);padding:clamp(1rem,3vw,2rem);box-shadow:0 16px 36px rgba(15,23,42,.08)}
+  .quick h2{display:flex;align-items:center;gap:.6rem}.quick h2::before{content:"CONTROL REGISTER";font:800 .64rem/1 var(--mono);letter-spacing:.1em;color:var(--paper);background:var(--accent);padding:.38rem .5rem}
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}table{width:100%;min-width:720px;font-size:.86rem}
+  th,td{padding:.72rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{position:sticky;top:0;background:var(--surface-2);font:800 .72rem/1.25 var(--sans);letter-spacing:.04em;text-transform:uppercase}
+  tbody tr:hover{background:var(--accent-soft)}td:first-child{font-family:var(--sans);font-weight:760;min-width:12rem}tbody tr:last-child td{border-bottom:0}
+  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0}.entry h3{border-left:3px solid var(--accent);padding-left:.65rem;margin-bottom:.65rem}
+  .entry p{font-size:.9rem}.example,.gotcha{padding:.65rem;border-left:2px solid var(--safe);background:var(--safe-bg)}.gotcha{border-color:var(--danger);background:var(--danger-bg)}
+  .checklist ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:.5rem;counter-reset:steps}.checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);padding:.8rem}.checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:800 .7rem/1 var(--mono);margin-right:.55rem}
+  .sources ul{list-style:none;padding:0;display:grid;gap:.5rem}.sources li{display:grid;grid-template-columns:minmax(16rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}.sources span{color:var(--muted);font-size:.86rem}
+  .related{margin-top:4rem;border:1px solid var(--line);padding:1rem;background:var(--surface-2)}.related h2{font-size:1rem}.related div{display:flex;flex-wrap:wrap;gap:.55rem 1rem}.related a{font-size:.84rem}
+  .equation{font:800 clamp(1rem,3vw,1.55rem)/1.4 var(--mono);padding:1rem;border:1px dashed var(--accent);background:var(--accent-soft);overflow-wrap:anywhere}
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}.flow div{position:relative;padding:1rem;background:var(--surface);border:1px solid var(--line);min-height:7rem}.flow b{display:block;color:var(--accent);font:800 .7rem/1 var(--mono);margin-bottom:.5rem}.flow p{font-size:.83rem}
+  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}.print-only{display:none}
+}
+@layer print {
+  @media print{nav{display:none}.shell{width:100%}.sheet-section{break-inside:avoid;margin-top:1.3rem}.entry{break-inside:avoid}a{color:inherit}.print-only{display:block}.table-wrap{overflow:visible}table{min-width:0;font-size:7.7pt}th{position:static}}
+  @media(max-width:600px){.shell{width:min(100% - 1rem,1180px)}.masthead{padding-top:1.2rem}.sources li{grid-template-columns:1fr}.quick{padding:.8rem}.table-wrap{margin-inline:-.5rem}.entry-grid{grid-template-columns:1fr}}
+}
+</style></head>
+<body><header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance · engineering reference</p><h1>Institutional crypto custody</h1><p class="dek">Custody is the control system around a signing primitive: asset float, policy, people, evidence, recovery, and a ledger that still balances when a facility or vendor disappears.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<nav aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#custody-tier-register">Custody tier register</a><a href="#tiering--float-math">Tiering &amp; float math</a><a href="#policy-engine-controls">Policy engine controls</a><a href="#key-ceremony-script">Key ceremony script</a><a href="#ccss-v9-0-engineering-crosswalk">CCSS v9.0 engineering crosswalk</a><a href="#assurance-landscape">Assurance landscape</a><a href="#business-continuity-dual-control--insurance">Business continuity, dual control &amp; insurance</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
+<main class="shell"><section class="quick" id="quick-reference" aria-labelledby="quick-title"><h2 id="quick-title">Four tiers, four bounded failure domains</h2>
+    <section class="sheet-section" aria-labelledby="custody-tier-quick-reference">
+      <h2 id="custody-tier-quick-reference">Custody tier quick reference</h2>
+      <p class="section-note">The correct hot amount is a demand quantile over replenishment lead time, not “5% of AUC.” Every tier needs a documented loss bound and a tested way back.</p>
+      <div class="table-wrap" role="region" aria-label="Custody tier quick reference" tabindex="0">
+        <table><thead><tr><th scope="col">Tier</th><th scope="col">Automation</th><th scope="col">Target</th><th scope="col">Transfer gate</th><th scope="col">Verdict</th></tr></thead><tbody><tr><td>Hot</td><td>Continuous</td><td>Lead-time withdrawal demand</td><td>Default-deny policy + velocity</td><td><span class="signal danger">LIMIT EXPOSURE</span></td></tr><tr><td>Warm</td><td>Workflow</td><td>Replenishment buffer</td><td>Human quorum + delayed destinations</td><td><span class="signal warn">CONDITIONAL</span></td></tr><tr><td>Cold</td><td>Ceremony</td><td>Reserve</td><td>Offline independent key holders</td><td><span class="signal safe">ISOLATED</span></td></tr><tr><td>Deep cold</td><td>Retrieval</td><td>Long-horizon reserve</td><td>Geographic quorum + multi-day process</td><td><span class="signal safe">DIVERSE</span></td></tr></tbody></table>
+      </div>
+    </section></section>
+    <section class="sheet-section" aria-labelledby="custody-tier-register">
+      <h2 id="custody-tier-register">Custody tier register</h2>
+      <p class="section-note">Percentages are outputs of demand and loss models, not universal best practices.</p>
+      <div class="table-wrap" role="region" aria-label="Custody tier register" tabindex="0">
+        <table><thead><tr><th scope="col">Tier</th><th scope="col">Purpose</th><th scope="col">Typical latency</th><th scope="col">Approval</th><th scope="col">Network exposure</th><th scope="col">Loss bound</th></tr></thead><tbody><tr><td>Hot</td><td>Automated withdrawals</td><td>Seconds–minutes</td><td>Policy + automated signer</td><td>Online</td><td>Strict balance and velocity cap</td></tr><tr><td>Warm</td><td>Human-gated replenishment</td><td>Minutes–hours</td><td>2-person quorum</td><td>Connected only for workflow</td><td>Per-transfer and daily cap</td></tr><tr><td>Cold</td><td>Reserve</td><td>Hours–day</td><td>Independent key holders</td><td>Air-gapped ceremony</td><td>Facility/quorum loss tolerance</td></tr><tr><td>Deep cold</td><td>Long-horizon reserve</td><td>Days</td><td>Geographic retrieval quorum</td><td>Offline, distributed</td><td>Catastrophic correlated-event bound</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="tiering--float-math">
+      <h2 id="tiering--float-math">Tiering &amp; float math</h2>
+      <p class="section-note">Worked result: the stated profile produces a $3.2M hot target. Recompute from observed withdrawals, replenishment lead, and incident conditions.</p>
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Base-stock target</h3>
+          <p>Cover withdrawals during replenishment lead time at a chosen service level, then cap exposure above that target.</p>
+          <p class="example"><strong>Concrete use:</strong> Mean daily BTC demand $2.0M, one-day replenishment lead, 99th-percentile one-day demand $3.2M: set hot target S=$3.2M, not a portfolio percentage.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Normal-distribution shortcuts understate fat-tail withdrawal runs.</p>
+        </article>
+        <article class="entry">
+          <h3>Reorder point</h3>
+          <p>Trigger warm/cold replenishment before available hot inventory reaches expected lead-time demand.</p>
+          <p class="example"><strong>Concrete use:</strong> With $2.0M mean lead-time demand and $1.2M safety stock, reorder at s=$3.2M and replenish to a separately governed S.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Counting pending deposits as available can postpone replenishment until failure.</p>
+        </article>
+        <article class="entry">
+          <h3>Per-asset sizing</h3>
+          <p>Each asset has distinct demand, finality, fee, halt, and replenishment behavior.</p>
+          <p class="example"><strong>Concrete use:</strong> USDC payment float may turn daily while an illiquid governance token remains entirely cold.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Portfolio-wide percentages hide the one chain that cannot replenish during an outage.</p>
+        </article>
+        <article class="entry">
+          <h3>Loss/service cost</h3>
+          <p>Minimize expected compromise loss + delayed-withdrawal cost + ceremony cost.</p>
+          <p class="example"><strong>Concrete use:</strong> Compare $3.2M hot exposure with an estimated incident loss fraction against the measurable cost of one delayed day and each cold pull.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> False precision in compromise probability is worse than sensitivity ranges.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section" aria-labelledby="policy-engine-controls">
+      <h2 id="policy-engine-controls">Policy engine controls</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Ordered rules</h3>
+          <p>Rules match subject, source, destination, asset, amount, time, and action in a documented order.</p>
+          <p class="example"><strong>Concrete use:</strong> Deny unknown destinations first; allow routine USDC only after KYT and velocity gates; route $250k+ to 2-of-3 approval.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A broad allow above a narrow deny turns rule order into a bypass.</p>
+        </article>
+        <article class="entry">
+          <h3>Destination time lock</h3>
+          <p>A newly allowlisted destination cannot receive funds until an observation window passes.</p>
+          <p class="example"><strong>Concrete use:</strong> Require 48 hours plus out-of-band confirmation before first transfer; alert on creation and activation.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Instant allowlisting makes a stolen admin session equivalent to key theft.</p>
+        </article>
+        <article class="entry">
+          <h3>Rolling velocity</h3>
+          <p>Aggregate amount and count over overlapping windows by user, asset, destination, and risk domain.</p>
+          <p class="example"><strong>Concrete use:</strong> Cap $50k/hour and $200k/24h, with sub-$10k structuring still aggregating.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Calendar-day resets invite an attacker to straddle midnight.</p>
+        </article>
+        <article class="entry">
+          <h3>Policy-change quorum</h3>
+          <p>Changing authorization logic is itself a high-risk custody operation.</p>
+          <p class="example"><strong>Concrete use:</strong> Require two administrators from separate roles and a 24-hour delayed activation for production rule changes.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A mutable policy controlled by one admin is decorative.</p>
+        </article>
+        <article class="entry">
+          <h3>Break glass</h3>
+          <p>Emergency bypass is narrow, expiring, visible, and separately authorized.</p>
+          <p class="example"><strong>Concrete use:</strong> Open a 30-minute route for one predeclared destination with a maximum amount and after-action review.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Permanent emergency roles become the normal attack path.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section checklist" aria-labelledby="key-ceremony-script">
+      <h2 id="key-ceremony-script">Key ceremony script</h2>
+      <p class="section-note">A ceremony is executable procedure. If a step lacks owner, evidence, abort condition, and recovery, it is prose.</p>
+      <ol><li><span aria-hidden="true">□</span> Approve purpose, asset/scheme, quorum, participants, facilities, and abort criteria.</li><li><span aria-hidden="true">□</span> Freeze software, firmware, device serials, hashes, SBOM, and build provenance.</li><li><span aria-hidden="true">□</span> Rehearse the script with non-production material and record expected outputs.</li><li><span aria-hidden="true">□</span> Sweep room, disable networks, inventory devices, and seal unrelated electronics.</li><li><span aria-hidden="true">□</span> Verify participant identity and role; confirm no person holds conflicting quorum roles.</li><li><span aria-hidden="true">□</span> Inspect tamper packaging and device provenance in view of independent witnesses.</li><li><span aria-hidden="true">□</span> Collect independent entropy sources where the scheme requires them; log method, never secret value.</li><li><span aria-hidden="true">□</span> Run DKG or generation; abort on any proof, display, or transcript mismatch.</li><li><span aria-hidden="true">□</span> Derive the aggregate public key and first receive address independently on two implementations.</li><li><span aria-hidden="true">□</span> Perform a funded canary receive and a complete sign/broadcast/confirm cycle before bulk funding.</li><li><span aria-hidden="true">□</span> Create backups without reconstructing a full key; label scheme, path, epoch, and quorum metadata.</li><li><span aria-hidden="true">□</span> Seal backups with unique IDs and record custody without photographing secrets.</li><li><span aria-hidden="true">□</span> Distribute shares/backups across approved geographic and administrative domains.</li><li><span aria-hidden="true">□</span> Sign the ceremony attestation and transcript hashes; note every deviation.</li><li><span aria-hidden="true">□</span> Load policy default-deny, limits, allowlist delays, and audit destinations.</li><li><span aria-hidden="true">□</span> Reconcile the public inventory against custody records before accepting customer funds.</li><li><span aria-hidden="true">□</span> Schedule refresh/reshare, holder departure, compromise, and retirement ceremonies.</li><li><span aria-hidden="true">□</span> Schedule an isolated restore drill; define RTO and RPO for signing, not merely the app.</li><li><span aria-hidden="true">□</span> Store evidence outside signer and policy trust domains.</li><li><span aria-hidden="true">□</span> Close with independent witness and auditor sign-off; destroy temporary secret-bearing media.</li></ol>
+    </section>
+    <section class="sheet-section" aria-labelledby="ccss-v9-0-engineering-crosswalk">
+      <h2 id="ccss-v9-0-engineering-crosswalk">CCSS v9.0 engineering crosswalk</h2>
+      <p class="section-note">CCSS v9.0 was published December 17, 2024 and organizes ten aspects across two domains. This table is an engineering navigation aid, not normative requirement text; use C4's current standard for assessment.</p>
+      <div class="table-wrap" role="region" aria-label="CCSS v9.0 engineering crosswalk" tabindex="0">
+        <table><thead><tr><th scope="col">Current aspect</th><th scope="col">Level I intent</th><th scope="col">Level II direction</th><th scope="col">Level III direction</th><th scope="col">Architecture evidence</th></tr></thead><tbody><tr><td>1.01 Key/Seed Generation</td><td>Approved entropy and controlled generation</td><td>Stronger separation and validation</td><td>Highest-assurance ceremony evidence</td><td>DKG / ceremony script + entropy attestation</td></tr><tr><td>1.02 Wallet Creation</td><td>Correct, verified wallet construction</td><td>Independent verification</td><td>Comprehensive control evidence</td><td>Two-device address derivation and sign/verify test</td></tr><tr><td>1.03 Key/Seed Storage</td><td>Protected storage</td><td>Distributed, access-controlled storage</td><td>Highest isolation and resilience</td><td>Tier topology + geographic inventory</td></tr><tr><td>1.04 Key/Seed Usage</td><td>Controlled signing</td><td>Stronger authorization and isolation</td><td>Comprehensive transaction controls</td><td>Policy engine + decoded intent + audit log</td></tr><tr><td>1.05 Key Compromise Policy</td><td>Documented response</td><td>Tested and role-assigned response</td><td>Mature evidence and exercise</td><td>Freeze, rotate/reshare, investigate, notify</td></tr><tr><td>1.06 Keyholder Grant/Revoke</td><td>Controlled lifecycle</td><td>Dual-control changes</td><td>Auditable, rehearsed lifecycle</td><td>Joiner/mover/leaver + quorum-change ceremony</td></tr><tr><td>1.07 Log and Monitor</td><td>Security-relevant records</td><td>Monitoring and protected retention</td><td>Comprehensive review and evidence</td><td>External append-only signing and policy logs</td></tr><tr><td>2.01 Third-Party Security Audits</td><td>Independent review</td><td>Broad scope and remediation</td><td>Sustained assurance</td><td>Audit exact signer/policy release + track closure</td></tr><tr><td>2.02 Data Sanitization</td><td>Secret-bearing media disposal</td><td>Verified procedures</td><td>Comprehensive evidence</td><td>Crypto erase, device destruction, witness log</td></tr><tr><td>2.03 Risk Management</td><td>Threats and controls identified</td><td>Periodic assessment</td><td>Mature continuous treatment</td><td>Threat model sets review and test cadence</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="assurance-landscape">
+      <h2 id="assurance-landscape">Assurance landscape</h2>
+      <p class="section-note">Regulatory status changes. Links below point to primary text checked August 2026; obtain jurisdiction-specific counsel for applicability.</p>
+      <div class="table-wrap" role="region" aria-label="Assurance landscape" tabindex="0">
+        <table><thead><tr><th scope="col">Framework / rule</th><th scope="col">What it answers</th><th scope="col">What it does not answer</th><th scope="col">Current engineering hook</th></tr></thead><tbody><tr><td>CCSS v9.0</td><td>Crypto-system controls across 10 aspects</td><td>Enterprise control completeness by itself</td><td>Map every aspect to evidence</td></tr><tr><td>SOC 2 Type II</td><td>Control design + operation over a period</td><td>Specific crypto key architecture</td><td>Scope signer, policy, ledger, provider, DR</td></tr><tr><td>ISO/IEC 27001</td><td>Information-security management system</td><td>Wallet correctness or asset existence</td><td>Risk treatment, supplier and incident processes</td></tr><tr><td>NIST SP 800-57</td><td>Key-management lifecycle terminology</td><td>Chain-specific custody design</td><td>Generation, activation, rotation, revocation, destruction</td></tr><tr><td>NYDFS custody guidance</td><td>Segregation, separate accounting, limited use, disclosure</td><td>A universal global custody rule</td><td>Ledger/on-chain segregation and reconciliation</td></tr><tr><td>MiCA Article 75</td><td>EU CASP custody policy, register, statements, return and segregation</td><td>Technical control implementation</td><td>Client position register and operational segregation</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="common-mistakes--anti-patterns">
+      <h2 id="common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Hot balance by intuition</h3>
+          <p>A round portfolio percentage ignores demand and replenishment lead time.</p>
+          <p class="example"><strong>Concrete use:</strong> Calculate per-asset base stock and sensitivity.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Market moves can double fiat exposure without any operational change.</p>
+        </article>
+        <article class="entry">
+          <h3>Allowlist without delay</h3>
+          <p>The attacker who controls admin can immediately cash out.</p>
+          <p class="example"><strong>Concrete use:</strong> Alert and hold new destinations 48 hours.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Out-of-band checks after transfer are forensics, not prevention.</p>
+        </article>
+        <article class="entry">
+          <h3>Untested backup</h3>
+          <p>Presence of sealed media says nothing about correctness or current metadata.</p>
+          <p class="example"><strong>Concrete use:</strong> Restore annually and verify the first address.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Discovering a bad backup during disaster converts outage to permanent loss.</p>
+        </article>
+        <article class="entry">
+          <h3>Assessment as outcome</h3>
+          <p>A level or report is evidence about scoped controls, not immunity from loss.</p>
+          <p class="example"><strong>Concrete use:</strong> Track scope, exclusions, period, tested version, and remediation.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A vendor badge does not transfer your policy and ledger responsibilities.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section" aria-labelledby="business-continuity-dual-control--insurance">
+      <h2 id="business-continuity-dual-control--insurance">Business continuity, dual control &amp; insurance</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Signing RTO/RPO</h3>
+          <p>Recovery objectives apply to authorization and signing, not merely the web/API tier.</p>
+          <p class="example"><strong>Concrete use:</strong> Exercise loss of one site and one key holder; measure time to a valid canary signature and intact audit trail.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A restored database with no quorum is still a custody outage.</p>
+        </article>
+        <article class="entry">
+          <h3>Role separation</h3>
+          <p>Initiator, approver, policy admin, signer admin, key holder, and auditor are conflict domains.</p>
+          <p class="example"><strong>Concrete use:</strong> Prohibit one identity from changing a destination rule and satisfying its transfer quorum.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Two accounts owned by one person do not create dual control.</p>
+        </article>
+        <article class="entry">
+          <h3>Vendor/facility loss</h3>
+          <p>Exit must recreate shares, paths, addresses, policy, pending state and evidence.</p>
+          <p class="example"><strong>Concrete use:</strong> Restore in an isolated alternate site annually and reconcile a canary address.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A share without derivation metadata may not restore the portfolio.</p>
+        </article>
+        <article class="entry">
+          <h3>Insurance scope</h3>
+          <p>Crime, specie, and cyber policies contain peril, hot/cold, location, sublimit, exclusion, and allocation terms.</p>
+          <p class="example"><strong>Concrete use:</strong> Map each tier and subcontractor to the schedule and model loss above each sublimit.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> “Insured up to $X” rarely means every client receives X.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section sources" aria-labelledby="sources">
+      <h2 id="sources">Primary sources &amp; scope</h2>
+      <p class="section-note">Operational and volatile claims were checked against these first-party documents on 2026-08-31. Examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
+      <ul><li><a href="https://cryptoconsortium.org/cryptocurrency-security-standard-documentation/ccss-details-v9/" target="_blank" rel="noopener noreferrer">CCSS v9.0 details</a><span>Current aspect and control structure.</span></li><li><a href="https://cryptoconsortium.org/cryptocurrency-security-standard-documentation/overview/" target="_blank" rel="noopener noreferrer">CCSS overview</a><span>Ten aspects, two domains, and level aggregation.</span></li><li><a href="https://eur-lex.europa.eu/eli/reg/2023/1114/oj" target="_blank" rel="noopener noreferrer">MiCA Article 75</a><span>Custody agreements, register, policy, return and segregation.</span></li><li><a href="https://www.dfs.ny.gov/virtual_currency_businesses" target="_blank" rel="noopener noreferrer">NYDFS virtual-currency guidance</a><span>Current guidance index; 2025 custody update supersedes 2023 guidance.</span></li><li><a href="https://csrc.nist.gov/pubs/sp/800/57/pt1/r5/final" target="_blank" rel="noopener noreferrer">NIST SP 800-57 Part 1</a><span>General key-management lifecycle guidance.</span></li></ul>
+    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a><a href="personal-cybersecurity.html">Personal cybersecurity <span aria-hidden="true">→</span></a></div></aside></main>
+<footer class="shell meta"><p>Last verified: 2026-08-31 · Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer></body></html>

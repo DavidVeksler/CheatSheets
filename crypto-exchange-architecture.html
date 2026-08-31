@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crypto Exchange Architecture: Ledger, Matching, Wallet Boundary</title><meta name="description" content="Design a crypto exchange around deterministic matching, a double-entry ledger, wallet-boundary invariants, deposit and withdrawal pipelines, reconciliation, and proof of reserves."><meta name="keywords" content="crypto exchange architecture, matching engine, double entry ledger, wallet system, proof of reserves">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/crypto-exchange-architecture.html">
+<meta property="og:title" content="Crypto Exchange Architecture: Ledger, Matching, Wallet Boundary"><meta property="og:description" content="Design a crypto exchange around deterministic matching, a double-entry ledger, wallet-boundary invariants, deposit and withdrawal pipelines, reconciliation, and proof of reserves."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/crypto-exchange-architecture.html"><meta property="og:image" content="images/crypto-exchange-architecture.png"><meta property="og:image:alt" content="Crypto exchange system map with a heavy wallet boundary and ledger invariant">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Crypto Exchange Architecture: Ledger, Matching, Wallet Boundary"><meta name="twitter:description" content="Design a crypto exchange around deterministic matching, a double-entry ledger, wallet-boundary invariants, deposit and withdrawal pipelines, reconciliation, and proof of reserves."><meta name="twitter:image" content="images/crypto-exchange-architecture.png"><meta name="twitter:creator" content="@heroiclife">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Crypto Exchange Architecture: Ledger, Matching, Wallet Boundary","description":"Design a crypto exchange around deterministic matching, a double-entry ledger, wallet-boundary invariants, deposit and withdrawal pipelines, reconciliation, and proof of reserves.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-08-31","dateModified":"2026-08-31","keywords":"crypto exchange architecture, matching engine, double entry ledger, wallet system, proof of reserves"}</script><style>
+@layer reset, tokens, base, layout, components, print;
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --paper: light-dark(#faf9f7, #0f172a); --surface: light-dark(#ffffff, #182235);
+    --surface-2: light-dark(#f4f1ed, #111c2e); --ink: light-dark(#172033, #e7edf6);
+    --muted: light-dark(#586273, #a9b5c7); --line: light-dark(#d8d3cc, #334155);
+    --accent: light-dark(#86198f, #e879f9); --accent-soft: light-dark(#fae8ff, #3b1641);
+    --safe: light-dark(#166534, #86efac); --safe-bg: light-dark(#dcfce7, #12351f);
+    --warn: light-dark(#92400e, #fcd34d); --warn-bg: light-dark(#fef3c7, #3b2a0d);
+    --danger: light-dark(#991b1b, #fca5a5); --danger-bg: light-dark(#fee2e2, #401719);
+    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+}
+@layer reset { *,*::before,*::after{box-sizing:border-box} body,h1,h2,h3,p{margin:0} table{border-collapse:collapse} }
+@layer base {
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;text-wrap:pretty}
+  a{color:var(--accent);font-weight:650;text-decoration-thickness:.08em;text-underline-offset:.18em}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  code,.mono,td:nth-child(n+2){font-family:var(--mono);font-variant-numeric:tabular-nums}
+  h1,h2,h3{text-wrap:balance;line-height:1.15} h1{font-size:clamp(2rem,6vw,4.25rem);letter-spacing:-.045em;max-width:18ch}
+  h2{font-size:clamp(1.45rem,3vw,2.15rem);margin-bottom:1rem} h3{font-size:1.02rem;letter-spacing:.015em}
+  p+p{margin-top:.72rem}
+}
+@layer layout {
+  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}.masthead{padding:2.2rem 0 1.5rem;border-bottom:1px solid var(--line)}
+  .eyebrow{color:var(--accent);font:700 .76rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem}
+  .dek{color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);max-width:72ch;margin-top:1rem}
+  .meta{display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:1.2rem;color:var(--muted);font:600 .78rem/1.4 var(--mono)}
+  nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 94%,transparent);border-bottom:1px solid var(--line)}
+  nav .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.65rem 0}nav a{white-space:nowrap;font-size:.82rem}
+  main{padding:1.5rem 0 4rem}.sheet-section{margin-top:clamp(2.2rem,6vw,4.5rem);scroll-margin-top:4rem}
+  .section-note{color:var(--muted);max-width:85ch;margin-bottom:1rem}.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:.8rem}
+}
+@layer components {
+  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.2rem .55rem;font:800 .72rem/1 var(--mono);white-space:nowrap}
+  .signal.safe{color:var(--safe);background:var(--safe-bg)}.signal.warn{color:var(--warn);background:var(--warn-bg)}.signal.danger{color:var(--danger);background:var(--danger-bg)}
+  .quick{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--accent);padding:clamp(1rem,3vw,2rem);box-shadow:0 16px 36px rgba(15,23,42,.08)}
+  .quick h2{display:flex;align-items:center;gap:.6rem}.quick h2::before{content:"CONTROL REGISTER";font:800 .64rem/1 var(--mono);letter-spacing:.1em;color:var(--paper);background:var(--accent);padding:.38rem .5rem}
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}table{width:100%;min-width:720px;font-size:.86rem}
+  th,td{padding:.72rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{position:sticky;top:0;background:var(--surface-2);font:800 .72rem/1.25 var(--sans);letter-spacing:.04em;text-transform:uppercase}
+  tbody tr:hover{background:var(--accent-soft)}td:first-child{font-family:var(--sans);font-weight:760;min-width:12rem}tbody tr:last-child td{border-bottom:0}
+  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0}.entry h3{border-left:3px solid var(--accent);padding-left:.65rem;margin-bottom:.65rem}
+  .entry p{font-size:.9rem}.example,.gotcha{padding:.65rem;border-left:2px solid var(--safe);background:var(--safe-bg)}.gotcha{border-color:var(--danger);background:var(--danger-bg)}
+  .checklist ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:.5rem;counter-reset:steps}.checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);padding:.8rem}.checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:800 .7rem/1 var(--mono);margin-right:.55rem}
+  .sources ul{list-style:none;padding:0;display:grid;gap:.5rem}.sources li{display:grid;grid-template-columns:minmax(16rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}.sources span{color:var(--muted);font-size:.86rem}
+  .related{margin-top:4rem;border:1px solid var(--line);padding:1rem;background:var(--surface-2)}.related h2{font-size:1rem}.related div{display:flex;flex-wrap:wrap;gap:.55rem 1rem}.related a{font-size:.84rem}
+  .equation{font:800 clamp(1rem,3vw,1.55rem)/1.4 var(--mono);padding:1rem;border:1px dashed var(--accent);background:var(--accent-soft);overflow-wrap:anywhere}
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}.flow div{position:relative;padding:1rem;background:var(--surface);border:1px solid var(--line);min-height:7rem}.flow b{display:block;color:var(--accent);font:800 .7rem/1 var(--mono);margin-bottom:.5rem}.flow p{font-size:.83rem}
+  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}.print-only{display:none}
+}
+@layer print {
+  @media print{nav{display:none}.shell{width:100%}.sheet-section{break-inside:avoid;margin-top:1.3rem}.entry{break-inside:avoid}a{color:inherit}.print-only{display:block}.table-wrap{overflow:visible}table{min-width:0;font-size:7.7pt}th{position:static}}
+  @media(max-width:600px){.shell{width:min(100% - 1rem,1180px)}.masthead{padding-top:1.2rem}.sources li{grid-template-columns:1fr}.quick{padding:.8rem}.table-wrap{margin-inline:-.5rem}.entry-grid{grid-template-columns:1fr}}
+}
+</style></head>
+<body><header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance · engineering reference</p><h1>Crypto exchange architecture</h1><p class="dek">The matching engine makes trades; the ledger makes them true; the wallet subsystem crosses into a chain. Most catastrophic defects live at the boundary between those statements.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<nav aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#matching-engine">Matching engine</a><a href="#ledger-design-rules">Ledger design rules</a><a href="#wallet-boundary-crossings">Wallet-boundary crossings</a><a href="#addressing-model-comparison">Addressing model comparison</a><a href="#withdrawal-pipeline-at-scale">Withdrawal pipeline at scale</a><a href="#proof-of-reserves-constructions">Proof-of-reserves constructions</a><a href="#risk-apis--market-data">Risk, APIs &amp; market data</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
+<main class="shell"><section class="quick" id="quick-reference" aria-labelledby="quick-title"><h2 id="quick-title">The system map and hard invariant</h2><div class="flow"><div><b>CLIENT</b><p>REST · WebSocket · FIX</p></div><div><b>RISK</b><p>Balance holds · limits · STP</p></div><div><b>SEQUENCER</b><p>Total ordered commands</p></div><div><b>MATCHER</b><p>Deterministic in-memory book</p></div><div><b>LEDGER</b><p>Immutable double-entry truth</p></div><div><b>WALLET BOUNDARY</b><p>Deposit · withdrawal · sweep · rebalance</p></div></div><p class="equation">customer liabilities + fees + firm position = on-chain holdings + in-flight settlements + receivables</p><p class="callout"><strong>Continuous assertion:</strong> if the equation breaks, stop withdrawals before explaining the difference.</p></section>
+    <section class="sheet-section" aria-labelledby="matching-engine">
+      <h2 id="matching-engine">Matching engine</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Single-writer sequencer</h3>
+          <p>A total ordered command log makes execution deterministic and replayable.</p>
+          <p class="example"><strong>Concrete use:</strong> Sequence order <code>9,184,201</code> reserves balance, enters a BTC-USD limit order, and emits all resulting fills before <code>9,184,202</code>.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Distributed writers create conflicting price-time order and irreproducible books.</p>
+        </article>
+        <article class="entry">
+          <h3>Price-level book</h3>
+          <p>Ordered price map points to FIFO queues; add/cancel is near O(1) within a known level and best-price lookup follows the ordered structure.</p>
+          <p class="example"><strong>Concrete use:</strong> A post-only bid at $62,500 joins the tail of that price level unless it would cross.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Floating-point price keys create equality and ordering defects.</p>
+        </article>
+        <article class="entry">
+          <h3>Order semantics</h3>
+          <p>Limit, market, stop, IOC, FOK, post-only, and iceberg orders change when/how quantity enters the book.</p>
+          <p class="example"><strong>Concrete use:</strong> A 5 BTC FOK must fill completely immediately or cancel without partial execution.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Implementing order labels without exact atomic behavior produces customer disputes.</p>
+        </article>
+        <article class="entry">
+          <h3>Self-trade prevention</h3>
+          <p>Prevent related accounts from matching themselves under an explicit cancel-new/cancel-old/decrement policy.</p>
+          <p class="example"><strong>Concrete use:</strong> Apply the configured account-group rule before a fill enters the journal.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Post-trade cleanup cannot undo misleading market data.</p>
+        </article>
+        <article class="entry">
+          <h3>Recovery</h3>
+          <p>Snapshot + append-only journal restores state, then deterministic replay produces the identical book and sequence.</p>
+          <p class="example"><strong>Concrete use:</strong> Load snapshot at sequence 9,180,000, replay 4,201 commands, compare state hash before reopening.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A database balance snapshot cannot reconstruct queue priority.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section" aria-labelledby="ledger-design-rules">
+      <h2 id="ledger-design-rules">Ledger design rules</h2>
+      <p class="section-note">Use explicit asset units and enforce per-asset zero-sum at the database boundary, not in application convention.</p>
+      <div class="table-wrap" role="region" aria-label="Ledger design rules" tabindex="0">
+        <table><thead><tr><th scope="col">Rule</th><th scope="col">Concrete form</th><th scope="col">Invariant</th><th scope="col">Failure prevented</th></tr></thead><tbody><tr><td>Double entry</td><td>Every journal transaction sums debits and credits per asset</td><td>Σ postings = 0</td><td>Value creation/loss</td></tr><tr><td>Integer minor units</td><td>BTC satoshis; token base units; wide integer/decimal</td><td>Exact arithmetic</td><td>18-decimal rounding drift</td></tr><tr><td>Immutable journal</td><td>Corrections are compensating entries</td><td>History never rewritten</td><td>Untraceable balance edits</td></tr><tr><td>Available vs total</td><td>Holds reserve open orders/withdrawals</td><td>available = total − holds</td><td>Double-spend of customer liability</td></tr><tr><td>Idempotent posting</td><td>Unique business event + version</td><td>One event, one journal result</td><td>Duplicate webhook/fill credit</td></tr><tr><td>Projection</td><td>Balance is derived/cached with journal checkpoint</td><td>Projection equals replay</td><td>Authoritative mutable balance row</td></tr><tr><td>Domain boundary</td><td>Book and wallet only post through ledger API</td><td>No direct chain/book coupling</td><td>Hidden liability changes</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="wallet-boundary-crossings">
+      <h2 id="wallet-boundary-crossings">Wallet-boundary crossings</h2>
+      <p class="section-note">Most exchange transactions are ledger entries and never touch a chain. The wallet system never talks to the book; both talk to the ledger.</p>
+      <div class="table-wrap" role="region" aria-label="Wallet-boundary crossings" tabindex="0">
+        <table><thead><tr><th scope="col">Crossing</th><th scope="col">Ordered sequence</th><th scope="col">Ledger effect</th><th scope="col">Chain effect</th><th scope="col">Break signal</th></tr></thead><tbody><tr><td>Deposit</td><td>observe → validate → finality → screen → credit</td><td>Liability increases</td><td>External asset arrives</td><td>On-chain asset without liability</td></tr><tr><td>Trade/internal transfer</td><td>reserve → match → settle journal</td><td>Liabilities move between accounts</td><td>None</td><td>Any chain dependency</td></tr><tr><td>Withdrawal</td><td>hold/debit → screen → approve → sign → broadcast → settle</td><td>Liability decreases / in-flight closes</td><td>Asset leaves</td><td>Broadcast before debit/hold</td></tr><tr><td>Sweep</td><td>detect → authorize → move → reconcile fee</td><td>No customer-liability change; fee/asset location only</td><td>Internal address movement</td><td>Sweep booked as customer flow</td></tr><tr><td>Rebalance</td><td>policy → transfer between tiers → reconcile</td><td>Asset-location accounts move</td><td>Internal custody movement</td><td>Reserve invariant changes</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="addressing-model-comparison">
+      <h2 id="addressing-model-comparison">Addressing model comparison</h2>
+      <p class="section-note">Legal and operational segregation are not identical. MiCA Article 75 and NYDFS guidance both make the internal position register and segregation design material.</p>
+      <div class="table-wrap" role="region" aria-label="Addressing model comparison" tabindex="0">
+        <table><thead><tr><th scope="col">Model</th><th scope="col">Attribution</th><th scope="col">Sweep/gas</th><th scope="col">Privacy</th><th scope="col">Provability</th><th scope="col">Operational risk</th></tr></thead><tbody><tr><td>Omnibus address</td><td>Memo/internal ledger</td><td>Lowest</td><td>Poor on-chain separation</td><td>Aggregate only</td><td>Tag mistakes; ledger critical</td></tr><tr><td>Per-user deposit address → pool</td><td>Address derivation</td><td>High; gas station often needed</td><td>Better inbound separation</td><td>Address history visible</td><td>Gap/lookahead and sweep backlog</td></tr><tr><td>Segregated custody</td><td>Address is position boundary</td><td>Highest</td><td>On-chain linkability varies</td><td>Individual control easier to evidence</td><td>Large key/policy/address surface</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="withdrawal-pipeline-at-scale">
+      <h2 id="withdrawal-pipeline-at-scale">Withdrawal pipeline at scale</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Reservation</h3>
+          <p>Place an immutable hold before any external action so available balance cannot be spent twice.</p>
+          <p class="example"><strong>Concrete use:</strong> A $25,000 USDC withdrawal moves available → withdrawal-hold in one serializable transaction.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Debiting after broadcast allows concurrent spending.</p>
+        </article>
+        <article class="entry">
+          <h3>Batching</h3>
+          <p>Combine compatible screened intents while retaining output-to-intent mapping.</p>
+          <p class="example"><strong>Concrete use:</strong> Ten Bitcoin P2WPKH withdrawals share one version/locktime/input set; each output maps to one internal ID.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> One tainted or urgent output can poison an entire batch.</p>
+        </article>
+        <article class="entry">
+          <h3>Fee spike</h3>
+          <p>Queue policy distinguishes urgency, customer quote, ceiling, and replacement path.</p>
+          <p class="example"><strong>Concrete use:</strong> Hold low-priority withdrawals above 200 sat/vB while expiring quotes and showing queue state.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Flat fees without cost accounting socialize extreme chain cost invisibly.</p>
+        </article>
+        <article class="entry">
+          <h3>Outage drain</h3>
+          <p>Rate-limit release of backlog across policy, signer, chain, and support capacity.</p>
+          <p class="example"><strong>Concrete use:</strong> Drain 1,000 queued transfers in value tiers with fresh rescreening and nonce/UTXO allocation.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Releasing all at once resembles an attack and exhausts hot float.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section" aria-labelledby="proof-of-reserves-constructions">
+      <h2 id="proof-of-reserves-constructions">Proof-of-reserves constructions</h2>
+      <p class="section-note">Proof of reserves is not proof of solvency. A point-in-time assets proof says nothing about undisclosed liabilities or what happens immediately after the snapshot.</p>
+      <div class="table-wrap" role="region" aria-label="Proof-of-reserves constructions" tabindex="0">
+        <table><thead><tr><th scope="col">Construction</th><th scope="col">Proves</th><th scope="col">Does not prove</th><th scope="col">Attack / control</th></tr></thead><tbody><tr><td>Signed address message</td><td>Control of listed keys at a time</td><td>Ownership, unencumbered asset, completeness</td><td>Borrowed assets; repeat unpredictably</td></tr><tr><td>Asset self-transfer</td><td>Ability to move listed asset</td><td>No hidden lien/liability</td><td>Snapshot gaming; combine with books</td></tr><tr><td>Merkle liabilities</td><td>A customer leaf is included in committed set</td><td>No omitted users or negative balances by itself</td><td>Omission/negative leaf; audit construction</td></tr><tr><td>ZK liabilities</td><td>Committed sum and constraints such as non-negative balances</td><td>Off-balance-sheet claims unless included</td><td>Circuit/scope audit</td></tr><tr><td>Reserve oracle/feed</td><td>Publisher's stated observation</td><td>Independent solvency</td><td>Staleness and publisher trust</td></tr></tbody></table>
+      </div>
+    </section>
+    <section class="sheet-section" aria-labelledby="risk-apis--market-data">
+      <h2 id="risk-apis--market-data">Risk, APIs &amp; market data</h2>
+      
+      <div class="entry-grid">
+        <article class="entry">
+          <h3>Margin boundary</h3>
+          <p>Cross margin shares collateral; isolated margin bounds a position's collateral and liquidation path.</p>
+          <p class="example"><strong>Concrete use:</strong> Journal collateral, unrealized PnL, fees, funding and liquidation as explicit accounts.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Mixing risk-engine projections with settled ledger balances hides insolvency.</p>
+        </article>
+        <article class="entry">
+          <h3>Mark price</h3>
+          <p>A robust index/mark drives margin and liquidation, not the venue's last thin trade.</p>
+          <p class="example"><strong>Concrete use:</strong> Use multiple spot sources, staleness guards and bounded deviation.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A manipulable last price can trigger forced liquidation.</p>
+        </article>
+        <article class="entry">
+          <h3>Snapshot + delta</h3>
+          <p>Clients load an order-book snapshot then apply contiguous sequence deltas.</p>
+          <p class="example"><strong>Concrete use:</strong> On gap 81,104 → 81,107, discard local book and resnapshot.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Applying deltas through a gap creates a plausible but false book.</p>
+        </article>
+        <article class="entry">
+          <h3>Client order ID</h3>
+          <p>Unique client identity makes order create safe to retry.</p>
+          <p class="example"><strong>Concrete use:</strong> Query <code>cli_20260831_771</code> after timeout before another create.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Transport timeout is not evidence of rejection.</p>
+        </article></div>
+    </section>
+    <section class="sheet-section checklist" aria-labelledby="common-mistakes--anti-patterns">
+      <h2 id="common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</h2>
+      <p class="section-note">The architecture cannot prevent an authorized operator from overriding controls; governance, segregation, and external assurance must make that override visible and costly.</p>
+      <ol><li><span aria-hidden="true">□</span> Never use binary floating point for price, quantity, fee, balance, or PnL.</li><li><span aria-hidden="true">□</span> Never let matching engine or risk engine read live chain state.</li><li><span aria-hidden="true">□</span> Credit only after adapter-defined finality and compliance gates.</li><li><span aria-hidden="true">□</span> Book sweeps/rebalances as asset-location changes, not liability changes.</li><li><span aria-hidden="true">□</span> Hold/debit before signing or broadcast; release only after authoritative terminal reconciliation.</li><li><span aria-hidden="true">□</span> Require zero unexplained balance tolerance; model in-flight explicitly.</li><li><span aria-hidden="true">□</span> Scan HD addresses with persisted range/lookahead and alert before exhaustion.</li><li><span aria-hidden="true">□</span> Do not publish assets-only proof as solvency.</li><li><span aria-hidden="true">□</span> Resynchronize market data on any sequence gap.</li><li><span aria-hidden="true">□</span> Reconcile customer liabilities + firm positions + fees against on-chain + in-flight + receivables continuously.</li></ol>
+    </section>
+    <section class="sheet-section sources" aria-labelledby="sources">
+      <h2 id="sources">Primary sources &amp; scope</h2>
+      <p class="section-note">Operational and volatile claims were checked against these first-party documents on 2026-08-31. Examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
+      <ul><li><a href="https://eur-lex.europa.eu/eli/reg/2023/1114/oj" target="_blank" rel="noopener noreferrer">MiCA Regulation 2023/1114</a><span>Client position registers and custody segregation.</span></li><li><a href="https://www.dfs.ny.gov/virtual_currency_businesses" target="_blank" rel="noopener noreferrer">NYDFS virtual-currency guidance</a><span>Current custody and customer-asset guidance index.</span></li><li><a href="https://www.fixtrading.org/standards/" target="_blank" rel="noopener noreferrer">FIX Trading Community</a><span>Protocol standards for institutional order flow.</span></li><li><a href="https://developer.bitcoin.org/reference/" target="_blank" rel="noopener noreferrer">Bitcoin developer reference</a><span>Chain transaction and wallet primitives.</span></li><li><a href="https://freethepeople.org/how-to-build-a-bitcoin-exchange-part-1/" target="_blank" rel="noopener noreferrer">How to Build a Bitcoin Exchange, Part 1</a><span>David Veksler&#x27;s 2017 design-goals article; this page is the engineering continuation.</span></li></ul>
+    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a><a href="bitcoin-exchanges-cards.html">Bitcoin exchanges &amp; cards <span aria-hidden="true">→</span></a></div></aside></main>
+<footer class="shell meta"><p>Last verified: 2026-08-31 · Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer></body></html>
