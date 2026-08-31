@@ -70,26 +70,42 @@ two categories.
 `post-quantum-cryptography.html` stays in `Security & Privacy` (it is a general cryptography
 page); sheet 9 is the custody-specific sibling and lives in the new category.
 
-### 2. Sheet 6 is a patterns page, not a vendor page
+### 2. Sheet 6 names Fireblocks, and covers more than Fireblocks
 
-The natural title for sheet 6 is a single vendor's name. **Do not build it that way.** A page
-named after, and centred on, one company is the shape that already cost this repo a page after a
-cease-and-desist. Sheet 6 ships as `custody-provider-integration.html`: an *integration-patterns*
-reference in which several named platforms are compared factually from their own public
-documentation, with the largest one carrying the most detail because it has the most public
-documentation — not because it is being promoted. Concretely, the constraints are:
+Fireblocks is named on the page — in the title, the H1 and a section of its own — and its
+terminology is used directly (vault accounts, the Transaction Authorization Policy, the API
+co-signer and its callback, Gas Station, transaction statuses and sub-statuses). It has extensive
+public developer documentation, naming it is ordinary technical writing, and the queries people
+actually search are vendor-shaped.
 
-- No vendor logos, no vendor colour schemes, no brand-styled sections.
+**This is not the Anduril situation.** That page was about a US defense contractor and the
+cease-and-desist reflected that sector's posture, not a general rule about naming companies. A
+custody platform with a public developer portal, a public API reference and a public status page
+is in an entirely different position, and the correct treatment is normal technical citation.
+
+What *is* still deliberate is the page's structure: **a generic model with vendors mapped onto it,
+rather than one vendor's documentation restated.** That is an editorial call about what makes the
+page useful and durable, not a legal one. The generic layer is what lets a reader read any
+platform's docs; it is also what stops the whole page rotting when one API changes. Fireblocks
+carries the most detail because it has the most public documentation and the largest deployed
+footprint, and the page should say so plainly rather than pretending to a false symmetry.
+
+The remaining constraints are ordinary accuracy and trademark hygiene:
+
 - Every vendor-specific claim carries an inline "as documented <Mon YYYY>" tag and links to that
-  vendor's own public docs.
-- No pricing claims unless publicly published by the vendor; commercial terms are private and
-  guessing at them is both wrong and provocative.
-- No comparative superlatives ("the best", "the industry standard"). State capabilities, cite the
-  doc, let the table speak.
-- Nothing sourced from a private account, dashboard, contract, or NDA'd material.
+  vendor's own public docs. This is an accuracy rule first — these APIs move.
+- No vendor logos or brand colour schemes. Partly trademark hygiene, mostly design coherence: the
+  batch has one visual identity and vendor branding would wreck it.
+- No pricing or commercial terms unless the vendor publishes them. Not because it is provocative,
+  but because they are negotiated and any number would be wrong.
+- No editorial ranking or superlatives ("the best", "the industry standard"). State capabilities,
+  cite the doc, let the table speak — and note that the author has not operated every platform
+  listed, which is exactly why the page compares documented capabilities rather than experiences.
+- Nothing from a private account, dashboard, contract, or NDA'd material. Every claim must be
+  reproducible by a reader from public documents.
 
-The same rule applies more loosely to sheets 4 and 5, which also name commercial vendors: name
-them in a table, cite public documentation, do not rank them editorially.
+The same treatment applies to the commercial vendors named in sheets 3, 4 and 5: name them, cite
+public documentation, date the claim, do not rank them.
 
 ## Prior work by the author that these sheets draw on
 

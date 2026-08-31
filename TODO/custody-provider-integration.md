@@ -2,13 +2,17 @@
 
 **Target file:** `custody-provider-integration.html`
 **Batch:** [custody-engineering-batch-2026-08.md](custody-engineering-batch-2026-08.md) (sheet 6 of 9, P1).
-**Read the batch file's "Sheet 6 is a patterns page, not a vendor page" section before writing a
-line of this.** Those constraints are binding and they shape the whole structure.
+**Read the batch file's "Sheet 6 names Fireblocks, and covers more than Fireblocks" section before
+writing a line of this.** Fireblocks is named throughout, its terminology is used directly, and it
+gets a section of its own; the accuracy and citation rules there are binding.
 
 ## Why this topic
 
-Custody platform documentation is written per-vendor, from inside that vendor's model, and assumes
-you have already chosen. What does not exist is the **cross-vendor integration-patterns reference**:
+Fireblocks' developer documentation is good and thorough, and it is also written from entirely
+inside the Fireblocks model — as is every competitor's. Each assumes you have already chosen, and
+none of them tells you which of its concepts are Fireblocks inventions and which are the shape that
+every custody platform converges on. What does not exist is the **cross-vendor integration-patterns
+reference**:
 the handful of structures every custody platform converges on — an account/vault hierarchy, a
 declarative transaction-authorisation policy, an out-of-band co-signer, a webhook stream with
 at-least-once delivery, a transaction state machine, and an automated native-asset funding
@@ -25,21 +29,38 @@ The build-versus-buy frame closes it, and it is honest in a way vendor content c
 custody platform removes the signing problem and roughly none of the ledger, reconciliation,
 deposit-detection or compliance problems. Sheets 2, 3 and 4 do not go away.
 
+One thing this page must be straight about, because it is what makes it trustworthy: it compares
+**documented capabilities**, not operating experience. The author has built and run provider
+integrations of exactly this shape (see the research-sources note) but has not personally operated
+every platform in the comparison table. State that once, plainly, in an "about this page" line —
+it costs nothing, it is what an honest technical reference does, and a reader who spots an
+unearned claim of experience discards the whole page.
+
 ## Targeting
 
-- **Primary query:** `custody platform integration patterns`
-- **Secondary:** `crypto custody api webhook verification`, `transaction authorization policy crypto`,
-  `mpc custody provider comparison`, `custody build vs buy crypto`, `api co-signer callback`,
-  `crypto gas station automation`, `vault account architecture`
+- **Primary query:** `fireblocks integration`
+- **Secondary:** `fireblocks transaction authorization policy`, `fireblocks webhook verification`,
+  `fireblocks api co-signer`, `fireblocks vault account structure`, `fireblocks vs bitgo vs copper`,
+  `custody platform integration patterns`, `custody build vs buy crypto`,
+  `crypto custody api webhook verification`, `crypto gas station automation`
+- **Note on the primary:** the vendor-shaped queries carry the volume and the intent — someone
+  typing `fireblocks webhook verification` has a bug open right now. The generic queries carry the
+  durability. The page serves both by using Fireblocks' own vocabulary in the headings and the
+  generic model in the structure, so it ranks for the vendor terms without being obsolete when the
+  vendor landscape shifts.
 - **Mode:** operational, mid-integration or mid-evaluation. Entered at a specific section (webhooks,
   policy, statuses) from a specific problem.
 
 ## Draft title / H1 / meta
 
-- `<title>`: `Custody Provider Integration: Vaults, Policy, Webhooks` (54 chars)
-- **H1:** `Custody Provider Integration Patterns`
+- `<title>`: `Fireblocks Integration Patterns: Vaults, TAP, Webhooks` (54 chars)
+- **H1:** `Custody Provider Integration Patterns: Fireblocks and the Model Underneath It`
 - **Meta description (draft):**
-  `The structures every crypto custody platform shares: vault hierarchies, transaction authorization policy, co-signer callbacks, webhook delivery semantics, gas stations, and a build-versus-buy frame.` (196 chars)
+  `Fireblocks vault accounts, Transaction Authorization Policy, the API co-signer callback and webhook delivery semantics, mapped onto the generic model every custody platform shares. With build vs buy.` (198 chars)
+- **Filename stays `custody-provider-integration.html`.** The title leads with the vendor because
+  that is the query; the canonical URL stays generic because it is permanent and the page outlives
+  any one platform. If the vendor terms clearly carry the page after six months of Search Console
+  data, revisit — but a URL is the one thing that cannot be cheaply changed later.
 
 ## Reader outcome
 
@@ -58,14 +79,20 @@ operational reality of these platforms. Not a traffic page.
 
 ## Content approach
 
-Generic model first, vendor mapping second, decision frame last. **The generic model is the page**;
-the vendor columns are an index into it. Structuring it this way is also what keeps the page from
-being a vendor page and keeps it durable when any one API changes.
+Generic model first, vendor mapping second, decision frame last. **The generic model is the
+skeleton; Fireblocks' vocabulary is the flesh.** Use Fireblocks' actual terms in the prose and
+headings — a reader searching `transaction authorization policy` should land on a heading that says
+it — while the section structure stays generic so the page survives an API revision and so a Copper
+or BitGo reader can still use it. Every Fireblocks-specific assertion is dated and cited to the
+developer docs.
 
 1. **Quick reference: the six structures** — the concepts every platform implements, each in one
-   line, with a cross-vendor naming table beneath (this platform calls it a vault account, that one
-   calls it a wallet, that one a sub-account). Signature element. This table is the page's most
-   reusable object because it makes every vendor's documentation readable.
+   line, with a cross-vendor naming table beneath. **Fireblocks is the leftmost vendor column and
+   the anchor vocabulary**, because it is the one most readers arrive already using: vault account,
+   vault asset wallet, internal/external/contract wallet, Transaction Authorization Policy, API
+   co-signer, Gas Station. The other columns say what each platform calls the same thing. Signature
+   element, and the page's most reusable object — it is what makes any vendor's documentation
+   readable once you know one vendor's.
 2. **Account and address hierarchy** — the tree (organisation → account/vault → per-asset wallet →
    address) and the decisions it forces: one vault per customer versus an omnibus vault with an
    internal ledger, and the scaling wall the per-customer model hits; permanent versus one-time
@@ -73,7 +100,8 @@ being a vendor page and keeps it durable when any one API changes.
    destinations it merely knows about; and the address-management burden on chains with account
    models versus UTXO models. Cross-reference sheet 7's omnibus-versus-segregated treatment rather
    than duplicating it.
-3. **Transaction authorization policy** — the declarative rule layer as a generic model: an
+3. **Transaction authorization policy (Fireblocks TAP, and its equivalents)** — the declarative
+   rule layer as a generic model: an
    ordered rule list, each rule matching on initiator, source, destination, asset and amount, and
    resolving to allow / block / require-N-approvals. Then the properties that matter and that
    engineers get wrong: **first-match ordering makes rule order a security property**; a
@@ -81,11 +109,14 @@ being a vendor page and keeps it durable when any one API changes.
    changes to the policy must themselves be quorum-gated or the policy is decorative; and the
    policy is only as good as the identity of the initiator, which is an API-key management
    question. Give a worked example policy for a realistic organisation — tiered amounts,
-   allowlisted destinations, a break-glass rule — and then walk an attack through it to show which
-   rule stops it. Cross-reference sheet 3, which owns the control design; this section owns the
-   *encoding* of it.
-4. **The co-signer and the callback** — the architectural hook that most integrations never
-   discover and that is the most interesting thing on the page. Deploying your own co-signer means
+   allowlisted destinations, a break-glass rule — expressed in TAP's actual rule vocabulary
+   (initiator, designated signer, source, destination, asset, amount, action) so it is directly
+   usable, with a note on which parts of that vocabulary are Fireblocks-specific and which have
+   equivalents elsewhere. Then walk an attack through it to show which rule stops it.
+   Cross-reference sheet 3, which owns the control design; this section owns the *encoding* of it.
+4. **The API co-signer and the callback handler** — the architectural hook that most integrations
+   never discover and that is the most interesting thing on the page. Deploying your own co-signer
+   with a callback handler means
    a signing request passes through **your** code before the shares act, so you can enforce policy
    the vendor's engine cannot express — business-rule checks, your own risk score, a
    cross-reference against your ledger, a rate limit, a sanity check that the payload matches the
@@ -93,7 +124,11 @@ being a vendor page and keeps it durable when any one API changes.
    the MPC boundary" problem, and it belongs here. Cover the deployment models, the availability
    requirement it creates (your callback is now on the critical path for every withdrawal, so its
    uptime is your withdrawal uptime), the fail-open versus fail-closed decision, and the
-   attestation/enclave models vendors use to protect the signing environment.
+   attestation/enclave models vendors use to protect the signing environment — for Fireblocks, the
+   enclave-based co-signer and the choice between a hosted and a self-deployed co-signer, described
+   from the documented architecture and dated. Name the equivalent hook on the other platforms
+   where one exists, and say plainly where one does not, because its absence is a real
+   differentiator that no comparison table usually captures.
 5. **Authentication and request semantics** — API key classes (signing versus read-only versus
    admin) and why they must be separate credentials with separate storage; request signing
    patterns (a signed token over a hash of the request body with a nonce and a short expiry) and
@@ -113,25 +148,33 @@ being a vendor page and keeps it durable when any one API changes.
    (acknowledge fast, process asynchronously); replay protection; and the runbook for a webhook
    outage. Include a short, correct verification snippet in pseudocode that shows the raw-body
    requirement, since that is the detail most implementations get wrong.
-7. **Transaction state machine** — the lifecycle as a diagram plus a table: submitted, pending
-   authorisation, queued, pending signature, broadcasting, confirming, completed, and the terminal
-   failure states (rejected by policy, blocked by compliance, cancelled, failed on chain). For each
+7. **Transaction state machine** — the lifecycle as a diagram plus a table, using Fireblocks'
+   documented status names as the reference vocabulary because they are the most widely encountered:
+   submitted, pending authorisation, queued, pending signature, broadcasting, confirming, completed,
+   and the terminal failure states (rejected by policy, blocked by compliance, cancelled, failed on
+   chain). Verify the exact status strings against the current API reference — they are enum values
+   and getting one wrong makes the table actively harmful. For each
    state: who can move it, whether it is terminal, whether funds are committed, and what your
    ledger should do on entry. Then the sub-status taxonomy that carries the actual reason for a
    failure, and the operational point: **the interesting information is in the sub-status, and
-   most integrations only read the status.** Map the generic states onto the vendor naming table
+   most integrations only read the status.** Fireblocks' sub-status taxonomy is the worked example
+   here and is worth enumerating properly, since it is the part of the API that turns "the
+   withdrawal failed" into something actionable. Map the states onto the vendor naming table
    from §1.
-8. **Gas stations and sweeping** — the platform-side answer to sheet 2's gas-station problem:
-   automated native-asset funding with a threshold and a cap, which chains it covers, and the
+8. **Gas stations and sweeping** — the platform-side answer to sheet 2's gas-station problem.
+   Fireblocks Gas Station is the named example: automated native-asset funding of vault deposit
+   addresses with a configured threshold and cap, the documented chain coverage and its limits, and
+   the
    failure modes (the gas station itself running dry at the worst moment, funding races, and the
    cost of funding addresses that never get swept). Sweeping configuration and the interaction
    with the address model from §2. Link to sheet 2 for the underlying problem rather than
    restating it.
 9. **Platform comparison** — a factual table, built under the batch rule: no ranking, no
    superlatives, no pricing, every claim dated and cited to that vendor's public documentation.
-   Rows: the major MPC-based platforms, the multisig-heritage and qualified-custodian platforms,
-   the embedded-wallet and key-infrastructure providers, the smart-contract wallet stack, and the
-   open-source threshold-signing libraries as the self-build option. Columns: custody model
+   Rows named explicitly: **Fireblocks**, Copper, BitGo, Anchorage, Coinbase Prime/Custody, Zodia,
+   Cobo, Dfns, Turnkey, Privy, Safe as the smart-contract-wallet option, and the open-source
+   threshold-signing libraries as the self-build row. Verify each is still operating and still
+   publishing docs before including it. Columns: custody model
    (who holds what), signing scheme family, self-hosted co-signer available, policy expressiveness,
    webhook and API surface, chain coverage approach, regulatory posture (charter/licence type,
    stated as fact), **key exportability and exit package**, and integration effort class. The
@@ -162,11 +205,14 @@ being a vendor page and keeps it durable when any one API changes.
 
 **Overall: VOLATILE on the vendor-specific layer, STABLE underneath — and the page is deliberately
 structured so those two layers can be updated independently.**
-- **§1 naming table, §7 state names, §9 comparison: VOLATILE.** APIs, product names and feature
-  matrices change on vendor release schedules. Every vendor-specific cell carries an inline "as
-  documented <Mon YYYY>" tag. At each freshness pass, re-verify §9 against the vendors' current
-  public docs; if a vendor's documentation is no longer public, remove the row rather than
-  carrying stale claims.
+- **§1 naming table, §3 TAP vocabulary, §7 status and sub-status enums, §8 Gas Station chain
+  coverage, §9 comparison: VOLATILE.** APIs, product names, enum values and feature matrices change
+  on vendor release schedules, and Fireblocks ships frequently. Every vendor-specific cell carries
+  an inline "as documented <Mon YYYY>" tag. **The status and sub-status enums in §7 are the single
+  highest-risk content on the page** — a stale enum value silently breaks a reader's integration —
+  so re-verify those against the current API reference at every freshness pass, not just annually.
+  If a vendor's documentation is no longer public, remove the row rather than carrying stale
+  claims.
 - **§9 regulatory posture column: VOLATILE.** Charters and licences change.
 - **§2–§8 generic models, §10 decision frame, §11 checklist, §12 mistakes: STABLE.** These are
   properties of the problem and will outlive every API on the page — which is why they are written
@@ -206,8 +252,9 @@ what get read on a phone before a meeting.
 
 ## og:image / shareable artifact
 
-The **six structures** table from §1 at 1200×630 — the generic concept in the left column and the
-cross-vendor naming across the top. It is the page's most reusable object and reads at card size.
+The **six structures** table from §1 at 1200×630 — the generic concept in the left column,
+Fireblocks' vocabulary in the anchor column, and the other platforms across the top. It is the
+page's most reusable object and reads at card size.
 The webhook-semantics block ("at least once, out of order, sometimes never") is the
 screenshot-this text artifact.
 
@@ -228,8 +275,11 @@ mistakes ≥ 10.
 
 ## Research sources (verify against these, per Rule 1)
 
-Each platform's own public developer documentation and public API reference, read directly and
-cited per claim with the date read. Public regulatory registers for the charter/licence column
+The Fireblocks developer portal and API reference first and in the most depth — read the current
+docs directly for vault structure, TAP rule grammar, co-signer deployment models, webhook event
+types and signature verification, Gas Station configuration, and the full transaction status and
+sub-status enumerations. Then each other platform's own public developer documentation and public
+API reference, read directly and cited per claim with the date read. Public regulatory registers for the charter/licence column
 (the regulator's register, not the vendor's about page). Open-source threshold-signing repositories
 for the self-build row. RFC 7519 and current practice guidance for request-signing patterns.
 **Nothing sourced from a private account, a dashboard, a sales conversation, a contract, or any
@@ -250,9 +300,11 @@ public documentation.
 
 **Identity: the batch register at its most technical** — this is the sheet that most resembles API
 documentation, and it should read that way: heavy monospace, code blocks, state diagrams, sparse
-prose. Deliberately the plainest page in the batch. **No vendor logos, no vendor brand colours, no
-brand-styled section headers** — per the batch rule, and visually this also keeps the generic model
-in the foreground where it belongs.
+prose. Deliberately the plainest page in the batch. Vendors are named freely in headings, prose and tables — that
+is what makes the page findable and usable — but with **no vendor logos, no vendor brand colours
+and no brand-styled section headers**: the batch has one visual identity and vendor branding would
+wreck it. Fireblocks' terms are set in the same monospace as every other API identifier on the
+page, which is exactly the right register for them.
 
 **Signature element: the transaction state machine.** One inline SVG state diagram with the states
 as nodes and the transitions labelled with what causes them, drawn in a plain systems-documentation
