@@ -21,10 +21,17 @@ still bumping "Last verified" to today. Silent false provenance is a worse
 failure than an incomplete run, so --limit defaults to a batch that actually
 fits under the cap, and the script refuses to emit a plan that cannot.
 
-Staleness is read from, in order of preference:
-  1. JSON-LD  "dateModified": "YYYY-MM-DD"
-  2. a visible  Last verified: <Month D, YYYY>  line
-  3. the file's last git commit date
+Where staleness comes from (as of 2026-09-01)
+----------------------------------------------
+Cheatsheets no longer carry a visible "Last verified" line or a JSON-LD
+`dateModified` field -- that stamp turned into makework, where the routine's
+only real weekly output was bumping a date on a page nobody had actually
+re-verified. Review status now lives in refresh-status.json at the repo root,
+written once per run by the Selector after it collects every Worker's report
+(never by a Worker directly, so concurrent Workers can't race on one shared
+file). Staleness is read from, in order of preference:
+  1. refresh-status.json "files"."<name>"."last_reviewed"  (YYYY-MM-DD)
+  2. the file's last git commit date
 
 Usage:
     python scripts/freshness_scan.py                  # this run's batch
@@ -41,12 +48,12 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
-import re
 import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+REFRESH_STATUS_PATH = REPO_ROOT / "refresh-status.json"
 
 # Section 7: whole topics that are essentially evergreen. These still deserve an
 # occasional freshness-stamp pass, but they never justify a research Worker, so
@@ -67,20 +74,15 @@ DEFAULT_SESSION_BUDGET = 200
 # the last call.
 BUDGET_HEADROOM = 20
 
-JSONLD_DATE = re.compile(r'"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})"')
-VISIBLE_DATE = re.compile(
-    r"Last verified:?\s*([A-Z][a-z]+ \d{1,2}, \d{4}|\d{4}-\d{2}-\d{2})", re.I
-)
 
-
-def _parse_visible(raw: str) -> dt.date | None:
-    raw = raw.strip()
-    for fmt in ("%Y-%m-%d", "%B %d, %Y", "%b %d, %Y"):
-        try:
-            return dt.datetime.strptime(raw, fmt).date()
-        except ValueError:
-            continue
-    return None
+def _load_refresh_status() -> dict:
+    if not REFRESH_STATUS_PATH.exists():
+        return {}
+    try:
+        data = json.loads(REFRESH_STATUS_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data.get("files", {})
 
 
 def _git_date(path: Path) -> dt.date | None:
@@ -100,25 +102,17 @@ def _git_date(path: Path) -> dt.date | None:
         return None
 
 
-def last_verified(path: Path) -> tuple[dt.date | None, str]:
+def last_verified(path: Path, statuses: dict) -> tuple[dt.date | None, str]:
     """Return (date, where it came from) for one cheatsheet."""
-    try:
-        text = path.read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return None, "unreadable"
-
-    m = JSONLD_DATE.search(text)
-    if m:
+    entry = statuses.get(path.name)
+    if entry and entry.get("last_reviewed"):
         try:
-            return dt.datetime.strptime(m.group(1), "%Y-%m-%d").date(), "json-ld"
+            return (
+                dt.datetime.strptime(entry["last_reviewed"], "%Y-%m-%d").date(),
+                "refresh-status.json",
+            )
         except ValueError:
             pass
-
-    m = VISIBLE_DATE.search(text)
-    if m:
-        parsed = _parse_visible(m.group(1))
-        if parsed:
-            return parsed, "visible"
 
     git = _git_date(path)
     if git:
@@ -132,9 +126,10 @@ def is_evergreen(name: str) -> bool:
 
 
 def scan(today: dt.date) -> list[dict]:
+    statuses = _load_refresh_status()
     rows = []
     for path in sorted(REPO_ROOT.glob("*.html")):
-        date, source = last_verified(path)
+        date, source = last_verified(path, statuses)
         rows.append({
             "file": path.name,
             "last_verified": date.isoformat() if date else None,

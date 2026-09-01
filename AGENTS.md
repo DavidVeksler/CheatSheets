@@ -24,6 +24,7 @@ A collection of standalone, interactive HTML cheatsheets covering technology, fi
 | [`TODO/seo-planning.md`](TODO/seo-planning.md) | **SEO planning** — GSC baselines and striking-distance opportunities. |
 | [`deploy/DEPLOY.md`](deploy/DEPLOY.md) | **Deployment runbook** — `./deploy.sh` pipeline (preflight, validate, push, verify). |
 | [`weekly-freshness-update.md`](weekly-freshness-update.md) | Scheduled fact-drift refresh routine. |
+| `refresh-status.json` | **Review-status data** — per-file last-reviewed date, written only by the freshness routine's Selector. Not hand-edited; not rendered on any page. |
 | [`README.md`](README.md) | Public repository readme. |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | GitHub Copilot summary (sync when editing this file). |
 | `SEO_PROMPT.txt` | Footer cross-linking procedure. |
@@ -52,8 +53,8 @@ A collection of standalone, interactive HTML cheatsheets covering technology, fi
    - Density floor: 20+ substantive entries per sheet.
 6. **Freshness & Provenance:**
    - Date volatile facts inline ("as of <Mon YYYY>" or version tag).
-   - Include visible `Last verified: YYYY-MM-DD` in header/footer (dates the *topic content*, never internal tooling/Bootstrap versions/SRI hashes).
-   - Set JSON-LD `dateModified` to match visible verification date.
+   - Do **not** add a visible "Last verified" line or a JSON-LD `dateModified` field to the page. A weekly routine used to bump these on a schedule regardless of whether it had actually re-verified anything, which made the stamp a lie more often than a fact. Review status is now tracked outside the page, in `refresh-status.json` at the repo root (see [`weekly-freshness-update.md`](weekly-freshness-update.md)).
+   - `datePublished` in JSON-LD stays (it's a fact, not a claim about ongoing review) — see the template below.
 
 ---
 
@@ -131,7 +132,6 @@ Compute new hashes via `curl -sL <url> | openssl dgst -sha384 -binary | openssl 
   "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
   "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
   "datePublished": "YYYY-MM-DD",
-  "dateModified": "YYYY-MM-DD",
   "keywords": "keyword list"
 }
 </script>

@@ -19,7 +19,8 @@ Where this file and AGENTS.md disagree, AGENTS.md wins.
    (Generation Protocol + Content Comprehensiveness Standard in AGENTS.md).
 2. Write `topic-subtopic.html` in root using the Modern Platform Baseline and **all**
    metadata blocks (title, meta description, canonical, OG/X, TechArticle JSON-LD).
-   JSON-LD must match visible content; set a real `Last verified` date.
+   JSON-LD must match visible content — do not add a `dateModified` field or a visible
+   "Last verified" line (review status lives in `refresh-status.json`, not the page).
 3. Add the file to the `$categoryMap` array in `category-map.php`, or it lands under "Other"
    (AGENTS.md > *Adding New Cheatsheets*).
 4. Generate + optimize the `images/{filename}.png` preview.

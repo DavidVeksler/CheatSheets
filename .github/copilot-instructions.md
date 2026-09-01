@@ -97,7 +97,6 @@ Or use PHP built-in: `php -S localhost:8000`
   "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
   "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
   "datePublished": "YYYY-MM-DD",
-  "dateModified": "YYYY-MM-DD",
   "keywords": "keyword list"
 }
 </script>

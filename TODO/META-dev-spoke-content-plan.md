@@ -39,8 +39,8 @@ query family below once GSC range data is available again (see the tooling note 
 - **Action (content-only, no title change):** add a substantive **"Azure DevOps best practices"**
   section (branching policy, pipeline security, environments/approvals, work-item hygiene, IaC gates)
   and expand thin sections toward the density floor (~20+ substantive entries). Every claim verified
-  against Microsoft Learn; keep the visible `Last verified` current.
-- **Acceptance:** passes `scripts/seo_check.py`; title unchanged; `dateModified` = real edit date.
+  against Microsoft Learn.
+- **Acceptance:** passes `scripts/seo_check.py`; title unchanged.
 - **Success metric:** `azure devops best practices` family moves off page 5 toward page 1–2 at
   roughly constant position on the head term (guard-rail: do not lose the pos-2 "azure devops cheat
   sheet" ranking).
@@ -110,6 +110,5 @@ query family once GSC range data is available again.
 2. Make the content-only change above; **do not** rewrite titles during the same window as the WP1
    title measurement unless a page is explicitly cleared.
 3. Run `scripts/seo_check.py` (0 failures) and the accuracy protocol on every new number.
-4. Update the visible `Last verified` date and JSON-LD `dateModified`.
-5. Commit one page per commit; each page starts its own before/after measurement at roughly constant
+4. Commit one page per commit; each page starts its own before/after measurement at roughly constant
    head-term position (guard-rail: never trade a won head-term ranking for long-tail gains).

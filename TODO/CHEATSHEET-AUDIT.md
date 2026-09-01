@@ -6,15 +6,22 @@ corpus scan on **2026-07-04** (see Appendix for the baseline findings and priori
 
 **Division of labor with the other repo docs:**
 - `AGENTS.md` — owns the quality bar. This audit *applies* it retroactively; it never redefines it.
-- `weekly-freshness-update.md` — owns **fact drift** (stale versions, prices, model names).
-  This audit does NOT re-verify facts; it checks that the freshness *machinery* exists
-  (stamps, dated volatile facts). If you find stale facts, note them for the freshness job.
+- `weekly-freshness-update.md` — owns **fact drift** (stale versions, prices, model names) and
+  the `refresh-status.json` review-status record. This audit does NOT re-verify facts and does
+  NOT touch `refresh-status.json`; it only checks that volatile facts are dated inline. If you
+  find stale facts, note them for the freshness job.
 - `TODO/SPEC-AUDIT.md` — spec completeness for *future* pages; not used here.
 
 **Context that explains most defects:** the corpus spans several generations of the build
-pipeline. Old pages predate the SRI mandate, JSON-LD requirement, `Last verified` line,
-Bootstrap 5.3.8 pin, and no-web-fonts rule. The audit's job is to bring each page up to the
-current standard *or* explicitly accept a legacy exception — never to silently skip.
+pipeline. Old pages predate the SRI mandate, JSON-LD requirement, Bootstrap 5.3.8 pin, and
+no-web-fonts rule. The audit's job is to bring each page up to the current standard *or*
+explicitly accept a legacy exception — never to silently skip.
+
+**Policy change (2026-09-01):** pages used to carry a visible "Last verified" line and a
+JSON-LD `dateModified` field; both were removed repo-wide because the weekly freshness routine
+was bumping them without real review. A page that still carries either one is a **defect now**,
+not a requirement — see §2. Historical findings below that reference "missing `Last verified`"
+predate this change and are superseded; read them as "was true then," not as current defects.
 
 ---
 
@@ -33,8 +40,8 @@ current standard *or* explicitly accept a legacy exception — never to silently
 
 | Tier | Meaning | Examples |
 |---|---|---|
-| **BLOCKER** | Visibly broken or lying to users/crawlers | placeholder URLs (`YOUR_IMAGE_URL_HERE`, `yourdomain.com`), broken internal links, JSON-LD describing content not on the page, `dateModified` bumped without review |
-| **HIGH** | Violates a hard AGENTS.md requirement | missing JSON-LD, missing `Last verified`, CDN tags without SRI, unpinned/old Bootstrap, missing `$categoryMap` entry, missing preview image, missing `lang` attr |
+| **BLOCKER** | Visibly broken or lying to users/crawlers | placeholder URLs (`YOUR_IMAGE_URL_HERE`, `yourdomain.com`), broken internal links, JSON-LD describing content not on the page |
+| **HIGH** | Violates a hard AGENTS.md requirement | missing JSON-LD, a visible "Last verified" line or JSON-LD `dateModified` (deprecated 2026-09-01 — remove, don't add), CDN tags without SRI, unpinned/old Bootstrap, missing `$categoryMap` entry, missing preview image, missing `lang` attr |
 | **MEDIUM** | Standard not met, degrades quality | web-font dependency (offline break), thin sections (<3 entries), no Quick Reference block, no Common Mistakes section, undated volatile facts, JS not deferred |
 | **LOW** | Modernization / polish | Bootstrap collapse instead of native `<details name>`, no `light-dark()` theming, no container queries, missing `text-wrap` niceties |
 
@@ -93,8 +100,8 @@ Apply the AGENTS.md Testing Checklist's comprehensiveness half, as an auditor:
 3. **Quick Reference block** near the top? **Common Mistakes** section (mandatory for
    technical topics)?
 4. **Self-containment test** — could a practitioner work from this page alone?
-5. **JSON-LD truthfulness** — does the schema describe what's visibly on the page? Is
-   `dateModified` plausible against `git log -1 --format=%cs -- "$FILE"`?
+5. **JSON-LD truthfulness** — does the schema describe what's visibly on the page? There
+   should be no `dateModified` field at all (removed 2026-09-01; see policy note above).
 6. **Volatile facts dated?** Don't verify the facts (freshness job's work) — check they
    carry `as of <Mon YYYY>` tags so staleness is *visible*.
 7. **Cross-links** — does the page link its cluster (per `SEO_PROMPT.txt` groupings), and
@@ -124,10 +131,12 @@ Serve locally (`python3 serve.py` or `nohup python3 -m http.server 8765 &`) and 
 **Fix in place this run (BLOCKER + HIGH, and cheap MEDIUMs):**
 - Placeholder/wrong og:image → point at `images/$BASE.png`; generate the image if missing
   (1200×630 per AGENTS.md; `generate-image-previews.py` is the batch fallback).
-- Missing JSON-LD → add the standard `TechArticle` block, describing only what's on the page.
-  Set `datePublished` from `git log --diff-filter=A --format=%cs -- "$FILE"`.
-- Missing `Last verified` → add the footer line **only after actually reviewing the page this
-  run** (which an audit does). Match the muted footer style.
+- Missing JSON-LD → add the standard `TechArticle` block (no `dateModified` field), describing
+  only what's on the page. Set `datePublished` from `git log --diff-filter=A --format=%cs -- "$FILE"`.
+- A visible "Last verified" line or a JSON-LD `dateModified` field is present → **remove it**,
+  following the same rules as the 2026-09-01 repo-wide cleanup (delete a self-contained stamp
+  element outright; if it's one clause among others, drop just the clause and fix the
+  surrounding punctuation/separators).
 - Bootstrap 5.3.2/5.3.3 → bump to 5.3.8 + Icons 1.13.1 with the AGENTS.md SRI hashes; add
   `defer`. Then run the browser check — old pages occasionally use removed/renamed behaviors.
 - Missing SRI on existing CDN tags → add computed hashes + `crossorigin="anonymous"`.

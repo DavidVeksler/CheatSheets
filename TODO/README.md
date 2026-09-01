@@ -66,8 +66,9 @@ A page is done when all of these hold, in addition to the AGENTS.md testing chec
   or exceeds the row coverage the spec describes.
 - Every worked example arrives at an actual final answer (a real latitude, a real dollar
   gap, a real NNT) — never "…and so on."
-- Every volatile fact carries an inline date or version tag; the page has a visible
-  `Last verified:` line.
+- Every volatile fact carries an inline date or version tag. (The page itself carries no
+  visible "Last verified" line or JSON-LD `dateModified` — review status lives in
+  `refresh-status.json`, not on the page.)
 - The spec's **signature visual element** (see Rule 5) is implemented and is the most
   polished thing on the page.
 - The page renders correctly at 375 px wide and prints sanely (the celestial and nuclear
