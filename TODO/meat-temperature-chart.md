@@ -171,3 +171,46 @@ ground, warm cream ink, ember accent. The doneness ladder is rendered as a horiz
 bar from rare to well with the temperature bands marked along it — drawn as inline SVG, and
 labelled in text at every band so it survives greyscale printing and colour-blind reading. The
 wall chart is built first and best. No JavaScript anywhere; no unit toggle by design.
+
+**Palette and type tokens — binding.** Diner mode: enamel cream `#F6E8CF`, maroon `#6B1F2B`,
+bottle green `#285C45`, ember `#D66A2C`, rule shadow `#C9B89A`. Night-kitchen mode: charcoal
+`#211A17`, warm ink `#F5E8D4`, ember `#EE7650`, sage `#A9C77D`, dim rule `#67564C`. Use a condensed
+slab-like system stack for sign headings, a highly legible system sans for guidance and tabular
+figures for every °F/°C pair. Colour may suggest doneness but words, texture and temperature must
+always carry the result.
+
+**Composition contract — build a kitchen instrument wall, not a recipe-card grid.** The recent
+pages are the quality reference for labelled SVG and quantitative axes; this page should feel
+warmer, more physical and more varied than their engineering-register shell:
+
+1. **Enamel-sign masthead:** a shallow sign with the H1, one-sentence reconciliation of safety
+   versus doneness and a riveted `LAST VERIFIED` plaque. Keep the useful wall chart visible in the
+   first viewport; do not spend the screen on a large food photograph or marketing hero.
+2. **Wall chart:** one uninterrupted, heavy-ruled lookup surface with protein silhouettes as row
+   locators, oversized pull → rest → final figures and safety notes printed in the same row. It is
+   not a collection of protein cards.
+3. **Doneness thermal rail:** the six bands form one long cut-section/temperature rail with
+   labelled muscle changes and appearance descriptors. Provide hatching and boundary ticks so it
+   remains usable in monochrome; never rely on red-to-brown colour alone.
+4. **Carryover trajectories:** small-multiple line plots share the same elapsed-minute axis for a
+   thin steak, thick roast, poultry breast and shoulder. Plot pull, peak and settled temperature;
+   the curves make thickness/method differences visible before the table is read.
+5. **Safety time-temperature field:** a proper temperature-versus-hold-time plot with labelled
+   curves/steps for the sourced lethality targets, paired with the regulatory table. Do not turn
+   safety into a speedometer or a green/red badge.
+6. **Low-and-slow strip chart:** brisket and pork shoulder get a recorder-like cook curve with the
+   stall shaded and wrapping marked as an intervention. This section should feel like a pit log,
+   visually distinct from the enamel reference above it.
+7. **Probe-placement plates:** simple inline-SVG silhouettes of steak, whole bird, breast and fish
+   show probe entry, sensing tip and bone/pan errors with leader lines. No stock photography and
+   no decorative animal illustrations.
+8. **Calibration and holding instruments:** ice/boiling calibration use two compact thermometer
+   scales; reheating/holding use a 24-hour clock strip and temperature rail. These replace another
+   generic comparison-card row.
+
+**Page rhythm and anti-patterns.** Sequence sign → wall chart → thermal rail → data plots → sous
+vide ledger → pit-log curve → probe plates → instrument strip → checklist. Alternate full-width
+lookup surfaces with airy diagrams and compact two-up figures; avoid recipe cards, glossy food
+photography, chef-hat icons, circular gauges, glass effects and repeated equal-height tiles. In
+print, page 1 is the wall chart and page 2 is the sous-vide/safety sheet; ornamental textures drop
+out. The 1200×630 preview is the wall chart with the pull → rest → final reading path intact.

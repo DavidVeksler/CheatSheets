@@ -211,3 +211,41 @@ colour does work (a hue per lab), always with the lab name printed on the marker
 contrast with `ai-frontier.html`'s design so the two pages read as siblings, not duplicates. No
 JavaScript required; the derived views are static SVG generated at build time by the same script
 that maintains the table.
+
+**Palette and type tokens — binding.** Dark instrument mode: recorder black `#0A0F14`, panel
+`#121B24`, phosphor text `#D7E1E8`, cyan trace `#43B7D6`, warning amber `#E3A83B`, update-stamp
+red `#D55252`. Light logbook mode: paper `#F3EBD8`, ink `#17324D`, rule `#9AA9B2`, stamp
+`#B23A48`. Use a system monospace for dates, model IDs and measurements; use a compact grotesque
+system stack for summaries and headings. Lab colours are data-series colours confined to the
+timeline and derived charts — they are not decorative section accents.
+
+**Composition contract — this must not become a long card feed.** Use the recent pages as a bar
+for visual explanation — the shared time axis in `blockchain-deposits-withdrawals.html`, the
+labelled inline-SVG plates in `mpc-wallet-architecture.html`, and the strong changes in scale in
+`post-quantum-cryptography.html` — without copying the custody batch's shell. The page must use at
+least these six distinct information shapes:
+
+1. **Instrument-status masthead:** a compact two-column header, title and inclusion rule on the
+   left; `LAST UPDATED`, `COVERING THROUGH`, row count and freshness state on a hard-edged recorder
+   panel on the right. This is operational status, not four generic statistic cards.
+2. **Ninety-day event tape:** a full-width vertical date rail on phones and a horizontal strip on
+   desktop. Release entries attach directly to the rail like flight-recorder events; alternating
+   sides or lab colours must never scramble chronology.
+3. **Master logbook:** the release table is an uninterrupted ruled register with month dividers
+   spanning all columns, pinned date/model columns and stamped source links. Do not wrap each row
+   in a card.
+4. **Lab-lane timeline:** one wide, quiet SVG plate using a shared month axis, collision-aware
+   labels and explicit lab lane names. At 375 px it becomes stacked quarterly panels with the
+   same axis, not a uniformly shrunken desktop graphic.
+5. **Lineage schematics:** model families render as compact branching transit lines with version
+   nodes, preview/GA/deprecation glyphs and dates. They must look categorically different from the
+   master table and remain understandable without colour.
+6. **Derived small multiples:** releases per quarter as bars, open-weight share as a 100% stack,
+   context growth as a step plot and price movement as an indexed slope chart. Keep one chart
+   grammar per question; do not repeat four doughnuts or four identically framed cards.
+
+**Page rhythm and anti-patterns.** Alternate dense register sections with one wide explanatory
+graphic, then a compact two-up comparison, then dense register again. Hard corners, rules, stamps
+and datum ticks carry the identity; avoid floating rounded cards, glass effects, decorative
+gradients, icon clouds, oversized empty hero space and a repeated three-column card grid. The
+1200×630 preview must crop the lab-lane timeline plus the live coverage stamp, not merely the H1.

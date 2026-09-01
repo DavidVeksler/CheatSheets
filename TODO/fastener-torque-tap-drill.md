@@ -170,3 +170,43 @@ SVG bolt heads in the drawing style — this is the signature element and must b
 not iconographic clip art. Tables are styled as drawing-sheet schedules with a title block above
 each (standard, revision year, units). Zero JavaScript; sticky headers and row highlighting are
 pure CSS.
+
+**Palette and type tokens — binding.** Cyanotype mode: field `#082F49`, deep field `#061F31`,
+drawing line `#BAE6FD`, dimension cyan `#38BDF8`, correction red `#F87171`. Vellum mode: sheet
+`#F4F1E8`, graphite `#24323D`, blue-grey rule `#607D8B`, construction line `#B9C6CC`, correction
+pencil `#C63D4F`. Use a condensed system sans for sheet titles, a tabular sans for measurements
+and system monospace only for thread designations such as `M8×1.25` and `3/8-16 UNC`.
+
+**Composition contract — make it feel like a set of shop drawings, not Bootstrap cards.** The
+recent `mpc-wallet-architecture.html` diagrams are the quality reference for labelled SVG, while
+the axis rows in `blockchain-deposits-withdrawals.html` are the reference for making quantities
+visible before they are read. Use those lessons in a wholly different drafting language:
+
+1. **Drawing title-block masthead:** a low, asymmetrical header with the H1 occupying the drawing
+   title field and revision, units, standards basis and print-sheet count in a real title block.
+   Do not use an oversized centered marketing hero.
+2. **Bench labels:** the eight quick lookups are a 2×4 rack of die-cut tool-bin labels with a
+   large thread designation and a three-line tap / clearance / torque stack. On mobile they become
+   one horizontal snap-free strip or a single column; no carousel and no hidden values.
+3. **Full-width schedules:** inch, metric and torque tables span the sheet like drawing schedules,
+   each with a different title-block code and strongly ruled column groups. These are the dense
+   rests of the page, not card interiors.
+4. **Bolt-head specimen plate:** the grade section is a museum-like specimen row of dimensioned
+   SVG bolt heads with leader lines to proof strength and substitution warnings. Use the negative
+   space between specimens; do not put each head in an identical card.
+5. **Threaded-joint cutaway:** one sectional SVG labels engaged threads, major/minor diameter,
+   clamp load, friction surfaces and failure planes. Overlay the minimum engagement depths for
+   steel, aluminium and plastic as dimension lines rather than another prose panel.
+6. **Torque/friction graphic:** pair `T = KFd` with three aligned force bars for dry, lubricated
+   and plated conditions, plus a small torque-angle arc. It explains why the tables diverge; it is
+   not a decorative gauge.
+7. **Tool-fit strip:** socket near-misses render as paired hex silhouettes overlaid to scale, and
+   thread-lockers render as labelled engineering swatches with strength words printed in them so
+   colour is never the only encoding.
+
+**Page rhythm and anti-patterns.** Move title block → bench labels → schedule → specimen plate →
+schedule → cutaway → force graphic → final schedules/checklist. Use edge-to-edge ruled regions,
+two-up technical plates and narrow annotation bands; avoid rounded cards, pills, shadows,
+photorealistic tools, decorative gears and repeated equal-height grids. The printed version must
+look like three coordinated shop sheets, not a web page squeezed onto paper. The 1200×630 preview
+is the bolt-head specimen plate with its drawing title block visible.

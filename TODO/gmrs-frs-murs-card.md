@@ -160,3 +160,42 @@ boxed numeral, frequency in tabular mono, and the power ceiling as a small fille
 a thin left rule in a single accent colour; no red/green traffic lights, since "requires a
 licence" is not a warning. Build the master table first and best. Zero JavaScript required; the
 only interactive element is a CSS-only row highlight.
+
+**Palette and type tokens — binding.** Field-card mode: stock `#EFE7D3`, ink `#1B2A34`, rule
+`#82929A`, FCC blue `#356B78`, receiver amber `#C87928`. Night-radio mode: chassis `#11171B`,
+recess `#192228`, warm legend `#F1E6CF`, LCD amber `#FFB347`, dial teal `#63B3B1`. Use a condensed
+system sans for labels, a seven-segment-like system-monospace treatment for channel/frequency
+readouts, and tabular numerals everywhere. Amber means active/readout, not danger.
+
+**Composition contract — every section should resemble a different part of a radio kit.** Borrow
+the recent pages' clarity of shared axes, inline SVG and semantic labels, but do not reuse their
+dark dotted shell, status pills or generic table-plus-card cadence:
+
+1. **Radio-face masthead:** a compact front-panel silhouette with the title engraved into the
+   chassis and one useful LCD example showing service, channel, frequency and legal power. The
+   scope line `US · FCC PART 95` reads like a faceplate legend, not a badge.
+2. **Five-position service selector:** the quick-reference verdict is a large labelled rotary or
+   stepped selector — FRS low power, FRS shared, GMRS, MURS, Amateur — with `USE THIS WHEN…` copy
+   attached to each stop. A plain adjacent list carries the same content for accessibility.
+3. **Channel faceplate table:** keep the dense master table, but vary row anatomy with boxed
+   channel numerals, frequency readouts, proportional power bars and a thin repeater-pair rail.
+   The first three fields form one fixed visual cluster while secondary rules scroll.
+4. **Spectrum ruler:** show FRS/GMRS/MURS allocations on a full-width frequency ruler, including
+   shared and interstitial regions. Labels and hatching carry service identity; colour alone does
+   not. This is a spectrum diagram, not another table.
+5. **Repeater duplex rails:** render the eight GMRS pairs as parallel receive/transmit tracks with
+   the +5 MHz bridge drawn between them. On phones, each pair becomes a short two-line ladder.
+6. **Tone codebook:** CTCSS is a ruled frequency ledger and DCS is a perforated compact code grid,
+   separated by a large `SQUELCH, NOT PRIVACY` correction strip. Do not make 138 tiny cards.
+7. **Terrain range profiles:** four labelled side-elevation silhouettes — open ground, forest,
+   suburb and repeater — place radios and obstructions on a horizon line with range anchors. Pair
+   with the numeric table; never imply a precise guarantee from the drawing.
+8. **Programming worksheet:** the UV-5R crosswalk looks like a writable memory-bank sheet with
+   numbered slots and an annotated keypad path, giving the bottom of the page a lighter paper
+   texture than the chassis sections.
+
+**Page rhythm and anti-patterns.** Sequence faceplate → selector → dense channel table → open
+spectrum diagram → compact rules → duplex rails → codebook → terrain profiles → worksheet. Avoid
+generic rounded cards, traffic-light verdict chips, signal-wave wallpaper, faux knobs that imply
+clickability and a repeated three-column grid. The 1200×630 preview should combine the LCD identity
+with a legible crop of the shared FRS/GMRS channel rows and their power bars.

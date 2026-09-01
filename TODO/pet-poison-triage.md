@@ -184,3 +184,50 @@ Palette: near-black ground, bone-white card, one alarm-amber and one clinical-bl
 condensed grotesque for band labels, tabular figures for every dose. The triage block is built
 first and best: it is the page. Everything below it is quieter — plain tables, no ornament.
 Motion gated behind `prefers-reduced-motion`, and in practice there should be none.
+
+**Palette and type tokens — binding.** Day tag: bone card `#F5F0E6`, ink `#17242B`, clinical teal
+`#2B6F77`, call amber `#D9822B`, alarm burgundy `#8B2635`, rule `#A9A296`. Night tag: ground
+`#101619`, card `#1A2428`, text `#F2E9D8`, clinical teal `#65BAC0`, call amber `#FFB14E`, alarm
+rose `#F17A85`. Use a condensed system sans only for verdict labels, a calm system sans for all
+instructions and tabular numerals for doses. The four verdicts require word + shape/pattern +
+colour; never colour alone.
+
+**Composition contract — urgency first, visual variety only when it speeds recognition.** The
+recent `wallet-recovery-forensics.html` is the reference for calm mobile-first triage and
+`mpc-wallet-architecture.html` for labelled diagrams, but this page must not inherit their search
+bar, dense desktop masthead or engineering shell:
+
+1. **The page begins as the triage tag:** no decorative hero precedes the emergency phone strip,
+   scope line, three facts to collect and four-band verdict stack. The H1 is printed in the tag's
+   header and the phone numbers are its tear-off edge with large `tel:` targets.
+2. **Four verdict bands:** use four different edge shapes/patterns and unambiguous verbs — not four
+   same-sized coloured cards. `CALL NOW REGARDLESS` is visually first; low risk is deliberately
+   quiet. At 375 px all four fit without horizontal motion and the phone strip remains visible.
+3. **Urgent-substance register:** the regardless-of-dose list is a single vertical emergency
+   register with substance, affected species and first action aligned on one scan line. Use one
+   alarm rule down the edge; do not scatter the items into icon tiles.
+4. **Threshold table with dose rails:** keep the evidence-first table, adding a short normalized
+   watch → call → go-now rail inside rows only where the literature supports bands. Rows with no
+   known safe dose instead show a hatched `NO THRESHOLD` field. Everyday-unit examples stay text;
+   the rails never pretend unlike toxins are comparable.
+5. **Chocolate calculation tape:** chocolate types form a vertical concentration ruler beside
+   one fully worked weight × amount × concentration calculation. Use simple wrapper/cocoa
+   silhouettes only as row locators, never brand-like packaging or candy photography.
+6. **Compound-case schematic:** the chocolate-plus-THC edible is one labelled convergence diagram
+   showing two hazards feeding one call decision. The human-medication section switches to a ruled
+   medicine-cabinet index; the household section switches again to a two-column species hazard
+   register. This variation is functional, not decorative.
+7. **What-not-to-do correction strip:** harmful actions appear as large crossed instruction labels
+   with a one-line mechanism beneath each — `NO PEROXIDE FOR CATS`, `NO VOMITING FOR CAUSTICS` —
+   rather than a red warning-card mosaic.
+8. **Vet-call tear sheet:** the final checklist looks like a detachable clipboard form with blank
+   lines wide enough to write on when printed. This is the only form-like object; it contains no
+   editable web inputs and requests no sensitive data.
+
+**Page rhythm and anti-patterns.** First two screens remain almost entirely tag + urgent register;
+only then alternate the dense threshold table with the calculation tape, a compact schematic,
+quiet registers and the printable tear sheet. Avoid pet photos, mascots, paw-print wallpaper,
+animations, gauges, countdowns, modal calculators, floating cards and repeated severity badges.
+Texture must be subtle and baked into element backgrounds so it never impairs scroll performance.
+The 1200×630 preview is the actual four-band tag plus phone/call preparation strip, with no cute
+animal imagery and no unverified dose examples.
