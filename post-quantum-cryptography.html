@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script>document.documentElement.classList.add('js');</script>
 <title>Comprehensive Guide to Post-Quantum Cryptography</title>
 <link href="https://cheatsheets.davidveksler.com/post-quantum-cryptography.html" rel="canonical"/>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous"/>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous"/>
 <style>
         /* Cyberpunk Theme for PQC Cheatsheet - Readability Focus */
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
     
         :root {
             --font-display: 'Orbitron', sans-serif;       /* Main H1 Title */
@@ -380,6 +379,210 @@
             text-decoration: none;
         }
     </style>
+<style>
+  /* Modern editorial layer: intentionally unlayered so it can supersede the legacy theme. */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body, h1, h2, h3, h4, h5, h6, p, ul, ol { margin: 0; }
+  button { font: inherit; }
+
+  :root {
+    color-scheme: dark light;
+    --ink: light-dark(#17212a, #e7edf2);
+    --muted: light-dark(#56636d, #9eabb5);
+    --paper: light-dark(#f2f0e9, #0b1116);
+    --surface: light-dark(#fffef9, #111a21);
+    --surface-2: light-dark(#e7ebe9, #17232c);
+    --line: light-dark(#bac5c3, #33434e);
+    --signal: light-dark(#006d70, #65dfe3);
+    --signal-soft: light-dark(#d5eeee, #123336);
+    --violet: light-dark(#6247a6, #b7a2ff);
+    --safe: light-dark(#28724b, #6cda99);
+    --warning: light-dark(#915b00, #f6c65b);
+    --danger: light-dark(#a2343e, #ff7d83);
+    --shadow: 0 18px 55px light-dark(rgb(27 45 48 / .12), rgb(0 0 0 / .34));
+    --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --serif: Georgia, "Times New Roman", serif;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+
+  body {
+    min-width: 0;
+    background:
+      linear-gradient(120deg, transparent 0 48.8%, light-dark(rgb(15 90 90 / .035), rgb(110 230 230 / .025)) 49% 51%, transparent 51.2%) 0 0 / 46px 46px,
+      var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.62;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: var(--signal); text-underline-offset: .2em; }
+  a:hover { text-decoration-thickness: .14em; }
+  :focus-visible { outline: 3px solid var(--warning); outline-offset: 3px; }
+  h1, h2, h3, h4, h5, h6 { line-height: 1.12; text-wrap: balance; }
+  p, li { text-wrap: pretty; }
+  code, .term { font-family: var(--mono); }
+  code { color: var(--violet); font-size: .92em; }
+  .container { width: min(1220px, calc(100% - 2rem)); margin-inline: auto; }
+
+  .skip-link {
+    position: fixed; left: 1rem; top: 1rem; z-index: 1100;
+    translate: 0 -180%; padding: .65rem .9rem; border-radius: .25rem;
+    background: var(--ink); color: var(--paper); font-weight: 850;
+  }
+  .skip-link:focus { translate: 0; }
+
+  .topbar { border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--paper) 94%, transparent); }
+  .topbar-inner { width: min(1220px, calc(100% - 2rem)); min-height: 3.25rem; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .brand { color: var(--ink); font-family: var(--mono); font-size: .76rem; font-weight: 900; letter-spacing: .11em; text-decoration: none; text-transform: uppercase; }
+  .brand .bi { color: var(--signal); margin-right: .35rem; }
+  .top-actions { display: flex; align-items: center; gap: .65rem; }
+  .top-link, .theme-button {
+    border: 1px solid var(--line); border-radius: .25rem; background: var(--surface);
+    color: var(--ink); font-family: var(--mono); font-size: .75rem; font-weight: 850;
+    letter-spacing: .03em; padding: .47rem .66rem; text-decoration: none;
+  }
+  .top-link:hover, .theme-button:hover { border-color: var(--signal); color: var(--signal); }
+  .theme-button { cursor: pointer; }
+
+  .hero-header { width: min(1220px, calc(100% - 2rem)); margin: 0 auto; padding: clamp(2.7rem, 7vw, 6.5rem) 0 clamp(2rem, 5vw, 4rem); background: transparent; border: 0; box-shadow: none; color: var(--ink); text-align: left; }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(16rem, .65fr); align-items: end; gap: clamp(2rem, 6vw, 5rem); }
+  .eyebrow { color: var(--signal); font-family: var(--mono); font-size: .76rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+  .hero-header h1 { color: var(--ink); font-family: var(--sans); font-size: clamp(2.8rem, 7.2vw, 6.5rem); letter-spacing: -.065em; margin: .55rem 0 0; max-width: 13ch; text-shadow: none; }
+  .title-kicker { display: block; color: var(--ink); }
+  .title-subject { display: block; color: var(--violet); font-family: var(--serif); font-style: italic; letter-spacing: -.045em; }
+  .hero-header .lead { color: var(--muted); font-family: var(--sans); font-size: clamp(1.04rem, 2vw, 1.28rem); font-weight: 400; max-width: 63ch; margin: 1.1rem 0 0; }
+  .migration-card { border-left: 4px solid var(--signal); padding-left: 1.05rem; }
+  .migration-card strong { color: var(--signal); display: block; font-family: var(--mono); font-size: .77rem; letter-spacing: .1em; text-transform: uppercase; }
+  .migration-card p { font-size: .94rem; margin-top: .38rem; }
+  .migration-path { color: var(--muted); font-family: var(--mono); font-size: .72rem; line-height: 1.7; margin-top: .7rem; }
+
+  .quick-nav { background: var(--surface); border-block: 1px solid var(--line); box-shadow: var(--shadow); }
+  .quick-nav-inner { width: min(1220px, calc(100% - 2rem)); margin-inline: auto; padding: .95rem 0; }
+  .quick-nav-label { color: var(--muted); display: block; font-family: var(--mono); font-size: .69rem; font-weight: 900; letter-spacing: .11em; margin-bottom: .55rem; text-transform: uppercase; }
+  .quick-nav-links { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .35rem; }
+  .quick-nav a { border: 1px solid transparent; color: var(--ink); font-family: var(--mono); font-size: .72rem; padding: .38rem .45rem; text-decoration: none; }
+  .quick-nav a span { color: var(--signal); margin-right: .35rem; }
+  .quick-nav a:hover { background: var(--signal-soft); border-color: var(--line); color: var(--signal); }
+
+  main.container { padding-top: clamp(3rem, 7vw, 6.5rem); }
+  .main-section { --section-accent-color: var(--signal); scroll-margin-top: 1rem; background: transparent; border: 0; margin: 0; padding: 0 0 clamp(3.5rem, 7vw, 6.5rem); }
+  .foundations-theme, .hardware-theme, .bitcoin-pqc-theme { --section-accent-color: var(--safe); }
+  .algorithms-theme, .geopolitics-theme, .applications-theme { --section-accent-color: var(--violet); }
+  .exploits-theme, .future-theme { --section-accent-color: var(--warning); }
+
+  .main-section-header { border-top: 2px solid var(--ink); border-bottom: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 1.2rem; padding: .95rem 0 0; margin-bottom: 1.2rem; position: static; }
+  .main-section-header::after { display: none; }
+  .main-section-header h2 { color: var(--ink); font-family: var(--sans); font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 750; letter-spacing: -.04em; text-transform: none; }
+  .main-section-header h2 .bi { color: var(--section-accent-color); font-size: .65em; margin-right: .55rem; vertical-align: .1em; }
+  .main-section-header > div { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
+  .btn { border: 1px solid var(--line); border-radius: .25rem; cursor: pointer; }
+  .main-section-header .btn { background: var(--surface); box-shadow: none; color: var(--muted); font-family: var(--mono); font-size: .69rem; font-weight: 850; letter-spacing: .04em; padding: .43rem .58rem; text-transform: uppercase; }
+  .main-section-header .btn:hover { background: var(--surface); border-color: var(--section-accent-color); box-shadow: none; color: var(--section-accent-color); }
+  .ms-2 { margin-left: 0; }
+
+  .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0; }
+  .row > [class*="col-"] { min-width: 0; width: auto; padding: 0; margin: 0 !important; }
+  .info-card { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--section-accent-color); border-radius: .32rem; box-shadow: none; display: flex; flex-direction: column; height: 100%; min-width: 0; overflow: clip; }
+  .info-card .card-header { background: transparent; border-bottom: 1px solid var(--line); min-height: 3.8rem; padding: .95rem 1rem .8rem; }
+  .info-card .card-header h5 { color: var(--ink); font-family: var(--sans); font-size: 1.03rem; font-weight: 750; }
+  .info-card .card-header h5 .bi { color: var(--section-accent-color); margin-right: .45rem; }
+  .info-card .card-body { display: flex; flex: 1; flex-direction: column; padding: .95rem 1rem 1rem; }
+  .info-card p.summary { color: var(--muted); flex: 1; font-size: .92rem; margin-bottom: .9rem; }
+  .details-toggle { align-items: center; background: var(--surface-2); box-shadow: none; color: var(--ink); display: flex; font-family: var(--mono); font-size: .72rem; font-weight: 900; justify-content: space-between; letter-spacing: .06em; margin-top: auto; padding: .54rem .65rem; text-transform: uppercase; width: 100%; }
+  .details-toggle:hover, .details-toggle[aria-expanded="true"] { background: var(--signal-soft); border-color: var(--section-accent-color); box-shadow: none; color: var(--section-accent-color); }
+  .js .collapse:not(.show) { display: none; }
+  html:not(.js) .details-toggle { display: none; }
+  html:not(.js) .collapse { display: block; }
+  .collapsing { height: 0; overflow: hidden; transition: height .25s ease; }
+  .collapse-content { background: var(--surface-2); border-top: 1px solid var(--line); color: var(--ink); font-size: .91rem; padding: 1.05rem; }
+  .collapse-content > * + * { margin-top: .72rem; }
+  .collapse-content h6 { color: var(--section-accent-color); font-family: var(--mono); font-size: .76rem; font-weight: 800; letter-spacing: .07em; margin: 1.15rem 0 0; text-transform: uppercase; }
+  .collapse-content ul, .collapse-content ol { padding-left: 1.25rem; }
+  .collapse-content li { color: var(--ink); margin-bottom: 0; }
+  .collapse-content li + li { margin-top: .48rem; }
+  .collapse-content li::marker { color: var(--section-accent-color); }
+  .collapse-content li strong { color: var(--ink); }
+
+  .term { background: var(--signal-soft); border: 1px solid color-mix(in srgb, var(--signal) 32%, var(--line)); border-radius: .2rem; color: var(--signal); cursor: help; font-size: .9em; font-weight: 700; padding: .12em .3em; }
+  .styled-list { list-style: none; padding-left: 0 !important; }
+  .styled-list li { padding-left: 1.35rem; position: relative; }
+  .styled-list li::before { color: var(--section-accent-color); content: "→"; font-family: var(--mono); left: 0; position: absolute; }
+
+  .callout { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--signal); color: var(--ink); margin: 1.1rem 0 0; padding: .8rem .9rem; }
+  .callout h5 { align-items: center; display: flex; font-family: var(--mono); font-size: .72rem; letter-spacing: .06em; margin-bottom: .48rem; text-transform: uppercase; }
+  .callout h5 .bi { margin-right: .4rem; }
+  .callout-security-alert { border-left-color: var(--danger); }
+  .callout-security-alert h5 { color: var(--danger); }
+  .callout-deep-dive { border-left-color: var(--safe); }
+  .callout-deep-dive h5 { color: var(--safe); }
+  .callout-future-watch { border-left-color: var(--violet); }
+  .callout-future-watch h5 { color: var(--violet); }
+  .callout-key-definition { border-left-color: var(--muted); }
+  .callout-key-definition h5 { color: var(--muted); }
+
+  .tooltip { display: block; font-family: var(--sans); font-size: .78rem; opacity: 0; position: absolute; z-index: 1080; }
+  .tooltip.show { opacity: 1; }
+  .tooltip-inner { background: var(--ink); border-radius: .25rem; color: var(--paper); max-width: 230px; padding: .45rem .6rem; text-align: center; }
+
+  footer.container { background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-size: .83rem; margin: 0 auto 1rem; padding: 1.4rem; text-align: center; }
+  footer p { font-family: var(--sans); font-size: .83rem; }
+  footer p + p { margin-top: .35rem; }
+  footer a { color: var(--signal); font-weight: 700; text-shadow: none; }
+  footer a:hover { color: var(--signal); text-decoration: underline; text-shadow: none; }
+  footer .mb-3 { margin-bottom: .9rem; }
+  footer .mb-2 { margin-bottom: .45rem; }
+  footer .mx-2 { display: inline-block; margin: .2rem .45rem; }
+  .related-cheatsheets { border-top: 1px solid var(--line); margin-top: 1rem; padding-top: .8rem; }
+  .cheatsheets-build-note { border-top: 1px solid var(--line); padding-top: .8rem; }
+  .small { font-size: .82rem; }
+  .link-secondary { color: var(--muted); }
+
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; align-items: start; gap: 1.8rem; }
+    .migration-card { max-width: 64ch; }
+    .row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .quick-nav-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 620px) {
+    .container, .hero-header, .topbar-inner, .quick-nav-inner { width: min(100% - 1rem, 1220px); }
+    .brand span, .top-link { display: none; }
+    .hero-header { padding-top: 2.4rem; }
+    .hero-header h1 { font-size: clamp(2.35rem, 12.5vw, 3.5rem); }
+    .title-subject { font-size: .9em; }
+    .main-section-header { grid-template-columns: 1fr; align-items: start; }
+    .main-section-header > div { justify-content: flex-start; }
+    .row { grid-template-columns: 1fr; }
+    .quick-nav-links { display: flex; overflow-x: auto; padding-bottom: .25rem; scrollbar-width: thin; }
+    .quick-nav a { flex: 0 0 auto; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    a, button { transition: color .16s ease, border-color .16s ease, background-color .16s ease; }
+    .info-card { transition: translate .18s ease, box-shadow .18s ease; }
+    .info-card:hover { border-color: var(--line); box-shadow: 0 12px 30px rgb(0 0 0 / .13); translate: 0 -2px; }
+  }
+  @media print {
+    :root { color-scheme: light; --paper: #fff; --surface: #fff; --surface-2: #f2f2f2; --ink: #000; --muted: #333; --line: #888; --signal: #005f62; --violet: #4f368e; --safe: #24633f; --warning: #704600; --danger: #8f2630; }
+    body { background: #fff; font-size: 9.5pt; }
+    .topbar, .quick-nav, .main-section-header > div, .details-toggle { display: none; }
+    .hero-header, .container { width: 100%; }
+    .hero-header { padding: 0 0 1rem; }
+    .hero-grid { grid-template-columns: 1fr; }
+    .hero-header h1 { font-size: 30pt; }
+    main.container { padding-top: 1rem; }
+    .main-section { break-before: page; padding-bottom: 0; }
+    .row { display: block; }
+    .row > [class*="col-"] { margin-bottom: .7rem !important; }
+    .info-card { break-inside: avoid; box-shadow: none; }
+    .collapse { display: block !important; height: auto !important; }
+    .collapse-content { font-size: 8.5pt; }
+    a { color: inherit; text-decoration: none; }
+    footer.container { break-before: page; margin: 0; }
+  }
+</style>
 <meta property="og:image:alt" content="Comprehensive Guide to Post-Quantum Cryptography">
 <meta content="images/post-quantum-cryptography.png" property="og:image"/><meta content="images/post-quantum-cryptography.png" name="twitter:image"/><meta content="The Comprehensive Guide to Post-Quantum Cryptography" property="og:title"/><meta content="The Comprehensive Guide to Post-Quantum Cryptography" name="twitter:title"/><meta content="A comprehensive, interactive guide to post-quantum cryptography: NIST-standardized algorithms, hardware and migration strategies, known exploits, and geopolitical and Bitcoin implications." property="og:description"/><meta content="A comprehensive, interactive guide to post-quantum cryptography: NIST-standardized algorithms, hardware and migration strategies, known exploits, and geopolitical and Bitcoin implications." name="twitter:description"/><meta content="A comprehensive, interactive guide to post-quantum cryptography: NIST-standardized algorithms, hardware and migration strategies, known exploits, and geopolitical and Bitcoin implications." name="description"/><meta content="website" property="og:type"/><meta content="https://cheatsheets.davidveksler.com/post-quantum-cryptography.html" property="og:url"/><meta content="summary_large_image" name="twitter:card"/><script type="application/ld+json">
 {
@@ -401,12 +604,49 @@
 </script>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to the guide</a>
+<nav class="topbar" aria-label="Page controls">
+<div class="topbar-inner">
+<a class="brand" href="index.php"><i class="bi bi-shield-check" aria-hidden="true"></i>DV<span> / Migration Notes</span></a>
+<div class="top-actions">
+<a class="top-link" href="#pqc-migration">Migration strategy ↓</a>
+<button class="theme-button" id="themeToggle" type="button" aria-label="Switch color theme">Theme: dark</button>
+</div>
+</div>
+</nav>
 <header class="hero-header">
-<h1><i class="bi bi-shield-lock-fill"></i> The Comprehensive Guide to Post-Quantum Cryptography</h1>
+<div class="hero-grid">
+<div>
+<p class="eyebrow">Quantum-resistant systems · Migration field guide</p>
+<h1><span class="title-kicker">Post-Quantum</span><span class="title-subject">Cryptography</span></h1>
 <p class="lead">Navigate the critical transition to quantum-resistant security. Understand the threats, explore
             the solutions, and prepare for the future of encryption.</p>
+</div>
+<aside class="migration-card" aria-label="Migration principle">
+<strong>Migration is a systems problem</strong>
+<p>Inventory where public-key cryptography lives before choosing replacements. Protocol limits, hardware, dependencies, and rollback plans decide whether an algorithm can ship safely.</p>
+<p class="migration-path">DISCOVER → PRIORITIZE → PILOT → VERIFY</p>
+</aside>
+</div>
 </header>
-<div class="container">
+<nav class="quick-nav" aria-label="Guide sections">
+<div class="quick-nav-inner">
+<span class="quick-nav-label">Quick navigation · 10-part field guide</span>
+<div class="quick-nav-links">
+<a href="#pqc-introduction"><span>01</span>Threat</a>
+<a href="#pqc-foundations"><span>02</span>Foundations</a>
+<a href="#pqc-algorithms-detail"><span>03</span>Algorithms</a>
+<a href="#pqc-hardware"><span>04</span>Hardware</a>
+<a href="#pqc-exploits"><span>05</span>Exploits</a>
+<a href="#pqc-migration"><span>06</span>Migration</a>
+<a href="#pqc-geopolitics"><span>07</span>Geopolitics</a>
+<a href="#pqc-applications"><span>08</span>Applications</a>
+<a href="#bitcoin-pqc"><span>09</span>Bitcoin</a>
+<a href="#pqc-future"><span>10</span>Future</a>
+</div>
+</div>
+</nav>
+<main class="container" id="main">
 <!-- Section 1: Introduction to Post-Quantum Cryptography -->
 <section class="main-section introduction-theme" id="pqc-introduction">
 <div class="main-section-header d-flex justify-content-between align-items-center mb-4">
@@ -1951,19 +2191,57 @@
 </div>
 </div>
 </section>
-</div>
+</main>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
 <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Initialize Bootstrap tooltips
-            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
+            // Theme control with storage feature-detection and a soft fallback.
+            const root = document.documentElement;
+            const themeButton = document.getElementById('themeToggle');
+            const themes = ['auto', 'dark', 'light'];
+            const storageKey = 'post-quantum-cryptography-theme';
+            let savedTheme = 'dark';
+            try { savedTheme = localStorage.getItem(storageKey) || 'dark'; } catch (error) { /* fail soft */ }
+
+            function applyTheme(theme) {
+                if (theme === 'auto') root.removeAttribute('data-theme');
+                else root.dataset.theme = theme;
+                themeButton.textContent = `Theme: ${theme}`;
+                themeButton.setAttribute('aria-label', `Color theme is ${theme}; activate to change`);
+            }
+
+            if (!themes.includes(savedTheme)) savedTheme = 'auto';
+            applyTheme(savedTheme);
+            themeButton.addEventListener('click', function () {
+                const current = root.dataset.theme || 'auto';
+                const next = themes[(themes.indexOf(current) + 1) % themes.length];
+                applyTheme(next);
+                try { localStorage.setItem(storageKey, next); } catch (error) { /* fail soft */ }
             });
 
             // Update year in footer
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            const currentYear = document.getElementById('currentYear');
+            if (currentYear) currentYear.textContent = new Date().getFullYear();
+
+            function setDisclosure(panel, expanded) {
+                panel.classList.toggle('show', expanded);
+                document.querySelectorAll(`[data-bs-target="#${panel.id}"]`).forEach(button => {
+                    button.setAttribute('aria-expanded', String(expanded));
+                    const icon = button.querySelector('.bi');
+                    if (icon) {
+                        icon.classList.toggle('bi-chevron-down', !expanded);
+                        icon.classList.toggle('bi-chevron-up', expanded);
+                    }
+                });
+            }
+
+            document.querySelectorAll('.details-toggle').forEach(button => {
+                const target = document.querySelector(button.getAttribute('data-bs-target'));
+                if (!target) return;
+                button.addEventListener('click', function () {
+                    setDisclosure(target, !target.classList.contains('show'));
+                });
+            });
 
             // Expand/Collapse All functionality
             document.querySelectorAll('.btn-expand-all').forEach(button => {
@@ -1972,8 +2250,7 @@
                     const section = document.getElementById(sectionId);
                     if (section) {
                         section.querySelectorAll('.collapse').forEach(collapseElement => {
-                            const bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, { toggle: false });
-                            bsCollapse.show();
+                            setDisclosure(collapseElement, true);
                         });
                     }
                 });
@@ -1985,34 +2262,10 @@
                     const section = document.getElementById(sectionId);
                     if (section) {
                         section.querySelectorAll('.collapse').forEach(collapseElement => {
-                            const bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, { toggle: false });
-                            bsCollapse.hide();
+                            setDisclosure(collapseElement, false);
                         });
                     }
                 });
-            });
-
-            // Optional: Update details toggle button icon
-            document.querySelectorAll('.details-toggle').forEach(button => {
-                const targetId = button.getAttribute('data-bs-target');
-                const collapseElement = document.querySelector(targetId);
-                const icon = button.querySelector('.bi');
-
-                if (collapseElement && icon) {
-                    collapseElement.addEventListener('show.bs.collapse', function () {
-                        icon.classList.remove('bi-chevron-down');
-                        icon.classList.add('bi-chevron-up');
-                    });
-                    collapseElement.addEventListener('hide.bs.collapse', function () {
-                        icon.classList.remove('bi-chevron-up');
-                        icon.classList.add('bi-chevron-down');
-                    });
-                    // Ensure correct initial state if some are pre-expanded
-                    if (collapseElement.classList.contains('show')) {
-                        icon.classList.remove('bi-chevron-down');
-                        icon.classList.add('bi-chevron-up');
-                    }
-                }
             });
         });
     </script>
