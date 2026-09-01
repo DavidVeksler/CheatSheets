@@ -4,98 +4,321 @@
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/crypto-exchange-architecture.html">
 <meta property="og:title" content="Crypto Exchange Architecture: Ledger, Matching, Wallet Boundary"><meta property="og:description" content="Design a crypto exchange around deterministic matching, a double-entry ledger, wallet-boundary invariants, deposit and withdrawal pipelines, reconciliation, and proof of reserves."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/crypto-exchange-architecture.html"><meta property="og:image" content="images/crypto-exchange-architecture.png"><meta property="og:image:alt" content="Crypto exchange system map with a heavy wallet boundary and ledger invariant">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Crypto Exchange Architecture: Ledger, Matching, Wallet Boundary"><meta name="twitter:description" content="Design a crypto exchange around deterministic matching, a double-entry ledger, wallet-boundary invariants, deposit and withdrawal pipelines, reconciliation, and proof of reserves."><meta name="twitter:image" content="images/crypto-exchange-architecture.png"><meta name="twitter:creator" content="@heroiclife">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Crypto Exchange Architecture: Ledger, Matching, Wallet Boundary","description":"Design a crypto exchange around deterministic matching, a double-entry ledger, wallet-boundary invariants, deposit and withdrawal pipelines, reconciliation, and proof of reserves.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-08-31","dateModified":"2026-08-31","keywords":"crypto exchange architecture, matching engine, double entry ledger, wallet system, proof of reserves"}</script><style>
-@layer reset, tokens, base, layout, components, print;
+@layer reset, tokens, base, layout, components, diagram, print;
+
 @layer tokens {
   :root {
     color-scheme: light dark;
-    --paper: light-dark(#faf9f7, #0f172a); --surface: light-dark(#ffffff, #182235);
-    --surface-2: light-dark(#f4f1ed, #111c2e); --ink: light-dark(#172033, #e7edf6);
-    --muted: light-dark(#586273, #a9b5c7); --line: light-dark(#d8d3cc, #334155);
-    --accent: light-dark(#86198f, #e879f9); --accent-soft: light-dark(#fae8ff, #3b1641);
-    --safe: light-dark(#166534, #86efac); --safe-bg: light-dark(#dcfce7, #12351f);
-    --warn: light-dark(#92400e, #fcd34d); --warn-bg: light-dark(#fef3c7, #3b2a0d);
-    --danger: light-dark(#991b1b, #fca5a5); --danger-bg: light-dark(#fee2e2, #401719);
-    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --accent: light-dark(#37505f, #9db8c9);
+    --accent-soft: light-dark(color-mix(in srgb, #37505f 11%, #ffffff), color-mix(in srgb, #9db8c9 17%, #0d0c15));
+    --lattice: light-dark(color-mix(in srgb, #37505f 17%, transparent), color-mix(in srgb, #9db8c9 13%, transparent));
+    --paper: light-dark(color-mix(in srgb, #37505f 7%, #f4f3f6), color-mix(in srgb, #9db8c9 5%, #0c0b12));
+    --surface: light-dark(#ffffff, color-mix(in srgb, #9db8c9 7%, #17161f));
+    --surface-2: light-dark(color-mix(in srgb, #37505f 11%, #ecebef), color-mix(in srgb, #9db8c9 6%, #121118));
+    --ink: light-dark(#16151f, #e9e7f3);
+    --muted: light-dark(#55536c, #a3a0bb);
+    --faint: light-dark(#5d5b72, #8a87a7);
+    --line: light-dark(color-mix(in srgb, #37505f 22%, #c9c6d2), color-mix(in srgb, #9db8c9 18%, #2c2a38));
+    --safe: light-dark(#146c43, #7fe3ab); --safe-bg: light-dark(#dcf0e4, #10301f);
+    --warn: light-dark(#8a5407, #f0c05a); --warn-bg: light-dark(#f8eed6, #322612);
+    --danger: light-dark(#98202f, #f7909d); --danger-bg: light-dark(#f8dfe2, #351520);
+    --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --display: "Archivo", "Public Sans", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"]  { color-scheme: dark; }
+}
+
+@layer reset {
+  *,*::before,*::after{box-sizing:border-box}
+  body,h1,h2,h3,p,figure{margin:0}
+  table{border-collapse:collapse}
+  img,svg{display:block;max-width:100%}
+  button,input{font:inherit;color:inherit}
+}
+
+@layer base {
+  body{
+    background:
+      radial-gradient(circle at 16% -8%, color-mix(in srgb,var(--accent) 8%,transparent), transparent 38%),
+      radial-gradient(circle at 94% 0%, color-mix(in srgb,var(--accent) 5%,transparent), transparent 32%),
+      repeating-linear-gradient(180deg, var(--lattice) 0 1px, transparent 1px 28px),
+      var(--paper);
+    color:var(--ink);
+    font:400 1rem/1.6 var(--sans);
+    text-wrap:pretty;
+  }
+  a{color:var(--accent);font-weight:600;text-decoration-thickness:.08em;text-underline-offset:.18em}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:2px}
+  code,.mono{font-family:var(--mono)}
+  td:nth-child(n+2),.num{font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.1;letter-spacing:-.03em}
+  h1{font-size:clamp(2.3rem,6.5vw,4.5rem);font-weight:800;letter-spacing:-.05em;max-width:15ch}
+  h2{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800}
+  h3{font-size:1rem;font-weight:600;letter-spacing:-.01em}
+  p+p{margin-top:.72rem}
+  pre{overflow-x:auto;background:var(--surface);border:1px solid var(--line);padding:.9rem;font-size:.8rem}
+  .skip{position:absolute;left:-9999px;top:0;z-index:99;background:var(--accent);color:var(--surface);
+    padding:.6rem 1rem;font:600 .85rem var(--mono)}
+  .skip:focus{left:.5rem;top:.5rem}
+}
+
+@layer layout {
+  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}
+  .mid{width:min(920px,100%)}
+  .utility{position:sticky;top:0;z-index:8;background:var(--surface);border-bottom:1px solid var(--line)}
+  .utility .shell{display:flex;align-items:center;gap:.75rem;padding-block:.5rem;flex-wrap:wrap}
+  .utility .wordmark{font:600 .68rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .filter{flex:1 1 14rem;min-width:0}
+  .filter input{width:100%;padding:.42rem .7rem;border:1px solid var(--line);border-radius:3px;
+    background:var(--paper);color:var(--ink);font:500 .8rem/1.3 var(--mono)}
+  .filter input::placeholder{color:var(--faint)}
+  .btn{border:1px solid var(--line);border-radius:3px;background:var(--paper);cursor:pointer;
+    padding:.42rem .7rem;font:500 .68rem/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .btn:hover{color:var(--ink);border-color:var(--accent)}
+  .filter-status{font:500 .68rem/1 var(--mono);color:var(--faint);white-space:nowrap}
+
+  .masthead{padding:clamp(2rem,5vw,3.6rem) 0 1.4rem}
+  .eyebrow{color:var(--accent);font:600 .74rem/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;margin-bottom:1rem}
+  .dek{color:var(--muted);font-size:clamp(1rem,1.9vw,1.22rem);max-width:66ch;margin-top:1.1rem}
+  .meta{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;margin-top:1.2rem;color:var(--faint);font:500 .74rem/1.4 var(--mono)}
+
+  nav.sections{position:sticky;top:2.6rem;z-index:6;background:var(--surface);border-block:1px solid var(--line)}
+  nav.sections .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.6rem 0}
+  nav.sections a{white-space:nowrap;font-size:.82rem;font-weight:600}
+
+  main{padding-bottom:4rem}
+  .sheet-section{margin-top:clamp(2.4rem,5.5vw,4rem);scroll-margin-top:6rem}
+  .section-note{color:var(--muted);max-width:68ch;margin-bottom:1.1rem}
+  .entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:.8rem}
+}
+
+@layer components {
+  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.18rem .5rem;
+    font:600 .7rem/1.35 var(--mono);white-space:nowrap}
+  .signal.safe{color:var(--safe);background:var(--safe-bg)}
+  .signal.warn{color:var(--warn);background:var(--warn-bg)}
+  .signal.danger{color:var(--danger);background:var(--danger-bg)}
+
+  /* Instrument panel: the values that define the topic, above the fold. */
+  .instrument{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:1px;
+    background:var(--line);border:1px solid var(--line);border-top:4px solid var(--accent)}
+  .instrument div{background:var(--surface);padding:.9rem 1rem;display:grid;gap:.24rem;align-content:start}
+  .instrument .k{font:500 .66rem/1.3 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+  .instrument .v{font-family:var(--display);font-weight:800;font-size:clamp(1.25rem,2.9vw,1.85rem);
+    letter-spacing:-.045em;line-height:1.05;color:var(--accent);font-variant-numeric:tabular-nums}
+  .instrument .s{font:400 .74rem/1.4 var(--mono);color:var(--muted)}
+
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+  table{width:100%;min-width:700px;font-size:.87rem}
+  th,td{padding:.7rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+  th{position:sticky;top:0;background:var(--surface-2);z-index:1;
+    font:600 .7rem/1.3 var(--sans);letter-spacing:.05em;text-transform:uppercase}
+  tbody tr:hover{background:var(--accent-soft)}
+  td:first-child{font-weight:600;min-width:11rem}
+  tbody tr:last-child td{border-bottom:0}
+
+  /* Severity encoded in form, not only in words. */
+  td.sev{white-space:nowrap}
+  td.sev::before{content:"";display:inline-block;width:.22rem;height:.95em;border-radius:1px;
+    margin-right:.5rem;vertical-align:-.13em;background:var(--sev,var(--line))}
+  tr[data-sev="danger"] td.sev{--sev:var(--danger)}
+  tr[data-sev="warn"]   td.sev{--sev:var(--warn)}
+  tr[data-sev="safe"]   td.sev{--sev:var(--safe)}
+
+  /* Magnitude inside the cell: one gradient, no extra markup, prints fine. */
+  td.bar{min-width:8rem}
+  td.bar span{display:block;height:.62rem;border-radius:1px;
+    background:linear-gradient(90deg,var(--c,var(--accent)) var(--w),color-mix(in srgb,var(--line) 55%,transparent) var(--w))}
+
+  /* Log axis: for columns whose values span more than a decade. */
+  .axis{display:grid;gap:.15rem;min-width:30rem}
+  .axis-ticks{position:relative;height:1.35rem;margin-left:11rem;border-bottom:1px solid var(--line)}
+  .axis-ticks span{position:absolute;left:var(--x);transform:translateX(-50%);bottom:.28rem;
+    font:500 .64rem/1 var(--mono);color:var(--faint);white-space:nowrap}
+  .axis-ticks span::after{content:"";position:absolute;left:50%;bottom:-.32rem;width:1px;height:.28rem;background:var(--line)}
+  .axis-ticks span:last-child{transform:translateX(-100%)}
+  .axis-ticks span:last-child::after{left:100%}
+  .axis-row{display:grid;grid-template-columns:11rem 1fr;align-items:center;padding-block:.16rem}
+  .axis-row .name{font:500 .78rem/1.3 var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:.6rem}
+  .axis-track{position:relative;height:1.15rem;
+    background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--line) 55%,transparent) 0 1px,transparent 1px 25%)}
+  .axis-track i{position:absolute;left:var(--x);top:50%;translate:-50% -50%;
+    width:.62rem;height:.62rem;border-radius:50%;background:var(--dot,var(--accent));
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--dot,var(--accent)) 22%,transparent)}
+  .axis-track b{position:absolute;left:var(--x);top:50%;translate:.75rem -50%;
+    font:500 .68rem/1 var(--mono);color:var(--muted);white-space:nowrap}
+  .axis-row.flip .axis-track b{translate:-.75rem -50%;transform:translateX(-100%)}
+
+  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0;display:grid;gap:.6rem;align-content:start}
+  .entry h3{border-left:3px solid var(--accent);padding-left:.6rem}
+  .entry p{font-size:.9rem;margin:0}
+  .example,.gotcha{padding:.6rem .65rem;border-left:2px solid var(--safe);background:var(--safe-bg);font-size:.86rem}
+  .gotcha{border-color:var(--danger);background:var(--danger-bg)}
+  .example strong,.gotcha strong{display:block;font:600 .66rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.2rem}
+
+  .checklist ol{list-style:none;padding:0;margin:0;display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:.5rem;counter-reset:steps}
+  .checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);
+    padding:.75rem .85rem;font-size:.9rem;display:grid;grid-template-columns:auto 1fr;gap:.6rem;align-items:baseline}
+  .checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:600 .72rem/1.5 var(--mono)}
+
+  /* Progressive disclosure on the edge/advanced tier. */
+  .drawers{display:grid;gap:.5rem}
+  details.drawer{background:var(--surface);border:1px solid var(--line)}
+  details.drawer summary{cursor:pointer;padding:.8rem 1rem;font-family:var(--display);font-weight:600;
+    font-size:1rem;letter-spacing:-.01em;display:flex;align-items:center;gap:.6rem;list-style:none}
+  details.drawer summary::-webkit-details-marker{display:none}
+  details.drawer summary::before{content:"+";color:var(--accent);font:600 1rem/1 var(--mono);width:1ch}
+  details.drawer[open] summary::before{content:"\2212"}
+  details.drawer summary:hover{background:var(--accent-soft)}
+  details.drawer .drawer-body{padding:0 1rem 1rem;display:grid;gap:.6rem}
+  details.drawer .drawer-body p{font-size:.9rem;margin:0}
+
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}
+  .flow div{padding:.9rem;background:var(--surface);border:1px solid var(--line)}
+  .flow b{display:block;color:var(--accent);font:700 .68rem/1 var(--mono);margin-bottom:.45rem;letter-spacing:.06em}
+  .flow p{font-size:.83rem;margin:0}
+  .equation{font:700 clamp(.92rem,2.2vw,1.25rem)/1.45 var(--mono);padding:1rem;border:1px dashed var(--accent);
+    background:var(--accent-soft);overflow-wrap:anywhere;margin:1rem 0}
+  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}
+
+  .sources ul{list-style:none;padding:0;margin:0;display:grid;gap:.5rem}
+  .sources li{display:grid;grid-template-columns:minmax(15rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}
+  .sources span{color:var(--muted);font-size:.87rem}
+
+  .related{margin-top:3.5rem;border:1px solid var(--line);border-top:3px solid var(--accent);
+    padding:1rem 1.1rem;background:var(--surface-2)}
+  .related h2{font-size:1rem;font-weight:600;margin-bottom:.7rem}
+  .related div{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem}
+  .related a{font-size:.85rem}
+  footer.sheet-foot{margin-top:2rem;color:var(--faint);font:400 .78rem/1.6 var(--mono)}
+  [hidden]{display:none !important}
+}
+
+/* Diagrams: tokens + currentColor, so they theme and print for free. */
+@layer diagram {
+  figure.plate{margin:0;background:var(--surface);border:1px solid var(--line);padding:1rem}
+  figure.plate svg{width:100%;height:auto;margin-inline:auto;max-width:44rem}
+  figcaption{margin-top:.7rem;color:var(--muted);font-size:.85rem;text-align:center;text-wrap:balance}
+  .dg-field{fill:var(--surface-2);stroke:var(--line)}
+  .dg-lbl{font:500 9px var(--mono);fill:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+  .dg-cap{font:600 11px var(--mono);fill:var(--ink)}
+  .dg-node{fill:var(--surface);stroke:var(--ink);stroke-width:1.4}
+  .dg-node.on{fill:var(--safe-bg);stroke:var(--safe);stroke-width:2.2}
+  .dg-node.end{fill:var(--danger-bg);stroke:var(--danger);stroke-width:2}
+  .dg-node.hot{fill:var(--warn-bg);stroke:var(--warn);stroke-width:2}
+  .dg-quorum{fill:none;stroke:var(--safe);stroke-width:2.2;stroke-dasharray:5 4}
+  .dg-cross{fill:none;stroke:var(--danger);stroke-width:1.8;stroke-dasharray:3 3}
+  .dg-flow{fill:none;stroke:var(--accent);stroke-width:1.6}
+  .dg-flow.dim{stroke:var(--line);stroke-width:1.2}
+  .dg-brace{fill:none;stroke:var(--accent);stroke-width:1.2}
+  .dg-ok{fill:var(--safe);font:600 10px var(--mono)}
+  .dg-no{fill:var(--danger);font:600 10px var(--mono)}
+  .dg-acc{fill:var(--accent);font:600 10px var(--mono)}
+}
+
+@layer print {
+  @media print{
+    body{background:#fff;color:#000}
+    .utility,nav.sections,.related{display:none}
+    .shell,.mid{width:100%}
+    .sheet-section{break-inside:avoid;margin-top:1.3rem}
+    .entry,.checklist li,figure.plate,details.drawer{break-inside:avoid}
+    details.drawer summary::before{content:""}
+    a{color:inherit;text-decoration:none}
+    .table-wrap{overflow:visible;border:1px solid #999}
+    table{min-width:0;font-size:7.6pt}
+    th{position:static}
+    .instrument{border-top-width:2px}
+  }
+  @media(max-width:600px){
+    .shell{width:min(100% - 1rem,1180px)}
+    .masthead{padding-top:1.2rem}
+    .sources li{grid-template-columns:1fr}
+    .entry-grid{grid-template-columns:1fr}
+    nav.sections{top:0}
+  }
+  @media(prefers-reduced-motion:no-preference){
+    html{scroll-behavior:smooth}
+    .btn,.filter input,tbody tr,details.drawer summary{transition:background-color .15s,border-color .15s,color .15s}
   }
 }
-@layer reset { *,*::before,*::after{box-sizing:border-box} body,h1,h2,h3,p{margin:0} table{border-collapse:collapse} }
-@layer base {
-  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;text-wrap:pretty}
-  a{color:var(--accent);font-weight:650;text-decoration-thickness:.08em;text-underline-offset:.18em}
-  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-  code,.mono,td:nth-child(n+2){font-family:var(--mono);font-variant-numeric:tabular-nums}
-  h1,h2,h3{text-wrap:balance;line-height:1.15} h1{font-size:clamp(2rem,6vw,4.25rem);letter-spacing:-.045em;max-width:18ch}
-  h2{font-size:clamp(1.45rem,3vw,2.15rem);margin-bottom:1rem} h3{font-size:1.02rem;letter-spacing:.015em}
-  p+p{margin-top:.72rem}
-}
-@layer layout {
-  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}.masthead{padding:2.2rem 0 1.5rem;border-bottom:1px solid var(--line)}
-  .eyebrow{color:var(--accent);font:700 .76rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem}
-  .dek{color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);max-width:72ch;margin-top:1rem}
-  .meta{display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:1.2rem;color:var(--muted);font:600 .78rem/1.4 var(--mono)}
-  nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 94%,transparent);border-bottom:1px solid var(--line)}
-  nav .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.65rem 0}nav a{white-space:nowrap;font-size:.82rem}
-  main{padding:1.5rem 0 4rem}.sheet-section{margin-top:clamp(2.2rem,6vw,4.5rem);scroll-margin-top:4rem}
-  .section-note{color:var(--muted);max-width:85ch;margin-bottom:1rem}.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:.8rem}
-}
-@layer components {
-  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.2rem .55rem;font:800 .72rem/1 var(--mono);white-space:nowrap}
-  .signal.safe{color:var(--safe);background:var(--safe-bg)}.signal.warn{color:var(--warn);background:var(--warn-bg)}.signal.danger{color:var(--danger);background:var(--danger-bg)}
-  .quick{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--accent);padding:clamp(1rem,3vw,2rem);box-shadow:0 16px 36px rgba(15,23,42,.08)}
-  .quick h2{display:flex;align-items:center;gap:.6rem}.quick h2::before{content:"CONTROL REGISTER";font:800 .64rem/1 var(--mono);letter-spacing:.1em;color:var(--paper);background:var(--accent);padding:.38rem .5rem}
-  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}table{width:100%;min-width:720px;font-size:.86rem}
-  th,td{padding:.72rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{position:sticky;top:0;background:var(--surface-2);font:800 .72rem/1.25 var(--sans);letter-spacing:.04em;text-transform:uppercase}
-  tbody tr:hover{background:var(--accent-soft)}td:first-child{font-family:var(--sans);font-weight:760;min-width:12rem}tbody tr:last-child td{border-bottom:0}
-  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0}.entry h3{border-left:3px solid var(--accent);padding-left:.65rem;margin-bottom:.65rem}
-  .entry p{font-size:.9rem}.example,.gotcha{padding:.65rem;border-left:2px solid var(--safe);background:var(--safe-bg)}.gotcha{border-color:var(--danger);background:var(--danger-bg)}
-  .checklist ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:.5rem;counter-reset:steps}.checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);padding:.8rem}.checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:800 .7rem/1 var(--mono);margin-right:.55rem}
-  .sources ul{list-style:none;padding:0;display:grid;gap:.5rem}.sources li{display:grid;grid-template-columns:minmax(16rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}.sources span{color:var(--muted);font-size:.86rem}
-  .related{margin-top:4rem;border:1px solid var(--line);padding:1rem;background:var(--surface-2)}.related h2{font-size:1rem}.related div{display:flex;flex-wrap:wrap;gap:.55rem 1rem}.related a{font-size:.84rem}
-  .equation{font:800 clamp(1rem,3vw,1.55rem)/1.4 var(--mono);padding:1rem;border:1px dashed var(--accent);background:var(--accent-soft);overflow-wrap:anywhere}
-  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}.flow div{position:relative;padding:1rem;background:var(--surface);border:1px solid var(--line);min-height:7rem}.flow b{display:block;color:var(--accent);font:800 .7rem/1 var(--mono);margin-bottom:.5rem}.flow p{font-size:.83rem}
-  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}.print-only{display:none}
-}
-@layer print {
-  @media print{nav{display:none}.shell{width:100%}.sheet-section{break-inside:avoid;margin-top:1.3rem}.entry{break-inside:avoid}a{color:inherit}.print-only{display:block}.table-wrap{overflow:visible}table{min-width:0;font-size:7.7pt}th{position:static}}
-  @media(max-width:600px){.shell{width:min(100% - 1rem,1180px)}.masthead{padding-top:1.2rem}.sources li{grid-template-columns:1fr}.quick{padding:.8rem}.table-wrap{margin-inline:-.5rem}.entry-grid{grid-template-columns:1fr}}
-}
 </style></head>
-<body><header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance · engineering reference</p><h1>Crypto exchange architecture</h1><p class="dek">The matching engine makes trades; the ledger makes them true; the wallet subsystem crosses into a chain. Most catastrophic defects live at the boundary between those statements.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
-<nav aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#matching-engine">Matching engine</a><a href="#ledger-design-rules">Ledger design rules</a><a href="#wallet-boundary-crossings">Wallet-boundary crossings</a><a href="#addressing-model-comparison">Addressing model comparison</a><a href="#withdrawal-pipeline-at-scale">Withdrawal pipeline at scale</a><a href="#proof-of-reserves-constructions">Proof-of-reserves constructions</a><a href="#risk-apis--market-data">Risk, APIs &amp; market data</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
-<main class="shell"><section class="quick" id="quick-reference" aria-labelledby="quick-title"><h2 id="quick-title">The system map and hard invariant</h2><div class="flow"><div><b>CLIENT</b><p>REST · WebSocket · FIX</p></div><div><b>RISK</b><p>Balance holds · limits · STP</p></div><div><b>SEQUENCER</b><p>Total ordered commands</p></div><div><b>MATCHER</b><p>Deterministic in-memory book</p></div><div><b>LEDGER</b><p>Immutable double-entry truth</p></div><div><b>WALLET BOUNDARY</b><p>Deposit · withdrawal · sweep · rebalance</p></div></div><p class="equation">customer liabilities + fees + firm position = on-chain holdings + in-flight settlements + receivables</p><p class="callout"><strong>Continuous assertion:</strong> if the equation breaks, stop withdrawals before explaining the difference.</p></section>
+<body>
+<a class="skip" href="#main">Skip to reference</a>
+<div class="utility"><div class="shell"><span class="wordmark">Crypto exchange architecture</span>
+<div class="filter"><label class="skip" for="sheet-filter">Filter this sheet</label>
+<input id="sheet-filter" type="search" autocomplete="off" placeholder="Filter rows &amp; entries"></div>
+<span class="filter-status" id="filter-status" role="status" aria-live="polite"></span>
+<button class="btn" id="theme-btn" type="button" aria-pressed="false">Theme</button></div></div>
+<header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance &middot; engineering reference</p><h1>Crypto exchange architecture</h1><p class="dek">The matching engine makes trades; the ledger makes them true; the wallet subsystem crosses into a chain. Most catastrophic defects live at the boundary between those statements.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<nav class="sections" aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#matching-engine">Matching engine</a><a href="#ledger-design-rules">Ledger design rules</a><a href="#wallet-boundary-crossings">Wallet-boundary crossings</a><a href="#addressing-model-comparison">Addressing model comparison</a><a href="#withdrawal-pipeline-at-scale">Withdrawal pipeline at scale</a><a href="#proof-of-reserves-constructions">Proof-of-reserves constructions</a><a href="#risk-apis--market-data">Risk, APIs &amp; market data</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
+<main id="main" class="shell">
+<section class="sheet-section" id="quick-reference" aria-labelledby="quick-title" style="margin-top:1.6rem"><h2 id="quick-title">The system map and hard invariant</h2>
+<p class="section-note">The matching engine makes trades; the ledger makes them true. Most catastrophic defects live at the boundary between those statements.</p><div class="instrument"><div><span class="k">Stages</span><span class="v">6</span><span class="s">client &rarr; wallet boundary</span></div><div><span class="k">Ledger</span><span class="v">double entry</span><span class="s">&Sigma; postings = 0</span></div><div><span class="k">Arithmetic</span><span class="v">integers</span><span class="s">minor units only</span></div><div><span class="k">Available</span><span class="v">total &minus; holds</span><span class="s">never a mutable row</span></div><div><span class="k">Crossings</span><span class="v">5</span><span class="s">deposit &middot; withdrawal &middot; sweep &hellip;</span></div><div><span class="k">On break</span><span class="v">STOP</span><span class="s">halt withdrawals first</span></div></div></section>
+<section class="sheet-section" aria-label="Quick reference detail"><div class="flow"><div><b>CLIENT</b><p>REST · WebSocket · FIX</p></div><div><b>RISK</b><p>Balance holds · limits · STP</p></div><div><b>SEQUENCER</b><p>Total ordered commands</p></div><div><b>MATCHER</b><p>Deterministic in-memory book</p></div><div><b>LEDGER</b><p>Immutable double-entry truth</p></div><div><b>WALLET BOUNDARY</b><p>Deposit · withdrawal · sweep · rebalance</p></div></div><p class="equation">customer liabilities + fees + firm position = on-chain holdings + in-flight settlements + receivables</p><p class="callout"><strong>Continuous assertion:</strong> if the equation breaks, stop withdrawals before explaining the difference.</p></section>
+
+    <section class="sheet-section" aria-labelledby="system-map-figure">
+      <h2 id="system-map-figure">The system map and its hard invariant</h2>
+      <p class="section-note">One boundary matters more than the rest: the only place where a ledger statement becomes an irreversible chain event.</p>
+      <figure class="plate"><svg viewBox="0 0 620 240" role="img" aria-labelledby="ex-t ex-d">
+<title id="ex-t">Exchange system map with the wallet boundary and the ledger invariant</title>
+<desc id="ex-d">Client, risk, sequencer and matcher feed a double-entry ledger. The wallet boundary is the only place value crosses onto a chain, and the balance invariant must hold continuously across it.</desc>
+<defs><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--accent)"/></marker></defs>
+<rect class="dg-node" x="6" y="30" width="110" height="42" rx="3"/><rect class="dg-node" x="132" y="30" width="110" height="42" rx="3"/>
+<rect class="dg-node" x="258" y="30" width="110" height="42" rx="3"/><rect class="dg-node" x="384" y="30" width="110" height="42" rx="3"/>
+<text class="dg-cap" x="61" y="49" text-anchor="middle">Client</text><text class="dg-lbl" x="61" y="64" text-anchor="middle">REST &middot; WS &middot; FIX</text>
+<text class="dg-cap" x="187" y="49" text-anchor="middle">Risk</text><text class="dg-lbl" x="187" y="64" text-anchor="middle">holds &middot; limits</text>
+<text class="dg-cap" x="313" y="49" text-anchor="middle">Sequencer</text><text class="dg-lbl" x="313" y="64" text-anchor="middle">total order</text>
+<text class="dg-cap" x="439" y="49" text-anchor="middle">Matcher</text><text class="dg-lbl" x="439" y="64" text-anchor="middle">in-memory book</text>
+<path class="dg-flow" d="M116 51 H128" marker-end="url(#ar)"/><path class="dg-flow" d="M242 51 H254" marker-end="url(#ar)"/><path class="dg-flow" d="M368 51 H380" marker-end="url(#ar)"/>
+<rect class="dg-node on" x="132" y="106" width="362" height="44" rx="3"/>
+<text class="dg-cap" x="313" y="126" text-anchor="middle">Ledger &mdash; immutable double entry</text>
+<text class="dg-lbl" x="313" y="142" text-anchor="middle">the only authority on customer liability</text>
+<path class="dg-flow" d="M439 72 V102" marker-end="url(#ar)"/>
+<path class="dg-cross" style="stroke-width:2.6" d="M6 172 H614"/>
+<text class="dg-no" x="6" y="166" text-anchor="start">WALLET BOUNDARY &mdash; the only crossing onto a chain</text>
+<path class="dg-flow" d="M470 150 V168" marker-end="url(#ar)"/>
+<rect class="dg-node" x="30" y="182" width="122" height="34" rx="3"/><rect class="dg-node" x="176" y="182" width="122" height="34" rx="3"/>
+<rect class="dg-node" x="322" y="182" width="122" height="34" rx="3"/><rect class="dg-node" x="468" y="182" width="122" height="34" rx="3"/>
+<text class="dg-lbl" x="91" y="203" text-anchor="middle">deposit</text><text class="dg-lbl" x="237" y="203" text-anchor="middle">withdrawal</text>
+<text class="dg-lbl" x="383" y="203" text-anchor="middle">sweep</text><text class="dg-lbl" x="529" y="203" text-anchor="middle">rebalance</text>
+<text class="dg-acc" x="310" y="234" text-anchor="middle">If the balance invariant breaks, stop withdrawals before explaining the difference</text></svg><figcaption>Customer liabilities + fees + firm position = on-chain holdings + in-flight settlements + receivables. Assert it continuously.</figcaption></figure>
+    </section>
     <section class="sheet-section" aria-labelledby="matching-engine">
       <h2 id="matching-engine">Matching engine</h2>
       
       <div class="entry-grid">
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Single-writer sequencer</h3>
           <p>A total ordered command log makes execution deterministic and replayable.</p>
           <p class="example"><strong>Concrete use:</strong> Sequence order <code>9,184,201</code> reserves balance, enters a BTC-USD limit order, and emits all resulting fills before <code>9,184,202</code>.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Distributed writers create conflicting price-time order and irreproducible books.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Price-level book</h3>
           <p>Ordered price map points to FIFO queues; add/cancel is near O(1) within a known level and best-price lookup follows the ordered structure.</p>
           <p class="example"><strong>Concrete use:</strong> A post-only bid at $62,500 joins the tail of that price level unless it would cross.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Floating-point price keys create equality and ordering defects.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Order semantics</h3>
           <p>Limit, market, stop, IOC, FOK, post-only, and iceberg orders change when/how quantity enters the book.</p>
           <p class="example"><strong>Concrete use:</strong> A 5 BTC FOK must fill completely immediately or cancel without partial execution.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Implementing order labels without exact atomic behavior produces customer disputes.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Self-trade prevention</h3>
           <p>Prevent related accounts from matching themselves under an explicit cancel-new/cancel-old/decrement policy.</p>
           <p class="example"><strong>Concrete use:</strong> Apply the configured account-group rule before a fill enters the journal.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Post-trade cleanup cannot undo misleading market data.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Recovery</h3>
           <p>Snapshot + append-only journal restores state, then deterministic replay produces the identical book and sequence.</p>
           <p class="example"><strong>Concrete use:</strong> Load snapshot at sequence 9,180,000, replay 4,201 commands, compare state hash before reopening.</p>
@@ -106,46 +329,46 @@
       <h2 id="ledger-design-rules">Ledger design rules</h2>
       <p class="section-note">Use explicit asset units and enforce per-asset zero-sum at the database boundary, not in application convention.</p>
       <div class="table-wrap" role="region" aria-label="Ledger design rules" tabindex="0">
-        <table><thead><tr><th scope="col">Rule</th><th scope="col">Concrete form</th><th scope="col">Invariant</th><th scope="col">Failure prevented</th></tr></thead><tbody><tr><td>Double entry</td><td>Every journal transaction sums debits and credits per asset</td><td>Σ postings = 0</td><td>Value creation/loss</td></tr><tr><td>Integer minor units</td><td>BTC satoshis; token base units; wide integer/decimal</td><td>Exact arithmetic</td><td>18-decimal rounding drift</td></tr><tr><td>Immutable journal</td><td>Corrections are compensating entries</td><td>History never rewritten</td><td>Untraceable balance edits</td></tr><tr><td>Available vs total</td><td>Holds reserve open orders/withdrawals</td><td>available = total − holds</td><td>Double-spend of customer liability</td></tr><tr><td>Idempotent posting</td><td>Unique business event + version</td><td>One event, one journal result</td><td>Duplicate webhook/fill credit</td></tr><tr><td>Projection</td><td>Balance is derived/cached with journal checkpoint</td><td>Projection equals replay</td><td>Authoritative mutable balance row</td></tr><tr><td>Domain boundary</td><td>Book and wallet only post through ledger API</td><td>No direct chain/book coupling</td><td>Hidden liability changes</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Rule</th><th scope="col">Concrete form</th><th scope="col">Invariant</th><th scope="col">Failure prevented</th></tr></thead><tbody><tr data-f><td>Double entry</td><td>Every journal transaction sums debits and credits per asset</td><td>Σ postings = 0</td><td>Value creation/loss</td></tr><tr data-f><td>Integer minor units</td><td>BTC satoshis; token base units; wide integer/decimal</td><td>Exact arithmetic</td><td>18-decimal rounding drift</td></tr><tr data-f><td>Immutable journal</td><td>Corrections are compensating entries</td><td>History never rewritten</td><td>Untraceable balance edits</td></tr><tr data-f><td>Available vs total</td><td>Holds reserve open orders/withdrawals</td><td>available = total − holds</td><td>Double-spend of customer liability</td></tr><tr data-f><td>Idempotent posting</td><td>Unique business event + version</td><td>One event, one journal result</td><td>Duplicate webhook/fill credit</td></tr><tr data-f><td>Projection</td><td>Balance is derived/cached with journal checkpoint</td><td>Projection equals replay</td><td>Authoritative mutable balance row</td></tr><tr data-f><td>Domain boundary</td><td>Book and wallet only post through ledger API</td><td>No direct chain/book coupling</td><td>Hidden liability changes</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="wallet-boundary-crossings">
       <h2 id="wallet-boundary-crossings">Wallet-boundary crossings</h2>
       <p class="section-note">Most exchange transactions are ledger entries and never touch a chain. The wallet system never talks to the book; both talk to the ledger.</p>
       <div class="table-wrap" role="region" aria-label="Wallet-boundary crossings" tabindex="0">
-        <table><thead><tr><th scope="col">Crossing</th><th scope="col">Ordered sequence</th><th scope="col">Ledger effect</th><th scope="col">Chain effect</th><th scope="col">Break signal</th></tr></thead><tbody><tr><td>Deposit</td><td>observe → validate → finality → screen → credit</td><td>Liability increases</td><td>External asset arrives</td><td>On-chain asset without liability</td></tr><tr><td>Trade/internal transfer</td><td>reserve → match → settle journal</td><td>Liabilities move between accounts</td><td>None</td><td>Any chain dependency</td></tr><tr><td>Withdrawal</td><td>hold/debit → screen → approve → sign → broadcast → settle</td><td>Liability decreases / in-flight closes</td><td>Asset leaves</td><td>Broadcast before debit/hold</td></tr><tr><td>Sweep</td><td>detect → authorize → move → reconcile fee</td><td>No customer-liability change; fee/asset location only</td><td>Internal address movement</td><td>Sweep booked as customer flow</td></tr><tr><td>Rebalance</td><td>policy → transfer between tiers → reconcile</td><td>Asset-location accounts move</td><td>Internal custody movement</td><td>Reserve invariant changes</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Crossing</th><th scope="col">Ordered sequence</th><th scope="col">Ledger effect</th><th scope="col">Chain effect</th><th scope="col">Break signal</th></tr></thead><tbody><tr data-f><td>Deposit</td><td>observe → validate → finality → screen → credit</td><td>Liability increases</td><td>External asset arrives</td><td>On-chain asset without liability</td></tr><tr data-f><td>Trade/internal transfer</td><td>reserve → match → settle journal</td><td>Liabilities move between accounts</td><td>None</td><td>Any chain dependency</td></tr><tr data-f><td>Withdrawal</td><td>hold/debit → screen → approve → sign → broadcast → settle</td><td>Liability decreases / in-flight closes</td><td>Asset leaves</td><td>Broadcast before debit/hold</td></tr><tr data-f><td>Sweep</td><td>detect → authorize → move → reconcile fee</td><td>No customer-liability change; fee/asset location only</td><td>Internal address movement</td><td>Sweep booked as customer flow</td></tr><tr data-f><td>Rebalance</td><td>policy → transfer between tiers → reconcile</td><td>Asset-location accounts move</td><td>Internal custody movement</td><td>Reserve invariant changes</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="addressing-model-comparison">
       <h2 id="addressing-model-comparison">Addressing model comparison</h2>
       <p class="section-note">Legal and operational segregation are not identical. MiCA Article 75 and NYDFS guidance both make the internal position register and segregation design material.</p>
       <div class="table-wrap" role="region" aria-label="Addressing model comparison" tabindex="0">
-        <table><thead><tr><th scope="col">Model</th><th scope="col">Attribution</th><th scope="col">Sweep/gas</th><th scope="col">Privacy</th><th scope="col">Provability</th><th scope="col">Operational risk</th></tr></thead><tbody><tr><td>Omnibus address</td><td>Memo/internal ledger</td><td>Lowest</td><td>Poor on-chain separation</td><td>Aggregate only</td><td>Tag mistakes; ledger critical</td></tr><tr><td>Per-user deposit address → pool</td><td>Address derivation</td><td>High; gas station often needed</td><td>Better inbound separation</td><td>Address history visible</td><td>Gap/lookahead and sweep backlog</td></tr><tr><td>Segregated custody</td><td>Address is position boundary</td><td>Highest</td><td>On-chain linkability varies</td><td>Individual control easier to evidence</td><td>Large key/policy/address surface</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Model</th><th scope="col">Attribution</th><th scope="col">Sweep/gas</th><th scope="col">Privacy</th><th scope="col">Provability</th><th scope="col">Operational risk</th></tr></thead><tbody><tr data-f><td>Omnibus address</td><td>Memo/internal ledger</td><td>Lowest</td><td>Poor on-chain separation</td><td>Aggregate only</td><td>Tag mistakes; ledger critical</td></tr><tr data-f><td>Per-user deposit address → pool</td><td>Address derivation</td><td>High; gas station often needed</td><td>Better inbound separation</td><td>Address history visible</td><td>Gap/lookahead and sweep backlog</td></tr><tr data-f><td>Segregated custody</td><td>Address is position boundary</td><td>Highest</td><td>On-chain linkability varies</td><td>Individual control easier to evidence</td><td>Large key/policy/address surface</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="withdrawal-pipeline-at-scale">
       <h2 id="withdrawal-pipeline-at-scale">Withdrawal pipeline at scale</h2>
       
       <div class="entry-grid">
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Reservation</h3>
           <p>Place an immutable hold before any external action so available balance cannot be spent twice.</p>
           <p class="example"><strong>Concrete use:</strong> A $25,000 USDC withdrawal moves available → withdrawal-hold in one serializable transaction.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Debiting after broadcast allows concurrent spending.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Batching</h3>
           <p>Combine compatible screened intents while retaining output-to-intent mapping.</p>
           <p class="example"><strong>Concrete use:</strong> Ten Bitcoin P2WPKH withdrawals share one version/locktime/input set; each output maps to one internal ID.</p>
           <p class="gotcha"><strong>Failure mode:</strong> One tainted or urgent output can poison an entire batch.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Fee spike</h3>
           <p>Queue policy distinguishes urgency, customer quote, ceiling, and replacement path.</p>
           <p class="example"><strong>Concrete use:</strong> Hold low-priority withdrawals above 200 sat/vB while expiring quotes and showing queue state.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Flat fees without cost accounting socialize extreme chain cost invisibly.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Outage drain</h3>
           <p>Rate-limit release of backlog across policy, signer, chain, and support capacity.</p>
           <p class="example"><strong>Concrete use:</strong> Drain 1,000 queued transfers in value tiers with fresh rescreening and nonce/UTXO allocation.</p>
@@ -156,32 +379,32 @@
       <h2 id="proof-of-reserves-constructions">Proof-of-reserves constructions</h2>
       <p class="section-note">Proof of reserves is not proof of solvency. A point-in-time assets proof says nothing about undisclosed liabilities or what happens immediately after the snapshot.</p>
       <div class="table-wrap" role="region" aria-label="Proof-of-reserves constructions" tabindex="0">
-        <table><thead><tr><th scope="col">Construction</th><th scope="col">Proves</th><th scope="col">Does not prove</th><th scope="col">Attack / control</th></tr></thead><tbody><tr><td>Signed address message</td><td>Control of listed keys at a time</td><td>Ownership, unencumbered asset, completeness</td><td>Borrowed assets; repeat unpredictably</td></tr><tr><td>Asset self-transfer</td><td>Ability to move listed asset</td><td>No hidden lien/liability</td><td>Snapshot gaming; combine with books</td></tr><tr><td>Merkle liabilities</td><td>A customer leaf is included in committed set</td><td>No omitted users or negative balances by itself</td><td>Omission/negative leaf; audit construction</td></tr><tr><td>ZK liabilities</td><td>Committed sum and constraints such as non-negative balances</td><td>Off-balance-sheet claims unless included</td><td>Circuit/scope audit</td></tr><tr><td>Reserve oracle/feed</td><td>Publisher's stated observation</td><td>Independent solvency</td><td>Staleness and publisher trust</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Construction</th><th scope="col">Proves</th><th scope="col">Does not prove</th><th scope="col">Attack / control</th></tr></thead><tbody><tr data-f><td>Signed address message</td><td>Control of listed keys at a time</td><td>Ownership, unencumbered asset, completeness</td><td>Borrowed assets; repeat unpredictably</td></tr><tr data-f><td>Asset self-transfer</td><td>Ability to move listed asset</td><td>No hidden lien/liability</td><td>Snapshot gaming; combine with books</td></tr><tr data-f><td>Merkle liabilities</td><td>A customer leaf is included in committed set</td><td>No omitted users or negative balances by itself</td><td>Omission/negative leaf; audit construction</td></tr><tr data-f><td>ZK liabilities</td><td>Committed sum and constraints such as non-negative balances</td><td>Off-balance-sheet claims unless included</td><td>Circuit/scope audit</td></tr><tr data-f><td>Reserve oracle/feed</td><td>Publisher's stated observation</td><td>Independent solvency</td><td>Staleness and publisher trust</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="risk-apis--market-data">
       <h2 id="risk-apis--market-data">Risk, APIs &amp; market data</h2>
       
       <div class="entry-grid">
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Margin boundary</h3>
           <p>Cross margin shares collateral; isolated margin bounds a position's collateral and liquidation path.</p>
           <p class="example"><strong>Concrete use:</strong> Journal collateral, unrealized PnL, fees, funding and liquidation as explicit accounts.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Mixing risk-engine projections with settled ledger balances hides insolvency.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Mark price</h3>
           <p>A robust index/mark drives margin and liquidation, not the venue's last thin trade.</p>
           <p class="example"><strong>Concrete use:</strong> Use multiple spot sources, staleness guards and bounded deviation.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A manipulable last price can trigger forced liquidation.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Snapshot + delta</h3>
           <p>Clients load an order-book snapshot then apply contiguous sequence deltas.</p>
           <p class="example"><strong>Concrete use:</strong> On gap 81,104 → 81,107, discard local book and resnapshot.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Applying deltas through a gap creates a plausible but false book.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Client order ID</h3>
           <p>Unique client identity makes order create safe to retry.</p>
           <p class="example"><strong>Concrete use:</strong> Query <code>cli_20260831_771</code> after timeout before another create.</p>
@@ -191,11 +414,79 @@
     <section class="sheet-section checklist" aria-labelledby="common-mistakes--anti-patterns">
       <h2 id="common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</h2>
       <p class="section-note">The architecture cannot prevent an authorized operator from overriding controls; governance, segregation, and external assurance must make that override visible and costly.</p>
-      <ol><li><span aria-hidden="true">□</span> Never use binary floating point for price, quantity, fee, balance, or PnL.</li><li><span aria-hidden="true">□</span> Never let matching engine or risk engine read live chain state.</li><li><span aria-hidden="true">□</span> Credit only after adapter-defined finality and compliance gates.</li><li><span aria-hidden="true">□</span> Book sweeps/rebalances as asset-location changes, not liability changes.</li><li><span aria-hidden="true">□</span> Hold/debit before signing or broadcast; release only after authoritative terminal reconciliation.</li><li><span aria-hidden="true">□</span> Require zero unexplained balance tolerance; model in-flight explicitly.</li><li><span aria-hidden="true">□</span> Scan HD addresses with persisted range/lookahead and alert before exhaustion.</li><li><span aria-hidden="true">□</span> Do not publish assets-only proof as solvency.</li><li><span aria-hidden="true">□</span> Resynchronize market data on any sequence gap.</li><li><span aria-hidden="true">□</span> Reconcile customer liabilities + firm positions + fees against on-chain + in-flight + receivables continuously.</li></ol>
+      <ol><li data-f><span>Never use binary floating point for price, quantity, fee, balance, or PnL.</span></li><li data-f><span>Never let matching engine or risk engine read live chain state.</span></li><li data-f><span>Credit only after adapter-defined finality and compliance gates.</span></li><li data-f><span>Book sweeps/rebalances as asset-location changes, not liability changes.</span></li><li data-f><span>Hold/debit before signing or broadcast; release only after authoritative terminal reconciliation.</span></li><li data-f><span>Require zero unexplained balance tolerance; model in-flight explicitly.</span></li><li data-f><span>Scan HD addresses with persisted range/lookahead and alert before exhaustion.</span></li><li data-f><span>Do not publish assets-only proof as solvency.</span></li><li data-f><span>Resynchronize market data on any sequence gap.</span></li><li data-f><span>Reconcile customer liabilities + firm positions + fees against on-chain + in-flight + receivables continuously.</span></li></ol>
     </section>
     <section class="sheet-section sources" aria-labelledby="sources">
       <h2 id="sources">Primary sources &amp; scope</h2>
       <p class="section-note">Operational and volatile claims were checked against these first-party documents on 2026-08-31. Examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
-      <ul><li><a href="https://eur-lex.europa.eu/eli/reg/2023/1114/oj" target="_blank" rel="noopener noreferrer">MiCA Regulation 2023/1114</a><span>Client position registers and custody segregation.</span></li><li><a href="https://www.dfs.ny.gov/virtual_currency_businesses" target="_blank" rel="noopener noreferrer">NYDFS virtual-currency guidance</a><span>Current custody and customer-asset guidance index.</span></li><li><a href="https://www.fixtrading.org/standards/" target="_blank" rel="noopener noreferrer">FIX Trading Community</a><span>Protocol standards for institutional order flow.</span></li><li><a href="https://developer.bitcoin.org/reference/" target="_blank" rel="noopener noreferrer">Bitcoin developer reference</a><span>Chain transaction and wallet primitives.</span></li><li><a href="https://freethepeople.org/how-to-build-a-bitcoin-exchange-part-1/" target="_blank" rel="noopener noreferrer">How to Build a Bitcoin Exchange, Part 1</a><span>David Veksler&#x27;s 2017 design-goals article; this page is the engineering continuation.</span></li></ul>
-    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a><a href="bitcoin-exchanges-cards.html">Bitcoin exchanges &amp; cards <span aria-hidden="true">→</span></a></div></aside></main>
-<footer class="shell meta"><p>Last verified: 2026-08-31 · Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer></body></html>
+      <ul><li data-f><a href="https://eur-lex.europa.eu/eli/reg/2023/1114/oj" target="_blank" rel="noopener noreferrer">MiCA Regulation 2023/1114</a><span>Client position registers and custody segregation.</span></li><li data-f><a href="https://www.dfs.ny.gov/virtual_currency_businesses" target="_blank" rel="noopener noreferrer">NYDFS virtual-currency guidance</a><span>Current custody and customer-asset guidance index.</span></li><li data-f><a href="https://www.fixtrading.org/standards/" target="_blank" rel="noopener noreferrer">FIX Trading Community</a><span>Protocol standards for institutional order flow.</span></li><li data-f><a href="https://developer.bitcoin.org/reference/" target="_blank" rel="noopener noreferrer">Bitcoin developer reference</a><span>Chain transaction and wallet primitives.</span></li><li data-f><a href="https://freethepeople.org/how-to-build-a-bitcoin-exchange-part-1/" target="_blank" rel="noopener noreferrer">How to Build a Bitcoin Exchange, Part 1</a><span>David Veksler&#x27;s 2017 design-goals article; this page is the engineering continuation.</span></li></ul>
+    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a><a href="bitcoin-exchanges-cards.html">Bitcoin exchanges &amp; cards <span aria-hidden="true">→</span></a></div></aside>
+<footer class="sheet-foot"><p>Last verified: 2026-08-31 &middot; Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer>
+</main>
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement, btn = document.getElementById("theme-btn");
+  var stored = null;
+  try { stored = localStorage.getItem("custody-theme"); } catch (e) { /* private mode */ }
+  if (stored === "light" || stored === "dark") root.setAttribute("data-theme", stored);
+  function isDark() {
+    var t = root.getAttribute("data-theme");
+    return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  btn.setAttribute("aria-pressed", String(isDark()));
+  btn.addEventListener("click", function () {
+    var next = isDark() ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    btn.setAttribute("aria-pressed", String(next === "dark"));
+    try { localStorage.setItem("custody-theme", next); } catch (e) { /* ignore */ }
+  });
+
+  var input = document.getElementById("sheet-filter"),
+      status = document.getElementById("filter-status"),
+      units = [].slice.call(document.querySelectorAll("[data-f]")),
+      total = units.length,
+      openState = new WeakMap();
+
+  function apply() {
+    var q = input.value.trim().toLowerCase(), shown = 0;
+    units.forEach(function (el) {
+      var hit = !q || el.textContent.toLowerCase().indexOf(q) > -1;
+      el.hidden = !hit;
+      if (hit) shown++;
+      if (el.tagName === "DETAILS") {
+        if (q) {
+          if (!openState.has(el)) openState.set(el, el.open);
+          el.open = hit;
+        } else if (openState.has(el)) {
+          el.open = openState.get(el);
+          openState.delete(el);
+        }
+      }
+    });
+    [].forEach.call(document.querySelectorAll("main .sheet-section"), function (sec) {
+      var own = sec.querySelectorAll("[data-f]");
+      sec.hidden = own.length > 0 && !sec.querySelector("[data-f]:not([hidden])");
+    });
+    status.textContent = q ? shown + " / " + total : "";
+  }
+  input.addEventListener("input", apply);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { input.value = ""; apply(); }
+  });
+  apply();
+
+  var reopen = [];
+  addEventListener("beforeprint", function () {
+    reopen = [];
+    [].forEach.call(document.querySelectorAll("details.drawer"), function (d) {
+      if (!d.open) { reopen.push(d); d.open = true; }
+    });
+  });
+  addEventListener("afterprint", function () {
+    reopen.forEach(function (d) { d.open = false; });
+    reopen = [];
+  });
+})();
+</script>
+</body></html>

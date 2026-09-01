@@ -4,98 +4,319 @@
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/crypto-compliance-architecture.html">
 <meta property="og:title" content="Crypto Compliance Architecture: KYT, Travel Rule, IVMS101"><meta property="og:description" content="Place KYT, sanctions, Travel Rule, and policy gates correctly; implement an IVMS101 field map and payload; and handle alerts without signing irreversible transfers."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/crypto-compliance-architecture.html"><meta property="og:image" content="images/crypto-compliance-architecture.png"><meta property="og:image:alt" content="Deposit and withdrawal compliance gate map showing controls before credit and signing">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Crypto Compliance Architecture: KYT, Travel Rule, IVMS101"><meta name="twitter:description" content="Place KYT, sanctions, Travel Rule, and policy gates correctly; implement an IVMS101 field map and payload; and handle alerts without signing irreversible transfers."><meta name="twitter:image" content="images/crypto-compliance-architecture.png"><meta name="twitter:creator" content="@heroiclife">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Crypto Compliance Architecture: KYT, Travel Rule, IVMS101","description":"Place KYT, sanctions, Travel Rule, and policy gates correctly; implement an IVMS101 field map and payload; and handle alerts without signing irreversible transfers.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-08-31","dateModified":"2026-08-31","keywords":"crypto compliance architecture, KYT, Travel Rule, IVMS101, sanctions screening, VASP"}</script><style>
-@layer reset, tokens, base, layout, components, print;
+@layer reset, tokens, base, layout, components, diagram, print;
+
 @layer tokens {
   :root {
     color-scheme: light dark;
-    --paper: light-dark(#faf9f7, #0f172a); --surface: light-dark(#ffffff, #182235);
-    --surface-2: light-dark(#f4f1ed, #111c2e); --ink: light-dark(#172033, #e7edf6);
-    --muted: light-dark(#586273, #a9b5c7); --line: light-dark(#d8d3cc, #334155);
-    --accent: light-dark(#86198f, #e879f9); --accent-soft: light-dark(#fae8ff, #3b1641);
-    --safe: light-dark(#166534, #86efac); --safe-bg: light-dark(#dcfce7, #12351f);
-    --warn: light-dark(#92400e, #fcd34d); --warn-bg: light-dark(#fef3c7, #3b2a0d);
-    --danger: light-dark(#991b1b, #fca5a5); --danger-bg: light-dark(#fee2e2, #401719);
-    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --accent: light-dark(#28468f, #8aabff);
+    --accent-soft: light-dark(color-mix(in srgb, #28468f 11%, #ffffff), color-mix(in srgb, #8aabff 17%, #0d0c15));
+    --lattice: light-dark(color-mix(in srgb, #28468f 17%, transparent), color-mix(in srgb, #8aabff 13%, transparent));
+    --paper: light-dark(color-mix(in srgb, #28468f 7%, #f4f3f6), color-mix(in srgb, #8aabff 5%, #0c0b12));
+    --surface: light-dark(#ffffff, color-mix(in srgb, #8aabff 7%, #17161f));
+    --surface-2: light-dark(color-mix(in srgb, #28468f 11%, #ecebef), color-mix(in srgb, #8aabff 6%, #121118));
+    --ink: light-dark(#16151f, #e9e7f3);
+    --muted: light-dark(#55536c, #a3a0bb);
+    --faint: light-dark(#5d5b72, #8a87a7);
+    --line: light-dark(color-mix(in srgb, #28468f 22%, #c9c6d2), color-mix(in srgb, #8aabff 18%, #2c2a38));
+    --safe: light-dark(#146c43, #7fe3ab); --safe-bg: light-dark(#dcf0e4, #10301f);
+    --warn: light-dark(#8a5407, #f0c05a); --warn-bg: light-dark(#f8eed6, #322612);
+    --danger: light-dark(#98202f, #f7909d); --danger-bg: light-dark(#f8dfe2, #351520);
+    --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --display: "Archivo", "Public Sans", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"]  { color-scheme: dark; }
+}
+
+@layer reset {
+  *,*::before,*::after{box-sizing:border-box}
+  body,h1,h2,h3,p,figure{margin:0}
+  table{border-collapse:collapse}
+  img,svg{display:block;max-width:100%}
+  button,input{font:inherit;color:inherit}
+}
+
+@layer base {
+  body{
+    background:
+      radial-gradient(circle at 16% -8%, color-mix(in srgb,var(--accent) 8%,transparent), transparent 38%),
+      radial-gradient(circle at 94% 0%, color-mix(in srgb,var(--accent) 5%,transparent), transparent 32%),
+      repeating-linear-gradient(135deg, var(--lattice) 0 1px, transparent 1px 11px),
+      var(--paper);
+    color:var(--ink);
+    font:400 1rem/1.6 var(--sans);
+    text-wrap:pretty;
+  }
+  a{color:var(--accent);font-weight:600;text-decoration-thickness:.08em;text-underline-offset:.18em}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:2px}
+  code,.mono{font-family:var(--mono)}
+  td:nth-child(n+2),.num{font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.1;letter-spacing:-.03em}
+  h1{font-size:clamp(2.3rem,6.5vw,4.5rem);font-weight:800;letter-spacing:-.05em;max-width:15ch}
+  h2{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800}
+  h3{font-size:1rem;font-weight:600;letter-spacing:-.01em}
+  p+p{margin-top:.72rem}
+  pre{overflow-x:auto;background:var(--surface);border:1px solid var(--line);padding:.9rem;font-size:.8rem}
+  .skip{position:absolute;left:-9999px;top:0;z-index:99;background:var(--accent);color:var(--surface);
+    padding:.6rem 1rem;font:600 .85rem var(--mono)}
+  .skip:focus{left:.5rem;top:.5rem}
+}
+
+@layer layout {
+  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}
+  .mid{width:min(920px,100%)}
+  .utility{position:sticky;top:0;z-index:8;background:var(--surface);border-bottom:1px solid var(--line)}
+  .utility .shell{display:flex;align-items:center;gap:.75rem;padding-block:.5rem;flex-wrap:wrap}
+  .utility .wordmark{font:600 .68rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .filter{flex:1 1 14rem;min-width:0}
+  .filter input{width:100%;padding:.42rem .7rem;border:1px solid var(--line);border-radius:3px;
+    background:var(--paper);color:var(--ink);font:500 .8rem/1.3 var(--mono)}
+  .filter input::placeholder{color:var(--faint)}
+  .btn{border:1px solid var(--line);border-radius:3px;background:var(--paper);cursor:pointer;
+    padding:.42rem .7rem;font:500 .68rem/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .btn:hover{color:var(--ink);border-color:var(--accent)}
+  .filter-status{font:500 .68rem/1 var(--mono);color:var(--faint);white-space:nowrap}
+
+  .masthead{padding:clamp(2rem,5vw,3.6rem) 0 1.4rem}
+  .eyebrow{color:var(--accent);font:600 .74rem/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;margin-bottom:1rem}
+  .dek{color:var(--muted);font-size:clamp(1rem,1.9vw,1.22rem);max-width:66ch;margin-top:1.1rem}
+  .meta{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;margin-top:1.2rem;color:var(--faint);font:500 .74rem/1.4 var(--mono)}
+
+  nav.sections{position:sticky;top:2.6rem;z-index:6;background:var(--surface);border-block:1px solid var(--line)}
+  nav.sections .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.6rem 0}
+  nav.sections a{white-space:nowrap;font-size:.82rem;font-weight:600}
+
+  main{padding-bottom:4rem}
+  .sheet-section{margin-top:clamp(2.4rem,5.5vw,4rem);scroll-margin-top:6rem}
+  .section-note{color:var(--muted);max-width:68ch;margin-bottom:1.1rem}
+  .entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:.8rem}
+}
+
+@layer components {
+  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.18rem .5rem;
+    font:600 .7rem/1.35 var(--mono);white-space:nowrap}
+  .signal.safe{color:var(--safe);background:var(--safe-bg)}
+  .signal.warn{color:var(--warn);background:var(--warn-bg)}
+  .signal.danger{color:var(--danger);background:var(--danger-bg)}
+
+  /* Instrument panel: the values that define the topic, above the fold. */
+  .instrument{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:1px;
+    background:var(--line);border:1px solid var(--line);border-top:4px solid var(--accent)}
+  .instrument div{background:var(--surface);padding:.9rem 1rem;display:grid;gap:.24rem;align-content:start}
+  .instrument .k{font:500 .66rem/1.3 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+  .instrument .v{font-family:var(--display);font-weight:800;font-size:clamp(1.25rem,2.9vw,1.85rem);
+    letter-spacing:-.045em;line-height:1.05;color:var(--accent);font-variant-numeric:tabular-nums}
+  .instrument .s{font:400 .74rem/1.4 var(--mono);color:var(--muted)}
+
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+  table{width:100%;min-width:700px;font-size:.87rem}
+  th,td{padding:.7rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+  th{position:sticky;top:0;background:var(--surface-2);z-index:1;
+    font:600 .7rem/1.3 var(--sans);letter-spacing:.05em;text-transform:uppercase}
+  tbody tr:hover{background:var(--accent-soft)}
+  td:first-child{font-weight:600;min-width:11rem}
+  tbody tr:last-child td{border-bottom:0}
+
+  /* Severity encoded in form, not only in words. */
+  td.sev{white-space:nowrap}
+  td.sev::before{content:"";display:inline-block;width:.22rem;height:.95em;border-radius:1px;
+    margin-right:.5rem;vertical-align:-.13em;background:var(--sev,var(--line))}
+  tr[data-sev="danger"] td.sev{--sev:var(--danger)}
+  tr[data-sev="warn"]   td.sev{--sev:var(--warn)}
+  tr[data-sev="safe"]   td.sev{--sev:var(--safe)}
+
+  /* Magnitude inside the cell: one gradient, no extra markup, prints fine. */
+  td.bar{min-width:8rem}
+  td.bar span{display:block;height:.62rem;border-radius:1px;
+    background:linear-gradient(90deg,var(--c,var(--accent)) var(--w),color-mix(in srgb,var(--line) 55%,transparent) var(--w))}
+
+  /* Log axis: for columns whose values span more than a decade. */
+  .axis{display:grid;gap:.15rem;min-width:30rem}
+  .axis-ticks{position:relative;height:1.35rem;margin-left:11rem;border-bottom:1px solid var(--line)}
+  .axis-ticks span{position:absolute;left:var(--x);transform:translateX(-50%);bottom:.28rem;
+    font:500 .64rem/1 var(--mono);color:var(--faint);white-space:nowrap}
+  .axis-ticks span::after{content:"";position:absolute;left:50%;bottom:-.32rem;width:1px;height:.28rem;background:var(--line)}
+  .axis-ticks span:last-child{transform:translateX(-100%)}
+  .axis-ticks span:last-child::after{left:100%}
+  .axis-row{display:grid;grid-template-columns:11rem 1fr;align-items:center;padding-block:.16rem}
+  .axis-row .name{font:500 .78rem/1.3 var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:.6rem}
+  .axis-track{position:relative;height:1.15rem;
+    background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--line) 55%,transparent) 0 1px,transparent 1px 25%)}
+  .axis-track i{position:absolute;left:var(--x);top:50%;translate:-50% -50%;
+    width:.62rem;height:.62rem;border-radius:50%;background:var(--dot,var(--accent));
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--dot,var(--accent)) 22%,transparent)}
+  .axis-track b{position:absolute;left:var(--x);top:50%;translate:.75rem -50%;
+    font:500 .68rem/1 var(--mono);color:var(--muted);white-space:nowrap}
+  .axis-row.flip .axis-track b{translate:-.75rem -50%;transform:translateX(-100%)}
+
+  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0;display:grid;gap:.6rem;align-content:start}
+  .entry h3{border-left:3px solid var(--accent);padding-left:.6rem}
+  .entry p{font-size:.9rem;margin:0}
+  .example,.gotcha{padding:.6rem .65rem;border-left:2px solid var(--safe);background:var(--safe-bg);font-size:.86rem}
+  .gotcha{border-color:var(--danger);background:var(--danger-bg)}
+  .example strong,.gotcha strong{display:block;font:600 .66rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.2rem}
+
+  .checklist ol{list-style:none;padding:0;margin:0;display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:.5rem;counter-reset:steps}
+  .checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);
+    padding:.75rem .85rem;font-size:.9rem;display:grid;grid-template-columns:auto 1fr;gap:.6rem;align-items:baseline}
+  .checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:600 .72rem/1.5 var(--mono)}
+
+  /* Progressive disclosure on the edge/advanced tier. */
+  .drawers{display:grid;gap:.5rem}
+  details.drawer{background:var(--surface);border:1px solid var(--line)}
+  details.drawer summary{cursor:pointer;padding:.8rem 1rem;font-family:var(--display);font-weight:600;
+    font-size:1rem;letter-spacing:-.01em;display:flex;align-items:center;gap:.6rem;list-style:none}
+  details.drawer summary::-webkit-details-marker{display:none}
+  details.drawer summary::before{content:"+";color:var(--accent);font:600 1rem/1 var(--mono);width:1ch}
+  details.drawer[open] summary::before{content:"\2212"}
+  details.drawer summary:hover{background:var(--accent-soft)}
+  details.drawer .drawer-body{padding:0 1rem 1rem;display:grid;gap:.6rem}
+  details.drawer .drawer-body p{font-size:.9rem;margin:0}
+
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}
+  .flow div{padding:.9rem;background:var(--surface);border:1px solid var(--line)}
+  .flow b{display:block;color:var(--accent);font:700 .68rem/1 var(--mono);margin-bottom:.45rem;letter-spacing:.06em}
+  .flow p{font-size:.83rem;margin:0}
+  .equation{font:700 clamp(.92rem,2.2vw,1.25rem)/1.45 var(--mono);padding:1rem;border:1px dashed var(--accent);
+    background:var(--accent-soft);overflow-wrap:anywhere;margin:1rem 0}
+  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}
+
+  .sources ul{list-style:none;padding:0;margin:0;display:grid;gap:.5rem}
+  .sources li{display:grid;grid-template-columns:minmax(15rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}
+  .sources span{color:var(--muted);font-size:.87rem}
+
+  .related{margin-top:3.5rem;border:1px solid var(--line);border-top:3px solid var(--accent);
+    padding:1rem 1.1rem;background:var(--surface-2)}
+  .related h2{font-size:1rem;font-weight:600;margin-bottom:.7rem}
+  .related div{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem}
+  .related a{font-size:.85rem}
+  footer.sheet-foot{margin-top:2rem;color:var(--faint);font:400 .78rem/1.6 var(--mono)}
+  [hidden]{display:none !important}
+}
+
+/* Diagrams: tokens + currentColor, so they theme and print for free. */
+@layer diagram {
+  figure.plate{margin:0;background:var(--surface);border:1px solid var(--line);padding:1rem}
+  figure.plate svg{width:100%;height:auto;margin-inline:auto;max-width:44rem}
+  figcaption{margin-top:.7rem;color:var(--muted);font-size:.85rem;text-align:center;text-wrap:balance}
+  .dg-field{fill:var(--surface-2);stroke:var(--line)}
+  .dg-lbl{font:500 9px var(--mono);fill:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+  .dg-cap{font:600 11px var(--mono);fill:var(--ink)}
+  .dg-node{fill:var(--surface);stroke:var(--ink);stroke-width:1.4}
+  .dg-node.on{fill:var(--safe-bg);stroke:var(--safe);stroke-width:2.2}
+  .dg-node.end{fill:var(--danger-bg);stroke:var(--danger);stroke-width:2}
+  .dg-node.hot{fill:var(--warn-bg);stroke:var(--warn);stroke-width:2}
+  .dg-quorum{fill:none;stroke:var(--safe);stroke-width:2.2;stroke-dasharray:5 4}
+  .dg-cross{fill:none;stroke:var(--danger);stroke-width:1.8;stroke-dasharray:3 3}
+  .dg-flow{fill:none;stroke:var(--accent);stroke-width:1.6}
+  .dg-flow.dim{stroke:var(--line);stroke-width:1.2}
+  .dg-brace{fill:none;stroke:var(--accent);stroke-width:1.2}
+  .dg-ok{fill:var(--safe);font:600 10px var(--mono)}
+  .dg-no{fill:var(--danger);font:600 10px var(--mono)}
+  .dg-acc{fill:var(--accent);font:600 10px var(--mono)}
+}
+
+@layer print {
+  @media print{
+    body{background:#fff;color:#000}
+    .utility,nav.sections,.related{display:none}
+    .shell,.mid{width:100%}
+    .sheet-section{break-inside:avoid;margin-top:1.3rem}
+    .entry,.checklist li,figure.plate,details.drawer{break-inside:avoid}
+    details.drawer summary::before{content:""}
+    a{color:inherit;text-decoration:none}
+    .table-wrap{overflow:visible;border:1px solid #999}
+    table{min-width:0;font-size:7.6pt}
+    th{position:static}
+    .instrument{border-top-width:2px}
+  }
+  @media(max-width:600px){
+    .shell{width:min(100% - 1rem,1180px)}
+    .masthead{padding-top:1.2rem}
+    .sources li{grid-template-columns:1fr}
+    .entry-grid{grid-template-columns:1fr}
+    nav.sections{top:0}
+  }
+  @media(prefers-reduced-motion:no-preference){
+    html{scroll-behavior:smooth}
+    .btn,.filter input,tbody tr,details.drawer summary{transition:background-color .15s,border-color .15s,color .15s}
   }
 }
-@layer reset { *,*::before,*::after{box-sizing:border-box} body,h1,h2,h3,p{margin:0} table{border-collapse:collapse} }
-@layer base {
-  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;text-wrap:pretty}
-  a{color:var(--accent);font-weight:650;text-decoration-thickness:.08em;text-underline-offset:.18em}
-  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-  code,.mono,td:nth-child(n+2){font-family:var(--mono);font-variant-numeric:tabular-nums}
-  h1,h2,h3{text-wrap:balance;line-height:1.15} h1{font-size:clamp(2rem,6vw,4.25rem);letter-spacing:-.045em;max-width:18ch}
-  h2{font-size:clamp(1.45rem,3vw,2.15rem);margin-bottom:1rem} h3{font-size:1.02rem;letter-spacing:.015em}
-  p+p{margin-top:.72rem}
-}
-@layer layout {
-  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}.masthead{padding:2.2rem 0 1.5rem;border-bottom:1px solid var(--line)}
-  .eyebrow{color:var(--accent);font:700 .76rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem}
-  .dek{color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);max-width:72ch;margin-top:1rem}
-  .meta{display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:1.2rem;color:var(--muted);font:600 .78rem/1.4 var(--mono)}
-  nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 94%,transparent);border-bottom:1px solid var(--line)}
-  nav .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.65rem 0}nav a{white-space:nowrap;font-size:.82rem}
-  main{padding:1.5rem 0 4rem}.sheet-section{margin-top:clamp(2.2rem,6vw,4.5rem);scroll-margin-top:4rem}
-  .section-note{color:var(--muted);max-width:85ch;margin-bottom:1rem}.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:.8rem}
-}
-@layer components {
-  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.2rem .55rem;font:800 .72rem/1 var(--mono);white-space:nowrap}
-  .signal.safe{color:var(--safe);background:var(--safe-bg)}.signal.warn{color:var(--warn);background:var(--warn-bg)}.signal.danger{color:var(--danger);background:var(--danger-bg)}
-  .quick{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--accent);padding:clamp(1rem,3vw,2rem);box-shadow:0 16px 36px rgba(15,23,42,.08)}
-  .quick h2{display:flex;align-items:center;gap:.6rem}.quick h2::before{content:"CONTROL REGISTER";font:800 .64rem/1 var(--mono);letter-spacing:.1em;color:var(--paper);background:var(--accent);padding:.38rem .5rem}
-  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}table{width:100%;min-width:720px;font-size:.86rem}
-  th,td{padding:.72rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{position:sticky;top:0;background:var(--surface-2);font:800 .72rem/1.25 var(--sans);letter-spacing:.04em;text-transform:uppercase}
-  tbody tr:hover{background:var(--accent-soft)}td:first-child{font-family:var(--sans);font-weight:760;min-width:12rem}tbody tr:last-child td{border-bottom:0}
-  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0}.entry h3{border-left:3px solid var(--accent);padding-left:.65rem;margin-bottom:.65rem}
-  .entry p{font-size:.9rem}.example,.gotcha{padding:.65rem;border-left:2px solid var(--safe);background:var(--safe-bg)}.gotcha{border-color:var(--danger);background:var(--danger-bg)}
-  .checklist ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:.5rem;counter-reset:steps}.checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);padding:.8rem}.checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:800 .7rem/1 var(--mono);margin-right:.55rem}
-  .sources ul{list-style:none;padding:0;display:grid;gap:.5rem}.sources li{display:grid;grid-template-columns:minmax(16rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}.sources span{color:var(--muted);font-size:.86rem}
-  .related{margin-top:4rem;border:1px solid var(--line);padding:1rem;background:var(--surface-2)}.related h2{font-size:1rem}.related div{display:flex;flex-wrap:wrap;gap:.55rem 1rem}.related a{font-size:.84rem}
-  .equation{font:800 clamp(1rem,3vw,1.55rem)/1.4 var(--mono);padding:1rem;border:1px dashed var(--accent);background:var(--accent-soft);overflow-wrap:anywhere}
-  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}.flow div{position:relative;padding:1rem;background:var(--surface);border:1px solid var(--line);min-height:7rem}.flow b{display:block;color:var(--accent);font:800 .7rem/1 var(--mono);margin-bottom:.5rem}.flow p{font-size:.83rem}
-  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}.print-only{display:none}
-}
-@layer print {
-  @media print{nav{display:none}.shell{width:100%}.sheet-section{break-inside:avoid;margin-top:1.3rem}.entry{break-inside:avoid}a{color:inherit}.print-only{display:block}.table-wrap{overflow:visible}table{min-width:0;font-size:7.7pt}th{position:static}}
-  @media(max-width:600px){.shell{width:min(100% - 1rem,1180px)}.masthead{padding-top:1.2rem}.sources li{grid-template-columns:1fr}.quick{padding:.8rem}.table-wrap{margin-inline:-.5rem}.entry-grid{grid-template-columns:1fr}}
-}
 </style></head>
-<body><header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance · engineering reference</p><h1>Crypto compliance architecture</h1><p class="dek">Compliance is transaction architecture. The decisive question is whether a gate runs before credit and before signing, with enough versioned evidence to reproduce the decision months later.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
-<nav aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#gate-placement-rules">Gate placement rules</a><a href="#compliance-gate-map">Compliance gate map</a><a href="#travel-rule-implementation-register">Travel Rule implementation register</a><a href="#ivms101-field-map">IVMS101 field map</a><a href="#ivms101-2023-worked-payload">IVMS101.2023 worked payload</a><a href="#kyt-sanctions--data-protection">KYT, sanctions &amp; data protection</a><a href="#kyt-integration-surfaces">KYT integration surfaces</a><a href="#travel-rule-protocol-interoperability">Travel Rule protocol interoperability</a><a href="#blocked-property-and-alert-runbook">Blocked-property and alert runbook</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
-<main class="shell"><section class="quick" id="quick-reference" aria-labelledby="quick-title"><h2 id="quick-title">Gate before irreversibility</h2><div class="flow"><div><b>01 · OBSERVE</b><p>Parse chain, contract, transfer identity and finality.</p></div><div><b>02 · SCREEN</b><p>KYT + sanctions with model/list version.</p></div><div><b>03 · IDENTIFY</b><p>Customer, counterparty VASP, corridor, unhosted status.</p></div><div><b>04 · TRANSMIT</b><p>Minimum IVMS101 data to authenticated counterparty.</p></div><div><b>05 · AUTHORIZE</b><p>Ledger intent, policy, velocity, approvals.</p></div><div><b>06 · SIGN</b><p>Only the exact cleared payload.</p></div></div><p class="callout"><strong>Signing is the boundary.</strong> “Screen before broadcast” is too late if valid signed bytes already exist.</p></section>
+<body>
+<a class="skip" href="#main">Skip to reference</a>
+<div class="utility"><div class="shell"><span class="wordmark">Crypto compliance architecture</span>
+<div class="filter"><label class="skip" for="sheet-filter">Filter this sheet</label>
+<input id="sheet-filter" type="search" autocomplete="off" placeholder="Filter rows &amp; entries"></div>
+<span class="filter-status" id="filter-status" role="status" aria-live="polite"></span>
+<button class="btn" id="theme-btn" type="button" aria-pressed="false">Theme</button></div></div>
+<header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance &middot; engineering reference</p><h1>Crypto compliance architecture</h1><p class="dek">Compliance is transaction architecture. The decisive question is whether a gate runs before credit and before signing, with enough versioned evidence to reproduce the decision months later.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<nav class="sections" aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#gate-placement-rules">Gate placement rules</a><a href="#compliance-gate-map">Compliance gate map</a><a href="#travel-rule-implementation-register">Travel Rule implementation register</a><a href="#ivms101-field-map">IVMS101 field map</a><a href="#ivms101-2023-worked-payload">IVMS101.2023 worked payload</a><a href="#kyt-sanctions--data-protection">KYT, sanctions &amp; data protection</a><a href="#kyt-integration-surfaces">KYT integration surfaces</a><a href="#travel-rule-protocol-interoperability">Travel Rule protocol interoperability</a><a href="#blocked-property-and-alert-runbook">Blocked-property and alert runbook</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
+<main id="main" class="shell">
+<section class="sheet-section" id="quick-reference" aria-labelledby="quick-title" style="margin-top:1.6rem"><h2 id="quick-title">Gate before irreversibility</h2>
+<p class="section-note">Gate placement is the whole design. A control that runs after signing is forensics, not compliance.</p><div class="instrument"><div><span class="k">Gates</span><span class="v">6</span><span class="s">observe &rarr; sign</span></div><div><span class="k">Boundary</span><span class="v">SIGN</span><span class="s">the irreversible step</span></div><div><span class="k">Payload</span><span class="v">IVMS101</span><span class="s">.2023 structured fields</span></div><div><span class="k">Deposit gates</span><span class="v">4</span><span class="s">before credit</span></div><div><span class="k">Withdrawal gates</span><span class="v">4</span><span class="s">before the signer</span></div><div><span class="k">On alert</span><span class="v">DO NOT SIGN</span><span class="s">hold, never broadcast</span></div></div></section>
+<section class="sheet-section" aria-label="Quick reference detail"><div class="flow"><div><b>01 · OBSERVE</b><p>Parse chain, contract, transfer identity and finality.</p></div><div><b>02 · SCREEN</b><p>KYT + sanctions with model/list version.</p></div><div><b>03 · IDENTIFY</b><p>Customer, counterparty VASP, corridor, unhosted status.</p></div><div><b>04 · TRANSMIT</b><p>Minimum IVMS101 data to authenticated counterparty.</p></div><div><b>05 · AUTHORIZE</b><p>Ledger intent, policy, velocity, approvals.</p></div><div><b>06 · SIGN</b><p>Only the exact cleared payload.</p></div></div><p class="callout"><strong>Signing is the boundary.</strong> “Screen before broadcast” is too late if valid signed bytes already exist.</p></section>
+
+    <section class="sheet-section" aria-labelledby="gate-figure">
+      <h2 id="gate-figure">Gate before irreversibility</h2>
+      <p class="section-note">Five gates run before the sixth. Once valid signed bytes exist, every remaining control is after the fact.</p>
+      <figure class="plate"><svg viewBox="0 0 620 220" role="img" aria-labelledby="gt-t gt-d">
+<title id="gt-t">Six compliance gates ending at the signing boundary</title>
+<desc id="gt-d">Observe, screen, identify, transmit and authorize all run before signing. Signing is the irreversibility boundary: once valid signed bytes exist, screening before broadcast is too late.</desc>
+<defs><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--accent)"/></marker></defs>
+<rect class="dg-node" x="4" y="52" width="92" height="44" rx="3"/><rect class="dg-node" x="104" y="52" width="92" height="44" rx="3"/>
+<rect class="dg-node" x="204" y="52" width="92" height="44" rx="3"/><rect class="dg-node" x="304" y="52" width="92" height="44" rx="3"/>
+<rect class="dg-node" x="404" y="52" width="92" height="44" rx="3"/><rect class="dg-node end" x="516" y="52" width="96" height="44" rx="3"/>
+<text class="dg-cap" x="50" y="78" text-anchor="middle">Observe</text><text class="dg-cap" x="150" y="78" text-anchor="middle">Screen</text>
+<text class="dg-cap" x="250" y="78" text-anchor="middle">Identify</text><text class="dg-cap" x="350" y="78" text-anchor="middle">Transmit</text>
+<text class="dg-cap" x="450" y="78" text-anchor="middle">Authorize</text><text class="dg-cap" x="564" y="78" text-anchor="middle">Sign</text>
+<text class="dg-lbl" x="50" y="112" text-anchor="middle">01</text><text class="dg-lbl" x="150" y="112" text-anchor="middle">02</text>
+<text class="dg-lbl" x="250" y="112" text-anchor="middle">03</text><text class="dg-lbl" x="350" y="112" text-anchor="middle">04</text>
+<text class="dg-lbl" x="450" y="112" text-anchor="middle">05</text><text class="dg-lbl" x="564" y="112" text-anchor="middle">06</text>
+<path class="dg-flow" d="M96 74 H100" marker-end="url(#ar)"/><path class="dg-flow" d="M196 74 H200" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M296 74 H300" marker-end="url(#ar)"/><path class="dg-flow" d="M396 74 H400" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M496 74 H512" marker-end="url(#ar)"/>
+<path class="dg-cross" d="M506 26 V126"/>
+<text class="dg-no" x="506" y="18" text-anchor="middle">irreversibility boundary</text>
+<path class="dg-brace" d="M4 148 V156 H496 V148"/>
+<text class="dg-acc" x="250" y="176" text-anchor="middle">every gate runs before credit and before signing</text>
+<text class="dg-no" x="310" y="204" text-anchor="middle">&ldquo;Screen before broadcast&rdquo; is too late if valid signed bytes already exist</text></svg><figcaption>Signing is the boundary. Screening before broadcast is too late if a valid signature already exists.</figcaption></figure>
+    </section>
     <section class="sheet-section" aria-labelledby="gate-placement-rules">
       <h2 id="gate-placement-rules">Gate placement rules</h2>
       
       <div class="entry-grid">
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Deposit observation</h3>
           <p>Parse chain, contract, amount, source, destination, tag, and finality before any customer posting.</p>
           <p class="example"><strong>Concrete use:</strong> Open a compliance case on a new USDC transfer while the balance remains pending.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Screening after credit lets tainted value fund internal trades or withdrawals.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Pre-credit KYT</h3>
           <p>Screen the actual transfer and counterparty exposure before making funds available.</p>
           <p class="example"><strong>Concrete use:</strong> Persist provider, model/list version, score, categories, hop depth, and raw response hash.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A naked score cannot be reproduced after the vendor model changes.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Pre-sign withdrawal gate</h3>
           <p>All identity, Travel Rule, sanctions, destination, and business-policy checks must pass before irreversible signing.</p>
           <p class="example"><strong>Concrete use:</strong> The signer callback verifies compliance case <code>case_20418=cleared</code> and exact destination bytes.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Screening between signing and broadcast leaves a valid signed payload that can escape.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Rescreen on list update</h3>
           <p>Addresses and persons previously clean can become blocked property when lists change.</p>
           <p class="example"><strong>Concrete use:</strong> Subscribe to list changes, rescreen held positions and pending transfers, and open retroactive cases.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A once-at-onboarding result silently expires.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Fail closed</h3>
           <p>Provider outage blocks automated value movement while an explicit, dual-controlled manual route handles exceptions.</p>
           <p class="example"><strong>Concrete use:</strong> After 60 seconds of KYT timeout, queue rather than sign; page operations before SLA breach.</p>
@@ -106,21 +327,21 @@
       <h2 id="compliance-gate-map">Compliance gate map</h2>
       <p class="section-note">The control boundary is signing. A signed blockchain transaction is a bearer-like capability even if your broadcaster has not submitted it yet.</p>
       <div class="table-wrap" role="region" aria-label="Compliance gate map" tabindex="0">
-        <table><thead><tr><th scope="col">Path</th><th scope="col">Gate</th><th scope="col">Input</th><th scope="col">On hit</th><th scope="col">If placed later</th></tr></thead><tbody><tr><td>Deposit</td><td>Asset validation</td><td>chain + contract + decimals</td><td>Quarantine</td><td>Fake token may be credited</td></tr><tr><td>Deposit</td><td>KYT exposure</td><td>source + transfer graph</td><td>Pending/manual review</td><td>Funds become internally spendable</td></tr><tr><td>Deposit</td><td>Sanctions</td><td>person + address + live list</td><td>Block/segregate</td><td>Blocked property may move</td></tr><tr><td>Deposit</td><td>Finality</td><td>chain-native status</td><td>Wait</td><td>Reorg creates unbacked credit</td></tr><tr><td>Withdrawal</td><td>Customer/KYC state</td><td>identity + account risk</td><td>Reject/review</td><td>Value enters signer path</td></tr><tr><td>Withdrawal</td><td>Travel Rule</td><td>counterparty + threshold + IVMS payload</td><td>Hold/send data</td><td>Transfer may breach obligation</td></tr><tr><td>Withdrawal</td><td>Destination KYT</td><td>address + asset + amount</td><td>Reject/review</td><td>Signed transaction exists</td></tr><tr><td>Withdrawal</td><td>Policy callback</td><td>ledger intent + decoded payload</td><td>Do not sign</td><td>Broadcast control is too late</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Path</th><th scope="col">Gate</th><th scope="col">Input</th><th scope="col">On hit</th><th scope="col">If placed later</th></tr></thead><tbody><tr data-f><td>Deposit</td><td>Asset validation</td><td>chain + contract + decimals</td><td>Quarantine</td><td>Fake token may be credited</td></tr><tr data-f><td>Deposit</td><td>KYT exposure</td><td>source + transfer graph</td><td>Pending/manual review</td><td>Funds become internally spendable</td></tr><tr data-f><td>Deposit</td><td>Sanctions</td><td>person + address + live list</td><td>Block/segregate</td><td>Blocked property may move</td></tr><tr data-f><td>Deposit</td><td>Finality</td><td>chain-native status</td><td>Wait</td><td>Reorg creates unbacked credit</td></tr><tr data-f><td>Withdrawal</td><td>Customer/KYC state</td><td>identity + account risk</td><td>Reject/review</td><td>Value enters signer path</td></tr><tr data-f><td>Withdrawal</td><td>Travel Rule</td><td>counterparty + threshold + IVMS payload</td><td>Hold/send data</td><td>Transfer may breach obligation</td></tr><tr data-f><td>Withdrawal</td><td>Destination KYT</td><td>address + asset + amount</td><td>Reject/review</td><td>Signed transaction exists</td></tr><tr data-f><td>Withdrawal</td><td>Policy callback</td><td>ledger intent + decoded payload</td><td>Do not sign</td><td>Broadcast control is too late</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="travel-rule-implementation-register">
       <h2 id="travel-rule-implementation-register">Travel Rule implementation register</h2>
       <p class="section-note">This is a routing register, not a legal threshold table. Thresholds and scope depend on entity, activity, corridor, and current local implementation; resolve them in maintained policy data before launch.</p>
       <div class="table-wrap" role="region" aria-label="Travel Rule implementation register" tabindex="0">
-        <table><thead><tr><th scope="col">Regime</th><th scope="col">Engineering baseline</th><th scope="col">De minimis posture</th><th scope="col">Unhosted-wallet concern</th><th scope="col">Primary text</th></tr></thead><tbody><tr><td>FATF R.16</td><td>Originator/beneficiary information; VASP-to-VASP transmission</td><td>Countries implement locally</td><td>Risk-based treatment</td><td><a href="https://www.fatf-gafi.org/en/topics/fatf-recommendations.html">FATF</a></td></tr><tr><td>United States</td><td>31 CFR / FinCEN funds-transfer rules and BSA records</td><td>Thresholds depend on rule and transaction class</td><td>Identify applicable counterparty/rule</td><td><a href="https://www.ecfr.gov/current/title-31/subtitle-B/chapter-X">eCFR Title 31</a></td></tr><tr><td>European Union</td><td>Regulation 2023/1113 applies information duties to crypto transfers</td><td>No general crypto de minimis</td><td>Self-hosted interactions require risk controls</td><td><a href="https://eur-lex.europa.eu/eli/reg/2023/1113/oj">EUR-Lex</a></td></tr><tr><td>United Kingdom</td><td>Money Laundering Regulations + FCA implementation</td><td>Verify current UK requirements</td><td>Risk-based evidence</td><td><a href="https://www.fca.org.uk/firms/financial-crime/cryptoassets-aml-ctf-regime">FCA</a></td></tr><tr><td>Switzerland</td><td>AMLA/AMLO-FINMA implementation</td><td>Verify current Swiss threshold</td><td>Proof of control often material</td><td><a href="https://www.finma.ch/en/supervision/fintech/">FINMA</a></td></tr><tr><td>Singapore</td><td>Payment Services Act / MAS notices</td><td>Verify current notice and scope</td><td>Counterparty due diligence</td><td><a href="https://www.mas.gov.sg/regulation/anti-money-laundering">MAS</a></td></tr><tr><td>Japan</td><td>Act / JFSA and JVCEA implementation</td><td>Verify current local rule</td><td>Counterparty controls</td><td><a href="https://www.fsa.go.jp/en/">JFSA</a></td></tr><tr><td>Canada</td><td>PCMLTFA / FINTRAC virtual-currency transfer records</td><td>CAD threshold rules vary by duty</td><td>Identity and records</td><td><a href="https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/vctr/vctr-eng">FINTRAC</a></td></tr><tr><td>Australia</td><td>AML/CTF regime and AUSTRAC guidance</td><td>Verify reforms and commencement</td><td>Counterparty and ownership risk</td><td><a href="https://www.austrac.gov.au/business/core-guidance/amlctf-programs">AUSTRAC</a></td></tr><tr><td>Hong Kong</td><td>AMLO VASP regime</td><td>Verify current threshold and circulars</td><td>Risk-based controls</td><td><a href="https://www.sfc.hk/en/Regulatory-functions/Intermediaries/Virtual-asset-trading-platforms-operators">SFC</a></td></tr><tr><td>UAE</td><td>Federal plus competent-authority rule</td><td>Depends on regulator/free zone</td><td>Counterparty verification</td><td><a href="https://www.vara.ae/en/regulations/regulations/">VARA</a></td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Regime</th><th scope="col">Engineering baseline</th><th scope="col">De minimis posture</th><th scope="col">Unhosted-wallet concern</th><th scope="col">Primary text</th></tr></thead><tbody><tr data-f><td>FATF R.16</td><td>Originator/beneficiary information; VASP-to-VASP transmission</td><td>Countries implement locally</td><td>Risk-based treatment</td><td><a href="https://www.fatf-gafi.org/en/topics/fatf-recommendations.html">FATF</a></td></tr><tr data-f><td>United States</td><td>31 CFR / FinCEN funds-transfer rules and BSA records</td><td>Thresholds depend on rule and transaction class</td><td>Identify applicable counterparty/rule</td><td><a href="https://www.ecfr.gov/current/title-31/subtitle-B/chapter-X">eCFR Title 31</a></td></tr><tr data-f><td>European Union</td><td>Regulation 2023/1113 applies information duties to crypto transfers</td><td>No general crypto de minimis</td><td>Self-hosted interactions require risk controls</td><td><a href="https://eur-lex.europa.eu/eli/reg/2023/1113/oj">EUR-Lex</a></td></tr><tr data-f><td>United Kingdom</td><td>Money Laundering Regulations + FCA implementation</td><td>Verify current UK requirements</td><td>Risk-based evidence</td><td><a href="https://www.fca.org.uk/firms/financial-crime/cryptoassets-aml-ctf-regime">FCA</a></td></tr><tr data-f><td>Switzerland</td><td>AMLA/AMLO-FINMA implementation</td><td>Verify current Swiss threshold</td><td>Proof of control often material</td><td><a href="https://www.finma.ch/en/supervision/fintech/">FINMA</a></td></tr><tr data-f><td>Singapore</td><td>Payment Services Act / MAS notices</td><td>Verify current notice and scope</td><td>Counterparty due diligence</td><td><a href="https://www.mas.gov.sg/regulation/anti-money-laundering">MAS</a></td></tr><tr data-f><td>Japan</td><td>Act / JFSA and JVCEA implementation</td><td>Verify current local rule</td><td>Counterparty controls</td><td><a href="https://www.fsa.go.jp/en/">JFSA</a></td></tr><tr data-f><td>Canada</td><td>PCMLTFA / FINTRAC virtual-currency transfer records</td><td>CAD threshold rules vary by duty</td><td>Identity and records</td><td><a href="https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/vctr/vctr-eng">FINTRAC</a></td></tr><tr data-f><td>Australia</td><td>AML/CTF regime and AUSTRAC guidance</td><td>Verify reforms and commencement</td><td>Counterparty and ownership risk</td><td><a href="https://www.austrac.gov.au/business/core-guidance/amlctf-programs">AUSTRAC</a></td></tr><tr data-f><td>Hong Kong</td><td>AMLO VASP regime</td><td>Verify current threshold and circulars</td><td>Risk-based controls</td><td><a href="https://www.sfc.hk/en/Regulatory-functions/Intermediaries/Virtual-asset-trading-platforms-operators">SFC</a></td></tr><tr data-f><td>UAE</td><td>Federal plus competent-authority rule</td><td>Depends on regulator/free zone</td><td>Counterparty verification</td><td><a href="https://www.vara.ae/en/regulations/regulations/">VARA</a></td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="ivms101-field-map">
       <h2 id="ivms101-field-map">IVMS101 field map</h2>
       <p class="section-note">IVMS101 standardizes identity data; it does not standardize discovery, transport, certificate trust, or corridor policy.</p>
       <div class="table-wrap" role="region" aria-label="IVMS101 field map" tabindex="0">
-        <table><thead><tr><th scope="col">Object / field</th><th scope="col">Cardinality / type</th><th scope="col">Constraint</th><th scope="col">Common rejection</th></tr></thead><tbody><tr><td>originator / beneficiary</td><td>1 object</td><td>Person arrays + account number</td><td>Flattening all persons into one name</td></tr><tr><td>naturalPerson.name</td><td>1..n</td><td>Structured <code>nameIdentifier</code></td><td>Single free-text full name</td></tr><tr><td>legalPerson.name</td><td>1..n</td><td>Legal-person identifier structure</td><td>Using natural-person fields</td></tr><tr><td>nameIdentifierType</td><td>code</td><td>Controlled vocabulary such as <code>LEGL</code></td><td>Unrecognized local code</td></tr><tr><td>geographicAddress</td><td>0..n</td><td>Typed address + ISO country</td><td>Country name instead of alpha-2 code</td></tr><tr><td>addressType</td><td>code</td><td>Controlled vocabulary</td><td>Billing/home/business semantics mixed</td></tr><tr><td>nationalIdentification</td><td>0..1</td><td>Identifier + type; authority where required</td><td>Sending raw document without type</td></tr><tr><td>dateAndPlaceOfBirth</td><td>0..1</td><td>ISO date + place</td><td>Locale-formatted date</td></tr><tr><td>customerIdentification</td><td>0..1</td><td>VASP customer identifier</td><td>Reusing government ID</td></tr><tr><td>accountNumber</td><td>0..n strings</td><td>Chain/account or internal account</td><td>Dropping memo/tag</td></tr><tr><td>originatingVASP / beneficiaryVASP</td><td>0..1</td><td>Legal-person identity</td><td>Trusting a domain name as identity</td></tr><tr><td>transferPath</td><td>0..1</td><td>Ordered intermediaries</td><td>Losing sequence</td></tr><tr><td>payloadMetadata</td><td>0..1</td><td>Encoding/transliteration metadata</td><td>No Latin/local script strategy</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Object / field</th><th scope="col">Cardinality / type</th><th scope="col">Constraint</th><th scope="col">Common rejection</th></tr></thead><tbody><tr data-f><td>originator / beneficiary</td><td>1 object</td><td>Person arrays + account number</td><td>Flattening all persons into one name</td></tr><tr data-f><td>naturalPerson.name</td><td>1..n</td><td>Structured <code>nameIdentifier</code></td><td>Single free-text full name</td></tr><tr data-f><td>legalPerson.name</td><td>1..n</td><td>Legal-person identifier structure</td><td>Using natural-person fields</td></tr><tr data-f><td>nameIdentifierType</td><td>code</td><td>Controlled vocabulary such as <code>LEGL</code></td><td>Unrecognized local code</td></tr><tr data-f><td>geographicAddress</td><td>0..n</td><td>Typed address + ISO country</td><td>Country name instead of alpha-2 code</td></tr><tr data-f><td>addressType</td><td>code</td><td>Controlled vocabulary</td><td>Billing/home/business semantics mixed</td></tr><tr data-f><td>nationalIdentification</td><td>0..1</td><td>Identifier + type; authority where required</td><td>Sending raw document without type</td></tr><tr data-f><td>dateAndPlaceOfBirth</td><td>0..1</td><td>ISO date + place</td><td>Locale-formatted date</td></tr><tr data-f><td>customerIdentification</td><td>0..1</td><td>VASP customer identifier</td><td>Reusing government ID</td></tr><tr data-f><td>accountNumber</td><td>0..n strings</td><td>Chain/account or internal account</td><td>Dropping memo/tag</td></tr><tr data-f><td>originatingVASP / beneficiaryVASP</td><td>0..1</td><td>Legal-person identity</td><td>Trusting a domain name as identity</td></tr><tr data-f><td>transferPath</td><td>0..1</td><td>Ordered intermediaries</td><td>Losing sequence</td></tr><tr data-f><td>payloadMetadata</td><td>0..1</td><td>Encoding/transliteration metadata</td><td>No Latin/local script strategy</td></tr></tbody></table>
       </div>
     </section><section class="sheet-section" aria-labelledby="ivms101-payload"><h2 id="ivms101-payload">IVMS101.2023 worked payload</h2>
 <p class="section-note">Illustrative transport envelope: validate against the counterparty network's current IVMS101.2023 schema and required jurisdictional fields. Names use structured identifiers; dates use ISO 8601.</p>
@@ -145,31 +366,31 @@
       <h2 id="kyt-sanctions--data-protection">KYT, sanctions &amp; data protection</h2>
       
       <div class="entry-grid">
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Hop depth</h3>
           <p>Indirect exposure is a policy parameter; at enough hops almost every liquid address becomes connected.</p>
           <p class="example"><strong>Concrete use:</strong> Store direct and 1-hop exposure separately and require a documented threshold by category.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Treating graph distance as moral certainty creates unbounded false positives.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Vendor disagreement</h3>
           <p>Attribution and clustering are models, not shared facts.</p>
           <p class="example"><strong>Concrete use:</strong> Route a high-value disagreement to evidence review; retain each vendor's label version.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Averaging opaque scores does not create truth.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Dynamic sanctions data</h3>
           <p>Lists add and remove identifiers; application code must consume versioned authoritative data.</p>
           <p class="example"><strong>Concrete use:</strong> Treat the OFAC SDN feed as an external signed/versioned input and rescreen on update.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Hard-coded addresses become wrong in both directions.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Blocked-property response</h3>
           <p>Freeze and segregate; route reporting, recordkeeping, and legal decisions to the applicable program.</p>
           <p class="example"><strong>Concrete use:</strong> Open one case linking asset, list version, timestamps, owners, decisions, and reports.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Automatically returning funds may itself be prohibited.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Data minimization</h3>
           <p>Transmit required identity data only to an authenticated counterparty under a recorded lawful mechanism.</p>
           <p class="example"><strong>Concrete use:</strong> Encrypt in transit and at rest, separate compliance payload from chain transaction, and expire unnecessary copies.</p>
@@ -179,54 +400,122 @@
     <section class="sheet-section checklist" aria-labelledby="blocked-property-and-alert-runbook">
       <h2 id="blocked-property-and-alert-runbook">Blocked-property and alert runbook</h2>
       <p class="section-note">Deadlines are jurisdiction- and program-specific. The runbook must link to maintained legal policy, never freeze a number in application code.</p>
-      <ol><li><span aria-hidden="true">□</span> Atomically freeze availability and prevent signing; preserve the exact screening response.</li><li><span aria-hidden="true">□</span> Identify governing entity, program, list entry, ownership/control basis, and transaction state.</li><li><span aria-hidden="true">□</span> Segregate or label the position so routine sweeps and reconciler repairs cannot move it.</li><li><span aria-hidden="true">□</span> Do not return, consolidate, or test-transfer value without authorized legal determination.</li><li><span aria-hidden="true">□</span> Open a privileged case with timestamps, list version, assets, chain evidence, and decision owners.</li><li><span aria-hidden="true">□</span> Evaluate required blocking/rejection reports and deadlines under the applicable program.</li><li><span aria-hidden="true">□</span> Evaluate separate suspicious-activity reporting and anti-tipping-off constraints.</li><li><span aria-hidden="true">□</span> Notify internal legal/compliance/security through the documented channel, not ordinary support notes.</li><li><span aria-hidden="true">□</span> Rescreen related customers, addresses, counterparties, and pending transfers.</li><li><span aria-hidden="true">□</span> Retain records and schedule ongoing/annual reporting where the applicable rule requires it.</li><li><span aria-hidden="true">□</span> Test release/delisting path with dual control and complete audit evidence.</li><li><span aria-hidden="true">□</span> After closure, repair the placement or data defect that allowed exposure.</li></ol>
+      <ol><li data-f><span>Atomically freeze availability and prevent signing; preserve the exact screening response.</span></li><li data-f><span>Identify governing entity, program, list entry, ownership/control basis, and transaction state.</span></li><li data-f><span>Segregate or label the position so routine sweeps and reconciler repairs cannot move it.</span></li><li data-f><span>Do not return, consolidate, or test-transfer value without authorized legal determination.</span></li><li data-f><span>Open a privileged case with timestamps, list version, assets, chain evidence, and decision owners.</span></li><li data-f><span>Evaluate required blocking/rejection reports and deadlines under the applicable program.</span></li><li data-f><span>Evaluate separate suspicious-activity reporting and anti-tipping-off constraints.</span></li><li data-f><span>Notify internal legal/compliance/security through the documented channel, not ordinary support notes.</span></li><li data-f><span>Rescreen related customers, addresses, counterparties, and pending transfers.</span></li><li data-f><span>Retain records and schedule ongoing/annual reporting where the applicable rule requires it.</span></li><li data-f><span>Test release/delisting path with dual control and complete audit evidence.</span></li><li data-f><span>After closure, repair the placement or data defect that allowed exposure.</span></li></ol>
     </section>
-    <section class="sheet-section" aria-labelledby="common-mistakes--anti-patterns">
+    <section class="sheet-section mid" aria-labelledby="common-mistakes--anti-patterns">
       <h2 id="common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</h2>
-      
-      <div class="entry-grid">
-        <article class="entry">
-          <h3>Screen after broadcast</h3>
-          <p>The irreversible action already happened.</p>
-          <p class="example"><strong>Concrete use:</strong> Gate before signing.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> A broadcaster hold does not neutralize signed bytes.</p>
-        </article>
-        <article class="entry">
-          <h3>Hard-coded lists</h3>
-          <p>Sanctions state changes without software releases.</p>
-          <p class="example"><strong>Concrete use:</strong> Consume authoritative versioned feeds.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Delisting is as important as designation.</p>
-        </article>
-        <article class="entry">
-          <h3>Score as fact</h3>
-          <p>A vendor's risk score encodes taxonomy and model choices.</p>
-          <p class="example"><strong>Concrete use:</strong> Store evidence, category, distance, model and appeal path.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Threshold tuning without false-positive measurement is guesswork.</p>
-        </article>
-        <article class="entry">
-          <h3>Unauthenticated counterparty</h3>
-          <p>Correct IVMS data sent to the wrong VASP is a breach.</p>
-          <p class="example"><strong>Concrete use:</strong> Verify certificate/entity before payload transmission.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Protocol membership is not universal identity assurance.</p>
-        </article></div>
+      <p class="section-note">Failures that pass a vendor demo. Expand each for the control and the reason it fails.</p>
+      <div class="drawers">
+        <details class="drawer" name="antipattern" data-f><summary>Screen after broadcast</summary>
+          <div class="drawer-body">
+            <p>The irreversible action already happened.</p>
+            <p class="example"><strong>Concrete use:</strong> Gate before signing.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> A broadcaster hold does not neutralize signed bytes.</p>
+          </div></details>
+        <details class="drawer" name="antipattern" data-f><summary>Hard-coded lists</summary>
+          <div class="drawer-body">
+            <p>Sanctions state changes without software releases.</p>
+            <p class="example"><strong>Concrete use:</strong> Consume authoritative versioned feeds.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> Delisting is as important as designation.</p>
+          </div></details>
+        <details class="drawer" name="antipattern" data-f><summary>Score as fact</summary>
+          <div class="drawer-body">
+            <p>A vendor's risk score encodes taxonomy and model choices.</p>
+            <p class="example"><strong>Concrete use:</strong> Store evidence, category, distance, model and appeal path.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> Threshold tuning without false-positive measurement is guesswork.</p>
+          </div></details>
+        <details class="drawer" name="antipattern" data-f><summary>Unauthenticated counterparty</summary>
+          <div class="drawer-body">
+            <p>Correct IVMS data sent to the wrong VASP is a breach.</p>
+            <p class="example"><strong>Concrete use:</strong> Verify certificate/entity before payload transmission.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> Protocol membership is not universal identity assurance.</p>
+          </div></details></div>
     </section>
     <section class="sheet-section" aria-labelledby="kyt-integration-surfaces">
       <h2 id="kyt-integration-surfaces">KYT integration surfaces</h2>
       <p class="section-note">Recheck each vendor's public documentation before procurement. This compares integration shape, not quality, experience, or rank.</p>
       <div class="table-wrap" role="region" aria-label="KYT integration surfaces" tabindex="0">
-        <table><thead><tr><th scope="col">Provider</th><th scope="col">Documented surface</th><th scope="col">Retain</th><th scope="col">Do not infer</th></tr></thead><tbody><tr><td>Chainalysis</td><td>APIs and platform workflows</td><td>category, exposure, score, evidence/version</td><td>Cross-vendor score equivalence</td></tr><tr><td>TRM Labs</td><td>APIs and case workflows</td><td>risk indicators, attribution, graph context</td><td>Attribution immutability</td></tr><tr><td>Elliptic</td><td>Wallet/transaction screening APIs</td><td>risk rule, category, path, timestamp</td><td>Identical taxonomy</td></tr><tr><td>Merkle Science</td><td>Transaction-monitoring APIs</td><td>rule hit, exposure, model state</td><td>Score as legal conclusion</td></tr><tr><td>Crystal</td><td>Blockchain-analytics APIs</td><td>entity/category and transaction evidence</td><td>Universal chain/token coverage</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Provider</th><th scope="col">Documented surface</th><th scope="col">Retain</th><th scope="col">Do not infer</th></tr></thead><tbody><tr data-f><td>Chainalysis</td><td>APIs and platform workflows</td><td>category, exposure, score, evidence/version</td><td>Cross-vendor score equivalence</td></tr><tr data-f><td>TRM Labs</td><td>APIs and case workflows</td><td>risk indicators, attribution, graph context</td><td>Attribution immutability</td></tr><tr data-f><td>Elliptic</td><td>Wallet/transaction screening APIs</td><td>risk rule, category, path, timestamp</td><td>Identical taxonomy</td></tr><tr data-f><td>Merkle Science</td><td>Transaction-monitoring APIs</td><td>rule hit, exposure, model state</td><td>Score as legal conclusion</td></tr><tr data-f><td>Crystal</td><td>Blockchain-analytics APIs</td><td>entity/category and transaction evidence</td><td>Universal chain/token coverage</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="travel-rule-protocol-interoperability">
       <h2 id="travel-rule-protocol-interoperability">Travel Rule protocol interoperability</h2>
       <p class="section-note">The payload is standardized more broadly than transport and discovery. Multi-network routing, receipts, retries, and counterparty identity are first-class state.</p>
       <div class="table-wrap" role="region" aria-label="Travel Rule protocol interoperability" tabindex="0">
-        <table><thead><tr><th scope="col">Protocol/network</th><th scope="col">Transport/discovery</th><th scope="col">Identity trust</th><th scope="col">Payload</th><th scope="col">Architecture implication</th></tr></thead><tbody><tr><td>TRISA</td><td>Certificate-backed directory/messaging</td><td>VASP certificates</td><td>IVMS101-compatible</td><td>Operate certificate lifecycle and discovery</td></tr><tr><td>TRP</td><td>Open protocol specifications</td><td>Implementation-dependent counterparty verification</td><td>IVMS101 mapping</td><td>No universal directory</td></tr><tr><td>OpenVASP</td><td>Open messaging/identity design</td><td>Protocol-defined VASP identity</td><td>Structured Travel Rule data</td><td>Reach may require another network</td></tr><tr><td>Commercial broker</td><td>Vendor directory and routed transport</td><td>Vendor onboarding model</td><td>Often IVMS101</td><td>Broker concentration and exit are controls</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Protocol/network</th><th scope="col">Transport/discovery</th><th scope="col">Identity trust</th><th scope="col">Payload</th><th scope="col">Architecture implication</th></tr></thead><tbody><tr data-f><td>TRISA</td><td>Certificate-backed directory/messaging</td><td>VASP certificates</td><td>IVMS101-compatible</td><td>Operate certificate lifecycle and discovery</td></tr><tr data-f><td>TRP</td><td>Open protocol specifications</td><td>Implementation-dependent counterparty verification</td><td>IVMS101 mapping</td><td>No universal directory</td></tr><tr data-f><td>OpenVASP</td><td>Open messaging/identity design</td><td>Protocol-defined VASP identity</td><td>Structured Travel Rule data</td><td>Reach may require another network</td></tr><tr data-f><td>Commercial broker</td><td>Vendor directory and routed transport</td><td>Vendor onboarding model</td><td>Often IVMS101</td><td>Broker concentration and exit are controls</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section sources" aria-labelledby="sources">
       <h2 id="sources">Primary sources &amp; scope</h2>
       <p class="section-note">Operational and volatile claims were checked against these first-party documents on 2026-08-31. Examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
-      <ul><li><a href="https://www.intervasp.org/" target="_blank" rel="noopener noreferrer">IVMS101.2023</a><span>Maintainer page and current data model download.</span></li><li><a href="https://www.fatf-gafi.org/en/publications/Fatfrecommendations/Guidance-rba-virtual-assets-2021.html" target="_blank" rel="noopener noreferrer">FATF virtual-asset guidance</a><span>Recommendation 16 implementation context.</span></li><li><a href="https://eur-lex.europa.eu/eli/reg/2023/1113/oj" target="_blank" rel="noopener noreferrer">EU Regulation 2023/1113</a><span>Information accompanying crypto-asset transfers.</span></li><li><a href="https://ofac.treasury.gov/sanctions-list-service" target="_blank" rel="noopener noreferrer">OFAC sanctions data</a><span>Authoritative list service and digital-currency identifiers.</span></li><li><a href="https://www.ecfr.gov/current/title-31/subtitle-B/chapter-X" target="_blank" rel="noopener noreferrer">FinCEN regulations</a><span>Current BSA regulatory text.</span></li></ul>
-    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a></div></aside></main>
-<footer class="shell meta"><p>Last verified: 2026-08-31 · Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer></body></html>
+      <ul><li data-f><a href="https://www.intervasp.org/" target="_blank" rel="noopener noreferrer">IVMS101.2023</a><span>Maintainer page and current data model download.</span></li><li data-f><a href="https://www.fatf-gafi.org/en/publications/Fatfrecommendations/Guidance-rba-virtual-assets-2021.html" target="_blank" rel="noopener noreferrer">FATF virtual-asset guidance</a><span>Recommendation 16 implementation context.</span></li><li data-f><a href="https://eur-lex.europa.eu/eli/reg/2023/1113/oj" target="_blank" rel="noopener noreferrer">EU Regulation 2023/1113</a><span>Information accompanying crypto-asset transfers.</span></li><li data-f><a href="https://ofac.treasury.gov/sanctions-list-service" target="_blank" rel="noopener noreferrer">OFAC sanctions data</a><span>Authoritative list service and digital-currency identifiers.</span></li><li data-f><a href="https://www.ecfr.gov/current/title-31/subtitle-B/chapter-X" target="_blank" rel="noopener noreferrer">FinCEN regulations</a><span>Current BSA regulatory text.</span></li></ul>
+    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a></div></aside>
+<footer class="sheet-foot"><p>Last verified: 2026-08-31 &middot; Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer>
+</main>
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement, btn = document.getElementById("theme-btn");
+  var stored = null;
+  try { stored = localStorage.getItem("custody-theme"); } catch (e) { /* private mode */ }
+  if (stored === "light" || stored === "dark") root.setAttribute("data-theme", stored);
+  function isDark() {
+    var t = root.getAttribute("data-theme");
+    return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  btn.setAttribute("aria-pressed", String(isDark()));
+  btn.addEventListener("click", function () {
+    var next = isDark() ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    btn.setAttribute("aria-pressed", String(next === "dark"));
+    try { localStorage.setItem("custody-theme", next); } catch (e) { /* ignore */ }
+  });
+
+  var input = document.getElementById("sheet-filter"),
+      status = document.getElementById("filter-status"),
+      units = [].slice.call(document.querySelectorAll("[data-f]")),
+      total = units.length,
+      openState = new WeakMap();
+
+  function apply() {
+    var q = input.value.trim().toLowerCase(), shown = 0;
+    units.forEach(function (el) {
+      var hit = !q || el.textContent.toLowerCase().indexOf(q) > -1;
+      el.hidden = !hit;
+      if (hit) shown++;
+      if (el.tagName === "DETAILS") {
+        if (q) {
+          if (!openState.has(el)) openState.set(el, el.open);
+          el.open = hit;
+        } else if (openState.has(el)) {
+          el.open = openState.get(el);
+          openState.delete(el);
+        }
+      }
+    });
+    [].forEach.call(document.querySelectorAll("main .sheet-section"), function (sec) {
+      var own = sec.querySelectorAll("[data-f]");
+      sec.hidden = own.length > 0 && !sec.querySelector("[data-f]:not([hidden])");
+    });
+    status.textContent = q ? shown + " / " + total : "";
+  }
+  input.addEventListener("input", apply);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { input.value = ""; apply(); }
+  });
+  apply();
+
+  var reopen = [];
+  addEventListener("beforeprint", function () {
+    reopen = [];
+    [].forEach.call(document.querySelectorAll("details.drawer"), function (d) {
+      if (!d.open) { reopen.push(d); d.open = true; }
+    });
+  });
+  addEventListener("afterprint", function () {
+    reopen.forEach(function (d) { d.open = false; });
+    reopen = [];
+  });
+})();
+</script>
+</body></html>

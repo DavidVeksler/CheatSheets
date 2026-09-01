@@ -24,7 +24,7 @@ def esc(value: object) -> str:
 def table(title: str, columns: list[str], rows: list[list[str]], note: str = "") -> str:
     head = "".join(f"<th scope=\"col\">{esc(column)}</th>" for column in columns)
     body = "".join(
-        "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
+        "<tr data-f>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
         for row in rows
     )
     return f"""
@@ -38,10 +38,34 @@ def table(title: str, columns: list[str], rows: list[list[str]], note: str = "")
 
 
 def cards(title: str, entries: list[tuple[str, str, str, str]], intro: str = "") -> str:
+    """Render entry cards, or progressive-disclosure drawers for the edge tier.
+
+    The anti-pattern section is the advanced tier on every sheet, so it collapses
+    by default; the sheet filter reopens whichever drawer matches a query, and a
+    beforeprint handler opens all of them so printing still emits the full sheet.
+    """
+    if title == "Common mistakes & anti-patterns":
+        rendered = "".join(
+            f"""
+        <details class="drawer" name="antipattern" data-f><summary>{esc(name)}</summary>
+          <div class="drawer-body">
+            <p>{definition}</p>
+            <p class="example"><strong>Concrete use:</strong> {example}</p>
+            <p class="gotcha"><strong>Failure mode:</strong> {gotcha}</p>
+          </div></details>"""
+            for name, definition, example, gotcha in entries
+        )
+        return f"""
+    <section class="sheet-section mid" aria-labelledby="{slugify(title)}">
+      <h2 id="{slugify(title)}">{esc(title)}</h2>
+      <p class="section-note">{intro or 'Failures that pass a vendor demo. Expand each for the control and the reason it fails.'}</p>
+      <div class="drawers">{rendered}</div>
+    </section>"""
+
     rendered = []
     for name, definition, example, gotcha in entries:
         rendered.append(f"""
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>{esc(name)}</h3>
           <p>{definition}</p>
           <p class="example"><strong>Concrete use:</strong> {example}</p>
@@ -56,7 +80,7 @@ def cards(title: str, entries: list[tuple[str, str, str, str]], intro: str = "")
 
 
 def checklist(title: str, items: list[str], intro: str = "") -> str:
-    lis = "".join(f"<li><span aria-hidden=\"true\">□</span> {item}</li>" for item in items)
+    lis = "".join(f"<li data-f><span>{item}</span></li>" for item in items)
     return f"""
     <section class="sheet-section checklist" aria-labelledby="{slugify(title)}">
       <h2 id="{slugify(title)}">{esc(title)}</h2>
@@ -67,7 +91,7 @@ def checklist(title: str, items: list[str], intro: str = "") -> str:
 
 def sources(items: list[tuple[str, str, str]]) -> str:
     rendered = "".join(
-        f'<li><a href="{esc(url)}" target="_blank" rel="noopener noreferrer">{esc(label)}</a>'
+        f'<li data-f><a href="{esc(url)}" target="_blank" rel="noopener noreferrer">{esc(label)}</a>'
         f'<span>{esc(note)}</span></li>'
         for label, url, note in items
     )
@@ -101,72 +125,795 @@ SHARED_RELATED = [
 ]
 
 
+# --- House visual system -----------------------------------------------------
+# One structural grammar shared by all nine sheets; per-sheet accent, ground
+# texture and figures are injected from SHEET_DESIGN so the batch reads as nine
+# sheets rather than nine copies.
+
+TEXTURES = {
+    # Baked into `background` on purpose. Fixed full-viewport mix-blend-mode or
+    # backdrop-filter stalls scroll compositing.
+    "lattice": "radial-gradient(circle, var(--lattice) 1px, transparent 1.3px) 0 0/26px 26px",
+    "lattice-wide": "radial-gradient(circle, var(--lattice) 1.1px, transparent 1.4px) 0 0/38px 38px",
+    "grid": ("linear-gradient(90deg, var(--lattice) 1px, transparent 1px) 0 0/32px 32px,"
+             "linear-gradient(var(--lattice) 1px, transparent 1px) 0 0/32px 32px"),
+    "rules": "repeating-linear-gradient(180deg, var(--lattice) 0 1px, transparent 1px 28px)",
+    "hatch": "repeating-linear-gradient(135deg, var(--lattice) 0 1px, transparent 1px 11px)",
+}
+
 CSS = r"""
-@layer reset, tokens, base, layout, components, print;
+@layer reset, tokens, base, layout, components, diagram, print;
+
 @layer tokens {
   :root {
     color-scheme: light dark;
-    --paper: light-dark(#faf9f7, #0f172a); --surface: light-dark(#ffffff, #182235);
-    --surface-2: light-dark(#f4f1ed, #111c2e); --ink: light-dark(#172033, #e7edf6);
-    --muted: light-dark(#586273, #a9b5c7); --line: light-dark(#d8d3cc, #334155);
-    --accent: light-dark(#86198f, #e879f9); --accent-soft: light-dark(#fae8ff, #3b1641);
-    --safe: light-dark(#166534, #86efac); --safe-bg: light-dark(#dcfce7, #12351f);
-    --warn: light-dark(#92400e, #fcd34d); --warn-bg: light-dark(#fef3c7, #3b2a0d);
-    --danger: light-dark(#991b1b, #fca5a5); --danger-bg: light-dark(#fee2e2, #401719);
-    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    __ACCENT__
+    --paper: light-dark(__PAPER_L__, __PAPER_D__);
+    --surface: light-dark(#ffffff, __SURF_D__);
+    --surface-2: light-dark(__SURF2_L__, __SURF2_D__);
+    --ink: light-dark(#16151f, #e9e7f3);
+    --muted: light-dark(#55536c, #a3a0bb);
+    --faint: light-dark(#5d5b72, #8a87a7);
+    --line: light-dark(__LINE_L__, __LINE_D__);
+    --safe: light-dark(#146c43, #7fe3ab); --safe-bg: light-dark(#dcf0e4, #10301f);
+    --warn: light-dark(#8a5407, #f0c05a); --warn-bg: light-dark(#f8eed6, #322612);
+    --danger: light-dark(#98202f, #f7909d); --danger-bg: light-dark(#f8dfe2, #351520);
+    --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --display: "Archivo", "Public Sans", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"]  { color-scheme: dark; }
+}
+
+@layer reset {
+  *,*::before,*::after{box-sizing:border-box}
+  body,h1,h2,h3,p,figure{margin:0}
+  table{border-collapse:collapse}
+  img,svg{display:block;max-width:100%}
+  button,input{font:inherit;color:inherit}
+}
+
+@layer base {
+  body{
+    background:
+      radial-gradient(circle at 16% -8%, color-mix(in srgb,var(--accent) 8%,transparent), transparent 38%),
+      radial-gradient(circle at 94% 0%, color-mix(in srgb,var(--accent) 5%,transparent), transparent 32%),
+      __TEXTURE__,
+      var(--paper);
+    color:var(--ink);
+    font:400 1rem/1.6 var(--sans);
+    text-wrap:pretty;
+  }
+  a{color:var(--accent);font-weight:600;text-decoration-thickness:.08em;text-underline-offset:.18em}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:2px}
+  code,.mono{font-family:var(--mono)}
+  td:nth-child(n+2),.num{font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.1;letter-spacing:-.03em}
+  h1{font-size:clamp(2.3rem,6.5vw,4.5rem);font-weight:800;letter-spacing:-.05em;max-width:15ch}
+  h2{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800}
+  h3{font-size:1rem;font-weight:600;letter-spacing:-.01em}
+  p+p{margin-top:.72rem}
+  pre{overflow-x:auto;background:var(--surface);border:1px solid var(--line);padding:.9rem;font-size:.8rem}
+  .skip{position:absolute;left:-9999px;top:0;z-index:99;background:var(--accent);color:var(--surface);
+    padding:.6rem 1rem;font:600 .85rem var(--mono)}
+  .skip:focus{left:.5rem;top:.5rem}
+}
+
+@layer layout {
+  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}
+  .mid{width:min(920px,100%)}
+  .utility{position:sticky;top:0;z-index:8;background:var(--surface);border-bottom:1px solid var(--line)}
+  .utility .shell{display:flex;align-items:center;gap:.75rem;padding-block:.5rem;flex-wrap:wrap}
+  .utility .wordmark{font:600 .68rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .filter{flex:1 1 14rem;min-width:0}
+  .filter input{width:100%;padding:.42rem .7rem;border:1px solid var(--line);border-radius:3px;
+    background:var(--paper);color:var(--ink);font:500 .8rem/1.3 var(--mono)}
+  .filter input::placeholder{color:var(--faint)}
+  .btn{border:1px solid var(--line);border-radius:3px;background:var(--paper);cursor:pointer;
+    padding:.42rem .7rem;font:500 .68rem/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .btn:hover{color:var(--ink);border-color:var(--accent)}
+  .filter-status{font:500 .68rem/1 var(--mono);color:var(--faint);white-space:nowrap}
+
+  .masthead{padding:clamp(2rem,5vw,3.6rem) 0 1.4rem}
+  .eyebrow{color:var(--accent);font:600 .74rem/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;margin-bottom:1rem}
+  .dek{color:var(--muted);font-size:clamp(1rem,1.9vw,1.22rem);max-width:66ch;margin-top:1.1rem}
+  .meta{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;margin-top:1.2rem;color:var(--faint);font:500 .74rem/1.4 var(--mono)}
+
+  nav.sections{position:sticky;top:2.6rem;z-index:6;background:var(--surface);border-block:1px solid var(--line)}
+  nav.sections .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.6rem 0}
+  nav.sections a{white-space:nowrap;font-size:.82rem;font-weight:600}
+
+  main{padding-bottom:4rem}
+  .sheet-section{margin-top:clamp(2.4rem,5.5vw,4rem);scroll-margin-top:6rem}
+  .section-note{color:var(--muted);max-width:68ch;margin-bottom:1.1rem}
+  .entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:.8rem}
+}
+
+@layer components {
+  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.18rem .5rem;
+    font:600 .7rem/1.35 var(--mono);white-space:nowrap}
+  .signal.safe{color:var(--safe);background:var(--safe-bg)}
+  .signal.warn{color:var(--warn);background:var(--warn-bg)}
+  .signal.danger{color:var(--danger);background:var(--danger-bg)}
+
+  /* Instrument panel: the values that define the topic, above the fold. */
+  .instrument{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:1px;
+    background:var(--line);border:1px solid var(--line);border-top:4px solid var(--accent)}
+  .instrument div{background:var(--surface);padding:.9rem 1rem;display:grid;gap:.24rem;align-content:start}
+  .instrument .k{font:500 .66rem/1.3 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+  .instrument .v{font-family:var(--display);font-weight:800;font-size:clamp(1.25rem,2.9vw,1.85rem);
+    letter-spacing:-.045em;line-height:1.05;color:var(--accent);font-variant-numeric:tabular-nums}
+  .instrument .s{font:400 .74rem/1.4 var(--mono);color:var(--muted)}
+
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+  table{width:100%;min-width:700px;font-size:.87rem}
+  th,td{padding:.7rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+  th{position:sticky;top:0;background:var(--surface-2);z-index:1;
+    font:600 .7rem/1.3 var(--sans);letter-spacing:.05em;text-transform:uppercase}
+  tbody tr:hover{background:var(--accent-soft)}
+  td:first-child{font-weight:600;min-width:11rem}
+  tbody tr:last-child td{border-bottom:0}
+
+  /* Severity encoded in form, not only in words. */
+  td.sev{white-space:nowrap}
+  td.sev::before{content:"";display:inline-block;width:.22rem;height:.95em;border-radius:1px;
+    margin-right:.5rem;vertical-align:-.13em;background:var(--sev,var(--line))}
+  tr[data-sev="danger"] td.sev{--sev:var(--danger)}
+  tr[data-sev="warn"]   td.sev{--sev:var(--warn)}
+  tr[data-sev="safe"]   td.sev{--sev:var(--safe)}
+
+  /* Magnitude inside the cell: one gradient, no extra markup, prints fine. */
+  td.bar{min-width:8rem}
+  td.bar span{display:block;height:.62rem;border-radius:1px;
+    background:linear-gradient(90deg,var(--c,var(--accent)) var(--w),color-mix(in srgb,var(--line) 55%,transparent) var(--w))}
+
+  /* Log axis: for columns whose values span more than a decade. */
+  .axis{display:grid;gap:.15rem;min-width:30rem}
+  .axis-ticks{position:relative;height:1.35rem;margin-left:11rem;border-bottom:1px solid var(--line)}
+  .axis-ticks span{position:absolute;left:var(--x);transform:translateX(-50%);bottom:.28rem;
+    font:500 .64rem/1 var(--mono);color:var(--faint);white-space:nowrap}
+  .axis-ticks span::after{content:"";position:absolute;left:50%;bottom:-.32rem;width:1px;height:.28rem;background:var(--line)}
+  .axis-ticks span:last-child{transform:translateX(-100%)}
+  .axis-ticks span:last-child::after{left:100%}
+  .axis-row{display:grid;grid-template-columns:11rem 1fr;align-items:center;padding-block:.16rem}
+  .axis-row .name{font:500 .78rem/1.3 var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:.6rem}
+  .axis-track{position:relative;height:1.15rem;
+    background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--line) 55%,transparent) 0 1px,transparent 1px 25%)}
+  .axis-track i{position:absolute;left:var(--x);top:50%;translate:-50% -50%;
+    width:.62rem;height:.62rem;border-radius:50%;background:var(--dot,var(--accent));
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--dot,var(--accent)) 22%,transparent)}
+  .axis-track b{position:absolute;left:var(--x);top:50%;translate:.75rem -50%;
+    font:500 .68rem/1 var(--mono);color:var(--muted);white-space:nowrap}
+  .axis-row.flip .axis-track b{translate:-.75rem -50%;transform:translateX(-100%)}
+
+  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0;display:grid;gap:.6rem;align-content:start}
+  .entry h3{border-left:3px solid var(--accent);padding-left:.6rem}
+  .entry p{font-size:.9rem;margin:0}
+  .example,.gotcha{padding:.6rem .65rem;border-left:2px solid var(--safe);background:var(--safe-bg);font-size:.86rem}
+  .gotcha{border-color:var(--danger);background:var(--danger-bg)}
+  .example strong,.gotcha strong{display:block;font:600 .66rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.2rem}
+
+  .checklist ol{list-style:none;padding:0;margin:0;display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:.5rem;counter-reset:steps}
+  .checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);
+    padding:.75rem .85rem;font-size:.9rem;display:grid;grid-template-columns:auto 1fr;gap:.6rem;align-items:baseline}
+  .checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:600 .72rem/1.5 var(--mono)}
+
+  /* Progressive disclosure on the edge/advanced tier. */
+  .drawers{display:grid;gap:.5rem}
+  details.drawer{background:var(--surface);border:1px solid var(--line)}
+  details.drawer summary{cursor:pointer;padding:.8rem 1rem;font-family:var(--display);font-weight:600;
+    font-size:1rem;letter-spacing:-.01em;display:flex;align-items:center;gap:.6rem;list-style:none}
+  details.drawer summary::-webkit-details-marker{display:none}
+  details.drawer summary::before{content:"+";color:var(--accent);font:600 1rem/1 var(--mono);width:1ch}
+  details.drawer[open] summary::before{content:"\2212"}
+  details.drawer summary:hover{background:var(--accent-soft)}
+  details.drawer .drawer-body{padding:0 1rem 1rem;display:grid;gap:.6rem}
+  details.drawer .drawer-body p{font-size:.9rem;margin:0}
+
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}
+  .flow div{padding:.9rem;background:var(--surface);border:1px solid var(--line)}
+  .flow b{display:block;color:var(--accent);font:700 .68rem/1 var(--mono);margin-bottom:.45rem;letter-spacing:.06em}
+  .flow p{font-size:.83rem;margin:0}
+  .equation{font:700 clamp(.92rem,2.2vw,1.25rem)/1.45 var(--mono);padding:1rem;border:1px dashed var(--accent);
+    background:var(--accent-soft);overflow-wrap:anywhere;margin:1rem 0}
+  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}
+
+  .sources ul{list-style:none;padding:0;margin:0;display:grid;gap:.5rem}
+  .sources li{display:grid;grid-template-columns:minmax(15rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}
+  .sources span{color:var(--muted);font-size:.87rem}
+
+  .related{margin-top:3.5rem;border:1px solid var(--line);border-top:3px solid var(--accent);
+    padding:1rem 1.1rem;background:var(--surface-2)}
+  .related h2{font-size:1rem;font-weight:600;margin-bottom:.7rem}
+  .related div{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem}
+  .related a{font-size:.85rem}
+  footer.sheet-foot{margin-top:2rem;color:var(--faint);font:400 .78rem/1.6 var(--mono)}
+  [hidden]{display:none !important}
+}
+
+/* Diagrams: tokens + currentColor, so they theme and print for free. */
+@layer diagram {
+  figure.plate{margin:0;background:var(--surface);border:1px solid var(--line);padding:1rem}
+  figure.plate svg{width:100%;height:auto;margin-inline:auto;max-width:44rem}
+  figcaption{margin-top:.7rem;color:var(--muted);font-size:.85rem;text-align:center;text-wrap:balance}
+  .dg-field{fill:var(--surface-2);stroke:var(--line)}
+  .dg-lbl{font:500 9px var(--mono);fill:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+  .dg-cap{font:600 11px var(--mono);fill:var(--ink)}
+  .dg-node{fill:var(--surface);stroke:var(--ink);stroke-width:1.4}
+  .dg-node.on{fill:var(--safe-bg);stroke:var(--safe);stroke-width:2.2}
+  .dg-node.end{fill:var(--danger-bg);stroke:var(--danger);stroke-width:2}
+  .dg-node.hot{fill:var(--warn-bg);stroke:var(--warn);stroke-width:2}
+  .dg-quorum{fill:none;stroke:var(--safe);stroke-width:2.2;stroke-dasharray:5 4}
+  .dg-cross{fill:none;stroke:var(--danger);stroke-width:1.8;stroke-dasharray:3 3}
+  .dg-flow{fill:none;stroke:var(--accent);stroke-width:1.6}
+  .dg-flow.dim{stroke:var(--line);stroke-width:1.2}
+  .dg-brace{fill:none;stroke:var(--accent);stroke-width:1.2}
+  .dg-ok{fill:var(--safe);font:600 10px var(--mono)}
+  .dg-no{fill:var(--danger);font:600 10px var(--mono)}
+  .dg-acc{fill:var(--accent);font:600 10px var(--mono)}
+}
+
+@layer print {
+  @media print{
+    body{background:#fff;color:#000}
+    .utility,nav.sections,.related{display:none}
+    .shell,.mid{width:100%}
+    .sheet-section{break-inside:avoid;margin-top:1.3rem}
+    .entry,.checklist li,figure.plate,details.drawer{break-inside:avoid}
+    details.drawer summary::before{content:""}
+    a{color:inherit;text-decoration:none}
+    .table-wrap{overflow:visible;border:1px solid #999}
+    table{min-width:0;font-size:7.6pt}
+    th{position:static}
+    .instrument{border-top-width:2px}
+  }
+  @media(max-width:600px){
+    .shell{width:min(100% - 1rem,1180px)}
+    .masthead{padding-top:1.2rem}
+    .sources li{grid-template-columns:1fr}
+    .entry-grid{grid-template-columns:1fr}
+    nav.sections{top:0}
+  }
+  @media(prefers-reduced-motion:no-preference){
+    html{scroll-behavior:smooth}
+    .btn,.filter input,tbody tr,details.drawer summary{transition:background-color .15s,border-color .15s,color .15s}
   }
 }
-@layer reset { *,*::before,*::after{box-sizing:border-box} body,h1,h2,h3,p{margin:0} table{border-collapse:collapse} }
-@layer base {
-  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;text-wrap:pretty}
-  a{color:var(--accent);font-weight:650;text-decoration-thickness:.08em;text-underline-offset:.18em}
-  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-  code,.mono,td:nth-child(n+2){font-family:var(--mono);font-variant-numeric:tabular-nums}
-  h1,h2,h3{text-wrap:balance;line-height:1.15} h1{font-size:clamp(2rem,6vw,4.25rem);letter-spacing:-.045em;max-width:18ch}
-  h2{font-size:clamp(1.45rem,3vw,2.15rem);margin-bottom:1rem} h3{font-size:1.02rem;letter-spacing:.015em}
-  p+p{margin-top:.72rem}
-}
-@layer layout {
-  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}.masthead{padding:2.2rem 0 1.5rem;border-bottom:1px solid var(--line)}
-  .eyebrow{color:var(--accent);font:700 .76rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem}
-  .dek{color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);max-width:72ch;margin-top:1rem}
-  .meta{display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:1.2rem;color:var(--muted);font:600 .78rem/1.4 var(--mono)}
-  nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 94%,transparent);border-bottom:1px solid var(--line)}
-  nav .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.65rem 0}nav a{white-space:nowrap;font-size:.82rem}
-  main{padding:1.5rem 0 4rem}.sheet-section{margin-top:clamp(2.2rem,6vw,4.5rem);scroll-margin-top:4rem}
-  .section-note{color:var(--muted);max-width:85ch;margin-bottom:1rem}.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:.8rem}
-}
-@layer components {
-  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.2rem .55rem;font:800 .72rem/1 var(--mono);white-space:nowrap}
-  .signal.safe{color:var(--safe);background:var(--safe-bg)}.signal.warn{color:var(--warn);background:var(--warn-bg)}.signal.danger{color:var(--danger);background:var(--danger-bg)}
-  .quick{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--accent);padding:clamp(1rem,3vw,2rem);box-shadow:0 16px 36px rgba(15,23,42,.08)}
-  .quick h2{display:flex;align-items:center;gap:.6rem}.quick h2::before{content:"CONTROL REGISTER";font:800 .64rem/1 var(--mono);letter-spacing:.1em;color:var(--paper);background:var(--accent);padding:.38rem .5rem}
-  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}table{width:100%;min-width:720px;font-size:.86rem}
-  th,td{padding:.72rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{position:sticky;top:0;background:var(--surface-2);font:800 .72rem/1.25 var(--sans);letter-spacing:.04em;text-transform:uppercase}
-  tbody tr:hover{background:var(--accent-soft)}td:first-child{font-family:var(--sans);font-weight:760;min-width:12rem}tbody tr:last-child td{border-bottom:0}
-  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0}.entry h3{border-left:3px solid var(--accent);padding-left:.65rem;margin-bottom:.65rem}
-  .entry p{font-size:.9rem}.example,.gotcha{padding:.65rem;border-left:2px solid var(--safe);background:var(--safe-bg)}.gotcha{border-color:var(--danger);background:var(--danger-bg)}
-  .checklist ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:.5rem;counter-reset:steps}.checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);padding:.8rem}.checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:800 .7rem/1 var(--mono);margin-right:.55rem}
-  .sources ul{list-style:none;padding:0;display:grid;gap:.5rem}.sources li{display:grid;grid-template-columns:minmax(16rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}.sources span{color:var(--muted);font-size:.86rem}
-  .related{margin-top:4rem;border:1px solid var(--line);padding:1rem;background:var(--surface-2)}.related h2{font-size:1rem}.related div{display:flex;flex-wrap:wrap;gap:.55rem 1rem}.related a{font-size:.84rem}
-  .equation{font:800 clamp(1rem,3vw,1.55rem)/1.4 var(--mono);padding:1rem;border:1px dashed var(--accent);background:var(--accent-soft);overflow-wrap:anywhere}
-  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}.flow div{position:relative;padding:1rem;background:var(--surface);border:1px solid var(--line);min-height:7rem}.flow b{display:block;color:var(--accent);font:800 .7rem/1 var(--mono);margin-bottom:.5rem}.flow p{font-size:.83rem}
-  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}.print-only{display:none}
-}
-@layer print {
-  @media print{nav{display:none}.shell{width:100%}.sheet-section{break-inside:avoid;margin-top:1.3rem}.entry{break-inside:avoid}a{color:inherit}.print-only{display:block}.table-wrap{overflow:visible}table{min-width:0;font-size:7.7pt}th{position:static}}
-  @media(max-width:600px){.shell{width:min(100% - 1rem,1180px)}.masthead{padding-top:1.2rem}.sources li{grid-template-columns:1fr}.quick{padding:.8rem}.table-wrap{margin-inline:-.5rem}.entry-grid{grid-template-columns:1fr}}
-}
 """
+
+SCRIPT = r"""
+(function () {
+  "use strict";
+  var root = document.documentElement, btn = document.getElementById("theme-btn");
+  var stored = null;
+  try { stored = localStorage.getItem("custody-theme"); } catch (e) { /* private mode */ }
+  if (stored === "light" || stored === "dark") root.setAttribute("data-theme", stored);
+  function isDark() {
+    var t = root.getAttribute("data-theme");
+    return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  btn.setAttribute("aria-pressed", String(isDark()));
+  btn.addEventListener("click", function () {
+    var next = isDark() ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    btn.setAttribute("aria-pressed", String(next === "dark"));
+    try { localStorage.setItem("custody-theme", next); } catch (e) { /* ignore */ }
+  });
+
+  var input = document.getElementById("sheet-filter"),
+      status = document.getElementById("filter-status"),
+      units = [].slice.call(document.querySelectorAll("[data-f]")),
+      total = units.length,
+      openState = new WeakMap();
+
+  function apply() {
+    var q = input.value.trim().toLowerCase(), shown = 0;
+    units.forEach(function (el) {
+      var hit = !q || el.textContent.toLowerCase().indexOf(q) > -1;
+      el.hidden = !hit;
+      if (hit) shown++;
+      if (el.tagName === "DETAILS") {
+        if (q) {
+          if (!openState.has(el)) openState.set(el, el.open);
+          el.open = hit;
+        } else if (openState.has(el)) {
+          el.open = openState.get(el);
+          openState.delete(el);
+        }
+      }
+    });
+    [].forEach.call(document.querySelectorAll("main .sheet-section"), function (sec) {
+      var own = sec.querySelectorAll("[data-f]");
+      sec.hidden = own.length > 0 && !sec.querySelector("[data-f]:not([hidden])");
+    });
+    status.textContent = q ? shown + " / " + total : "";
+  }
+  input.addEventListener("input", apply);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { input.value = ""; apply(); }
+  });
+  apply();
+
+  var reopen = [];
+  addEventListener("beforeprint", function () {
+    reopen = [];
+    [].forEach.call(document.querySelectorAll("details.drawer"), function (d) {
+      if (!d.open) { reopen.push(d); d.open = true; }
+    });
+  });
+  addEventListener("afterprint", function () {
+    reopen.forEach(function (d) { d.open = false; });
+    reopen = [];
+  });
+})();
+"""
+
+
+# --- Per-sheet design -------------------------------------------------------
+# accent  : (light, dark) drawn from the sheet's own subject, never shared.
+# texture : ground pattern key from TEXTURES.
+# panel   : (label, value, sub) instrument cells; every value appears in the body.
+# figures : hand-authored SVG built on the shared .dg-* classes.
+
+ARROW = ('<defs><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" '
+         'orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--accent)"/></marker></defs>')
+
+
+def figure(svg: str, caption: str) -> str:
+    svg = svg.replace("__ARROW__", ARROW)
+    return f'<figure class="plate">{svg}<figcaption>{caption}</figcaption></figure>'
+
+
+def plate(title: str, note: str, body: str, anchor: str) -> str:
+    return f"""
+    <section class="sheet-section" aria-labelledby="{anchor}">
+      <h2 id="{anchor}">{title}</h2>
+      <p class="section-note">{note}</p>
+      {body}
+    </section>"""
+
+
+# --- 1. MPC wallet architecture ---------------------------------------------
+MPC_FIG1 = """<svg viewBox="0 0 620 250" role="img" aria-labelledby="qf-t qf-d">
+<title id="qf-t">Two-of-three threshold signing across three trust domains</title>
+<desc id="qf-d">Three separate trust domains each hold one share. Any two shares together produce a valid signature; a single share on its own yields nothing. A refresh rotates all three shares while the public key and address stay the same.</desc>
+<rect class="dg-field" x="8" y="40" width="188" height="112" rx="3"/>
+<rect class="dg-field" x="216" y="40" width="188" height="112" rx="3"/>
+<rect class="dg-field" x="424" y="40" width="188" height="112" rx="3"/>
+<text class="dg-lbl" x="102" y="30" text-anchor="middle">Cloud HSM &middot; account A</text>
+<text class="dg-lbl" x="310" y="30" text-anchor="middle">Operator device</text>
+<text class="dg-lbl" x="518" y="30" text-anchor="middle">Recovery co-signer</text>
+<circle class="dg-node on" cx="102" cy="90" r="25"/><circle class="dg-node on" cx="310" cy="90" r="25"/><circle class="dg-node" cx="518" cy="90" r="25"/>
+<text class="dg-cap" x="102" y="94" text-anchor="middle">s1</text><text class="dg-cap" x="310" y="94" text-anchor="middle">s2</text><text class="dg-cap" x="518" y="94" text-anchor="middle">s3</text>
+<path class="dg-quorum" d="M129 90 H283"/>
+<text class="dg-ok" x="206" y="170" text-anchor="middle">quorum met &rarr; one ordinary signature</text>
+<path class="dg-cross" d="M496 116 L540 144 M540 116 L496 144"/>
+<text class="dg-no" x="518" y="170" text-anchor="middle">alone &rarr; 0 bits</text>
+<path class="dg-brace" d="M8 184 V192 H612 V184"/>
+<text class="dg-acc" x="310" y="210" text-anchor="middle">Refresh rotates s1 s2 s3 &mdash; public key and address unchanged</text>
+<text class="dg-lbl" x="310" y="232" text-anchor="middle">Independent IAM &middot; hypervisor &middot; update channel &middot; operator &middot; region &middot; recovery authority</text></svg>"""
+
+MPC_FIG2 = """<svg viewBox="0 0 620 220" role="img" aria-labelledby="lc-t lc-d">
+<title id="lc-t">Key lifecycle: DKG, signing, refresh, resharing, retirement</title>
+<desc id="lc-d">Distributed key generation creates the key. Signing consumes it. Refresh and resharing both change share material while leaving the public key and address unchanged. Retirement ends the wallet and requires moving assets first.</desc>
+__ARROW__
+<rect class="dg-node" x="10" y="52" width="104" height="46" rx="3"/><rect class="dg-node" x="140" y="52" width="104" height="46" rx="3"/>
+<rect class="dg-node" x="270" y="52" width="104" height="46" rx="3"/><rect class="dg-node" x="400" y="52" width="104" height="46" rx="3"/>
+<rect class="dg-node end" x="530" y="52" width="80" height="46" rx="3"/>
+<text class="dg-cap" x="62" y="80" text-anchor="middle">DKG</text><text class="dg-cap" x="192" y="80" text-anchor="middle">Signing</text>
+<text class="dg-cap" x="322" y="80" text-anchor="middle">Refresh</text><text class="dg-cap" x="452" y="80" text-anchor="middle">Reshare</text>
+<text class="dg-cap" x="570" y="80" text-anchor="middle">Retire</text>
+<path class="dg-flow" d="M114 75 H136" marker-end="url(#ar)"/><path class="dg-flow" d="M244 75 H266" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M374 75 H396" marker-end="url(#ar)"/><path class="dg-flow" d="M504 75 H526" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M322 52 V32 H192 V48" marker-end="url(#ar)"/>
+<text class="dg-acc" x="257" y="26" text-anchor="middle">quarterly &amp; after suspected host compromise</text>
+<path class="dg-brace" d="M270 112 V124 H504 V112"/>
+<text class="dg-acc" x="387" y="142" text-anchor="middle">public key &amp; address unchanged</text>
+<text class="dg-no" x="62" y="119" text-anchor="middle">import path =</text><text class="dg-no" x="62" y="133" text-anchor="middle">full-key moment</text>
+<text class="dg-no" x="570" y="120" text-anchor="middle">sweep first</text>
+<text class="dg-lbl" x="310" y="176" text-anchor="middle">Below-threshold survivors cannot reshare</text>
+<text class="dg-lbl" x="310" y="196" text-anchor="middle" style="fill:var(--danger)">Fall below t surviving shares and the address is permanently frozen</text></svg>"""
+
+
+# --- 2. Blockchain deposits & withdrawals -----------------------------------
+# Log axis: cadence spans 400 ms to 600 s, three orders of magnitude.
+# x = (log10(sec) - log10(0.4)) / (log10(600) - log10(0.4))
+DEPOSIT_AXIS = """<div class="scroll-x" style="overflow-x:auto"><div class="axis">
+  <div class="axis-ticks"><span style="--x:12.5%">1s</span><span style="--x:44%">10s</span><span style="--x:68.5%">1 min</span><span style="--x:100%">10 min</span></div>
+  <div class="axis-row"><span class="name">Solana</span><span class="axis-track" style="--x:0%;--dot:var(--safe)"><i></i><b>~400 ms slot target</b></span></div>
+  <div class="axis-row"><span class="name">Avalanche C-Chain</span><span class="axis-track" style="--x:12.5%;--dot:var(--safe)"><i></i><b>sub-second to seconds</b></span></div>
+  <div class="axis-row"><span class="name">Polygon PoS (Bor)</span><span class="axis-track" style="--x:22%;--dot:var(--safe)"><i></i><b>~2 s</b></span></div>
+  <div class="axis-row"><span class="name">Tron</span><span class="axis-track" style="--x:27.6%;--dot:var(--safe)"><i></i><b>~3 s</b></span></div>
+  <div class="axis-row"><span class="name">Ethereum</span><span class="axis-track" style="--x:46.5%;--dot:var(--warn)"><i></i><b>12 s slot</b></span></div>
+  <div class="axis-row flip"><span class="name">Litecoin</span><span class="axis-track" style="--x:81%;--dot:var(--warn)"><i></i><b>~2.5 min target</b></span></div>
+  <div class="axis-row flip"><span class="name">Bitcoin</span><span class="axis-track" style="--x:100%;--dot:var(--danger)"><i></i><b>~10 min target</b></span></div>
+</div></div>"""
+
+DEPOSIT_FIG = """<svg viewBox="0 0 620 216" role="img" aria-labelledby="cs-t cs-d">
+<title id="cs-t">Credit state machine from observed to settled, with the orphaned branch</title>
+<desc id="cs-d">A deposit moves from observed to provisional to credited to settled. At any point before settlement the block can leave the canonical chain, which sends the deposit to the orphaned state and reverses the customer balance.</desc>
+__ARROW__
+<rect class="dg-node" x="6" y="40" width="126" height="44" rx="3"/><rect class="dg-node" x="158" y="40" width="126" height="44" rx="3"/>
+<rect class="dg-node hot" x="310" y="40" width="126" height="44" rx="3"/><rect class="dg-node on" x="462" y="40" width="150" height="44" rx="3"/>
+<text class="dg-cap" x="69" y="66" text-anchor="middle">Observed</text><text class="dg-cap" x="221" y="66" text-anchor="middle">Provisional</text>
+<text class="dg-cap" x="373" y="66" text-anchor="middle">Credited</text><text class="dg-cap" x="537" y="66" text-anchor="middle">Settled</text>
+<text class="dg-lbl" x="69" y="98" text-anchor="middle">hidden</text><text class="dg-lbl" x="221" y="98" text-anchor="middle">may display</text>
+<text class="dg-lbl" x="373" y="98" text-anchor="middle">available by tier</text><text class="dg-lbl" x="537" y="98" text-anchor="middle">withdrawable</text>
+<path class="dg-flow" d="M132 62 H154" marker-end="url(#ar)"/><path class="dg-flow" d="M284 62 H306" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M436 62 H458" marker-end="url(#ar)"/>
+<text class="dg-lbl" x="143" y="30" text-anchor="middle">safe depth</text><text class="dg-lbl" x="295" y="30" text-anchor="middle">final state</text>
+<text class="dg-lbl" x="447" y="30" text-anchor="middle">reconciled</text>
+<rect class="dg-node end" x="228" y="126" width="164" height="42" rx="3"/>
+<text class="dg-cap" x="310" y="152" text-anchor="middle">Orphaned</text>
+<path class="dg-flow" style="stroke:var(--danger)" d="M69 84 V147 H224" marker-end="url(#ar)"/>
+<path class="dg-flow" style="stroke:var(--danger)" d="M373 84 V107 H460 V147 H396" marker-end="url(#ar)"/>
+<text class="dg-no" x="310" y="188" text-anchor="middle">block left the canonical chain &rarr; REVERSE and freeze derived funds</text>
+<text class="dg-lbl" x="310" y="208" text-anchor="middle">Withdrawal stays blocked until the chain-native final state is reached</text></svg>"""
+
+
+# --- 3. Institutional custody -----------------------------------------------
+CUSTODY_FIG = """<svg viewBox="0 0 620 230" role="img" aria-labelledby="ti-t ti-d">
+<title id="ti-t">Four custody tiers ordered by automation and network exposure</title>
+<desc id="ti-d">Hot, warm, cold and deep cold tiers trade automation against exposure. Automation and network exposure fall from left to right while latency and the strength of the transfer gate rise.</desc>
+__ARROW__
+<rect class="dg-node hot" x="8" y="46" width="140" height="58" rx="3"/><rect class="dg-node" x="164" y="46" width="140" height="58" rx="3"/>
+<rect class="dg-node on" x="320" y="46" width="140" height="58" rx="3"/><rect class="dg-node on" x="476" y="46" width="136" height="58" rx="3"/>
+<text class="dg-cap" x="78" y="70" text-anchor="middle">Hot</text><text class="dg-cap" x="234" y="70" text-anchor="middle">Warm</text>
+<text class="dg-cap" x="390" y="70" text-anchor="middle">Cold</text><text class="dg-cap" x="544" y="70" text-anchor="middle">Deep cold</text>
+<text class="dg-lbl" x="78" y="90" text-anchor="middle">seconds&ndash;minutes</text><text class="dg-lbl" x="234" y="90" text-anchor="middle">minutes&ndash;hours</text>
+<text class="dg-lbl" x="390" y="90" text-anchor="middle">hours&ndash;day</text><text class="dg-lbl" x="544" y="90" text-anchor="middle">days</text>
+<text class="dg-lbl" x="78" y="36" text-anchor="middle">online</text><text class="dg-lbl" x="234" y="36" text-anchor="middle">connected for workflow</text>
+<text class="dg-lbl" x="390" y="36" text-anchor="middle">air-gapped ceremony</text><text class="dg-lbl" x="544" y="36" text-anchor="middle">offline, distributed</text>
+<path class="dg-flow" d="M148 75 H160" marker-end="url(#ar)"/><path class="dg-flow" d="M304 75 H316" marker-end="url(#ar)"/><path class="dg-flow" d="M460 75 H472" marker-end="url(#ar)"/>
+<text class="dg-acc" x="78" y="124" text-anchor="middle">policy + velocity</text><text class="dg-acc" x="234" y="124" text-anchor="middle">2-person quorum</text>
+<text class="dg-acc" x="390" y="124" text-anchor="middle">independent holders</text><text class="dg-acc" x="544" y="124" text-anchor="middle">geographic quorum</text>
+<path class="dg-brace" d="M8 146 V154 H612 V146"/>
+<text class="dg-lbl" x="8" y="176" text-anchor="start" style="fill:var(--danger)">network exposure &amp; automation &mdash;&mdash;&mdash;&gt; falling</text>
+<text class="dg-lbl" x="612" y="176" text-anchor="end" style="fill:var(--safe)">rising &lt;&mdash;&mdash;&mdash; latency &amp; gate strength</text>
+<text class="dg-acc" x="310" y="206" text-anchor="middle">Hot target is a demand quantile over replenishment lead time, not a percentage of AUC</text></svg>"""
+
+
+# --- 4. Compliance architecture ---------------------------------------------
+COMPLIANCE_FIG = """<svg viewBox="0 0 620 220" role="img" aria-labelledby="gt-t gt-d">
+<title id="gt-t">Six compliance gates ending at the signing boundary</title>
+<desc id="gt-d">Observe, screen, identify, transmit and authorize all run before signing. Signing is the irreversibility boundary: once valid signed bytes exist, screening before broadcast is too late.</desc>
+__ARROW__
+<rect class="dg-node" x="4" y="52" width="92" height="44" rx="3"/><rect class="dg-node" x="104" y="52" width="92" height="44" rx="3"/>
+<rect class="dg-node" x="204" y="52" width="92" height="44" rx="3"/><rect class="dg-node" x="304" y="52" width="92" height="44" rx="3"/>
+<rect class="dg-node" x="404" y="52" width="92" height="44" rx="3"/><rect class="dg-node end" x="516" y="52" width="96" height="44" rx="3"/>
+<text class="dg-cap" x="50" y="78" text-anchor="middle">Observe</text><text class="dg-cap" x="150" y="78" text-anchor="middle">Screen</text>
+<text class="dg-cap" x="250" y="78" text-anchor="middle">Identify</text><text class="dg-cap" x="350" y="78" text-anchor="middle">Transmit</text>
+<text class="dg-cap" x="450" y="78" text-anchor="middle">Authorize</text><text class="dg-cap" x="564" y="78" text-anchor="middle">Sign</text>
+<text class="dg-lbl" x="50" y="112" text-anchor="middle">01</text><text class="dg-lbl" x="150" y="112" text-anchor="middle">02</text>
+<text class="dg-lbl" x="250" y="112" text-anchor="middle">03</text><text class="dg-lbl" x="350" y="112" text-anchor="middle">04</text>
+<text class="dg-lbl" x="450" y="112" text-anchor="middle">05</text><text class="dg-lbl" x="564" y="112" text-anchor="middle">06</text>
+<path class="dg-flow" d="M96 74 H100" marker-end="url(#ar)"/><path class="dg-flow" d="M196 74 H200" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M296 74 H300" marker-end="url(#ar)"/><path class="dg-flow" d="M396 74 H400" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M496 74 H512" marker-end="url(#ar)"/>
+<path class="dg-cross" d="M506 26 V126"/>
+<text class="dg-no" x="506" y="18" text-anchor="middle">irreversibility boundary</text>
+<path class="dg-brace" d="M4 148 V156 H496 V148"/>
+<text class="dg-acc" x="250" y="176" text-anchor="middle">every gate runs before credit and before signing</text>
+<text class="dg-no" x="310" y="204" text-anchor="middle">&ldquo;Screen before broadcast&rdquo; is too late if valid signed bytes already exist</text></svg>"""
+
+
+# --- 5. Stablecoin infrastructure -------------------------------------------
+STABLECOIN_FIG = """<svg viewBox="0 0 620 240" role="img" aria-labelledby="fz-t fz-d">
+<title id="fz-t">Finality and freezability are independent axes</title>
+<desc id="fz-d">A stablecoin transfer can be final on-chain yet still frozen, unredeemable, or on the wrong contract. Chain finality is one axis; issuer and bridge control is a separate one.</desc>
+<line class="dg-flow dim" x1="60" y1="196" x2="600" y2="196"/><line class="dg-flow dim" x1="60" y1="20" x2="60" y2="196"/>
+<text class="dg-lbl" x="330" y="222" text-anchor="middle">chain finality reached &mdash;&mdash;&gt;</text>
+<text class="dg-lbl" x="16" y="108" text-anchor="middle" transform="rotate(-90 16 108)">issuer / bridge control &mdash;&mdash;&gt;</text>
+<rect class="dg-field" x="72" y="112" width="252" height="78" rx="3"/><rect class="dg-node on" x="336" y="112" width="256" height="78" rx="3"/>
+<rect class="dg-node hot" x="72" y="26" width="252" height="78" rx="3"/><rect class="dg-node end" x="336" y="26" width="256" height="78" rx="3"/>
+<text class="dg-cap" x="198" y="148" text-anchor="middle">Pending</text><text class="dg-lbl" x="198" y="168" text-anchor="middle">not yet spendable</text>
+<text class="dg-cap" x="464" y="142" text-anchor="middle">Final &amp; free</text><text class="dg-lbl" x="464" y="162" text-anchor="middle">the only settled state</text>
+<text class="dg-cap" x="198" y="58" text-anchor="middle">Attestation delay</text><text class="dg-lbl" x="198" y="78" text-anchor="middle">CCTP burn awaiting mint</text>
+<text class="dg-cap" x="464" y="52" text-anchor="middle">Final but frozen</text><text class="dg-lbl" x="464" y="72" text-anchor="middle">issuer blacklist &middot; bridge exploit</text>
+<text class="dg-lbl" x="464" y="88" text-anchor="middle">&middot; wrong contract</text>
+<text class="dg-no" x="330" y="238" text-anchor="middle">A finalized transfer may still be frozen, bridged, unredeemable, or the wrong contract</text></svg>"""
+
+
+# --- 6. Custody provider integration ----------------------------------------
+PROVIDER_FIG = """<svg viewBox="0 0 620 220" role="img" aria-labelledby="pi-t pi-d">
+<title id="pi-t">One internal intent fans out to many attempts and hashes, then back to one ledger outcome</title>
+<desc id="pi-d">A single internal transfer intent may produce any number of provider API attempts and any number of chain transaction hashes, but must always reconcile to exactly one final ledger outcome.</desc>
+__ARROW__
+<rect class="dg-node on" x="8" y="82" width="118" height="52" rx="3"/>
+<text class="dg-cap" x="67" y="104" text-anchor="middle">Intent</text><text class="dg-lbl" x="67" y="122" text-anchor="middle">your ID</text>
+<rect class="dg-node" x="190" y="24" width="112" height="38" rx="3"/><rect class="dg-node" x="190" y="82" width="112" height="38" rx="3"/><rect class="dg-node" x="190" y="140" width="112" height="38" rx="3"/>
+<text class="dg-lbl" x="246" y="48" text-anchor="middle">API attempt</text><text class="dg-lbl" x="246" y="106" text-anchor="middle">API attempt</text><text class="dg-lbl" x="246" y="164" text-anchor="middle">API attempt</text>
+<rect class="dg-node" x="336" y="53" width="104" height="38" rx="3"/><rect class="dg-node" x="336" y="111" width="104" height="38" rx="3"/>
+<text class="dg-lbl" x="388" y="77" text-anchor="middle">chain hash</text><text class="dg-lbl" x="388" y="135" text-anchor="middle">chain hash</text>
+<rect class="dg-node on" x="480" y="82" width="132" height="52" rx="3"/>
+<text class="dg-cap" x="546" y="104" text-anchor="middle">One outcome</text><text class="dg-lbl" x="546" y="122" text-anchor="middle">ledger truth</text>
+<path class="dg-flow" d="M126 100 C160 100 156 43 186 43" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M126 106 H186" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M126 112 C160 112 156 159 186 159" marker-end="url(#ar)"/>
+<path class="dg-flow dim" d="M302 43 C320 43 318 72 332 72"/><path class="dg-flow dim" d="M302 101 H332"/>
+<path class="dg-flow dim" d="M302 159 C320 159 318 130 332 130"/>
+<path class="dg-flow" d="M440 72 C462 72 458 100 476 100" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M440 130 C462 130 458 116 476 116" marker-end="url(#ar)"/>
+<text class="dg-acc" x="67" y="152" text-anchor="middle">exactly 1</text><text class="dg-lbl" x="246" y="196" text-anchor="middle">0..n</text>
+<text class="dg-lbl" x="388" y="196" text-anchor="middle">0..n</text><text class="dg-acc" x="546" y="152" text-anchor="middle">exactly 1</text>
+<text class="dg-no" x="310" y="216" text-anchor="middle">Webhooks are hints; the polling reconciler is truth</text></svg>"""
+
+
+# --- 7. Exchange architecture -----------------------------------------------
+EXCHANGE_FIG = """<svg viewBox="0 0 620 240" role="img" aria-labelledby="ex-t ex-d">
+<title id="ex-t">Exchange system map with the wallet boundary and the ledger invariant</title>
+<desc id="ex-d">Client, risk, sequencer and matcher feed a double-entry ledger. The wallet boundary is the only place value crosses onto a chain, and the balance invariant must hold continuously across it.</desc>
+__ARROW__
+<rect class="dg-node" x="6" y="30" width="110" height="42" rx="3"/><rect class="dg-node" x="132" y="30" width="110" height="42" rx="3"/>
+<rect class="dg-node" x="258" y="30" width="110" height="42" rx="3"/><rect class="dg-node" x="384" y="30" width="110" height="42" rx="3"/>
+<text class="dg-cap" x="61" y="49" text-anchor="middle">Client</text><text class="dg-lbl" x="61" y="64" text-anchor="middle">REST &middot; WS &middot; FIX</text>
+<text class="dg-cap" x="187" y="49" text-anchor="middle">Risk</text><text class="dg-lbl" x="187" y="64" text-anchor="middle">holds &middot; limits</text>
+<text class="dg-cap" x="313" y="49" text-anchor="middle">Sequencer</text><text class="dg-lbl" x="313" y="64" text-anchor="middle">total order</text>
+<text class="dg-cap" x="439" y="49" text-anchor="middle">Matcher</text><text class="dg-lbl" x="439" y="64" text-anchor="middle">in-memory book</text>
+<path class="dg-flow" d="M116 51 H128" marker-end="url(#ar)"/><path class="dg-flow" d="M242 51 H254" marker-end="url(#ar)"/><path class="dg-flow" d="M368 51 H380" marker-end="url(#ar)"/>
+<rect class="dg-node on" x="132" y="106" width="362" height="44" rx="3"/>
+<text class="dg-cap" x="313" y="126" text-anchor="middle">Ledger &mdash; immutable double entry</text>
+<text class="dg-lbl" x="313" y="142" text-anchor="middle">the only authority on customer liability</text>
+<path class="dg-flow" d="M439 72 V102" marker-end="url(#ar)"/>
+<path class="dg-cross" style="stroke-width:2.6" d="M6 172 H614"/>
+<text class="dg-no" x="6" y="166" text-anchor="start">WALLET BOUNDARY &mdash; the only crossing onto a chain</text>
+<path class="dg-flow" d="M470 150 V168" marker-end="url(#ar)"/>
+<rect class="dg-node" x="30" y="182" width="122" height="34" rx="3"/><rect class="dg-node" x="176" y="182" width="122" height="34" rx="3"/>
+<rect class="dg-node" x="322" y="182" width="122" height="34" rx="3"/><rect class="dg-node" x="468" y="182" width="122" height="34" rx="3"/>
+<text class="dg-lbl" x="91" y="203" text-anchor="middle">deposit</text><text class="dg-lbl" x="237" y="203" text-anchor="middle">withdrawal</text>
+<text class="dg-lbl" x="383" y="203" text-anchor="middle">sweep</text><text class="dg-lbl" x="529" y="203" text-anchor="middle">rebalance</text>
+<text class="dg-acc" x="310" y="234" text-anchor="middle">If the balance invariant breaks, stop withdrawals before explaining the difference</text></svg>"""
+
+
+# --- 8. Wallet recovery forensics -------------------------------------------
+# Log axis over candidate space: 2,048 to 3.66e15 -- twelve orders of magnitude.
+# x = log10(n) / log10(3.66e15)
+RECOVERY_AXIS = """<div class="scroll-x" style="overflow-x:auto"><div class="axis">
+  <div class="axis-ticks"><span style="--x:19.4%">10&#8309;</span><span style="--x:38.7%">10&#8310;</span><span style="--x:58.1%">10&#8313;</span><span style="--x:77.4%">10&#185;&#178;</span><span style="--x:96.8%">10&#185;&#8309;</span></div>
+  <div class="axis-row"><span class="name">1 word, known slot</span><span class="axis-track" style="--x:21.4%;--dot:var(--safe)"><i></i><b>2,048</b></span></div>
+  <div class="axis-row"><span class="name">1 word, any slot</span><span class="axis-track" style="--x:27.4%;--dot:var(--safe)"><i></i><b>24,576</b></span></div>
+  <div class="axis-row"><span class="name">2 words, known slots</span><span class="axis-track" style="--x:42.8%;--dot:var(--safe)"><i></i><b>4,194,304</b></span></div>
+  <div class="axis-row"><span class="name">12 words, reordered</span><span class="axis-track" style="--x:55.6%;--dot:var(--warn)"><i></i><b>479,001,600</b></span></div>
+  <div class="axis-row flip"><span class="name">8-char lowercase</span><span class="axis-track" style="--x:72.9%;--dot:var(--warn)"><i></i><b>208,827,064,576</b></span></div>
+  <div class="axis-row flip"><span class="name">4 Diceware words</span><span class="axis-track" style="--x:100%;--dot:var(--danger)"><i></i><b>&asymp;3.66&times;10&#185;&#8309;</b></span></div>
+</div></div>"""
+
+RECOVERY_FIG = """<svg viewBox="0 0 620 210" role="img" aria-labelledby="rf-t rf-d">
+<title id="rf-t">Recovery triage: rule out the wrong derivation path before any cracking</title>
+<desc id="rf-d">Preserve a verified copy, identify the format, scan for the correct derivation path, constrain the candidate space, benchmark the key derivation function, then divide to decide whether the search is feasible at all.</desc>
+__ARROW__
+<rect class="dg-node on" x="6" y="34" width="96" height="42" rx="3"/><rect class="dg-node" x="112" y="34" width="96" height="42" rx="3"/>
+<rect class="dg-node hot" x="218" y="34" width="96" height="42" rx="3"/><rect class="dg-node" x="324" y="34" width="96" height="42" rx="3"/>
+<rect class="dg-node" x="430" y="34" width="96" height="42" rx="3"/><rect class="dg-node end" x="536" y="34" width="76" height="42" rx="3"/>
+<text class="dg-cap" x="54" y="59" text-anchor="middle">Preserve</text><text class="dg-cap" x="160" y="59" text-anchor="middle">Identify</text>
+<text class="dg-cap" x="266" y="59" text-anchor="middle">Scan</text><text class="dg-cap" x="372" y="59" text-anchor="middle">Constrain</text>
+<text class="dg-cap" x="478" y="59" text-anchor="middle">Benchmark</text><text class="dg-cap" x="574" y="59" text-anchor="middle">Stop</text>
+<path class="dg-flow" d="M102 55 H108" marker-end="url(#ar)"/><path class="dg-flow" d="M208 55 H214" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M314 55 H320" marker-end="url(#ar)"/><path class="dg-flow" d="M420 55 H426" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M526 55 H532" marker-end="url(#ar)"/>
+<text class="dg-acc" x="266" y="94" text-anchor="middle">most &ldquo;lost&rdquo; wallets stop here &mdash; wrong path, account or passphrase state</text>
+<path class="dg-brace" d="M324 108 V116 H526 V108"/>
+<text class="dg-lbl" x="425" y="134" text-anchor="middle">candidate space &divide; measured guesses per second</text>
+<text class="dg-acc" x="425" y="150" text-anchor="middle">= wall-clock seconds</text>
+<text class="dg-no" x="310" y="182" text-anchor="middle">No secret, no exploit, no recovery</text>
+<text class="dg-lbl" x="310" y="200" text-anchor="middle">Blockchain transparency does not let anyone derive an unconstrained private key</text></svg>"""
+
+
+# --- 9. Post-quantum custody migration --------------------------------------
+# Micro-bars over FIPS 204/205 signature sizes; widths are bytes/17,088.
+PQ_BARS = """<div class="table-wrap" role="region" aria-label="Post-quantum signature sizes" tabindex="0">
+<table><thead><tr><th scope="col">Scheme</th><th scope="col">Public key (bytes)</th><th scope="col">Signature size relative to the largest</th><th scope="col">Signature (bytes)</th><th scope="col">Standard</th></tr></thead><tbody>
+<tr data-f><td>ML-DSA-65</td><td class="num">1,952</td><td class="bar"><span style="--w:19.4%;--c:var(--safe)"></span></td><td class="num">3,309</td><td>FIPS 204</td></tr>
+<tr data-f><td>ML-DSA-87</td><td class="num">2,592</td><td class="bar"><span style="--w:27.1%;--c:var(--safe)"></span></td><td class="num">4,627</td><td>FIPS 204</td></tr>
+<tr data-f><td>SLH-DSA-SHA2-128s</td><td class="num">32</td><td class="bar"><span style="--w:46.0%;--c:var(--warn)"></span></td><td class="num">7,856</td><td>FIPS 205</td></tr>
+<tr data-f><td>SLH-DSA-SHA2-128f</td><td class="num">32</td><td class="bar"><span style="--w:100%;--c:var(--danger)"></span></td><td class="num">17,088</td><td>FIPS 205</td></tr>
+</tbody></table></div>"""
+
+PQ_FIG = """<svg viewBox="0 0 620 200" role="img" aria-labelledby="pq-t pq-d">
+<title id="pq-t">Exposure depends on whether an elliptic-curve public key is already visible</title>
+<desc id="pq-d">An output whose elliptic-curve public key is already on chain is a long-range key-recovery target. An unspent output that reveals only a hash stays protected until it is spent, which is why address reuse is the control that matters now.</desc>
+__ARROW__
+<rect class="dg-node end" x="8" y="40" width="266" height="76" rx="3"/>
+<text class="dg-cap" x="141" y="66" text-anchor="middle">Public key already visible</text>
+<text class="dg-lbl" x="141" y="86" text-anchor="middle">reused address &middot; spent output &middot; exported xpub</text>
+<text class="dg-no" x="141" y="106" text-anchor="middle">INVENTORY NOW</text>
+<rect class="dg-node on" x="346" y="40" width="266" height="76" rx="3"/>
+<text class="dg-cap" x="479" y="66" text-anchor="middle">Only a hash visible</text>
+<text class="dg-lbl" x="479" y="86" text-anchor="middle">unspent, never reused</text>
+<text class="dg-ok" x="479" y="106" text-anchor="middle">NO REUSE</text>
+<path class="dg-flow" style="stroke:var(--danger)" d="M479 116 V140 H141 V120" marker-end="url(#ar)"/>
+<text class="dg-no" x="310" y="156" text-anchor="middle">spending reveals the key &mdash; the transition is one-way</text>
+<text class="dg-lbl" x="310" y="184" text-anchor="middle">Signatures break before hashes do &middot; BIPs 360/361 were Draft as of August 2026</text></svg>"""
+
+
+SHEET_DESIGN: dict[str, dict[str, object]] = {
+    "mpc-wallet-architecture": {
+        "accent": ("#4a3f9e", "#a99cff"), "texture": "lattice",
+        "panel": [("Quorum", "2 of 3", "shares, no dealer"), ("Key origin", "DKG", "key never assembled"),
+                  ("Below threshold", "0 bits", "fewer than t reveal nothing"), ("Refresh", "Epoch", "same address, new shares"),
+                  ("Reshare", "Identical", "public key, byte-for-byte"), ("Boundary", "Policy", "key use protected, not intent")],
+        "panel_note": "A 2-of-3 wallet in one worked configuration. Every value below is defined in the sections that follow.",
+        "figures": [("What a 2-of-3 actually asserts",
+                     "Three hosts are not three trust domains. The guarantee is about share count; the risk is about how independent those domains really are.",
+                     figure(MPC_FIG1, "The chain sees a single signature. It does not record which two domains participated &mdash; attribution has to be written somewhere else."),
+                     "quorum-figure", "after-quick"),
+                    ("The lifecycle in one picture",
+                     "Two of these five operations preserve the address. Knowing which is the difference between a routine control and an incident.",
+                     figure(MPC_FIG2, "Refresh and reshare are the two operations that change share material without moving funds. Everything else changes the address or ends the wallet."),
+                     "lifecycle-figure", "key-lifecycle")],
+    },
+    "blockchain-deposits-withdrawals": {
+        "accent": ("#0b6480", "#48c9ee"), "texture": "rules",
+        "panel": [("Credit states", "5", "observed &rarr; settled"), ("Bitcoin", "1 &middot; 3 &middot; 6", "blocks by value tier"),
+                  ("Ethereum", "safe", "or finalized, never head"), ("Solana", "400 ms", "slot target"),
+                  ("On reorg", "REVERSE", "freeze derived funds"), ("Audit key", "hash + height", "not a bare count")],
+        "panel_note": "The decisive numbers differ per chain. A confirmation count copied between chains is the most common credit defect.",
+        "figures": [("Block cadence spans three orders of magnitude",
+                     "Plotted on a log axis, because a text column cannot show the distance between a 400&nbsp;ms slot and a 10-minute target. Cadence is not finality &mdash; it only sets the clock the finality rule runs on.",
+                     DEPOSIT_AXIS, "cadence-figure", "after-quick"),
+                    ("Credit state machine",
+                     "Balance visibility and withdrawal eligibility are separate questions at every state.",
+                     figure(DEPOSIT_FIG, "A deposit can leave the canonical chain at any point before settlement, which is why credit and withdrawal are gated separately."),
+                     "credit-state-figure", "after-quick")],
+    },
+    "institutional-crypto-custody": {
+        "accent": ("#0d6357", "#43d1b6"), "texture": "grid",
+        "panel": [("Tiers", "4", "hot &middot; warm &middot; cold &middot; deep cold"), ("Hot target", "$3.2M", "99th-pct one-day demand"),
+                  ("New destination", "48 h", "delay + out-of-band"), ("Velocity", "$50k/h", "and $200k / 24 h"),
+                  ("Policy change", "2 admins", "+ 24 h activation"), ("CCSS v9.0", "10", "aspects, two domains")],
+        "panel_note": "Worked from the float example below. Recompute every figure from your own observed withdrawals and replenishment lead time.",
+        "figures": [("Four tiers, four bounded failure domains",
+                     "Automation and exposure fall left to right; latency and gate strength rise. Each tier needs a documented loss bound and a tested way back.",
+                     figure(CUSTODY_FIG, "The correct hot amount is a demand quantile over replenishment lead time, not a percentage of assets under custody."),
+                     "tier-figure", "after-quick")],
+    },
+    "crypto-compliance-architecture": {
+        "accent": ("#28468f", "#8aabff"), "texture": "hatch",
+        "panel": [("Gates", "6", "observe &rarr; sign"), ("Boundary", "SIGN", "the irreversible step"),
+                  ("Payload", "IVMS101", ".2023 structured fields"), ("Deposit gates", "4", "before credit"),
+                  ("Withdrawal gates", "4", "before the signer"), ("On alert", "DO NOT SIGN", "hold, never broadcast")],
+        "panel_note": "Gate placement is the whole design. A control that runs after signing is forensics, not compliance.",
+        "figures": [("Gate before irreversibility",
+                     "Five gates run before the sixth. Once valid signed bytes exist, every remaining control is after the fact.",
+                     figure(COMPLIANCE_FIG, "Signing is the boundary. Screening before broadcast is too late if a valid signature already exists."),
+                     "gate-figure", "after-quick")],
+    },
+    "stablecoin-payment-infrastructure": {
+        "accent": ("#7a2d5c", "#f095c8"), "texture": "lattice-wide",
+        "panel": [("Decision layers", "5", "asset &rarr; redemption"), ("Asset identity", "chain + contract", "never the ticker"),
+                  ("Reserve", "report + cutoff", "attestation is not audit"), ("Control roles", "pause &middot; freeze", "mint &middot; upgrade"),
+                  ("Redemption", "eligibility", "minimum + bank cutoff"), ("Clocks", "4", "issuer &middot; token &middot; chain &middot; bank")],
+        "panel_note": "Four systems with different clocks. A rail is production-ready only when every state has an immutable ID, a retry rule, and a reconciliation path.",
+        "figures": [("Finality is not redeemability",
+                     "Chain finality and issuer control are independent axes. Only one quadrant is actually settled.",
+                     figure(STABLECOIN_FIG, "Settlement assurance is multidimensional: a final transfer can still be frozen, bridged, unredeemable, or on the wrong contract."),
+                     "freezability-figure", "after-quick")],
+    },
+    "custody-provider-integration": {
+        "accent": ("#63359c", "#c69bf5"), "texture": "grid",
+        "panel": [("Lifecycle", "6", "intent &rarr; reconcile"), ("Internal intents", "exactly 1", "your ID is authoritative"),
+                  ("API attempts", "0..n", "one idempotency key"), ("Chain hashes", "0..n", "replacement, RBF"),
+                  ("Ledger outcome", "exactly 1", "the reconciler decides"), ("Webhooks", "hints", "never truth")],
+        "panel_note": "A provider should be mapped into your model, not allowed to become it. These cardinalities are the anti-corruption layer.",
+        "figures": [("One intent, many attempts, one outcome",
+                     "The cardinality mismatch between your ledger and a provider API is where duplicate and lost withdrawals live.",
+                     figure(PROVIDER_FIG, "Many hashes may map to one intent. Only the reconciler closes an intent, and only once."),
+                     "cardinality-figure", "after-quick")],
+    },
+    "crypto-exchange-architecture": {
+        "accent": ("#37505f", "#9db8c9"), "texture": "rules",
+        "panel": [("Stages", "6", "client &rarr; wallet boundary"), ("Ledger", "double entry", "&Sigma; postings = 0"),
+                  ("Arithmetic", "integers", "minor units only"), ("Available", "total &minus; holds", "never a mutable row"),
+                  ("Crossings", "5", "deposit &middot; withdrawal &middot; sweep &hellip;"), ("On break", "STOP", "halt withdrawals first")],
+        "panel_note": "The matching engine makes trades; the ledger makes them true. Most catastrophic defects live at the boundary between those statements.",
+        "figures": [("The system map and its hard invariant",
+                     "One boundary matters more than the rest: the only place where a ledger statement becomes an irreversible chain event.",
+                     figure(EXCHANGE_FIG, "Customer liabilities + fees + firm position = on-chain holdings + in-flight settlements + receivables. Assert it continuously."),
+                     "system-map-figure", "after-quick")],
+    },
+    "wallet-recovery-forensics": {
+        "accent": ("#5f4a6b", "#cbb0dd"), "texture": "lattice",
+        "panel": [("Triage steps", "6", "preserve &rarr; stop"), ("Feasibility", "space &divide; rate", "= wall-clock seconds"),
+                  ("First check", "wrong path", "before any cracking"), ("BIP39 KDF", "2,048", "PBKDF2-HMAC-SHA512 rounds"),
+                  ("12-word checksum", "~1/16", "accepted mnemonics"), ("Without a secret", "no recovery", "no exploit exists")],
+        "panel_note": "Recovery is constraint engineering. Every number below is an input to one division that decides whether to start at all.",
+        "figures": [("Candidate space spans twelve orders of magnitude",
+                     "The gap between a tractable search and an impossible one is not a matter of effort. It is visible the moment the space is plotted on a log axis.",
+                     RECOVERY_AXIS, "search-space-figure", "after-quick"),
+                    ("Triage before tools",
+                     "The third step resolves most cases. Cracking is the last resort, not the first move.",
+                     figure(RECOVERY_FIG, "Divide the constrained candidate space by a measured guess rate on named hardware, then accept the answer."),
+                     "triage-figure", "after-quick")],
+    },
+    "post-quantum-custody-migration": {
+        "accent": ("#8b2d8f", "#eb9ceb"), "texture": "lattice",
+        "panel": [("Breaks first", "signatures", "hashes hold longer"), ("ML-DSA-65 sig", "3,309 B", "vs 64&ndash;72 B today"),
+                  ("Largest standard", "17,088 B", "SLH-DSA-SHA2-128f"), ("Bitcoin BIPs", "360 / 361", "Draft as of Aug 2026"),
+                  ("Q-day", "unknown", "use ranges, not a year"), ("Act now", "inventory", "and ban address reuse")],
+        "panel_note": "The useful work now is an exposure inventory and address hygiene. Everything else waits on chain rules that do not exist yet.",
+        "figures": [("Exposure is about what is already visible",
+                     "The question is not when a quantum computer arrives. It is which of your outputs have already published an elliptic-curve public key.",
+                     figure(PQ_FIG, "Spending reveals the key, and the transition only runs one way. That is why reuse policy is the control available today."),
+                     "exposure-figure", "after-quick"),
+                    ("Signature sizes are the migration's real cost",
+                     "Post-quantum signatures are one to two orders of magnitude larger than the 64&ndash;72 bytes chains budget for today. Bars are relative to the largest standardised signature.",
+                     PQ_BARS, "signature-size-figure", "after-quick")],
+    },
+}
+
+
+def _theme(design: dict) -> str:
+    """Per-sheet token block: accent, its soft tint, lattice ink, and matched neutrals.
+
+    The neutrals carry a slight bias toward the accent hue so each sheet's greys
+    read as chosen rather than inherited.
+    """
+    light, dark = design["accent"]
+    return (
+        f"--accent: light-dark({light}, {dark});\n"
+        f"    --accent-soft: light-dark(color-mix(in srgb, {light} 11%, #ffffff), "
+        f"color-mix(in srgb, {dark} 17%, #0d0c15));\n"
+        f"    --lattice: light-dark(color-mix(in srgb, {light} 17%, transparent), "
+        f"color-mix(in srgb, {dark} 13%, transparent));"
+    )
+
+
+def _css_for(design: dict) -> str:
+    light, dark = design["accent"]
+    return (
+        CSS.replace("__ACCENT__", _theme(design))
+        .replace("__TEXTURE__", TEXTURES[str(design["texture"])])
+        .replace("__PAPER_L__", f"color-mix(in srgb, {light} 7%, #f4f3f6)")
+        .replace("__PAPER_D__", f"color-mix(in srgb, {dark} 5%, #0c0b12)")
+        .replace("__SURF_D__", f"color-mix(in srgb, {dark} 7%, #17161f)")
+        .replace("__SURF2_L__", f"color-mix(in srgb, {light} 11%, #ecebef)")
+        .replace("__SURF2_D__", f"color-mix(in srgb, {dark} 6%, #121118)")
+        .replace("__LINE_L__", f"color-mix(in srgb, {light} 22%, #c9c6d2)")
+        .replace("__LINE_D__", f"color-mix(in srgb, {dark} 18%, #2c2a38)")
+    )
+
+
+def instrument(design: dict) -> str:
+    cells = "".join(
+        f'<div><span class="k">{label}</span><span class="v">{value}</span>'
+        f'<span class="s">{sub}</span></div>'
+        for label, value, sub in design["panel"]
+    )
+    return f'<div class="instrument">{cells}</div>'
 
 
 def render(page: dict[str, object]) -> str:
     title = str(page["title"])
     description = str(page["description"])
     slug = str(page["slug"])
+    design = SHEET_DESIGN[slug]
     sections = str(page["sections"])
     nav = "".join(f'<a href="#{slugify(label)}">{esc(label)}</a>' for label in page["nav"])
+
+    figures = [f for f in design.get("figures", [])]
+    after_quick = "".join(
+        plate(heading, note, body, anchor)
+        for heading, note, body, anchor, position in figures
+        if position == "after-quick"
+    )
+    # A figure anchored to a section is inserted directly above that section's heading.
+    for heading, note, body, anchor, position in figures:
+        if position == "after-quick":
+            continue
+        marker = f'<h2 id="{position}">'
+        if marker in sections:
+            block = plate(heading, note, body, anchor)
+            head_start = sections.rindex("<section", 0, sections.index(marker))
+            sections = sections[:head_start] + block + "\n    " + sections[head_start:]
+
+    quick_raw = str(page["quick"])
+    quick_block = (
+        quick_raw if "<section" in quick_raw
+        else f'<section class="sheet-section" aria-label="Quick reference detail">{quick_raw}</section>'
+    )
+
     schema = {
         "@context": "https://schema.org", "@type": "TechArticle", "headline": title,
         "description": description, "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
@@ -179,13 +926,27 @@ def render(page: dict[str, object]) -> str:
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/{slug}.html">
 <meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(description)}"><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/{slug}.html"><meta property="og:image" content="images/{slug}.png"><meta property="og:image:alt" content="{esc(page['image_alt'])}">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{esc(title)}"><meta name="twitter:description" content="{esc(description)}"><meta name="twitter:image" content="images/{slug}.png"><meta name="twitter:creator" content="@heroiclife">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
-<script type="application/ld+json">{json.dumps(schema, separators=(',', ':'))}</script><style>{CSS}</style></head>
-<body><header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance · engineering reference</p><h1>{esc(page['h1'])}</h1><p class="dek">{esc(page['dek'])}</p><div class="meta"><span>LAST VERIFIED: {VERIFIED}</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
-<nav aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a>{nav}<a href="#sources">Sources</a></div></nav>
-<main class="shell"><section class="quick" id="quick-reference" aria-labelledby="quick-title"><h2 id="quick-title">{esc(page['quick_title'])}</h2>{page['quick']}</section>{sections}{related([item for item in page['related'] if item[1] != slug + '.html'])}</main>
-<footer class="shell meta"><p>Last verified: {VERIFIED} · Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer></body></html>"""
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script type="application/ld+json">{json.dumps(schema, separators=(',', ':'))}</script><style>{_css_for(design)}</style></head>
+<body>
+<a class="skip" href="#main">Skip to reference</a>
+<div class="utility"><div class="shell"><span class="wordmark">{esc(page['h1'])}</span>
+<div class="filter"><label class="skip" for="sheet-filter">Filter this sheet</label>
+<input id="sheet-filter" type="search" autocomplete="off" placeholder="Filter rows &amp; entries"></div>
+<span class="filter-status" id="filter-status" role="status" aria-live="polite"></span>
+<button class="btn" id="theme-btn" type="button" aria-pressed="false">Theme</button></div></div>
+<header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance &middot; engineering reference</p><h1>{esc(page['h1'])}</h1><p class="dek">{esc(page['dek'])}</p><div class="meta"><span>LAST VERIFIED: {VERIFIED}</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<nav class="sections" aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a>{nav}<a href="#sources">Sources</a></div></nav>
+<main id="main" class="shell">
+<section class="sheet-section" id="quick-reference" aria-labelledby="quick-title" style="margin-top:1.6rem"><h2 id="quick-title">{esc(page['quick_title'])}</h2>
+<p class="section-note">{design['panel_note']}</p>{instrument(design)}</section>
+{quick_block}
+{after_quick}{sections}{related([item for item in page['related'] if item[1] != slug + '.html'])}
+<footer class="sheet-foot"><p>Last verified: {VERIFIED} &middot; Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer>
+</main>
+<script>{SCRIPT}</script>
+</body></html>"""
 
 
 PAGES: list[dict[str, object]] = []

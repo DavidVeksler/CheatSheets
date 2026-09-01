@@ -4,106 +4,340 @@
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/blockchain-deposits-withdrawals.html">
 <meta property="og:title" content="Blockchain Deposits &amp; Withdrawals: Finality and Operations"><meta property="og:description" content="Production reference for chain finality, confirmation policy, EVM nonces, UTXO selection, gas stations, deposit identity, idempotency, and reconciliation failures."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/blockchain-deposits-withdrawals.html"><meta property="og:image" content="images/blockchain-deposits-withdrawals.png"><meta property="og:image:alt" content="Per-chain finality and confirmation policy control register">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Blockchain Deposits &amp; Withdrawals: Finality and Operations"><meta name="twitter:description" content="Production reference for chain finality, confirmation policy, EVM nonces, UTXO selection, gas stations, deposit identity, idempotency, and reconciliation failures."><meta name="twitter:image" content="images/blockchain-deposits-withdrawals.png"><meta name="twitter:creator" content="@heroiclife">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Blockchain Deposits & Withdrawals: Finality and Operations","description":"Production reference for chain finality, confirmation policy, EVM nonces, UTXO selection, gas stations, deposit identity, idempotency, and reconciliation failures.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-08-31","dateModified":"2026-08-31","keywords":"blockchain confirmations, finality, crypto deposits, withdrawals, nonce management, UTXO, reconciliation"}</script><style>
-@layer reset, tokens, base, layout, components, print;
+@layer reset, tokens, base, layout, components, diagram, print;
+
 @layer tokens {
   :root {
     color-scheme: light dark;
-    --paper: light-dark(#faf9f7, #0f172a); --surface: light-dark(#ffffff, #182235);
-    --surface-2: light-dark(#f4f1ed, #111c2e); --ink: light-dark(#172033, #e7edf6);
-    --muted: light-dark(#586273, #a9b5c7); --line: light-dark(#d8d3cc, #334155);
-    --accent: light-dark(#86198f, #e879f9); --accent-soft: light-dark(#fae8ff, #3b1641);
-    --safe: light-dark(#166534, #86efac); --safe-bg: light-dark(#dcfce7, #12351f);
-    --warn: light-dark(#92400e, #fcd34d); --warn-bg: light-dark(#fef3c7, #3b2a0d);
-    --danger: light-dark(#991b1b, #fca5a5); --danger-bg: light-dark(#fee2e2, #401719);
-    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --accent: light-dark(#0b6480, #48c9ee);
+    --accent-soft: light-dark(color-mix(in srgb, #0b6480 11%, #ffffff), color-mix(in srgb, #48c9ee 17%, #0d0c15));
+    --lattice: light-dark(color-mix(in srgb, #0b6480 17%, transparent), color-mix(in srgb, #48c9ee 13%, transparent));
+    --paper: light-dark(color-mix(in srgb, #0b6480 7%, #f4f3f6), color-mix(in srgb, #48c9ee 5%, #0c0b12));
+    --surface: light-dark(#ffffff, color-mix(in srgb, #48c9ee 7%, #17161f));
+    --surface-2: light-dark(color-mix(in srgb, #0b6480 11%, #ecebef), color-mix(in srgb, #48c9ee 6%, #121118));
+    --ink: light-dark(#16151f, #e9e7f3);
+    --muted: light-dark(#55536c, #a3a0bb);
+    --faint: light-dark(#5d5b72, #8a87a7);
+    --line: light-dark(color-mix(in srgb, #0b6480 22%, #c9c6d2), color-mix(in srgb, #48c9ee 18%, #2c2a38));
+    --safe: light-dark(#146c43, #7fe3ab); --safe-bg: light-dark(#dcf0e4, #10301f);
+    --warn: light-dark(#8a5407, #f0c05a); --warn-bg: light-dark(#f8eed6, #322612);
+    --danger: light-dark(#98202f, #f7909d); --danger-bg: light-dark(#f8dfe2, #351520);
+    --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --display: "Archivo", "Public Sans", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"]  { color-scheme: dark; }
+}
+
+@layer reset {
+  *,*::before,*::after{box-sizing:border-box}
+  body,h1,h2,h3,p,figure{margin:0}
+  table{border-collapse:collapse}
+  img,svg{display:block;max-width:100%}
+  button,input{font:inherit;color:inherit}
+}
+
+@layer base {
+  body{
+    background:
+      radial-gradient(circle at 16% -8%, color-mix(in srgb,var(--accent) 8%,transparent), transparent 38%),
+      radial-gradient(circle at 94% 0%, color-mix(in srgb,var(--accent) 5%,transparent), transparent 32%),
+      repeating-linear-gradient(180deg, var(--lattice) 0 1px, transparent 1px 28px),
+      var(--paper);
+    color:var(--ink);
+    font:400 1rem/1.6 var(--sans);
+    text-wrap:pretty;
+  }
+  a{color:var(--accent);font-weight:600;text-decoration-thickness:.08em;text-underline-offset:.18em}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:2px}
+  code,.mono{font-family:var(--mono)}
+  td:nth-child(n+2),.num{font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.1;letter-spacing:-.03em}
+  h1{font-size:clamp(2.3rem,6.5vw,4.5rem);font-weight:800;letter-spacing:-.05em;max-width:15ch}
+  h2{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800}
+  h3{font-size:1rem;font-weight:600;letter-spacing:-.01em}
+  p+p{margin-top:.72rem}
+  pre{overflow-x:auto;background:var(--surface);border:1px solid var(--line);padding:.9rem;font-size:.8rem}
+  .skip{position:absolute;left:-9999px;top:0;z-index:99;background:var(--accent);color:var(--surface);
+    padding:.6rem 1rem;font:600 .85rem var(--mono)}
+  .skip:focus{left:.5rem;top:.5rem}
+}
+
+@layer layout {
+  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}
+  .mid{width:min(920px,100%)}
+  .utility{position:sticky;top:0;z-index:8;background:var(--surface);border-bottom:1px solid var(--line)}
+  .utility .shell{display:flex;align-items:center;gap:.75rem;padding-block:.5rem;flex-wrap:wrap}
+  .utility .wordmark{font:600 .68rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .filter{flex:1 1 14rem;min-width:0}
+  .filter input{width:100%;padding:.42rem .7rem;border:1px solid var(--line);border-radius:3px;
+    background:var(--paper);color:var(--ink);font:500 .8rem/1.3 var(--mono)}
+  .filter input::placeholder{color:var(--faint)}
+  .btn{border:1px solid var(--line);border-radius:3px;background:var(--paper);cursor:pointer;
+    padding:.42rem .7rem;font:500 .68rem/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .btn:hover{color:var(--ink);border-color:var(--accent)}
+  .filter-status{font:500 .68rem/1 var(--mono);color:var(--faint);white-space:nowrap}
+
+  .masthead{padding:clamp(2rem,5vw,3.6rem) 0 1.4rem}
+  .eyebrow{color:var(--accent);font:600 .74rem/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;margin-bottom:1rem}
+  .dek{color:var(--muted);font-size:clamp(1rem,1.9vw,1.22rem);max-width:66ch;margin-top:1.1rem}
+  .meta{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;margin-top:1.2rem;color:var(--faint);font:500 .74rem/1.4 var(--mono)}
+
+  nav.sections{position:sticky;top:2.6rem;z-index:6;background:var(--surface);border-block:1px solid var(--line)}
+  nav.sections .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.6rem 0}
+  nav.sections a{white-space:nowrap;font-size:.82rem;font-weight:600}
+
+  main{padding-bottom:4rem}
+  .sheet-section{margin-top:clamp(2.4rem,5.5vw,4rem);scroll-margin-top:6rem}
+  .section-note{color:var(--muted);max-width:68ch;margin-bottom:1.1rem}
+  .entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:.8rem}
+}
+
+@layer components {
+  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.18rem .5rem;
+    font:600 .7rem/1.35 var(--mono);white-space:nowrap}
+  .signal.safe{color:var(--safe);background:var(--safe-bg)}
+  .signal.warn{color:var(--warn);background:var(--warn-bg)}
+  .signal.danger{color:var(--danger);background:var(--danger-bg)}
+
+  /* Instrument panel: the values that define the topic, above the fold. */
+  .instrument{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:1px;
+    background:var(--line);border:1px solid var(--line);border-top:4px solid var(--accent)}
+  .instrument div{background:var(--surface);padding:.9rem 1rem;display:grid;gap:.24rem;align-content:start}
+  .instrument .k{font:500 .66rem/1.3 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+  .instrument .v{font-family:var(--display);font-weight:800;font-size:clamp(1.25rem,2.9vw,1.85rem);
+    letter-spacing:-.045em;line-height:1.05;color:var(--accent);font-variant-numeric:tabular-nums}
+  .instrument .s{font:400 .74rem/1.4 var(--mono);color:var(--muted)}
+
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+  table{width:100%;min-width:700px;font-size:.87rem}
+  th,td{padding:.7rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+  th{position:sticky;top:0;background:var(--surface-2);z-index:1;
+    font:600 .7rem/1.3 var(--sans);letter-spacing:.05em;text-transform:uppercase}
+  tbody tr:hover{background:var(--accent-soft)}
+  td:first-child{font-weight:600;min-width:11rem}
+  tbody tr:last-child td{border-bottom:0}
+
+  /* Severity encoded in form, not only in words. */
+  td.sev{white-space:nowrap}
+  td.sev::before{content:"";display:inline-block;width:.22rem;height:.95em;border-radius:1px;
+    margin-right:.5rem;vertical-align:-.13em;background:var(--sev,var(--line))}
+  tr[data-sev="danger"] td.sev{--sev:var(--danger)}
+  tr[data-sev="warn"]   td.sev{--sev:var(--warn)}
+  tr[data-sev="safe"]   td.sev{--sev:var(--safe)}
+
+  /* Magnitude inside the cell: one gradient, no extra markup, prints fine. */
+  td.bar{min-width:8rem}
+  td.bar span{display:block;height:.62rem;border-radius:1px;
+    background:linear-gradient(90deg,var(--c,var(--accent)) var(--w),color-mix(in srgb,var(--line) 55%,transparent) var(--w))}
+
+  /* Log axis: for columns whose values span more than a decade. */
+  .axis{display:grid;gap:.15rem;min-width:30rem}
+  .axis-ticks{position:relative;height:1.35rem;margin-left:11rem;border-bottom:1px solid var(--line)}
+  .axis-ticks span{position:absolute;left:var(--x);transform:translateX(-50%);bottom:.28rem;
+    font:500 .64rem/1 var(--mono);color:var(--faint);white-space:nowrap}
+  .axis-ticks span::after{content:"";position:absolute;left:50%;bottom:-.32rem;width:1px;height:.28rem;background:var(--line)}
+  .axis-ticks span:last-child{transform:translateX(-100%)}
+  .axis-ticks span:last-child::after{left:100%}
+  .axis-row{display:grid;grid-template-columns:11rem 1fr;align-items:center;padding-block:.16rem}
+  .axis-row .name{font:500 .78rem/1.3 var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:.6rem}
+  .axis-track{position:relative;height:1.15rem;
+    background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--line) 55%,transparent) 0 1px,transparent 1px 25%)}
+  .axis-track i{position:absolute;left:var(--x);top:50%;translate:-50% -50%;
+    width:.62rem;height:.62rem;border-radius:50%;background:var(--dot,var(--accent));
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--dot,var(--accent)) 22%,transparent)}
+  .axis-track b{position:absolute;left:var(--x);top:50%;translate:.75rem -50%;
+    font:500 .68rem/1 var(--mono);color:var(--muted);white-space:nowrap}
+  .axis-row.flip .axis-track b{translate:-.75rem -50%;transform:translateX(-100%)}
+
+  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0;display:grid;gap:.6rem;align-content:start}
+  .entry h3{border-left:3px solid var(--accent);padding-left:.6rem}
+  .entry p{font-size:.9rem;margin:0}
+  .example,.gotcha{padding:.6rem .65rem;border-left:2px solid var(--safe);background:var(--safe-bg);font-size:.86rem}
+  .gotcha{border-color:var(--danger);background:var(--danger-bg)}
+  .example strong,.gotcha strong{display:block;font:600 .66rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.2rem}
+
+  .checklist ol{list-style:none;padding:0;margin:0;display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:.5rem;counter-reset:steps}
+  .checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);
+    padding:.75rem .85rem;font-size:.9rem;display:grid;grid-template-columns:auto 1fr;gap:.6rem;align-items:baseline}
+  .checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:600 .72rem/1.5 var(--mono)}
+
+  /* Progressive disclosure on the edge/advanced tier. */
+  .drawers{display:grid;gap:.5rem}
+  details.drawer{background:var(--surface);border:1px solid var(--line)}
+  details.drawer summary{cursor:pointer;padding:.8rem 1rem;font-family:var(--display);font-weight:600;
+    font-size:1rem;letter-spacing:-.01em;display:flex;align-items:center;gap:.6rem;list-style:none}
+  details.drawer summary::-webkit-details-marker{display:none}
+  details.drawer summary::before{content:"+";color:var(--accent);font:600 1rem/1 var(--mono);width:1ch}
+  details.drawer[open] summary::before{content:"\2212"}
+  details.drawer summary:hover{background:var(--accent-soft)}
+  details.drawer .drawer-body{padding:0 1rem 1rem;display:grid;gap:.6rem}
+  details.drawer .drawer-body p{font-size:.9rem;margin:0}
+
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}
+  .flow div{padding:.9rem;background:var(--surface);border:1px solid var(--line)}
+  .flow b{display:block;color:var(--accent);font:700 .68rem/1 var(--mono);margin-bottom:.45rem;letter-spacing:.06em}
+  .flow p{font-size:.83rem;margin:0}
+  .equation{font:700 clamp(.92rem,2.2vw,1.25rem)/1.45 var(--mono);padding:1rem;border:1px dashed var(--accent);
+    background:var(--accent-soft);overflow-wrap:anywhere;margin:1rem 0}
+  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}
+
+  .sources ul{list-style:none;padding:0;margin:0;display:grid;gap:.5rem}
+  .sources li{display:grid;grid-template-columns:minmax(15rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}
+  .sources span{color:var(--muted);font-size:.87rem}
+
+  .related{margin-top:3.5rem;border:1px solid var(--line);border-top:3px solid var(--accent);
+    padding:1rem 1.1rem;background:var(--surface-2)}
+  .related h2{font-size:1rem;font-weight:600;margin-bottom:.7rem}
+  .related div{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem}
+  .related a{font-size:.85rem}
+  footer.sheet-foot{margin-top:2rem;color:var(--faint);font:400 .78rem/1.6 var(--mono)}
+  [hidden]{display:none !important}
+}
+
+/* Diagrams: tokens + currentColor, so they theme and print for free. */
+@layer diagram {
+  figure.plate{margin:0;background:var(--surface);border:1px solid var(--line);padding:1rem}
+  figure.plate svg{width:100%;height:auto;margin-inline:auto;max-width:44rem}
+  figcaption{margin-top:.7rem;color:var(--muted);font-size:.85rem;text-align:center;text-wrap:balance}
+  .dg-field{fill:var(--surface-2);stroke:var(--line)}
+  .dg-lbl{font:500 9px var(--mono);fill:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+  .dg-cap{font:600 11px var(--mono);fill:var(--ink)}
+  .dg-node{fill:var(--surface);stroke:var(--ink);stroke-width:1.4}
+  .dg-node.on{fill:var(--safe-bg);stroke:var(--safe);stroke-width:2.2}
+  .dg-node.end{fill:var(--danger-bg);stroke:var(--danger);stroke-width:2}
+  .dg-node.hot{fill:var(--warn-bg);stroke:var(--warn);stroke-width:2}
+  .dg-quorum{fill:none;stroke:var(--safe);stroke-width:2.2;stroke-dasharray:5 4}
+  .dg-cross{fill:none;stroke:var(--danger);stroke-width:1.8;stroke-dasharray:3 3}
+  .dg-flow{fill:none;stroke:var(--accent);stroke-width:1.6}
+  .dg-flow.dim{stroke:var(--line);stroke-width:1.2}
+  .dg-brace{fill:none;stroke:var(--accent);stroke-width:1.2}
+  .dg-ok{fill:var(--safe);font:600 10px var(--mono)}
+  .dg-no{fill:var(--danger);font:600 10px var(--mono)}
+  .dg-acc{fill:var(--accent);font:600 10px var(--mono)}
+}
+
+@layer print {
+  @media print{
+    body{background:#fff;color:#000}
+    .utility,nav.sections,.related{display:none}
+    .shell,.mid{width:100%}
+    .sheet-section{break-inside:avoid;margin-top:1.3rem}
+    .entry,.checklist li,figure.plate,details.drawer{break-inside:avoid}
+    details.drawer summary::before{content:""}
+    a{color:inherit;text-decoration:none}
+    .table-wrap{overflow:visible;border:1px solid #999}
+    table{min-width:0;font-size:7.6pt}
+    th{position:static}
+    .instrument{border-top-width:2px}
+  }
+  @media(max-width:600px){
+    .shell{width:min(100% - 1rem,1180px)}
+    .masthead{padding-top:1.2rem}
+    .sources li{grid-template-columns:1fr}
+    .entry-grid{grid-template-columns:1fr}
+    nav.sections{top:0}
+  }
+  @media(prefers-reduced-motion:no-preference){
+    html{scroll-behavior:smooth}
+    .btn,.filter input,tbody tr,details.drawer summary{transition:background-color .15s,border-color .15s,color .15s}
   }
 }
-@layer reset { *,*::before,*::after{box-sizing:border-box} body,h1,h2,h3,p{margin:0} table{border-collapse:collapse} }
-@layer base {
-  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;text-wrap:pretty}
-  a{color:var(--accent);font-weight:650;text-decoration-thickness:.08em;text-underline-offset:.18em}
-  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-  code,.mono,td:nth-child(n+2){font-family:var(--mono);font-variant-numeric:tabular-nums}
-  h1,h2,h3{text-wrap:balance;line-height:1.15} h1{font-size:clamp(2rem,6vw,4.25rem);letter-spacing:-.045em;max-width:18ch}
-  h2{font-size:clamp(1.45rem,3vw,2.15rem);margin-bottom:1rem} h3{font-size:1.02rem;letter-spacing:.015em}
-  p+p{margin-top:.72rem}
-}
-@layer layout {
-  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}.masthead{padding:2.2rem 0 1.5rem;border-bottom:1px solid var(--line)}
-  .eyebrow{color:var(--accent);font:700 .76rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem}
-  .dek{color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);max-width:72ch;margin-top:1rem}
-  .meta{display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:1.2rem;color:var(--muted);font:600 .78rem/1.4 var(--mono)}
-  nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 94%,transparent);border-bottom:1px solid var(--line)}
-  nav .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.65rem 0}nav a{white-space:nowrap;font-size:.82rem}
-  main{padding:1.5rem 0 4rem}.sheet-section{margin-top:clamp(2.2rem,6vw,4.5rem);scroll-margin-top:4rem}
-  .section-note{color:var(--muted);max-width:85ch;margin-bottom:1rem}.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:.8rem}
-}
-@layer components {
-  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.2rem .55rem;font:800 .72rem/1 var(--mono);white-space:nowrap}
-  .signal.safe{color:var(--safe);background:var(--safe-bg)}.signal.warn{color:var(--warn);background:var(--warn-bg)}.signal.danger{color:var(--danger);background:var(--danger-bg)}
-  .quick{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--accent);padding:clamp(1rem,3vw,2rem);box-shadow:0 16px 36px rgba(15,23,42,.08)}
-  .quick h2{display:flex;align-items:center;gap:.6rem}.quick h2::before{content:"CONTROL REGISTER";font:800 .64rem/1 var(--mono);letter-spacing:.1em;color:var(--paper);background:var(--accent);padding:.38rem .5rem}
-  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}table{width:100%;min-width:720px;font-size:.86rem}
-  th,td{padding:.72rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{position:sticky;top:0;background:var(--surface-2);font:800 .72rem/1.25 var(--sans);letter-spacing:.04em;text-transform:uppercase}
-  tbody tr:hover{background:var(--accent-soft)}td:first-child{font-family:var(--sans);font-weight:760;min-width:12rem}tbody tr:last-child td{border-bottom:0}
-  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0}.entry h3{border-left:3px solid var(--accent);padding-left:.65rem;margin-bottom:.65rem}
-  .entry p{font-size:.9rem}.example,.gotcha{padding:.65rem;border-left:2px solid var(--safe);background:var(--safe-bg)}.gotcha{border-color:var(--danger);background:var(--danger-bg)}
-  .checklist ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:.5rem;counter-reset:steps}.checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);padding:.8rem}.checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:800 .7rem/1 var(--mono);margin-right:.55rem}
-  .sources ul{list-style:none;padding:0;display:grid;gap:.5rem}.sources li{display:grid;grid-template-columns:minmax(16rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}.sources span{color:var(--muted);font-size:.86rem}
-  .related{margin-top:4rem;border:1px solid var(--line);padding:1rem;background:var(--surface-2)}.related h2{font-size:1rem}.related div{display:flex;flex-wrap:wrap;gap:.55rem 1rem}.related a{font-size:.84rem}
-  .equation{font:800 clamp(1rem,3vw,1.55rem)/1.4 var(--mono);padding:1rem;border:1px dashed var(--accent);background:var(--accent-soft);overflow-wrap:anywhere}
-  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}.flow div{position:relative;padding:1rem;background:var(--surface);border:1px solid var(--line);min-height:7rem}.flow b{display:block;color:var(--accent);font:800 .7rem/1 var(--mono);margin-bottom:.5rem}.flow p{font-size:.83rem}
-  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}.print-only{display:none}
-}
-@layer print {
-  @media print{nav{display:none}.shell{width:100%}.sheet-section{break-inside:avoid;margin-top:1.3rem}.entry{break-inside:avoid}a{color:inherit}.print-only{display:block}.table-wrap{overflow:visible}table{min-width:0;font-size:7.7pt}th{position:static}}
-  @media(max-width:600px){.shell{width:min(100% - 1rem,1180px)}.masthead{padding-top:1.2rem}.sources li{grid-template-columns:1fr}.quick{padding:.8rem}.table-wrap{margin-inline:-.5rem}.entry-grid{grid-template-columns:1fr}}
-}
 </style></head>
-<body><header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance · engineering reference</p><h1>Blockchain deposits &amp; withdrawals</h1><p class="dek">A transaction hash is evidence, not identity. Credit policy begins with the chain’s native finality model and ends with an invariant that detects every missing, duplicated, or orphaned posting.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
-<nav aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#finality-register">Finality register</a><a href="#finality-vocabulary--layer-2">Finality vocabulary &amp; Layer 2</a><a href="#evm-nonce-runbook">EVM nonce runbook</a><a href="#utxo-operations">UTXO operations</a><a href="#gas-station--deposit-hazards">Gas station &amp; deposit hazards</a><a href="#reconciliation-break-taxonomy">Reconciliation break taxonomy</a><a href="#observed-incident-register">Observed incident register</a><a href="#value-at-risk-policy-pattern">Value-at-risk policy pattern</a><a href="#common-mistakes--incident-checklist">Common mistakes &amp; incident checklist</a><a href="#sources">Sources</a></div></nav>
-<main class="shell"><section class="quick" id="quick-reference" aria-labelledby="quick-title"><h2 id="quick-title">Per-chain finality policy</h2>
+<body>
+<a class="skip" href="#main">Skip to reference</a>
+<div class="utility"><div class="shell"><span class="wordmark">Blockchain deposits &amp; withdrawals</span>
+<div class="filter"><label class="skip" for="sheet-filter">Filter this sheet</label>
+<input id="sheet-filter" type="search" autocomplete="off" placeholder="Filter rows &amp; entries"></div>
+<span class="filter-status" id="filter-status" role="status" aria-live="polite"></span>
+<button class="btn" id="theme-btn" type="button" aria-pressed="false">Theme</button></div></div>
+<header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance &middot; engineering reference</p><h1>Blockchain deposits &amp; withdrawals</h1><p class="dek">A transaction hash is evidence, not identity. Credit policy begins with the chain’s native finality model and ends with an invariant that detects every missing, duplicated, or orphaned posting.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<nav class="sections" aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#finality-register">Finality register</a><a href="#finality-vocabulary--layer-2">Finality vocabulary &amp; Layer 2</a><a href="#evm-nonce-runbook">EVM nonce runbook</a><a href="#utxo-operations">UTXO operations</a><a href="#gas-station--deposit-hazards">Gas station &amp; deposit hazards</a><a href="#reconciliation-break-taxonomy">Reconciliation break taxonomy</a><a href="#observed-incident-register">Observed incident register</a><a href="#value-at-risk-policy-pattern">Value-at-risk policy pattern</a><a href="#common-mistakes--incident-checklist">Common mistakes &amp; incident checklist</a><a href="#sources">Sources</a></div></nav>
+<main id="main" class="shell">
+<section class="sheet-section" id="quick-reference" aria-labelledby="quick-title" style="margin-top:1.6rem"><h2 id="quick-title">Per-chain finality policy</h2>
+<p class="section-note">The decisive numbers differ per chain. A confirmation count copied between chains is the most common credit defect.</p><div class="instrument"><div><span class="k">Credit states</span><span class="v">5</span><span class="s">observed &rarr; settled</span></div><div><span class="k">Bitcoin</span><span class="v">1 &middot; 3 &middot; 6</span><span class="s">blocks by value tier</span></div><div><span class="k">Ethereum</span><span class="v">safe</span><span class="s">or finalized, never head</span></div><div><span class="k">Solana</span><span class="v">400 ms</span><span class="s">slot target</span></div><div><span class="k">On reorg</span><span class="v">REVERSE</span><span class="s">freeze derived funds</span></div><div><span class="k">Audit key</span><span class="v">hash + height</span><span class="s">not a bare count</span></div></div></section>
+
     <section class="sheet-section" aria-labelledby="value-tiered-credit-states">
       <h2 id="value-tiered-credit-states">Value-tiered credit states</h2>
       <p class="section-note">Keep block hash, height/slot, status vocabulary, adapter version, and policy version with every decision. A bare integer confirmation count cannot be audited across chains.</p>
       <div class="table-wrap" role="region" aria-label="Value-tiered credit states" tabindex="0">
-        <table><thead><tr><th scope="col">State</th><th scope="col">Customer balance</th><th scope="col">Withdrawal</th><th scope="col">Required evidence</th></tr></thead><tbody><tr><td>Observed</td><td>Hidden / pending</td><td>Blocked</td><td>Transaction parsed; asset identity validated</td></tr><tr><td>Provisional</td><td>May display</td><td>Blocked</td><td>Canonical block at adapter-defined safe depth</td></tr><tr><td>Credited</td><td>Available by value tier</td><td>Risk hold may remain</td><td>Chain-native safe/final state</td></tr><tr><td>Settled</td><td>Available</td><td>Allowed by policy</td><td>Reconciled ledger posting + final chain evidence</td></tr><tr><td>Orphaned</td><td><span class="signal danger">REVERSE</span></td><td>Freeze derived funds</td><td>Previously observed block left canonical chain</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">State</th><th scope="col">Customer balance</th><th scope="col">Withdrawal</th><th scope="col">Required evidence</th></tr></thead><tbody><tr data-f><td>Observed</td><td>Hidden / pending</td><td>Blocked</td><td>Transaction parsed; asset identity validated</td></tr><tr data-f><td>Provisional</td><td>May display</td><td>Blocked</td><td>Canonical block at adapter-defined safe depth</td></tr><tr data-f><td>Credited</td><td>Available by value tier</td><td>Risk hold may remain</td><td>Chain-native safe/final state</td></tr><tr data-f><td>Settled</td><td>Available</td><td>Allowed by policy</td><td>Reconciled ledger posting + final chain evidence</td></tr><tr data-f><td>Orphaned</td><td><span class="signal danger">REVERSE</span></td><td>Freeze derived funds</td><td>Previously observed block left canonical chain</td></tr></tbody></table>
       </div>
-    </section></section>
+    </section>
+
+    <section class="sheet-section" aria-labelledby="cadence-figure">
+      <h2 id="cadence-figure">Block cadence spans three orders of magnitude</h2>
+      <p class="section-note">Plotted on a log axis, because a text column cannot show the distance between a 400&nbsp;ms slot and a 10-minute target. Cadence is not finality &mdash; it only sets the clock the finality rule runs on.</p>
+      <div class="scroll-x" style="overflow-x:auto"><div class="axis">
+  <div class="axis-ticks"><span style="--x:12.5%">1s</span><span style="--x:44%">10s</span><span style="--x:68.5%">1 min</span><span style="--x:100%">10 min</span></div>
+  <div class="axis-row"><span class="name">Solana</span><span class="axis-track" style="--x:0%;--dot:var(--safe)"><i></i><b>~400 ms slot target</b></span></div>
+  <div class="axis-row"><span class="name">Avalanche C-Chain</span><span class="axis-track" style="--x:12.5%;--dot:var(--safe)"><i></i><b>sub-second to seconds</b></span></div>
+  <div class="axis-row"><span class="name">Polygon PoS (Bor)</span><span class="axis-track" style="--x:22%;--dot:var(--safe)"><i></i><b>~2 s</b></span></div>
+  <div class="axis-row"><span class="name">Tron</span><span class="axis-track" style="--x:27.6%;--dot:var(--safe)"><i></i><b>~3 s</b></span></div>
+  <div class="axis-row"><span class="name">Ethereum</span><span class="axis-track" style="--x:46.5%;--dot:var(--warn)"><i></i><b>12 s slot</b></span></div>
+  <div class="axis-row flip"><span class="name">Litecoin</span><span class="axis-track" style="--x:81%;--dot:var(--warn)"><i></i><b>~2.5 min target</b></span></div>
+  <div class="axis-row flip"><span class="name">Bitcoin</span><span class="axis-track" style="--x:100%;--dot:var(--danger)"><i></i><b>~10 min target</b></span></div>
+</div></div>
+    </section>
+    <section class="sheet-section" aria-labelledby="credit-state-figure">
+      <h2 id="credit-state-figure">Credit state machine</h2>
+      <p class="section-note">Balance visibility and withdrawal eligibility are separate questions at every state.</p>
+      <figure class="plate"><svg viewBox="0 0 620 216" role="img" aria-labelledby="cs-t cs-d">
+<title id="cs-t">Credit state machine from observed to settled, with the orphaned branch</title>
+<desc id="cs-d">A deposit moves from observed to provisional to credited to settled. At any point before settlement the block can leave the canonical chain, which sends the deposit to the orphaned state and reverses the customer balance.</desc>
+<defs><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--accent)"/></marker></defs>
+<rect class="dg-node" x="6" y="40" width="126" height="44" rx="3"/><rect class="dg-node" x="158" y="40" width="126" height="44" rx="3"/>
+<rect class="dg-node hot" x="310" y="40" width="126" height="44" rx="3"/><rect class="dg-node on" x="462" y="40" width="150" height="44" rx="3"/>
+<text class="dg-cap" x="69" y="66" text-anchor="middle">Observed</text><text class="dg-cap" x="221" y="66" text-anchor="middle">Provisional</text>
+<text class="dg-cap" x="373" y="66" text-anchor="middle">Credited</text><text class="dg-cap" x="537" y="66" text-anchor="middle">Settled</text>
+<text class="dg-lbl" x="69" y="98" text-anchor="middle">hidden</text><text class="dg-lbl" x="221" y="98" text-anchor="middle">may display</text>
+<text class="dg-lbl" x="373" y="98" text-anchor="middle">available by tier</text><text class="dg-lbl" x="537" y="98" text-anchor="middle">withdrawable</text>
+<path class="dg-flow" d="M132 62 H154" marker-end="url(#ar)"/><path class="dg-flow" d="M284 62 H306" marker-end="url(#ar)"/>
+<path class="dg-flow" d="M436 62 H458" marker-end="url(#ar)"/>
+<text class="dg-lbl" x="143" y="30" text-anchor="middle">safe depth</text><text class="dg-lbl" x="295" y="30" text-anchor="middle">final state</text>
+<text class="dg-lbl" x="447" y="30" text-anchor="middle">reconciled</text>
+<rect class="dg-node end" x="228" y="126" width="164" height="42" rx="3"/>
+<text class="dg-cap" x="310" y="152" text-anchor="middle">Orphaned</text>
+<path class="dg-flow" style="stroke:var(--danger)" d="M69 84 V147 H224" marker-end="url(#ar)"/>
+<path class="dg-flow" style="stroke:var(--danger)" d="M373 84 V107 H460 V147 H396" marker-end="url(#ar)"/>
+<text class="dg-no" x="310" y="188" text-anchor="middle">block left the canonical chain &rarr; REVERSE and freeze derived funds</text>
+<text class="dg-lbl" x="310" y="208" text-anchor="middle">Withdrawal stays blocked until the chain-native final state is reached</text></svg><figcaption>A deposit can leave the canonical chain at any point before settlement, which is why credit and withdrawal are gated separately.</figcaption></figure>
+    </section>
     <section class="sheet-section" aria-labelledby="finality-register">
       <h2 id="finality-register">Finality register</h2>
       <p class="section-note">Cadences are protocol targets or typical ranges, not SLAs. A production adapter must query live network state and carry an incident override. Last checked August 2026.</p>
       <div class="table-wrap" role="region" aria-label="Finality register" tabindex="0">
-        <table><thead><tr><th scope="col">Chain</th><th scope="col">Consensus</th><th scope="col">Cadence</th><th scope="col">Native vocabulary</th><th scope="col">Credit rule</th><th scope="col">Critical caveat</th></tr></thead><tbody><tr><td>Bitcoin</td><td>PoW · probabilistic</td><td>~10 min target</td><td>mempool → block depth</td><td>1 / 3 / 6 blocks by value</td><td>No protocol-final state</td></tr><tr><td>Ethereum</td><td>PoS · economic finality</td><td>12 s slot</td><td>head → safe → finalized</td><td>Use <code>safe</code> or <code>finalized</code></td><td>Finality normally spans epochs; query the node</td></tr><tr><td>Solana</td><td>PoS + Tower BFT</td><td>~400 ms slot target</td><td>processed → confirmed → finalized</td><td>Use commitment parameter explicitly</td><td>Finalized means max lockout / rooted</td></tr><tr><td>Tron</td><td>DPoS / SR</td><td>~3 s</td><td>latest → solidified</td><td>Credit only solidified for withdrawal</td><td>Resource and SR behavior differ from EVM</td></tr><tr><td>BNB Smart Chain</td><td>PoSA</td><td>Network-upgrade dependent</td><td>latest → finalized</td><td>Use finality RPC where supported</td><td>Never hard-code an old block interval</td></tr><tr><td>Polygon PoS</td><td>Heimdall/Bor + Ethereum checkpoints</td><td>~2 s Bor</td><td>Bor inclusion → checkpoint</td><td>Separate fast credit from bridge exit</td><td>PoS reorg and L1 checkpoint are different states</td></tr><tr><td>Avalanche C-Chain</td><td>Snowman · accepted finality</td><td>Sub-second to seconds</td><td>processing → accepted</td><td>Require accepted</td><td>Do not add Bitcoin-style confirmations mechanically</td></tr><tr><td>Litecoin</td><td>PoW · probabilistic</td><td>~2.5 min target</td><td>block depth</td><td>Value-tiered depth</td><td>Security budget differs from Bitcoin</td></tr><tr><td>Dogecoin</td><td>PoW · probabilistic</td><td>~1 min target</td><td>block depth</td><td>Value-tiered depth</td><td>Merged mining does not make depth policies identical</td></tr><tr><td>Bitcoin Cash</td><td>PoW · probabilistic</td><td>~10 min target</td><td>block depth</td><td>Value-tiered depth</td><td>Deep-reorg history requires incident override</td></tr><tr><td>XRP Ledger</td><td>Federated consensus</td><td>~3–5 s ledger</td><td>open → validated</td><td>Credit validated ledger only</td><td>Destination tag is part of deposit identity</td></tr><tr><td>Stellar</td><td>SCP · deterministic</td><td>Usually seconds</td><td>pending → successful ledger</td><td>Successful ledger close</td><td>Memo is part of deposit identity</td></tr><tr><td>Cardano</td><td>Ouroboros · probabilistic</td><td>~20 s slot</td><td>block depth</td><td>Node/venue risk policy</td><td>Settlement assurance grows with depth</td></tr><tr><td>Cosmos SDK / CometBFT</td><td>BFT · deterministic</td><td>Chain configured</td><td>commit</td><td>Committed block</td><td>Validator-set and chain halts dominate</td></tr><tr><td>Tezos</td><td>PoS with finality</td><td>Protocol-version dependent</td><td>head → finalized</td><td>Use finalized level</td><td>Upgrade can change timing parameters</td></tr><tr><td>Aptos</td><td>Jolteon/DiemBFT</td><td>Sub-second target</td><td>pending → executed</td><td>Committed execution</td><td>Expiration timestamp is operationally significant</td></tr><tr><td>Sui</td><td>Narwhal/Bullshark lineage</td><td>Path dependent</td><td>effects certified/checkpointed</td><td>Checkpointed for external credit</td><td>Fast-path and consensus-path semantics differ</td></tr><tr><td>TON</td><td>PoS sharded</td><td>Shard/masterchain dependent</td><td>included → masterchain confirmed</td><td>Observe masterchain state</td><td>Shard routing and memo identity matter</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Chain</th><th scope="col">Consensus</th><th scope="col">Cadence</th><th scope="col">Native vocabulary</th><th scope="col">Credit rule</th><th scope="col">Critical caveat</th></tr></thead><tbody><tr data-f><td>Bitcoin</td><td>PoW · probabilistic</td><td>~10 min target</td><td>mempool → block depth</td><td>1 / 3 / 6 blocks by value</td><td>No protocol-final state</td></tr><tr data-f><td>Ethereum</td><td>PoS · economic finality</td><td>12 s slot</td><td>head → safe → finalized</td><td>Use <code>safe</code> or <code>finalized</code></td><td>Finality normally spans epochs; query the node</td></tr><tr data-f><td>Solana</td><td>PoS + Tower BFT</td><td>~400 ms slot target</td><td>processed → confirmed → finalized</td><td>Use commitment parameter explicitly</td><td>Finalized means max lockout / rooted</td></tr><tr data-f><td>Tron</td><td>DPoS / SR</td><td>~3 s</td><td>latest → solidified</td><td>Credit only solidified for withdrawal</td><td>Resource and SR behavior differ from EVM</td></tr><tr data-f><td>BNB Smart Chain</td><td>PoSA</td><td>Network-upgrade dependent</td><td>latest → finalized</td><td>Use finality RPC where supported</td><td>Never hard-code an old block interval</td></tr><tr data-f><td>Polygon PoS</td><td>Heimdall/Bor + Ethereum checkpoints</td><td>~2 s Bor</td><td>Bor inclusion → checkpoint</td><td>Separate fast credit from bridge exit</td><td>PoS reorg and L1 checkpoint are different states</td></tr><tr data-f><td>Avalanche C-Chain</td><td>Snowman · accepted finality</td><td>Sub-second to seconds</td><td>processing → accepted</td><td>Require accepted</td><td>Do not add Bitcoin-style confirmations mechanically</td></tr><tr data-f><td>Litecoin</td><td>PoW · probabilistic</td><td>~2.5 min target</td><td>block depth</td><td>Value-tiered depth</td><td>Security budget differs from Bitcoin</td></tr><tr data-f><td>Dogecoin</td><td>PoW · probabilistic</td><td>~1 min target</td><td>block depth</td><td>Value-tiered depth</td><td>Merged mining does not make depth policies identical</td></tr><tr data-f><td>Bitcoin Cash</td><td>PoW · probabilistic</td><td>~10 min target</td><td>block depth</td><td>Value-tiered depth</td><td>Deep-reorg history requires incident override</td></tr><tr data-f><td>XRP Ledger</td><td>Federated consensus</td><td>~3–5 s ledger</td><td>open → validated</td><td>Credit validated ledger only</td><td>Destination tag is part of deposit identity</td></tr><tr data-f><td>Stellar</td><td>SCP · deterministic</td><td>Usually seconds</td><td>pending → successful ledger</td><td>Successful ledger close</td><td>Memo is part of deposit identity</td></tr><tr data-f><td>Cardano</td><td>Ouroboros · probabilistic</td><td>~20 s slot</td><td>block depth</td><td>Node/venue risk policy</td><td>Settlement assurance grows with depth</td></tr><tr data-f><td>Cosmos SDK / CometBFT</td><td>BFT · deterministic</td><td>Chain configured</td><td>commit</td><td>Committed block</td><td>Validator-set and chain halts dominate</td></tr><tr data-f><td>Tezos</td><td>PoS with finality</td><td>Protocol-version dependent</td><td>head → finalized</td><td>Use finalized level</td><td>Upgrade can change timing parameters</td></tr><tr data-f><td>Aptos</td><td>Jolteon/DiemBFT</td><td>Sub-second target</td><td>pending → executed</td><td>Committed execution</td><td>Expiration timestamp is operationally significant</td></tr><tr data-f><td>Sui</td><td>Narwhal/Bullshark lineage</td><td>Path dependent</td><td>effects certified/checkpointed</td><td>Checkpointed for external credit</td><td>Fast-path and consensus-path semantics differ</td></tr><tr data-f><td>TON</td><td>PoS sharded</td><td>Shard/masterchain dependent</td><td>included → masterchain confirmed</td><td>Observe masterchain state</td><td>Shard routing and memo identity matter</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="finality-vocabulary--layer-2">
       <h2 id="finality-vocabulary--layer-2">Finality vocabulary &amp; Layer 2</h2>
       
       <div class="entry-grid">
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Probabilistic depth</h3>
           <p>Each additional PoW block raises reversal cost but never creates a protocol-final flag.</p>
           <p class="example"><strong>Concrete use:</strong> A venue may expose 1-block provisional credit while holding withdrawals until 6 blocks for a large BTC deposit.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Applying the same count to Dogecoin and Bitcoin ignores security-budget differences.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Economic finality</h3>
           <p>A PoS checkpoint becomes reversible only through exceptional consensus failure and slashable behavior.</p>
           <p class="example"><strong>Concrete use:</strong> On Ethereum, request <code>safe</code> for lower latency or <code>finalized</code> for the strongest standard RPC state.</p>
           <p class="gotcha"><strong>Failure mode:</strong> The JSON-RPC <code>latest</code> tag is not a finality promise.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Optimistic rollup</h3>
           <p>Sequencer receipt, L1 data publication, and challenge-window completion are three different moments.</p>
           <p class="example"><strong>Concrete use:</strong> Credit a small Arbitrum deposit after L1 inclusion but gate bridge-dependent withdrawal until the relevant protocol state.</p>
           <p class="gotcha"><strong>Failure mode:</strong> An L2 cannot be more final than the L1 data and state it inherits.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>ZK rollup</h3>
           <p>Validity proof acceptance on L1 establishes state correctness; data availability and L1 finality remain separate.</p>
           <p class="example"><strong>Concrete use:</strong> Track batch inclusion, proof verification, and L1 finalized block as independent fields.</p>
@@ -114,25 +348,25 @@
       <h2 id="evm-nonce-runbook">EVM nonce runbook</h2>
       
       <div class="entry-grid">
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Single-writer allocator</h3>
           <p>One durable allocator leases sequential nonces per hot address; workers never poll independently for the next value.</p>
           <p class="example"><strong>Concrete use:</strong> Lease nonce 418 for 60 seconds, persist request ID and fee fields, then mark broadcast by transaction hash.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Two workers reading <code>pending</code> can assign the same nonce.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Gap handling</h3>
           <p>A missing nonce blocks every later transaction from that address.</p>
           <p class="example"><strong>Concrete use:</strong> If 418 is stuck and 419–425 are queued, replace 418 first; do not keep adding higher nonces.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A gap can look like seven unrelated provider failures.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Replacement</h3>
           <p>Resubmit the same nonce with the same intent and a sufficiently higher effective fee.</p>
           <p class="example"><strong>Concrete use:</strong> Keep <code>maxPriorityFeePerGas</code> and <code>maxFeePerGas</code> under a policy ceiling, then reconcile whichever hash lands.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A replacement creates multiple hashes for one withdrawal intent.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Throughput sharding</h3>
           <p>Nonce serialization is per sender, so scale with multiple funded hot addresses.</p>
           <p class="example"><strong>Concrete use:</strong> Route withdrawals deterministically across 8 addresses while retaining per-address single writers.</p>
@@ -143,38 +377,38 @@
       <h2 id="utxo-operations">UTXO operations</h2>
       <p class="section-note">Fee examples are arithmetic, not fee recommendations. Query a current node estimator and enforce a maximum policy.</p>
       <div class="table-wrap" role="region" aria-label="UTXO operations" tabindex="0">
-        <table><thead><tr><th scope="col">Operation</th><th scope="col">Control</th><th scope="col">Worked value</th><th scope="col">Do not</th></tr></thead><tbody><tr><td>Coin selection</td><td>Minimize input cost, change, and privacy leakage</td><td>At 20 sat/vB, a 68-vB input costs ~1,360 sat to spend</td><td>Select nominal value without effective value</td></tr><tr><td>Batching</td><td>One transaction, many outputs</td><td>10 P2WPKH outputs avoid repeating 10 transaction overheads</td><td>Mix incompatible urgency or screening states</td></tr><tr><td>RBF</td><td>Replace an opt-in unconfirmed transaction</td><td>Same inputs; higher fee; preserve withdrawal identity</td><td>Credit both hashes</td></tr><tr><td>CPFP</td><td>Spend a low-fee parent output with a high-fee child</td><td>Package feerate must clear the target</td><td>Assume every output is spendable</td></tr><tr><td>Consolidation</td><td>Merge small UTXOs during low-fee windows</td><td>Only consolidate inputs whose future fee saving exceeds current cost</td><td>Create one operationally catastrophic mega-UTXO</td></tr><tr><td>Descriptor scan</td><td>Derive monitored addresses with an explicit range</td><td>Persist last-used index and scan beyond configured lookahead</td><td>Rely on an implicit gap limit</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Operation</th><th scope="col">Control</th><th scope="col">Worked value</th><th scope="col">Do not</th></tr></thead><tbody><tr data-f><td>Coin selection</td><td>Minimize input cost, change, and privacy leakage</td><td>At 20 sat/vB, a 68-vB input costs ~1,360 sat to spend</td><td>Select nominal value without effective value</td></tr><tr data-f><td>Batching</td><td>One transaction, many outputs</td><td>10 P2WPKH outputs avoid repeating 10 transaction overheads</td><td>Mix incompatible urgency or screening states</td></tr><tr data-f><td>RBF</td><td>Replace an opt-in unconfirmed transaction</td><td>Same inputs; higher fee; preserve withdrawal identity</td><td>Credit both hashes</td></tr><tr data-f><td>CPFP</td><td>Spend a low-fee parent output with a high-fee child</td><td>Package feerate must clear the target</td><td>Assume every output is spendable</td></tr><tr data-f><td>Consolidation</td><td>Merge small UTXOs during low-fee windows</td><td>Only consolidate inputs whose future fee saving exceeds current cost</td><td>Create one operationally catastrophic mega-UTXO</td></tr><tr data-f><td>Descriptor scan</td><td>Derive monitored addresses with an explicit range</td><td>Persist last-used index and scan beyond configured lookahead</td><td>Rely on an implicit gap limit</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="gas-station--deposit-hazards">
       <h2 id="gas-station--deposit-hazards">Gas station &amp; deposit hazards</h2>
       
       <div class="entry-grid">
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Token sweep funding</h3>
           <p>A token-holding address also needs the chain's native asset to pay execution fees.</p>
           <p class="example"><strong>Concrete use:</strong> Detect USDC, estimate sweep gas, fund only the bounded amount, then sweep and reconcile both transactions.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Pre-funding every address strands native asset and expands attack value.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Contract identity</h3>
           <p>Token contract and chain identify an asset; symbol and decimals are display metadata.</p>
           <p class="example"><strong>Concrete use:</strong> Credit only the allowlisted Ethereum USDC contract and read its configured 6 decimals.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A fake token can emit the same symbol and Transfer event.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Memo / destination tag</h3>
           <p>Some chains multiplex users behind one address; the tag is part of the account key.</p>
           <p class="example"><strong>Concrete use:</strong> Store <code>(chain,address,tag)</code> and hold unmatched XRP deposits for operations review.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Address-only indexing miscredits or strands deposits.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Address poisoning</h3>
           <p>Zero-value or dust transfers plant a lookalike address in history.</p>
           <p class="example"><strong>Concrete use:</strong> Never populate destinations from recent on-chain counterparties; use authenticated address books.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Prefix/suffix visual checks are weak against generated lookalikes.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Transfer semantics</h3>
           <p>Fee-on-transfer, rebasing, and contract-originated moves break naive amount assumptions.</p>
           <p class="example"><strong>Concrete use:</strong> Credit the observed balance delta after finality, not the requested calldata amount.</p>
@@ -185,31 +419,99 @@
       <h2 id="reconciliation-break-taxonomy">Reconciliation break taxonomy</h2>
       <p class="section-note">Balance tolerance is zero. Timing differences belong in explicit in-flight accounts, not an unexplained reconciliation allowance.</p>
       <div class="table-wrap" role="region" aria-label="Reconciliation break taxonomy" tabindex="0">
-        <table><thead><tr><th scope="col">Mismatch</th><th scope="col">Detection</th><th scope="col">Likely cause</th><th scope="col">First response</th></tr></thead><tbody><tr><td>On-chain, no ledger</td><td>Finalized inbound absent internally</td><td>Indexer/webhook loss</td><td>Pause auto-sweep; backfill by block range</td></tr><tr><td>Ledger, no chain</td><td>Broadcast intent has no accepted hash</td><td>Timeout/crash before broadcast</td><td>Query provider by idempotency ID before retry</td></tr><tr><td>Duplicate credit</td><td>Same transfer identity posted twice</td><td>At-least-once delivery</td><td>Reverse duplicate journal entry; fix uniqueness key</td></tr><tr><td>Orphaned credit</td><td>Credited block no longer canonical</td><td>Reorg</td><td>Freeze derived availability; post compensating entry</td></tr><tr><td>Amount mismatch</td><td>Observed delta differs from ledger amount</td><td>Decimals/fee-on-transfer</td><td>Quarantine asset adapter</td></tr><tr><td>Wrong network</td><td>Supported address, unsupported chain</td><td>User routing error</td><td>Do not automate recovery; assess key/control path</td></tr><tr><td>Fee drift</td><td>On-chain fee ≠ booked expense</td><td>Replacement or estimator error</td><td>Attach all hashes to one intent and settle actual fee</td></tr><tr><td>In-flight snapshot</td><td>Invariant break clears next cycle</td><td>Timing boundary</td><td>Model in-flight account explicitly; do not use tolerance</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Mismatch</th><th scope="col">Detection</th><th scope="col">Likely cause</th><th scope="col">First response</th></tr></thead><tbody><tr data-f><td>On-chain, no ledger</td><td>Finalized inbound absent internally</td><td>Indexer/webhook loss</td><td>Pause auto-sweep; backfill by block range</td></tr><tr data-f><td>Ledger, no chain</td><td>Broadcast intent has no accepted hash</td><td>Timeout/crash before broadcast</td><td>Query provider by idempotency ID before retry</td></tr><tr data-f><td>Duplicate credit</td><td>Same transfer identity posted twice</td><td>At-least-once delivery</td><td>Reverse duplicate journal entry; fix uniqueness key</td></tr><tr data-f><td>Orphaned credit</td><td>Credited block no longer canonical</td><td>Reorg</td><td>Freeze derived availability; post compensating entry</td></tr><tr data-f><td>Amount mismatch</td><td>Observed delta differs from ledger amount</td><td>Decimals/fee-on-transfer</td><td>Quarantine asset adapter</td></tr><tr data-f><td>Wrong network</td><td>Supported address, unsupported chain</td><td>User routing error</td><td>Do not automate recovery; assess key/control path</td></tr><tr data-f><td>Fee drift</td><td>On-chain fee ≠ booked expense</td><td>Replacement or estimator error</td><td>Attach all hashes to one intent and settle actual fee</td></tr><tr data-f><td>In-flight snapshot</td><td>Invariant break clears next cycle</td><td>Timing boundary</td><td>Model in-flight account explicitly; do not use tolerance</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section checklist" aria-labelledby="common-mistakes--incident-checklist">
       <h2 id="common-mistakes--incident-checklist">Common mistakes &amp; incident checklist</h2>
       <p class="section-note">Run this list before enabling a new chain or asset.</p>
-      <ol><li><span aria-hidden="true">□</span> Use an internal immutable transaction ID as the key; treat every chain hash as an output/version.</li><li><span aria-hidden="true">□</span> Record requested, safe, and finalized block identifiers—not just a confirmation count.</li><li><span aria-hidden="true">□</span> Centralize nonce allocation and expose lease, gap, replacement, and expiry telemetry.</li><li><span aria-hidden="true">□</span> Check native-fee balance before token sweep and cap automated funding.</li><li><span aria-hidden="true">□</span> Persist chain + contract + address + tag/memo + log index as deposit identity.</li><li><span aria-hidden="true">□</span> Verify token contract and decimals; measure balance delta for unusual tokens.</li><li><span aria-hidden="true">□</span> Make webhook consumers idempotent and back them with block-range polling.</li><li><span aria-hidden="true">□</span> Raise confirmation policy during consensus incidents; never wait for a code deploy.</li><li><span aria-hidden="true">□</span> Alert before descriptor/lookahead exhaustion and test skipped-address recovery.</li><li><span aria-hidden="true">□</span> Reconcile more frequently than the shortest customer withdrawal SLA.</li></ol>
+      <ol><li data-f><span>Use an internal immutable transaction ID as the key; treat every chain hash as an output/version.</span></li><li data-f><span>Record requested, safe, and finalized block identifiers—not just a confirmation count.</span></li><li data-f><span>Centralize nonce allocation and expose lease, gap, replacement, and expiry telemetry.</span></li><li data-f><span>Check native-fee balance before token sweep and cap automated funding.</span></li><li data-f><span>Persist chain + contract + address + tag/memo + log index as deposit identity.</span></li><li data-f><span>Verify token contract and decimals; measure balance delta for unusual tokens.</span></li><li data-f><span>Make webhook consumers idempotent and back them with block-range polling.</span></li><li data-f><span>Raise confirmation policy during consensus incidents; never wait for a code deploy.</span></li><li data-f><span>Alert before descriptor/lookahead exhaustion and test skipped-address recovery.</span></li><li data-f><span>Reconcile more frequently than the shortest customer withdrawal SLA.</span></li></ol>
     </section>
     <section class="sheet-section" aria-labelledby="observed-incident-register">
       <h2 id="observed-incident-register">Observed incident register</h2>
       <p class="section-note">Where a primary record does not establish a trustworthy depth, this register does not invent one. Absence of a number is safer than a false confirmation rule.</p>
       <div class="table-wrap" role="region" aria-label="Observed incident register" tabindex="0">
-        <table><thead><tr><th scope="col">Network / date</th><th scope="col">Observed event</th><th scope="col">Evidence</th><th scope="col">Engineering consequence</th></tr></thead><tbody><tr><td>Bitcoin · 2013-03-11</td><td>0.8/0.7 consensus split from Berkeley DB lock behavior</td><td><a href="https://bitcoin.org/bip/50/">BIP 50</a>: fork at height 225,430; experimental double-spend documented</td><td>Suspend on node-version disagreement; height is not a unique ID</td></tr><tr><td>Bitcoin · 2013-08-16</td><td>Unpatched nodes forked at block 252,451</td><td><a href="https://bitcoin.org/bip/50/">BIP 50 resolution record</a></td><td>Track consensus alerts and client versions, not depth alone</td></tr><tr><td>Ethereum Classic · 2020-07-31</td><td>Successful 51% reorganization attack</td><td><a href="https://www.ethereumclassic.org/knowledge/history/">Project history</a></td><td>Static confirmation policy can become obsolete during attack</td></tr><tr><td>Ethereum Classic · 2020-08-06</td><td>Third successful 51% reorganization attack</td><td><a href="https://www.ethereumclassic.org/knowledge/history/">Repeated within one week</a></td><td>Pause can be safer than adding a few blocks</td></tr><tr><td>Ethereum Classic · 2020-08-29</td><td>Fourth successful 51% reorganization attack</td><td><a href="https://www.ethereumclassic.org/knowledge/history/">Repeated in same month</a></td><td>Security budget and incident state govern policy</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Network / date</th><th scope="col">Observed event</th><th scope="col">Evidence</th><th scope="col">Engineering consequence</th></tr></thead><tbody><tr data-f><td>Bitcoin · 2013-03-11</td><td>0.8/0.7 consensus split from Berkeley DB lock behavior</td><td><a href="https://bitcoin.org/bip/50/">BIP 50</a>: fork at height 225,430; experimental double-spend documented</td><td>Suspend on node-version disagreement; height is not a unique ID</td></tr><tr data-f><td>Bitcoin · 2013-08-16</td><td>Unpatched nodes forked at block 252,451</td><td><a href="https://bitcoin.org/bip/50/">BIP 50 resolution record</a></td><td>Track consensus alerts and client versions, not depth alone</td></tr><tr data-f><td>Ethereum Classic · 2020-07-31</td><td>Successful 51% reorganization attack</td><td><a href="https://www.ethereumclassic.org/knowledge/history/">Project history</a></td><td>Static confirmation policy can become obsolete during attack</td></tr><tr data-f><td>Ethereum Classic · 2020-08-06</td><td>Third successful 51% reorganization attack</td><td><a href="https://www.ethereumclassic.org/knowledge/history/">Repeated within one week</a></td><td>Pause can be safer than adding a few blocks</td></tr><tr data-f><td>Ethereum Classic · 2020-08-29</td><td>Fourth successful 51% reorganization attack</td><td><a href="https://www.ethereumclassic.org/knowledge/history/">Repeated in same month</a></td><td>Security budget and incident state govern policy</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="value-at-risk-policy-pattern">
       <h2 id="value-at-risk-policy-pattern">Value-at-risk policy pattern</h2>
       <p class="section-note">Derive bands from loss tolerance and attack economics; never treat one universal confirmation count as an asset property.</p>
       <div class="table-wrap" role="region" aria-label="Value-at-risk policy pattern" tabindex="0">
-        <table><thead><tr><th scope="col">Tier</th><th scope="col">Credit</th><th scope="col">Withdrawal</th><th scope="col">Incident overlay</th></tr></thead><tbody><tr><td>Low</td><td>Provisional at conservative safe level</td><td>Hold until settled</td><td>Raise or pause automatically</td></tr><tr><td>Medium</td><td>Chain-native safe/final state</td><td>Additional risk/KYT hold</td><td>Manual release during instability</td></tr><tr><td>High</td><td>Strongest final state + independent node agreement</td><td>Human approval after reconciliation</td><td>Pause on fork/finality alarm</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Tier</th><th scope="col">Credit</th><th scope="col">Withdrawal</th><th scope="col">Incident overlay</th></tr></thead><tbody><tr data-f><td>Low</td><td>Provisional at conservative safe level</td><td>Hold until settled</td><td>Raise or pause automatically</td></tr><tr data-f><td>Medium</td><td>Chain-native safe/final state</td><td>Additional risk/KYT hold</td><td>Manual release during instability</td></tr><tr data-f><td>High</td><td>Strongest final state + independent node agreement</td><td>Human approval after reconciliation</td><td>Pause on fork/finality alarm</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section sources" aria-labelledby="sources">
       <h2 id="sources">Primary sources &amp; scope</h2>
       <p class="section-note">Operational and volatile claims were checked against these first-party documents on 2026-08-31. Examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
-      <ul><li><a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/" target="_blank" rel="noopener noreferrer">Ethereum consensus and PoS finality</a><span>Slots, epochs, justification and finalization.</span></li><li><a href="https://solana.com/docs/rpc" target="_blank" rel="noopener noreferrer">Solana commitment</a><span>RPC commitment parameters and chain-native status vocabulary.</span></li><li><a href="https://developer.bitcoin.org/reference/" target="_blank" rel="noopener noreferrer">Bitcoin developer reference</a><span>Transactions, blocks, mempool and wallet primitives.</span></li><li><a href="https://developers.circle.com/cctp/concepts/finality-and-block-confirmations" target="_blank" rel="noopener noreferrer">Circle CCTP finality</a><span>Current cross-chain confirmed/finalized thresholds and timing.</span></li><li><a href="https://eips.ethereum.org/EIPS/eip-1559" target="_blank" rel="noopener noreferrer">EIP-1559</a><span>Typed transaction fee fields and replacement context.</span></li></ul>
-    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a><a href="bitcoin-wallet.html">Bitcoin wallet <span aria-hidden="true">→</span></a></div></aside></main>
-<footer class="shell meta"><p>Last verified: 2026-08-31 · Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer></body></html>
+      <ul><li data-f><a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/" target="_blank" rel="noopener noreferrer">Ethereum consensus and PoS finality</a><span>Slots, epochs, justification and finalization.</span></li><li data-f><a href="https://solana.com/docs/rpc" target="_blank" rel="noopener noreferrer">Solana commitment</a><span>RPC commitment parameters and chain-native status vocabulary.</span></li><li data-f><a href="https://developer.bitcoin.org/reference/" target="_blank" rel="noopener noreferrer">Bitcoin developer reference</a><span>Transactions, blocks, mempool and wallet primitives.</span></li><li data-f><a href="https://developers.circle.com/cctp/concepts/finality-and-block-confirmations" target="_blank" rel="noopener noreferrer">Circle CCTP finality</a><span>Current cross-chain confirmed/finalized thresholds and timing.</span></li><li data-f><a href="https://eips.ethereum.org/EIPS/eip-1559" target="_blank" rel="noopener noreferrer">EIP-1559</a><span>Typed transaction fee fields and replacement context.</span></li></ul>
+    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a><a href="bitcoin-wallet.html">Bitcoin wallet <span aria-hidden="true">→</span></a></div></aside>
+<footer class="sheet-foot"><p>Last verified: 2026-08-31 &middot; Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer>
+</main>
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement, btn = document.getElementById("theme-btn");
+  var stored = null;
+  try { stored = localStorage.getItem("custody-theme"); } catch (e) { /* private mode */ }
+  if (stored === "light" || stored === "dark") root.setAttribute("data-theme", stored);
+  function isDark() {
+    var t = root.getAttribute("data-theme");
+    return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  btn.setAttribute("aria-pressed", String(isDark()));
+  btn.addEventListener("click", function () {
+    var next = isDark() ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    btn.setAttribute("aria-pressed", String(next === "dark"));
+    try { localStorage.setItem("custody-theme", next); } catch (e) { /* ignore */ }
+  });
+
+  var input = document.getElementById("sheet-filter"),
+      status = document.getElementById("filter-status"),
+      units = [].slice.call(document.querySelectorAll("[data-f]")),
+      total = units.length,
+      openState = new WeakMap();
+
+  function apply() {
+    var q = input.value.trim().toLowerCase(), shown = 0;
+    units.forEach(function (el) {
+      var hit = !q || el.textContent.toLowerCase().indexOf(q) > -1;
+      el.hidden = !hit;
+      if (hit) shown++;
+      if (el.tagName === "DETAILS") {
+        if (q) {
+          if (!openState.has(el)) openState.set(el, el.open);
+          el.open = hit;
+        } else if (openState.has(el)) {
+          el.open = openState.get(el);
+          openState.delete(el);
+        }
+      }
+    });
+    [].forEach.call(document.querySelectorAll("main .sheet-section"), function (sec) {
+      var own = sec.querySelectorAll("[data-f]");
+      sec.hidden = own.length > 0 && !sec.querySelector("[data-f]:not([hidden])");
+    });
+    status.textContent = q ? shown + " / " + total : "";
+  }
+  input.addEventListener("input", apply);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { input.value = ""; apply(); }
+  });
+  apply();
+
+  var reopen = [];
+  addEventListener("beforeprint", function () {
+    reopen = [];
+    [].forEach.call(document.querySelectorAll("details.drawer"), function (d) {
+      if (!d.open) { reopen.push(d); d.open = true; }
+    });
+  });
+  addEventListener("afterprint", function () {
+    reopen.forEach(function (d) { d.open = false; });
+    reopen = [];
+  });
+})();
+</script>
+</body></html>

@@ -4,106 +4,325 @@
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/institutional-crypto-custody.html">
 <meta property="og:title" content="Institutional Crypto Custody: Tiers, Controls, and CCSS"><meta property="og:description" content="Design institutional digital-asset custody tiers, hot-wallet float, policy engines, dual control, key ceremonies, disaster recovery, and a CCSS v9.0 control crosswalk."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/institutional-crypto-custody.html"><meta property="og:image" content="images/institutional-crypto-custody.png"><meta property="og:image:alt" content="Institutional hot warm cold and deep-cold custody tier control register">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Institutional Crypto Custody: Tiers, Controls, and CCSS"><meta name="twitter:description" content="Design institutional digital-asset custody tiers, hot-wallet float, policy engines, dual control, key ceremonies, disaster recovery, and a CCSS v9.0 control crosswalk."><meta name="twitter:image" content="images/institutional-crypto-custody.png"><meta name="twitter:creator" content="@heroiclife">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Institutional Crypto Custody: Tiers, Controls, and CCSS","description":"Design institutional digital-asset custody tiers, hot-wallet float, policy engines, dual control, key ceremonies, disaster recovery, and a CCSS v9.0 control crosswalk.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-08-31","dateModified":"2026-08-31","keywords":"institutional crypto custody, CCSS v9, hot warm cold wallet, key ceremony, policy engine"}</script><style>
-@layer reset, tokens, base, layout, components, print;
+@layer reset, tokens, base, layout, components, diagram, print;
+
 @layer tokens {
   :root {
     color-scheme: light dark;
-    --paper: light-dark(#faf9f7, #0f172a); --surface: light-dark(#ffffff, #182235);
-    --surface-2: light-dark(#f4f1ed, #111c2e); --ink: light-dark(#172033, #e7edf6);
-    --muted: light-dark(#586273, #a9b5c7); --line: light-dark(#d8d3cc, #334155);
-    --accent: light-dark(#86198f, #e879f9); --accent-soft: light-dark(#fae8ff, #3b1641);
-    --safe: light-dark(#166534, #86efac); --safe-bg: light-dark(#dcfce7, #12351f);
-    --warn: light-dark(#92400e, #fcd34d); --warn-bg: light-dark(#fef3c7, #3b2a0d);
-    --danger: light-dark(#991b1b, #fca5a5); --danger-bg: light-dark(#fee2e2, #401719);
-    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --accent: light-dark(#0d6357, #43d1b6);
+    --accent-soft: light-dark(color-mix(in srgb, #0d6357 11%, #ffffff), color-mix(in srgb, #43d1b6 17%, #0d0c15));
+    --lattice: light-dark(color-mix(in srgb, #0d6357 17%, transparent), color-mix(in srgb, #43d1b6 13%, transparent));
+    --paper: light-dark(color-mix(in srgb, #0d6357 7%, #f4f3f6), color-mix(in srgb, #43d1b6 5%, #0c0b12));
+    --surface: light-dark(#ffffff, color-mix(in srgb, #43d1b6 7%, #17161f));
+    --surface-2: light-dark(color-mix(in srgb, #0d6357 11%, #ecebef), color-mix(in srgb, #43d1b6 6%, #121118));
+    --ink: light-dark(#16151f, #e9e7f3);
+    --muted: light-dark(#55536c, #a3a0bb);
+    --faint: light-dark(#5d5b72, #8a87a7);
+    --line: light-dark(color-mix(in srgb, #0d6357 22%, #c9c6d2), color-mix(in srgb, #43d1b6 18%, #2c2a38));
+    --safe: light-dark(#146c43, #7fe3ab); --safe-bg: light-dark(#dcf0e4, #10301f);
+    --warn: light-dark(#8a5407, #f0c05a); --warn-bg: light-dark(#f8eed6, #322612);
+    --danger: light-dark(#98202f, #f7909d); --danger-bg: light-dark(#f8dfe2, #351520);
+    --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --display: "Archivo", "Public Sans", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"]  { color-scheme: dark; }
+}
+
+@layer reset {
+  *,*::before,*::after{box-sizing:border-box}
+  body,h1,h2,h3,p,figure{margin:0}
+  table{border-collapse:collapse}
+  img,svg{display:block;max-width:100%}
+  button,input{font:inherit;color:inherit}
+}
+
+@layer base {
+  body{
+    background:
+      radial-gradient(circle at 16% -8%, color-mix(in srgb,var(--accent) 8%,transparent), transparent 38%),
+      radial-gradient(circle at 94% 0%, color-mix(in srgb,var(--accent) 5%,transparent), transparent 32%),
+      linear-gradient(90deg, var(--lattice) 1px, transparent 1px) 0 0/32px 32px,linear-gradient(var(--lattice) 1px, transparent 1px) 0 0/32px 32px,
+      var(--paper);
+    color:var(--ink);
+    font:400 1rem/1.6 var(--sans);
+    text-wrap:pretty;
+  }
+  a{color:var(--accent);font-weight:600;text-decoration-thickness:.08em;text-underline-offset:.18em}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:2px}
+  code,.mono{font-family:var(--mono)}
+  td:nth-child(n+2),.num{font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.1;letter-spacing:-.03em}
+  h1{font-size:clamp(2.3rem,6.5vw,4.5rem);font-weight:800;letter-spacing:-.05em;max-width:15ch}
+  h2{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800}
+  h3{font-size:1rem;font-weight:600;letter-spacing:-.01em}
+  p+p{margin-top:.72rem}
+  pre{overflow-x:auto;background:var(--surface);border:1px solid var(--line);padding:.9rem;font-size:.8rem}
+  .skip{position:absolute;left:-9999px;top:0;z-index:99;background:var(--accent);color:var(--surface);
+    padding:.6rem 1rem;font:600 .85rem var(--mono)}
+  .skip:focus{left:.5rem;top:.5rem}
+}
+
+@layer layout {
+  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}
+  .mid{width:min(920px,100%)}
+  .utility{position:sticky;top:0;z-index:8;background:var(--surface);border-bottom:1px solid var(--line)}
+  .utility .shell{display:flex;align-items:center;gap:.75rem;padding-block:.5rem;flex-wrap:wrap}
+  .utility .wordmark{font:600 .68rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .filter{flex:1 1 14rem;min-width:0}
+  .filter input{width:100%;padding:.42rem .7rem;border:1px solid var(--line);border-radius:3px;
+    background:var(--paper);color:var(--ink);font:500 .8rem/1.3 var(--mono)}
+  .filter input::placeholder{color:var(--faint)}
+  .btn{border:1px solid var(--line);border-radius:3px;background:var(--paper);cursor:pointer;
+    padding:.42rem .7rem;font:500 .68rem/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .btn:hover{color:var(--ink);border-color:var(--accent)}
+  .filter-status{font:500 .68rem/1 var(--mono);color:var(--faint);white-space:nowrap}
+
+  .masthead{padding:clamp(2rem,5vw,3.6rem) 0 1.4rem}
+  .eyebrow{color:var(--accent);font:600 .74rem/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;margin-bottom:1rem}
+  .dek{color:var(--muted);font-size:clamp(1rem,1.9vw,1.22rem);max-width:66ch;margin-top:1.1rem}
+  .meta{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;margin-top:1.2rem;color:var(--faint);font:500 .74rem/1.4 var(--mono)}
+
+  nav.sections{position:sticky;top:2.6rem;z-index:6;background:var(--surface);border-block:1px solid var(--line)}
+  nav.sections .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.6rem 0}
+  nav.sections a{white-space:nowrap;font-size:.82rem;font-weight:600}
+
+  main{padding-bottom:4rem}
+  .sheet-section{margin-top:clamp(2.4rem,5.5vw,4rem);scroll-margin-top:6rem}
+  .section-note{color:var(--muted);max-width:68ch;margin-bottom:1.1rem}
+  .entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:.8rem}
+}
+
+@layer components {
+  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.18rem .5rem;
+    font:600 .7rem/1.35 var(--mono);white-space:nowrap}
+  .signal.safe{color:var(--safe);background:var(--safe-bg)}
+  .signal.warn{color:var(--warn);background:var(--warn-bg)}
+  .signal.danger{color:var(--danger);background:var(--danger-bg)}
+
+  /* Instrument panel: the values that define the topic, above the fold. */
+  .instrument{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:1px;
+    background:var(--line);border:1px solid var(--line);border-top:4px solid var(--accent)}
+  .instrument div{background:var(--surface);padding:.9rem 1rem;display:grid;gap:.24rem;align-content:start}
+  .instrument .k{font:500 .66rem/1.3 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+  .instrument .v{font-family:var(--display);font-weight:800;font-size:clamp(1.25rem,2.9vw,1.85rem);
+    letter-spacing:-.045em;line-height:1.05;color:var(--accent);font-variant-numeric:tabular-nums}
+  .instrument .s{font:400 .74rem/1.4 var(--mono);color:var(--muted)}
+
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+  table{width:100%;min-width:700px;font-size:.87rem}
+  th,td{padding:.7rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+  th{position:sticky;top:0;background:var(--surface-2);z-index:1;
+    font:600 .7rem/1.3 var(--sans);letter-spacing:.05em;text-transform:uppercase}
+  tbody tr:hover{background:var(--accent-soft)}
+  td:first-child{font-weight:600;min-width:11rem}
+  tbody tr:last-child td{border-bottom:0}
+
+  /* Severity encoded in form, not only in words. */
+  td.sev{white-space:nowrap}
+  td.sev::before{content:"";display:inline-block;width:.22rem;height:.95em;border-radius:1px;
+    margin-right:.5rem;vertical-align:-.13em;background:var(--sev,var(--line))}
+  tr[data-sev="danger"] td.sev{--sev:var(--danger)}
+  tr[data-sev="warn"]   td.sev{--sev:var(--warn)}
+  tr[data-sev="safe"]   td.sev{--sev:var(--safe)}
+
+  /* Magnitude inside the cell: one gradient, no extra markup, prints fine. */
+  td.bar{min-width:8rem}
+  td.bar span{display:block;height:.62rem;border-radius:1px;
+    background:linear-gradient(90deg,var(--c,var(--accent)) var(--w),color-mix(in srgb,var(--line) 55%,transparent) var(--w))}
+
+  /* Log axis: for columns whose values span more than a decade. */
+  .axis{display:grid;gap:.15rem;min-width:30rem}
+  .axis-ticks{position:relative;height:1.35rem;margin-left:11rem;border-bottom:1px solid var(--line)}
+  .axis-ticks span{position:absolute;left:var(--x);transform:translateX(-50%);bottom:.28rem;
+    font:500 .64rem/1 var(--mono);color:var(--faint);white-space:nowrap}
+  .axis-ticks span::after{content:"";position:absolute;left:50%;bottom:-.32rem;width:1px;height:.28rem;background:var(--line)}
+  .axis-ticks span:last-child{transform:translateX(-100%)}
+  .axis-ticks span:last-child::after{left:100%}
+  .axis-row{display:grid;grid-template-columns:11rem 1fr;align-items:center;padding-block:.16rem}
+  .axis-row .name{font:500 .78rem/1.3 var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:.6rem}
+  .axis-track{position:relative;height:1.15rem;
+    background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--line) 55%,transparent) 0 1px,transparent 1px 25%)}
+  .axis-track i{position:absolute;left:var(--x);top:50%;translate:-50% -50%;
+    width:.62rem;height:.62rem;border-radius:50%;background:var(--dot,var(--accent));
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--dot,var(--accent)) 22%,transparent)}
+  .axis-track b{position:absolute;left:var(--x);top:50%;translate:.75rem -50%;
+    font:500 .68rem/1 var(--mono);color:var(--muted);white-space:nowrap}
+  .axis-row.flip .axis-track b{translate:-.75rem -50%;transform:translateX(-100%)}
+
+  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0;display:grid;gap:.6rem;align-content:start}
+  .entry h3{border-left:3px solid var(--accent);padding-left:.6rem}
+  .entry p{font-size:.9rem;margin:0}
+  .example,.gotcha{padding:.6rem .65rem;border-left:2px solid var(--safe);background:var(--safe-bg);font-size:.86rem}
+  .gotcha{border-color:var(--danger);background:var(--danger-bg)}
+  .example strong,.gotcha strong{display:block;font:600 .66rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.2rem}
+
+  .checklist ol{list-style:none;padding:0;margin:0;display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:.5rem;counter-reset:steps}
+  .checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);
+    padding:.75rem .85rem;font-size:.9rem;display:grid;grid-template-columns:auto 1fr;gap:.6rem;align-items:baseline}
+  .checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:600 .72rem/1.5 var(--mono)}
+
+  /* Progressive disclosure on the edge/advanced tier. */
+  .drawers{display:grid;gap:.5rem}
+  details.drawer{background:var(--surface);border:1px solid var(--line)}
+  details.drawer summary{cursor:pointer;padding:.8rem 1rem;font-family:var(--display);font-weight:600;
+    font-size:1rem;letter-spacing:-.01em;display:flex;align-items:center;gap:.6rem;list-style:none}
+  details.drawer summary::-webkit-details-marker{display:none}
+  details.drawer summary::before{content:"+";color:var(--accent);font:600 1rem/1 var(--mono);width:1ch}
+  details.drawer[open] summary::before{content:"\2212"}
+  details.drawer summary:hover{background:var(--accent-soft)}
+  details.drawer .drawer-body{padding:0 1rem 1rem;display:grid;gap:.6rem}
+  details.drawer .drawer-body p{font-size:.9rem;margin:0}
+
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}
+  .flow div{padding:.9rem;background:var(--surface);border:1px solid var(--line)}
+  .flow b{display:block;color:var(--accent);font:700 .68rem/1 var(--mono);margin-bottom:.45rem;letter-spacing:.06em}
+  .flow p{font-size:.83rem;margin:0}
+  .equation{font:700 clamp(.92rem,2.2vw,1.25rem)/1.45 var(--mono);padding:1rem;border:1px dashed var(--accent);
+    background:var(--accent-soft);overflow-wrap:anywhere;margin:1rem 0}
+  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}
+
+  .sources ul{list-style:none;padding:0;margin:0;display:grid;gap:.5rem}
+  .sources li{display:grid;grid-template-columns:minmax(15rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}
+  .sources span{color:var(--muted);font-size:.87rem}
+
+  .related{margin-top:3.5rem;border:1px solid var(--line);border-top:3px solid var(--accent);
+    padding:1rem 1.1rem;background:var(--surface-2)}
+  .related h2{font-size:1rem;font-weight:600;margin-bottom:.7rem}
+  .related div{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem}
+  .related a{font-size:.85rem}
+  footer.sheet-foot{margin-top:2rem;color:var(--faint);font:400 .78rem/1.6 var(--mono)}
+  [hidden]{display:none !important}
+}
+
+/* Diagrams: tokens + currentColor, so they theme and print for free. */
+@layer diagram {
+  figure.plate{margin:0;background:var(--surface);border:1px solid var(--line);padding:1rem}
+  figure.plate svg{width:100%;height:auto;margin-inline:auto;max-width:44rem}
+  figcaption{margin-top:.7rem;color:var(--muted);font-size:.85rem;text-align:center;text-wrap:balance}
+  .dg-field{fill:var(--surface-2);stroke:var(--line)}
+  .dg-lbl{font:500 9px var(--mono);fill:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+  .dg-cap{font:600 11px var(--mono);fill:var(--ink)}
+  .dg-node{fill:var(--surface);stroke:var(--ink);stroke-width:1.4}
+  .dg-node.on{fill:var(--safe-bg);stroke:var(--safe);stroke-width:2.2}
+  .dg-node.end{fill:var(--danger-bg);stroke:var(--danger);stroke-width:2}
+  .dg-node.hot{fill:var(--warn-bg);stroke:var(--warn);stroke-width:2}
+  .dg-quorum{fill:none;stroke:var(--safe);stroke-width:2.2;stroke-dasharray:5 4}
+  .dg-cross{fill:none;stroke:var(--danger);stroke-width:1.8;stroke-dasharray:3 3}
+  .dg-flow{fill:none;stroke:var(--accent);stroke-width:1.6}
+  .dg-flow.dim{stroke:var(--line);stroke-width:1.2}
+  .dg-brace{fill:none;stroke:var(--accent);stroke-width:1.2}
+  .dg-ok{fill:var(--safe);font:600 10px var(--mono)}
+  .dg-no{fill:var(--danger);font:600 10px var(--mono)}
+  .dg-acc{fill:var(--accent);font:600 10px var(--mono)}
+}
+
+@layer print {
+  @media print{
+    body{background:#fff;color:#000}
+    .utility,nav.sections,.related{display:none}
+    .shell,.mid{width:100%}
+    .sheet-section{break-inside:avoid;margin-top:1.3rem}
+    .entry,.checklist li,figure.plate,details.drawer{break-inside:avoid}
+    details.drawer summary::before{content:""}
+    a{color:inherit;text-decoration:none}
+    .table-wrap{overflow:visible;border:1px solid #999}
+    table{min-width:0;font-size:7.6pt}
+    th{position:static}
+    .instrument{border-top-width:2px}
+  }
+  @media(max-width:600px){
+    .shell{width:min(100% - 1rem,1180px)}
+    .masthead{padding-top:1.2rem}
+    .sources li{grid-template-columns:1fr}
+    .entry-grid{grid-template-columns:1fr}
+    nav.sections{top:0}
+  }
+  @media(prefers-reduced-motion:no-preference){
+    html{scroll-behavior:smooth}
+    .btn,.filter input,tbody tr,details.drawer summary{transition:background-color .15s,border-color .15s,color .15s}
   }
 }
-@layer reset { *,*::before,*::after{box-sizing:border-box} body,h1,h2,h3,p{margin:0} table{border-collapse:collapse} }
-@layer base {
-  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;text-wrap:pretty}
-  a{color:var(--accent);font-weight:650;text-decoration-thickness:.08em;text-underline-offset:.18em}
-  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-  code,.mono,td:nth-child(n+2){font-family:var(--mono);font-variant-numeric:tabular-nums}
-  h1,h2,h3{text-wrap:balance;line-height:1.15} h1{font-size:clamp(2rem,6vw,4.25rem);letter-spacing:-.045em;max-width:18ch}
-  h2{font-size:clamp(1.45rem,3vw,2.15rem);margin-bottom:1rem} h3{font-size:1.02rem;letter-spacing:.015em}
-  p+p{margin-top:.72rem}
-}
-@layer layout {
-  .shell{width:min(1180px,calc(100% - 2rem));margin-inline:auto}.masthead{padding:2.2rem 0 1.5rem;border-bottom:1px solid var(--line)}
-  .eyebrow{color:var(--accent);font:700 .76rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem}
-  .dek{color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);max-width:72ch;margin-top:1rem}
-  .meta{display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:1.2rem;color:var(--muted);font:600 .78rem/1.4 var(--mono)}
-  nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 94%,transparent);border-bottom:1px solid var(--line)}
-  nav .shell{display:flex;gap:.9rem;overflow-x:auto;padding:.65rem 0}nav a{white-space:nowrap;font-size:.82rem}
-  main{padding:1.5rem 0 4rem}.sheet-section{margin-top:clamp(2.2rem,6vw,4.5rem);scroll-margin-top:4rem}
-  .section-note{color:var(--muted);max-width:85ch;margin-bottom:1rem}.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:.8rem}
-}
-@layer components {
-  .signal{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.2rem .55rem;font:800 .72rem/1 var(--mono);white-space:nowrap}
-  .signal.safe{color:var(--safe);background:var(--safe-bg)}.signal.warn{color:var(--warn);background:var(--warn-bg)}.signal.danger{color:var(--danger);background:var(--danger-bg)}
-  .quick{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--accent);padding:clamp(1rem,3vw,2rem);box-shadow:0 16px 36px rgba(15,23,42,.08)}
-  .quick h2{display:flex;align-items:center;gap:.6rem}.quick h2::before{content:"CONTROL REGISTER";font:800 .64rem/1 var(--mono);letter-spacing:.1em;color:var(--paper);background:var(--accent);padding:.38rem .5rem}
-  .table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}table{width:100%;min-width:720px;font-size:.86rem}
-  th,td{padding:.72rem .78rem;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{position:sticky;top:0;background:var(--surface-2);font:800 .72rem/1.25 var(--sans);letter-spacing:.04em;text-transform:uppercase}
-  tbody tr:hover{background:var(--accent-soft)}td:first-child{font-family:var(--sans);font-weight:760;min-width:12rem}tbody tr:last-child td{border-bottom:0}
-  .entry{background:var(--surface);border:1px solid var(--line);padding:1rem;min-width:0}.entry h3{border-left:3px solid var(--accent);padding-left:.65rem;margin-bottom:.65rem}
-  .entry p{font-size:.9rem}.example,.gotcha{padding:.65rem;border-left:2px solid var(--safe);background:var(--safe-bg)}.gotcha{border-color:var(--danger);background:var(--danger-bg)}
-  .checklist ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:.5rem;counter-reset:steps}.checklist li{counter-increment:steps;background:var(--surface);border:1px solid var(--line);padding:.8rem}.checklist li::before{content:counter(steps,decimal-leading-zero);color:var(--accent);font:800 .7rem/1 var(--mono);margin-right:.55rem}
-  .sources ul{list-style:none;padding:0;display:grid;gap:.5rem}.sources li{display:grid;grid-template-columns:minmax(16rem,1fr) 2fr;gap:1rem;border-top:1px solid var(--line);padding:.65rem 0}.sources span{color:var(--muted);font-size:.86rem}
-  .related{margin-top:4rem;border:1px solid var(--line);padding:1rem;background:var(--surface-2)}.related h2{font-size:1rem}.related div{display:flex;flex-wrap:wrap;gap:.55rem 1rem}.related a{font-size:.84rem}
-  .equation{font:800 clamp(1rem,3vw,1.55rem)/1.4 var(--mono);padding:1rem;border:1px dashed var(--accent);background:var(--accent-soft);overflow-wrap:anywhere}
-  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem}.flow div{position:relative;padding:1rem;background:var(--surface);border:1px solid var(--line);min-height:7rem}.flow b{display:block;color:var(--accent);font:800 .7rem/1 var(--mono);margin-bottom:.5rem}.flow p{font-size:.83rem}
-  .callout{border-left:5px solid var(--warn);padding:1rem;background:var(--warn-bg);margin:1rem 0}.print-only{display:none}
-}
-@layer print {
-  @media print{nav{display:none}.shell{width:100%}.sheet-section{break-inside:avoid;margin-top:1.3rem}.entry{break-inside:avoid}a{color:inherit}.print-only{display:block}.table-wrap{overflow:visible}table{min-width:0;font-size:7.7pt}th{position:static}}
-  @media(max-width:600px){.shell{width:min(100% - 1rem,1180px)}.masthead{padding-top:1.2rem}.sources li{grid-template-columns:1fr}.quick{padding:.8rem}.table-wrap{margin-inline:-.5rem}.entry-grid{grid-template-columns:1fr}}
-}
 </style></head>
-<body><header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance · engineering reference</p><h1>Institutional crypto custody</h1><p class="dek">Custody is the control system around a signing primitive: asset float, policy, people, evidence, recovery, and a ledger that still balances when a facility or vendor disappears.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
-<nav aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#custody-tier-register">Custody tier register</a><a href="#tiering--float-math">Tiering &amp; float math</a><a href="#policy-engine-controls">Policy engine controls</a><a href="#key-ceremony-script">Key ceremony script</a><a href="#ccss-v9-0-engineering-crosswalk">CCSS v9.0 engineering crosswalk</a><a href="#assurance-landscape">Assurance landscape</a><a href="#business-continuity-dual-control--insurance">Business continuity, dual control &amp; insurance</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
-<main class="shell"><section class="quick" id="quick-reference" aria-labelledby="quick-title"><h2 id="quick-title">Four tiers, four bounded failure domains</h2>
+<body>
+<a class="skip" href="#main">Skip to reference</a>
+<div class="utility"><div class="shell"><span class="wordmark">Institutional crypto custody</span>
+<div class="filter"><label class="skip" for="sheet-filter">Filter this sheet</label>
+<input id="sheet-filter" type="search" autocomplete="off" placeholder="Filter rows &amp; entries"></div>
+<span class="filter-status" id="filter-status" role="status" aria-live="polite"></span>
+<button class="btn" id="theme-btn" type="button" aria-pressed="false">Theme</button></div></div>
+<header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance &middot; engineering reference</p><h1>Institutional crypto custody</h1><p class="dek">Custody is the control system around a signing primitive: asset float, policy, people, evidence, recovery, and a ledger that still balances when a facility or vendor disappears.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<nav class="sections" aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#custody-tier-register">Custody tier register</a><a href="#tiering--float-math">Tiering &amp; float math</a><a href="#policy-engine-controls">Policy engine controls</a><a href="#key-ceremony-script">Key ceremony script</a><a href="#ccss-v9-0-engineering-crosswalk">CCSS v9.0 engineering crosswalk</a><a href="#assurance-landscape">Assurance landscape</a><a href="#business-continuity-dual-control--insurance">Business continuity, dual control &amp; insurance</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
+<main id="main" class="shell">
+<section class="sheet-section" id="quick-reference" aria-labelledby="quick-title" style="margin-top:1.6rem"><h2 id="quick-title">Four tiers, four bounded failure domains</h2>
+<p class="section-note">Worked from the float example below. Recompute every figure from your own observed withdrawals and replenishment lead time.</p><div class="instrument"><div><span class="k">Tiers</span><span class="v">4</span><span class="s">hot &middot; warm &middot; cold &middot; deep cold</span></div><div><span class="k">Hot target</span><span class="v">$3.2M</span><span class="s">99th-pct one-day demand</span></div><div><span class="k">New destination</span><span class="v">48 h</span><span class="s">delay + out-of-band</span></div><div><span class="k">Velocity</span><span class="v">$50k/h</span><span class="s">and $200k / 24 h</span></div><div><span class="k">Policy change</span><span class="v">2 admins</span><span class="s">+ 24 h activation</span></div><div><span class="k">CCSS v9.0</span><span class="v">10</span><span class="s">aspects, two domains</span></div></div></section>
+
     <section class="sheet-section" aria-labelledby="custody-tier-quick-reference">
       <h2 id="custody-tier-quick-reference">Custody tier quick reference</h2>
       <p class="section-note">The correct hot amount is a demand quantile over replenishment lead time, not “5% of AUC.” Every tier needs a documented loss bound and a tested way back.</p>
       <div class="table-wrap" role="region" aria-label="Custody tier quick reference" tabindex="0">
-        <table><thead><tr><th scope="col">Tier</th><th scope="col">Automation</th><th scope="col">Target</th><th scope="col">Transfer gate</th><th scope="col">Verdict</th></tr></thead><tbody><tr><td>Hot</td><td>Continuous</td><td>Lead-time withdrawal demand</td><td>Default-deny policy + velocity</td><td><span class="signal danger">LIMIT EXPOSURE</span></td></tr><tr><td>Warm</td><td>Workflow</td><td>Replenishment buffer</td><td>Human quorum + delayed destinations</td><td><span class="signal warn">CONDITIONAL</span></td></tr><tr><td>Cold</td><td>Ceremony</td><td>Reserve</td><td>Offline independent key holders</td><td><span class="signal safe">ISOLATED</span></td></tr><tr><td>Deep cold</td><td>Retrieval</td><td>Long-horizon reserve</td><td>Geographic quorum + multi-day process</td><td><span class="signal safe">DIVERSE</span></td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Tier</th><th scope="col">Automation</th><th scope="col">Target</th><th scope="col">Transfer gate</th><th scope="col">Verdict</th></tr></thead><tbody><tr data-f><td>Hot</td><td>Continuous</td><td>Lead-time withdrawal demand</td><td>Default-deny policy + velocity</td><td><span class="signal danger">LIMIT EXPOSURE</span></td></tr><tr data-f><td>Warm</td><td>Workflow</td><td>Replenishment buffer</td><td>Human quorum + delayed destinations</td><td><span class="signal warn">CONDITIONAL</span></td></tr><tr data-f><td>Cold</td><td>Ceremony</td><td>Reserve</td><td>Offline independent key holders</td><td><span class="signal safe">ISOLATED</span></td></tr><tr data-f><td>Deep cold</td><td>Retrieval</td><td>Long-horizon reserve</td><td>Geographic quorum + multi-day process</td><td><span class="signal safe">DIVERSE</span></td></tr></tbody></table>
       </div>
-    </section></section>
+    </section>
+
+    <section class="sheet-section" aria-labelledby="tier-figure">
+      <h2 id="tier-figure">Four tiers, four bounded failure domains</h2>
+      <p class="section-note">Automation and exposure fall left to right; latency and gate strength rise. Each tier needs a documented loss bound and a tested way back.</p>
+      <figure class="plate"><svg viewBox="0 0 620 230" role="img" aria-labelledby="ti-t ti-d">
+<title id="ti-t">Four custody tiers ordered by automation and network exposure</title>
+<desc id="ti-d">Hot, warm, cold and deep cold tiers trade automation against exposure. Automation and network exposure fall from left to right while latency and the strength of the transfer gate rise.</desc>
+<defs><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--accent)"/></marker></defs>
+<rect class="dg-node hot" x="8" y="46" width="140" height="58" rx="3"/><rect class="dg-node" x="164" y="46" width="140" height="58" rx="3"/>
+<rect class="dg-node on" x="320" y="46" width="140" height="58" rx="3"/><rect class="dg-node on" x="476" y="46" width="136" height="58" rx="3"/>
+<text class="dg-cap" x="78" y="70" text-anchor="middle">Hot</text><text class="dg-cap" x="234" y="70" text-anchor="middle">Warm</text>
+<text class="dg-cap" x="390" y="70" text-anchor="middle">Cold</text><text class="dg-cap" x="544" y="70" text-anchor="middle">Deep cold</text>
+<text class="dg-lbl" x="78" y="90" text-anchor="middle">seconds&ndash;minutes</text><text class="dg-lbl" x="234" y="90" text-anchor="middle">minutes&ndash;hours</text>
+<text class="dg-lbl" x="390" y="90" text-anchor="middle">hours&ndash;day</text><text class="dg-lbl" x="544" y="90" text-anchor="middle">days</text>
+<text class="dg-lbl" x="78" y="36" text-anchor="middle">online</text><text class="dg-lbl" x="234" y="36" text-anchor="middle">connected for workflow</text>
+<text class="dg-lbl" x="390" y="36" text-anchor="middle">air-gapped ceremony</text><text class="dg-lbl" x="544" y="36" text-anchor="middle">offline, distributed</text>
+<path class="dg-flow" d="M148 75 H160" marker-end="url(#ar)"/><path class="dg-flow" d="M304 75 H316" marker-end="url(#ar)"/><path class="dg-flow" d="M460 75 H472" marker-end="url(#ar)"/>
+<text class="dg-acc" x="78" y="124" text-anchor="middle">policy + velocity</text><text class="dg-acc" x="234" y="124" text-anchor="middle">2-person quorum</text>
+<text class="dg-acc" x="390" y="124" text-anchor="middle">independent holders</text><text class="dg-acc" x="544" y="124" text-anchor="middle">geographic quorum</text>
+<path class="dg-brace" d="M8 146 V154 H612 V146"/>
+<text class="dg-lbl" x="8" y="176" text-anchor="start" style="fill:var(--danger)">network exposure &amp; automation &mdash;&mdash;&mdash;&gt; falling</text>
+<text class="dg-lbl" x="612" y="176" text-anchor="end" style="fill:var(--safe)">rising &lt;&mdash;&mdash;&mdash; latency &amp; gate strength</text>
+<text class="dg-acc" x="310" y="206" text-anchor="middle">Hot target is a demand quantile over replenishment lead time, not a percentage of AUC</text></svg><figcaption>The correct hot amount is a demand quantile over replenishment lead time, not a percentage of assets under custody.</figcaption></figure>
+    </section>
     <section class="sheet-section" aria-labelledby="custody-tier-register">
       <h2 id="custody-tier-register">Custody tier register</h2>
       <p class="section-note">Percentages are outputs of demand and loss models, not universal best practices.</p>
       <div class="table-wrap" role="region" aria-label="Custody tier register" tabindex="0">
-        <table><thead><tr><th scope="col">Tier</th><th scope="col">Purpose</th><th scope="col">Typical latency</th><th scope="col">Approval</th><th scope="col">Network exposure</th><th scope="col">Loss bound</th></tr></thead><tbody><tr><td>Hot</td><td>Automated withdrawals</td><td>Seconds–minutes</td><td>Policy + automated signer</td><td>Online</td><td>Strict balance and velocity cap</td></tr><tr><td>Warm</td><td>Human-gated replenishment</td><td>Minutes–hours</td><td>2-person quorum</td><td>Connected only for workflow</td><td>Per-transfer and daily cap</td></tr><tr><td>Cold</td><td>Reserve</td><td>Hours–day</td><td>Independent key holders</td><td>Air-gapped ceremony</td><td>Facility/quorum loss tolerance</td></tr><tr><td>Deep cold</td><td>Long-horizon reserve</td><td>Days</td><td>Geographic retrieval quorum</td><td>Offline, distributed</td><td>Catastrophic correlated-event bound</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Tier</th><th scope="col">Purpose</th><th scope="col">Typical latency</th><th scope="col">Approval</th><th scope="col">Network exposure</th><th scope="col">Loss bound</th></tr></thead><tbody><tr data-f><td>Hot</td><td>Automated withdrawals</td><td>Seconds–minutes</td><td>Policy + automated signer</td><td>Online</td><td>Strict balance and velocity cap</td></tr><tr data-f><td>Warm</td><td>Human-gated replenishment</td><td>Minutes–hours</td><td>2-person quorum</td><td>Connected only for workflow</td><td>Per-transfer and daily cap</td></tr><tr data-f><td>Cold</td><td>Reserve</td><td>Hours–day</td><td>Independent key holders</td><td>Air-gapped ceremony</td><td>Facility/quorum loss tolerance</td></tr><tr data-f><td>Deep cold</td><td>Long-horizon reserve</td><td>Days</td><td>Geographic retrieval quorum</td><td>Offline, distributed</td><td>Catastrophic correlated-event bound</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="tiering--float-math">
       <h2 id="tiering--float-math">Tiering &amp; float math</h2>
       <p class="section-note">Worked result: the stated profile produces a $3.2M hot target. Recompute from observed withdrawals, replenishment lead, and incident conditions.</p>
       <div class="entry-grid">
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Base-stock target</h3>
           <p>Cover withdrawals during replenishment lead time at a chosen service level, then cap exposure above that target.</p>
           <p class="example"><strong>Concrete use:</strong> Mean daily BTC demand $2.0M, one-day replenishment lead, 99th-percentile one-day demand $3.2M: set hot target S=$3.2M, not a portfolio percentage.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Normal-distribution shortcuts understate fat-tail withdrawal runs.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Reorder point</h3>
           <p>Trigger warm/cold replenishment before available hot inventory reaches expected lead-time demand.</p>
           <p class="example"><strong>Concrete use:</strong> With $2.0M mean lead-time demand and $1.2M safety stock, reorder at s=$3.2M and replenish to a separately governed S.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Counting pending deposits as available can postpone replenishment until failure.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Per-asset sizing</h3>
           <p>Each asset has distinct demand, finality, fee, halt, and replenishment behavior.</p>
           <p class="example"><strong>Concrete use:</strong> USDC payment float may turn daily while an illiquid governance token remains entirely cold.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Portfolio-wide percentages hide the one chain that cannot replenish during an outage.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Loss/service cost</h3>
           <p>Minimize expected compromise loss + delayed-withdrawal cost + ceremony cost.</p>
           <p class="example"><strong>Concrete use:</strong> Compare $3.2M hot exposure with an estimated incident loss fraction against the measurable cost of one delayed day and each cold pull.</p>
@@ -114,31 +333,31 @@
       <h2 id="policy-engine-controls">Policy engine controls</h2>
       
       <div class="entry-grid">
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Ordered rules</h3>
           <p>Rules match subject, source, destination, asset, amount, time, and action in a documented order.</p>
           <p class="example"><strong>Concrete use:</strong> Deny unknown destinations first; allow routine USDC only after KYT and velocity gates; route $250k+ to 2-of-3 approval.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A broad allow above a narrow deny turns rule order into a bypass.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Destination time lock</h3>
           <p>A newly allowlisted destination cannot receive funds until an observation window passes.</p>
           <p class="example"><strong>Concrete use:</strong> Require 48 hours plus out-of-band confirmation before first transfer; alert on creation and activation.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Instant allowlisting makes a stolen admin session equivalent to key theft.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Rolling velocity</h3>
           <p>Aggregate amount and count over overlapping windows by user, asset, destination, and risk domain.</p>
           <p class="example"><strong>Concrete use:</strong> Cap $50k/hour and $200k/24h, with sub-$10k structuring still aggregating.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Calendar-day resets invite an attacker to straddle midnight.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Policy-change quorum</h3>
           <p>Changing authorization logic is itself a high-risk custody operation.</p>
           <p class="example"><strong>Concrete use:</strong> Require two administrators from separate roles and a 24-hour delayed activation for production rule changes.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A mutable policy controlled by one admin is decorative.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Break glass</h3>
           <p>Emergency bypass is narrow, expiring, visible, and separately authorized.</p>
           <p class="example"><strong>Concrete use:</strong> Open a 30-minute route for one predeclared destination with a maximum amount and after-action review.</p>
@@ -148,74 +367,74 @@
     <section class="sheet-section checklist" aria-labelledby="key-ceremony-script">
       <h2 id="key-ceremony-script">Key ceremony script</h2>
       <p class="section-note">A ceremony is executable procedure. If a step lacks owner, evidence, abort condition, and recovery, it is prose.</p>
-      <ol><li><span aria-hidden="true">□</span> Approve purpose, asset/scheme, quorum, participants, facilities, and abort criteria.</li><li><span aria-hidden="true">□</span> Freeze software, firmware, device serials, hashes, SBOM, and build provenance.</li><li><span aria-hidden="true">□</span> Rehearse the script with non-production material and record expected outputs.</li><li><span aria-hidden="true">□</span> Sweep room, disable networks, inventory devices, and seal unrelated electronics.</li><li><span aria-hidden="true">□</span> Verify participant identity and role; confirm no person holds conflicting quorum roles.</li><li><span aria-hidden="true">□</span> Inspect tamper packaging and device provenance in view of independent witnesses.</li><li><span aria-hidden="true">□</span> Collect independent entropy sources where the scheme requires them; log method, never secret value.</li><li><span aria-hidden="true">□</span> Run DKG or generation; abort on any proof, display, or transcript mismatch.</li><li><span aria-hidden="true">□</span> Derive the aggregate public key and first receive address independently on two implementations.</li><li><span aria-hidden="true">□</span> Perform a funded canary receive and a complete sign/broadcast/confirm cycle before bulk funding.</li><li><span aria-hidden="true">□</span> Create backups without reconstructing a full key; label scheme, path, epoch, and quorum metadata.</li><li><span aria-hidden="true">□</span> Seal backups with unique IDs and record custody without photographing secrets.</li><li><span aria-hidden="true">□</span> Distribute shares/backups across approved geographic and administrative domains.</li><li><span aria-hidden="true">□</span> Sign the ceremony attestation and transcript hashes; note every deviation.</li><li><span aria-hidden="true">□</span> Load policy default-deny, limits, allowlist delays, and audit destinations.</li><li><span aria-hidden="true">□</span> Reconcile the public inventory against custody records before accepting customer funds.</li><li><span aria-hidden="true">□</span> Schedule refresh/reshare, holder departure, compromise, and retirement ceremonies.</li><li><span aria-hidden="true">□</span> Schedule an isolated restore drill; define RTO and RPO for signing, not merely the app.</li><li><span aria-hidden="true">□</span> Store evidence outside signer and policy trust domains.</li><li><span aria-hidden="true">□</span> Close with independent witness and auditor sign-off; destroy temporary secret-bearing media.</li></ol>
+      <ol><li data-f><span>Approve purpose, asset/scheme, quorum, participants, facilities, and abort criteria.</span></li><li data-f><span>Freeze software, firmware, device serials, hashes, SBOM, and build provenance.</span></li><li data-f><span>Rehearse the script with non-production material and record expected outputs.</span></li><li data-f><span>Sweep room, disable networks, inventory devices, and seal unrelated electronics.</span></li><li data-f><span>Verify participant identity and role; confirm no person holds conflicting quorum roles.</span></li><li data-f><span>Inspect tamper packaging and device provenance in view of independent witnesses.</span></li><li data-f><span>Collect independent entropy sources where the scheme requires them; log method, never secret value.</span></li><li data-f><span>Run DKG or generation; abort on any proof, display, or transcript mismatch.</span></li><li data-f><span>Derive the aggregate public key and first receive address independently on two implementations.</span></li><li data-f><span>Perform a funded canary receive and a complete sign/broadcast/confirm cycle before bulk funding.</span></li><li data-f><span>Create backups without reconstructing a full key; label scheme, path, epoch, and quorum metadata.</span></li><li data-f><span>Seal backups with unique IDs and record custody without photographing secrets.</span></li><li data-f><span>Distribute shares/backups across approved geographic and administrative domains.</span></li><li data-f><span>Sign the ceremony attestation and transcript hashes; note every deviation.</span></li><li data-f><span>Load policy default-deny, limits, allowlist delays, and audit destinations.</span></li><li data-f><span>Reconcile the public inventory against custody records before accepting customer funds.</span></li><li data-f><span>Schedule refresh/reshare, holder departure, compromise, and retirement ceremonies.</span></li><li data-f><span>Schedule an isolated restore drill; define RTO and RPO for signing, not merely the app.</span></li><li data-f><span>Store evidence outside signer and policy trust domains.</span></li><li data-f><span>Close with independent witness and auditor sign-off; destroy temporary secret-bearing media.</span></li></ol>
     </section>
     <section class="sheet-section" aria-labelledby="ccss-v9-0-engineering-crosswalk">
       <h2 id="ccss-v9-0-engineering-crosswalk">CCSS v9.0 engineering crosswalk</h2>
       <p class="section-note">CCSS v9.0 was published December 17, 2024 and organizes ten aspects across two domains. This table is an engineering navigation aid, not normative requirement text; use C4's current standard for assessment.</p>
       <div class="table-wrap" role="region" aria-label="CCSS v9.0 engineering crosswalk" tabindex="0">
-        <table><thead><tr><th scope="col">Current aspect</th><th scope="col">Level I intent</th><th scope="col">Level II direction</th><th scope="col">Level III direction</th><th scope="col">Architecture evidence</th></tr></thead><tbody><tr><td>1.01 Key/Seed Generation</td><td>Approved entropy and controlled generation</td><td>Stronger separation and validation</td><td>Highest-assurance ceremony evidence</td><td>DKG / ceremony script + entropy attestation</td></tr><tr><td>1.02 Wallet Creation</td><td>Correct, verified wallet construction</td><td>Independent verification</td><td>Comprehensive control evidence</td><td>Two-device address derivation and sign/verify test</td></tr><tr><td>1.03 Key/Seed Storage</td><td>Protected storage</td><td>Distributed, access-controlled storage</td><td>Highest isolation and resilience</td><td>Tier topology + geographic inventory</td></tr><tr><td>1.04 Key/Seed Usage</td><td>Controlled signing</td><td>Stronger authorization and isolation</td><td>Comprehensive transaction controls</td><td>Policy engine + decoded intent + audit log</td></tr><tr><td>1.05 Key Compromise Policy</td><td>Documented response</td><td>Tested and role-assigned response</td><td>Mature evidence and exercise</td><td>Freeze, rotate/reshare, investigate, notify</td></tr><tr><td>1.06 Keyholder Grant/Revoke</td><td>Controlled lifecycle</td><td>Dual-control changes</td><td>Auditable, rehearsed lifecycle</td><td>Joiner/mover/leaver + quorum-change ceremony</td></tr><tr><td>1.07 Log and Monitor</td><td>Security-relevant records</td><td>Monitoring and protected retention</td><td>Comprehensive review and evidence</td><td>External append-only signing and policy logs</td></tr><tr><td>2.01 Third-Party Security Audits</td><td>Independent review</td><td>Broad scope and remediation</td><td>Sustained assurance</td><td>Audit exact signer/policy release + track closure</td></tr><tr><td>2.02 Data Sanitization</td><td>Secret-bearing media disposal</td><td>Verified procedures</td><td>Comprehensive evidence</td><td>Crypto erase, device destruction, witness log</td></tr><tr><td>2.03 Risk Management</td><td>Threats and controls identified</td><td>Periodic assessment</td><td>Mature continuous treatment</td><td>Threat model sets review and test cadence</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Current aspect</th><th scope="col">Level I intent</th><th scope="col">Level II direction</th><th scope="col">Level III direction</th><th scope="col">Architecture evidence</th></tr></thead><tbody><tr data-f><td>1.01 Key/Seed Generation</td><td>Approved entropy and controlled generation</td><td>Stronger separation and validation</td><td>Highest-assurance ceremony evidence</td><td>DKG / ceremony script + entropy attestation</td></tr><tr data-f><td>1.02 Wallet Creation</td><td>Correct, verified wallet construction</td><td>Independent verification</td><td>Comprehensive control evidence</td><td>Two-device address derivation and sign/verify test</td></tr><tr data-f><td>1.03 Key/Seed Storage</td><td>Protected storage</td><td>Distributed, access-controlled storage</td><td>Highest isolation and resilience</td><td>Tier topology + geographic inventory</td></tr><tr data-f><td>1.04 Key/Seed Usage</td><td>Controlled signing</td><td>Stronger authorization and isolation</td><td>Comprehensive transaction controls</td><td>Policy engine + decoded intent + audit log</td></tr><tr data-f><td>1.05 Key Compromise Policy</td><td>Documented response</td><td>Tested and role-assigned response</td><td>Mature evidence and exercise</td><td>Freeze, rotate/reshare, investigate, notify</td></tr><tr data-f><td>1.06 Keyholder Grant/Revoke</td><td>Controlled lifecycle</td><td>Dual-control changes</td><td>Auditable, rehearsed lifecycle</td><td>Joiner/mover/leaver + quorum-change ceremony</td></tr><tr data-f><td>1.07 Log and Monitor</td><td>Security-relevant records</td><td>Monitoring and protected retention</td><td>Comprehensive review and evidence</td><td>External append-only signing and policy logs</td></tr><tr data-f><td>2.01 Third-Party Security Audits</td><td>Independent review</td><td>Broad scope and remediation</td><td>Sustained assurance</td><td>Audit exact signer/policy release + track closure</td></tr><tr data-f><td>2.02 Data Sanitization</td><td>Secret-bearing media disposal</td><td>Verified procedures</td><td>Comprehensive evidence</td><td>Crypto erase, device destruction, witness log</td></tr><tr data-f><td>2.03 Risk Management</td><td>Threats and controls identified</td><td>Periodic assessment</td><td>Mature continuous treatment</td><td>Threat model sets review and test cadence</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="assurance-landscape">
       <h2 id="assurance-landscape">Assurance landscape</h2>
       <p class="section-note">Regulatory status changes. Links below point to primary text checked August 2026; obtain jurisdiction-specific counsel for applicability.</p>
       <div class="table-wrap" role="region" aria-label="Assurance landscape" tabindex="0">
-        <table><thead><tr><th scope="col">Framework / rule</th><th scope="col">What it answers</th><th scope="col">What it does not answer</th><th scope="col">Current engineering hook</th></tr></thead><tbody><tr><td>CCSS v9.0</td><td>Crypto-system controls across 10 aspects</td><td>Enterprise control completeness by itself</td><td>Map every aspect to evidence</td></tr><tr><td>SOC 2 Type II</td><td>Control design + operation over a period</td><td>Specific crypto key architecture</td><td>Scope signer, policy, ledger, provider, DR</td></tr><tr><td>ISO/IEC 27001</td><td>Information-security management system</td><td>Wallet correctness or asset existence</td><td>Risk treatment, supplier and incident processes</td></tr><tr><td>NIST SP 800-57</td><td>Key-management lifecycle terminology</td><td>Chain-specific custody design</td><td>Generation, activation, rotation, revocation, destruction</td></tr><tr><td>NYDFS custody guidance</td><td>Segregation, separate accounting, limited use, disclosure</td><td>A universal global custody rule</td><td>Ledger/on-chain segregation and reconciliation</td></tr><tr><td>MiCA Article 75</td><td>EU CASP custody policy, register, statements, return and segregation</td><td>Technical control implementation</td><td>Client position register and operational segregation</td></tr></tbody></table>
+        <table><thead><tr><th scope="col">Framework / rule</th><th scope="col">What it answers</th><th scope="col">What it does not answer</th><th scope="col">Current engineering hook</th></tr></thead><tbody><tr data-f><td>CCSS v9.0</td><td>Crypto-system controls across 10 aspects</td><td>Enterprise control completeness by itself</td><td>Map every aspect to evidence</td></tr><tr data-f><td>SOC 2 Type II</td><td>Control design + operation over a period</td><td>Specific crypto key architecture</td><td>Scope signer, policy, ledger, provider, DR</td></tr><tr data-f><td>ISO/IEC 27001</td><td>Information-security management system</td><td>Wallet correctness or asset existence</td><td>Risk treatment, supplier and incident processes</td></tr><tr data-f><td>NIST SP 800-57</td><td>Key-management lifecycle terminology</td><td>Chain-specific custody design</td><td>Generation, activation, rotation, revocation, destruction</td></tr><tr data-f><td>NYDFS custody guidance</td><td>Segregation, separate accounting, limited use, disclosure</td><td>A universal global custody rule</td><td>Ledger/on-chain segregation and reconciliation</td></tr><tr data-f><td>MiCA Article 75</td><td>EU CASP custody policy, register, statements, return and segregation</td><td>Technical control implementation</td><td>Client position register and operational segregation</td></tr></tbody></table>
       </div>
     </section>
-    <section class="sheet-section" aria-labelledby="common-mistakes--anti-patterns">
+    <section class="sheet-section mid" aria-labelledby="common-mistakes--anti-patterns">
       <h2 id="common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</h2>
-      
-      <div class="entry-grid">
-        <article class="entry">
-          <h3>Hot balance by intuition</h3>
-          <p>A round portfolio percentage ignores demand and replenishment lead time.</p>
-          <p class="example"><strong>Concrete use:</strong> Calculate per-asset base stock and sensitivity.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Market moves can double fiat exposure without any operational change.</p>
-        </article>
-        <article class="entry">
-          <h3>Allowlist without delay</h3>
-          <p>The attacker who controls admin can immediately cash out.</p>
-          <p class="example"><strong>Concrete use:</strong> Alert and hold new destinations 48 hours.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Out-of-band checks after transfer are forensics, not prevention.</p>
-        </article>
-        <article class="entry">
-          <h3>Untested backup</h3>
-          <p>Presence of sealed media says nothing about correctness or current metadata.</p>
-          <p class="example"><strong>Concrete use:</strong> Restore annually and verify the first address.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Discovering a bad backup during disaster converts outage to permanent loss.</p>
-        </article>
-        <article class="entry">
-          <h3>Assessment as outcome</h3>
-          <p>A level or report is evidence about scoped controls, not immunity from loss.</p>
-          <p class="example"><strong>Concrete use:</strong> Track scope, exclusions, period, tested version, and remediation.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> A vendor badge does not transfer your policy and ledger responsibilities.</p>
-        </article></div>
+      <p class="section-note">Failures that pass a vendor demo. Expand each for the control and the reason it fails.</p>
+      <div class="drawers">
+        <details class="drawer" name="antipattern" data-f><summary>Hot balance by intuition</summary>
+          <div class="drawer-body">
+            <p>A round portfolio percentage ignores demand and replenishment lead time.</p>
+            <p class="example"><strong>Concrete use:</strong> Calculate per-asset base stock and sensitivity.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> Market moves can double fiat exposure without any operational change.</p>
+          </div></details>
+        <details class="drawer" name="antipattern" data-f><summary>Allowlist without delay</summary>
+          <div class="drawer-body">
+            <p>The attacker who controls admin can immediately cash out.</p>
+            <p class="example"><strong>Concrete use:</strong> Alert and hold new destinations 48 hours.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> Out-of-band checks after transfer are forensics, not prevention.</p>
+          </div></details>
+        <details class="drawer" name="antipattern" data-f><summary>Untested backup</summary>
+          <div class="drawer-body">
+            <p>Presence of sealed media says nothing about correctness or current metadata.</p>
+            <p class="example"><strong>Concrete use:</strong> Restore annually and verify the first address.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> Discovering a bad backup during disaster converts outage to permanent loss.</p>
+          </div></details>
+        <details class="drawer" name="antipattern" data-f><summary>Assessment as outcome</summary>
+          <div class="drawer-body">
+            <p>A level or report is evidence about scoped controls, not immunity from loss.</p>
+            <p class="example"><strong>Concrete use:</strong> Track scope, exclusions, period, tested version, and remediation.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> A vendor badge does not transfer your policy and ledger responsibilities.</p>
+          </div></details></div>
     </section>
     <section class="sheet-section" aria-labelledby="business-continuity-dual-control--insurance">
       <h2 id="business-continuity-dual-control--insurance">Business continuity, dual control &amp; insurance</h2>
       
       <div class="entry-grid">
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Signing RTO/RPO</h3>
           <p>Recovery objectives apply to authorization and signing, not merely the web/API tier.</p>
           <p class="example"><strong>Concrete use:</strong> Exercise loss of one site and one key holder; measure time to a valid canary signature and intact audit trail.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A restored database with no quorum is still a custody outage.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Role separation</h3>
           <p>Initiator, approver, policy admin, signer admin, key holder, and auditor are conflict domains.</p>
           <p class="example"><strong>Concrete use:</strong> Prohibit one identity from changing a destination rule and satisfying its transfer quorum.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Two accounts owned by one person do not create dual control.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Vendor/facility loss</h3>
           <p>Exit must recreate shares, paths, addresses, policy, pending state and evidence.</p>
           <p class="example"><strong>Concrete use:</strong> Restore in an isolated alternate site annually and reconcile a canary address.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A share without derivation metadata may not restore the portfolio.</p>
         </article>
-        <article class="entry">
+        <article class="entry" data-f>
           <h3>Insurance scope</h3>
           <p>Crime, specie, and cyber policies contain peril, hot/cold, location, sublimit, exclusion, and allocation terms.</p>
           <p class="example"><strong>Concrete use:</strong> Map each tier and subcontractor to the schedule and model loss above each sublimit.</p>
@@ -225,6 +444,74 @@
     <section class="sheet-section sources" aria-labelledby="sources">
       <h2 id="sources">Primary sources &amp; scope</h2>
       <p class="section-note">Operational and volatile claims were checked against these first-party documents on 2026-08-31. Examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
-      <ul><li><a href="https://cryptoconsortium.org/cryptocurrency-security-standard-documentation/ccss-details-v9/" target="_blank" rel="noopener noreferrer">CCSS v9.0 details</a><span>Current aspect and control structure.</span></li><li><a href="https://cryptoconsortium.org/cryptocurrency-security-standard-documentation/overview/" target="_blank" rel="noopener noreferrer">CCSS overview</a><span>Ten aspects, two domains, and level aggregation.</span></li><li><a href="https://eur-lex.europa.eu/eli/reg/2023/1114/oj" target="_blank" rel="noopener noreferrer">MiCA Article 75</a><span>Custody agreements, register, policy, return and segregation.</span></li><li><a href="https://www.dfs.ny.gov/virtual_currency_businesses" target="_blank" rel="noopener noreferrer">NYDFS virtual-currency guidance</a><span>Current guidance index; 2025 custody update supersedes 2023 guidance.</span></li><li><a href="https://csrc.nist.gov/pubs/sp/800/57/pt1/r5/final" target="_blank" rel="noopener noreferrer">NIST SP 800-57 Part 1</a><span>General key-management lifecycle guidance.</span></li></ul>
-    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a><a href="personal-cybersecurity.html">Personal cybersecurity <span aria-hidden="true">→</span></a></div></aside></main>
-<footer class="shell meta"><p>Last verified: 2026-08-31 · Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer></body></html>
+      <ul><li data-f><a href="https://cryptoconsortium.org/cryptocurrency-security-standard-documentation/ccss-details-v9/" target="_blank" rel="noopener noreferrer">CCSS v9.0 details</a><span>Current aspect and control structure.</span></li><li data-f><a href="https://cryptoconsortium.org/cryptocurrency-security-standard-documentation/overview/" target="_blank" rel="noopener noreferrer">CCSS overview</a><span>Ten aspects, two domains, and level aggregation.</span></li><li data-f><a href="https://eur-lex.europa.eu/eli/reg/2023/1114/oj" target="_blank" rel="noopener noreferrer">MiCA Article 75</a><span>Custody agreements, register, policy, return and segregation.</span></li><li data-f><a href="https://www.dfs.ny.gov/virtual_currency_businesses" target="_blank" rel="noopener noreferrer">NYDFS virtual-currency guidance</a><span>Current guidance index; 2025 custody update supersedes 2023 guidance.</span></li><li data-f><a href="https://csrc.nist.gov/pubs/sp/800/57/pt1/r5/final" target="_blank" rel="noopener noreferrer">NIST SP 800-57 Part 1</a><span>General key-management lifecycle guidance.</span></li></ul>
+    </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a><a href="personal-cybersecurity.html">Personal cybersecurity <span aria-hidden="true">→</span></a></div></aside>
+<footer class="sheet-foot"><p>Last verified: 2026-08-31 &middot; Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer>
+</main>
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement, btn = document.getElementById("theme-btn");
+  var stored = null;
+  try { stored = localStorage.getItem("custody-theme"); } catch (e) { /* private mode */ }
+  if (stored === "light" || stored === "dark") root.setAttribute("data-theme", stored);
+  function isDark() {
+    var t = root.getAttribute("data-theme");
+    return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  btn.setAttribute("aria-pressed", String(isDark()));
+  btn.addEventListener("click", function () {
+    var next = isDark() ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    btn.setAttribute("aria-pressed", String(next === "dark"));
+    try { localStorage.setItem("custody-theme", next); } catch (e) { /* ignore */ }
+  });
+
+  var input = document.getElementById("sheet-filter"),
+      status = document.getElementById("filter-status"),
+      units = [].slice.call(document.querySelectorAll("[data-f]")),
+      total = units.length,
+      openState = new WeakMap();
+
+  function apply() {
+    var q = input.value.trim().toLowerCase(), shown = 0;
+    units.forEach(function (el) {
+      var hit = !q || el.textContent.toLowerCase().indexOf(q) > -1;
+      el.hidden = !hit;
+      if (hit) shown++;
+      if (el.tagName === "DETAILS") {
+        if (q) {
+          if (!openState.has(el)) openState.set(el, el.open);
+          el.open = hit;
+        } else if (openState.has(el)) {
+          el.open = openState.get(el);
+          openState.delete(el);
+        }
+      }
+    });
+    [].forEach.call(document.querySelectorAll("main .sheet-section"), function (sec) {
+      var own = sec.querySelectorAll("[data-f]");
+      sec.hidden = own.length > 0 && !sec.querySelector("[data-f]:not([hidden])");
+    });
+    status.textContent = q ? shown + " / " + total : "";
+  }
+  input.addEventListener("input", apply);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { input.value = ""; apply(); }
+  });
+  apply();
+
+  var reopen = [];
+  addEventListener("beforeprint", function () {
+    reopen = [];
+    [].forEach.call(document.querySelectorAll("details.drawer"), function (d) {
+      if (!d.open) { reopen.push(d); d.open = true; }
+    });
+  });
+  addEventListener("afterprint", function () {
+    reopen.forEach(function (d) { d.open = false; });
+    reopen = [];
+  });
+})();
+</script>
+</body></html>
