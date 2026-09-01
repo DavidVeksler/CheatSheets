@@ -256,23 +256,23 @@
 <input id="sheet-filter" type="search" autocomplete="off" placeholder="Filter rows &amp; entries"></div>
 <span class="filter-status" id="filter-status" role="status" aria-live="polite"></span>
 <button class="btn" id="theme-btn" type="button" aria-pressed="false">Theme</button></div></div>
-<header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance &middot; engineering reference</p><h1>MPC wallet architecture</h1><p class="dek">The useful question is not whether a wallet says “MPC.” It is which protocol, which trust domains, which lifecycle controls, and which failure leaves the address spendable.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance &middot; engineering reference</p><h1>MPC wallet architecture</h1><p class="dek">MPC stands for multi-party computation. An MPC wallet splits a private key into shares held by different parties, and those parties compute a signature together without ever reassembling the key on any one machine. Nobody holds a spendable key, so nobody can be robbed of one. This sheet covers the protocols that do it, where to put the shares, what refresh and resharing actually change, and the attacks a threshold does nothing about.</p><div class="meta"><span>LAST VERIFIED: 2026-08-31</span><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
 <nav class="sections" aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#protocol-lineage">Protocol lineage</a><a href="#key-lifecycle">Key lifecycle</a><a href="#share-custody-topology">Share custody topology</a><a href="#what-mpc-does-not-protect">What MPC does not protect</a><a href="#custody-primitive-decision-matrix">Custody primitive decision matrix</a><a href="#vendor-due-diligence-checklist">Vendor due-diligence checklist</a><a href="#common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</a><a href="#sources">Sources</a></div></nav>
 <main id="main" class="shell">
-<section class="sheet-section" id="quick-reference" aria-labelledby="quick-title" style="margin-top:1.6rem"><h2 id="quick-title">The threshold guarantee — and its boundary</h2>
-<p class="section-note">A 2-of-3 wallet in one worked configuration. Every value below is defined in the sections that follow.</p><div class="instrument"><div><span class="k">Quorum</span><span class="v">2 of 3</span><span class="s">shares, no dealer</span></div><div><span class="k">Key origin</span><span class="v">DKG</span><span class="s">key never assembled</span></div><div><span class="k">Below threshold</span><span class="v">0 bits</span><span class="s">fewer than t reveal nothing</span></div><div><span class="k">Refresh</span><span class="v">Epoch</span><span class="s">same address, new shares</span></div><div><span class="k">Reshare</span><span class="v">Identical</span><span class="s">public key, byte-for-byte</span></div><div><span class="k">Boundary</span><span class="v">Policy</span><span class="s">key use protected, not intent</span></div></div></section>
+<section class="sheet-section" id="quick-reference" aria-labelledby="quick-title" style="margin-top:1.6rem"><h2 id="quick-title">What the threshold buys you, and where it stops</h2>
+<p class="section-note">One worked 2-of-3 wallet: three shares exist, any two of them can sign, and one on its own is useless. Every value here is explained in the sections below.</p><div class="instrument"><div><span class="k">Quorum</span><span class="v">2 of 3</span><span class="s">shares, no dealer</span></div><div><span class="k">Key origin</span><span class="v">DKG</span><span class="s">key never assembled</span></div><div><span class="k">Below threshold</span><span class="v">0 bits</span><span class="s">fewer than t reveal nothing</span></div><div><span class="k">Refresh</span><span class="v">Epoch</span><span class="s">same address, new shares</span></div><div><span class="k">Reshare</span><span class="v">Identical</span><span class="s">public key, byte-for-byte</span></div><div><span class="k">Boundary</span><span class="v">Policy</span><span class="s">key use protected, not intent</span></div></div></section>
 
     <section class="sheet-section" aria-labelledby="threshold-signing-model">
       <h2 id="threshold-signing-model">Threshold signing model</h2>
-      <p class="section-note">NIST calls out that real implementation security can diverge from the ideal primitive. Treat the signer, policy engine, callback, approver device, and audit store as separate trust surfaces.</p>
+      <p class="section-note">The proofs describe an ideal protocol. NIST IR 8214 is blunt about how far shipped code can drift from it. Treat the signer, the policy engine, the callback service, the approver device, and the audit store as five separate places an attacker can land, and test each one.</p>
       <div class="table-wrap" role="region" aria-label="Threshold signing model" tabindex="0">
         <table><thead><tr><th scope="col">Term</th><th scope="col">Precise meaning</th><th scope="col">Production test</th></tr></thead><tbody><tr data-f><td>Share</td><td>A secret contribution; never a standalone private key</td><td>Exfiltrating one share cannot sign or reconstruct below threshold</td></tr><tr data-f><td>DKG</td><td>Parties jointly create the key; no dealer knows it</td><td>Transcript and independently derived public key agree</td></tr><tr data-f><td>t-of-n</td><td>Any t participants can sign; fewer reveal nothing</td><td>Exercise every authorized quorum and one below-threshold set</td></tr><tr data-f><td>Refresh</td><td>New shares, same aggregate key and address</td><td>Old epoch + new epoch shares do not form a valid quorum</td></tr><tr data-f><td>Reshare</td><td>Change participants or quorum without moving funds</td><td>Public key is byte-identical before and after</td></tr><tr data-f><td>Boundary</td><td>MPC protects key use, not transaction intent</td><td><span class="signal danger">POLICY IS SEPARATE</span></td></tr></tbody></table>
       </div>
     </section>
 
     <section class="sheet-section" aria-labelledby="quorum-figure">
-      <h2 id="quorum-figure">What a 2-of-3 actually asserts</h2>
-      <p class="section-note">Three hosts are not three trust domains. The guarantee is about share count; the risk is about how independent those domains really are.</p>
+      <h2 id="quorum-figure">What a 2-of-3 actually promises</h2>
+      <p class="section-note">The math counts shares. Your risk depends on what those shares have in common. Three VMs in one cloud account share an IAM role, a hypervisor, an update channel, and an admin, so that wallet is really 1-of-1 wearing a 2-of-3 label.</p>
       <figure class="plate"><svg viewBox="0 0 620 250" role="img" aria-labelledby="qf-t qf-d">
 <title id="qf-t">Two-of-three threshold signing across three trust domains</title>
 <desc id="qf-d">Three separate trust domains each hold one share. Any two shares together produce a valid signature; a single share on its own yields nothing. A refresh rotates all three shares while the public key and address stay the same.</desc>
@@ -289,12 +289,12 @@
 <path class="dg-cross" d="M496 116 L540 144 M540 116 L496 144"/>
 <text class="dg-no" x="518" y="170" text-anchor="middle">alone &rarr; 0 bits</text>
 <path class="dg-brace" d="M8 184 V192 H612 V184"/>
-<text class="dg-acc" x="310" y="210" text-anchor="middle">Refresh rotates s1 s2 s3 &mdash; public key and address unchanged</text>
-<text class="dg-lbl" x="310" y="232" text-anchor="middle">Independent IAM &middot; hypervisor &middot; update channel &middot; operator &middot; region &middot; recovery authority</text></svg><figcaption>The chain sees a single signature. It does not record which two domains participated &mdash; attribution has to be written somewhere else.</figcaption></figure>
+<text class="dg-acc" x="310" y="210" text-anchor="middle">Refresh rotates s1 s2 s3 &middot; public key and address unchanged</text>
+<text class="dg-lbl" x="310" y="232" text-anchor="middle">Independent IAM &middot; hypervisor &middot; update channel &middot; operator &middot; region &middot; recovery authority</text></svg><figcaption>The chain records one ordinary signature and says nothing about which two domains produced it. If you want to know who signed, you have to log it yourself.</figcaption></figure>
     </section>
     <section class="sheet-section" aria-labelledby="protocol-lineage">
       <h2 id="protocol-lineage">Protocol lineage</h2>
-      <p class="section-note">Protocol names are not interchangeable. Record the exact paper revision, implementation commit, curve suite, and audit. RFC 9591 was checked August 2026.</p>
+      <p class="section-note">Two vendors can both say “GG18” and ship very different code. Get the paper revision, the implementation commit, the curve suite, and the audit that actually covered that commit. RFC 9591 was checked August 2026.</p>
       <div class="table-wrap" role="region" aria-label="Protocol lineage" tabindex="0">
         <table><thead><tr><th scope="col">Family</th><th scope="col">Output / quorum</th><th scope="col">Rounds &amp; preprocessing</th><th scope="col">Core assumption</th><th scope="col">Operational reading</th></tr></thead><tbody><tr data-f><td>Lindell17</td><td>ECDSA · 2-party</td><td>Interactive online signing</td><td>Paillier + ZK proofs</td><td>Historical baseline; use only audited, patched implementations</td></tr><tr data-f><td>GG18</td><td>ECDSA · t-of-n</td><td>Offline presigning + online rounds</td><td>Paillier MtA</td><td>Influential; implementation proof validation is security-critical</td></tr><tr data-f><td>GG20</td><td>ECDSA · t-of-n</td><td>Adds identifiable abort</td><td>Paillier MtA</td><td>Blame does not remove malformed-proof risk</td></tr><tr data-f><td>CMP / CGGMP</td><td>ECDSA · t-of-n</td><td>Proactive refresh; non-interactive presigning</td><td>Paillier + commitments</td><td>Modern family; pin paper, code commit, and audit together</td></tr><tr data-f><td>DKLs</td><td>ECDSA · 2-party / t-of-n variants</td><td>OT-based multiplication</td><td>Oblivious transfer</td><td>Avoids Paillier; different implementation surface</td></tr><tr data-f><td>FROST (RFC 9591)</td><td>Schnorr / EdDSA · t-of-n</td><td>2 signing rounds</td><td>Prime-order group + hash</td><td>RFC is Informational; coordinator selection remains external</td></tr><tr data-f><td>MuSig2 (BIP 327)</td><td>Schnorr · n-of-n</td><td>2 communication rounds</td><td>Key aggregation</td><td>Not threshold: every signer is required</td></tr></tbody></table>
       </div>
@@ -302,7 +302,7 @@
     
     <section class="sheet-section" aria-labelledby="lifecycle-figure">
       <h2 id="lifecycle-figure">The lifecycle in one picture</h2>
-      <p class="section-note">Two of these five operations preserve the address. Knowing which is the difference between a routine control and an incident.</p>
+      <p class="section-note">Two of these five operations keep the address you already gave your counterparties. Mix them up with the other three and a routine rotation becomes an incident call.</p>
       <figure class="plate"><svg viewBox="0 0 620 220" role="img" aria-labelledby="lc-t lc-d">
 <title id="lc-t">Key lifecycle: DKG, signing, refresh, resharing, retirement</title>
 <desc id="lc-d">Distributed key generation creates the key. Signing consumes it. Refresh and resharing both change share material while leaving the public key and address unchanged. Retirement ends the wallet and requires moving assets first.</desc>
@@ -322,7 +322,7 @@
 <text class="dg-no" x="62" y="119" text-anchor="middle">import path =</text><text class="dg-no" x="62" y="133" text-anchor="middle">full-key moment</text>
 <text class="dg-no" x="570" y="120" text-anchor="middle">sweep first</text>
 <text class="dg-lbl" x="310" y="176" text-anchor="middle">Below-threshold survivors cannot reshare</text>
-<text class="dg-lbl" x="310" y="196" text-anchor="middle" style="fill:var(--danger)">Fall below t surviving shares and the address is permanently frozen</text></svg><figcaption>Refresh and reshare are the two operations that change share material without moving funds. Everything else changes the address or ends the wallet.</figcaption></figure>
+<text class="dg-lbl" x="310" y="196" text-anchor="middle" style="fill:var(--danger)">Fall below t surviving shares and the address is permanently frozen</text></svg><figcaption>Refresh and reshare swap out share material while the funds sit still. The other three either change the address or end the wallet.</figcaption></figure>
     </section>
     <section class="sheet-section" aria-labelledby="key-lifecycle">
       <h2 id="key-lifecycle">Key lifecycle</h2>
@@ -330,38 +330,38 @@
       <div class="entry-grid">
         <article class="entry" data-f>
           <h3>Distributed key generation</h3>
-          <p>Each party contributes entropy and proves consistency; no dealer ever possesses the aggregate private key.</p>
+          <p>Every party contributes randomness and proves it played fair. The full private key is never assembled, so there is no moment when one machine could have copied it.</p>
           <p class="example"><strong>Concrete use:</strong> For a 2-of-3 wallet, retain the DKG transcript hash, participant identities, public key, and independently derived first address.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Importing and splitting a pre-existing seed leaves a full-key compromise moment.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Import an existing seed and split it afterward and the whole key sat on one machine first. Whatever was watching that machine has it.</p>
         </article>
         <article class="entry" data-f>
           <h3>Signing</h3>
-          <p>Participants validate the same canonical payload, consume one presign package where applicable, and produce an ordinary chain signature.</p>
+          <p>Each participant checks the same canonical payload, burns one presign package if the protocol uses them, and the group emits a signature the chain cannot tell apart from a single-key one.</p>
           <p class="example"><strong>Concrete use:</strong> Bind request ID <code>wd_20260831_0042</code>, chain ID, nonce, asset, amount, destination, fee ceiling, and policy decision into the audit record.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> A quorum can correctly sign a malicious payload supplied by a compromised policy engine.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A quorum will happily sign a payload someone else chose. Compromise the policy engine and the cryptography works perfectly against you.</p>
         </article>
         <article class="entry" data-f>
           <h3>Proactive refresh</h3>
-          <p>Shares are re-randomized while the public key and address remain unchanged; old and new epoch shares cannot be combined.</p>
+          <p>Every share gets re-randomized while the public key and address stay put. Shares from the old epoch and the new one will not combine, so an attacker who stole one last quarter is left holding a dead number.</p>
           <p class="example"><strong>Concrete use:</strong> Refresh quarterly and after a suspected host compromise; prove completion on all three parties before deleting epoch N material.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> A configured job that has never completed a restore test is not a control.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> A refresh job nobody has restore-tested is a scheduled task you hope works. You find out during an incident.</p>
         </article>
         <article class="entry" data-f>
           <h3>Resharing</h3>
-          <p>A live quorum changes <code>t-of-n</code> or replaces participants without moving funds.</p>
+          <p>A live quorum hands a fresh set of shares to a different group, or changes <code>t-of-n</code>, and the funds never move.</p>
           <p class="example"><strong>Concrete use:</strong> Replace a departing 2-of-3 signer with a new HSM and verify the unchanged public key before revoking the old share.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Below-threshold survivors cannot reshare; the address is permanently frozen.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Resharing needs a live quorum. Drop below <code>t</code> surviving shares and there is nothing left to reshare with, and the address is frozen for good.</p>
         </article>
         <article class="entry" data-f>
           <h3>Retirement</h3>
-          <p>Move remaining assets, destroy every live share and presign cache, and retain non-secret audit evidence.</p>
+          <p>Sweep the assets out first, then destroy every live share and presign cache. Keep the non-secret audit evidence, because that is what you show later.</p>
           <p class="example"><strong>Concrete use:</strong> After a chain is delisted, sweep all derivation paths, reconcile zero balances, then obtain destruction attestations from each domain.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Deleting the vendor workspace while dust or token contracts remain creates orphaned value.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Delete the vendor workspace with dust or a forgotten token balance still on those addresses and the value is stranded, with nothing left that can sign for it.</p>
         </article></div>
     </section>
     <section class="sheet-section" aria-labelledby="share-custody-topology">
       <h2 id="share-custody-topology">Share custody topology</h2>
-      <p class="section-note">Three hosts are not three trust domains. Model IAM, hypervisor, update channel, operator, region, and recovery authority.</p>
+      <p class="section-note">For each row, ask what a single attacker has to own to reach two shares. Count IAM roles, hypervisors, update channels, operators, regions, and whoever holds recovery authority. Do not count machines.</p>
       <div class="table-wrap" role="region" aria-label="Share custody topology" tabindex="0">
         <table><thead><tr><th scope="col">Topology</th><th scope="col">Correlated failure</th><th scope="col">Liveness</th><th scope="col">Recovery</th><th scope="col">Collusion floor</th></tr></thead><tbody><tr data-f><td>3 VMs / one cloud account / one IAM role</td><td><span class="signal danger">BROKEN</span></td><td>Fast</td><td>Easy</td><td>One admin credential</td></tr><tr data-f><td>Separate cloud accounts, same provider</td><td><span class="signal warn">CONDITIONAL</span></td><td>High</td><td>Moderate</td><td>2 account compromises</td></tr><tr data-f><td>Two cloud providers + on-prem HSM</td><td><span class="signal safe">DIVERSE</span></td><td>Medium</td><td>Harder</td><td>2 trust domains</td></tr><tr data-f><td>Vendor 2 shares + customer HSM share</td><td><span class="signal warn">VERIFY</span></td><td>Vendor-dependent</td><td>Exit package required</td><td>Vendor + customer or vendor internal quorum</td></tr><tr data-f><td>Mobile approver + cloud + HSM</td><td><span class="signal warn">DEVICE RISK</span></td><td>High</td><td>User lifecycle heavy</td><td>2 device/domain compromises</td></tr></tbody></table>
       </div>
@@ -372,88 +372,88 @@
       <div class="entry-grid">
         <article class="entry" data-f>
           <h3>Policy-engine compromise</h3>
-          <p>The signer sees an authorized request, so threshold secrecy provides no safety.</p>
+          <p>An attacker-crafted request that the policy engine approved looks exactly like a legitimate one to the signers. Splitting the key does nothing here.</p>
           <p class="example"><strong>Concrete use:</strong> Require an independently operated callback to compare the payload with ledger intent before any share acts.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Putting policy and all shares under one admin collapses the architecture.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> One admin over both the policy engine and the shares collapses the whole design back to a single key.</p>
         </article>
         <article class="entry" data-f>
           <h3>Blind signing</h3>
-          <p>Approvers who see only a digest cannot verify the human-readable destination or contract call.</p>
+          <p>An approver staring at a 32-byte hash has no way to tell where the money goes or what contract call they just authorized.</p>
           <p class="example"><strong>Concrete use:</strong> Decode EIP-712 or chain-native intent on a separate trusted display and bind it to the request.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> A green approval screen can describe different bytes than the signer receives.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> The screen says one thing and the bytes reaching the signer say another. The approval is real; the description was fiction.</p>
         </article>
         <article class="entry" data-f>
           <h3>Address substitution</h3>
-          <p>Malware changes a destination after business approval but before canonical serialization.</p>
+          <p>Malware waits for the business approval, then swaps the destination address before the transaction is serialized. Everyone signed what they thought they were signing.</p>
           <p class="example"><strong>Concrete use:</strong> Use allowlists with a 48-hour activation delay and out-of-band confirmation for additions.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Clipboard checks and prefix/suffix matching are not authentication.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Eyeballing the first and last four characters catches nothing. Attackers grind vanity addresses that match both ends.</p>
         </article>
         <article class="entry" data-f>
           <h3>Threshold insider collusion</h3>
-          <p>Exactly <code>t</code> valid participants are sufficient by design.</p>
+          <p>The protocol cannot tell an honest quorum from a corrupt one. <code>t</code> valid participants who agree to steal is exactly what the design authorizes.</p>
           <p class="example"><strong>Concrete use:</strong> Set role separation so two approvers cannot also administer policy or signer infrastructure.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> 2-of-3 is not two humans if automation controls both shares.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> If a service account drives two of the three shares, your 2-of-3 needs zero humans to sign.</p>
         </article>
         <article class="entry" data-f>
           <h3>Missing attribution</h3>
-          <p>The chain records one aggregate signature, not which parties participated.</p>
+          <p>All the chain ever sees is one signature. Which parties took part, and which ones declined, exists only in whatever you logged.</p>
           <p class="example"><strong>Concrete use:</strong> Write append-only participant, policy, payload, and transcript hashes to an external audit store.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> On-chain indistinguishability trades away native signer attribution.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> The privacy that makes MPC look like a normal wallet is the same property that costs you free on-chain attribution.</p>
         </article>
         <article class="entry" data-f>
           <h3>Supply-chain compromise</h3>
-          <p>A malicious library or signer image can bias nonces, leak shares, or rewrite payloads.</p>
+          <p>A tampered dependency or signer image can bias nonces, leak share material a few bits at a time, or rewrite payloads on the way in.</p>
           <p class="example"><strong>Concrete use:</strong> Pin reproducible builds, SBOM, signatures, audit commit, and measured boot evidence.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> A mathematically proven protocol does not prove the deployed binary.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> The proof covers the paper. It says nothing about the binary you are running.</p>
         </article></div>
     </section>
     <section class="sheet-section" aria-labelledby="custody-primitive-decision-matrix">
       <h2 id="custody-primitive-decision-matrix">Custody primitive decision matrix</h2>
-      <p class="section-note">Use MPC for broad chain coverage and stable addresses; native multisig for independently verifiable cold quorums; hybrid tiering when correlated vendor risk dominates.</p>
+      <p class="section-note">Pick MPC when you need many chains and an address that survives staff changes. Pick native multisig when you want a cold quorum anyone can verify from the chain itself. Split hot and cold across both when your biggest worry is the vendor.</p>
       <div class="table-wrap" role="region" aria-label="Custody primitive decision matrix" tabindex="0">
         <table><thead><tr><th scope="col">Primitive</th><th scope="col">On-chain footprint</th><th scope="col">Quorum change</th><th scope="col">Attribution</th><th scope="col">Exit failure</th></tr></thead><tbody><tr data-f><td>Threshold MPC</td><td>Ordinary single signature</td><td>Same address via reshare</td><td>Off-chain log only</td><td>Need export/reshare package</td></tr><tr data-f><td>Native multisig</td><td>Visible; chain-specific fee</td><td>Usually new policy/address</td><td>Often visible</td><td>Independent signers can survive coordinator</td></tr><tr data-f><td>Smart-contract wallet</td><td>Contract call + execution gas</td><td>Upgradeable policy</td><td>Event/log dependent</td><td>Chain and contract governance remain</td></tr><tr data-f><td>Single-key HSM</td><td>Ordinary signature</td><td>Re-key requires move</td><td>HSM audit log</td><td>Backup/key ceremony determines survival</td></tr><tr data-f><td>Hybrid MPC hot + multisig cold</td><td>Tier-dependent</td><td>Independent paths</td><td>Mixed</td><td>Reduces common vendor failure</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section checklist" aria-labelledby="vendor-due-diligence-checklist">
       <h2 id="vendor-due-diligence-checklist">Vendor due-diligence checklist</h2>
-      <p class="section-note">A protocol label is the start of diligence, not the result.</p>
-      <ol><li data-f><span>Name the protocol, revision, ciphersuite, implementation commit, and every production audit.</span></li><li data-f><span>Prove DKG was used; document any full-key import path and when it is allowed.</span></li><li data-f><span>Map shares to independent IAM, cloud, region, operator, HSM, backup, and update domains.</span></li><li data-f><span>Show completed refresh and resharing evidence, not configuration screenshots.</span></li><li data-f><span>Explain malformed-proof validation, nonce handling, presign reuse prevention, and identifiable abort.</span></li><li data-f><span>Separate policy administration from signer administration and require quorum for policy changes.</span></li><li data-f><span>Provide an export/exit package and execute a restore in an isolated environment.</span></li><li data-f><span>Measure signing availability for the chosen quorum; alert before survivors fall below threshold.</span></li><li data-f><span>Retain payload and participant attribution outside the vendor's trust domain.</span></li><li data-f><span>Test vendor disappearance, customer-share loss, cloud outage, and revoked operator scenarios.</span></li></ol>
+      <p class="section-note">The protocol name on the datasheet is where diligence starts. Everything below is what you still have to make them show you.</p>
+      <ol><li data-f><span>Name the protocol, revision, ciphersuite, implementation commit, and every production audit.</span></li><li data-f><span>Prove DKG was used; document any full-key import path and when it is allowed.</span></li><li data-f><span>Map shares to independent IAM, cloud, region, operator, HSM, backup, and update domains.</span></li><li data-f><span>Ask for evidence of refresh and resharing runs that finished, with timestamps. A screenshot of the settings page proves nothing.</span></li><li data-f><span>Explain malformed-proof validation, nonce handling, presign reuse prevention, and identifiable abort.</span></li><li data-f><span>Separate policy administration from signer administration and require quorum for policy changes.</span></li><li data-f><span>Get the export package in writing, then restore from it in an isolated environment and sign something with it.</span></li><li data-f><span>Measure signing availability for the chosen quorum; alert before survivors fall below threshold.</span></li><li data-f><span>Retain payload and participant attribution outside the vendor's trust domain.</span></li><li data-f><span>Test vendor disappearance, customer-share loss, cloud outage, and revoked operator scenarios.</span></li></ol>
     </section>
     <section class="sheet-section mid" aria-labelledby="common-mistakes--anti-patterns">
       <h2 id="common-mistakes--anti-patterns">Common mistakes &amp; anti-patterns</h2>
-      <p class="section-note">Failures that pass a vendor demo. Expand each for the control and the reason it fails.</p>
+      <p class="section-note">Every one of these sails through a vendor demo. Expand one for the control and why it still fails.</p>
       <div class="drawers">
         <details class="drawer" name="antipattern" data-f><summary>Seed import called MPC</summary>
           <div class="drawer-body">
-            <p>Splitting a key after creation is secret sharing, not dealerless generation.</p>
+            <p>Splitting a key that already exists is secret sharing. It gives you the same runtime story as real DKG, minus the one guarantee that mattered.</p>
             <p class="example"><strong>Concrete use:</strong> Mark imported wallets as a distinct assurance class.</p>
-            <p class="gotcha"><strong>Failure mode:</strong> Marketing vocabulary cannot erase the full-key event.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> Calling it MPC afterward does not un-happen the moment the whole key existed in one place.</p>
           </div></details>
         <details class="drawer" name="antipattern" data-f><summary>One-manager quorum</summary>
           <div class="drawer-body">
-            <p>Multiple accounts still share one coercion and employment boundary.</p>
+            <p>Three approvers who all report to the same VP can all be pressured, or fired, by the same person.</p>
             <p class="example"><strong>Concrete use:</strong> Require independent reporting lines for high-value tiers.</p>
-            <p class="gotcha"><strong>Failure mode:</strong> Org-chart correlation defeats technical separation.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> The org chart quietly undoes the separation the architecture diagram promised.</p>
           </div></details>
         <details class="drawer" name="antipattern" data-f><summary>ECDSA-only selection</summary>
           <div class="drawer-body">
-            <p>ECDSA threshold families do not sign Ed25519-native chains.</p>
+            <p>An ECDSA-only threshold stack cannot sign for Ed25519 chains like Solana or Cardano. Vendors bridge that gap with raw signing.</p>
             <p class="example"><strong>Concrete use:</strong> Inventory chain signature schemes before procurement.</p>
-            <p class="gotcha"><strong>Failure mode:</strong> Raw signing may bypass transaction parsing and policy.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> Raw signing hands the signer bytes nobody parsed, so amount and destination limits never get a chance to fire.</p>
           </div></details>
         <details class="drawer" name="antipattern" data-f><summary>No exit rehearsal</summary>
           <div class="drawer-body">
-            <p>Exportability exists only if a second implementation can restore and sign.</p>
+            <p>You have exportability once a second implementation has actually restored the shares and produced a valid signature. Until then you have a promise.</p>
             <p class="example"><strong>Concrete use:</strong> Run an annual isolated restore using the contractual package.</p>
-            <p class="gotcha"><strong>Failure mode:</strong> A PDF procedure is not evidence of recoverability.</p>
+            <p class="gotcha"><strong>Failure mode:</strong> The day you need the exit package is the worst possible day to learn the procedure was never run.</p>
           </div></details></div>
     </section>
     <section class="sheet-section sources" aria-labelledby="sources">
       <h2 id="sources">Primary sources &amp; scope</h2>
-      <p class="section-note">Operational and volatile claims were checked against these first-party documents on 2026-08-31. Examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
-      <ul><li data-f><a href="https://www.rfc-editor.org/rfc/rfc9591.html" target="_blank" rel="noopener noreferrer">RFC 9591 — FROST</a><span>Two-round threshold Schnorr ciphersuites and security considerations.</span></li><li data-f><a href="https://csrc.nist.gov/pubs/ir/8214/final" target="_blank" rel="noopener noreferrer">NIST IR 8214</a><span>Threshold terminology, validation challenges, and implementation risk.</span></li><li data-f><a href="https://csrc.nist.gov/Projects/threshold-cryptography" target="_blank" rel="noopener noreferrer">NIST Multi-Party Threshold Cryptography</a><span>Current program state; IR 8214C final published January 2026.</span></li><li data-f><a href="https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki" target="_blank" rel="noopener noreferrer">BIP 327 — MuSig2</a><span>n-of-n Schnorr multisignature; not a threshold quorum.</span></li></ul>
+      <p class="section-note">Every operational claim above was checked against these first-party documents on 2026-08-31. The examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
+      <ul><li data-f><a href="https://www.rfc-editor.org/rfc/rfc9591.html" target="_blank" rel="noopener noreferrer">RFC 9591: FROST</a><span>Two-round threshold Schnorr ciphersuites and security considerations.</span></li><li data-f><a href="https://csrc.nist.gov/pubs/ir/8214/final" target="_blank" rel="noopener noreferrer">NIST IR 8214</a><span>Threshold terminology, validation challenges, and implementation risk.</span></li><li data-f><a href="https://csrc.nist.gov/Projects/threshold-cryptography" target="_blank" rel="noopener noreferrer">NIST Multi-Party Threshold Cryptography</a><span>Current program state; IR 8214C final published January 2026.</span></li><li data-f><a href="https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki" target="_blank" rel="noopener noreferrer">BIP 327: MuSig2</a><span>n-of-n Schnorr multisignature; not a threshold quorum.</span></li></ul>
     </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="blockchain-deposits-withdrawals.html">Deposits &amp; withdrawals <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a><a href="bitcoin-self-custody-guide.html">Bitcoin self-custody <span aria-hidden="true">→</span></a><a href="post-quantum-cryptography.html">Post-quantum cryptography <span aria-hidden="true">→</span></a></div></aside>
-<footer class="sheet-foot"><p>Last verified: 2026-08-31 &middot; Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer>
+<footer class="sheet-foot"><p>Last verified: 2026-08-31 &middot; Built as a standalone operational reference. Check your live policy, chain, and vendor state before you change anything in production.</p></footer>
 </main>
 <script>
 (function () {
