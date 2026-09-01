@@ -111,6 +111,7 @@ return [
     'baofeng-uv5r-ham-guide.html' => 'Radio',
     'baofeng-uv5r-quick-ref.html' => 'Radio',
     'emergency-radio-card.html' => 'Radio',
+    'gmrs-frs-murs-card.html' => 'Radio',
     'ham-radio-technician.html' => 'Radio',
 
     // Health & Fitness
