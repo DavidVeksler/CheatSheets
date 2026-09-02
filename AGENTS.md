@@ -21,7 +21,8 @@ A collection of standalone, interactive HTML cheatsheets covering technology, fi
 | `TODO/<topic>.md` | One spec per planned cheatsheet (deleted after shipping). |
 | [`TODO/SPEC-AUDIT.md`](TODO/SPEC-AUDIT.md) | **Spec audit** — Search targeting, outcome, staleness register criteria. |
 | [`TODO/CHEATSHEET-AUDIT.md`](TODO/CHEATSHEET-AUDIT.md) | **Sheet audit** — Conformance audit, SRI checks, defect baseline. |
-| [`TODO/seo-planning.md`](TODO/seo-planning.md) | **SEO planning** — GSC baselines and striking-distance opportunities. |
+| [`TODO/META-seo-planning.md`](TODO/META-seo-planning.md) | **SEO planning** — GSC baselines and striking-distance opportunities. |
+| [`TODO/META-crypto-custody-cluster-seo.md`](TODO/META-crypto-custody-cluster-seo.md) | **Custody cluster SEO** — positioning, link equity, day-30/60/90 gates for the 9 crypto custody sheets. |
 | [`deploy/DEPLOY.md`](deploy/DEPLOY.md) | **Deployment runbook** — `./deploy.sh` pipeline (preflight, validate, push, verify). |
 | [`weekly-freshness-update.md`](weekly-freshness-update.md) | Scheduled fact-drift refresh routine. |
 | `refresh-status.json` | **Review-status data** — per-file last-reviewed date, written only by the freshness routine's Selector. Not hand-edited; not rendered on any page. |

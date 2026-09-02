@@ -8,6 +8,12 @@ Data source: Google Search Console property `https://cheatsheets.davidveksler.co
 (MCP tool `search-console`). Re-pull before trusting numbers below more than a few weeks old —
 this doc is a snapshot, not a live dashboard.
 
+## Per-cluster docs
+
+- [`TODO/META-crypto-custody-cluster-seo.md`](META-crypto-custody-cluster-seo.md) — Crypto Custody
+  & Compliance (9 sheets, published 2026-08-31). Positioning, link-equity plan, day-30/60/90
+  measurement gates.
+
 ## Ground rule: judge per site goal, not site-wide
 
 Per memory `cheatsheets-site-goals`, pages serve four different goals (personal study, personal
