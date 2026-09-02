@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Blockchain Deposits &amp; Withdrawals: Finality and Operations</title><meta name="description" content="Production reference for chain finality, confirmation policy, EVM nonces, UTXO selection, gas stations, deposit identity, idempotency, and reconciliation failures."><meta name="keywords" content="blockchain confirmations, finality, crypto deposits, withdrawals, nonce management, UTXO, reconciliation">
+<title>Blockchain Deposits &amp; Withdrawals: Finality and Operations</title><meta name="description" content="Practical reference for chain finality, confirmations, EVM nonces, UTXO selection, gas funding, deposit identity, idempotency, and reconciliation failures."><meta name="keywords" content="blockchain confirmations, finality, crypto deposits, withdrawals, nonce management, UTXO, reconciliation">
 <link rel="canonical" href="https://cheatsheets.davidveksler.com/blockchain-deposits-withdrawals.html">
-<meta property="og:title" content="Blockchain Deposits &amp; Withdrawals: Finality and Operations"><meta property="og:description" content="Production reference for chain finality, confirmation policy, EVM nonces, UTXO selection, gas stations, deposit identity, idempotency, and reconciliation failures."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/blockchain-deposits-withdrawals.html"><meta property="og:image" content="images/blockchain-deposits-withdrawals.png"><meta property="og:image:alt" content="Per-chain finality and confirmation policy control register">
-<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Blockchain Deposits &amp; Withdrawals: Finality and Operations"><meta name="twitter:description" content="Production reference for chain finality, confirmation policy, EVM nonces, UTXO selection, gas stations, deposit identity, idempotency, and reconciliation failures."><meta name="twitter:image" content="images/blockchain-deposits-withdrawals.png"><meta name="twitter:creator" content="@heroiclife">
+<meta property="og:title" content="Blockchain Deposits &amp; Withdrawals: Finality and Operations"><meta property="og:description" content="Practical reference for chain finality, confirmations, EVM nonces, UTXO selection, gas funding, deposit identity, idempotency, and reconciliation failures."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/blockchain-deposits-withdrawals.html"><meta property="og:image" content="images/blockchain-deposits-withdrawals.png"><meta property="og:image:alt" content="Per-chain finality and confirmation policy control register">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Blockchain Deposits &amp; Withdrawals: Finality and Operations"><meta name="twitter:description" content="Practical reference for chain finality, confirmations, EVM nonces, UTXO selection, gas funding, deposit identity, idempotency, and reconciliation failures."><meta name="twitter:image" content="images/blockchain-deposits-withdrawals.png"><meta name="twitter:creator" content="@heroiclife">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Blockchain Deposits & Withdrawals: Finality and Operations","description":"Production reference for chain finality, confirmation policy, EVM nonces, UTXO selection, gas stations, deposit identity, idempotency, and reconciliation failures.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-08-31","keywords":"blockchain confirmations, finality, crypto deposits, withdrawals, nonce management, UTXO, reconciliation"}</script><style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Blockchain Deposits & Withdrawals: Finality and Operations","description":"Practical reference for chain finality, confirmations, EVM nonces, UTXO selection, gas funding, deposit identity, idempotency, and reconciliation failures.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-08-31","keywords":"blockchain confirmations, finality, crypto deposits, withdrawals, nonce management, UTXO, reconciliation"}</script><style>
 @layer reset, tokens, base, layout, components, diagram, print;
 
 @layer tokens {
@@ -256,15 +256,15 @@
 <input id="sheet-filter" type="search" autocomplete="off" placeholder="Filter rows &amp; entries"></div>
 <span class="filter-status" id="filter-status" role="status" aria-live="polite"></span>
 <button class="btn" id="theme-btn" type="button" aria-pressed="false">Theme</button></div></div>
-<header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance &middot; engineering reference</p><h1>Blockchain deposits &amp; withdrawals</h1><p class="dek">A transaction hash is evidence, not identity. Credit policy begins with the chain’s native finality model and ends with an invariant that detects every missing, duplicated, or orphaned posting.</p><div class="meta"><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
+<header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance &middot; engineering reference</p><h1>Blockchain deposits &amp; withdrawals</h1><p class="dek">A transaction hash is evidence, not an identity. Start with the chain’s own finality model, then build controls that catch missing, duplicate, and orphaned ledger postings.</p><div class="meta"><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
 <nav class="sections" aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#finality-register">Finality register</a><a href="#finality-vocabulary--layer-2">Finality vocabulary &amp; Layer 2</a><a href="#evm-nonce-runbook">EVM nonce runbook</a><a href="#utxo-operations">UTXO operations</a><a href="#gas-station--deposit-hazards">Gas station &amp; deposit hazards</a><a href="#reconciliation-break-taxonomy">Reconciliation break taxonomy</a><a href="#observed-incident-register">Observed incident register</a><a href="#value-at-risk-policy-pattern">Value-at-risk policy pattern</a><a href="#common-mistakes--incident-checklist">Common mistakes &amp; incident checklist</a><a href="#sources">Sources</a></div></nav>
 <main id="main" class="shell">
 <section class="sheet-section" id="quick-reference" aria-labelledby="quick-title" style="margin-top:1.6rem"><h2 id="quick-title">Per-chain finality policy</h2>
-<p class="section-note">The decisive numbers differ per chain. A confirmation count copied between chains is the most common credit defect.</p><div class="instrument"><div><span class="k">Credit states</span><span class="v">5</span><span class="s">observed &rarr; settled</span></div><div><span class="k">Bitcoin</span><span class="v">1 &middot; 3 &middot; 6</span><span class="s">blocks by value tier</span></div><div><span class="k">Ethereum</span><span class="v">safe</span><span class="s">or finalized, never head</span></div><div><span class="k">Solana</span><span class="v">400 ms</span><span class="s">slot target</span></div><div><span class="k">On reorg</span><span class="v">REVERSE</span><span class="s">freeze derived funds</span></div><div><span class="k">Audit key</span><span class="v">hash + height</span><span class="s">not a bare count</span></div></div></section>
+<p class="section-note">The numbers that matter are chain-specific. Copying a confirmation count from one chain to another is a common cause of bad credits.</p><div class="instrument"><div><span class="k">Credit states</span><span class="v">5</span><span class="s">observed &rarr; settled</span></div><div><span class="k">Bitcoin</span><span class="v">1 &middot; 3 &middot; 6</span><span class="s">blocks by value tier</span></div><div><span class="k">Ethereum</span><span class="v">safe</span><span class="s">or finalized, never head</span></div><div><span class="k">Solana</span><span class="v">400 ms</span><span class="s">slot target</span></div><div><span class="k">On reorg</span><span class="v">REVERSE</span><span class="s">freeze affected funds</span></div><div><span class="k">Audit key</span><span class="v">hash + height</span><span class="s">not a bare count</span></div></div></section>
 
     <section class="sheet-section" aria-labelledby="value-tiered-credit-states">
       <h2 id="value-tiered-credit-states">Value-tiered credit states</h2>
-      <p class="section-note">Keep block hash, height/slot, status vocabulary, adapter version, and policy version with every decision. A bare integer confirmation count cannot be audited across chains.</p>
+      <p class="section-note">Record the block hash, height or slot, status, adapter version, and policy version for every decision. A confirmation count on its own is not enough to audit activity across chains.</p>
       <div class="table-wrap" role="region" aria-label="Value-tiered credit states" tabindex="0">
         <table><thead><tr><th scope="col">State</th><th scope="col">Customer balance</th><th scope="col">Withdrawal</th><th scope="col">Required evidence</th></tr></thead><tbody><tr data-f><td>Observed</td><td>Hidden / pending</td><td>Blocked</td><td>Transaction parsed; asset identity validated</td></tr><tr data-f><td>Provisional</td><td>May display</td><td>Blocked</td><td>Canonical block at adapter-defined safe depth</td></tr><tr data-f><td>Credited</td><td>Available by value tier</td><td>Risk hold may remain</td><td>Chain-native safe/final state</td></tr><tr data-f><td>Settled</td><td>Available</td><td>Allowed by policy</td><td>Reconciled ledger posting + final chain evidence</td></tr><tr data-f><td>Orphaned</td><td><span class="signal danger">REVERSE</span></td><td>Freeze derived funds</td><td>Previously observed block left canonical chain</td></tr></tbody></table>
       </div>
@@ -272,7 +272,7 @@
 
     <section class="sheet-section" aria-labelledby="cadence-figure">
       <h2 id="cadence-figure">Block cadence spans three orders of magnitude</h2>
-      <p class="section-note">Plotted on a log axis, because a text column cannot show the distance between a 400&nbsp;ms slot and a 10-minute target. Cadence is not finality &mdash; it only sets the clock the finality rule runs on.</p>
+      <p class="section-note">This uses a log axis because a text column hides the gap between a 400&nbsp;ms slot and a 10-minute target. Cadence is not finality; it only sets the clock that the finality rule runs on.</p>
       <div class="scroll-x" style="overflow-x:auto"><div class="axis">
   <div class="axis-ticks"><span style="--x:12.5%">1s</span><span style="--x:44%">10s</span><span style="--x:68.5%">1 min</span><span style="--x:100%">10 min</span></div>
   <div class="axis-row"><span class="name">Solana</span><span class="axis-track" style="--x:0%;--dot:var(--safe)"><i></i><b>~400 ms slot target</b></span></div>
@@ -286,7 +286,7 @@
     </section>
     <section class="sheet-section" aria-labelledby="credit-state-figure">
       <h2 id="credit-state-figure">Credit state machine</h2>
-      <p class="section-note">Balance visibility and withdrawal eligibility are separate questions at every state.</p>
+      <p class="section-note">At every state, decide balance visibility and withdrawal eligibility separately.</p>
       <figure class="plate"><svg viewBox="0 0 620 216" role="img" aria-labelledby="cs-t cs-d">
 <title id="cs-t">Credit state machine from observed to settled, with the orphaned branch</title>
 <desc id="cs-d">A deposit moves from observed to provisional to credited to settled. At any point before settlement the block can leave the canonical chain, which sends the deposit to the orphaned state and reverses the customer balance.</desc>
@@ -306,11 +306,11 @@
 <path class="dg-flow" style="stroke:var(--danger)" d="M69 84 V147 H224" marker-end="url(#ar)"/>
 <path class="dg-flow" style="stroke:var(--danger)" d="M373 84 V107 H460 V147 H396" marker-end="url(#ar)"/>
 <text class="dg-no" x="310" y="188" text-anchor="middle">block left the canonical chain &rarr; REVERSE and freeze derived funds</text>
-<text class="dg-lbl" x="310" y="208" text-anchor="middle">Withdrawal stays blocked until the chain-native final state is reached</text></svg><figcaption>A deposit can leave the canonical chain at any point before settlement, which is why credit and withdrawal are gated separately.</figcaption></figure>
+<text class="dg-lbl" x="310" y="208" text-anchor="middle">Withdrawal stays blocked until the chain-native final state is reached</text></svg><figcaption>A deposit can leave the canonical chain before settlement. That is why credit and withdrawals need separate gates.</figcaption></figure>
     </section>
     <section class="sheet-section" aria-labelledby="finality-register">
       <h2 id="finality-register">Finality register</h2>
-      <p class="section-note">Cadences are protocol targets or typical ranges, not SLAs. A production adapter must query live network state and carry an incident override. Last checked August 2026.</p>
+      <p class="section-note">Cadences are protocol targets or typical ranges, not SLAs. Your production adapter should query live network state and support an incident override. Last checked August 2026.</p>
       <div class="table-wrap" role="region" aria-label="Finality register" tabindex="0">
         <table><thead><tr><th scope="col">Chain</th><th scope="col">Consensus</th><th scope="col">Cadence</th><th scope="col">Native vocabulary</th><th scope="col">Credit rule</th><th scope="col">Critical caveat</th></tr></thead><tbody><tr data-f><td>Bitcoin</td><td>PoW · probabilistic</td><td>~10 min target</td><td>mempool → block depth</td><td>1 / 3 / 6 blocks by value</td><td>No protocol-final state</td></tr><tr data-f><td>Ethereum</td><td>PoS · economic finality</td><td>12 s slot</td><td>head → safe → finalized</td><td>Use <code>safe</code> or <code>finalized</code></td><td>Finality normally spans epochs; query the node</td></tr><tr data-f><td>Solana</td><td>PoS + Tower BFT</td><td>~400 ms slot target</td><td>processed → confirmed → finalized</td><td>Use commitment parameter explicitly</td><td>Finalized means max lockout / rooted</td></tr><tr data-f><td>Tron</td><td>DPoS / SR</td><td>~3 s</td><td>latest → solidified</td><td>Credit only solidified for withdrawal</td><td>Resource and SR behavior differ from EVM</td></tr><tr data-f><td>BNB Smart Chain</td><td>PoSA</td><td>Network-upgrade dependent</td><td>latest → finalized</td><td>Use finality RPC where supported</td><td>Never hard-code an old block interval</td></tr><tr data-f><td>Polygon PoS</td><td>Heimdall/Bor + Ethereum checkpoints</td><td>~2 s Bor</td><td>Bor inclusion → checkpoint</td><td>Separate fast credit from bridge exit</td><td>PoS reorg and L1 checkpoint are different states</td></tr><tr data-f><td>Avalanche C-Chain</td><td>Snowman · accepted finality</td><td>Sub-second to seconds</td><td>processing → accepted</td><td>Require accepted</td><td>Do not add Bitcoin-style confirmations mechanically</td></tr><tr data-f><td>Litecoin</td><td>PoW · probabilistic</td><td>~2.5 min target</td><td>block depth</td><td>Value-tiered depth</td><td>Security budget differs from Bitcoin</td></tr><tr data-f><td>Dogecoin</td><td>PoW · probabilistic</td><td>~1 min target</td><td>block depth</td><td>Value-tiered depth</td><td>Merged mining does not make depth policies identical</td></tr><tr data-f><td>Bitcoin Cash</td><td>PoW · probabilistic</td><td>~10 min target</td><td>block depth</td><td>Value-tiered depth</td><td>Deep-reorg history requires incident override</td></tr><tr data-f><td>XRP Ledger</td><td>Federated consensus</td><td>~3–5 s ledger</td><td>open → validated</td><td>Credit validated ledger only</td><td>Destination tag is part of deposit identity</td></tr><tr data-f><td>Stellar</td><td>SCP · deterministic</td><td>Usually seconds</td><td>pending → successful ledger</td><td>Successful ledger close</td><td>Memo is part of deposit identity</td></tr><tr data-f><td>Cardano</td><td>Ouroboros · probabilistic</td><td>~20 s slot</td><td>block depth</td><td>Node/venue risk policy</td><td>Settlement assurance grows with depth</td></tr><tr data-f><td>Cosmos SDK / CometBFT</td><td>BFT · deterministic</td><td>Chain configured</td><td>commit</td><td>Committed block</td><td>Validator-set and chain halts dominate</td></tr><tr data-f><td>Tezos</td><td>PoS with finality</td><td>Protocol-version dependent</td><td>head → finalized</td><td>Use finalized level</td><td>Upgrade can change timing parameters</td></tr><tr data-f><td>Aptos</td><td>Jolteon/DiemBFT</td><td>Sub-second target</td><td>pending → executed</td><td>Committed execution</td><td>Expiration timestamp is operationally significant</td></tr><tr data-f><td>Sui</td><td>Narwhal/Bullshark lineage</td><td>Path dependent</td><td>effects certified/checkpointed</td><td>Checkpointed for external credit</td><td>Fast-path and consensus-path semantics differ</td></tr><tr data-f><td>TON</td><td>PoS sharded</td><td>Shard/masterchain dependent</td><td>included → masterchain confirmed</td><td>Observe masterchain state</td><td>Shard routing and memo identity matter</td></tr></tbody></table>
       </div>
@@ -321,25 +321,25 @@
       <div class="entry-grid">
         <article class="entry" data-f>
           <h3>Probabilistic depth</h3>
-          <p>Each additional PoW block raises reversal cost but never creates a protocol-final flag.</p>
-          <p class="example"><strong>Concrete use:</strong> A venue may expose 1-block provisional credit while holding withdrawals until 6 blocks for a large BTC deposit.</p>
-          <p class="gotcha"><strong>Failure mode:</strong> Applying the same count to Dogecoin and Bitcoin ignores security-budget differences.</p>
+          <p>Each additional PoW block makes a reversal more expensive, but it never creates a protocol-final flag.</p>
+          <p class="example"><strong>Concrete use:</strong> You might show a 1-block provisional credit while holding a large BTC deposit’s withdrawal availability until 6 blocks.</p>
+          <p class="gotcha"><strong>Failure mode:</strong> Using the same count for Dogecoin and Bitcoin ignores their different security budgets.</p>
         </article>
         <article class="entry" data-f>
           <h3>Economic finality</h3>
-          <p>A PoS checkpoint becomes reversible only through exceptional consensus failure and slashable behavior.</p>
+          <p>Reversing a PoS checkpoint requires an exceptional consensus failure and exposes validators to slashing.</p>
           <p class="example"><strong>Concrete use:</strong> On Ethereum, request <code>safe</code> for lower latency or <code>finalized</code> for the strongest standard RPC state.</p>
           <p class="gotcha"><strong>Failure mode:</strong> The JSON-RPC <code>latest</code> tag is not a finality promise.</p>
         </article>
         <article class="entry" data-f>
           <h3>Optimistic rollup</h3>
-          <p>Sequencer receipt, L1 data publication, and challenge-window completion are three different moments.</p>
-          <p class="example"><strong>Concrete use:</strong> Credit a small Arbitrum deposit after L1 inclusion but gate bridge-dependent withdrawal until the relevant protocol state.</p>
+          <p>A sequencer receipt, L1 data publication, and challenge-window completion are three distinct points in the process.</p>
+          <p class="example"><strong>Concrete use:</strong> You may credit a small Arbitrum deposit after L1 inclusion, while keeping a bridge-dependent withdrawal locked until the relevant protocol state.</p>
           <p class="gotcha"><strong>Failure mode:</strong> An L2 cannot be more final than the L1 data and state it inherits.</p>
         </article>
         <article class="entry" data-f>
           <h3>ZK rollup</h3>
-          <p>Validity proof acceptance on L1 establishes state correctness; data availability and L1 finality remain separate.</p>
+          <p>An accepted L1 validity proof establishes state correctness. Data availability and L1 finality are still separate questions.</p>
           <p class="example"><strong>Concrete use:</strong> Track batch inclusion, proof verification, and L1 finalized block as independent fields.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A sequencer UI saying final does not prove L1 settlement.</p>
         </article></div>
@@ -350,32 +350,32 @@
       <div class="entry-grid">
         <article class="entry" data-f>
           <h3>Single-writer allocator</h3>
-          <p>One durable allocator leases sequential nonces per hot address; workers never poll independently for the next value.</p>
+          <p>Use one durable allocator to lease sequential nonces for each hot address. Workers should never independently poll for the next value.</p>
           <p class="example"><strong>Concrete use:</strong> Lease nonce 418 for 60 seconds, persist request ID and fee fields, then mark broadcast by transaction hash.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Two workers reading <code>pending</code> can assign the same nonce.</p>
         </article>
         <article class="entry" data-f>
           <h3>Gap handling</h3>
-          <p>A missing nonce blocks every later transaction from that address.</p>
+          <p>One missing nonce blocks every transaction that follows it from the same address.</p>
           <p class="example"><strong>Concrete use:</strong> If 418 is stuck and 419–425 are queued, replace 418 first; do not keep adding higher nonces.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A gap can look like seven unrelated provider failures.</p>
         </article>
         <article class="entry" data-f>
           <h3>Replacement</h3>
-          <p>Resubmit the same nonce with the same intent and a sufficiently higher effective fee.</p>
+          <p>Resubmit the same nonce for the same intent, with a sufficiently higher effective fee.</p>
           <p class="example"><strong>Concrete use:</strong> Keep <code>maxPriorityFeePerGas</code> and <code>maxFeePerGas</code> under a policy ceiling, then reconcile whichever hash lands.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A replacement creates multiple hashes for one withdrawal intent.</p>
         </article>
         <article class="entry" data-f>
           <h3>Throughput sharding</h3>
-          <p>Nonce serialization is per sender, so scale with multiple funded hot addresses.</p>
-          <p class="example"><strong>Concrete use:</strong> Route withdrawals deterministically across 8 addresses while retaining per-address single writers.</p>
+          <p>Because nonce serialization is per sender, throughput comes from multiple funded hot addresses.</p>
+          <p class="example"><strong>Concrete use:</strong> Route withdrawals predictably across 8 addresses, while keeping one writer for each address.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Sharding multiplies gas, reconciliation, policy, and rebalancing surfaces.</p>
         </article></div>
     </section>
     <section class="sheet-section" aria-labelledby="utxo-operations">
       <h2 id="utxo-operations">UTXO operations</h2>
-      <p class="section-note">Fee examples are arithmetic, not fee recommendations. Query a current node estimator and enforce a maximum policy.</p>
+      <p class="section-note">The fee examples illustrate the arithmetic; they are not fee recommendations. Query a current node estimator and enforce a maximum fee policy.</p>
       <div class="table-wrap" role="region" aria-label="UTXO operations" tabindex="0">
         <table><thead><tr><th scope="col">Operation</th><th scope="col">Control</th><th scope="col">Worked value</th><th scope="col">Do not</th></tr></thead><tbody><tr data-f><td>Coin selection</td><td>Minimize input cost, change, and privacy leakage</td><td>At 20 sat/vB, a 68-vB input costs ~1,360 sat to spend</td><td>Select nominal value without effective value</td></tr><tr data-f><td>Batching</td><td>One transaction, many outputs</td><td>10 P2WPKH outputs avoid repeating 10 transaction overheads</td><td>Mix incompatible urgency or screening states</td></tr><tr data-f><td>RBF</td><td>Replace an opt-in unconfirmed transaction</td><td>Same inputs; higher fee; preserve withdrawal identity</td><td>Credit both hashes</td></tr><tr data-f><td>CPFP</td><td>Spend a low-fee parent output with a high-fee child</td><td>Package feerate must clear the target</td><td>Assume every output is spendable</td></tr><tr data-f><td>Consolidation</td><td>Merge small UTXOs during low-fee windows</td><td>Only consolidate inputs whose future fee saving exceeds current cost</td><td>Create one operationally catastrophic mega-UTXO</td></tr><tr data-f><td>Descriptor scan</td><td>Derive monitored addresses with an explicit range</td><td>Persist last-used index and scan beyond configured lookahead</td><td>Rely on an implicit gap limit</td></tr></tbody></table>
       </div>
@@ -386,38 +386,38 @@
       <div class="entry-grid">
         <article class="entry" data-f>
           <h3>Token sweep funding</h3>
-          <p>A token-holding address also needs the chain's native asset to pay execution fees.</p>
+          <p>An address holding tokens still needs the chain’s native asset to pay execution fees.</p>
           <p class="example"><strong>Concrete use:</strong> Detect USDC, estimate sweep gas, fund only the bounded amount, then sweep and reconcile both transactions.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Pre-funding every address strands native asset and expands attack value.</p>
         </article>
         <article class="entry" data-f>
           <h3>Contract identity</h3>
-          <p>Token contract and chain identify an asset; symbol and decimals are display metadata.</p>
+          <p>The chain and token contract identify an asset. Its symbol and decimals are display metadata.</p>
           <p class="example"><strong>Concrete use:</strong> Credit only the allowlisted Ethereum USDC contract and read its configured 6 decimals.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A fake token can emit the same symbol and Transfer event.</p>
         </article>
         <article class="entry" data-f>
           <h3>Memo / destination tag</h3>
-          <p>Some chains multiplex users behind one address; the tag is part of the account key.</p>
+          <p>Some chains route many users through one address, so the tag is part of the account key.</p>
           <p class="example"><strong>Concrete use:</strong> Store <code>(chain,address,tag)</code> and hold unmatched XRP deposits for operations review.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Address-only indexing miscredits or strands deposits.</p>
         </article>
         <article class="entry" data-f>
           <h3>Address poisoning</h3>
-          <p>Zero-value or dust transfers plant a lookalike address in history.</p>
+          <p>Zero-value or dust transfers can plant a lookalike address in a user’s history.</p>
           <p class="example"><strong>Concrete use:</strong> Never populate destinations from recent on-chain counterparties; use authenticated address books.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Prefix/suffix visual checks are weak against generated lookalikes.</p>
         </article>
         <article class="entry" data-f>
           <h3>Transfer semantics</h3>
-          <p>Fee-on-transfer, rebasing, and contract-originated moves break naive amount assumptions.</p>
+          <p>Fee-on-transfer tokens, rebasing, and contract-originated moves can break simple amount assumptions.</p>
           <p class="example"><strong>Concrete use:</strong> Credit the observed balance delta after finality, not the requested calldata amount.</p>
           <p class="gotcha"><strong>Failure mode:</strong> Transaction success does not imply the expected token amount arrived.</p>
         </article></div>
     </section>
     <section class="sheet-section" aria-labelledby="reconciliation-break-taxonomy">
       <h2 id="reconciliation-break-taxonomy">Reconciliation break taxonomy</h2>
-      <p class="section-note">Balance tolerance is zero. Timing differences belong in explicit in-flight accounts, not an unexplained reconciliation allowance.</p>
+      <p class="section-note">Your balance tolerance should be zero. Put timing differences in explicit in-flight accounts, not in an unexplained reconciliation allowance.</p>
       <div class="table-wrap" role="region" aria-label="Reconciliation break taxonomy" tabindex="0">
         <table><thead><tr><th scope="col">Mismatch</th><th scope="col">Detection</th><th scope="col">Likely cause</th><th scope="col">First response</th></tr></thead><tbody><tr data-f><td>On-chain, no ledger</td><td>Finalized inbound absent internally</td><td>Indexer/webhook loss</td><td>Pause auto-sweep; backfill by block range</td></tr><tr data-f><td>Ledger, no chain</td><td>Broadcast intent has no accepted hash</td><td>Timeout/crash before broadcast</td><td>Query provider by idempotency ID before retry</td></tr><tr data-f><td>Duplicate credit</td><td>Same transfer identity posted twice</td><td>At-least-once delivery</td><td>Reverse duplicate journal entry; fix uniqueness key</td></tr><tr data-f><td>Orphaned credit</td><td>Credited block no longer canonical</td><td>Reorg</td><td>Freeze derived availability; post compensating entry</td></tr><tr data-f><td>Amount mismatch</td><td>Observed delta differs from ledger amount</td><td>Decimals/fee-on-transfer</td><td>Quarantine asset adapter</td></tr><tr data-f><td>Wrong network</td><td>Supported address, unsupported chain</td><td>User routing error</td><td>Do not automate recovery; assess key/control path</td></tr><tr data-f><td>Fee drift</td><td>On-chain fee ≠ booked expense</td><td>Replacement or estimator error</td><td>Attach all hashes to one intent and settle actual fee</td></tr><tr data-f><td>In-flight snapshot</td><td>Invariant break clears next cycle</td><td>Timing boundary</td><td>Model in-flight account explicitly; do not use tolerance</td></tr></tbody></table>
       </div>
@@ -429,24 +429,24 @@
     </section>
     <section class="sheet-section" aria-labelledby="observed-incident-register">
       <h2 id="observed-incident-register">Observed incident register</h2>
-      <p class="section-note">Where a primary record does not establish a trustworthy depth, this register does not invent one. Absence of a number is safer than a false confirmation rule.</p>
+      <p class="section-note">If a primary record does not establish a trustworthy depth, do not invent one. No number is safer than a false confirmation rule.</p>
       <div class="table-wrap" role="region" aria-label="Observed incident register" tabindex="0">
         <table><thead><tr><th scope="col">Network / date</th><th scope="col">Observed event</th><th scope="col">Evidence</th><th scope="col">Engineering consequence</th></tr></thead><tbody><tr data-f><td>Bitcoin · 2013-03-11</td><td>0.8/0.7 consensus split from Berkeley DB lock behavior</td><td><a href="https://bitcoin.org/bip/50/">BIP 50</a>: fork at height 225,430; experimental double-spend documented</td><td>Suspend on node-version disagreement; height is not a unique ID</td></tr><tr data-f><td>Bitcoin · 2013-08-16</td><td>Unpatched nodes forked at block 252,451</td><td><a href="https://bitcoin.org/bip/50/">BIP 50 resolution record</a></td><td>Track consensus alerts and client versions, not depth alone</td></tr><tr data-f><td>Ethereum Classic · 2020-07-31</td><td>Successful 51% reorganization attack</td><td><a href="https://www.ethereumclassic.org/knowledge/history/">Project history</a></td><td>Static confirmation policy can become obsolete during attack</td></tr><tr data-f><td>Ethereum Classic · 2020-08-06</td><td>Third successful 51% reorganization attack</td><td><a href="https://www.ethereumclassic.org/knowledge/history/">Repeated within one week</a></td><td>Pause can be safer than adding a few blocks</td></tr><tr data-f><td>Ethereum Classic · 2020-08-29</td><td>Fourth successful 51% reorganization attack</td><td><a href="https://www.ethereumclassic.org/knowledge/history/">Repeated in same month</a></td><td>Security budget and incident state govern policy</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section" aria-labelledby="value-at-risk-policy-pattern">
       <h2 id="value-at-risk-policy-pattern">Value-at-risk policy pattern</h2>
-      <p class="section-note">Derive bands from loss tolerance and attack economics; never treat one universal confirmation count as an asset property.</p>
+      <p class="section-note">Set bands from your loss tolerance and the chain’s attack economics. Never treat one confirmation count as an inherent property of every asset.</p>
       <div class="table-wrap" role="region" aria-label="Value-at-risk policy pattern" tabindex="0">
         <table><thead><tr><th scope="col">Tier</th><th scope="col">Credit</th><th scope="col">Withdrawal</th><th scope="col">Incident overlay</th></tr></thead><tbody><tr data-f><td>Low</td><td>Provisional at conservative safe level</td><td>Hold until settled</td><td>Raise or pause automatically</td></tr><tr data-f><td>Medium</td><td>Chain-native safe/final state</td><td>Additional risk/KYT hold</td><td>Manual release during instability</td></tr><tr data-f><td>High</td><td>Strongest final state + independent node agreement</td><td>Human approval after reconciliation</td><td>Pause on fork/finality alarm</td></tr></tbody></table>
       </div>
     </section>
     <section class="sheet-section sources" aria-labelledby="sources">
       <h2 id="sources">Primary sources &amp; scope</h2>
-      <p class="section-note">Operational and volatile claims were checked against these first-party documents on 2026-08-31. Examples are illustrative controls, not legal, investment, or vendor-selection advice.</p>
+      <p class="section-note">We checked the operational and volatile claims against these first-party documents on 2026-08-31. The examples illustrate controls; they are not legal, investment, or vendor-selection advice.</p>
       <ul><li data-f><a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/" target="_blank" rel="noopener noreferrer">Ethereum consensus and PoS finality</a><span>Slots, epochs, justification and finalization.</span></li><li data-f><a href="https://solana.com/docs/rpc" target="_blank" rel="noopener noreferrer">Solana commitment</a><span>RPC commitment parameters and chain-native status vocabulary.</span></li><li data-f><a href="https://developer.bitcoin.org/reference/" target="_blank" rel="noopener noreferrer">Bitcoin developer reference</a><span>Transactions, blocks, mempool and wallet primitives.</span></li><li data-f><a href="https://developers.circle.com/cctp/concepts/finality-and-block-confirmations" target="_blank" rel="noopener noreferrer">Circle CCTP finality</a><span>Current cross-chain confirmed/finalized thresholds and timing.</span></li><li data-f><a href="https://eips.ethereum.org/EIPS/eip-1559" target="_blank" rel="noopener noreferrer">EIP-1559</a><span>Typed transaction fee fields and replacement context.</span></li></ul>
     </section><aside class="related" aria-labelledby="related"><h2 id="related">Related engineering sheets</h2><div><a href="mpc-wallet-architecture.html">MPC wallet architecture <span aria-hidden="true">→</span></a><a href="institutional-crypto-custody.html">Institutional custody <span aria-hidden="true">→</span></a><a href="crypto-compliance-architecture.html">Compliance architecture <span aria-hidden="true">→</span></a><a href="stablecoin-payment-infrastructure.html">Stablecoin infrastructure <span aria-hidden="true">→</span></a><a href="custody-provider-integration.html">Provider integration <span aria-hidden="true">→</span></a><a href="crypto-exchange-architecture.html">Exchange architecture <span aria-hidden="true">→</span></a><a href="wallet-recovery-forensics.html">Wallet recovery <span aria-hidden="true">→</span></a><a href="post-quantum-custody-migration.html">Post-quantum migration <span aria-hidden="true">→</span></a><a href="bitcoin-wallet.html">Bitcoin wallet <span aria-hidden="true">→</span></a></div></aside>
-<footer class="sheet-foot"><p>Built as a standalone operational reference. Verify live policy, chain, and vendor state before production changes.</p></footer>
+<footer class="sheet-foot"><p>Use this as a standalone operational reference, then verify live policy, chain, and vendor state before making production changes.</p></footer>
 </main>
 <script>
 (function () {
