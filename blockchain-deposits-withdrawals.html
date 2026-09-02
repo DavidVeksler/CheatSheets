@@ -257,10 +257,40 @@
 <span class="filter-status" id="filter-status" role="status" aria-live="polite"></span>
 <button class="btn" id="theme-btn" type="button" aria-pressed="false">Theme</button></div></div>
 <header class="masthead"><div class="shell"><p class="eyebrow">Crypto custody &amp; compliance &middot; engineering reference</p><h1>Blockchain deposits &amp; withdrawals</h1><p class="dek">A transaction hash is evidence, not an identity. Start with the chain’s own finality model, then build controls that catch missing, duplicate, and orphaned ledger postings.</p><div class="meta"><span>VOLATILE CLAIMS: DATE-TAGGED</span><span>PRINT: LANDSCAPE TABLES</span></div></div></header>
-<nav class="sections" aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#finality-register">Finality register</a><a href="#chain-state-labels">Chain state labels</a><a href="#finality-vocabulary--layer-2">Finality vocabulary &amp; Layer 2</a><a href="#evm-nonce-runbook">EVM nonce runbook</a><a href="#utxo-operations">UTXO operations</a><a href="#gas-station--deposit-hazards">Gas station &amp; deposit hazards</a><a href="#reconciliation-break-taxonomy">Reconciliation break taxonomy</a><a href="#observed-incident-register">Observed incident register</a><a href="#value-at-risk-policy-pattern">Value-at-risk policy pattern</a><a href="#common-mistakes--incident-checklist">Common mistakes &amp; incident checklist</a><a href="#sources">Sources</a></div></nav>
+<nav class="sections" aria-label="Page sections"><div class="shell"><a href="#quick-reference">Quick reference</a><a href="#deposit-pipeline-figure">Deposit pipeline</a><a href="#finality-register">Finality register</a><a href="#chain-state-labels">Chain state labels</a><a href="#finality-vocabulary--layer-2">Finality vocabulary &amp; Layer 2</a><a href="#withdrawal-pipeline-figure">Withdrawal pipeline</a><a href="#evm-nonce-runbook">EVM nonce runbook</a><a href="#utxo-operations">UTXO operations</a><a href="#gas-station--deposit-hazards">Gas station &amp; deposit hazards</a><a href="#reconciliation-break-taxonomy">Reconciliation break taxonomy</a><a href="#observed-incident-register">Observed incident register</a><a href="#value-at-risk-policy-pattern">Value-at-risk policy pattern</a><a href="#common-mistakes--incident-checklist">Common mistakes &amp; incident checklist</a><a href="#sources">Sources</a></div></nav>
 <main id="main" class="shell">
 <section class="sheet-section" id="quick-reference" aria-labelledby="quick-title" style="margin-top:1.6rem"><h2 id="quick-title">Per-chain finality policy</h2>
 <p class="section-note">The numbers that matter are chain-specific. Copying a confirmation count from one chain to another is a common cause of bad credits.</p><div class="instrument"><div><span class="k">Credit states</span><span class="v">5</span><span class="s">observed &rarr; settled</span></div><div><span class="k">Bitcoin</span><span class="v">1 &middot; 3 &middot; 6</span><span class="s">blocks by value tier</span></div><div><span class="k">Ethereum</span><span class="v">safe</span><span class="s">or finalized, never head</span></div><div><span class="k">Solana</span><span class="v">400 ms</span><span class="s">slot target</span></div><div><span class="k">On reorg</span><span class="v">REVERSE</span><span class="s">freeze affected funds</span></div><div><span class="k">Audit key</span><span class="v">hash + height</span><span class="s">not a bare count</span></div></div></section>
+
+    <section class="sheet-section" aria-labelledby="deposit-pipeline-figure">
+      <h2 id="deposit-pipeline-figure">Deposit pipeline</h2>
+      <p class="section-note">Four components, one continuous loop. The reconciler is the backstop &mdash; it does not wait for an incident report to tighten the confirmation policy.</p>
+      <figure class="plate"><svg viewBox="0 0 620 170" role="img" aria-labelledby="dp-t dp-d">
+<title id="dp-t">Deposit pipeline from listeners to reconciler</title>
+<desc id="dp-d">Chain listeners feed raw events into a confirmation policy gate. Events that clear the gate post an idempotent credit. The reconciler compares posted credits against chain state and feeds mismatches back to tighten or pause the confirmation policy.</desc>
+<defs><marker id="arD" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--accent)"/></marker>
+<marker id="arDd" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--danger)"/></marker></defs>
+<rect class="dg-node" x="17" y="40" width="136" height="44" rx="3"/>
+<rect class="dg-node hot" x="167" y="40" width="136" height="44" rx="3"/>
+<rect class="dg-node" x="317" y="40" width="136" height="44" rx="3"/>
+<rect class="dg-node on" x="467" y="40" width="136" height="44" rx="3"/>
+<text class="dg-cap" x="85" y="66" text-anchor="middle">Listeners</text>
+<text class="dg-cap" x="235" y="66" text-anchor="middle">Confirmation policy</text>
+<text class="dg-cap" x="385" y="66" text-anchor="middle">Idempotent credit</text>
+<text class="dg-cap" x="535" y="66" text-anchor="middle">Reconciler</text>
+<text class="dg-lbl" x="85" y="98" text-anchor="middle">webhook + block poll</text>
+<text class="dg-lbl" x="235" y="98" text-anchor="middle">value-tiered safe/final gate</text>
+<text class="dg-lbl" x="385" y="98" text-anchor="middle">dedup by transfer ID</text>
+<text class="dg-lbl" x="535" y="98" text-anchor="middle">chain vs ledger diff</text>
+<path class="dg-flow" d="M153 62 H165" marker-end="url(#arD)"/>
+<path class="dg-flow" d="M303 62 H315" marker-end="url(#arD)"/>
+<path class="dg-flow" d="M453 62 H465" marker-end="url(#arD)"/>
+<text class="dg-lbl" x="160" y="30" text-anchor="middle">raw tx / block event</text>
+<text class="dg-lbl" x="310" y="30" text-anchor="middle">credit decision</text>
+<text class="dg-lbl" x="460" y="30" text-anchor="middle">ledger posting</text>
+<path class="dg-cross" d="M535 84 V128 H235 V88" marker-end="url(#arDd)"/>
+<text class="dg-no" x="385" y="146" text-anchor="middle">mismatch &rarr; freeze credit / tighten confirmation policy</text></svg><figcaption>The forward path credits a deposit; the dashed path is the reconciler pulling the policy tighter the moment a posted credit stops matching chain state.</figcaption></figure>
+    </section>
 
     <section class="sheet-section" aria-labelledby="value-tiered-credit-states">
       <h2 id="value-tiered-credit-states">Value-tiered credit states</h2>
@@ -362,6 +392,52 @@
           <p class="example"><strong>Concrete use:</strong> Track batch inclusion, proof verification, and L1 finalized block as independent fields.</p>
           <p class="gotcha"><strong>Failure mode:</strong> A sequencer UI saying final does not prove L1 settlement.</p>
         </article></div>
+    </section>
+
+    <section class="sheet-section" aria-labelledby="withdrawal-pipeline-figure">
+      <h2 id="withdrawal-pipeline-figure">Withdrawal pipeline</h2>
+      <p class="section-note">Screening can reject before a key ever signs. Everything after signing is chain-specific plumbing; everything before it is policy.</p>
+      <figure class="plate"><svg viewBox="0 0 620 206" role="img" aria-labelledby="wp-t wp-d">
+<title id="wp-t">Withdrawal pipeline from intent to settlement</title>
+<desc id="wp-d">A withdrawal intent passes through screening and policy checks, then signing, then broadcast, then a tracker that watches for inclusion and replacement, then settlement. Screening can instead route the intent to a blocked state held for manual review.</desc>
+<defs><marker id="arW" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--accent)"/></marker>
+<marker id="arWd" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--danger)"/></marker></defs>
+<rect class="dg-node" x="17" y="40" width="136" height="44" rx="3"/>
+<rect class="dg-node hot" x="167" y="40" width="136" height="44" rx="3"/>
+<rect class="dg-node" x="317" y="40" width="136" height="44" rx="3"/>
+<rect class="dg-node" x="467" y="40" width="136" height="44" rx="3"/>
+<text class="dg-cap" x="85" y="66" text-anchor="middle">Intent</text>
+<text class="dg-cap" x="235" y="66" text-anchor="middle">Screening</text>
+<text class="dg-cap" x="385" y="66" text-anchor="middle">Policy</text>
+<text class="dg-cap" x="535" y="66" text-anchor="middle">Signing</text>
+<text class="dg-lbl" x="85" y="98" text-anchor="middle">customer / ops request</text>
+<text class="dg-lbl" x="235" y="98" text-anchor="middle">sanctions + velocity</text>
+<text class="dg-lbl" x="385" y="98" text-anchor="middle">limits + approvals</text>
+<text class="dg-lbl" x="535" y="98" text-anchor="middle">nonce / UTXO allocator</text>
+<path class="dg-flow" d="M153 62 H165" marker-end="url(#arW)"/>
+<path class="dg-flow" d="M303 62 H315" marker-end="url(#arW)"/>
+<path class="dg-flow" d="M453 62 H465" marker-end="url(#arW)"/>
+<text class="dg-lbl" x="160" y="30" text-anchor="middle">review request</text>
+<text class="dg-lbl" x="310" y="30" text-anchor="middle">cleared checks</text>
+<text class="dg-lbl" x="460" y="30" text-anchor="middle">approved amount</text>
+<rect class="dg-node end" x="167" y="104" width="136" height="40" rx="3"/>
+<text class="dg-cap" x="235" y="122" text-anchor="middle">Blocked</text>
+<text class="dg-lbl" x="235" y="136" text-anchor="middle">sanctions / velocity hold</text>
+<path class="dg-cross" d="M235 84 V102" marker-end="url(#arWd)"/>
+<path class="dg-flow" d="M535 84 V148" marker-end="url(#arW)"/>
+<text class="dg-lbl" x="548" y="118">signed tx</text>
+<rect class="dg-node" x="467" y="150" width="136" height="44" rx="3"/>
+<rect class="dg-node" x="317" y="150" width="136" height="44" rx="3"/>
+<rect class="dg-node on" x="167" y="150" width="136" height="44" rx="3"/>
+<text class="dg-cap" x="535" y="176" text-anchor="middle">Broadcast</text>
+<text class="dg-cap" x="385" y="176" text-anchor="middle">Tracker</text>
+<text class="dg-cap" x="235" y="176" text-anchor="middle">Settle</text>
+<text class="dg-lbl" x="535" y="192" text-anchor="middle">submit to network</text>
+<text class="dg-lbl" x="385" y="192" text-anchor="middle">poll inclusion / replace</text>
+<text class="dg-lbl" x="235" y="192" text-anchor="middle">ledger closed + notified</text>
+<path class="dg-flow" d="M467 172 H455" marker-end="url(#arW)"/>
+<path class="dg-flow" d="M317 172 H305" marker-end="url(#arW)"/>
+<text class="dg-lbl" x="461" y="146" text-anchor="middle">hash accepted</text></svg><figcaption>Screening can reject an intent outright. Once signed, the tracker owns replacement/CPFP until the chain's own finality rule is satisfied.</figcaption></figure>
     </section>
     <section class="sheet-section" aria-labelledby="evm-nonce-runbook">
       <h2 id="evm-nonce-runbook">EVM nonce runbook</h2>
