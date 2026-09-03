@@ -26,6 +26,8 @@ Assets already in place (do not redo):
 | Primary-source citations | NIST, FATF, EUR-Lex, NYDFS, CCSS/cryptoconsortium, intervasp.org, Fireblocks + Circle developer docs |
 | Cross-domain inbound | walletrecovery.info deep-links `wallet-recovery-forensics.html` from 5+ posts, with working anchors |
 | Cross-domain outbound | 24 links from the cluster to walletrecovery.info |
+| Beginner on-ramp | `#start-here` primer on all nine (2026-09-03): plain-English framing, four question cards, one takeaway line. Filterable (`data-f`), so it hides with everything else on a no-match query |
+| First-use glossary | 58 `abbr.term` tooltips added across the seven sheets that had none. Placement is first *body* use, never inside the primer, an SVG, or a link |
 
 ## Competitive reality — do not chase head terms
 
