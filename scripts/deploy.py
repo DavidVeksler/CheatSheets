@@ -199,11 +199,28 @@ def validate(args, base: str) -> None:
         scope = "changed files"
     print(f"  {c(DIM, f'scope: {scope} - {len(html)} html, {len(json_files)} json, {len(php_files)} php')}")
 
+    failures: list[str] = []
+
+    # The custody hub is a generated-discovery contract in all but name. Check it
+    # on every deploy so category, answer-engine listings, schema, matrix coverage,
+    # and deep anchors cannot drift independently.
+    cluster_check = os.path.join(ROOT, "scripts", "check_cluster_hub.py")
+    if os.path.exists(os.path.join(ROOT, "crypto-custody-index.html")):
+        res = subprocess.run([sys.executable, cluster_check], cwd=ROOT,
+                             capture_output=True, text=True)
+        if res.returncode != 0:
+            detail = [ln.strip() for ln in res.stdout.splitlines() if ln.startswith("  ")]
+            failures.extend(f"cluster hub: {ln}" for ln in detail or [res.stdout.strip()])
+        else:
+            ok("crypto custody hub parity and anchors passed")
+
     if not (html or json_files or php_files):
+        if failures:
+            for f in failures:
+                print(f"  {c(RED, 'FAIL')} {f}")
+            fail(f"{len(failures)} validation issue(s)")
         warn("no publishable files changed vs production. Nothing new to validate.")
         return
-
-    failures: list[str] = []
 
     # 1. SEO acceptance gate (scripts/seo_check.py) on the pages being shipped.
     if html and not args.skip_seo:

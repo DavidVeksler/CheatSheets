@@ -113,6 +113,7 @@ def slugify(value: str) -> str:
 
 
 SHARED_RELATED = [
+    ("Custody cluster index", "crypto-custody-index.html"),
     ("MPC wallet architecture", "mpc-wallet-architecture.html"),
     ("Deposits & withdrawals", "blockchain-deposits-withdrawals.html"),
     ("Institutional custody", "institutional-crypto-custody.html"),

@@ -85,6 +85,7 @@ return [
     // Crypto Custody & Compliance
     'blockchain-deposits-withdrawals.html' => 'Crypto Custody & Compliance',
     'crypto-compliance-architecture.html' => 'Crypto Custody & Compliance',
+    'crypto-custody-index.html' => 'Crypto Custody & Compliance',
     'crypto-exchange-architecture.html' => 'Crypto Custody & Compliance',
     'custody-provider-integration.html' => 'Crypto Custody & Compliance',
     'institutional-crypto-custody.html' => 'Crypto Custody & Compliance',

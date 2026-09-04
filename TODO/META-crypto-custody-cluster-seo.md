@@ -107,6 +107,10 @@ topical and cross-domain, and one link is worth more than all the rest:
 
 ### 3. Build an indexable hub page
 
+**Status: completed 2026-09-03.** `crypto-custody-index.html` is the indexable cluster hub;
+its nine-spoke roster, 34-row matrix, and deep anchors are enforced by
+`scripts/check_cluster_hub.py` during deploy validation.
+
 `?cat=Crypto+Custody+%26+Compliance` filters client-side and `index.php:310` emits a canonical to
 the site root for every filtered view. So the cluster has **no indexable landing page**: nothing
 can rank for the category head terms, nothing concentrates the internal links, and nothing gives
