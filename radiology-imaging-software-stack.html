@@ -267,13 +267,17 @@
     details.drawer[open] > .body,details.drawer > .body{display:block}
     /* Empty squares the reader ticks with a pen. */
     .check input[type=checkbox]{appearance:none;-webkit-appearance:none;width:10pt;height:10pt;
-      border:1pt solid #000;background:#fff;margin-top:2pt;border-radius:0}
-    .check label{border:0;padding:1pt 0}
+      border:1pt solid #000;background:#fff;margin-top:2pt;border-radius:0;display:block;flex:0 0 10pt}
+    body:not(.print-blank) .check input[type=checkbox]:checked{background:#000;box-shadow:inset 0 0 0 2pt #fff}
+    .check{display:block}
+    .check label{border:0;padding:1pt 0;display:flex;gap:7pt;align-items:flex-start;break-inside:avoid}
+    .check label span{display:block;flex:1;min-width:0}
     .check label:hover{background:transparent}
     .scorecard select{appearance:none;-webkit-appearance:none;border:.6pt solid #000;background:#fff;
       color:#000;height:16pt;font-size:7.5pt;border-radius:0}
     .scorecard td:first-child{min-width:0}
-    #scorecard,#questionnaire,#red-flags,#identity{page-break-before:always}
+    body:not(.print-workspace) #scorecard,body:not(.print-workspace) #questionnaire,
+    body:not(.print-workspace) #red-flags,body:not(.print-workspace) #identity{page-break-before:always}
     .glossary{columns:2}
   }
 }
@@ -281,50 +285,177 @@
   html{scroll-behavior:smooth}
   .stackmap a rect.stratum{transition:stroke .12s ease-out}
 }
+
+/* Architecture Atlas refactor: orientation, table behavior, and evaluation workspace. */
+@layer layout {
+  body{overflow-x:clip}
+  .shell{width:min(1480px,calc(100% - 2rem))}
+  .utility .shell{min-height:55px;flex-wrap:nowrap}
+  .command-search{display:grid;grid-template-columns:minmax(12rem,1fr) auto auto auto;align-items:center;
+    flex:1 1 34rem;min-width:0;border:1px solid var(--line-2);background:var(--surface-3)}
+  .command-search .filter{display:block;min-width:0}
+  .command-search .filter input{border:0;background:transparent;padding:.52rem .65rem}
+  .command-search .btn{border-block:0;border-right:0;min-height:34px;padding-inline:.55rem}
+  .command-search .btn[disabled]{opacity:.35;cursor:not-allowed}
+  .chapter-readout{display:grid;gap:.1rem;min-width:11rem;color:var(--muted)}
+  .chapter-readout .k{font:700 .58rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+  .chapter-readout strong{font:750 .76rem/1.2 var(--sans)}
+  #sections-btn{display:none}
+  .masthead{padding-bottom:1.4rem;border-bottom:1px solid var(--line)}
+  .task-launchpad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem;margin-top:1.15rem;max-width:66rem}
+  .task-launchpad a{display:flex;align-items:center;min-height:44px;padding:.62rem .72rem;border:1px solid var(--line);
+    background:var(--surface);text-decoration:none;font-size:.84rem}
+  .task-launchpad a::before{content:"\2192";margin-right:.5rem;color:var(--amber);font-family:var(--mono)}
+  .evidence-key{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem .55rem;margin-top:.8rem;color:var(--muted);font-size:.8rem}
+  .atlas-layout{display:grid;grid-template-columns:248px minmax(0,1fr);gap:clamp(1.2rem,2.4vw,2.4rem);
+    width:min(1480px,calc(100% - 2rem));margin-inline:auto;align-items:start}
+  .atlas-layout main{width:auto;min-width:0;margin:0;padding-bottom:3rem}
+  .section-rail{position:sticky;top:64px;max-height:calc(100vh - 72px);overflow:auto;padding:.8rem .65rem .9rem 0;
+    scrollbar-width:thin;border-right:1px solid var(--line)}
+  .section-rail .rail-title{font:750 .63rem/1.2 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--faint);
+    padding:.2rem .45rem .65rem}
+  .rail-group+ .rail-group{margin-top:.8rem}
+  .rail-group h2{font:750 .62rem/1.25 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    padding:0 .45rem .24rem}
+  .rail-group a{display:grid;grid-template-columns:1.65rem 1fr;gap:.15rem;align-items:baseline;padding:.28rem .45rem;
+    color:var(--muted);font-size:.76rem;line-height:1.25;text-decoration:none;border-left:3px solid transparent}
+  .rail-group a .rail-n{font:650 .6rem/1 var(--mono);color:var(--faint)}
+  .rail-group a:hover{color:var(--ink);background:var(--surface-2)}
+  .rail-group a[aria-current="location"]{color:var(--ink);font-weight:800;border-left-color:var(--cyan);background:var(--surface-2)}
+  .rail-group a[aria-current="location"]::after{content:"Current";font:700 .52rem/1 var(--mono);letter-spacing:.08em;
+    text-transform:uppercase;color:var(--cyan);grid-column:2}
+  .chapter-divider{margin-top:clamp(2rem,5vw,4rem);padding:.55rem .7rem;border-block:1px solid var(--line);
+    background:linear-gradient(90deg,color-mix(in srgb,var(--cyan) 12%,var(--surface)),transparent);
+    font:750 .7rem/1.25 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--cyan);scroll-margin-top:4.2rem}
+  .chapter-divider span{display:block;margin-top:.22rem;color:var(--muted);font:500 .75rem/1.35 var(--sans);letter-spacing:0;text-transform:none}
+  .sheet-section{position:relative;scroll-margin-top:4.4rem}
+  .sheet-section .overlay{padding-right:5.5rem}
+  .sheet-section::before{content:attr(data-purpose);position:absolute;right:0;top:.35rem;padding:.15rem .38rem;
+    border:1px solid var(--line-2);background:var(--surface);color:var(--muted);font:750 .62rem/1.3 var(--mono);
+    letter-spacing:.1em;text-transform:uppercase}
+}
+
+@layer components {
+  h3{font-size:1.06rem;font-weight:760}
+  .ev{font-size:.6875rem;line-height:1.45}
+  .table-wrap{position:relative;max-width:100%;overscroll-behavior-inline:contain;scrollbar-color:var(--cyan) var(--surface-2)}
+  .table-wrap:focus-visible{outline-offset:3px}
+  .table-wrap[data-overflow="right"]{box-shadow:inset -20px 0 16px -18px var(--cyan)}
+  .table-wrap[data-overflow="left"]{box-shadow:inset 20px 0 16px -18px var(--cyan)}
+  .table-wrap[data-overflow="both"]{box-shadow:inset 20px 0 16px -18px var(--cyan),inset -20px 0 16px -18px var(--cyan)}
+  .table-wrap::after{content:attr(data-cue);position:sticky;right:.35rem;bottom:.25rem;float:right;margin-top:-1.5rem;
+    padding:.15rem .35rem;background:var(--surface);border:1px solid var(--line);color:var(--muted);
+    font:700 .6rem/1.25 var(--mono);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}
+  .table-wrap:not([data-cue])::after,.table-wrap[data-overflow="none"]::after{display:none}
+  .table-wrap[data-table="comparison"] th:first-child,.table-wrap[data-table="comparison"] td:first-child,
+  .table-wrap[data-table="worksheet"] th:first-child,.table-wrap[data-table="worksheet"] td:first-child{
+    position:sticky;left:0;z-index:2;background:var(--surface)}
+  .table-wrap[data-table="comparison"] th:first-child,.table-wrap[data-table="worksheet"] th:first-child{background:var(--surface-2);z-index:3}
+  .searching .sheet-section:not(.search-hit){display:none}
+  .searching .chapter-divider{display:none}
+  mark.search-mark{background:color-mix(in srgb,var(--amber) 55%,var(--surface));color:var(--ink);padding:.02em .08em;border-radius:2px}
+  mark.search-mark.is-current{outline:3px solid var(--stop);outline-offset:2px}
+  .evaluation-summary{display:grid;grid-template-columns:1fr auto;gap:.65rem 1rem;align-items:center;
+    border:1px solid var(--amber);border-left:5px solid var(--amber);background:var(--surface);padding:.75rem .85rem;margin:.85rem 0 1rem}
+  .evaluation-summary h3{margin:0;font-size:.96rem}
+  .progress-pair{display:flex;flex-wrap:wrap;gap:.45rem 1rem;color:var(--muted);font:650 .72rem/1.4 var(--mono)}
+  .evaluation-actions{display:flex;flex-wrap:wrap;gap:.45rem;grid-column:1/-1}
+  .btn.danger{border-color:var(--stop);color:var(--stop)}
+  .btn.danger.confirming{background:var(--stop);color:var(--surface);font-weight:800}
+  .related-cheatsheets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:.35rem .9rem}
+  .related-cheatsheets strong{grid-column:1/-1}
+  .related-cheatsheets br{display:none}
+  .related-cheatsheets a{display:block;margin:0;padding:.35rem .45rem;border-left:2px solid var(--line);text-decoration:none}
+}
+
+@media (max-width:1199px){
+  @layer layout {
+    .utility .shell{flex-wrap:wrap}
+    #sections-btn{display:inline-flex;align-items:center;min-height:36px}
+    .atlas-layout{display:block;width:min(1120px,calc(100% - 2rem))}
+    .section-rail{position:fixed;z-index:20;top:56px;left:0;bottom:0;width:min(340px,88vw);max-height:none;padding:1rem;
+      border-right:1px solid var(--line);background:var(--surface);transform:translateX(-105%);box-shadow:8px 0 30px rgba(0,0,0,.28)}
+    body.nav-open .section-rail{transform:translateX(0)}
+    .section-rail .rail-title{display:flex;justify-content:space-between;align-items:center}
+    #rail-close{display:inline-flex}
+  }
+  @media (prefers-reduced-motion:no-preference){.section-rail{transition:transform .18s ease-out}}
+}
+@media (min-width:1200px){#rail-close{display:none}}
+
+@media (max-width:720px){
+  @layer layout {
+    .shell,.atlas-layout{width:min(100% - 1rem,1480px)}
+    .utility .shell{padding-block:.35rem;gap:.35rem}
+    .wordmark{display:none}
+    .chapter-readout{order:3;min-width:0;flex:1 1 auto}
+    #sections-btn{order:4;min-width:44px;min-height:44px}
+    #theme-btn,#print-btn{min-width:44px;min-height:44px;padding:.4rem}
+    .command-search{order:5;grid-template-columns:minmax(0,1fr) 44px 44px 44px;flex-basis:100%}
+    .command-search .btn{min-height:44px;padding:0}
+    .task-launchpad{grid-template-columns:1fr}
+    .task-launchpad a{min-height:44px}
+    .masthead{padding-top:1.1rem}
+    .sheet-section{scroll-margin-top:7.4rem}
+    .chapter-divider{scroll-margin-top:7.4rem}
+    .sheet-section .overlay{padding-right:0;display:block}
+    .sheet-section .overlay span{display:block}
+    .sheet-section .overlay span:last-child{margin-top:.25rem}
+    .sheet-section::before{position:static;display:inline-block;margin-bottom:.45rem}
+  }
+  @layer components {
+    .btn{min-height:44px}
+    .evaluation-summary{grid-template-columns:1fr}
+    .evaluation-actions{grid-column:1}
+    .qgroup h3{position:sticky;top:112px;z-index:3;margin:-.7rem -.8rem .45rem;padding:.65rem .8rem;background:var(--surface-2)}
+    .scorecard td:first-child{min-width:11.5rem}
+  }
+}
+
+@layer print {
+  @media print {
+    .section-rail,.command-search,.chapter-readout,.task-launchpad,.evidence-key,.chapter-divider,
+    .evaluation-summary,.sheet-section::before{display:none !important}
+    .atlas-layout{display:block;width:100%}
+    .atlas-layout main{width:100%}
+    .table-wrap::after{display:none!important}
+    .table-wrap[data-table] th:first-child,.table-wrap[data-table] td:first-child{position:static}
+    body.print-workspace .atlas-layout main > *{display:none!important;page-break-before:auto!important;page-break-after:auto!important;
+      break-before:auto!important;break-after:auto!important}
+    body.print-workspace .atlas-layout main > #scorecard,
+    body.print-workspace .atlas-layout main > #questionnaire{display:block!important;page-break-before:auto}
+    body.print-workspace .atlas-layout main > #questionnaire{page-break-before:always!important}
+    body.print-workspace .atlas-layout main{padding-bottom:0}
+    body.print-workspace.print-score .atlas-layout main > #questionnaire{display:none!important}
+    body.print-workspace.print-questionnaire .atlas-layout main > #scorecard{display:none!important}
+    body.print-workspace.print-questionnaire .atlas-layout main > #questionnaire{page-break-before:auto}
+    body.print-workspace .sheet-section .tools{display:none!important}
+  }
+}
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
 <div class="utility"><div class="shell">
-  <span class="wordmark">Reading Room / Imaging Stack</span>
-  <span class="filter"><label class="skip" for="sheet-filter">Filter this page</label>
-    <input id="sheet-filter" type="search" placeholder="Filter rows: C-MOVE, IOCM, 1.2.840.10008.1.2.4.90, GSPS&hellip;" autocomplete="off"></span>
+  <span class="wordmark">RAD / Architecture Atlas</span>
+  <div class="command-search" role="search">
+    <span class="filter"><label class="skip" for="sheet-filter">Find in this architecture atlas</label>
+      <input id="sheet-filter" type="search" placeholder="Find C-MOVE, IOCM, a UID, checklist item&hellip;" autocomplete="off"></span>
+    <button class="btn" id="match-prev" type="button" aria-label="Previous match" title="Previous match" disabled>&uarr;</button>
+    <button class="btn" id="match-next" type="button" aria-label="Next match" title="Next match" disabled>&darr;</button>
+    <button class="btn" id="filter-clear" type="button" aria-label="Clear search" title="Clear search">Clear</button>
+  </div>
   <span class="filter-status" id="filter-status" role="status" aria-live="polite"></span>
+  <span class="chapter-readout"><span class="k">Current chapter</span><strong id="current-chapter">Orientation</strong></span>
+  <button class="btn" id="sections-btn" type="button" aria-expanded="false" aria-controls="section-rail">Sections</button>
   <button class="btn" id="theme-btn" type="button" aria-pressed="false">Theme</button>
   <button class="btn" id="print-btn" type="button">Print</button>
 </div></div>
-
-<nav class="sections" aria-label="Sections"><div class="shell">
-  <a href="#quickref">Quick ref</a>
-  <a href="#stack-map">Stack map</a>
-  <a href="#vocabulary">Vocabulary</a>
-  <a href="#dicom-parts">DICOM parts</a>
-  <a href="#dimse">DIMSE</a>
-  <a href="#dicomweb">DICOMweb</a>
-  <a href="#sop-classes">SOP classes</a>
-  <a href="#transfer-syntax">Transfer syntaxes</a>
-  <a href="#ihe">IHE profiles</a>
-  <a href="#fhir">FHIR</a>
-  <a href="#identity">Identity</a>
-  <a href="#ingestion">Ingestion</a>
-  <a href="#repository">Repository</a>
-  <a href="#market">PACS / VNA</a>
-  <a href="#viewers">Viewers</a>
-  <a href="#workbench">Workbench</a>
-  <a href="#reports">Reports</a>
-  <a href="#ai">AI</a>
-  <a href="#security">Security</a>
-  <a href="#change">Change &amp; migration</a>
-  <a href="#sourcing">Sourcing</a>
-  <a href="#scorecard">Scorecard</a>
-  <a href="#architectures">Architectures</a>
-  <a href="#questionnaire">Questionnaire</a>
-  <a href="#red-flags">Red flags</a>
-  <a href="#anti-patterns">Anti-patterns</a>
-  <a href="#glossary">Glossary</a>
-  <a href="#sources">Sources</a>
-</div></nav>
+<noscript><style>
+  @media(max-width:1199px){.atlas-layout .section-rail{position:static;display:block;transform:none;width:100%;max-height:none;
+    border:1px solid var(--line);box-shadow:none;margin:1rem 0}.atlas-layout{display:block}}
+</style></noscript>
 
 <header class="masthead"><div class="shell">
   <p class="eyebrow">Series 00 / Orientation</p>
@@ -340,11 +471,67 @@
     <span>FHIR R5 (v5.0.0)</span>
     <span>Human &amp; veterinary</span>
   </p>
+  <nav class="task-launchpad" aria-label="Common tasks">
+    <a href="#stack-map">Understand the stack</a>
+    <a href="#dicom-parts">Resolve a protocol boundary</a>
+    <a href="#scorecard">Evaluate a product or vendor</a>
+  </nav>
+  <p class="evidence-key"><strong>Evidence:</strong>
+    <span class="ev ev-std">Standard</span><span class="ev ev-reg">Regulatory</span>
+    <span class="ev ev-prac">Common practice</span><span class="ev ev-rec">Recommendation</span>
+    <a href="#evidence-labels">See all labels and meanings</a>
+  </p>
 </div></header>
 
-<main id="main" class="shell">
+<div class="atlas-layout">
+<nav class="section-rail" id="section-rail" aria-label="Atlas sections">
+  <div class="rail-title">Atlas index <button class="btn" id="rail-close" type="button" aria-label="Close sections">Close</button></div>
+  <div class="rail-group" data-chapter="Orientation"><h2>1. Orientation</h2>
+    <a href="#quickref"><span class="rail-n">01</span><span>Quick reference</span></a>
+    <a href="#stack-map"><span class="rail-n">02</span><span>Stack map</span></a>
+    <a href="#vocabulary"><span class="rail-n">03</span><span>Vocabulary</span></a>
+  </div>
+  <div class="rail-group" data-chapter="Protocols and exchange"><h2>2. Protocols and exchange</h2>
+    <a href="#dicom-parts"><span class="rail-n">04</span><span>DICOM parts</span></a>
+    <a href="#dimse"><span class="rail-n">05</span><span>DIMSE</span></a>
+    <a href="#dicomweb"><span class="rail-n">06</span><span>DICOMweb</span></a>
+    <a href="#gateway"><span class="rail-n">07</span><span>Gateway</span></a>
+    <a href="#sop-classes"><span class="rail-n">08</span><span>SOP classes</span></a>
+    <a href="#transfer-syntax"><span class="rail-n">09</span><span>Transfer syntaxes</span></a>
+    <a href="#ihe"><span class="rail-n">10</span><span>IHE profiles</span></a>
+    <a href="#fhir"><span class="rail-n">11</span><span>FHIR</span></a>
+  </div>
+  <div class="rail-group" data-chapter="Imaging product"><h2>3. Imaging product</h2>
+    <a href="#identity"><span class="rail-n">12</span><span>Identity</span></a>
+    <a href="#ingestion"><span class="rail-n">13</span><span>Ingestion</span></a>
+    <a href="#repository"><span class="rail-n">14</span><span>Repository</span></a>
+    <a href="#market"><span class="rail-n">15</span><span>PACS / VNA</span></a>
+    <a href="#viewers"><span class="rail-n">16</span><span>Viewers</span></a>
+    <a href="#workbench"><span class="rail-n">17</span><span>Workbench</span></a>
+    <a href="#reports"><span class="rail-n">18</span><span>Reports</span></a>
+    <a href="#ai"><span class="rail-n">19</span><span>AI</span></a>
+  </div>
+  <div class="rail-group" data-chapter="Assurance and change"><h2>4. Assurance and change</h2>
+    <a href="#security"><span class="rail-n">20</span><span>Security</span></a>
+    <a href="#change"><span class="rail-n">21</span><span>Change and migration</span></a>
+  </div>
+  <div class="rail-group" data-chapter="Sourcing and evaluation"><h2>5. Sourcing and evaluation</h2>
+    <a href="#sourcing"><span class="rail-n">22</span><span>Sourcing</span></a>
+    <a href="#scorecard"><span class="rail-n">22C</span><span>Scorecard</span></a>
+    <a href="#architectures"><span class="rail-n">23</span><span>Architectures</span></a>
+    <a href="#questionnaire"><span class="rail-n">24</span><span>Questionnaire</span></a>
+    <a href="#red-flags"><span class="rail-n">24B</span><span>Red flags</span></a>
+    <a href="#anti-patterns"><span class="rail-n">25</span><span>Anti-patterns</span></a>
+  </div>
+  <div class="rail-group" data-chapter="Reference"><h2>6. Reference</h2>
+    <a href="#glossary"><span class="rail-n">26</span><span>Glossary</span></a>
+    <a href="#sources"><span class="rail-n">27</span><span>Sources</span></a>
+  </div>
+</nav>
+<main id="main">
 
-<section class="sheet-section" id="quickref" data-f>
+<div class="chapter-divider" id="chapter-orientation">Chapter 1 / Orientation<span>Find the layer, vocabulary, or high-frequency reference first.</span></div>
+<section class="sheet-section" id="quickref" data-purpose="Lookup" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 01 / Quick Reference</span><span>W:400 L:40</span></p>
   <h2>Quick reference</h2>
   <p class="section-note">The eight things you will look up during a vendor call. Everything below is
@@ -384,7 +571,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="stack-map" data-og-capture data-f>
+<section class="sheet-section" id="stack-map" data-purpose="Trace" data-og-capture data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 02 / Stack Map</span><span>SE:13 IM:1/1 &#183; ZOOM 100%</span></p>
   <h2>The stack map</h2>
   <p class="section-note">Thirteen strata, read bottom-up like a geological section. Tint = strategic character.
@@ -396,6 +583,7 @@
 <title id="mapTitle">The imaging stack as thirteen strata, read bottom-up</title>
 <desc id="mapDesc">Eleven horizontal strata from modalities at the bottom to delivery and integration at the top, plus two vertical bars spanning every layer for administration and security. Each stratum is tinted by strategic character (commodity, enabling, differentiating) and stamped with a default sourcing verdict. Every stratum links to its section on this page.</desc>
 <text class="s-title" x="20" y="26">STACK MAP / SOURCING DEFAULTS</text>
+<text class="s-legend" x="470" y="26">EXPOSURE &#8594; INGEST &#8594; STORE &#8594; READ &#8594; REPORT &#8594; DELIVER</text>
 <text class="s-legend" x="1180" y="26" text-anchor="end">READ BOTTOM-UP &#183; 13 STRATA</text>
 <line x1="20" y1="38" x2="1180" y2="38" stroke="currentColor" opacity=".22"/>
 <a href="#dimse">
@@ -501,8 +689,9 @@
 <title>Administration, support, observability, which spans every layer: default verdict BUILD</title>
 <rect class="stratum s-fill-d" x="892" y="52" width="150" height="514" rx="2" stroke-width="1"/>
 <text class="s-num" x="967.0" y="72" text-anchor="middle">12</text>
-<text class="s-label" transform="rotate(-90 967.0 330)" x="967.0" y="330" text-anchor="middle" dy="-6">Administration, support, observability</text>
-<text class="s-sub" transform="rotate(-90 967.0 330)" x="967.0" y="330" text-anchor="middle" dy="10">Tenant and AE configuration, support search, tracing, SLOs</text>
+<text class="s-label" x="967" y="104" text-anchor="middle" style="font-size:12px"><tspan x="967">Administration</tspan><tspan x="967" dy="16">support</tspan><tspan x="967" dy="16">observability</tspan></text>
+<text class="s-sub" x="967" y="180" text-anchor="middle" style="font-size:10px"><tspan x="967">Tenant and AE config</tspan><tspan x="967" dy="14">support search</tspan><tspan x="967" dy="14">tracing and SLOs</tspan></text>
+<text class="s-legend" x="967" y="318" text-anchor="middle" style="font-size:9px">SPANS ALL 11 LAYERS</text>
 <rect class="stamp-box" x="900" y="530" width="134" height="26"/>
 <text class="s-stamp" x="967.0" y="547" text-anchor="middle" style="font-size:9px">BUILD</text>
 </a>
@@ -510,8 +699,9 @@
 <title>Security and audit, which spans every layer: default verdict BUY + CUSTOMIZE</title>
 <rect class="stratum s-fill-e" x="1050" y="52" width="130" height="514" rx="2" stroke-width="1"/>
 <text class="s-num" x="1115.0" y="72" text-anchor="middle">13</text>
-<text class="s-label" transform="rotate(-90 1115.0 330)" x="1115.0" y="330" text-anchor="middle" dy="-6">Security &amp; audit</text>
-<text class="s-sub" transform="rotate(-90 1115.0 330)" x="1115.0" y="330" text-anchor="middle" dy="10">Identity, segmentation, TLS, audit trail, de-identification, recovery</text>
+<text class="s-label" x="1115" y="104" text-anchor="middle" style="font-size:12px"><tspan x="1115">Security</tspan><tspan x="1115" dy="16">&amp; audit</tspan></text>
+<text class="s-sub" x="1115" y="166" text-anchor="middle" style="font-size:9.5px"><tspan x="1115">Identity, TLS</tspan><tspan x="1115" dy="13">segmentation</tspan><tspan x="1115" dy="13">audit trail</tspan><tspan x="1115" dy="13">de-identification</tspan><tspan x="1115" dy="13">recovery</tspan></text>
+<text class="s-legend" x="1115" y="318" text-anchor="middle" style="font-size:9px">SPANS ALL 11 LAYERS</text>
 <rect class="stamp-box" x="1058" y="530" width="114" height="26"/>
 <text class="s-stamp" x="1115.0" y="547" text-anchor="middle" style="font-size:9px">BUY + CUSTOMIZE</text>
 </a>
@@ -524,7 +714,7 @@
 <text class="s-legend" x="824" y="596">DIFFERENTIATING: where customers feel it</text>
 <text class="s-legend" x="20" y="614">Stamps are default leans, not requirements: fill in your own verdicts in the scorecard.</text>
 </svg>
-<svg class="map-mobile" viewBox="0 0 360 1254" role="img" aria-labelledby="mapTitleM mapDescM" xmlns="http://www.w3.org/2000/svg">
+<svg class="map-mobile" viewBox="0 0 360 1276" role="img" aria-labelledby="mapTitleM mapDescM" xmlns="http://www.w3.org/2000/svg">
 <title id="mapTitleM">The imaging stack as thirteen strata</title>
 <desc id="mapDescM">The same thirteen strata as a single column, delivery at the top and modalities at the bottom, each tinted by strategic character and stamped with a default sourcing verdict, each linking to its section.</desc>
 <text class="s-title" x="10" y="20" style="font-size:11px">STACK MAP / SOURCING DEFAULTS</text>
@@ -628,37 +818,38 @@
 <rect class="stamp-box" x="18" y="964" width="180" height="17" stroke-width="1.2"/>
 <text class="m-stamp" x="108" y="976" text-anchor="middle">BUY / OUTSOURCE</text>
 </a>
+<text class="s-title" x="8" y="1004" style="font-size:10px">CROSS-CUTTING / SPANS EVERY LAYER</text>
 <a href="#sourcing">
 <title>Administration, support, observability: default verdict BUILD</title>
-<rect class="stratum s-fill-d" x="8" y="992" width="344" height="80" rx="2" stroke-width="1"/>
-<text class="m-num" x="18" y="1009">12 &#183; SPANS ALL LAYERS</text>
-<text class="m-label" x="18" y="1028" style="font-size:13.5px">Administration, support, observability</text>
-<text class="s-sub" x="18" y="1043" style="font-size:10.5px">Tenant config, support search, tracing</text>
-<rect class="stamp-box" x="18" y="1050" width="180" height="17" stroke-width="1.2"/>
-<text class="m-stamp" x="108" y="1062" text-anchor="middle">BUILD</text>
+<rect class="stratum s-fill-d" x="8" y="1012" width="344" height="80" rx="2" stroke-width="1"/>
+<text class="m-num" x="18" y="1029">12 &#183; SPANS ALL LAYERS</text>
+<text class="m-label" x="18" y="1048" style="font-size:13.5px">Administration, support, observability</text>
+<text class="s-sub" x="18" y="1063" style="font-size:10.5px">Tenant config, support search, tracing</text>
+<rect class="stamp-box" x="18" y="1070" width="180" height="17" stroke-width="1.2"/>
+<text class="m-stamp" x="108" y="1082" text-anchor="middle">BUILD</text>
 </a>
 <a href="#security">
 <title>Security and audit: default verdict BUY + CUSTOMIZE</title>
-<rect class="stratum s-fill-e" x="8" y="1078" width="344" height="80" rx="2" stroke-width="1"/>
-<text class="m-num" x="18" y="1095">13 &#183; SPANS ALL LAYERS</text>
-<text class="m-label" x="18" y="1114" style="font-size:13.5px">Security &amp; audit</text>
-<text class="s-sub" x="18" y="1129" style="font-size:10.5px">Identity, TLS, audit trail, de-identification</text>
-<rect class="stamp-box" x="18" y="1136" width="180" height="17" stroke-width="1.2"/>
-<text class="m-stamp" x="108" y="1148" text-anchor="middle">BUY + CUSTOMIZE</text>
+<rect class="stratum s-fill-e" x="8" y="1098" width="344" height="80" rx="2" stroke-width="1"/>
+<text class="m-num" x="18" y="1115">13 &#183; SPANS ALL LAYERS</text>
+<text class="m-label" x="18" y="1134" style="font-size:13.5px">Security &amp; audit</text>
+<text class="s-sub" x="18" y="1149" style="font-size:10.5px">Identity, TLS, audit trail, de-identification</text>
+<rect class="stamp-box" x="18" y="1156" width="180" height="17" stroke-width="1.2"/>
+<text class="m-stamp" x="108" y="1168" text-anchor="middle">BUY + CUSTOMIZE</text>
 </a>
-<line x1="8" y1="1168" x2="352" y2="1168" stroke="currentColor" opacity=".22"/>
-<rect class="s-fill-c" x="8" y="1172" width="14" height="11" stroke-width="1"/>
-<text class="s-legend" x="28" y="1181" style="font-size:10px">COMMODITY</text>
-<rect class="s-fill-e" x="8" y="1192" width="14" height="11" stroke-width="1"/>
-<text class="s-legend" x="28" y="1201" style="font-size:10px">ENABLING</text>
-<rect class="s-fill-d" x="8" y="1212" width="14" height="11" stroke-width="1"/>
-<text class="s-legend" x="28" y="1221" style="font-size:10px">DIFFERENTIATING</text>
-<text class="s-legend" x="8" y="1242" style="font-size:10px">Stamps are default leans, not requirements.</text>
+<line x1="8" y1="1188" x2="352" y2="1188" stroke="currentColor" opacity=".22"/>
+<rect class="s-fill-c" x="8" y="1192" width="14" height="11" stroke-width="1"/>
+<text class="s-legend" x="28" y="1201" style="font-size:10px">COMMODITY</text>
+<rect class="s-fill-e" x="8" y="1212" width="14" height="11" stroke-width="1"/>
+<text class="s-legend" x="28" y="1221" style="font-size:10px">ENABLING</text>
+<rect class="s-fill-d" x="8" y="1232" width="14" height="11" stroke-width="1"/>
+<text class="s-legend" x="28" y="1241" style="font-size:10px">DIFFERENTIATING</text>
+<text class="s-legend" x="8" y="1262" style="font-size:10px">Stamps are default leans, not requirements.</text>
 </svg>
   </figure>
 </section>
 
-<section class="sheet-section" id="vocabulary" data-f>
+<section class="sheet-section" id="vocabulary" data-purpose="Lookup" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 03 / Vocabulary</span><span>W:400 L:40</span></p>
   <h2>Vocabulary that must not be confused</h2>
   <p class="section-note">Most bad imaging decisions are made in the gap between what a standard requires,
@@ -715,7 +906,8 @@
   </div>
 </section>
 
-<section class="sheet-section" id="dicom-parts" data-f>
+<div class="chapter-divider" id="chapter-protocols">Chapter 2 / Protocols and exchange<span>Trace the standards, services, encodings, and hand-off boundaries.</span></div>
+<section class="sheet-section" id="dicom-parts" data-purpose="Lookup" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 04 / Standards</span><span>DICOM 2026C</span></p>
   <h2>DICOM, part by part</h2>
   <p class="section-note">The standard is republished several times a year; the current edition when this page
@@ -752,7 +944,7 @@
   </table></div>
 </section>
 
-<section class="sheet-section" id="dimse" data-f>
+<section class="sheet-section" id="dimse" data-purpose="Trace" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 05 / DIMSE</span><span>ASSOC &#183; PRES CTX &#183; AE</span></p>
   <h2>DIMSE services and the association model</h2>
   <p class="section-note">Classic DICOM networking. Composite services start with <code>C-</code>, normalized services
@@ -779,7 +971,7 @@
   </table></div>
 </section>
 
-<section class="sheet-section" id="dicomweb" data-f>
+<section class="sheet-section" id="dicomweb" data-purpose="Compare" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 06 / DICOMweb</span><span>PS3.18 &#183; HTTP</span></p>
   <h2>DICOMweb endpoints</h2>
   <p class="section-note">PS3.18 defines six services. The Studies Service is the one your browser application lives on.
@@ -806,7 +998,7 @@
   </table></div>
 </section>
 
-<section class="sheet-section" id="gateway" data-f>
+<section class="sheet-section" id="gateway" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 07 / Transport</span><span>DIMSE &#8644; HTTP</span></p>
   <h2>DIMSE vs DICOMweb, and when you need a gateway</h2>
   <p class="section-note">These are not competing standards. They are two transports for the same objects, aimed at
@@ -840,7 +1032,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="sop-classes" data-f>
+<section class="sheet-section" id="sop-classes" data-purpose="Lookup" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 08 / SOP Classes</span><span>PS3.6 ANNEX A</span></p>
   <h2>SOP Classes beyond images</h2>
   <p class="section-note">Storage SOP Classes live under the root <code>1.2.840.10008.5.1.4.1.1.</code> Every UID below was
@@ -879,7 +1071,7 @@
   </table></div>
 </section>
 
-<section class="sheet-section" id="transfer-syntax" data-f>
+<section class="sheet-section" id="transfer-syntax" data-purpose="Lookup" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 09 / Encoding</span><span>PS3.5 &#183; TRANSFER SYNTAX</span></p>
   <h2>Transfer syntaxes and compression</h2>
   <p class="section-note">A transfer syntax specifies byte ordering, VR encoding, and any compression. It is negotiated
@@ -965,7 +1157,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="ihe" data-f>
+<section class="sheet-section" id="ihe" data-purpose="Compare" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 10 / IHE Radiology</span><span>RAD TF REV. 23.0</span></p>
   <h2>IHE Radiology profiles and their maturity</h2>
   <p class="section-note">IHE profiles say how DICOM, HL7, FHIR and security standards are combined to solve one
@@ -1046,7 +1238,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="fhir" data-f>
+<section class="sheet-section" id="fhir" data-purpose="Trace" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 11 / FHIR &amp; HL7</span><span>R5 v5.0.0</span></p>
   <h2>FHIR imaging resources, and where they stop</h2>
   <p class="section-note">FHIR carries the clinical context around images; DICOM carries the images. The published
@@ -1082,7 +1274,8 @@
   </div>
 </section>
 
-<section class="sheet-section" id="identity" data-f>
+<div class="chapter-divider" id="chapter-product">Chapter 3 / Imaging product<span>Follow the study from identity and ingest through reading, reporting, and delivery.</span></div>
+<section class="sheet-section" id="identity" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 12 / Identity</span><span>SOURCE OF TRUTH</span></p>
   <h2>Identity and the source-of-truth worksheet</h2>
   <p class="section-note">Identity is an architecture problem and a clinical-safety problem at the same time. Fill one
@@ -1141,7 +1334,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="ingestion" data-f>
+<section class="sheet-section" id="ingestion" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 13 / Ingestion</span><span>EXCEPTION QUEUE</span></p>
   <h2>Ingestion failure scenarios</h2>
   <p class="section-note">A DICOM receiver is the first ten percent of ingestion. The rest is detection, state, and a
@@ -1173,7 +1366,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="repository" data-f>
+<section class="sheet-section" id="repository" data-purpose="Decide" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 14 / Repository</span><span>HOT / COOL / ARCHIVE</span></p>
   <h2>Repository, storage lifecycle, and scale</h2>
   <p class="section-note">A logical DICOM repository is not a bucket. Object storage plus a metadata database is an
@@ -1245,7 +1438,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="market" data-f>
+<section class="sheet-section" id="market" data-purpose="Compare" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 15 / Market</span><span>CATEGORY BOUNDARIES</span></p>
   <h2>PACS, VNA, and the market categories</h2>
   <p class="section-note">Suppliers use the same words for products with different boundaries. Define capabilities
@@ -1309,7 +1502,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="viewers" data-f>
+<section class="sheet-section" id="viewers" data-purpose="Compare" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 16 / Viewers</span><span>W:400 L:40 &#183; ZOOM 100%</span></p>
   <h2>Viewer tiers, architectures, and evaluation</h2>
   <p class="section-note">Most products need more than one viewing experience, and the differences are regulatory and
@@ -1397,7 +1590,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="workbench" data-f>
+<section class="sheet-section" id="workbench" data-purpose="Trace" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 17 / Workbench</span><span>STATE MACHINE</span></p>
   <h2>The radiologist workbench as a state machine</h2>
   <p class="section-note">In a teleradiology or consultation product the back office is not a worklist beside a viewer;
@@ -1436,7 +1629,7 @@
   </table></div>
 </section>
 
-<section class="sheet-section" id="reports" data-f>
+<section class="sheet-section" id="reports" data-purpose="Trace" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 18 / Delivery</span><span>ORU^R01 &#183; FHIR &#183; SR</span></p>
   <h2>Report lifecycle and delivery channels</h2>
   <p class="section-note">Report <em>encoding</em> is largely standardised. Turnaround visibility, delivery reliability,
@@ -1469,7 +1662,7 @@
   </table></div>
 </section>
 
-<section class="sheet-section" id="ai" data-f>
+<section class="sheet-section" id="ai" data-purpose="Decide" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 19 / AI</span><span>MODEL v&#183; PROVENANCE</span></p>
   <h2>AI orchestration</h2>
   <p class="section-note">Separate four decisions that are usually collapsed into one: buy or build the model; buy or
@@ -1533,7 +1726,8 @@
   </div>
 </section>
 
-<section class="sheet-section" id="security" data-f>
+<div class="chapter-divider" id="chapter-assurance">Chapter 4 / Assurance and change<span>Protect the workflow, surface hazards, and plan correction or migration.</span></div>
+<section class="sheet-section" id="security" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 20 / Security</span><span>ATNA &#183; TLS &#183; DE-ID</span></p>
   <h2>Security, privacy, and clinical safety</h2>
   <div class="callout stop">
@@ -1669,7 +1863,7 @@
   </table></div>
 </section>
 
-<section class="sheet-section" id="change" data-f>
+<section class="sheet-section" id="change" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 21 / Change</span><span>IOCM &#183; KOS &#183; CID 7010</span></p>
   <h2>Change, correction, and migration</h2>
   <p class="section-note">Imaging objects are immutable by design, so &ldquo;correcting&rdquo; a study means issuing new
@@ -1737,12 +1931,24 @@
   </div>
 </section>
 
-<section class="sheet-section" id="sourcing" data-f>
+<div class="chapter-divider" id="chapter-evaluation">Chapter 5 / Sourcing and evaluation<span>Turn the atlas into a product, vendor, or build-versus-buy decision.</span></div>
+<section class="sheet-section" id="sourcing" data-purpose="Decide" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 22 / Sourcing</span><span>COMMODITY / ENABLING / DIFFERENTIATING</span></p>
   <h2>Sourcing decisions, component by component</h2>
   <p class="section-note">The real question is not build versus buy. It is: <em>which capabilities are commodities,
   which must stay under product control, which create differentiation, and which responsibilities can safely be
   delegated?</em> Decide it per component, not once for the platform.</p>
+
+  <aside class="evaluation-summary" aria-labelledby="evaluation-title">
+    <div><h3 id="evaluation-title">Saved evaluation workspace</h3>
+      <p class="progress-pair"><span id="workspace-score-progress">Scorecard: 0 of 120</span><span id="workspace-q-progress">Questionnaire: 0 of 76</span></p>
+    </div>
+    <a href="#scorecard">Resume assessment</a>
+    <div class="evaluation-actions">
+      <button class="btn" id="workspace-blank" type="button">Print blank worksheet</button>
+      <button class="btn" id="workspace-complete" type="button">Print completed assessment</button>
+    </div>
+  </aside>
 
   <h3 id="strategic-character">Commodity, enabling, differentiating</h3>
   <div class="table-wrap"><table>
@@ -1778,7 +1984,7 @@
   </table></div>
 </section>
 
-<section class="sheet-section" id="scorecard" data-f>
+<section class="sheet-section" id="scorecard" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 22C / Scorecard</span><span>FILL IN &#183; SAVED LOCALLY</span></p>
   <h2>Component scorecard</h2>
   <p class="section-note">Fifteen components, seven criteria, one strategy each. Nothing is pre-filled on purpose: the
@@ -1786,8 +1992,8 @@
   wherever your context differs. Selections are stored in this browser only. Nothing is sent anywhere. Use
   <b>Print blank</b> to take an empty grid into a meeting.</p>
   <div class="tools">
-    <button class="btn" id="score-clear" type="button">Clear scorecard</button>
-    <button class="btn" id="score-print" type="button">Print blank</button>
+    <button class="btn danger" id="score-clear" type="button">Clear saved scorecard</button>
+    <button class="btn" id="score-print" type="button">Print blank scorecard</button>
     <span class="note" id="score-status" role="status" aria-live="polite"></span>
   </div>
   <div class="table-wrap"><table class="scorecard wide" id="scorecard-table">
@@ -1826,7 +2032,7 @@
   </table></div>
 </section>
 
-<section class="sheet-section" id="architectures" data-f>
+<section class="sheet-section" id="architectures" data-purpose="Compare" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 23 / Architectures</span><span>5 REFERENCE SHAPES</span></p>
   <h2>Five reference architectures</h2>
   <p class="section-note">Component lists and the decisions that dominate each shape. Expand the one you are in.</p>
@@ -1862,15 +2068,15 @@
     </div></div></details>
 </section>
 
-<section class="sheet-section" id="questionnaire" data-f>
+<section class="sheet-section" id="questionnaire" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 24 / Due Diligence</span><span>TICK AS YOU GO</span></p>
   <h2>Vendor questionnaire</h2>
   <p class="section-note">Forty-four questions in six groups. Tick them off during the call; answers save in this browser
   only. Print it blank for a meeting. The point is not the checklist. It is that an unanswerable question is
   itself the answer.</p>
   <div class="tools">
-    <button class="btn" id="q-clear" type="button">Clear all ticks</button>
-    <button class="btn" id="q-print" type="button">Print blank</button>
+    <button class="btn danger" id="q-clear" type="button">Clear saved questionnaire</button>
+    <button class="btn" id="q-print" type="button">Print blank questionnaire</button>
     <span class="note" id="q-status" role="status" aria-live="polite"></span>
   </div>
   <div class="grid2">
@@ -1979,7 +2185,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="red-flags" data-f>
+<section class="sheet-section" id="red-flags" data-purpose="Decide" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 24B / Red Flags</span><span>REJECTION NOTES</span></p>
   <h2>Fourteen red flags</h2>
   <p class="section-note">Each of these has sunk a real imaging programme. Any one of them is a reason to slow down;
@@ -2002,7 +2208,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="anti-patterns" data-f>
+<section class="sheet-section" id="anti-patterns" data-purpose="Compare" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 25 / Anti-patterns</span><span>CONSEQUENCE &#8594; FIX</span></p>
   <h2>Common mistakes and anti-patterns</h2>
   <p class="section-note">Fifteen recurring failures, each with the consequence it produces and the fix that prevents it.
@@ -2030,7 +2236,8 @@
   </table></div>
 </section>
 
-<section class="sheet-section" id="glossary" data-f>
+<div class="chapter-divider" id="chapter-reference">Chapter 6 / Reference<span>Resolve terminology and follow the evidence to its primary source.</span></div>
+<section class="sheet-section" id="glossary" data-purpose="Lookup" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 26 / Glossary</span><span>36 TERMS</span></p>
   <h2>Glossary</h2>
   <div class="glossary">
@@ -2075,7 +2282,7 @@
   </div>
 </section>
 
-<section class="sheet-section" id="sources" data-f>
+<section class="sheet-section" id="sources" data-purpose="Lookup" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 27 / Sources</span><span>ACCESSED SEP 2026</span></p>
   <h2>Sources</h2>
   <p class="section-note">Standards bodies, regulators, professional bodies, and peer-reviewed literature only. No vendor
@@ -2135,21 +2342,21 @@
   the primary sources listed above before you act on them. Standards versions and IHE profile statuses move; the IHE
   table is the one most likely to be out of date first.</p>
 
-<div class="related-cheatsheets mb-3" data-seo-related-links aria-label="Related Software &amp; DevOps cheatsheets">
+<div class="related-cheatsheets" data-seo-related-links aria-label="Related Software &amp; DevOps cheatsheets">
   <strong>Related Software &amp; DevOps:</strong><br>
-    <a class="mx-2" href="software-development-guides.html" target="_blank" rel="noopener" title="Open Software Development Guides: Developer Cheat Sheets by Role"><i class="bi bi-diagram-3" aria-hidden="true"></i> Part of: Software Development Guides hub</a>
-    <a class="mx-2" href="veterinary-diagnostics.html" target="_blank" rel="noopener" title="Open Veterinary Diagnostics Cheatsheet: Terminology &amp; Tests Guide"><i class="bi bi-journal-text" aria-hidden="true"></i> Veterinary Diagnostics Cheatsheet: Terminology &amp; Tests Guide</a>
-    <a class="mx-2" href="compression-algorithms.html" target="_blank" rel="noopener" title="Open Compression Algorithms Compared: Codecs, Ratios, Tradeoffs"><i class="bi bi-journal-text" aria-hidden="true"></i> Compression Algorithms Compared: Codecs, Ratios, Tradeoffs</a>
-    <a class="mx-2" href="api-design-rest-graphql-grpc-webhooks.html" target="_blank" rel="noopener" title="Open API Design: REST, GraphQL, gRPC, and Webhooks"><i class="bi bi-journal-text" aria-hidden="true"></i> API Design: REST, GraphQL, gRPC, and Webhooks</a>
-    <a class="mx-2" href="microservices.html" target="_blank" rel="noopener" title="Open Microservices Decisions: An ADR-Lite Cheatsheet"><i class="bi bi-journal-text" aria-hidden="true"></i> Microservices Decisions: An ADR-Lite Cheatsheet</a>
-    <a class="mx-2" href="observability-logs-metrics-traces-slos.html" target="_blank" rel="noopener" title="Open Observability: Logs, Metrics, Traces &amp; SLOs"><i class="bi bi-journal-text" aria-hidden="true"></i> Observability: Logs, Metrics, Traces &amp; SLOs</a>
-    <a class="mx-2" href="databases.html" target="_blank" rel="noopener" title="Open Database Comparison: SQL, NoSQL, Search and Vector DBs"><i class="bi bi-journal-text" aria-hidden="true"></i> Database Comparison: SQL, NoSQL, Search and Vector DBs</a>
-    <a class="mx-2" href="linux-server-hardening.html" target="_blank" rel="noopener" title="Open Linux Server Hardening: Checklist &amp; Paste-Ready Commands"><i class="bi bi-journal-text" aria-hidden="true"></i> Linux Server Hardening: Checklist &amp; Paste-Ready Commands</a>
-    <a class="mx-2" href="aws-vs-azure.html" target="_blank" rel="noopener" title="Open AWS vs Azure (2026): Cloud Architect's Comparison"><i class="bi bi-journal-text" aria-hidden="true"></i> AWS vs Azure (2026): Cloud Architect's Comparison</a>
-    <a class="mx-2" href="medical-school-curriculum.html" target="_blank" rel="noopener" title="Open Medical School Curriculum Cheatsheet: Comprehensive Guide"><i class="bi bi-journal-text" aria-hidden="true"></i> Medical School Curriculum Cheatsheet: Comprehensive Guide</a>
+    <a href="software-development-guides.html" target="_blank" rel="noopener" title="Open Software Development Guides: Developer Cheat Sheets by Role">Part of: Software Development Guides hub</a>
+    <a href="veterinary-diagnostics.html" target="_blank" rel="noopener" title="Open Veterinary Diagnostics Cheatsheet: Terminology &amp; Tests Guide">Veterinary Diagnostics Cheatsheet: Terminology &amp; Tests Guide</a>
+    <a href="compression-algorithms.html" target="_blank" rel="noopener" title="Open Compression Algorithms Compared: Codecs, Ratios, Tradeoffs">Compression Algorithms Compared: Codecs, Ratios, Tradeoffs</a>
+    <a href="api-design-rest-graphql-grpc-webhooks.html" target="_blank" rel="noopener" title="Open API Design: REST, GraphQL, gRPC, and Webhooks">API Design: REST, GraphQL, gRPC, and Webhooks</a>
+    <a href="microservices.html" target="_blank" rel="noopener" title="Open Microservices Decisions: An ADR-Lite Cheatsheet">Microservices Decisions: An ADR-Lite Cheatsheet</a>
+    <a href="observability-logs-metrics-traces-slos.html" target="_blank" rel="noopener" title="Open Observability: Logs, Metrics, Traces &amp; SLOs">Observability: Logs, Metrics, Traces &amp; SLOs</a>
+    <a href="databases.html" target="_blank" rel="noopener" title="Open Database Comparison: SQL, NoSQL, Search and Vector DBs">Database Comparison: SQL, NoSQL, Search and Vector DBs</a>
+    <a href="linux-server-hardening.html" target="_blank" rel="noopener" title="Open Linux Server Hardening: Checklist &amp; Paste-Ready Commands">Linux Server Hardening: Checklist &amp; Paste-Ready Commands</a>
+    <a href="aws-vs-azure.html" target="_blank" rel="noopener" title="Open AWS vs Azure (2026): Cloud Architect's Comparison">AWS vs Azure (2026): Cloud Architect's Comparison</a>
+    <a href="medical-school-curriculum.html" target="_blank" rel="noopener" title="Open Medical School Curriculum Cheatsheet: Comprehensive Guide">Medical School Curriculum Cheatsheet: Comprehensive Guide</a>
 </div>
 
-<p class="cheatsheets-build-note small" data-site-build-note style="margin:1rem auto 0;max-width:72ch;text-align:center;">
+<p class="cheatsheets-build-note" data-site-build-note style="margin:1rem auto 0;max-width:72ch;text-align:center;">
   One person + AI agents build and maintain this collection through public specs, QA gates, and git history.
   <a href="how-its-built.html" title="See how this cheatsheet collection is built">How this site is built</a>
   <span aria-hidden="true">&middot;</span>
@@ -2157,6 +2364,7 @@
 </p>
 </footer>
 </main>
+</div>
 
 <script>
 (function () {
@@ -2180,6 +2388,64 @@
   });
   document.getElementById("print-btn").addEventListener("click", function () { window.print(); });
 
+  /* ---- responsive atlas navigation ----------------------------------- */
+  var sectionsButton = document.getElementById("sections-btn");
+  var railClose = document.getElementById("rail-close");
+  var rail = document.getElementById("section-rail");
+  var railLinks = [].slice.call(rail.querySelectorAll("a[href^='#']"));
+  var chapterReadout = document.getElementById("current-chapter");
+  function closeRail(returnFocus) {
+    document.body.classList.remove("nav-open");
+    sectionsButton.setAttribute("aria-expanded", "false");
+    if (returnFocus) sectionsButton.focus();
+  }
+  sectionsButton.addEventListener("click", function () {
+    var open = document.body.classList.toggle("nav-open");
+    sectionsButton.setAttribute("aria-expanded", String(open));
+    if (open) railClose.focus();
+  });
+  railClose.addEventListener("click", function () { closeRail(true); });
+  railLinks.forEach(function (link) { link.addEventListener("click", function () { closeRail(false); }); });
+
+  var activeSections = new Set();
+  function setActiveSection(section) {
+    if (!section) return;
+    railLinks.forEach(function (link) {
+      var active = link.getAttribute("href") === "#" + section.id;
+      if (active) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+      if (active) {
+        var group = link.closest(".rail-group");
+        chapterReadout.textContent = group ? group.getAttribute("data-chapter") : "Orientation";
+      }
+    });
+  }
+  if ("IntersectionObserver" in window) {
+    var sectionObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) activeSections.add(entry.target); else activeSections.delete(entry.target);
+      });
+      var visible = [].slice.call(activeSections);
+      visible.sort(function (a, b) { return Math.abs(a.getBoundingClientRect().top - 74) - Math.abs(b.getBoundingClientRect().top - 74); });
+      if (visible[0]) setActiveSection(visible[0]);
+    }, { rootMargin: "-64px 0px -62% 0px", threshold: [0, .01, .25] });
+    [].forEach.call(document.querySelectorAll(".sheet-section"), function (section) { sectionObserver.observe(section); });
+  }
+  var navSections = [].slice.call(document.querySelectorAll(".sheet-section")), navFrame = 0;
+  function syncActiveToScroll() {
+    navFrame = 0;
+    var current = navSections[0];
+    navSections.forEach(function (section) {
+      if (section.getBoundingClientRect().top <= 86) current = section;
+    });
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) current = navSections[navSections.length - 1];
+    setActiveSection(current);
+  }
+  addEventListener("scroll", function () {
+    if (!navFrame) navFrame = requestAnimationFrame(syncActiveToScroll);
+  }, { passive: true });
+  setActiveSection(document.querySelector(location.hash + ".sheet-section") || document.getElementById("quickref"));
+
   /* ---- storage helpers with feature detection ------------------------- */
   var store = null;
   try {
@@ -2201,12 +2467,14 @@
   /* ---- scorecard ------------------------------------------------------ */
   var scoreSel = [].slice.call(document.querySelectorAll("[data-sc]"));
   var scoreStatus = document.getElementById("score-status");
+  var workspaceScore = document.getElementById("workspace-score-progress");
   var SCORE_KEY = "rad-scorecard";
   function scoreReport() {
     var filled = scoreSel.filter(function (s) { return s.value; }).length;
     scoreStatus.textContent = store
       ? filled + " of " + scoreSel.length + " cells set" + (filled ? " · saved in this browser" : "")
       : NOSTORE;
+    workspaceScore.textContent = "Scorecard: " + filled + " of " + scoreSel.length;
   }
   (function () {
     var saved = load(SCORE_KEY) || {};
@@ -2222,29 +2490,18 @@
     });
     scoreReport();
   })();
-  document.getElementById("score-clear").addEventListener("click", function () {
-    scoreSel.forEach(function (s) { s.value = ""; });
-    save(SCORE_KEY, {});
-    scoreReport();
-  });
-  document.getElementById("score-print").addEventListener("click", function () {
-    var snapshot = scoreSel.map(function (s) { return s.value; });
-    scoreSel.forEach(function (s) { s.value = ""; });
-    window.print();
-    setTimeout(function () {
-      scoreSel.forEach(function (s, i) { s.value = snapshot[i]; });
-    }, 250);
-  });
 
   /* ---- questionnaire and PoC checklists -------------------------------- */
   var boxes = [].slice.call(document.querySelectorAll("[data-q]"));
   var qStatus = document.getElementById("q-status");
+  var workspaceQ = document.getElementById("workspace-q-progress");
   var Q_KEY = "rad-questionnaire";
   function qReport() {
     var n = boxes.filter(function (b) { return b.checked; }).length;
     qStatus.textContent = store
       ? n + " of " + boxes.length + " ticked" + (n ? " · saved in this browser" : "")
       : NOSTORE;
+    workspaceQ.textContent = "Questionnaire: " + n + " of " + boxes.length;
   }
   (function () {
     var saved = load(Q_KEY) || {};
@@ -2260,59 +2517,197 @@
     });
     qReport();
   })();
-  document.getElementById("q-clear").addEventListener("click", function () {
-    boxes.forEach(function (b) { b.checked = false; });
-    save(Q_KEY, {});
-    qReport();
+
+  /* ---- evaluation printing and guarded destructive actions ------------ */
+  function guardedClear(button, originalLabel, action) {
+    if (button.getAttribute("data-confirm") !== "yes") {
+      button.setAttribute("data-confirm", "yes");
+      button.classList.add("confirming");
+      button.textContent = "Confirm erase";
+      setTimeout(function () {
+        if (button.getAttribute("data-confirm") === "yes") {
+          button.removeAttribute("data-confirm");
+          button.classList.remove("confirming");
+          button.textContent = originalLabel;
+        }
+      }, 4500);
+      return;
+    }
+    button.removeAttribute("data-confirm");
+    button.classList.remove("confirming");
+    button.textContent = originalLabel;
+    action();
+  }
+  var scoreClear = document.getElementById("score-clear");
+  scoreClear.addEventListener("click", function () {
+    guardedClear(scoreClear, "Clear saved scorecard", function () {
+      scoreSel.forEach(function (s) { s.value = ""; }); save(SCORE_KEY, {}); scoreReport();
+    });
   });
-  document.getElementById("q-print").addEventListener("click", function () {
-    var snapshot = boxes.map(function (b) { return b.checked; });
-    boxes.forEach(function (b) { b.checked = false; });
-    window.print();
-    setTimeout(function () {
-      boxes.forEach(function (b, i) { b.checked = snapshot[i]; });
-    }, 250);
+  var qClear = document.getElementById("q-clear");
+  qClear.addEventListener("click", function () {
+    guardedClear(qClear, "Clear saved questionnaire", function () {
+      boxes.forEach(function (b) { b.checked = false; }); save(Q_KEY, {}); qReport();
+    });
   });
 
-  /* ---- row filter ------------------------------------------------------ */
-  var input = document.getElementById("sheet-filter"),
-      status = document.getElementById("filter-status"),
-      rows = [].slice.call(document.querySelectorAll("main tbody tr")),
-      sections = [].slice.call(document.querySelectorAll("main .sheet-section"));
-  function applyFilter() {
-    var q = input.value.trim().toLowerCase(), shown = 0;
-    rows.forEach(function (tr) {
-      var hit = !q || tr.textContent.toLowerCase().indexOf(q) > -1;
-      tr.hidden = !hit;
-      if (hit) shown++;
-    });
-    sections.forEach(function (sec) {
-      if (!q) { sec.hidden = false; return; }
-      var own = sec.querySelectorAll("tbody tr");
-      var text = sec.textContent.toLowerCase().indexOf(q) > -1;
-      sec.hidden = own.length > 0
-        ? !sec.querySelector("tbody tr:not([hidden])")
-        : !text;
-    });
-    status.textContent = q ? shown + " / " + rows.length + " rows" : "";
+  var printSnapshot = null;
+  function restorePrintState() {
+    if (!printSnapshot) return;
+    scoreSel.forEach(function (s, i) { s.value = printSnapshot.scores[i]; });
+    boxes.forEach(function (b, i) { b.checked = printSnapshot.boxes[i]; });
+    document.body.classList.remove("print-workspace", "print-score", "print-questionnaire", "print-blank");
+    printSnapshot = null;
   }
-  input.addEventListener("input", applyFilter);
-  input.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { input.value = ""; applyFilter(); }
+  function printAssessment(scope, blank) {
+    restorePrintState();
+    printSnapshot = {
+      scores: scoreSel.map(function (s) { return s.value; }),
+      boxes: boxes.map(function (b) { return b.checked; })
+    };
+    if (blank && scope !== "questionnaire") scoreSel.forEach(function (s) { s.value = ""; });
+    if (blank && scope !== "score") boxes.forEach(function (b) { b.checked = false; });
+    document.body.classList.add("print-workspace");
+    if (scope === "score") document.body.classList.add("print-score");
+    if (scope === "questionnaire") document.body.classList.add("print-questionnaire");
+    if (blank) document.body.classList.add("print-blank");
+    window.print();
+    setTimeout(restorePrintState, 1000);
+  }
+  document.getElementById("score-print").addEventListener("click", function () { printAssessment("score", true); });
+  document.getElementById("q-print").addEventListener("click", function () { printAssessment("questionnaire", true); });
+  document.getElementById("workspace-blank").addEventListener("click", function () { printAssessment("all", true); });
+  document.getElementById("workspace-complete").addEventListener("click", function () { printAssessment("all", false); });
+
+  /* ---- table classification and overflow cues ------------------------- */
+  var tableWraps = [].slice.call(document.querySelectorAll(".table-wrap"));
+  function updateTableCue(wrap) {
+    var overflow = wrap.scrollWidth > wrap.clientWidth + 2;
+    if (!overflow) { wrap.setAttribute("data-overflow", "none"); wrap.removeAttribute("data-cue"); return; }
+    var atLeft = wrap.scrollLeft <= 2;
+    var atRight = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 2;
+    wrap.setAttribute("data-overflow", atLeft ? "right" : (atRight ? "left" : "both"));
+    wrap.setAttribute("data-cue", atLeft ? "Scroll table →" : (atRight ? "← Table start" : "← Scroll →"));
+  }
+  tableWraps.forEach(function (wrap, index) {
+    var table = wrap.querySelector("table");
+    var caption = table && table.querySelector("caption");
+    var heading = wrap.closest("section") && wrap.closest("section").querySelector("h2");
+    var kind = table && table.classList.contains("scorecard") ? "worksheet" :
+      (table && table.classList.contains("narrow") ? "lookup" : "comparison");
+    wrap.setAttribute("data-table", kind);
+    wrap.setAttribute("tabindex", "0");
+    wrap.setAttribute("role", "region");
+    wrap.setAttribute("aria-label", (caption ? caption.textContent : (heading ? heading.textContent : "Reference table " + (index + 1))) + ". Scroll horizontally when needed.");
+    wrap.addEventListener("scroll", function () { updateTableCue(wrap); }, { passive: true });
+    updateTableCue(wrap);
   });
-  applyFilter();
+  addEventListener("resize", function () { tableWraps.forEach(updateTableCue); });
+
+  /* ---- contextual find ------------------------------------------------- */
+  var input = document.getElementById("sheet-filter");
+  var status = document.getElementById("filter-status");
+  var previous = document.getElementById("match-prev");
+  var next = document.getElementById("match-next");
+  var clearSearchButton = document.getElementById("filter-clear");
+  var matches = [], currentMatch = -1, searchOrigin = null;
+  function resetMarks(restorePosition) {
+    [].forEach.call(document.querySelectorAll("mark.search-mark"), function (mark) {
+      mark.replaceWith(document.createTextNode(mark.textContent));
+    });
+    [].forEach.call(document.querySelectorAll(".sheet-section"), function (section) { section.classList.remove("search-hit"); section.normalize(); });
+    [].forEach.call(document.querySelectorAll("details[data-search-opened]"), function (details) {
+      details.open = false; details.removeAttribute("data-search-opened");
+    });
+    document.body.classList.remove("searching");
+    matches = []; currentMatch = -1;
+    previous.disabled = true; next.disabled = true;
+    if (restorePosition && searchOrigin !== null) {
+      var priorScrollBehavior = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      window.scrollTo(0, searchOrigin);
+      root.style.scrollBehavior = priorScrollBehavior;
+    }
+    if (restorePosition) searchOrigin = null;
+  }
+  function showMatch(index) {
+    if (!matches.length) return;
+    if (currentMatch >= 0) matches[currentMatch].classList.remove("is-current");
+    currentMatch = (index + matches.length) % matches.length;
+    var mark = matches[currentMatch];
+    mark.classList.add("is-current");
+    var drawer = mark.closest("details");
+    if (drawer && !drawer.open) { drawer.open = true; drawer.setAttribute("data-search-opened", "true"); }
+    mark.scrollIntoView({ block: "center", behavior: "auto" });
+    var sectionCount = new Set(matches.map(function (m) { return m.closest("section").id; })).size;
+    status.textContent = matches.length + (matches.length === 1 ? " match" : " matches") + " in " + sectionCount +
+      (sectionCount === 1 ? " section" : " sections") + " · " + (currentMatch + 1) + " of " + matches.length;
+  }
+  function applySearch() {
+    var query = input.value.trim();
+    resetMarks(false);
+    if (!query) { status.textContent = ""; return; }
+    if (searchOrigin === null) searchOrigin = window.scrollY;
+    document.body.classList.add("searching");
+    var needle = query.toLocaleLowerCase();
+    [].forEach.call(document.querySelectorAll(".sheet-section"), function (section) {
+      var walker = document.createTreeWalker(section, NodeFilter.SHOW_TEXT, {
+        acceptNode: function (node) {
+          var parent = node.parentElement;
+          if (!node.nodeValue.trim() || !parent || parent.closest("script,style,mark,button,input,select,textarea")) return NodeFilter.FILTER_REJECT;
+          return node.nodeValue.toLocaleLowerCase().indexOf(needle) > -1 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        }
+      });
+      var nodes = [], node;
+      while ((node = walker.nextNode())) nodes.push(node);
+      nodes.forEach(function (textNode) {
+        var text = textNode.nodeValue, lower = text.toLocaleLowerCase(), start = 0, hit, fragment = document.createDocumentFragment();
+        while ((hit = lower.indexOf(needle, start)) > -1) {
+          fragment.appendChild(document.createTextNode(text.slice(start, hit)));
+          var mark = document.createElement("mark"); mark.className = "search-mark"; mark.textContent = text.slice(hit, hit + query.length);
+          fragment.appendChild(mark); matches.push(mark); start = hit + query.length;
+        }
+        fragment.appendChild(document.createTextNode(text.slice(start)));
+        textNode.replaceWith(fragment);
+      });
+      if (section.querySelector("mark.search-mark")) section.classList.add("search-hit");
+    });
+    var sectionCount = new Set(matches.map(function (m) { return m.closest("section").id; })).size;
+    previous.disabled = matches.length < 2; next.disabled = matches.length < 2;
+    status.textContent = matches.length ? matches.length + (matches.length === 1 ? " match" : " matches") + " in " + sectionCount +
+      (sectionCount === 1 ? " section" : " sections") : "No matches";
+    if (matches.length) showMatch(0);
+  }
+  input.addEventListener("input", applySearch);
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "Enter" && matches.length) { event.preventDefault(); showMatch(currentMatch + (event.shiftKey ? -1 : 1)); }
+    if (event.key === "Escape") { event.preventDefault(); input.value = ""; resetMarks(true); status.textContent = ""; }
+  });
+  previous.addEventListener("click", function () { showMatch(currentMatch - 1); });
+  next.addEventListener("click", function () { showMatch(currentMatch + 1); });
+  clearSearchButton.addEventListener("click", function () { input.value = ""; resetMarks(true); status.textContent = ""; input.focus(); });
+  addEventListener("keydown", function (event) {
+    var editable = event.target.matches && event.target.matches("input,textarea,select,button,[contenteditable='true']");
+    if (event.key === "/" && !editable) { event.preventDefault(); input.focus(); input.select(); }
+    if (event.key === "Escape" && document.body.classList.contains("nav-open") && event.target !== input) closeRail(true);
+  });
 
   /* ---- print: open every drawer, restore afterwards -------------------- */
-  var reopened = [];
+  var reopened = [], drawerNames = [];
   addEventListener("beforeprint", function () {
     reopened = [];
+    drawerNames = [];
     [].forEach.call(document.querySelectorAll("details.drawer"), function (d) {
+      if (d.hasAttribute("name")) { drawerNames.push([d, d.getAttribute("name")]); d.removeAttribute("name"); }
       if (!d.open) { reopened.push(d); d.open = true; }
     });
   });
   addEventListener("afterprint", function () {
     reopened.forEach(function (d) { d.open = false; });
+    drawerNames.forEach(function (pair) { pair[0].setAttribute("name", pair[1]); });
     reopened = [];
+    drawerNames = [];
+    restorePrintState();
   });
 })();
 </script>
