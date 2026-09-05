@@ -234,526 +234,186 @@ $historyDates = array_keys($totalViewsHistory);
 $historySpanLabel = $historyDays > 0
     ? (date('M j', strtotime($historyDates[0])) . ' – ' . date('M j', strtotime($historyDates[$historyDays - 1])))
     : '';
+$baseUrl = 'https://cheatsheets.davidveksler.com/';
+require __DIR__ . '/lib/chrome.php';
+chrome_open(
+    "Popularity · Cheatsheets",
+    '30-day trending view counts for every cheatsheet, pulled nightly from Cloudflare Analytics.',
+    '📊',
+    $baseUrl . 'popularity.php',
+    'popularity'
+);
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="light dark">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+<style>
+.mini-panel{border:1px solid var(--rule);border-radius:8px;background:var(--surface);padding:14px 16px;height:100%}
+.mini-panel h2{font-size:13px;margin-bottom:10px;display:flex;align-items:baseline;gap:8px}
+.mini-panel h2 .age{font-size:11.5px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0}
+.mini-row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;padding:6px 0}
+.mini-row+.mini-row{border-top:1px dashed var(--rule)}
+.mini-row .mini-label{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:var(--ink)}
+.mini-row .mini-value{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap;text-align:right}
+.mini-bar{grid-column:1/3;height:5px;border-radius:3px;background:var(--rule);overflow:hidden}
+.mini-bar i{display:block;height:100%;background:var(--accent)}
+.mini-empty{color:var(--muted);font-size:13px;font-style:italic}
+.mini-age{color:var(--muted);font-size:12px}
 
-    <title>Popularity · David Veksler's Cheatsheets</title>
-    <meta name="description" content="30-day trending view counts for every cheatsheet, pulled nightly from Cloudflare Analytics.">
-    <meta name="robots" content="noindex, follow">
+.dist-row{display:grid;grid-template-columns:3.6rem 1fr 1.8rem;gap:8px;align-items:center;padding:4px 0}
+.dist-row .dl{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.dist-row .dc{font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+.dist-track{height:8px;border-radius:3px;background:var(--rule);overflow:hidden}
+.dist-fill{height:100%;border-radius:3px;background:var(--accent)}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:22px}
+.panels-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:22px}
 
-    <style>
-      @layer site {
-        :root {
-          color-scheme: light dark;
-          --bg:        light-dark(#f0f2f5, #14171c);
-          --surface:   light-dark(#ffffff, #1d2128);
-          --surface-2: light-dark(#f6f8fa, #161a20);
-          --border:    light-dark(#dee2e6, #303642);
-          --text:      light-dark(#1a1f27, #e7eaf0);
-          --muted:     light-dark(#5a6472, #9aa4b2);
-          --accent:    light-dark(#1a508b, #6ea8ff);
-          --accent-bg: light-dark(#e7f0fb, #1a2330);
-          --bar-track: light-dark(#e9ecef, #2a2f3a);
-          --bar-fill:  light-dark(#4f46e5, #818cf8);
-          --gold:      #f59e0b;
-          --silver:    light-dark(#6b7280, #9ca3af);
-          --bronze:    #b45309;
-          --top3-bg:   light-dark(#fffbeb, #1c1a0f);
-        }
-        .navbar { background: light-dark(#2c3034, #0f1216); }
-        .navbar-brand, .navbar .nav-link { color: #f1f3f5 !important; }
+.rank-row{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--rule)}
+.rank-row:last-child{border-bottom:0}
+.rank-row:hover{background:var(--accent-surface)}
+.rank-row.top1{border-left:3px solid var(--gold)}
+.rank-num{font-family:var(--mono);font-weight:650;font-size:13px;text-align:center;width:26px;height:26px;line-height:26px;border-radius:50%;flex:none;background:var(--accent-surface);color:var(--accent)}
+.rank-row.top1 .rank-num{background:color-mix(in srgb,var(--gold) 20%,transparent);color:var(--gold)}
+.rank-info{min-width:0;flex:1}
+.rank-title{font-weight:600;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.rank-title:hover{text-decoration:underline}
+.rank-bar-track{height:5px;border-radius:3px;background:var(--rule);margin-top:5px;overflow:hidden}
+.rank-bar-fill{height:100%;border-radius:3px;background:var(--accent)}
+.rank-row.top1 .rank-bar-fill{background:var(--gold)}
+.rank-score{text-align:right;white-space:nowrap;flex:none}
+.rank-score .val{font-family:var(--mono);font-weight:650;font-size:14px}
+.rank-score .pct{color:var(--muted);font-size:11.5px}
+@media (max-width:575px){ .rank-score{display:none} }
+</style>
 
-        /* ---- stat boxes ---- */
-        .stat-box {
-          background: var(--surface); border: 1px solid var(--border);
-          border-radius: .5rem; padding: 1rem 1.2rem; height: 100%;
-          display: flex; align-items: center; gap: .85rem;
-        }
-        .stat-icon {
-          flex-shrink: 0; width: 2.6rem; height: 2.6rem; border-radius: .65rem;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 1.25rem; background: var(--accent-bg); color: var(--accent);
-        }
-        .stat-icon.gold { background: #fef3c7; color: var(--gold); }
-        .stat-body { min-width: 0; }
-        .stat-box .num { font-size: 1.7rem; font-weight: 700; line-height: 1.1; }
-        .stat-box .lbl { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; margin-top: .15rem; }
+<div class="wrap">
+<section class="hero">
+  <h1>Popularity</h1>
+  <p class="lead">
+    30-day trending scores pulled nightly from Cloudflare Analytics.
+    <?php if ($lastUpdated): ?>
+      Last updated <strong style="color:var(--ink)"><?php echo h($lastUpdated); ?></strong> (<?php echo rel_time($lastUpdated); ?>).
+    <?php else: ?>
+      No data yet — run <code>fetch-popularity.py</code> to seed.
+    <?php endif; ?>
+    <a href="https://stats.davidveksler.com/" target="_blank" rel="noopener">Full analytics →</a>
+  </p>
+</section>
 
-        /* ---- mini panels (rising stars / distribution / referrers) ---- */
-        .mini-panel {
-          background: var(--surface); border: 1px solid var(--border);
-          border-radius: .5rem; padding: 1rem 1.1rem; height: 100%;
-        }
-        .mini-panel h2 {
-          font-size: .95rem; font-weight: 700; margin-bottom: .8rem;
-          display: flex; align-items: center; gap: .4rem;
-        }
-        .mini-row {
-          display: grid;
-          grid-template-columns: 1.3rem 1fr auto;
-          gap: .5rem; align-items: center;
-          padding: .4rem 0;
-        }
-        .mini-row + .mini-row { border-top: 1px dashed var(--border); }
-        .mini-row .mini-icon { color: var(--muted); text-align: center; }
-        .mini-row .mini-label {
-          min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-          font-size: .88rem; text-decoration: none; color: var(--text);
-        }
-        .mini-row a.mini-label:hover { color: var(--accent); }
-        .mini-row .mini-value {
-          font-size: .82rem; font-variant-numeric: tabular-nums; color: var(--muted);
-          white-space: nowrap;
-        }
-        .mini-bar-track {
-          grid-column: 2 / 4; height: 5px; border-radius: 3px;
-          background: var(--bar-track); margin-top: .3rem; overflow: hidden;
-        }
-        .mini-bar-fill { height: 100%; border-radius: 3px; background: var(--bar-fill); width: var(--bar-w, 0%); }
-        .mini-empty { color: var(--muted); font-size: .85rem; font-style: italic; }
-        .mini-age { color: var(--muted); font-size: .76rem; }
+<?php if ($rankedCount === 0): ?>
+  <div class="note warn"><code>popularity.json</code> is empty or missing. Run <code>python3 fetch-popularity.py</code> to fetch data from Cloudflare.</div>
+<?php else: ?>
 
-        /* ---- score distribution ---- */
-        .dist-row { display: grid; grid-template-columns: 3.4rem 1fr 1.6rem; gap: .6rem; align-items: center; padding: .35rem 0; }
-        .dist-row .dist-label { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-        .dist-row .dist-count { font-size: .8rem; text-align: right; font-variant-numeric: tabular-nums; }
-        .dist-track { height: 10px; border-radius: 3px; background: var(--bar-track); overflow: hidden; }
-        .dist-fill  { height: 100%; border-radius: 3px; background: var(--bar-fill); width: var(--bar-w, 0%); }
+<div class="stats">
+  <div class="stat"><div class="n"><?php echo number_format($rankedCount); ?></div><div class="l">Pages tracked</div></div>
+  <div class="stat"><div class="n"><?php echo number_format((int) $maxScore); ?></div><div class="l">Top page score</div></div>
+  <div class="stat"><div class="n"><?php echo number_format((int) $totalScore); ?></div><div class="l">Total score sum</div></div>
+  <div class="stat"><div class="n" style="font-size:14px"><?php echo $lastUpdated ? h($lastUpdated) : '—'; ?></div><div class="l">Last updated</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($avgScore, 1); ?></div><div class="l">Avg score / page</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($medianScore, 1); ?></div><div class="l">Median score</div></div>
+  <div class="stat"><div class="n"><?php echo $top3Share; ?>&thinsp;%</div><div class="l">Top 3 share of views</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($risingStarCount); ?></div><div class="l">Rising stars (&le;30d)</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($totalDailyViews); ?></div><div class="l">Views yesterday</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($totalViewsAllTime); ?></div><div class="l">All-time views tracked</div></div>
+  <div class="stat"><div class="n"><?php echo $top10Share; ?>&thinsp;%</div><div class="l">Top 10 share of views</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($untrackedCount); ?> <span style="color:var(--muted);font-size:.85em">/ <?php echo number_format($totalPageCount); ?></span></div><div class="l">Pages with zero views</div></div>
+</div>
 
-        /* ---- ranked list ---- */
-        .rank-list {
-          background: var(--surface); border: 1px solid var(--border);
-          border-radius: .5rem; overflow: hidden;
-        }
-        .rank-row {
-          display: grid;
-          grid-template-columns: 2.4rem 1fr auto;
-          gap: .25rem 1rem;
-          padding: .8rem 1.1rem;
-          border-bottom: 1px solid var(--border);
-          align-items: center;
-        }
-        .rank-row:last-child { border-bottom: 0; }
-        .rank-row.top-3 { background: var(--top3-bg); }
-        .rank-row:not(.top-3):hover { background: var(--surface-2); }
+<div class="note" style="margin-bottom:22px">
+  Each day's raw view count is added to the score after multiplying existing values by <strong>29/30</strong>.
+  After 30 days a single visit contributes ~37&nbsp;% of its original weight, so this reflects
+  <em>consistently popular</em> pages — not one-day spikes. Scores reset to zero over ~3 months of inactivity.
+  "All-time views tracked" accumulates from the day this counter was added and does not include views from before then.
+</div>
 
-        /* rank number pill */
-        .rank-num {
-          font-weight: 700; font-size: .95rem; text-align: center;
-          width: 2rem; height: 2rem; line-height: 2rem;
-          border-radius: 50%; flex-shrink: 0;
-          background: var(--accent-bg); color: var(--accent);
-        }
-        .rank-num.gold   { background: #fef3c7; color: var(--gold);   }
-        .rank-num.silver { background: #f3f4f6; color: var(--silver); }
-        .rank-num.bronze { background: #fef3c7; color: var(--bronze); }
+<?php if ($historyDays > 1): ?>
+<div class="mini-panel" style="margin-bottom:22px">
+  <h2>Site-wide traffic <span class="age">(<?php echo h($historySpanLabel); ?> · <?php echo number_format($historyTotal); ?> views)</span></h2>
+  <svg viewBox="0 0 <?php echo $sparkWidth; ?> <?php echo $sparkHeight; ?>" preserveAspectRatio="none" style="width:100%;height:60px;display:block" role="img" aria-label="Daily site-wide view count over the last <?php echo $historyDays; ?> days">
+    <polyline points="<?php echo h($sparkPoints); ?>" fill="none" stroke="var(--accent)" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
+  </svg>
+</div>
+<?php endif; ?>
 
-        /* title + bar area */
-        .rank-info { min-width: 0; }
-        .rank-title {
-          font-weight: 600; white-space: nowrap; overflow: hidden;
-          text-overflow: ellipsis; text-decoration: none; color: var(--text);
-          font-size: .95rem;
-        }
-        .rank-title:hover { color: var(--accent); }
-        .rank-bar-track {
-          height: 6px; border-radius: 3px;
-          background: var(--bar-track); margin-top: .4rem; overflow: hidden;
-        }
-        .rank-bar-fill {
-          height: 100%; border-radius: 3px;
-          background: var(--bar-fill);
-          width: var(--bar-w, 0%);
-          transition: width .4s ease;
-        }
-        .rank-row.top-3 .rank-bar-fill { background: var(--gold); }
+<div class="panels">
+  <div class="mini-panel">
+    <h2>Rising stars <span class="age">(published &le;30d ago)</span></h2>
+    <?php if (empty($risingStars)): ?>
+      <p class="mini-empty">No pages published in the last 30 days.</p>
+    <?php else: foreach ($risingStars as $star): ?>
+      <div class="mini-row">
+        <a class="mini-label" href="<?php echo h($star['filename']); ?>" target="_blank" title="<?php echo h($star['title']); ?>"><?php echo h($star['title']); ?></a>
+        <span class="mini-value"><?php echo number_format($star['score'], 0); ?></span>
+      </div>
+      <div class="mini-age" style="margin:-2px 0 6px"><?php echo h(rel_time(date('c', $star['ctime']))); ?></div>
+    <?php endforeach; endif; ?>
+  </div>
 
-        /* score + pct column */
-        .rank-score { text-align: right; white-space: nowrap; }
-        .rank-score .score-val { font-weight: 700; font-size: 1rem; font-variant-numeric: tabular-nums; }
-        .rank-score .score-pct { color: var(--muted); font-size: .78rem; }
+  <div class="mini-panel">
+    <h2>Score distribution</h2>
+    <?php foreach ($buckets as $b): $w = round($b['count'] / $maxBucketCount * 100, 1); ?>
+    <div class="dist-row">
+      <span class="dl"><?php echo h($b['label']); ?></span>
+      <div class="dist-track"><div class="dist-fill" style="width:<?php echo $w; ?>%"></div></div>
+      <span class="dc"><?php echo $b['count']; ?></span>
+    </div>
+    <?php endforeach; ?>
+  </div>
 
-        .muted { color: var(--muted); }
-        footer.site { color: var(--muted); border-top: 1px solid var(--border); }
-        #themeToggle { background: transparent; border: 0; color: #f1f3f5; font-size: 1.15rem; cursor: pointer; }
-        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  <div class="mini-panel">
+    <h2>Last 24 hours</h2>
+    <?php if (empty($dailyRows)): ?>
+      <p class="mini-empty">No daily view data yet — populated by the next nightly run.</p>
+    <?php else: foreach ($dailyRows as $day): ?>
+      <div class="mini-row">
+        <a class="mini-label" href="<?php echo h($day['filename']); ?>" target="_blank" title="<?php echo h($day['title']); ?>"><?php echo h($day['title']); ?></a>
+        <span class="mini-value"><?php echo number_format($day['count']); ?></span>
+      </div>
+    <?php endforeach; endif; ?>
+  </div>
+</div>
 
-        .callout {
-          background: var(--accent-bg); border-left: 3px solid var(--accent);
-          border-radius: 0 .4rem .4rem 0; padding: .75rem 1rem;
-          font-size: .88rem; color: var(--muted);
-        }
+<div class="panels-2">
+  <div class="mini-panel">
+    <h2>By category</h2>
+    <?php foreach ($categoryRows as $cr): $w = round($cr['score'] / $maxCategoryScore * 100, 1); ?>
+    <div class="dist-row" style="grid-template-columns:9rem 1fr 2.8rem">
+      <span class="dl" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="<?php echo h($cr['category']); ?>"><?php echo h($cr['category']); ?></span>
+      <div class="dist-track"><div class="dist-fill" style="width:<?php echo $w; ?>%"></div></div>
+      <span class="dc"><?php echo $cr['pct']; ?>&thinsp;%</span>
+    </div>
+    <?php endforeach; ?>
+  </div>
 
-        @media (prefers-reduced-motion: no-preference) {
-          .rank-row { transition: background .1s ease; }
-        }
-        @media (max-width: 575px) {
-          .rank-row { grid-template-columns: 2rem 1fr; }
-          .rank-score { display: none; }
-        }
-      }
-      [data-theme="light"] { color-scheme: light; }
-      [data-theme="dark"]  { color-scheme: dark; }
+  <div class="mini-panel">
+    <h2>Trending now <span class="age">(today's views vs. accumulated score)</span></h2>
+    <?php if (empty($trending)): ?>
+      <p class="mini-empty">No pages surging above the noise floor right now.</p>
+    <?php else: foreach ($trending as $t): ?>
+      <div class="mini-row">
+        <a class="mini-label" href="<?php echo h($t['filename']); ?>" target="_blank" title="<?php echo h($t['title']); ?>"><?php echo h($t['title']); ?></a>
+        <span class="mini-value"><?php echo number_format($t['today']); ?> today</span>
+      </div>
+    <?php endforeach; endif; ?>
+  </div>
+</div>
 
-      /* Unlayered on purpose: @layer rules always lose to Bootstrap's unlayered
-         CSS regardless of source order, so body/link overrides must live outside
-         @layer site to actually beat bootstrap.min.css's body/a rules. */
-      body {
-        background: var(--bg); color: var(--text);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        min-height: 100vh;
-      }
-      a { color: var(--accent); }
-      a:hover { color: var(--accent); }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-semibold" href="index.php"><i class="bi bi-journal-richtext me-2"></i>David Veksler's Cheatsheet Portfolio</a>
-            <div class="d-flex align-items-center gap-3">
-                <a class="nav-link d-none d-sm-inline" href="how-its-built.html"><i class="bi bi-gear-wide-connected me-1"></i>How it's built</a>
-                <a class="nav-link d-none d-sm-inline" href="history.php"><i class="bi bi-clock-history me-1"></i>Change History</a>
-                <button id="themeToggle" type="button" aria-label="Toggle colour theme" title="Toggle theme"><i class="bi bi-circle-half"></i></button>
-            </div>
-        </div>
-    </nav>
+<p class="lbl sectlbl">Ranked by decayed 30-day score</p>
+<div class="list-card" role="list">
+  <?php foreach ($rows as $row): $isTop1 = $row['rank'] === 1; ?>
+  <div class="rank-row<?php echo $isTop1 ? ' top1' : ''; ?>" role="listitem">
+    <div class="rank-num" aria-label="Rank <?php echo $row['rank']; ?>"><?php echo $row['rank']; ?></div>
+    <div class="rank-info">
+      <a class="rank-title" href="<?php echo h($row['filename']); ?>" target="_blank" title="<?php echo h($row['filename']); ?>"><?php echo h($row['title']); ?></a>
+      <div class="rank-bar-track" aria-hidden="true"><div class="rank-bar-fill" style="width:<?php echo $row['bar']; ?>%"></div></div>
+    </div>
+    <div class="rank-score">
+      <div class="val num"><?php echo number_format($row['score'], 0); ?></div>
+      <div class="pct"><?php echo $row['pct']; ?>&thinsp;%</div>
+    </div>
+  </div>
+  <?php endforeach; ?>
+</div>
 
-    <main class="container py-4">
+<?php endif; ?>
+</div>
+<?php chrome_close(); ?>
 
-        <header class="mb-4">
-            <h1 class="h3 mb-1"><i class="bi bi-bar-chart-fill me-2"></i>Popularity</h1>
-            <p class="muted mb-0">
-                30-day trending scores pulled nightly from Cloudflare Analytics.
-                <?php if ($lastUpdated): ?>
-                    Last updated <strong><?php echo h($lastUpdated); ?></strong>
-                    <span class="muted">(<?php echo rel_time($lastUpdated); ?>)</span>.
-                <?php else: ?>
-                    No data yet — run <code>fetch-popularity.py</code> to seed.
-                <?php endif; ?>
-            </p>
-        </header>
-
-        <?php if ($rankedCount === 0): ?>
-            <div class="alert alert-warning">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                <code>popularity.json</code> is empty or missing.
-                Run <code>python3 fetch-popularity.py</code> to fetch data from Cloudflare.
-            </div>
-        <?php else: ?>
-
-        <!-- Stat boxes -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon"><i class="bi bi-collection-fill"></i></span>
-                    <div class="stat-body">
-                        <div class="num"><?php echo number_format($rankedCount); ?></div>
-                        <div class="lbl">Pages tracked</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon gold"><i class="bi bi-trophy-fill"></i></span>
-                    <div class="stat-body">
-                        <div class="num"><?php echo number_format((int) $maxScore); ?></div>
-                        <div class="lbl">Top page score</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon"><i class="bi bi-layers-fill"></i></span>
-                    <div class="stat-body">
-                        <div class="num"><?php echo number_format((int) $totalScore); ?></div>
-                        <div class="lbl">Total score sum</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon"><i class="bi bi-calendar2-check-fill"></i></span>
-                    <div class="stat-body">
-                        <div class="num" style="font-size:1.1rem;"><?php echo $lastUpdated ? h($lastUpdated) : '—'; ?></div>
-                        <div class="lbl">Last updated</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon"><i class="bi bi-bar-chart-line-fill"></i></span>
-                    <div class="stat-body">
-                        <div class="num"><?php echo number_format($avgScore, 1); ?></div>
-                        <div class="lbl">Avg score / page</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon"><i class="bi bi-distribute-vertical"></i></span>
-                    <div class="stat-body">
-                        <div class="num"><?php echo number_format($medianScore, 1); ?></div>
-                        <div class="lbl">Median score</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon"><i class="bi bi-pie-chart-fill"></i></span>
-                    <div class="stat-body">
-                        <div class="num"><?php echo $top3Share; ?>&thinsp;%</div>
-                        <div class="lbl">Top 3 share of views</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon"><i class="bi bi-rocket-takeoff-fill"></i></span>
-                    <div class="stat-body">
-                        <div class="num"><?php echo number_format($risingStarCount); ?></div>
-                        <div class="lbl">Rising stars (&le;30d old)</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon"><i class="bi bi-eye-fill"></i></span>
-                    <div class="stat-body">
-                        <div class="num"><?php echo number_format($totalDailyViews); ?></div>
-                        <div class="lbl">Views yesterday</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon"><i class="bi bi-infinity"></i></span>
-                    <div class="stat-body">
-                        <div class="num"><?php echo number_format($totalViewsAllTime); ?></div>
-                        <div class="lbl">All-time views tracked</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon"><i class="bi bi-pie-chart"></i></span>
-                    <div class="stat-body">
-                        <div class="num"><?php echo $top10Share; ?>&thinsp;%</div>
-                        <div class="lbl">Top 10 share of views</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-box">
-                    <span class="stat-icon"><i class="bi bi-eye-slash-fill"></i></span>
-                    <div class="stat-body">
-                        <div class="num"><?php echo number_format($untrackedCount); ?> <span class="muted" style="font-size:.9rem;">/ <?php echo number_format($totalPageCount); ?></span></div>
-                        <div class="lbl">Pages with zero views</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Explanation callout -->
-        <div class="callout mb-4">
-            <i class="bi bi-info-circle me-1"></i>
-            Each day's raw view count is added to the score after multiplying existing values by <strong>29/30</strong>.
-            After 30 days a single visit contributes ~37 % of its original weight, so this reflects
-            <em>consistently popular</em> pages — not one-day spikes. Scores reset to zero over ~3 months of inactivity.
-            <br>"All-time views tracked" accumulates from the day this counter was added and does not include
-            views from before then.
-        </div>
-
-        <!-- 90-day traffic trend -->
-        <?php if ($historyDays > 1): ?>
-        <div class="mini-panel mb-4">
-            <h2><i class="bi bi-graph-up-arrow"></i>Site-wide Traffic <span class="mini-age">(<?php echo h($historySpanLabel); ?> · <?php echo number_format($historyTotal); ?> views)</span></h2>
-            <svg viewBox="0 0 <?php echo $sparkWidth; ?> <?php echo $sparkHeight; ?>" preserveAspectRatio="none" style="width:100%; height:70px; display:block;" role="img" aria-label="Daily site-wide view count over the last <?php echo $historyDays; ?> days">
-                <polyline points="<?php echo h($sparkPoints); ?>" fill="none" stroke="var(--bar-fill)" stroke-width="2" vector-effect="non-scaling-stroke" />
-            </svg>
-        </div>
-        <?php endif; ?>
-
-        <!-- Rising stars / Score distribution / Top referrers -->
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-lg-4">
-                <div class="mini-panel">
-                    <h2><i class="bi bi-rocket-takeoff-fill"></i>Rising Stars <span class="mini-age">(published &le;30d ago)</span></h2>
-                    <?php if (empty($risingStars)): ?>
-                        <p class="mini-empty mb-0">No pages published in the last 30 days.</p>
-                    <?php else: ?>
-                        <?php foreach ($risingStars as $star): ?>
-                        <div class="mini-row">
-                            <span class="mini-icon"><i class="bi bi-star-fill"></i></span>
-                            <a class="mini-label" href="<?php echo h($star['filename']); ?>" target="_blank" title="<?php echo h($star['title']); ?>">
-                                <?php echo h($star['title']); ?>
-                            </a>
-                            <span class="mini-value"><?php echo number_format($star['score'], 0); ?></span>
-                            <div class="mini-age" style="grid-column: 2 / 4;">published <?php echo rel_time(date('c', $star['ctime'])); ?></div>
-                        </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <div class="col-12 col-lg-4">
-                <div class="mini-panel">
-                    <h2><i class="bi bi-bar-chart-steps"></i>Score Distribution</h2>
-                    <?php foreach ($buckets as $b): $w = round($b['count'] / $maxBucketCount * 100, 1); ?>
-                    <div class="dist-row">
-                        <span class="dist-label"><?php echo h($b['label']); ?></span>
-                        <div class="dist-track"><div class="dist-fill" style="--bar-w: <?php echo $w; ?>%"></div></div>
-                        <span class="dist-count"><?php echo $b['count']; ?></span>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <div class="col-12 col-lg-4">
-                <div class="mini-panel">
-                    <h2><i class="bi bi-clock-history"></i>Last 24 Hours</h2>
-                    <?php if (empty($dailyRows)): ?>
-                        <p class="mini-empty mb-0">No daily view data yet — populated by the next nightly run.</p>
-                    <?php else: ?>
-                        <?php foreach ($dailyRows as $day): ?>
-                        <div class="mini-row">
-                            <span class="mini-icon"><i class="bi bi-eye-fill"></i></span>
-                            <a class="mini-label" href="<?php echo h($day['filename']); ?>" target="_blank" title="<?php echo h($day['title']); ?>">
-                                <?php echo h($day['title']); ?>
-                            </a>
-                            <span class="mini-value"><?php echo number_format($day['count']); ?></span>
-                        </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Category breakdown / Trending now -->
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-lg-6">
-                <div class="mini-panel">
-                    <h2><i class="bi bi-tags-fill"></i>By Category</h2>
-                    <?php foreach ($categoryRows as $cr): $w = round($cr['score'] / $maxCategoryScore * 100, 1); ?>
-                    <div class="dist-row" style="grid-template-columns: 9rem 1fr 2.6rem;">
-                        <span class="dist-label" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="<?php echo h($cr['category']); ?>"><?php echo h($cr['category']); ?></span>
-                        <div class="dist-track"><div class="dist-fill" style="--bar-w: <?php echo $w; ?>%"></div></div>
-                        <span class="dist-count"><?php echo $cr['pct']; ?>&thinsp;%</span>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <div class="col-12 col-lg-6">
-                <div class="mini-panel">
-                    <h2><i class="bi bi-fire"></i>Trending Now <span class="mini-age">(today's views vs. accumulated score)</span></h2>
-                    <?php if (empty($trending)): ?>
-                        <p class="mini-empty mb-0">No pages surging above the noise floor right now.</p>
-                    <?php else: ?>
-                        <?php foreach ($trending as $t): ?>
-                        <div class="mini-row">
-                            <span class="mini-icon"><i class="bi bi-graph-up"></i></span>
-                            <a class="mini-label" href="<?php echo h($t['filename']); ?>" target="_blank" title="<?php echo h($t['title']); ?>">
-                                <?php echo h($t['title']); ?>
-                            </a>
-                            <span class="mini-value"><?php echo number_format($t['today']); ?> today</span>
-                        </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Ranked list -->
-        <div class="rank-list" role="list">
-            <?php foreach ($rows as $row):
-                $rankClass = match ($row['rank']) {
-                    1 => 'gold',
-                    2 => 'silver',
-                    3 => 'bronze',
-                    default => '',
-                };
-                $rowClass = $row['rank'] <= 3 ? 'top-3' : '';
-            ?>
-            <div class="rank-row <?php echo $rowClass; ?>" role="listitem">
-                <!-- Rank pill -->
-                <div class="rank-num <?php echo $rankClass; ?>" aria-label="Rank <?php echo $row['rank']; ?>">
-                    <?php if ($row['rank'] === 1): ?>
-                        <i class="bi bi-trophy-fill" title="1st"></i>
-                    <?php elseif ($row['rank'] === 2): ?>
-                        <i class="bi bi-award-fill" title="2nd"></i>
-                    <?php elseif ($row['rank'] === 3): ?>
-                        <i class="bi bi-award" title="3rd"></i>
-                    <?php else: ?>
-                        <?php echo $row['rank']; ?>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Title + bar -->
-                <div class="rank-info">
-                    <a class="rank-title" href="<?php echo h($row['filename']); ?>" target="_blank"
-                       title="<?php echo h($row['filename']); ?>">
-                        <?php echo h($row['title']); ?>
-                    </a>
-                    <div class="rank-bar-track" aria-hidden="true">
-                        <div class="rank-bar-fill" style="--bar-w: <?php echo $row['bar']; ?>%"></div>
-                    </div>
-                </div>
-
-                <!-- Score + share -->
-                <div class="rank-score">
-                    <div class="score-val"><?php echo number_format($row['score'], 0); ?></div>
-                    <div class="score-pct"><?php echo $row['pct']; ?>&thinsp;%</div>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
-
-        <?php endif; ?>
-    </main>
-
-    <footer class="site py-4 mt-5">
-        <div class="container text-center small">
-            <a href="index.php"><i class="bi bi-collection-fill me-1"></i>All cheatsheets</a>
-            <span class="mx-2">·</span>
-            <a href="history.php"><i class="bi bi-clock-history me-1"></i>Change history</a>
-            <span class="mx-2">·</span>
-            <a href="https://stats.davidveksler.com/" target="_blank" rel="noopener"><i class="bi bi-graph-up me-1"></i>Full analytics</a>
-            <span class="mx-2">·</span>
-            Scores decay 1/30 per day · updated nightly via GitHub Actions
-            <span class="mx-2">·</span>
-            © <?php echo date('Y'); ?> David Veksler
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
-    <script>
-      (function () {
-        const KEY  = 'cheatsheet-theme';
-        const root = document.documentElement;
-        const saved = (function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } })();
-        if (saved === 'light' || saved === 'dark') root.setAttribute('data-theme', saved);
-        document.addEventListener('DOMContentLoaded', function () {
-          const btn = document.getElementById('themeToggle');
-          if (!btn) return;
-          btn.addEventListener('click', function () {
-            const cur  = root.getAttribute('data-theme')
-              || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            const next = cur === 'dark' ? 'light' : 'dark';
-            root.setAttribute('data-theme', next);
-            try { localStorage.setItem(KEY, next); } catch (e) {}
-          });
-        });
-      })();
-    </script>
-</body>
-</html>

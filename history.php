@@ -255,349 +255,222 @@ if ($repoReady && $view === 'file') {
 }
 
 $selfUrl = strtok($_SERVER['REQUEST_URI'] ?? 'history.php', '?');
+$baseUrl = 'https://cheatsheets.davidveksler.com/';
 $pageTitle = match ($view) {
     'commit' => 'Commit ' . substr($commit, 0, 10) . ' · Change History',
     'file'   => h($file) . ' · Change History',
     default  => 'Change History',
-};
+} . ' · Cheatsheets';
+
+require __DIR__ . '/lib/chrome.php';
+chrome_open(
+    $pageTitle,
+    "Browse the full git change history of David Veksler's cheatsheet collection — every commit, diff, and per-file revision, rendered straight from the repository.",
+    '🕓',
+    $baseUrl . $selfUrl,
+    'history'
+);
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="light dark">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕓</text></svg>">
+<style>
+.searchbar{display:flex;gap:8px;max-width:520px;margin:0 0 20px}
+.searchbar input{flex:1;min-width:0;font:14px var(--sans);padding:9px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)}
+.searchbar input:focus-visible{border-color:var(--accent)}
+.searchbar button{padding:9px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--page);border-radius:8px;font-weight:600;cursor:pointer;font-size:14px}
+.searchbar .clear{border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:8px;padding:9px 14px;font-size:14px;text-decoration:none}
+.searchbar .clear:hover{border-color:var(--accent)}
 
-    <title><?php echo $pageTitle; ?> | David Veksler's Cheatsheets</title>
-    <meta name="description" content="Browse the full git change history of David Veksler's cheatsheet collection — every commit, diff, and per-file revision, rendered straight from the repository.">
-    <meta name="robots" content="noindex, follow">
-    <link rel="canonical" href="<?php echo h($selfUrl); ?>">
+.commit-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 16px;border-bottom:1px solid var(--rule);color:inherit;text-decoration:none}
+.commit-row:last-child{border-bottom:0}
+.commit-row:hover{background:var(--accent-surface);text-decoration:none}
+.commit-subject{font-weight:600;font-size:14px;line-height:1.35;color:var(--ink)}
+.commit-meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;margin-top:4px;font-size:12.5px;color:var(--muted)}
+.author-chip{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--ink)}
+.author-dot{width:18px;height:18px;border-radius:50%;color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.sha{font-family:var(--mono);font-size:12px;background:var(--accent-surface);color:var(--accent);padding:1px 7px;border-radius:5px;white-space:nowrap;text-decoration:none}
+.commit-row .sha{flex:none}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+.pager{display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:13px;color:var(--muted)}
+.pager a{border:1px solid var(--rule);border-radius:999px;padding:5px 14px;color:var(--ink);background:var(--surface);text-decoration:none}
+.pager a:hover{border-color:var(--accent)}
 
-    <style>
-      @layer site {
-        :root {
-          color-scheme: light dark;
-          --bg:        light-dark(#f0f2f5, #14171c);
-          --surface:   light-dark(#ffffff, #1d2128);
-          --surface-2: light-dark(#f6f8fa, #161a20);
-          --border:    light-dark(#dee2e6, #303642);
-          --text:      light-dark(#1a1f27, #e7eaf0);
-          --muted:     light-dark(#5a6472, #9aa4b2);
-          --accent:    light-dark(#1a508b, #6ea8ff);
-          --accent-bg: light-dark(#e7f0fb, #1a2330);
-          --add:       light-dark(#1a7f37, #56d364);
-          --add-bg:    light-dark(#e6ffec, #12261b);
-          --del:       light-dark(#cf222e, #f85149);
-          --del-bg:    light-dark(#ffebe9, #2a1416);
-          --hunk:      light-dark(#6639ba, #d2a8ff);
-        }
-        .navbar { background: light-dark(#2c3034, #0f1216); }
-        .navbar-brand, .navbar .nav-link { color: #f1f3f5 !important; }
-        .card, .list-card {
-          background: var(--surface); border: 1px solid var(--border);
-          border-radius: .5rem;
-        }
-        .stat-box {
-          background: var(--surface); border: 1px solid var(--border);
-          border-radius: .5rem; padding: 1rem 1.1rem; height: 100%;
-        }
-        .stat-box .num { font-size: 1.6rem; font-weight: 700; line-height: 1; }
-        .stat-box .lbl { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+.detail{border:1px solid var(--rule);border-radius:8px;background:var(--surface);padding:16px 18px;margin:0 0 20px}
+.detail .meta-row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-bottom:6px;font-size:13.5px;color:var(--muted)}
+.detail .body{white-space:pre-wrap;line-height:1.6;margin-top:10px;font-size:14px;color:var(--ink)}
+.parents{font-size:12.5px;color:var(--muted);margin-top:6px}
 
-        /* Commit list ------------------------------------------------------ */
-        .commit-row {
-          display: grid; grid-template-columns: 1fr auto; gap: .25rem 1rem;
-          padding: .85rem 1.1rem; border-bottom: 1px solid var(--border);
-          text-decoration: none; color: inherit;
-        }
-        .commit-row:last-child { border-bottom: 0; }
-        .commit-row:hover { background: var(--surface-2); }
-        .commit-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-        .commit-subject { font-weight: 600; line-height: 1.35; text-wrap: pretty; }
-        .commit-meta { color: var(--muted); font-size: .85rem; display: flex; flex-wrap: wrap; gap: .35rem .9rem; align-items: center; }
-        .author-chip {
-          display: inline-flex; align-items: center; gap: .35rem; font-weight: 600;
-        }
-        .author-dot {
-          width: 1.25rem; height: 1.25rem; border-radius: 50%; color: #fff;
-          font-size: .7rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 700;
-        }
-        .sha {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-          background: var(--accent-bg); color: var(--accent);
-          padding: .05rem .4rem; border-radius: .3rem; font-size: .8rem; white-space: nowrap;
-        }
+.filelist{border:1px solid var(--rule);border-radius:8px;background:var(--surface);overflow:hidden;margin-bottom:20px}
+.filerow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--rule);font-size:13.5px}
+.filerow:last-child{border-bottom:0}
+.filerow .path{word-break:break-all}
+.filestat{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.filestat .a{color:var(--success)}
+.filestat .d{color:var(--danger)}
+.bars{letter-spacing:-1px}
 
-        /* Diff ------------------------------------------------------------- */
-        .diff {
-          background: var(--surface); border: 1px solid var(--border); border-radius: .5rem;
-          overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-          font-size: .82rem; line-height: 1.5; margin: 0;
-        }
-        .diff .dl { display: block; padding: 0 .9rem; white-space: pre; }
-        .diff .d-ctx  { color: var(--text); }
-        .diff .d-add  { background: var(--add-bg); color: var(--add); }
-        .diff .d-del  { background: var(--del-bg); color: var(--del); }
-        .diff .d-hunk { color: var(--hunk); background: var(--surface-2); }
-        .diff .d-file { color: var(--muted); font-weight: 600; }
-        .diff .d-meta { color: var(--muted); background: var(--surface-2); }
+.diff{background:var(--surface);border:1px solid var(--rule);border-radius:8px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.55;margin:0 0 20px;padding:6px 0}
+.diff .dl{display:block;padding:0 14px;white-space:pre}
+.diff .d-add{background:color-mix(in srgb,var(--success) 14%,transparent);color:var(--success)}
+.diff .d-del{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+.diff .d-hunk{color:var(--accent);background:var(--accent-surface)}
+.diff .d-file{color:var(--muted);font-weight:600}
+.diff .d-meta{color:var(--muted);background:var(--accent-surface)}
+</style>
 
-        .filestat { font-family: ui-monospace, monospace; font-size: .85rem; }
-        .filestat .a { color: var(--add); } .filestat .d { color: var(--del); }
-        .bars { letter-spacing: -1px; }
+<div class="wrap">
+<?php if (!$repoReady): ?>
+  <div class="note warn">
+    <strong>History unavailable.</strong> This page reads from the site's git repository, but git is not reachable here
+    (not a git checkout, or the <code>git</code> binary is unavailable to the web server).
+    <?php $why = git(['status'])['err']; if ($why): ?><br><br><code><?php echo h($why); ?></code><?php endif; ?>
+  </div>
 
-        .muted { color: var(--muted); }
-        .text-balance { text-wrap: balance; }
-        footer.site { color: var(--muted); border-top: 1px solid var(--border); }
-        #themeToggle { background: transparent; border: 0; color: #f1f3f5; font-size: 1.15rem; cursor: pointer; }
-        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-        @media (prefers-reduced-motion: no-preference) {
-          .commit-row, .stat-box { transition: background .12s ease; }
-        }
-      }
-      /* Manual theme override */
-      [data-theme="light"] { color-scheme: light; }
-      [data-theme="dark"]  { color-scheme: dark; }
-
-      /* Unlayered on purpose: @layer rules always lose to Bootstrap's unlayered
-         CSS regardless of source order, so body/link overrides must live outside
-         @layer site to actually beat bootstrap.min.css's body/a rules. */
-      body {
-        background: var(--bg); color: var(--text);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        min-height: 100vh;
-      }
-      a { color: var(--accent); }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-semibold" href="index.php"><i class="bi bi-journal-richtext me-2"></i>David Veksler's Cheatsheet Portfolio</a>
-            <div class="d-flex align-items-center gap-3">
-                <a class="nav-link d-none d-sm-inline" href="how-its-built.html"><i class="bi bi-gear-wide-connected me-1"></i>How it's built</a>
-                <a class="nav-link d-none d-sm-inline" href="popularity.php"><i class="bi bi-bar-chart-fill me-1"></i>Popularity</a>
-                <button id="themeToggle" type="button" aria-label="Toggle colour theme" title="Toggle theme"><i class="bi bi-circle-half"></i></button>
-            </div>
-        </div>
-    </nav>
-
-    <main class="container py-4">
-    <?php if (!$repoReady): ?>
-        <div class="alert alert-warning">
-            <h4 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>History unavailable</h4>
-            <p class="mb-0">This page reads from the site's git repository, but git is not reachable here
-            (not a git checkout, or the <code>git</code> binary is unavailable to the web server).</p>
-            <?php $why = git(['status'])['err']; if ($why): ?><hr><pre class="mb-0 small"><?php echo h($why); ?></pre><?php endif; ?>
-        </div>
-
-    <?php elseif ($view === 'commit'): ?>
-        <?php if (!$detail): ?>
-            <div class="alert alert-warning">Commit <code><?php echo h($commit); ?></code> was not found.
-                <a href="history.php">Back to history</a>.</div>
-        <?php else: ?>
-            <nav aria-label="breadcrumb" class="mb-3">
-              <ol class="breadcrumb small mb-0">
-                <li class="breadcrumb-item"><a href="history.php">Change History</a></li>
-                <li class="breadcrumb-item active"><span class="sha"><?php echo h($detail['short']); ?></span></li>
-              </ol>
-            </nav>
-            <h1 class="h4 text-balance mb-3"><?php echo h($detail['subject']); ?></h1>
-            <div class="card p-3 mb-4">
-              <div class="d-flex flex-wrap gap-3 align-items-center mb-2">
-                <span class="author-chip">
-                  <span class="author-dot" style="background:<?php echo h(author_color($detail['ae'])); ?>"><?php echo h(strtoupper(substr($detail['an'], 0, 1))); ?></span>
-                  <?php echo h($detail['an']); ?>
-                </span>
-                <span class="muted"><i class="bi bi-clock me-1"></i><time datetime="<?php echo h($detail['iso']); ?>"><?php echo h(date('M j, Y g:i A', $detail['at'])); ?></time> · <?php echo h(rel_time($detail['at'])); ?></span>
-                <span class="sha" title="Full SHA"><?php echo h($detail['hash']); ?></span>
-              </div>
-              <?php if ($detail['parents'] !== ''): ?>
-                <div class="small muted mb-2">
-                  Parent<?php echo strpos($detail['parents'], ' ') !== false ? 's' : ''; ?>:
-                  <?php foreach (explode(' ', $detail['parents']) as $p): ?>
-                    <a class="sha" href="?commit=<?php echo h($p); ?>"><?php echo h(substr($p, 0, 9)); ?></a>
-                  <?php endforeach; ?>
-                </div>
-              <?php endif; ?>
-              <?php if ($detail['body'] !== ''): ?>
-                <div class="mt-2" style="white-space:pre-wrap; line-height:1.6;"><?php echo h($detail['body']); ?></div>
-              <?php endif; ?>
-            </div>
-
-            <?php if ($detail['files']): ?>
-            <h2 class="h6 muted text-uppercase mb-2">
-              <?php echo count($detail['files']); ?> file<?php echo count($detail['files']) === 1 ? '' : 's'; ?> changed
-              <span class="filestat ms-2"><span class="a">+<?php echo $detail['totAdd']; ?></span> <span class="d">−<?php echo $detail['totDel']; ?></span></span>
-            </h2>
-            <div class="card mb-4">
-              <ul class="list-group list-group-flush">
-                <?php foreach ($detail['files'] as $fl):
-                    $isTracked = in_array($fl['path'], tracked_files(), true);
-                    $tot = ($fl['add'] ?? 0) + ($fl['del'] ?? 0);
-                    $aBars = $tot > 0 ? (int) round(($fl['add'] ?? 0) / $tot * 5) : 0;
-                    $dBars = $tot > 0 ? (int) round(($fl['del'] ?? 0) / $tot * 5) : 0;
-                ?>
-                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:var(--surface); border-color:var(--border); color:var(--text);">
-                  <span class="text-break">
-                    <i class="bi bi-file-earmark-text me-1 muted"></i>
-                    <?php if ($isTracked): ?>
-                      <a href="?file=<?php echo h(urlencode($fl['path'])); ?>"><?php echo h($fl['path']); ?></a>
-                    <?php else: ?>
-                      <?php echo h($fl['path']); ?>
-                    <?php endif; ?>
-                  </span>
-                  <span class="filestat">
-                    <?php if ($fl['add'] === null && $fl['del'] === null): ?>
-                      <span class="muted">binary</span>
-                    <?php else: ?>
-                      <span class="a">+<?php echo $fl['add']; ?></span>
-                      <span class="d">−<?php echo $fl['del']; ?></span>
-                      <span class="bars"><span class="a"><?php echo str_repeat('▰', $aBars); ?></span><span class="d"><?php echo str_repeat('▰', $dBars); ?></span></span>
-                    <?php endif; ?>
-                  </span>
-                </li>
-                <?php endforeach; ?>
-              </ul>
-            </div>
-            <?php endif; ?>
-
-            <?php if (trim($detail['patch']) !== ''): ?>
-              <h2 class="h6 muted text-uppercase mb-2">Diff</h2>
-              <pre class="diff"><?php echo render_diff($detail['patch']); ?></pre>
-            <?php endif; ?>
-        <?php endif; ?>
-
-    <?php elseif ($view === 'file'): ?>
-        <nav aria-label="breadcrumb" class="mb-3">
-          <ol class="breadcrumb small mb-0">
-            <li class="breadcrumb-item"><a href="history.php">Change History</a></li>
-            <li class="breadcrumb-item active"><?php echo h($file); ?></li>
-          </ol>
-        </nav>
-        <h1 class="h4 text-balance mb-1"><i class="bi bi-file-earmark-text me-1"></i><?php echo h($file); ?></h1>
-        <p class="muted mb-4">
-          <?php echo count($commitsList); ?> commit<?php echo count($commitsList) === 1 ? '' : 's'; ?> touched this file.
-          <?php $isHtml = str_ends_with(strtolower($file), '.html'); if ($isHtml): ?>
-            <a href="<?php echo h($file); ?>" target="_blank">View current version <i class="bi bi-box-arrow-up-right"></i></a>
-          <?php endif; ?>
-        </p>
-        <div class="list-card">
-          <?php foreach ($commitsList as $c): ?>
-            <a class="commit-row" href="?commit=<?php echo h($c['hash']); ?>">
-              <div>
-                <div class="commit-subject"><?php echo h($c['subject']); ?></div>
-                <div class="commit-meta">
-                  <span class="author-chip">
-                    <span class="author-dot" style="background:<?php echo h(author_color($c['ae'])); ?>"><?php echo h(strtoupper(substr($c['an'], 0, 1))); ?></span>
-                    <?php echo h($c['an']); ?>
-                  </span>
-                  <span><i class="bi bi-clock me-1"></i><?php echo h(rel_time($c['at'])); ?></span>
-                </div>
-              </div>
-              <div class="text-end align-self-center"><span class="sha"><?php echo h($c['short']); ?></span></div>
-            </a>
+<?php elseif ($view === 'commit'): ?>
+  <?php if (!$detail): ?>
+    <div class="note warn">Commit <code><?php echo h($commit); ?></code> was not found. <a href="history.php">Back to history</a>.</div>
+  <?php else: ?>
+    <p class="crumb"><a href="history.php">Change history</a> / <span class="sha"><?php echo h($detail['short']); ?></span></p>
+    <h1><?php echo h($detail['subject']); ?></h1>
+    <div class="detail">
+      <div class="meta-row">
+        <span class="author-chip">
+          <span class="author-dot" style="background:<?php echo h(author_color($detail['ae'])); ?>"><?php echo h(strtoupper(substr($detail['an'], 0, 1))); ?></span>
+          <?php echo h($detail['an']); ?>
+        </span>
+        <span><time datetime="<?php echo h($detail['iso']); ?>"><?php echo h(date('M j, Y g:i A', $detail['at'])); ?></time> · <?php echo h(rel_time($detail['at'])); ?></span>
+        <span class="sha" title="Full SHA"><?php echo h($detail['hash']); ?></span>
+      </div>
+      <?php if ($detail['parents'] !== ''): ?>
+        <div class="parents">
+          Parent<?php echo strpos($detail['parents'], ' ') !== false ? 's' : ''; ?>:
+          <?php foreach (explode(' ', $detail['parents']) as $p): ?>
+            <a class="sha" href="?commit=<?php echo h($p); ?>"><?php echo h(substr($p, 0, 9)); ?></a>
           <?php endforeach; ?>
         </div>
+      <?php endif; ?>
+      <?php if ($detail['body'] !== ''): ?>
+        <div class="body"><?php echo h($detail['body']); ?></div>
+      <?php endif; ?>
+    </div>
 
-    <?php else: /* ---------------- list view ---------------- */ ?>
-        <header class="mb-4">
-          <h1 class="h3 text-balance mb-1"><i class="bi bi-clock-history me-2"></i>Change History</h1>
-          <p class="muted mb-0">Every change to this cheatsheet collection, straight from the git repository<?php echo $summary['branch'] ? ' (<code>' . h($summary['branch']) . '</code>)' : ''; ?>.</p>
-        </header>
-
-        <div class="row g-3 mb-4">
-          <div class="col-6 col-md-3"><div class="stat-box"><div class="num"><?php echo number_format($summary['commits']); ?></div><div class="lbl">Commits</div></div></div>
-          <div class="col-6 col-md-3"><div class="stat-box"><div class="num"><?php echo number_format($summary['files']); ?></div><div class="lbl">Tracked files</div></div></div>
-          <div class="col-6 col-md-3"><div class="stat-box"><div class="num"><?php echo number_format($summary['authors']); ?></div><div class="lbl">Contributors</div></div></div>
-          <div class="col-6 col-md-3"><div class="stat-box"><div class="num" style="font-size:1.05rem;"><?php echo $summary['last'] ? h(date('M j, Y', $summary['last'])) : '—'; ?></div><div class="lbl">Last change</div></div></div>
-        </div>
-
-        <form method="get" action="history.php" class="mb-4" role="search">
-          <div class="input-group">
-            <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
-            <input type="search" name="q" class="form-control" value="<?php echo h($q); ?>"
-                   placeholder="Search commit messages or authors…" aria-label="Search history">
-            <button class="btn btn-primary" type="submit">Search</button>
-            <?php if ($q !== ''): ?><a class="btn btn-outline-secondary" href="history.php">Clear</a><?php endif; ?>
-          </div>
-        </form>
-
-        <?php if (empty($commitsList)): ?>
-          <div class="alert alert-info">No commits<?php echo $q !== '' ? ' match “' . h($q) . '”' : ' found'; ?>.</div>
-        <?php else: ?>
-          <div class="list-card mb-4">
-            <?php foreach ($commitsList as $c): ?>
-              <a class="commit-row" href="?commit=<?php echo h($c['hash']); ?>">
-                <div>
-                  <div class="commit-subject"><?php echo h($c['subject']); ?></div>
-                  <div class="commit-meta">
-                    <span class="author-chip">
-                      <span class="author-dot" style="background:<?php echo h(author_color($c['ae'])); ?>"><?php echo h(strtoupper(substr($c['an'], 0, 1))); ?></span>
-                      <?php echo h($c['an']); ?>
-                    </span>
-                    <span><i class="bi bi-clock me-1"></i><time datetime="<?php echo h(date('c', $c['at'])); ?>"><?php echo h(rel_time($c['at'])); ?></time></span>
-                  </div>
-                </div>
-                <div class="text-end align-self-center"><span class="sha"><?php echo h($c['short']); ?></span></div>
-              </a>
-            <?php endforeach; ?>
-          </div>
-
-          <nav class="d-flex justify-content-between align-items-center" aria-label="History pages">
-            <?php
-              $qParam = $q !== '' ? '&q=' . urlencode($q) : '';
-              $prevPage = $page - 1; $nextPage = $page + 1;
-            ?>
-            <div>
-              <?php if ($page > 1): ?>
-                <a class="btn btn-outline-secondary" href="?page=<?php echo $prevPage . $qParam; ?>"><i class="bi bi-arrow-left"></i> Newer</a>
-              <?php endif; ?>
-            </div>
-            <span class="muted small">Page <?php echo $page; ?></span>
-            <div>
-              <?php if ($hasNext): ?>
-                <a class="btn btn-outline-secondary" href="?page=<?php echo $nextPage . $qParam; ?>">Older <i class="bi bi-arrow-right"></i></a>
-              <?php endif; ?>
-            </div>
-          </nav>
-        <?php endif; ?>
-    <?php endif; ?>
-    </main>
-
-    <footer class="site py-4 mt-5">
-      <div class="container text-center small">
-        <a href="index.php"><i class="bi bi-collection-fill me-1"></i>All cheatsheets</a>
-        <span class="mx-2">·</span>
-        Rendered from git <?php echo $summary['branch'] ? 'on <code>' . h($summary['branch']) . '</code>' : ''; ?>
-        · © <?php echo date('Y'); ?> David Veksler
+    <?php if ($detail['files']): ?>
+    <p class="lbl sectlbl">
+      <?php echo count($detail['files']); ?> file<?php echo count($detail['files']) === 1 ? '' : 's'; ?> changed
+      <span class="filestat"><span class="a">+<?php echo $detail['totAdd']; ?></span> <span class="d">−<?php echo $detail['totDel']; ?></span></span>
+    </p>
+    <div class="filelist">
+      <?php foreach ($detail['files'] as $fl):
+          $isTracked = in_array($fl['path'], tracked_files(), true);
+          $tot = ($fl['add'] ?? 0) + ($fl['del'] ?? 0);
+          $aBars = $tot > 0 ? (int) round(($fl['add'] ?? 0) / $tot * 5) : 0;
+          $dBars = $tot > 0 ? (int) round(($fl['del'] ?? 0) / $tot * 5) : 0;
+      ?>
+      <div class="filerow">
+        <span class="path">
+          <?php if ($isTracked): ?>
+            <a href="?file=<?php echo h(urlencode($fl['path'])); ?>"><?php echo h($fl['path']); ?></a>
+          <?php else: ?>
+            <?php echo h($fl['path']); ?>
+          <?php endif; ?>
+        </span>
+        <span class="filestat">
+          <?php if ($fl['add'] === null && $fl['del'] === null): ?>
+            <span class="l" style="color:var(--muted)">binary</span>
+          <?php else: ?>
+            <span class="a">+<?php echo $fl['add']; ?></span>
+            <span class="d">−<?php echo $fl['del']; ?></span>
+            <span class="bars"><span class="a"><?php echo str_repeat('▰', $aBars); ?></span><span class="d"><?php echo str_repeat('▰', $dBars); ?></span></span>
+          <?php endif; ?>
+        </span>
       </div>
-    </footer>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
-    <script>
-      // Manual light/dark override, persisted; defaults to OS preference.
-      (function () {
-        const KEY = 'cheatsheet-theme';
-        const root = document.documentElement;
-        const saved = (function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } })();
-        if (saved === 'light' || saved === 'dark') root.setAttribute('data-theme', saved);
-        document.addEventListener('DOMContentLoaded', function () {
-          const btn = document.getElementById('themeToggle');
-          if (!btn) return;
-          btn.addEventListener('click', function () {
-            const current = root.getAttribute('data-theme')
-              || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            const next = current === 'dark' ? 'light' : 'dark';
-            root.setAttribute('data-theme', next);
-            try { localStorage.setItem(KEY, next); } catch (e) {}
-          });
-        });
-      })();
-    </script>
-</body>
-</html>
+    <?php if (trim($detail['patch']) !== ''): ?>
+      <p class="lbl sectlbl">Diff</p>
+      <pre class="diff"><?php echo render_diff($detail['patch']); ?></pre>
+    <?php endif; ?>
+  <?php endif; ?>
+
+<?php elseif ($view === 'file'): ?>
+  <p class="crumb"><a href="history.php">Change history</a> / <?php echo h($file); ?></p>
+  <h1><?php echo h($file); ?></h1>
+  <p class="lead" style="color:var(--muted);margin:0 0 18px">
+    <?php echo count($commitsList); ?> commit<?php echo count($commitsList) === 1 ? '' : 's'; ?> touched this file.
+    <?php $isHtml = str_ends_with(strtolower($file), '.html'); if ($isHtml): ?>
+      <a href="<?php echo h($file); ?>" target="_blank">View current version →</a>
+    <?php endif; ?>
+  </p>
+  <div class="list-card">
+    <?php foreach ($commitsList as $c): ?>
+      <a class="commit-row" href="?commit=<?php echo h($c['hash']); ?>">
+        <div>
+          <div class="commit-subject"><?php echo h($c['subject']); ?></div>
+          <div class="commit-meta">
+            <span class="author-chip">
+              <span class="author-dot" style="background:<?php echo h(author_color($c['ae'])); ?>"><?php echo h(strtoupper(substr($c['an'], 0, 1))); ?></span>
+              <?php echo h($c['an']); ?>
+            </span>
+            <span><?php echo h(rel_time($c['at'])); ?></span>
+          </div>
+        </div>
+        <span class="sha"><?php echo h($c['short']); ?></span>
+      </a>
+    <?php endforeach; ?>
+  </div>
+
+<?php else: /* ---------------- list view ---------------- */ ?>
+  <section class="hero">
+    <h1>Change history</h1>
+    <p class="lead">Every change to this cheatsheet collection, straight from the git repository<?php echo $summary['branch'] ? ' (<code>' . h($summary['branch']) . '</code>)' : ''; ?>.</p>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><div class="n"><?php echo number_format($summary['commits']); ?></div><div class="l">Commits</div></div>
+    <div class="stat"><div class="n"><?php echo number_format($summary['files']); ?></div><div class="l">Tracked files</div></div>
+    <div class="stat"><div class="n"><?php echo number_format($summary['authors']); ?></div><div class="l">Contributors</div></div>
+    <div class="stat"><div class="n" style="font-size:15px"><?php echo $summary['last'] ? h(date('M j, Y', $summary['last'])) : '—'; ?></div><div class="l">Last change</div></div>
+  </div>
+
+  <form method="get" action="history.php" class="searchbar" role="search">
+    <label class="sr" for="hq">Search commit messages or authors</label>
+    <input type="search" id="hq" name="q" value="<?php echo h($q); ?>" placeholder="Search commit messages or authors…" autocomplete="off">
+    <button type="submit">Search</button>
+    <?php if ($q !== ''): ?><a class="clear" href="history.php">Clear</a><?php endif; ?>
+  </form>
+
+  <?php if (empty($commitsList)): ?>
+    <div class="note">No commits<?php echo $q !== '' ? ' match "' . h($q) . '"' : ' found'; ?>.</div>
+  <?php else: ?>
+    <div class="list-card">
+      <?php foreach ($commitsList as $c): ?>
+        <a class="commit-row" href="?commit=<?php echo h($c['hash']); ?>">
+          <div>
+            <div class="commit-subject"><?php echo h($c['subject']); ?></div>
+            <div class="commit-meta">
+              <span class="author-chip">
+                <span class="author-dot" style="background:<?php echo h(author_color($c['ae'])); ?>"><?php echo h(strtoupper(substr($c['an'], 0, 1))); ?></span>
+                <?php echo h($c['an']); ?>
+              </span>
+              <span><time datetime="<?php echo h(date('c', $c['at'])); ?>"><?php echo h(rel_time($c['at'])); ?></time></span>
+            </div>
+          </div>
+          <span class="sha"><?php echo h($c['short']); ?></span>
+        </a>
+      <?php endforeach; ?>
+    </div>
+
+    <nav class="pager" aria-label="History pages">
+      <?php
+        $qParam = $q !== '' ? '&q=' . urlencode($q) : '';
+        $prevPage = $page - 1; $nextPage = $page + 1;
+      ?>
+      <div><?php if ($page > 1): ?><a href="?page=<?php echo $prevPage . $qParam; ?>">← Newer</a><?php endif; ?></div>
+      <span class="num">Page <?php echo $page; ?></span>
+      <div><?php if ($hasNext): ?><a href="?page=<?php echo $nextPage . $qParam; ?>">Older →</a><?php endif; ?></div>
+    </nav>
+  <?php endif; ?>
+<?php endif; ?>
+</div>
+<?php chrome_close(); ?>
+
