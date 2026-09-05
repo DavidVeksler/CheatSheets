@@ -14,7 +14,11 @@ header('Content-Type: text/html; charset=utf-8');
 header('Cache-Control: public, max-age=3600');
 
 $dataFile  = __DIR__ . '/popularity.json';
-$cacheFile = __DIR__ . '/.metadata-cache.json';
+// Titles and first-commit dates come from catalog.json (built by
+// scripts/build_catalog.py). This used to read .metadata-cache.json, a
+// by-product of the old index.php's runtime HTML parser; that parser and its
+// cache are gone, and the catalog is the single extraction source now.
+$cacheFile = __DIR__ . '/catalog.json';
 
 /* ---------- Load popularity.json ---------- */
 $popData = ['lastUpdated' => null, 'scores' => []];
@@ -29,13 +33,23 @@ if (is_readable($dataFile)) {
 $scores = $popData['scores'] ?? [];
 arsort($scores);  // highest score first
 
-/* ---------- Load metadata cache for proper titles ---------- */
+/* ---------- Load the catalog for proper titles and creation dates ---------- */
+// Reshaped to the {filename => ['title' =>, 'git_ctime' =>]} map this page has
+// always consumed, so the rendering below is unchanged.
 $metaCache = [];
 if (is_readable($cacheFile)) {
     $raw = @file_get_contents($cacheFile);
     if ($raw !== false) {
         $decoded = json_decode($raw, true);
-        if (is_array($decoded)) $metaCache = $decoded;
+        if (is_array($decoded) && !empty($decoded['sheets']) && is_array($decoded['sheets'])) {
+            foreach ($decoded['sheets'] as $sheet) {
+                if (empty($sheet['file'])) continue;
+                $metaCache[(string)$sheet['file']] = [
+                    'title'     => (string)($sheet['title'] ?? ''),
+                    'git_ctime' => (int)($sheet['created'] ?? 0),
+                ];
+            }
+        }
     }
 }
 
