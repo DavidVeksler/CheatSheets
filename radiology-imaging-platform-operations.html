@@ -1,0 +1,1348 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radiology PACS Operations: Connectivity, Downtime, Cost</title><meta name="description" content="Operate the imaging platform after you buy it: modality commissioning steps, DICOM status and reject code triage, downtime runbooks, SLO targets, and a five-year archive cost model.">
+<meta name="keywords" content="PACS operations, DICOM troubleshooting, DICOM status codes, association rejected called AE title not recognized, modality commissioning checklist, PACS downtime procedure, imaging platform SLO, PACS total cost of ownership, MPPS discontinuation reason, veterinary PACS operations">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/radiology-imaging-platform-operations.html">
+<meta property="og:title" content="Radiology PACS Operations: Connectivity, Downtime, Cost"><meta property="og:description" content="Operate the imaging platform after you buy it: modality commissioning steps, DICOM status and reject code triage, downtime runbooks, SLO targets, and a five-year archive cost model."><meta property="og:type" content="website"><meta property="og:url" content="https://cheatsheets.davidveksler.com/radiology-imaging-platform-operations.html"><meta property="og:image" content="images/radiology-imaging-platform-operations.png"><meta property="og:image:alt" content="An operations dispatch board decoding DICOM association reject and status codes into probes and fixes">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Radiology PACS Operations: Connectivity, Downtime, Cost"><meta name="twitter:description" content="Operate the imaging platform after you buy it: modality commissioning steps, DICOM status and reject code triage, downtime runbooks, SLO targets, and a five-year archive cost model."><meta name="twitter:image" content="images/radiology-imaging-platform-operations.png"><meta name="twitter:creator" content="@heroiclife">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Radiology PACS Operations: Connectivity, Downtime, and Cost of Ownership","description":"An operations reference for a running radiology imaging platform: per-modality operating profiles, MPPS discontinuation reasons, a modality and site commissioning sequence, a DICOM association-reject and DIMSE status-code triage board, exception-desk queues and authority limits, degraded-operation runbooks mapped to the HIPAA contingency plan standard, service-level indicators with measurement points, a five-year archive cost model, operating-model responsibility matrices, and human versus veterinary operational differences.","author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-09-05","keywords":"PACS operations, DICOM troubleshooting, DICOM status codes, modality commissioning, PACS downtime procedure, imaging SLO, imaging cost of ownership, MPPS discontinuation reason, veterinary PACS"}</script>
+<style>
+@layer reset, tokens, base, layout, components, board, print;
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  body, h1, h2, h3, h4, p, ul, ol, dl, dd, figure, table { margin: 0; }
+  ul, ol { padding: 0; }
+  img, svg { max-width: 100%; }
+}
+
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --paper:    light-dark(#f2efe7, #100f0d);
+    --surface:  light-dark(#fffdf7, #191713);
+    --surface2: light-dark(#f7f3e9, #201d18);
+    --ink:      light-dark(#1a1713, #eae4d8);
+    --muted:    light-dark(#4a443b, #a89f8f);
+    --faint:    light-dark(#6b6355, #8b8273);
+    --line:     light-dark(#cfc6b4, #332e26);
+    --rule:     light-dark(#a1957c, #4c4539);
+    --ok:       light-dark(#15613f, #62d3a0);
+    --fault:    light-dark(#9d3410, #ff9970);
+    --warn:     light-dark(#77560a, #e3b64a);
+    --info:     light-dark(#22507b, #86c3f2);
+    --ok-bg:    light-dark(#e6f1e9, #14251c);
+    --fault-bg: light-dark(#f7e8e0, #2a1811);
+    --warn-bg:  light-dark(#f7f0dc, #251f11);
+    --info-bg:  light-dark(#e6eef6, #131e29);
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --pad: clamp(0.9rem, 2.4vw, 1.6rem);
+  }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; scroll-padding-top: 5.2rem; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    background: var(--paper); color: var(--ink);
+    font: 400 clamp(0.94rem, 0.9rem + 0.18vw, 1.02rem)/1.55 var(--sans);
+    -webkit-text-size-adjust: 100%;
+  }
+  h1, h2, h3, h4 { font-family: var(--mono); font-weight: 600; line-height: 1.2; text-wrap: balance; letter-spacing: -0.01em; }
+  p, li { text-wrap: pretty; }
+  p + p { margin-top: 0.7em; }
+  a { color: var(--info); text-underline-offset: 0.18em; }
+  a:hover { color: var(--fault); }
+  :focus-visible { outline: 2px solid var(--fault); outline-offset: 2px; border-radius: 2px; }
+  code, kbd, samp { font-family: var(--mono); font-size: 0.92em; }
+  code { background: var(--surface2); border: 1px solid var(--line); border-radius: 3px; padding: 0.05em 0.3em; }
+  abbr[title] { text-decoration-style: dotted; cursor: help; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+}
+
+@layer layout {
+  .wrap { max-width: 1180px; margin-inline: auto; padding-inline: var(--pad); }
+  main { padding-bottom: 4rem; }
+  .chapter { margin-top: 3.2rem; scroll-margin-top: 5.2rem; }
+  .chapter > h2 {
+    font-size: clamp(1.15rem, 1rem + 1vw, 1.5rem); text-transform: uppercase; letter-spacing: 0.06em;
+    padding-bottom: 0.4rem; border-bottom: 2px solid var(--rule); display: flex; flex-wrap: wrap;
+    align-items: baseline; gap: 0.7rem;
+  }
+  .chapter > h2 .num { font-size: 0.7em; color: var(--fault); letter-spacing: 0.14em; }
+  .chapter > h2 + .lede { margin-top: 0.7rem; color: var(--muted); max-width: 78ch; }
+  h3 { font-size: 1.05rem; margin-top: 2rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink); }
+  h3::before { content: "\25B8\00A0"; color: var(--fault); }
+  h4 { font-size: 0.95rem; margin-top: 1.2rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .grid { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); margin-top: 1rem; }
+  .grid-2 { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); margin-top: 1rem; }
+}
+
+@layer components {
+  /* masthead ---------------------------------------------------------- */
+  .masthead { background: var(--surface); border-bottom: 2px solid var(--rule); padding-block: 1.6rem 1.2rem; }
+  .masthead h1 { font-size: clamp(1.4rem, 1rem + 2.6vw, 2.3rem); }
+  .masthead .sub { margin-top: 0.5rem; color: var(--muted); max-width: 74ch; }
+  .stampline {
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; margin-top: 0.9rem;
+    font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint);
+  }
+  .stampline b { color: var(--ok); font-weight: 600; }
+  .companion {
+    margin-top: 1rem; border: 1px solid var(--line); border-left: 4px solid var(--info);
+    background: var(--info-bg); padding: 0.7rem 0.9rem; border-radius: 3px; max-width: 82ch;
+  }
+  .companion strong { font-family: var(--mono); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.1em; color: var(--info); display: block; }
+
+  /* nav --------------------------------------------------------------- */
+  .railnav { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .railnav ol { display: flex; gap: 0.15rem; list-style: none; overflow-x: auto; margin: 0; padding: 0.35rem 0; scrollbar-width: thin; }
+  .railnav a {
+    display: block; white-space: nowrap; padding: 0.35rem 0.6rem; border-radius: 3px; text-decoration: none;
+    font-family: var(--mono); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
+  }
+  .railnav a:hover, .railnav a:focus-visible { background: var(--surface2); color: var(--ink); }
+
+  /* cards ------------------------------------------------------------- */
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0.8rem 0.9rem; }
+  .card > h4 { margin-top: 0; }
+  .card p, .card ul { font-size: 0.92rem; }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--rule); border-radius: 3px; padding: 0.7rem 0.85rem; }
+  .tile .k { font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.11em; color: var(--faint); }
+  .tile .v { font-family: var(--mono); font-size: 1.05rem; font-weight: 600; margin-block: 0.15rem 0.3rem; color: var(--ink); overflow-wrap: anywhere; }
+  .tile p { font-size: 0.86rem; color: var(--muted); }
+  .tile.ok { border-left-color: var(--ok); }
+  .tile.fault { border-left-color: var(--fault); }
+  .tile.warn { border-left-color: var(--warn); }
+  .tile.info { border-left-color: var(--info); }
+
+  /* callouts ---------------------------------------------------------- */
+  .note { border: 1px solid var(--line); border-left: 4px solid var(--rule); background: var(--surface); padding: 0.7rem 0.9rem; border-radius: 3px; margin-top: 1rem; font-size: 0.93rem; }
+  .note > .lbl { font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.11em; display: block; margin-bottom: 0.25rem; }
+  .note.anti { border-left-color: var(--fault); background: var(--fault-bg); }
+  .note.anti > .lbl { color: var(--fault); }
+  .note.rec { border-left-color: var(--ok); background: var(--ok-bg); }
+  .note.rec > .lbl { color: var(--ok); }
+  .note.reg { border-left-color: var(--info); background: var(--info-bg); }
+  .note.reg > .lbl { color: var(--info); }
+  .note.caution { border-left-color: var(--warn); background: var(--warn-bg); }
+  .note.caution > .lbl { color: var(--warn); }
+
+  /* evidence chips ---------------------------------------------------- */
+  .ev { font-family: var(--mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.09em; padding: 0.12em 0.42em; border-radius: 2px; border: 1px solid currentColor; white-space: nowrap; vertical-align: 0.14em; }
+  .ev.std { color: var(--info); }
+  .ev.reg { color: var(--fault); }
+  .ev.prac { color: var(--muted); }
+  .ev.rec { color: var(--ok); }
+  .ev.dec { color: var(--warn); }
+
+  /* tables ------------------------------------------------------------ */
+  .tw { overflow-x: auto; margin-top: 0.9rem; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+  caption { text-align: left; font-family: var(--mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint); padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--line); background: var(--surface2); }
+  th, td { text-align: left; padding: 0.42rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { background: var(--surface2); font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); position: sticky; top: 0; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface2) 55%, transparent); }
+  td.mono, th.mono, .mono { font-family: var(--mono); }
+  td.code { font-family: var(--mono); font-weight: 600; white-space: nowrap; }
+
+  /* lists ------------------------------------------------------------- */
+  ul.tick, ol.steps { list-style: none; margin-top: 0.8rem; }
+  ul.tick li { position: relative; padding-left: 1.35rem; margin-bottom: 0.45rem; }
+  ul.tick li::before { content: "\25AA"; position: absolute; left: 0.25rem; color: var(--fault); font-family: var(--mono); }
+  ol.steps { counter-reset: s; }
+  ol.steps > li { counter-increment: s; position: relative; padding-left: 2.4rem; margin-bottom: 0.7rem; }
+  ol.steps > li::before {
+    content: counter(s, decimal-leading-zero); position: absolute; left: 0; top: 0.05rem;
+    font-family: var(--mono); font-size: 0.72rem; color: var(--paper); background: var(--rule);
+    border-radius: 2px; padding: 0.1rem 0.35rem;
+  }
+
+  /* drawers ----------------------------------------------------------- */
+  details.drawer { border: 1px solid var(--line); border-radius: 4px; background: var(--surface); margin-top: 0.7rem; }
+  details.drawer > summary {
+    cursor: pointer; padding: 0.6rem 0.8rem; font-family: var(--mono); font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 0.05em; list-style: none; display: flex; gap: 0.6rem; align-items: baseline;
+  }
+  details.drawer > summary::-webkit-details-marker { display: none; }
+  details.drawer > summary::before { content: "+"; color: var(--fault); font-weight: 700; }
+  details.drawer[open] > summary::before { content: "\2212"; }
+  details.drawer > summary:hover { background: var(--surface2); }
+  details.drawer > .body { padding: 0 0.8rem 0.8rem; border-top: 1px solid var(--line); padding-top: 0.7rem; }
+
+  /* code blocks ------------------------------------------------------- */
+  pre {
+    margin-top: 0.8rem; background: var(--surface2); border: 1px solid var(--line); border-left: 4px solid var(--ok);
+    border-radius: 3px; padding: 0.7rem 0.8rem; overflow-x: auto; font-family: var(--mono); font-size: 0.8rem; line-height: 1.5;
+  }
+  pre .cm { color: var(--faint); }
+  pre code { background: none; border: 0; padding: 0; }
+}
+</style>
+<style>
+@layer board {
+  /* signature: the dispatch board ------------------------------------ */
+  .board { margin-top: 1rem; border: 2px solid var(--rule); border-radius: 5px; background: var(--surface); overflow: hidden; }
+  .board-head {
+    display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; justify-content: space-between;
+    padding: 0.6rem 0.8rem; background: var(--surface2); border-bottom: 2px solid var(--rule);
+  }
+  .board-head .title { font-family: var(--mono); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+  .board-search { display: flex; gap: 0.4rem; align-items: center; flex: 1 1 16rem; max-width: 26rem; }
+  .board-search input {
+    flex: 1; font-family: var(--mono); font-size: 0.85rem; padding: 0.4rem 0.55rem; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 3px;
+  }
+  .board-search button, .btn {
+    font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em;
+    padding: 0.42rem 0.7rem; background: var(--surface); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 3px; cursor: pointer;
+  }
+  .board-search button:hover, .btn:hover { background: var(--surface2); border-color: var(--fault); }
+  .board-count { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); }
+  .board table { font-size: 0.85rem; }
+  .board td:first-child { white-space: nowrap; font-family: var(--mono); font-weight: 600; }
+  .led { display: inline-block; width: 0.55em; height: 0.55em; border-radius: 50%; margin-right: 0.45em; vertical-align: 0.04em; background: var(--muted); }
+  .led.ok { background: var(--ok); } .led.fault { background: var(--fault); }
+  .led.warn { background: var(--warn); } .led.info { background: var(--info); }
+  tr[hidden] { display: none; }
+  .board .empty { padding: 1rem; color: var(--faint); font-family: var(--mono); font-size: 0.8rem; }
+
+  /* the board degrades to stacked cards on narrow screens */
+  @media (max-width: 46rem) {
+    .board .tw { overflow-x: visible; }
+    .board table, .board tbody, .board tr, .board td { display: block; width: 100%; }
+    .board thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .board tbody tr { border-bottom: 2px solid var(--rule); padding: 0.6rem 0.75rem 0.75rem; background: none; }
+    .board tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface2) 55%, transparent); }
+    .board tbody tr:last-child { border-bottom: 0; }
+    .board td { border: 0; padding: 0; }
+    .board td[data-l="Signal"] { font-size: 1rem; margin-bottom: 0.35rem; }
+    .board td:not([data-l="Signal"])::before {
+      content: attr(data-l); display: block; font-family: var(--mono); font-size: 0.62rem;
+      text-transform: uppercase; letter-spacing: 0.11em; color: var(--faint); margin-top: 0.5rem;
+    }
+  }
+
+  /* checklist --------------------------------------------------------- */
+  .checklist { margin-top: 1rem; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+  .checklist-head { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; justify-content: space-between; padding: 0.55rem 0.8rem; background: var(--surface2); border-bottom: 1px solid var(--line); }
+  .checklist-head .pct { font-family: var(--mono); font-size: 0.75rem; color: var(--ok); }
+  .checklist ol { list-style: none; margin: 0; padding: 0.4rem 0.5rem 0.6rem; counter-reset: c; }
+  .checklist li { counter-increment: c; display: grid; grid-template-columns: auto 1fr; gap: 0.55rem; padding: 0.42rem 0.35rem; border-bottom: 1px dashed var(--line); }
+  .checklist li:last-child { border-bottom: 0; }
+  .checklist input[type=checkbox] { margin-top: 0.28rem; width: 1rem; height: 1rem; accent-color: var(--ok); }
+  .checklist .step-t { font-family: var(--mono); font-size: 0.82rem; font-weight: 600; }
+  .checklist .step-t::before { content: counter(c, decimal-leading-zero) " \00B7 "; color: var(--faint); font-weight: 400; }
+  .checklist .step-d { font-size: 0.86rem; color: var(--muted); }
+  .checklist .pass { font-size: 0.82rem; color: var(--ok); }
+  .checklist .pass b { font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.09em; }
+  .checklist li:has(input:checked) .step-t { text-decoration: line-through; color: var(--faint); }
+
+  /* calculator -------------------------------------------------------- */
+  .calc { margin-top: 1rem; display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+  .calc fieldset { border: 1px solid var(--line); border-radius: 4px; background: var(--surface); padding: 0.6rem 0.8rem 0.8rem; margin: 0; }
+  .calc legend { font-family: var(--mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint); padding-inline: 0.3rem; }
+  .calc label { display: grid; grid-template-columns: 1fr 7.2rem; gap: 0.5rem; align-items: center; margin-top: 0.42rem; font-size: 0.85rem; }
+  .calc input {
+    font-family: var(--mono); font-size: 0.82rem; padding: 0.28rem 0.4rem; text-align: right; color: var(--ink);
+    background: var(--surface2); border: 1px solid var(--line); border-radius: 3px; width: 100%;
+  }
+  .calc .hint { font-size: 0.74rem; color: var(--faint); grid-column: 1 / -1; margin-top: 0.1rem; }
+  .out { margin-top: 1rem; border: 2px solid var(--rule); border-radius: 4px; background: var(--surface); }
+  .out .out-head { padding: 0.55rem 0.8rem; background: var(--surface2); border-bottom: 2px solid var(--rule); font-family: var(--mono); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.11em; color: var(--muted); }
+  .out .figs { display: grid; gap: 0; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); }
+  .out .fig { padding: 0.6rem 0.8rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .out .fig .k { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint); }
+  .out .fig .v { font-family: var(--mono); font-size: 1.1rem; font-weight: 600; margin-top: 0.15rem; }
+  .out .fig.hero .v { color: var(--fault); font-size: 1.35rem; }
+  .out .fig.good .v { color: var(--ok); }
+
+  /* memo -------------------------------------------------------------- */
+  .memo { margin-top: 1rem; }
+  .memo textarea {
+    width: 100%; min-height: 24rem; font-family: var(--mono); font-size: 0.8rem; line-height: 1.5;
+    color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0.8rem; resize: vertical;
+  }
+  .memo .bar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
+  .memo .status { font-family: var(--mono); font-size: 0.72rem; color: var(--ok); }
+
+  /* related / footer -------------------------------------------------- */
+  .sheet-foot { margin-top: 3.5rem; padding-top: 1.2rem; border-top: 2px solid var(--rule); font-size: 0.88rem; color: var(--muted); }
+  .related-cheatsheets { margin-top: 1.1rem; font-size: 0.85rem; }
+  .related-cheatsheets a { display: inline-block; margin: 0.2rem 0.5rem 0.2rem 0; }
+  .srcs { font-size: 0.85rem; }
+  .srcs li { margin-bottom: 0.4rem; }
+  .srcs ol { padding-left: 1.4rem; }
+}
+
+@layer print {
+  @media print {
+    .railnav, .board-search, .memo .bar, .checklist-head .btn { display: none; }
+    body { background: #fff; color: #000; font-size: 10pt; }
+    .chapter { break-inside: auto; page-break-inside: auto; }
+    h2, h3 { break-after: avoid; }
+    .tw, table, .card, .tile, .note { break-inside: avoid; }
+    details.drawer > .body { display: block !important; }
+    a { color: #000; text-decoration: none; }
+    .tw { overflow: visible; }
+  }
+}
+</style>
+</head>
+<body>
+<a class="sr-only" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <div class="wrap">
+    <h1>Radiology imaging platform operations</h1>
+    <p class="sub">The part of the job that starts the day the contract is signed: bringing a modality online, decoding the error a technologist just read to you over the phone, running the exception desk, working through an archive outage, defining a service level that can actually be measured, and modelling what five years of studies really costs.</p>
+    <p class="stampline"><span>Companion sheet</span> <span><b>Ops &amp; economics axis</b></span> <span>DICOM edition PS3 2026c</span> <span>Prices: us-east-1, Sep&nbsp;2026</span></p>
+    <div class="companion">
+      <strong>Read this with the architecture atlas</strong>
+      This sheet deliberately does not re-explain DICOM parts, DIMSE versus DICOMweb, transfer syntaxes, IHE profile maturity, PACS versus VNA, viewer tiers, de-identification profiles, or the build-versus-buy scorecard. Those live in <a href="radiology-imaging-software-stack.html">The Radiology Imaging Software Stack</a>, which answers <em>what the system is made of</em>. This one answers <em>who runs it, what breaks, what you are on the hook for, and what it costs</em>. Where a topic appears in both, the atlas has the structural version and this sheet has the operational one.
+    </div>
+  </div>
+</header>
+
+<nav class="railnav" aria-label="Sections">
+  <div class="wrap">
+    <ol>
+      <li><a href="#quick">00 Quick card</a></li>
+      <li><a href="#floor">01 Modality floor</a></li>
+      <li><a href="#commission">02 Commissioning</a></li>
+      <li><a href="#triage">03 Triage board</a></li>
+      <li><a href="#desk">04 Exception desk</a></li>
+      <li><a href="#degraded">05 Degraded ops</a></li>
+      <li><a href="#slo">06 Service levels</a></li>
+      <li><a href="#cost">07 Cost model</a></li>
+      <li><a href="#models">08 Operating models</a></li>
+      <li><a href="#vet">09 Human vs vet</a></li>
+      <li><a href="#memo">10 Ops memo</a></li>
+      <li><a href="#mistakes">11 Mistakes</a></li>
+      <li><a href="#glossary">12 Glossary</a></li>
+      <li><a href="#sources">13 Sources</a></li>
+    </ol>
+  </div>
+</nav>
+
+<main id="main" class="wrap">
+
+<section class="chapter" id="quick">
+  <h2><span class="num">00</span> The card you keep open</h2>
+  <p class="lede">Eight things an on-call engineer or an imaging operations lead looks up under pressure. Everything here is verified against the primary source named on the tile.</p>
+
+  <div class="grid">
+    <div class="tile info">
+      <span class="k">Registered ports</span>
+      <span class="v">104 / 11112 / 2762</span>
+      <p>IANA registers <code>acr-nema</code> on 104, <code>dicom</code> on 11112, <code>dicom-tls</code> on 2762 and <code>dicom-iscl</code> on 2761. If a firewall ticket names only 104, it will not cover a modern deployment.</p>
+    </div>
+    <div class="tile fault">
+      <span class="k">Association rejected</span>
+      <span class="v">1 / 1 / 7</span>
+      <p>Result&nbsp;1 (permanent), Source&nbsp;1 (service-user), Reason&nbsp;7 = <b>called AE title not recognized</b>. Reason&nbsp;3 = calling AE title not recognized. Those two account for most day-one failures. <span class="ev std">Standard</span> PS3.8&nbsp;9.3.4</p>
+    </div>
+    <div class="tile fault">
+      <span class="k">C-STORE failed</span>
+      <span class="v">A7xx / A9xx / Cxxx</span>
+      <p>A7xx = refused, out of resources (their disk or queue). A9xx = data set does not match SOP class (your object). Cxxx = cannot understand (parse failure). <span class="ev std">Standard</span> PS3.4 Table&nbsp;B.2-1</p>
+    </div>
+    <div class="tile warn">
+      <span class="k">C-STORE succeeded with</span>
+      <span class="v">B000 coercion</span>
+      <p>The receiver rewrote your attributes, usually demographics pulled from its own worklist. A success you should treat as an event: silent coercion is how a wrong patient identity becomes permanent.</p>
+    </div>
+    <div class="tile fault">
+      <span class="k">C-MOVE failed</span>
+      <span class="v">A801 / A702</span>
+      <p>A801 = move destination unknown: the archive has no entry for your destination AE. A702 = unable to perform sub-operations, which usually means the archive cannot open a connection <em>back</em> to your destination. <span class="ev std">Standard</span> PS3.4 C.4.2</p>
+    </div>
+    <div class="tile info">
+      <span class="k">Worklist required matching keys</span>
+      <span class="v">AE + date + modality</span>
+      <p>Scheduled Station AE Title (0040,0001) is single-value matching only; Scheduled Procedure Step Start Date/Time (0040,0002)/(0040,0003) accept ranges; Modality (0008,0060), Patient's Name and Patient ID are also required matching keys. An empty worklist is nearly always one of these. <span class="ev std">Standard</span> PS3.4 Table&nbsp;K.6-1</p>
+    </div>
+    <div class="tile ok">
+      <span class="k">Clock skew budget</span>
+      <span class="v">&lt; 1 s median</span>
+      <p>The IHE Consistent Time profile specifies synchronisation to a median error under one second, over NTP. Audit correlation, TAT clocks, and "which correction happened first" all depend on it. <span class="ev std">IHE ITI</span></p>
+    </div>
+    <div class="tile warn">
+      <span class="k">Retention floors, US</span>
+      <span class="v">5 yr / 5&ndash;10 yr</span>
+      <p>Hospital medical records: at least 5&nbsp;years (42&nbsp;CFR&nbsp;482.24(b)(1)). Mammography: the longest of 5&nbsp;years, 10&nbsp;years if no further mammograms are performed at the facility, or the state period (21&nbsp;CFR&nbsp;900.12(c)(4)). State law and payer contracts routinely exceed both. <span class="ev reg">Regulatory</span></p>
+    </div>
+  </div>
+
+  <div class="note reg"><span class="lbl">Scope, stated once</span>
+    This is a systems-operations reference for people running imaging infrastructure. It is not clinical guidance, not legal advice, and not a compliance programme. Regulatory citations name the rule and its jurisdiction so you can check it; they do not tell you whether it applies to your organisation. Verify against the primary sources in <a href="#sources">section&nbsp;13</a> before acting.
+  </div>
+</section>
+
+<section class="chapter" id="floor">
+  <h2><span class="num">01</span> The modality floor</h2>
+  <p class="lede">Every operational surprise downstream starts at a device someone else owns, configured by someone who has left, and used at 02:00 by a technologist who will not read your release notes. The atlas treats acquisition as one stratum. Here it is a per-device operating profile: what the thing emits, what drives its object count, and the specific way it fails you.</p>
+
+  <h3>Operating profiles by modality</h3>
+  <p>Instance count, not gigabytes, is the operational variable. Per-object charges, index writes, queue depth, transfer duration, viewer load time, and migration wall-clock all scale with the number of objects. Sizes vary too much to state as facts; the atlas has the short list of figures that are actually citable, and the honest advice is to measure your own archive.</p>
+
+  <div class="tw">
+    <table>
+      <caption>Table 1.1 &mdash; Per-modality operating profile. SOP Class names are from PS3.4 Annex&nbsp;B / PS3.3 <span class="ev std">Standard</span>; failure modes are recurring field patterns <span class="ev prac">Common practice</span></caption>
+      <thead><tr><th>Modality</th><th>Typically emits</th><th>What drives object count</th><th>The failure it causes most often</th></tr></thead>
+      <tbody>
+        <tr><td class="code">CR / DX</td><td>Computed Radiography Image Storage; Digital X-Ray Image Storage &mdash; <em>For Presentation</em> and <em>For Processing</em> are separate SOP Classes.</td><td>Number of projections; typically single digits per study.</td><td>The device sends both For Presentation and For Processing. The archive doubles, hanging protocols pick the unprocessed object, and nobody notices for a quarter. Decide per device which one you accept, and enforce it at ingestion.</td></tr>
+        <tr><td class="code">CT</td><td>CT Image Storage; Enhanced CT Image Storage (multi-frame).</td><td>Coverage &divide; slice thickness, multiplied by every reconstruction kernel, window, and derived series the protocol produces.</td><td>Reconstructions arrive minutes apart on separate associations. The study looks complete, gets assigned, and a fourth series lands after the read starts. You need an explicit completeness rule (see below), not a guess.</td></tr>
+        <tr><td class="code">MR</td><td>MR Image Storage; Enhanced MR Image Storage; derived maps as separate series.</td><td>Sequence count; derived series (ADC, subtraction, MIP) added by the console or a post-processing station.</td><td>Free-text Series Description differs per scanner and per protocol revision, so hanging protocols silently stop matching after a scanner software upgrade. Treat protocol names as a versioned configuration item.</td></tr>
+        <tr><td class="code">US</td><td>Ultrasound Image Storage; Ultrasound Multi-frame Image Storage.</td><td>Number of stills plus cine loops; a loop is one large multi-frame object, not many small ones.</td><td>Lossy compression is applied on the device before you ever see the object, so your "we only store lossless" policy was already violated upstream. Cine playback also depends on frame-time attributes the device may omit.</td></tr>
+        <tr><td class="code">MG</td><td>Digital Mammography X-Ray Image Storage, For Presentation and For Processing.</td><td>Views per breast; priors are fetched in pairs and compared, so retrieval load is at least double the read count.</td><td>Missing or wrong laterality and view codes break the hanging protocol that the entire reading workflow depends on. Mammography retention rules are also longer than your default (21&nbsp;CFR&nbsp;900.12(c)(4)).</td></tr>
+        <tr><td class="code">MG / DBT</td><td>Breast Tomosynthesis Image Storage, usually alongside a synthesised 2D image.</td><td>Reconstructed slice count per view, plus the projection set if the site retains it.</td><td>The single largest object volume per study of any routine exam. It is the study type that first exposes an undersized ingest pipe, a slow viewer, or a per-object storage bill.</td></tr>
+        <tr><td class="code">XA / RF</td><td>X-Ray Angiographic Image Storage; X-Ray Radiofluoroscopic Image Storage; X-Ray Radiation Dose SR.</td><td>Runs per procedure; each run is a multi-frame object.</td><td>Dose reports are structured reports, not images. Pipelines built for pixels drop them, and the dose registry submission you promised quietly stops.</td></tr>
+        <tr><td class="code">NM / PT</td><td>Nuclear Medicine Image Storage; Positron Emission Tomography Image Storage.</td><td>Detector, phase, and gate dimensions; PET studies pair with a CT series for attenuation correction.</td><td>Quantitative display (SUV) depends on decay, dose, and timing attributes. Lose or re-derive them in a transcode and the numbers on screen are wrong while the images look fine.</td></tr>
+        <tr><td class="code">IO / dental</td><td>Intra-Oral X-Ray Image Storage; panoramic units often emit DX.</td><td>Per-tooth or per-quadrant exposures; high study count, low bytes.</td><td>Sensor software written for a single-practice server writes non-conformant or missing identifiers, and tooth numbering has no DICOM home, so it arrives in a free-text field you must parse.</td></tr>
+        <tr><td class="code">CBCT</td><td>Usually CT Image Storage, whatever the marketing name of the device.</td><td>Field of view and voxel size.</td><td>Modality and body-part attributes do not describe what the device is, so routing rules, worklists, and reporting templates keyed on Modality send it to the wrong queue.</td></tr>
+        <tr><td class="code">SC</td><td>Secondary Capture Image Storage; Encapsulated PDF; Encapsulated CDA.</td><td>Ad hoc: screenshots, scanned paper, exported reports.</td><td>Burned-in demographics in the pixel data. Every de-identification and sharing workflow has to treat these as a separate class of object, and Burned In Annotation (0028,0301) is frequently absent or wrong.</td></tr>
+        <tr><td class="code">SR / KO / PR</td><td>Basic Text, Enhanced, and Comprehensive SR; Key Object Selection Document; Grayscale Softcopy Presentation State.</td><td>One per report, selection, or saved annotation.</td><td>These are the objects that carry measurements, key images, and annotations. If a migration or export path only moves image SOP Classes, the clinical work product is what you leave behind.</td></tr>
+        <tr><td class="code">SM</td><td>VL Whole Slide Microscopy Image Storage.</td><td>Tiles per level across a pyramid; orders of magnitude beyond radiology per slide.</td><td>Digital pathology shares the standard and almost none of the operating assumptions. Do not fold it into a radiology archive plan without sizing it separately.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note rec"><span class="lbl">Recommendation &mdash; define "study complete" as a written rule per modality</span>
+    Three mechanisms exist and each fails differently. <b>MPPS COMPLETED</b> is the intended signal and the only one grounded in the standard, but plenty of devices never send it. <b>Instance count from the order</b> works where the RIS knows the expected series, which it usually does not for CT and MR. <b>A quiet timer</b> (no new object for <em>n</em> minutes) is the common fallback and is a guess with a clinical consequence: too short and studies are read incomplete, too long and turnaround-time clocks start late. Pick one per modality, write down the value, and make premature-completion an alarmed event rather than a discovery.
+  </div>
+
+  <h3>Discontinued procedure steps, decoded</h3>
+  <p>When a modality abandons a procedure step it can say why, using a coded reason from CID&nbsp;9301. Most platforms store the code and never act on it. Each one implies a different queue, and several are identity-safety events rather than scheduling noise.</p>
+
+  <div class="tw">
+    <table>
+      <caption>Table 1.2 &mdash; CID&nbsp;9301 Modality PPS Discontinuation Reason, complete, with the operational consequence <span class="ev std">Standard</span> PS3.16 <span class="ev rec">Consequence column: recommendation</span></caption>
+      <thead><tr><th>Code</th><th>Meaning</th><th>What operations must do with it</th></tr></thead>
+      <tbody>
+        <tr><td class="code">110500</td><td>Doctor canceled procedure</td><td>Close the order, stop the turnaround clock, and suppress the "study never arrived" alert. Billing and the ordering system both need the cancellation.</td></tr>
+        <tr><td class="code">110501</td><td>Equipment failure</td><td>Device health event, not a workflow event. Repeated codes from one AE title are your earliest signal of a failing detector or console before the site opens a ticket.</td></tr>
+        <tr><td class="code">110502</td><td>Incorrect procedure ordered</td><td>Route to the order-correction queue. A new order is required; do not let the technologist "fix" it by selecting a different worklist entry mid-exam.</td></tr>
+        <tr><td class="code">110503</td><td>Patient allergic to media/contrast</td><td>Clinical event with a safety record attached. Your platform's job is to preserve it, surface it on any repeat order, and not silently drop it during reconciliation.</td></tr>
+        <tr><td class="code">110504</td><td>Patient died</td><td>Stop all automated communication for that patient immediately: portal notifications, reminder messages, and result callbacks. This is the code that makes an unfiltered notification engine indefensible.</td></tr>
+        <tr><td class="code">110505</td><td>Patient refused to continue procedure</td><td>Partial study exists and may still be interpretable. It must reach a radiologist flagged as partial, never as a completed exam.</td></tr>
+        <tr><td class="code">110506</td><td>Patient taken for treatment or surgery</td><td>Expect a resumption or a repeat later the same day. Duplicate-detection needs to tolerate two partial studies for one order.</td></tr>
+        <tr><td class="code">110507</td><td>Patient did not arrive</td><td>Highest-volume code in most estates. Auto-close the worklist entry after a defined window, or the worklist fills with ghosts and technologists start scrolling past real entries.</td></tr>
+        <tr><td class="code">110508</td><td>Patient pregnant</td><td>Safety hold. Requires an order review, not a reschedule.</td></tr>
+        <tr><td class="code">110509</td><td>Change of procedure for correct charging</td><td>Financial reconciliation, not clinical. The images may be perfectly valid under a different procedure code.</td></tr>
+        <tr><td class="code">110510</td><td>Duplicate order</td><td>Feed it back to the ordering system. Repeated duplicates from one site is an integration defect, not user error.</td></tr>
+        <tr><td class="code">110511</td><td>Nursing unit cancel</td><td>Same handling as 110500, different source. Track separately: the split tells you where scheduling breaks down.</td></tr>
+        <tr><td class="code">110512</td><td>Incorrect side ordered</td><td>Wrong-side is a never-event category in surgery and a serious defect here. Alarm it; do not let it be silently corrected at the console.</td></tr>
+        <tr><td class="code">110513</td><td>Discontinued for unspecified reason</td><td>The default a device sends when its UI offers no list. A rising share of 110513 means your reason codes are decorative and the data is not usable for anything.</td></tr>
+        <tr><td class="code">110514</td><td>Incorrect worklist entry selected</td><td><b>The identity event.</b> Images were acquired under another patient's demographics. This must trigger the wrong-patient correction path (rejection, correction, downstream propagation) and be counted as a safety metric, not a support ticket.</td></tr>
+        <tr><td class="code">110515</td><td>Patient condition prevented continuing</td><td>Partial study, clinically urgent context. It usually should be read faster than a normal exam, not slower.</td></tr>
+        <tr><td class="code">110516</td><td>Equipment change</td><td>The same procedure will resume on a different AE title. Your completeness rule and duplicate detection must survive a study arriving from two devices.</td></tr>
+        <tr><td class="code">95384003</td><td>Injection site extravasation (SNOMED&nbsp;CT)</td><td>Adverse event. Preserve the association with the study and the contrast record.</td></tr>
+        <tr><td class="code">292094009</td><td>Radiopharmaceutical adverse reaction (SNOMED&nbsp;CT)</td><td>Adverse event with reporting obligations that vary by jurisdiction. Do not let it exist only as a discarded procedure step.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note anti"><span class="lbl">Anti-pattern &mdash; storing discontinuation reasons and routing none of them</span>
+    A platform that persists CID&nbsp;9301 codes but treats every discontinued step identically has all the evidence of a wrong-patient acquisition, a failing detector, and a deceased patient still receiving portal reminders, and acts on none of it. The codes are cheap to capture and worthless until something branches on them.
+  </div>
+</section>
+
+<section class="chapter" id="commission">
+  <h2><span class="num">02</span> Commissioning a site or a modality</h2>
+  <p class="lede">Onboarding is the operation you will perform most often and the one most likely to be improvised. Everything here is a form or a sequence, because the failure mode of onboarding is not difficulty, it is that step&nbsp;9 was skipped and nobody can prove it.</p>
+
+  <h3>The site survey, collected before anything is configured</h3>
+  <p>Every field below has cost someone a go-live. Collect them in writing, from the site, before a firewall ticket is raised.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>Network and access</h4>
+      <ul class="tick">
+        <li>Public egress IP and whether it is static. Dynamic IPs make source allowlisting a recurring outage.</li>
+        <li>Outbound port policy, and who approves changes. Naming 104 only is a classic day-one block.</li>
+        <li>Whether the clinic network sits behind carrier-grade NAT or a shared practice-group firewall.</li>
+        <li>Whether inbound connections are possible at all &mdash; this decides push versus pull architecture for the whole site.</li>
+        <li>Available upstream bandwidth at the time of day the site actually scans, not the advertised rate.</li>
+        <li>Who is on site with physical access to the gateway, and their hours.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Devices and identity</h4>
+      <ul class="tick">
+        <li>Per device: manufacturer, model, software version, AE title, IP, listening port, and the conformance statement.</li>
+        <li>AE titles in use elsewhere in the estate &mdash; collisions are common and produce baffling misrouting.</li>
+        <li>Which system is the source of truth for patient or owner identity at this site.</li>
+        <li>Whether the site has a RIS or PIMS that can supply a worklist, or whether identity is typed at the console.</li>
+        <li>Existing archive, if any, and whether historical studies are in scope for migration.</li>
+        <li>Time source of every device, and whether the site has a working NTP path.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Workflow and people</h4>
+      <ul class="tick">
+        <li>Who submits studies, who interprets, who receives the report, and who fixes an identity error.</li>
+        <li>Operating hours, after-hours volume, and what the site expects to happen at 03:00.</li>
+        <li>Report delivery destinations: EHR or PIMS interface, portal, email, fax, printer.</li>
+        <li>Named site contact for exceptions, and their escalation backup.</li>
+        <li>Training status of each technologist on worklist selection, which is the single highest-leverage control against wrong-patient studies.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Obligations you are inheriting</h4>
+      <ul class="tick">
+        <li>Retention period the site is contractually or legally bound to, and who told you.</li>
+        <li>Whether mammography is in scope, which changes retention and hanging requirements.</li>
+        <li>Jurisdiction of the site and of your storage, which is not always the same country.</li>
+        <li>Any existing business associate agreement, data processing agreement, or equivalent.</li>
+        <li>What the site was promised by sales that is not in the statement of work.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>The bring-up sequence</h3>
+  <p>Fourteen steps, in order, each with a pass criterion you can point at. Tick boxes persist in this browser only.</p>
+
+  <div class="checklist" id="commissioning">
+    <div class="checklist-head">
+      <span class="title mono" style="font-size:0.74rem;letter-spacing:0.11em;text-transform:uppercase;color:var(--muted)">Commissioning run sheet</span>
+      <span><span class="pct" id="ck-pct">0 of 14 complete</span> <button class="btn" type="button" id="ck-reset">Reset</button></span>
+    </div>
+    <ol>
+      <li><input type="checkbox" id="ck1"><div><label for="ck1" class="step-t">Allocate identity</label><div class="step-d">Assign the AE title, IP, and port on both sides and record them in the configuration system of record. AE Title is a 16-byte identifier, not a credential &mdash; treat allowlisting as a routing convenience, never as authentication.</div><div class="pass"><b>Pass:</b> both sides configured from the same written record, no AE title reused anywhere in the estate.</div></div></li>
+      <li><input type="checkbox" id="ck2"><div><label for="ck2" class="step-t">Open the path</label><div class="step-d">Firewall rules in both directions if you use C-MOVE, outbound only if you use push plus DICOMweb. Confirm with a raw TCP connection before involving DICOM at all.</div><div class="pass"><b>Pass:</b> TCP connect succeeds from the device subnet, not from the engineer's laptop on a different VLAN.</div></div></li>
+      <li><input type="checkbox" id="ck3"><div><label for="ck3" class="step-t">Verify with C-ECHO</label><div class="step-d">In both directions if both directions will be used. An echo that works one way proves nothing about the other.</div><div class="pass"><b>Pass:</b> echo succeeds from the device and from the archive, logged with timestamps on both.</div></div></li>
+      <li><input type="checkbox" id="ck4"><div><label for="ck4" class="step-t">Synchronise clocks</label><div class="step-d">Point the device and the gateway at a working NTP source. The IHE Consistent Time profile specifies a median error under one second.</div><div class="pass"><b>Pass:</b> device clock within one second of the archive's, verified after a reboot, not just after configuration.</div></div></li>
+      <li><input type="checkbox" id="ck5"><div><label for="ck5" class="step-t">Query the worklist</label><div class="step-d">Run a modality worklist C-FIND with the exact keys the device will send: Scheduled Station AE Title, start date, modality. Compare against what the device actually queries, captured from the wire, not from its manual.</div><div class="pass"><b>Pass:</b> a scheduled test order appears on the device screen, selected by the technologist, not typed.</div></div></li>
+      <li><input type="checkbox" id="ck6"><div><label for="ck6" class="step-t">Send one study</label><div class="step-d">A real acquisition, not a synthetic file, from the console the technologist will use. Synthetic objects hide exactly the encodings that break.</div><div class="pass"><b>Pass:</b> C-STORE status 0000 for every instance, and the instance count on the archive equals the count on the device.</div></div></li>
+      <li><input type="checkbox" id="ck7"><div><label for="ck7" class="step-t">Check for coercion</label><div class="step-d">Compare the stored object's identity attributes against what left the device. Status B000 means the receiver rewrote them.</div><div class="pass"><b>Pass:</b> either no coercion, or coercion is intended, documented, and logged as an event you can query later.</div></div></li>
+      <li><input type="checkbox" id="ck8"><div><label for="ck8" class="step-t">Confirm storage commitment</label><div class="step-d">If the device supports the Storage Commitment Push Model (N-ACTION out, N-EVENT-REPORT back), exercise it. The reverse association is a separate firewall path and fails independently of the store.</div><div class="pass"><b>Pass:</b> commitment returns success, and a deliberately unsupported object returns a documented failure reason rather than silence.</div></div></li>
+      <li><input type="checkbox" id="ck9"><div><label for="ck9" class="step-t">Exercise MPPS</label><div class="step-d">Start a step, complete one, and discontinue one with a reason code. Confirm your platform branches on the reason (Table&nbsp;1.2), rather than storing it.</div><div class="pass"><b>Pass:</b> IN PROGRESS, COMPLETED, and DISCONTINUED all land, and the discontinued one appears in the queue you expect.</div></div></li>
+      <li><input type="checkbox" id="ck10"><div><label for="ck10" class="step-t">Test the transcode path</label><div class="step-d">If you transcode or compress on ingest, verify the stored object against the original: pixel data, photometric interpretation, and the attributes that record what was done to it.</div><div class="pass"><b>Pass:</b> a documented comparison, per SOP Class this device emits, not per file format in general.</div></div></li>
+      <li><input type="checkbox" id="ck11"><div><label for="ck11" class="step-t">Render in every viewer</label><div class="step-d">Diagnostic, clinical review, and customer-facing. Each has a different decoder and a different tolerance for missing attributes.</div><div class="pass"><b>Pass:</b> correct window level, correct orientation and laterality, correct series ordering, cine plays at the right rate.</div></div></li>
+      <li><input type="checkbox" id="ck12"><div><label for="ck12" class="step-t">Fetch a prior</label><div class="step-d">Retrieve an older study for the same patient, from the tier it will actually live in. A prior retrieved from hot storage during testing proves nothing about the archive tier.</div><div class="pass"><b>Pass:</b> prior loads within the target the reading workflow assumes, measured from cold, with the retrieval charge recorded.</div></div></li>
+      <li><input type="checkbox" id="ck13"><div><label for="ck13" class="step-t">Break the link on purpose</label><div class="step-d">Pull the upstream connection mid-study. The gateway must buffer, resume, and not duplicate. This is the test that most often fails and the one most often skipped.</div><div class="pass"><b>Pass:</b> after reconnection the archive holds exactly one complete copy, and the buffer's capacity in hours is a number you know.</div></div></li>
+      <li><input type="checkbox" id="ck14"><div><label for="ck14" class="step-t">Close the loop end to end</label><div class="step-d">Interpret the test study, sign the report, and confirm delivery to every configured destination, including the fax or printer nobody remembers.</div><div class="pass"><b>Pass:</b> the site contact confirms receipt in their own system, in writing, before go-live is declared.</div></div></li>
+    </ol>
+  </div>
+
+  <div class="note anti"><span class="lbl">Anti-pattern &mdash; go-live on a synthetic test object</span>
+    A hand-built or downloaded sample study exercises your parser and nothing else. It does not carry the device's real transfer syntax, private attributes, series naming, burned-in text, or the number of instances that will expose your queue. Commission on a real acquisition from the console that will be used in production, or expect to commission twice.
+  </div>
+</section>
+
+<section class="chapter" id="triage">
+  <h2><span class="num">03</span> The triage board</h2>
+  <p class="lede">The signature tool on this page. Type a status code, a reject reason, or a symptom in plain words. Everything is filtered live, so <code>A801</code>, <code>worklist</code>, and <code>black</code> all land somewhere useful.</p>
+
+  <div class="board" id="board">
+    <div class="board-head">
+      <span class="title">Dispatch &mdash; symptom, probe, cause, fix</span>
+      <div class="board-search">
+        <label class="sr-only" for="board-q">Filter the triage board</label>
+        <input id="board-q" type="search" placeholder="A801, coercion, worklist empty, TLS, black images" autocomplete="off" spellcheck="false">
+        <button type="button" id="board-clear">Clear</button>
+      </div>
+      <span class="board-count" id="board-count"></span>
+    </div>
+    <div class="tw" style="margin:0;border:0;border-radius:0">
+      <table>
+        <thead><tr><th style="min-width:9rem">Signal</th><th style="min-width:14rem">Symptom</th><th style="min-width:14rem">Probe first</th><th style="min-width:18rem">Most likely cause and fix</th></tr></thead>
+        <tbody id="board-rows">
+          <tr><td data-l="Signal"><span class="led fault"></span>1 / 1 / 7</td><td data-l="Symptom">Association rejected immediately; nothing is transferred.</td><td data-l="Probe first">Read the reject PDU: result, source, reason.</td><td data-l="Cause and fix"><b>Called AE title not recognized.</b> The AE title you are calling is not configured on the receiver, or differs by case, a trailing space, or a character beyond 16 bytes. Compare the two configurations character by character rather than reading them aloud.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>1 / 1 / 3</td><td data-l="Symptom">Association rejected; the receiver logs an unknown peer.</td><td data-l="Probe first">Same PDU, reason field.</td><td data-l="Cause and fix"><b>Calling AE title not recognized.</b> The receiver allowlists source AE titles and yours is missing, usually because the device was replaced and the new console shipped with a different default.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>1 / 1 / 2</td><td data-l="Symptom">Rejected before any negotiation.</td><td data-l="Probe first">Reject PDU reason 2 with source 1.</td><td data-l="Cause and fix"><b>Application context name not supported.</b> Rare, and almost always a non-DICOM service answering on the port. Confirm you are talking to what you think you are.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>2 / 3 / 1</td><td data-l="Symptom">Intermittent rejections under load; retries succeed.</td><td data-l="Probe first">Reject PDU with result 2 (transient), source 3.</td><td data-l="Cause and fix"><b>Temporary congestion.</b> The receiver is at its concurrent-association limit. Fix the sender's parallelism and backoff before raising the receiver's limit, or you move the failure into its queue.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>2 / 3 / 2</td><td data-l="Symptom">Same, but persistent at a fixed concurrency.</td><td data-l="Probe first">Reject reason 2, source 3.</td><td data-l="Cause and fix"><b>Local limit exceeded.</b> A configured association cap. Raise it deliberately with the memory cost calculated, or serialise the sender.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>Echo OK, store fails</td><td data-l="Symptom">C-ECHO succeeds, C-STORE fails at once with no status.</td><td data-l="Probe first">Look for a rejected presentation context in the association-accept.</td><td data-l="Cause and fix">The receiver did not accept the SOP Class or the transfer syntax the device offered. Read section N.5 of the receiver's conformance statement and compare against what the device sends. Echo negotiates only the Verification SOP Class, so it proves connectivity and nothing about content.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>A7xx</td><td data-l="Symptom">Stores fail across all devices at once.</td><td data-l="Probe first">C-STORE status begins A7.</td><td data-l="Cause and fix"><b>Refused: out of resources.</b> The receiver, not you: disk, quota, queue depth, or a stuck consumer. Check the archive's own alarms before touching a modality.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>A9xx / B007</td><td data-l="Symptom">One device or one exam type fails; others are fine.</td><td data-l="Probe first">C-STORE status A9 or warning B007.</td><td data-l="Cause and fix"><b>Data set does not match SOP Class.</b> The object's contents disagree with the SOP Class UID it claims. Capture the failing object and diff it against a working one from the same device before escalating to the vendor.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>Cxxx</td><td data-l="Symptom">A subset of instances fails, reproducibly.</td><td data-l="Probe first">C-STORE status begins C.</td><td data-l="Cause and fix"><b>Cannot understand.</b> Parse failure at the receiver. Keep the raw object: this is the one class of failure where the artefact is the entire ticket, and it is routinely deleted by a retry loop.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>B000</td><td data-l="Symptom">Everything "succeeds", but stored demographics differ from the console.</td><td data-l="Probe first">C-STORE warning B000 in the response.</td><td data-l="Cause and fix"><b>Coercion of data elements.</b> The receiver rewrote attributes, typically identity, from its own worklist. Decide whether coercion is policy. If it is, log every coerced attribute; if it is not, turn it off. Undocumented coercion turns a mis-selected worklist entry into a permanent record.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>B006</td><td data-l="Symptom">Objects store but something is missing later.</td><td data-l="Probe first">C-STORE warning B006.</td><td data-l="Cause and fix"><b>Elements discarded.</b> The receiver dropped attributes it did not want, often private ones carrying measurements or reconstruction parameters. Ask which, in writing, and check whether your AI or quantitative workflow needed them.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>A801</td><td data-l="Symptom">C-MOVE fails instantly.</td><td data-l="Probe first">C-MOVE status A801.</td><td data-l="Cause and fix"><b>Move destination unknown.</b> The archive has no configuration entry for your destination AE title. C-MOVE requires the SCP to know the destination in advance; this is the structural reason many platforms move to C-GET or DICOMweb retrieval.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>A702</td><td data-l="Symptom">C-MOVE accepts, then fails part-way.</td><td data-l="Probe first">C-MOVE status A702, plus the sub-operation counters.</td><td data-l="Cause and fix"><b>Unable to perform sub-operations.</b> Usually the archive cannot open a connection back to the destination: a firewall that permits outbound only, or a destination that is not listening. Check the direction of the second connection, not the first.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>B000 on C-MOVE</td><td data-l="Symptom">Retrieval "succeeded" with fewer images than expected.</td><td data-l="Probe first">Warning B000 with failed sub-operation count above zero.</td><td data-l="Cause and fix"><b>Sub-operations complete, one or more failures.</b> A partial retrieval reported as a warning. If your code treats anything that is not a failure as success, you have silently delivered incomplete studies to a reading workstation.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>A701</td><td data-l="Symptom">Query fails before any match is returned.</td><td data-l="Probe first">C-MOVE or C-FIND status A701.</td><td data-l="Cause and fix"><b>Out of resources, unable to calculate number of matches.</b> The query is too broad for the archive to plan. Constrain by date range and level rather than retrying.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>Empty worklist</td><td data-l="Symptom">The device shows no scheduled procedures, but orders exist.</td><td data-l="Probe first">Capture the device's actual C-FIND request from the wire.</td><td data-l="Cause and fix">A required matching key does not match: Scheduled Station AE Title (single-value matching only), the start date range format, or the Modality code. Devices often send an AE title that differs from their calling AE title, and the fix is in the order feed, not the network.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>Wrong patient</td><td data-l="Symptom">A study is filed under another patient's name.</td><td data-l="Probe first">Look for MPPS reason 110514 and for a coercion warning at ingest.</td><td data-l="Cause and fix">An incorrect worklist entry was selected at the console. This is an identity-safety event: reject the objects through the change-management path, correct, propagate to everything that already received them, and count it. It is never a support-desk edit.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>Never completes</td><td data-l="Symptom">Study sits at "in progress" forever; the reading queue never receives it.</td><td data-l="Probe first">Compare arrival timestamps of the last series against your completeness rule.</td><td data-l="Cause and fix">No MPPS COMPLETED arrived and the quiet timer never expired because a trickle of objects kept resetting it, or a reconstruction landed after the window closed. Completeness must be a stated rule per modality, with premature and stalled completion both alarmed.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>Transfer stalls</td><td data-l="Symptom">Transfers stop mid-study and never resume.</td><td data-l="Probe first">Check the association timeout and the sender's queue depth.</td><td data-l="Cause and fix">The association hit an inactivity timeout, or the device's outbound queue was purged on reboot. Devices are not durable queues. If your architecture assumes the modality will retry, verify that assumption per device before you depend on it.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>TLS handshake</td><td data-l="Symptom">Connection resets during handshake on the secure port.</td><td data-l="Probe first"><code>openssl s_client -connect host:2762</code></td><td data-l="Cause and fix">Certificate chain, trusted CA, hostname mismatch, or an expired certificate. On appliances, a wrong clock also breaks validity checks &mdash; which is one more reason step&nbsp;4 of commissioning is not optional.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>Black images</td><td data-l="Symptom">Objects arrive and index correctly; the viewer shows black or inverted.</td><td data-l="Probe first">Inspect transfer syntax, Photometric Interpretation, and the window attributes.</td><td data-l="Cause and fix">The viewer cannot decode that transfer syntax, or window centre and width are absent and its default is wrong, or MONOCHROME1 is being rendered as MONOCHROME2. This is a rendering fault, not a transfer fault: the bytes are fine.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>Priors missing</td><td data-l="Symptom">Current study loads; the comparison does not.</td><td data-l="Probe first">Check the patient identifier and issuer on both studies, then the storage tier.</td><td data-l="Cause and fix">Either identity (the prior is under a different identifier or issuer and was never linked) or economics (the prior is in an archive tier whose retrieval latency exceeds the reader's patience). Both look identical to the radiologist and have completely different fixes.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>Duplicate studies</td><td data-l="Symptom">Two identical studies with the same Study Instance UID.</td><td data-l="Probe first">Compare arrival paths and source AE titles.</td><td data-l="Cause and fix">Two gateways or two routing rules sent the same objects. Idempotency at ingest must be keyed on SOP Instance UID; if it is keyed on filename or arrival order, duplicates are inevitable.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>Split studies</td><td data-l="Symptom">One acquisition appears as two studies for the same patient and time.</td><td data-l="Probe first">Compare Study Instance UIDs and acquisition times.</td><td data-l="Cause and fix">The device regenerated the Study Instance UID on resend, or two devices contributed to one procedure. This one requires a merge with an audit trail, not a delete-and-resend.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>Audit disorder</td><td data-l="Symptom">Events appear out of order across systems; corrections seem to precede the errors.</td><td data-l="Probe first">Compare timestamps across three nodes for one known transaction.</td><td data-l="Cause and fix">Clock skew. The IHE Consistent Time target is a median error under one second. Without it, no incident reconstruction and no "which write won" question can be answered.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>Commitment silence</td><td data-l="Symptom">Storage commitment requests are sent and nothing ever comes back.</td><td data-l="Probe first">Check whether the SCP can open an association back to the SCU.</td><td data-l="Cause and fix">The N-EVENT-REPORT arrives on a separate association from the SCP to the SCU, so it needs its own firewall path and a listener. Silence is not success: without the notification you have no evidence the archive accepted responsibility.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>Commitment 0110 / 0112</td><td data-l="Symptom">Commitment returns a failure list.</td><td data-l="Probe first">Read the failure reason per instance.</td><td data-l="Cause and fix">0110 processing failure, 0112 no such SOP instance, 0119 class/instance conflict, 0122 referenced SOP class not supported, 0131 duplicate transaction UID, 0213 resource limitation. 0112 in particular means the archive never received what you think you sent.</td></tr>
+          <tr><td data-l="Signal"><span class="led fault"></span>Preliminary forever</td><td data-l="Symptom">The report is signed but the EHR still shows it as preliminary.</td><td data-l="Probe first">Inspect OBR-25 and OBX-11 on the outbound message.</td><td data-l="Cause and fix">The result status never advanced to F. HL7&nbsp;v2 table&nbsp;0123 defines P preliminary, F final, C corrected final, M corrected not final, X order cancelled; table&nbsp;0085 adds A amended, C correction, W wrong patient, and U status change to final without retransmission. Sending an addendum with the original status is the most common variant of this bug.</td></tr>
+          <tr><td data-l="Signal"><span class="led warn"></span>Delivery blackhole</td><td data-l="Symptom">Reports leave your system and the site says they never arrived.</td><td data-l="Probe first">Check the acknowledgement, not the send.</td><td data-l="Cause and fix">An interface that logs "sent" without checking the application acknowledgement will lose messages silently for months. Every delivery channel needs a positive receipt and an unacknowledged-message queue with an age alarm.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="empty" id="board-empty" hidden>No row matches that. Try a status code (A801), a keyword (worklist, coercion, TLS), or clear the filter.</p>
+  </div>
+
+  <h3>The five commands worth memorising</h3>
+  <p>DCMTK 3.6 syntax, verified against the tool documentation. These are diagnostics, not a production integration path.</p>
+
+<pre><code><span class="cm"># 1. Is anything listening, and does it accept my AE title?</span>
+echoscu -v -aet MY_AE -aec THEIR_AE 10.20.30.40 11112
+
+<span class="cm"># 2. What does the worklist actually return for the keys the device sends?</span>
+<span class="cm">#    Sequence keys use the path syntax: (0040,0100)[0].Attribute</span>
+findscu -v -W -aet MY_AE -aec THEIR_AE 10.20.30.40 11112 \
+  -k "(0040,0100)[0].Modality=CT" \
+  -k "(0040,0100)[0].ScheduledStationAETitle=CT_SCANNER_1" \
+  -k "(0040,0100)[0].ScheduledProcedureStepStartDate=20260905" \
+  -k "PatientName=" -k "PatientID=" -k "AccessionNumber="
+
+<span class="cm"># 3. Send a real study and watch every status code come back</span>
+storescu -v --scan-directories --recurse -aet MY_AE -aec THEIR_AE \
+  10.20.30.40 11112 /studies/case-0001/
+
+<span class="cm"># 4. Pull a study back to a named destination (A801 lives here)</span>
+movescu -v --study --move DEST_AE --port 11113 -aet MY_AE -aec THEIR_AE \
+  10.20.30.40 11112 -k "QueryRetrieveLevel=STUDY" \
+  -k "StudyInstanceUID=1.2.840.113619.2.55.3.12345"
+
+<span class="cm"># 5. Is the TLS problem the certificate, the chain, or the clock?</span>
+openssl s_client -connect 10.20.30.40:2762 -showcerts &lt; /dev/null</code></pre>
+
+  <div class="note rec"><span class="lbl">Recommendation &mdash; what to capture before you escalate</span>
+    A vendor ticket without these is a week of round trips: the exact UTC timestamp and both AE titles; the association-accept showing which presentation contexts were accepted; the full status code with the related fields (0000,0901) and (0000,0902); the offending SOP Instance UID and, where you may retain it, the object itself; whether it reproduces on one device, one exam type, or everything; and the last configuration change on either side. Make that list the required fields of your escalation form, and the round trips stop.
+  </div>
+</section>
+
+<section class="chapter" id="desk">
+  <h2><span class="num">04</span> The exception desk</h2>
+  <p class="lede">Every imaging platform runs a human loop that nobody put in the architecture diagram. Its throughput determines how many studies reach a radiologist, and its authority limits determine whether a support agent can quietly destroy a clinical record. Design it deliberately or inherit it by accident.</p>
+
+  <h3>The queues, and what each one is really measuring</h3>
+  <div class="tw">
+    <table>
+      <caption>Table 4.1 &mdash; Exception queues, entry conditions, and the age at which each becomes clinically material. Age targets are planning anchors to argue about, not standards. <span class="ev dec">Product decision</span></caption>
+      <thead><tr><th>Queue</th><th>Enters when</th><th>Resolved by</th><th>Ages badly because</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">Unmatched study</td><td>Images arrive with no corresponding order or worklist entry.</td><td>Match to an order, or create an unscheduled case with a documented identity source.</td><td>The study is invisible to the reading queue while it waits. This queue's age <em>is</em> undiagnosed patient time.</td></tr>
+        <tr><td class="mono">Orphan order</td><td>An order exists and no images arrived within the expected window.</td><td>Confirm cancellation (often MPPS 110507), or chase the site.</td><td>Silence looks identical to a cancelled exam and a failed gateway. Without this queue, a site whose connectivity died on Friday is discovered on Monday.</td></tr>
+        <tr><td class="mono">Demographic mismatch</td><td>Study identity disagrees with the order's on name, identifier, date of birth, or accession.</td><td>Reconcile against the declared source of truth, or reject and correct.</td><td>Reading a study filed under the wrong identity is the highest-severity failure this platform can produce.</td></tr>
+        <tr><td class="mono">Duplicate / split</td><td>Same Study Instance UID twice, or one procedure under two UIDs.</td><td>Deduplicate on SOP Instance UID; merge with an audit record.</td><td>A split study means the radiologist sees half the exam and does not know it.</td></tr>
+        <tr><td class="mono">Incomplete study</td><td>Completeness rule not satisfied within its window.</td><td>Chase the missing series, or release as partial with an explicit flag.</td><td>Silently releasing an incomplete study is worse than holding it, and holding it forever is worse than releasing a flagged partial.</td></tr>
+        <tr><td class="mono">Failed ingest</td><td>Non-zero C-STORE status, transcode failure, or validation rejection.</td><td>Fix and re-send, with the original object retained.</td><td>Retry loops delete the evidence. Failed-ingest items must be immutable until a human closes them.</td></tr>
+        <tr><td class="mono">Stalled delivery</td><td>Report sent, no application acknowledgement received.</td><td>Re-deliver, or fall back to a secondary channel.</td><td>The report exists, the clinician does not have it, and every dashboard shows green.</td></tr>
+        <tr><td class="mono">Past turnaround</td><td>An assigned study exceeds its target read time.</td><td>Reassign, escalate, or renegotiate the target.</td><td>This is the queue customers see. It is also the one most often gamed by redefining when the clock starts.</td></tr>
+        <tr><td class="mono">Correction propagation</td><td>An identity or content correction has been made and one or more downstream recipients have not been updated.</td><td>Re-issue to every recipient, with confirmation.</td><td>A corrected record upstream and an uncorrected copy downstream is a worse state than the original error, because now two systems disagree and both look authoritative.</td></tr>
+        <tr><td class="mono">Automated-analysis failure</td><td>An AI or post-processing job errored, timed out, or produced an unusable result.</td><td>Re-run, or mark unavailable for that study.</td><td>A quietly missing result reads as a negative finding to anyone who assumed the tool ran.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Authority limits: who may do what</h3>
+  <p>The reason to write this down is not process hygiene. It is that "support can merge patients" and "support cannot merge patients" are two different products with different risk profiles, and most organisations have never decided which one they are.</p>
+
+  <div class="tw">
+    <table>
+      <caption>Table 4.2 &mdash; A defensible default authority matrix. Adjust it, but decide it explicitly. <span class="ev rec">Recommendation</span></caption>
+      <thead><tr><th>Action</th><th>Support tier 1</th><th>Imaging operations</th><th>Engineering</th><th>Requires clinical sign-off</th></tr></thead>
+      <tbody>
+        <tr><td>Read study metadata, view audit history</td><td>Yes</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+        <tr><td>Re-send a report to a configured destination</td><td>Yes</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+        <tr><td>Re-queue a failed ingest or delivery</td><td>Yes</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+        <tr><td>Correct a typographic demographic error on an unread study</td><td>No</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+        <tr><td>Reassign a study to another radiologist</td><td>No</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+        <tr><td>Merge two patient records</td><td>No</td><td>Yes, dual control</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Move a study between patients (wrong-patient correction)</td><td>No</td><td>Yes, dual control</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Reject or retire imaging objects</td><td>No</td><td>Yes, dual control</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Amend or retract a signed report</td><td>No</td><td>No</td><td>No</td><td>Yes, radiologist only</td></tr>
+        <tr><td>Delete imaging objects permanently</td><td>No</td><td>No</td><td>No</td><td>Policy exception, named approver, recorded</td></tr>
+        <tr><td>Direct database edit</td><td>No</td><td>No</td><td>Break-glass only, recorded and reviewed</td><td>Yes</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note anti"><span class="lbl">Anti-pattern &mdash; the support tool with a delete button</span>
+    Support tooling built by copying the administrative interface gives a tier&nbsp;1 agent, at 03:00, under customer pressure, the ability to perform an irreversible clinical-record change with no second pair of eyes. Support tooling should be able to <em>see</em> almost everything and <em>change</em> very little; every destructive capability belongs behind dual control and an audit record that names both people.
+  </div>
+
+  <div class="note rec"><span class="lbl">Recommendation &mdash; the operating rhythm</span>
+    <b>Continuously:</b> unmatched studies and demographic mismatches, because they block reads. <b>Every shift:</b> failed ingest, stalled delivery, past-turnaround, and the aged tail of every other queue. <b>Daily:</b> orphan orders per site, which is your connectivity canary; correction-propagation backlog; discontinuation-reason mix, watching for a rise in 110513 or any 110514 at all. <b>Weekly:</b> queue-age trend per site and per device, so you can name the two sites generating a third of the work. <b>Monthly:</b> the exceptions that recurred, converted into either a configuration change or a product change &mdash; a queue that never shrinks is a defect being staffed rather than fixed.
+  </div>
+</section>
+
+<section class="chapter" id="degraded">
+  <h2><span class="num">05</span> Degraded operations</h2>
+  <p class="lede">Imaging degrades in pieces. The archive can be down while acquisition continues; reporting can be up while delivery is dead. A single "system down" runbook is useless because the correct human behaviour differs completely per component, and the expensive part is almost never the outage &mdash; it is the catch-up.</p>
+
+  <div class="note reg"><span class="lbl">Regulatory context &mdash; the contingency plan standard</span>
+    For US HIPAA covered entities and business associates, 45&nbsp;CFR&nbsp;&sect;164.308(a)(7) requires a contingency plan with three <b>required</b> implementation specifications &mdash; a data backup plan ("create and maintain retrievable exact copies of electronic protected health information"), a disaster recovery plan ("restore any loss of data"), and an emergency mode operation plan ("enable continuation of critical business processes for protection of the security of electronic protected health information while operating in emergency mode") &mdash; plus two <b>addressable</b> ones: testing and revision procedures, and an applications and data criticality analysis. The table below is one way to produce the criticality analysis and the emergency mode procedures as an artefact rather than a paragraph.
+  </div>
+
+  <h3>Failure modes and the manual fallback</h3>
+  <div class="tw">
+    <table>
+      <caption>Table 5.1 &mdash; What still works, what the humans do instead, and what it costs you afterwards. <span class="ev rec">Recommendation</span></caption>
+      <thead><tr><th>What is down</th><th>Still works</th><th>Manual fallback</th><th>Catch-up work created</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">Upstream link at one site</td><td>Acquisition, local review on the modality, the gateway's buffer.</td><td>Keep scanning. The gateway buffers and forwards on reconnection. Urgent cases go by a pre-agreed alternate route.</td><td>A burst on reconnection that can exceed the ingest rate. Size the buffer in hours and rate-limit the drain, or the recovery causes the next incident.</td></tr>
+        <tr><td class="mono">Ingest pipeline</td><td>Acquisition, existing archive reads, reporting on already-ingested studies.</td><td>Modalities hold and retry &mdash; but only those that actually queue. Confirm per device rather than assuming.</td><td>Reconciliation of anything that retried into a partially-processed state. Idempotency on SOP Instance UID is what makes this survivable.</td></tr>
+        <tr><td class="mono">Archive / repository</td><td>Acquisition and buffering. Nothing downstream.</td><td>Full downtime procedure: paper or local-worklist tracking, hand-carried media for urgent cases.</td><td>Every study acquired during the window has to be ingested and reconciled, in order, with duplicates detected. This is the most expensive catch-up in the list.</td></tr>
+        <tr><td class="mono">Metadata index (objects intact)</td><td>Objects are safe; nothing is findable.</td><td>Treat as a full archive outage for users.</td><td>Index rebuild time, which almost nobody has measured at production object counts. Measure it, then decide whether that number is acceptable, because it is your true recovery time.</td></tr>
+        <tr><td class="mono">Worklist / order feed</td><td>Everything except scheduled acquisition.</td><td>Technologists type identity at the console.</td><td>Every typed study becomes an unscheduled case needing reconciliation, and typed identity is the leading cause of demographic mismatch. Expect the exception desk load to spike for days, not hours.</td></tr>
+        <tr><td class="mono">Diagnostic viewer</td><td>Ingest, archive, reporting engine.</td><td>Fall back to the secondary viewer, if you have licensed and tested one. Most organisations discover here that they have not.</td><td>Little data catch-up, large turnaround-time debt. This is the outage that most damages the customer relationship per minute.</td></tr>
+        <tr><td class="mono">Reporting / dictation</td><td>Everything up to interpretation.</td><td>Dictate to an offline recorder or type into a plain document, then transcribe in.</td><td>Reports created outside the system must be reconciled to the correct study and re-issued through the normal delivery path with the correct status.</td></tr>
+        <tr><td class="mono">Report delivery</td><td>Everything. Reports are signed and correct, and nobody receives them.</td><td>Phone and secondary channel for anything urgent; hold the rest in the retry queue.</td><td>Bulk re-delivery, with duplicate suppression at the recipient, and correct result status so a re-send is not read as a new finding.</td></tr>
+        <tr><td class="mono">Identity source (EHR / PIMS)</td><td>Imaging, in isolation.</td><td>Local identifiers, quarantined for later reconciliation.</td><td>The hardest catch-up of all: locally-created identities must be merged against the authoritative source afterwards, and merges are irreversible in practice.</td></tr>
+        <tr><td class="mono">Automated analysis</td><td>Everything else.</td><td>Read without it, explicitly.</td><td>Almost none &mdash; provided the absence is visible. The danger is a workflow where "no finding shown" and "the tool did not run" look the same.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>The downtime kit</h4>
+      <ul class="tick">
+        <li>A printed contact tree that does not depend on the systems that are down, including the site contacts.</li>
+        <li>The current site and device inventory, offline: AE titles, IPs, ports, owners.</li>
+        <li>A stated read-only mode, if the platform has one, and the exact conditions for entering and leaving it.</li>
+        <li>The urgent-case alternate route, agreed with each site in advance and tested, not invented during the incident.</li>
+        <li>A downtime log template: what was acquired, when, by whom, under which identity.</li>
+        <li>The catch-up order of operations, written down before it is needed.</li>
+        <li>Named authority to declare downtime and to declare it over. These are different decisions and both are frequently nobody's.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Catch-up, in order</h4>
+      <ol class="steps">
+        <li>Stop new work into the affected path before draining, or you will chase a moving target.</li>
+        <li>Ingest the backlog with rate limiting, oldest first, so turnaround clocks recover in the order patients waited.</li>
+        <li>Deduplicate on SOP Instance UID before anything is assigned for reading.</li>
+        <li>Reconcile identity for everything acquired without a worklist, against the authoritative source, before release.</li>
+        <li>Release to the reading queue only after completeness is confirmed per study.</li>
+        <li>Re-deliver reports, with correct status codes so a re-send is not mistaken for a new or corrected result.</li>
+        <li>Reconcile the downtime log against the system: anything in the log with no matching study is the incident's real damage.</li>
+        <li>Record the actual recovery time against the target, and correct the target if reality disagrees with it.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="note anti"><span class="lbl">Anti-pattern &mdash; a recovery plan that has never been run at production scale</span>
+    Restore drills on a sample dataset validate the procedure and none of the durations. The numbers that matter are index rebuild time at your object count, bulk ingest rate during a drain, and per-object retrieval fees when the archive tier is involved. All three are measurable in an afternoon and all three are routinely first measured during the incident.
+  </div>
+</section>
+
+<section class="chapter" id="slo">
+  <h2><span class="num">06</span> Service levels that survive contact with a customer</h2>
+  <p class="lede">Most imaging service levels are written as a single availability percentage, which is the one number that can be simultaneously true and useless. The read path and the write path fail independently; a platform that accepts studies perfectly while nobody can open one is at 100% by that measure.</p>
+
+  <h3>The indicator menu</h3>
+  <div class="tw">
+    <table>
+      <caption>Table 6.1 &mdash; Candidate SLIs. Measurement point is the part that matters: an indicator measured at the wrong boundary excludes exactly the failure the customer notices. Targets are starting anchors for negotiation. <span class="ev dec">Product decision</span></caption>
+      <thead><tr><th>Indicator</th><th>Measured from &rarr; to</th><th>Anchor target</th><th>Why this boundary</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">Ingest acceptance</td><td>Association close at the gateway &rarr; object durably stored and indexed.</td><td>p95 under 2 min</td><td>Measured from the archive's own receipt, it hides gateway queueing, which is where backlogs actually live.</td></tr>
+        <tr><td class="mono">Study availability</td><td>Last instance received &rarr; study visible and openable in the worklist.</td><td>p95 under 5 min</td><td>This is the customer's definition of "the study is here". Index lag lives entirely inside it.</td></tr>
+        <tr><td class="mono">Completeness detection</td><td>Last instance received &rarr; study marked complete.</td><td>Stated per modality</td><td>Not a performance metric but a correctness one: publish the value per modality so nobody has to guess whether an exam is finished.</td></tr>
+        <tr><td class="mono">Hot retrieval</td><td>Viewer request &rarr; first image rendered, current study.</td><td>p95 under 2 s</td><td>Server-side time alone excludes the decode and the network, which is most of what the radiologist experiences.</td></tr>
+        <tr><td class="mono">Prior retrieval</td><td>Request &rarr; prior displayable, from the tier it really lives in.</td><td>p95 under 10 s</td><td>The quiet killer. If priors come from an archive tier, this number is set by your storage-class choice, not your code.</td></tr>
+        <tr><td class="mono">Worklist availability</td><td>Successful worklist load, measured by synthetic probe.</td><td>99.9% monthly</td><td>Separate from the archive. Radiologists cannot start work without it even when every image is retrievable.</td></tr>
+        <tr><td class="mono">Report delivery</td><td>Signature &rarr; positive acknowledgement from each destination.</td><td>99.5% within 15 min</td><td>Acknowledgement, not transmission. Anything measured at send-time cannot detect a black hole.</td></tr>
+        <tr><td class="mono">Exception queue age</td><td>Item created &rarr; item resolved.</td><td>p95 under one shift</td><td>The only indicator that measures the human loop. Without it, understaffing the desk is invisible on every dashboard.</td></tr>
+        <tr><td class="mono">Correction propagation</td><td>Correction applied &rarr; all downstream recipients confirmed updated.</td><td>p95 under 1 hour</td><td>Measures the state nobody watches: upstream fixed, downstream stale.</td></tr>
+        <tr><td class="mono">Turnaround time</td><td>Defined event &rarr; report signed. <em>See the trap below.</em></td><td>Per priority class</td><td>The headline clinical metric and the most contested definition on this page.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note caution"><span class="lbl">The turnaround-time clock trap</span>
+    Four defensible start events produce four different numbers from identical work. <b>Order placed</b> includes scheduling and patient arrival, so it measures the health system, not you. <b>Study complete</b> is the fairest measure of the platform plus the reading service, and depends entirely on your completeness rule, which means changing that rule silently changes your headline metric. <b>Assigned to a radiologist</b> measures the radiologist only and hides every minute a study spent unassigned. <b>Radiologist opened it</b> measures dictation speed and nothing else. Agree the start event, the stop event, the exclusions, and the priority classes in writing, and treat any change to the completeness rule as a change to the service level, because it is.
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>What suppliers will rarely sign, and the substitute</h4>
+      <ul class="tick">
+        <li><b>End-to-end turnaround</b> when they do not control acquisition or reading. Substitute: their segment, measured at their boundary, with the boundary named.</li>
+        <li><b>Prior retrieval latency from archive tiers.</b> Substitute: a published latency per storage class plus a maximum, with the retrieval fee stated.</li>
+        <li><b>Index rebuild time.</b> Substitute: a tested figure at your object count, refreshed annually, in writing.</li>
+        <li><b>Bulk export throughput.</b> Substitute: objects per hour achieved in a real customer migration, with the per-object charge named. A supplier who cannot produce one has never migrated a customer out.</li>
+        <li><b>Correctness</b> of any kind. Nobody signs a defect-rate SLA. Substitute: severity definitions, response times per severity, and a root-cause commitment with a deadline.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Remedies that mean something</h4>
+      <ul class="tick">
+        <li>Service credits are compensation, not remedy. A month of credits does not restore a week of turnaround debt.</li>
+        <li>Tie repeated breach to a termination right and to data egress on defined terms, which is the only leverage that survives a bad relationship.</li>
+        <li>Require a root-cause analysis with a deadline for each severity-1 event, delivered whether or not credits apply.</li>
+        <li>Require notice of maintenance windows in the customer's local time, and count unannounced maintenance as unplanned downtime.</li>
+        <li>Make the measurement method contractual, including the probe location. Two honest parties measuring at different boundaries will disagree forever.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note anti"><span class="lbl">Anti-pattern &mdash; one availability number for the whole platform</span>
+    A single monthly percentage lets a platform report 99.95% during a month in which priors were unretrievable for two working days, because the archive answered every request &mdash; slowly, and from a tier nobody budgeted for. Publish availability per path: ingest, worklist, current-study retrieval, prior retrieval, reporting, delivery.
+  </div>
+</section>
+
+<section class="chapter" id="cost">
+  <h2><span class="num">07</span> What five years actually costs</h2>
+  <p class="lede">Storage price per gigabyte is the number everyone models and the one that decides least. This section is a working model with the arithmetic exposed, so you can put your own measurements in and get a defensible answer out &mdash; and then discover, as the worked example does, that the storage bill is a rounding error next to the people.</p>
+
+  <div class="note caution"><span class="lbl">What this model covers, and what it deliberately does not</span>
+    <b>In scope:</b> object-storage capacity across two tiers, per-object write and read charges, archive retrieval fees, egress to viewers, one-time egress at exit, and platform operations staffing. <b>Out of scope, and usually larger:</b> PACS or VNA licensing, viewer seats, radiologist fees, compute and database, network circuits and VPN, gateway hardware per site, security and compliance programme, migration-in cost, and the dual-run period during any migration. Add those separately. This model exists to size the part people <em>think</em> dominates and to show that it does not.
+  </div>
+
+  <h3>Rates, dated and sourced</h3>
+  <div class="tw">
+    <table>
+      <caption>Table 7.1 &mdash; Default rates: Amazon S3, US East (N. Virginia), September&nbsp;2026. Substitute your provider's current published rates; every one of these is an input below. <span class="ev prac">Vendor-published</span></caption>
+      <thead><tr><th>Line</th><th>Rate</th><th>Operational note</th></tr></thead>
+      <tbody>
+        <tr><td>Hot storage (S3 Standard, first 50&nbsp;TB)</td><td class="code">$0.023 / GB-month</td><td>Where the current-study working set must live.</td></tr>
+        <tr><td>Archive storage (Glacier Instant Retrieval)</td><td class="code">$0.004 / GB-month</td><td>Millisecond retrieval, but with a per-GB retrieval fee and a <b>90-day minimum storage duration</b>. Correct or delete an object inside 90 days and you still pay the balance.</td></tr>
+        <tr><td>Archive data retrieval</td><td class="code">$0.03 / GB</td><td>Seven and a half times the monthly storage rate. Retrieve an object once a month and the tier is costing you money, not saving it.</td></tr>
+        <tr><td>Write requests (PUT/COPY/POST/LIST)</td><td class="code">$0.005 / 1,000</td><td>Charged per object, so this line scales with <b>instance count</b>. A thin-slice CT study can be thousands of PUTs.</td></tr>
+        <tr><td>Read requests (GET)</td><td class="code">$0.0004 / 1,000</td><td>Small per request, large across a prior-fetch workload measured in instances.</td></tr>
+        <tr><td>Egress to internet (first 10&nbsp;TB/month)</td><td class="code">$0.09 / GB</td><td>Applies to browser-based viewing and to the day you leave. Both.</td></tr>
+        <tr><td>Other minimum durations</td><td class="code">30 / 90 / 180 days</td><td>Standard-IA 30, Glacier Flexible 90, Deep Archive 180. Early-deletion penalties interact badly with correction and retention workflows.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>The model</h3>
+  <p>Month <em>m</em> from 0 to 59. Studies grow geometrically. Data accumulates with no expiry inside the window when retention exceeds five years. Objects newer than the hot window sit in hot storage, everything older in the archive tier, and each is stored <em>r</em> times. Writes are charged per instance per replica; reads and archive retrievals are charged against the studies actually retrieved.</p>
+
+  <form class="calc" id="tco" novalidate>
+    <fieldset>
+      <legend>Volume</legend>
+      <label>Studies per month, today <input type="number" id="i_studies" value="12000" min="0" step="100"></label>
+      <label>Average MB per study <input type="number" id="i_mb" value="120" min="0" step="1"></label>
+      <label>Average instances per study <input type="number" id="i_inst" value="900" min="0" step="10"></label>
+      <label>Annual volume growth (%) <input type="number" id="i_growth" value="12" step="1"></label>
+      <p class="hint">Measure the first three from your own archive. Instance count drives request charges and migration wall-clock more than gigabytes do.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Storage shape</legend>
+      <label>Copies retained (replicas) <input type="number" id="i_repl" value="2" min="1" step="1"></label>
+      <label>Months in hot tier <input type="number" id="i_hot" value="3" min="0" step="1"></label>
+      <label>Hot rate ($/GB-month) <input type="number" id="i_hotr" value="0.023" min="0" step="0.001"></label>
+      <label>Archive rate ($/GB-month) <input type="number" id="i_coldr" value="0.004" min="0" step="0.001"></label>
+      <p class="hint">Replicas multiply storage and writes, not retrievals. A cross-region copy is the cheapest line in this whole model.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Access and charges</legend>
+      <label>Archive studies retrieved per month (%) <input type="number" id="i_retr" value="3" min="0" step="0.5"></label>
+      <label>Share of retrievals egressed (%) <input type="number" id="i_egshare" value="60" min="0" max="100" step="5"></label>
+      <label>Write request ($/1,000) <input type="number" id="i_put" value="0.005" min="0" step="0.001"></label>
+      <label>Read request ($/1,000) <input type="number" id="i_get" value="0.0004" min="0" step="0.0001"></label>
+      <label>Archive retrieval ($/GB) <input type="number" id="i_retgb" value="0.03" min="0" step="0.005"></label>
+      <label>Egress ($/GB) <input type="number" id="i_egr" value="0.09" min="0" step="0.005"></label>
+    </fieldset>
+    <fieldset>
+      <legend>People</legend>
+      <label>Platform operations FTE <input type="number" id="i_fte" value="3.5" min="0" step="0.5"></label>
+      <label>Loaded cost per FTE ($/yr) <input type="number" id="i_sal" value="135000" min="0" step="5000"></label>
+      <p class="hint">Ingest monitoring, the exception desk, site onboarding, on-call. Not radiologists, not engineering, not support beyond tier&nbsp;2.</p>
+    </fieldset>
+  </form>
+
+  <div class="out" aria-live="polite">
+    <div class="out-head">Five-year projection</div>
+    <div class="figs">
+      <div class="fig"><span class="k">Studies ingested</span><div class="v" id="o_studies">&mdash;</div></div>
+      <div class="fig"><span class="k">Archive at month 60</span><div class="v" id="o_tb">&mdash;</div></div>
+      <div class="fig"><span class="k">Storage capacity</span><div class="v" id="o_storage">&mdash;</div></div>
+      <div class="fig"><span class="k">Write requests</span><div class="v" id="o_put">&mdash;</div></div>
+      <div class="fig"><span class="k">Read requests</span><div class="v" id="o_get">&mdash;</div></div>
+      <div class="fig"><span class="k">Archive retrieval</span><div class="v" id="o_retr">&mdash;</div></div>
+      <div class="fig"><span class="k">Egress to viewers</span><div class="v" id="o_egress">&mdash;</div></div>
+      <div class="fig good"><span class="k">Infrastructure subtotal</span><div class="v" id="o_infra">&mdash;</div></div>
+      <div class="fig"><span class="k">Operations staffing</span><div class="v" id="o_staff">&mdash;</div></div>
+      <div class="fig hero"><span class="k">Five-year total</span><div class="v" id="o_total">&mdash;</div></div>
+      <div class="fig"><span class="k">Cost per study</span><div class="v" id="o_perstudy">&mdash;</div></div>
+      <div class="fig"><span class="k">Infrastructure per study</span><div class="v" id="o_perinfra">&mdash;</div></div>
+      <div class="fig"><span class="k">One-time egress to exit</span><div class="v" id="o_exit">&mdash;</div></div>
+      <div class="fig"><span class="k">Staffing share of total</span><div class="v" id="o_share">&mdash;</div></div>
+    </div>
+  </div>
+  <p style="margin-top:0.5rem;font-size:0.82rem;color:var(--faint)">Values persist in this browser only. <button class="btn" type="button" id="tco-reset">Reset to worked example</button></p>
+
+  <h3>The worked example, all the way to a number</h3>
+  <p>Using the defaults above &mdash; 12,000 studies a month growing 12% a year, 120&nbsp;MB and 900 instances per study, two copies, three months hot then Glacier Instant Retrieval, 3% of the archive retrieved monthly with 60% of that egressed, and 3.5&nbsp;FTE at $135,000 loaded:</p>
+  <ul class="tick">
+    <li><b>964,095 studies</b> ingested over the five years, reaching 20,949 studies a month by month&nbsp;60.</li>
+    <li><b>110.3&nbsp;TB</b> of unique data at month&nbsp;60, held twice.</li>
+    <li>Storage capacity across both tiers and both copies: <b>$37,621</b>.</li>
+    <li>Write requests: <b>$8,677</b> &mdash; 16% of the infrastructure bill, and entirely a function of instance count. Halve the instances per study and this line halves; halve the gigabytes and it does not move.</li>
+    <li>Read requests <b>$288</b>, archive retrieval fees <b>$2,516</b>, egress to viewers <b>$5,067</b>.</li>
+    <li><b>Infrastructure subtotal: $54,170</b> for five years, or <b>$0.056 per study</b>.</li>
+    <li>Operations staffing: <b>$2,362,500</b>.</li>
+    <li><b>Five-year total: $2,416,670</b>, which is <b>$2.51 per study</b> &mdash; and <b>97.8% of it is people</b>.</li>
+    <li>Leaving at the end of year five costs <b>$10,168</b> in egress alone, before anyone writes migration code. That single one-time line is 19% of everything you spent on infrastructure in five years.</li>
+  </ul>
+
+  <div class="note rec"><span class="lbl">Recommendation &mdash; what this model is actually telling you</span>
+    Three conclusions survive almost any plausible change to the inputs. <b>First:</b> negotiating the per-gigabyte rate is close to pointless; reducing exception-desk load by one FTE saves more than the entire five-year storage bill. <b>Second:</b> instance count is the cost driver you can control, and it is set by acquisition protocols you may not own. <b>Third:</b> exit cost is real, one-time, and never in the business case &mdash; model it on day one, because it is also the number that quietly determines how much leverage you have at renewal.
+  </div>
+
+  <div class="note anti"><span class="lbl">Anti-pattern &mdash; the archive tier chosen from the storage rate alone</span>
+    Glacier Instant Retrieval stores at $0.004/GB-month and returns data at $0.03/GB. An object retrieved once a month costs more in retrieval than it does in storage, and the 90-day minimum storage duration means a study corrected or deleted at day&nbsp;30 is billed for 90. Tier placement is a workflow decision about how often priors are read and how often objects change &mdash; the price list is an input to it, not the decision.
+  </div>
+</section>
+
+<section class="chapter" id="models">
+  <h2><span class="num">08</span> Operating models and who is actually responsible</h2>
+  <p class="lede">The sourcing decision picks components. The operating model decides who answers the phone at 03:00, and those are different questions with different answers. A team can buy every component and still own every operational obligation on this page.</p>
+
+  <div class="tw">
+    <table>
+      <caption>Table 8.1 &mdash; Five operating models against the obligations that do not disappear. <b>You</b> = the product organisation; <b>Site</b> = the clinic or hospital; <b>Sup</b> = supplier or operating partner; <b>Split</b> = genuinely shared and therefore the row to negotiate first. <span class="ev rec">Recommendation</span></caption>
+      <thead><tr><th>Obligation</th><th>Software platform only</th><th>Hosted PACS</th><th>Teleradiology service</th><th>Embedded in an EHR / PIMS</th><th>Platform + outsourced operations</th></tr></thead>
+      <tbody>
+        <tr><td>Modality commissioning</td><td>Site</td><td>Split</td><td>You</td><td>Split</td><td>Sup</td></tr>
+        <tr><td>Gateway health and buffering</td><td>Site</td><td>You</td><td>You</td><td>You</td><td>Sup</td></tr>
+        <tr><td>Identity source of truth</td><td>Site</td><td>Site</td><td>Split</td><td>Host system</td><td>Site</td></tr>
+        <tr><td>Exception desk</td><td>Site</td><td>Split</td><td>You</td><td>Split</td><td>Sup, to your standard</td></tr>
+        <tr><td>Wrong-patient correction</td><td>Site</td><td>Split</td><td>You</td><td>Split</td><td>Split &mdash; never fully delegate</td></tr>
+        <tr><td>Study completeness rule</td><td>You</td><td>You</td><td>You</td><td>You</td><td>You</td></tr>
+        <tr><td>Turnaround-time commitment</td><td>None</td><td>None</td><td>You</td><td>None</td><td>Split</td></tr>
+        <tr><td>Critical-result communication</td><td>Site</td><td>Site</td><td>You</td><td>Site</td><td>You</td></tr>
+        <tr><td>Diagnostic viewing conditions</td><td>Site</td><td>Site</td><td>You</td><td>Site</td><td>You</td></tr>
+        <tr><td>Retention and legal hold</td><td>Site</td><td>Split</td><td>Split</td><td>Host system</td><td>You</td></tr>
+        <tr><td>24-hour technical support</td><td>You</td><td>You</td><td>You</td><td>Split</td><td>Sup</td></tr>
+        <tr><td>Downtime declaration</td><td>Site</td><td>You</td><td>You</td><td>Split</td><td>You</td></tr>
+        <tr><td>Archive integrity and recovery</td><td>Site</td><td>You</td><td>You</td><td>You</td><td>Split &mdash; you must be able to verify</td></tr>
+        <tr><td>Bulk export on exit</td><td>You</td><td>You</td><td>You</td><td>You</td><td>You, contractually</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>The three rows that decide the model</h4>
+      <ul class="tick">
+        <li><b>Wrong-patient correction.</b> Whoever holds this holds clinical risk. It is the one obligation that should never be wholly outsourced, whatever the contract says, because you cannot delegate the consequence.</li>
+        <li><b>Downtime declaration.</b> If nobody is named, the answer during an incident is "everyone, eventually, after an hour of discussion".</li>
+        <li><b>Bulk export.</b> The only row that is identical in every column. If you cannot get your objects out at a demonstrated rate, the operating model is decorative.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Delegation tests before signing an operations partner</h4>
+      <ul class="tick">
+        <li>Can you observe their queues directly, or only their monthly report? A partner you can only audit retrospectively is a partner you cannot manage.</li>
+        <li>Do they operate to your written authority matrix, including dual control on merges?</li>
+        <li>Whose audit trail records their actions &mdash; yours, or theirs?</li>
+        <li>What happens to in-flight exceptions on the day the contract ends?</li>
+        <li>Can you take the function back in-house within one notice period, and have you written down how?</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="vet">
+  <h2><span class="num">09</span> Human and veterinary operations are not the same job</h2>
+  <p class="lede">The standard is shared; almost nothing about running the service is. Veterinary imaging is not human imaging with looser rules, and treating it as a configuration flag on a human platform produces a system that is wrong in both directions.</p>
+
+  <div class="tw">
+    <table>
+      <caption>Table 9.1 &mdash; Operational differences that change the product, not the branding. <span class="ev std">Standard</span> for the DICOM attributes; <span class="ev prac">common practice</span> for the workflow observations.</caption>
+      <thead><tr><th>Dimension</th><th>Human health</th><th>Veterinary</th><th>What it changes operationally</th></tr></thead>
+      <tbody>
+        <tr><td>Who the patient is</td><td>The person, with a durable identifier issued by an assigning authority.</td><td>The animal, usually identified through its owner and clinic. Patient's Name (0010,0010) frequently carries an owner-plus-animal convention with no standard form.</td><td>Deduplication and prior-matching cannot rely on a stable identifier. Two clinics in the same group will encode "Rex Alvarez" three different ways.</td></tr>
+        <tr><td>Extra required attributes</td><td>None specific.</td><td>Patient Species Description (0010,2201) and Code Sequence (0010,2202); Patient Breed Description (0010,2292) and Code Sequence (0010,2293); Breed Registration Sequence (0010,2294).</td><td>Species is clinically load-bearing: it drives reference ranges, hanging protocols, and which radiologist can read the case. If it arrives as free text, it will arrive as free text forever.</td></tr>
+        <tr><td>Decision-maker</td><td>The patient or a legal representative.</td><td>Responsible Person (0010,2297), Responsible Person Role (0010,2298) with defined terms including OWNER and VETERINARIAN, and Responsible Organization (0010,2299).</td><td>Report delivery and consent route to a party the standard models explicitly. Ignoring these attributes means rebuilding them badly in your own schema.</td></tr>
+        <tr><td>Ordering context</td><td>EHR order with an accession number, an ordering provider, and an encounter.</td><td>A PIMS request, or often a consultation request with no order at all.</td><td>Where there is no order, every study is an unscheduled case and the exception desk is the primary workflow rather than the fallback.</td></tr>
+        <tr><td>Species range</td><td>One.</td><td>Small animal, equine, exotic, production animal &mdash; different body parts, positioning, sizes, and reading expertise.</td><td>Routing rules keyed on Modality and body part are insufficient. Equine distal limb and feline thorax are different services sharing one SOP Class.</td></tr>
+        <tr><td>Retention</td><td>US hospitals: at least 5&nbsp;years (42&nbsp;CFR&nbsp;482.24(b)(1)). Mammography: the longest of 5&nbsp;years, 10&nbsp;years absent further mammograms, or the state period (21&nbsp;CFR&nbsp;900.12(c)(4)).</td><td>Set by state veterinary practice acts and board rules, which vary substantially by state and are not harmonised with human rules.</td><td>Retention becomes per-jurisdiction configuration, not a global constant. Get it in writing from the customer, per state.</td></tr>
+        <tr><td>Privacy regime</td><td>HIPAA and equivalents apply to protected health information.</td><td>Animal records are generally not protected health information; owner contact details are still personal data under general privacy law.</td><td>Do not claim HIPAA where it does not apply, and do not assume the absence of HIPAA means the absence of obligations. The owner's data is still regulated.</td></tr>
+        <tr><td>Who reads</td><td>Credentialled radiologists, with privileges by facility.</td><td>Board-certified veterinary radiologists, in a much smaller pool, often reading across many clinics.</td><td>Assignment, capacity planning, and after-hours cover are constrained by a scarce reader pool. Queue design matters more than in a large human practice.</td></tr>
+        <tr><td>Who pays and who receives</td><td>Payer, provider, and patient are distinct parties.</td><td>The clinic is the customer, the owner is the payer, and the referring veterinarian may be a third party.</td><td>Report distribution has three audiences with different needs, and the portal you build for the owner is a different product from the one you build for the clinic.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note rec"><span class="lbl">Recommendation &mdash; one core, two domain layers</span>
+    Share study, series, instance, workflow state, audit, and storage. Do not share the identity model. Human identity assumes an assigning authority and a durable identifier; veterinary identity assumes an owner relationship, a clinic, and a species. Forcing one schema to cover both produces fields that are optional in theory and required in practice, which is how a veterinary study ends up with a blank species and a human study ends up with a "responsible person".
+  </div>
+</section>
+
+<section class="chapter" id="memo">
+  <h2><span class="num">10</span> The operations readiness memo</h2>
+  <p class="lede">A fill-in artefact for the review before go-live, or the one you should have run before signing. Every blank is a question this page argues you cannot leave open. Edit it here and copy it out; it saves in this browser only.</p>
+
+  <div class="memo">
+    <label class="sr-only" for="memo-text">Operations readiness memo</label>
+    <textarea id="memo-text" spellcheck="false"></textarea>
+    <div class="bar">
+      <button class="btn" type="button" id="memo-copy">Copy memo</button>
+      <button class="btn" type="button" id="memo-reset">Reset template</button>
+      <span class="status" id="memo-status"></span>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="mistakes">
+  <h2><span class="num">11</span> Common mistakes and anti-patterns</h2>
+  <p class="lede">Fourteen failures that are operational rather than architectural. Each one has a healthy-looking architecture diagram behind it.</p>
+
+  <details class="drawer" name="mistake"><summary>1 &mdash; Treating a green dashboard as evidence the clinical path works</summary><div class="body"><p>Component health checks answer "is the process running". They do not answer "can a radiologist open today's chest CT with its priors". Run a synthetic transaction end to end on a schedule: push a known study, retrieve it, render it headlessly, generate and deliver a report to a test destination, and alarm on the whole path. Every incident in this page's tables is invisible to component-level monitoring.</p></div></details>
+  <details class="drawer" name="mistake"><summary>2 &mdash; A retry loop that deletes the failing object</summary><div class="body"><p>Cxxx and A9xx failures are diagnosable only from the artefact. A pipeline that retries three times and drops the object has converted a solvable vendor ticket into an unreproducible anecdote. Quarantine failed objects immutably, subject to your retention and privacy rules, and make the quarantine a queue with an owner.</p></div></details>
+  <details class="drawer" name="mistake"><summary>3 &mdash; Assuming the modality is a durable queue</summary><div class="body"><p>Some devices retry indefinitely, some hold a shallow queue, some drop everything on reboot. Which one each of your devices is, is a fact you can only learn by pulling the link during commissioning (step&nbsp;13). Architectures that assume "the modality will resend" fail silently on the devices that will not.</p></div></details>
+  <details class="drawer" name="mistake"><summary>4 &mdash; Silent attribute coercion</summary><div class="body"><p>Status B000 means the receiver rewrote your data. Coercion is sometimes correct policy, but undocumented coercion means an incorrectly-selected worklist entry is written into the permanent record with no trace of what the device actually sent. If you coerce, log every changed attribute with both values; if you do not, alarm on B000.</p></div></details>
+  <details class="drawer" name="mistake"><summary>5 &mdash; Support tooling with production-grade destructive power</summary><div class="body"><p>See the authority matrix in Table&nbsp;4.2. Merges, moves, rejections, and deletions belong behind dual control with a named second approver. A tier&nbsp;1 agent should be able to see nearly everything and change almost nothing.</p></div></details>
+  <details class="drawer" name="mistake"><summary>6 &mdash; A completeness rule that is a timeout nobody wrote down</summary><div class="body"><p>The value exists &mdash; it is in someone's configuration file. If it is not published per modality, then changing it silently changes turnaround-time reporting, the rate of incomplete reads, and your headline service level, all at once and without a change record.</p></div></details>
+  <details class="drawer" name="mistake"><summary>7 &mdash; Measuring delivery at send time</summary><div class="body"><p>An interface that logs "message transmitted" and never inspects the acknowledgement will lose reports for months while every dashboard stays green. Every delivery channel needs positive receipt and an unacknowledged queue with an age alarm. This is the single most common way a correct report fails to reach a clinician.</p></div></details>
+  <details class="drawer" name="mistake"><summary>8 &mdash; Correcting upstream and forgetting downstream</summary><div class="body"><p>A corrected identity in your archive plus an uncorrected copy in the EHR, the portal, the referring practice's system, and last night's export is worse than the original error: two systems now disagree and both appear authoritative. Correction is not complete until propagation is confirmed, which requires knowing every place a study or report has been.</p></div></details>
+  <details class="drawer" name="mistake"><summary>9 &mdash; Testing recovery on a sample dataset</summary><div class="body"><p>The procedure validates; the durations do not. Index rebuild time at production object count, bulk ingest rate during a drain, and per-object archive retrieval fees are the three numbers that decide your real recovery time, and all three are commonly first measured during the incident.</p></div></details>
+  <details class="drawer" name="mistake"><summary>10 &mdash; One availability number for the whole platform</summary><div class="body"><p>Ingest, worklist, current-study retrieval, prior retrieval, reporting, and delivery fail independently. A single monthly percentage can report 99.95% through two working days in which priors were effectively unavailable. Publish availability per path.</p></div></details>
+  <details class="drawer" name="mistake"><summary>11 &mdash; Tiering storage on the per-gigabyte rate</summary><div class="body"><p>Archive classes carry per-GB retrieval fees and minimum storage durations (90 days for Glacier Instant Retrieval and Flexible, 180 for Deep Archive, 30 for Standard-IA). An object read once a month costs more to retrieve than to store, and an object corrected at day&nbsp;30 is billed for 90. Tier on read frequency and mutability, then check the price.</p></div></details>
+  <details class="drawer" name="mistake"><summary>12 &mdash; No exit-cost line in the business case</summary><div class="body"><p>In the worked example, egress alone to leave at year five is $10,168 &mdash; 19% of five years of infrastructure spend, one-time, before any migration engineering. Suppliers know this number. Model it on day one, because it is also what determines your negotiating position at renewal.</p></div></details>
+  <details class="drawer" name="mistake"><summary>13 &mdash; Discontinuation reasons captured and never routed</summary><div class="body"><p>CID&nbsp;9301 hands you an incorrect-worklist-selection event (110514), an equipment-failure trend (110501), and a deceased-patient signal (110504) for free. A platform that stores all nineteen codes identically has the evidence and acts on none of it.</p></div></details>
+  <details class="drawer" name="mistake"><summary>14 &mdash; Staffing a queue instead of fixing its cause</summary><div class="body"><p>An exception queue whose depth is stable is not under control; it is in equilibrium with the rate of a defect you are paying people to absorb. Review monthly by cause, and convert the top cause into a configuration or product change. In the worked cost model, one FTE of avoided exception work outweighs the entire five-year infrastructure bill more than twelvefold.</p></div></details>
+</section>
+
+<section class="chapter" id="glossary">
+  <h2><span class="num">12</span> Operations glossary</h2>
+  <p class="lede">Terms used here in a specific operational sense. Protocol and architecture vocabulary lives in the <a href="radiology-imaging-software-stack.html#glossary">atlas glossary</a>; this list does not repeat it.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th style="min-width:11rem">Term</th><th>Meaning on this page</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">Association reject</td><td>A refusal before any data is exchanged, carrying result, source, and reason fields (PS3.8 9.3.4). Distinct from a DIMSE status, which is returned after a service request is accepted.</td></tr>
+        <tr><td class="mono">Bring-up</td><td>The commissioning sequence for one device or site, from identity allocation to confirmed end-to-end delivery.</td></tr>
+        <tr><td class="mono">Catch-up</td><td>Work created by an outage after service is restored: backlog ingest, deduplication, identity reconciliation, and re-delivery. Usually longer than the outage.</td></tr>
+        <tr><td class="mono">Coercion</td><td>The receiver rewriting attributes of an object it stores, reported as C-STORE warning B000. Frequently identity attributes taken from the receiver's own worklist.</td></tr>
+        <tr><td class="mono">Completeness rule</td><td>The written, per-modality definition of when a study is considered finished and may be released for reading. Three mechanisms exist and each fails differently.</td></tr>
+        <tr><td class="mono">Downtime kit</td><td>The offline artefacts an incident needs: contact tree, device inventory, alternate urgent route, downtime log, and named declaration authority.</td></tr>
+        <tr><td class="mono">Dual control</td><td>A destructive action requiring two named people, both recorded. Applied here to merges, moves between patients, rejections, and deletions.</td></tr>
+        <tr><td class="mono">Exception desk</td><td>The human loop that resolves studies the automated path cannot: unmatched, mismatched, duplicated, incomplete, undelivered.</td></tr>
+        <tr><td class="mono">Exit cost</td><td>The one-time cost of removing your data from a platform: egress, per-object retrieval, engineering, and dual-run time. Distinct from the licence you stop paying.</td></tr>
+        <tr><td class="mono">Hot window</td><td>How long after acquisition an object stays in immediate-access storage before moving to an archive class. A workflow decision constrained by prior-read frequency.</td></tr>
+        <tr><td class="mono">Instance count</td><td>Number of SOP Instances, as distinct from bytes. The variable that drives per-object charges, index writes, queue depth, and migration wall-clock.</td></tr>
+        <tr><td class="mono">Minimum storage duration</td><td>The billing floor of an archive storage class (30, 90, or 180 days). Objects deleted or moved earlier are still charged for the balance.</td></tr>
+        <tr><td class="mono">Orphan order</td><td>An order with no images inside the expected window. The queue that detects a site whose connectivity failed.</td></tr>
+        <tr><td class="mono">Propagation</td><td>Pushing a correction to every downstream system that already received the incorrect record, and confirming each one.</td></tr>
+        <tr><td class="mono">Quiet timer</td><td>The fallback completeness mechanism: no new object for <em>n</em> minutes means done. A guess with a clinical consequence in both directions.</td></tr>
+        <tr><td class="mono">Read path / write path</td><td>Retrieval and display versus ingestion and storage. They fail independently and deserve separate service levels.</td></tr>
+        <tr><td class="mono">Site survey</td><td>The written record of a site's network, devices, identity sources, people, and inherited obligations, collected before configuration begins.</td></tr>
+        <tr><td class="mono">Synthetic transaction</td><td>A scheduled end-to-end probe: push, retrieve, render, report, deliver. The only monitoring that fails when the clinical path fails.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="chapter" id="sources">
+  <h2><span class="num">13</span> Sources</h2>
+  <p class="lede">Every code, rate, and legal figure on this page traces to one of these. Standards editions and published prices move; the rate table in section&nbsp;7 will go stale first.</p>
+  <div class="grid-2 srcs">
+    <div class="card">
+      <h4>DICOM, current edition (PS3, 2026c)</h4>
+      <ol>
+        <li>PS3.4 Table B.2-1 &mdash; <a href="https://dicom.nema.org/medical/dicom/current/output/chtml/part04/sect_B.2.3.html" target="_blank" rel="noopener">Storage Service Class status values</a> (A7xx, A9xx, Cxxx, B000, B006, B007).</li>
+        <li>PS3.4 Section C.4.2 &mdash; <a href="https://dicom.nema.org/medical/dicom/current/output/chtml/part04/sect_C.4.2.html" target="_blank" rel="noopener">C-MOVE response statuses</a> (A701, A702, A801, A900, B000, FE00, FF00).</li>
+        <li>PS3.4 Table K.6-1 &mdash; <a href="https://dicom.nema.org/medical/dicom/current/output/chtml/part04/sect_K.6.html" target="_blank" rel="noopener">Modality Worklist matching keys</a>.</li>
+        <li>PS3.4 Annex J &mdash; <a href="https://dicom.nema.org/medical/dicom/current/output/chtml/part04/sect_J.3.html" target="_blank" rel="noopener">Storage Commitment Push Model</a> (N-ACTION and N-EVENT-REPORT).</li>
+        <li>PS3.3 Section C.14 &mdash; <a href="https://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.14.html" target="_blank" rel="noopener">Storage commitment failure reasons</a> (0110, 0112, 0119, 0122, 0131, 0213).</li>
+        <li>PS3.3 Section C.7 &mdash; <a href="https://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.7.html" target="_blank" rel="noopener">Patient module</a>, including species, breed, and responsible-person attributes.</li>
+        <li>PS3.7 Annex C &mdash; <a href="https://dicom.nema.org/medical/dicom/current/output/chtml/part07/chapter_C.html" target="_blank" rel="noopener">status class conventions</a> (Axxx, Bxxx, Cxxx, FE00, FF00).</li>
+        <li>PS3.8 Section 9.3.4 &mdash; <a href="https://dicom.nema.org/medical/dicom/current/output/chtml/part08/sect_9.3.4.html" target="_blank" rel="noopener">A-ASSOCIATE-RJ result, source, and reason values</a>.</li>
+        <li>PS3.16 CID 9301 &mdash; <a href="https://dicom.nema.org/medical/dicom/current/output/chtml/part16/sect_CID_9301.html" target="_blank" rel="noopener">Modality PPS Discontinuation Reason</a>; CID 9300 for the general procedure set.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h4>Integration profiles, regulation, and rates</h4>
+      <ol>
+        <li>IHE IT Infrastructure Technical Framework Volume 1 &mdash; <a href="https://profiles.ihe.net/ITI/TF/Volume1/ch-7.html" target="_blank" rel="noopener">Consistent Time (CT) profile</a>, median error under one second over NTP.</li>
+        <li>45 CFR &sect;164.308(a)(7) &mdash; <a href="https://www.law.cornell.edu/cfr/text/45/164.308" target="_blank" rel="noopener">HIPAA Security Rule contingency plan standard</a>.</li>
+        <li>42 CFR &sect;482.24(b)(1) &mdash; <a href="https://www.law.cornell.edu/cfr/text/42/482.24" target="_blank" rel="noopener">hospital medical record retention, at least five years</a>.</li>
+        <li>21 CFR &sect;900.12(c)(4) &mdash; <a href="https://www.law.cornell.edu/cfr/text/21/900.12" target="_blank" rel="noopener">MQSA mammography record retention</a>.</li>
+        <li>HL7 v2 table 0123 &mdash; <a href="https://terminology.hl7.org/6.0.2/CodeSystem-v2-0123.html" target="_blank" rel="noopener">Result Status</a>; table 0085 &mdash; <a href="https://terminology.hl7.org/6.0.2/CodeSystem-v2-0085.html" target="_blank" rel="noopener">Observation Result Status</a>.</li>
+        <li>IANA <a href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml" target="_blank" rel="noopener">Service Name and Transport Protocol Port Number Registry</a> &mdash; acr-nema 104, dicom-iscl 2761, dicom-tls 2762, dicom 11112.</li>
+        <li><a href="https://aws.amazon.com/s3/pricing/" target="_blank" rel="noopener">Amazon S3 pricing</a>, US East (N. Virginia), retrieved September&nbsp;2026, for the rates and minimum storage durations in Table&nbsp;7.1.</li>
+        <li>DCMTK 3.6 tool documentation for <code>echoscu</code>, <code>findscu</code>, <code>storescu</code>, and <code>movescu</code> option syntax, including the sequence path form <code>(0040,0100)[0].Attribute</code>.</li>
+        <li>Joint Commission National Patient Safety Goal NPSG.02.03.01 requires accredited organisations to define in writing who reports critical results to whom and within what interval, and to evaluate timeliness. Numbering differs between accreditation programmes and has moved; verify against the manual for your programme.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="sheet-foot">
+  <div class="wrap">
+  <div>
+  <p>A systems-operations reference, not clinical guidance and not legal advice. Nothing here tells you how to interpret an image, treat a patient, or satisfy a regulator in your jurisdiction. Regulatory citations name the rule so you can read it; applicability is yours to determine. Cloud prices and standards editions move &mdash; the rate table in section&nbsp;7 is the line most likely to be stale first.</p>
+
+<div class="related-cheatsheets" data-seo-related-links aria-label="Related Software &amp; DevOps cheatsheets">
+  <strong>Related Software &amp; DevOps:</strong><br>
+    <a href="radiology-imaging-software-stack.html" target="_blank" rel="noopener" title="Open Radiology Imaging Stack: DICOM, PACS, Viewers, Build vs Buy">Companion: The Radiology Imaging Software Stack</a>
+    <a href="software-development-guides.html" target="_blank" rel="noopener" title="Open Software Development Guides: Developer Cheat Sheets by Role">Part of: Software Development Guides hub</a>
+    <a href="observability-logs-metrics-traces-slos.html" target="_blank" rel="noopener" title="Open Observability: Logs, Metrics, Traces &amp; SLOs">Observability: Logs, Metrics, Traces &amp; SLOs</a>
+    <a href="veterinary-diagnostics.html" target="_blank" rel="noopener" title="Open Veterinary Diagnostics Cheatsheet: Terminology &amp; Tests Guide">Veterinary Diagnostics Cheatsheet: Terminology &amp; Tests Guide</a>
+    <a href="linux-server-hardening.html" target="_blank" rel="noopener" title="Open Linux Server Hardening: Checklist &amp; Paste-Ready Commands">Linux Server Hardening: Checklist &amp; Paste-Ready Commands</a>
+    <a href="aws-vs-azure.html" target="_blank" rel="noopener" title="Open AWS vs Azure (2026): Cloud Architect's Comparison">AWS vs Azure (2026): Cloud Architect's Comparison</a>
+    <a href="databases.html" target="_blank" rel="noopener" title="Open Database Comparison: SQL, NoSQL, Search and Vector DBs">Database Comparison: SQL, NoSQL, Search and Vector DBs</a>
+    <a href="api-design-rest-graphql-grpc-webhooks.html" target="_blank" rel="noopener" title="Open API Design: REST, GraphQL, gRPC, and Webhooks">API Design: REST, GraphQL, gRPC, and Webhooks</a>
+    <a href="compression-algorithms.html" target="_blank" rel="noopener" title="Open Compression Algorithms Compared: Codecs, Ratios, Tradeoffs">Compression Algorithms Compared: Codecs, Ratios, Tradeoffs</a>
+    <a href="microservices.html" target="_blank" rel="noopener" title="Open Microservices Decisions: An ADR-Lite Cheatsheet">Microservices Decisions: An ADR-Lite Cheatsheet</a>
+</div>
+  </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var store = (function () {
+    try { var k = "__t"; localStorage.setItem(k, k); localStorage.removeItem(k); return localStorage; }
+    catch (e) { return null; }
+  })();
+  function get(k) { try { return store && store.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (store) store.setItem(k, v); } catch (e) { /* quota or blocked */ } }
+  function del(k) { try { if (store) store.removeItem(k); } catch (e) { /* ignore */ } }
+
+  /* ---- triage board filter ------------------------------------------- */
+  var q = document.getElementById("board-q");
+  if (q) {
+    var rows = [].slice.call(document.querySelectorAll("#board-rows tr"));
+    var count = document.getElementById("board-count");
+    var empty = document.getElementById("board-empty");
+    var text = rows.map(function (r) { return r.textContent.toLocaleLowerCase(); });
+    function filter() {
+      var needle = q.value.trim().toLocaleLowerCase();
+      var shown = 0;
+      rows.forEach(function (r, i) {
+        var hit = !needle || text[i].indexOf(needle) > -1;
+        r.hidden = !hit;
+        if (hit) shown++;
+      });
+      count.textContent = shown + " of " + rows.length + " shown";
+      empty.hidden = shown !== 0;
+    }
+    q.addEventListener("input", filter);
+    document.getElementById("board-clear").addEventListener("click", function () { q.value = ""; filter(); q.focus(); });
+    addEventListener("keydown", function (e) {
+      var t = e.target;
+      var editable = t && t.matches && t.matches("input,textarea,select,button,[contenteditable='true']");
+      if (e.key === "/" && !editable) { e.preventDefault(); q.focus(); q.select(); }
+    });
+    filter();
+  }
+
+  /* ---- commissioning checklist --------------------------------------- */
+  var list = document.getElementById("commissioning");
+  if (list) {
+    var boxes = [].slice.call(list.querySelectorAll("input[type=checkbox]"));
+    var pct = document.getElementById("ck-pct");
+    function paint() {
+      var done = boxes.filter(function (b) { return b.checked; }).length;
+      pct.textContent = done + " of " + boxes.length + " complete";
+    }
+    boxes.forEach(function (b) {
+      if (get("radops.ck." + b.id) === "1") b.checked = true;
+      b.addEventListener("change", function () {
+        if (b.checked) set("radops.ck." + b.id, "1"); else del("radops.ck." + b.id);
+        paint();
+      });
+    });
+    document.getElementById("ck-reset").addEventListener("click", function () {
+      boxes.forEach(function (b) { b.checked = false; del("radops.ck." + b.id); });
+      paint();
+    });
+    paint();
+  }
+
+  /* ---- cost model ----------------------------------------------------- */
+  var form = document.getElementById("tco");
+  if (form) {
+    var ids = ["i_studies", "i_mb", "i_inst", "i_growth", "i_repl", "i_hot", "i_hotr", "i_coldr",
+               "i_retr", "i_egshare", "i_put", "i_get", "i_retgb", "i_egr", "i_fte", "i_sal"];
+    var defaults = {};
+    ids.forEach(function (id) { defaults[id] = document.getElementById(id).value; });
+
+    var usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    var usd3 = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 3, maximumFractionDigits: 3 });
+    var usd2 = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    var num = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+
+    function v(id) { var n = parseFloat(document.getElementById(id).value); return isFinite(n) ? n : 0; }
+    function out(id, s) { document.getElementById(id).textContent = s; }
+
+    function compute() {
+      var S0 = v("i_studies"), MB = v("i_mb"), INST = v("i_inst"), g = v("i_growth") / 100;
+      var repl = Math.max(1, v("i_repl")), hotM = v("i_hot");
+      var hotR = v("i_hotr"), coldR = v("i_coldr");
+      var retrPct = v("i_retr") / 100, egShare = v("i_egshare") / 100;
+      var putR = v("i_put") / 1000, getR = v("i_get") / 1000, retGB = v("i_retgb"), egR = v("i_egr");
+      var fte = v("i_fte"), sal = v("i_sal");
+
+      var monthly = [], archive = 0, cumStudies = 0;
+      var t = { storage: 0, put: 0, get: 0, retr: 0, egress: 0, staff: 0 };
+
+      for (var m = 0; m < 60; m++) {
+        var s = S0 * Math.pow(1 + g, m / 12);
+        var gb = s * MB / 1024;
+        monthly.push(gb);
+        archive += gb;
+        cumStudies += s;
+        var hotGB = 0;
+        for (var j = Math.max(0, m - hotM + 1); j <= m; j++) hotGB += monthly[j];
+        if (hotM <= 0) hotGB = 0;
+        var coldGB = Math.max(0, archive - hotGB);
+        t.storage += (hotGB * hotR + coldGB * coldR) * repl;
+        t.put += s * INST * putR * repl;
+        var retrieved = retrPct * cumStudies;
+        t.get += retrieved * INST * getR;
+        var coldShare = archive > 0 ? coldGB / archive : 0;
+        t.retr += retrieved * MB / 1024 * coldShare * retGB;
+        t.egress += retrieved * MB / 1024 * egShare * egR;
+        t.staff += fte * sal / 12;
+      }
+
+      var infra = t.storage + t.put + t.get + t.retr + t.egress;
+      var total = infra + t.staff;
+
+      out("o_studies", num.format(cumStudies));
+      out("o_tb", (archive / 1024).toFixed(1) + " TB");
+      out("o_storage", usd.format(t.storage));
+      out("o_put", usd.format(t.put));
+      out("o_get", usd.format(t.get));
+      out("o_retr", usd.format(t.retr));
+      out("o_egress", usd.format(t.egress));
+      out("o_infra", usd.format(infra));
+      out("o_staff", usd.format(t.staff));
+      out("o_total", usd.format(total));
+      out("o_perstudy", cumStudies ? usd2.format(total / cumStudies) : "—");
+      out("o_perinfra", cumStudies ? usd3.format(infra / cumStudies) : "—");
+      out("o_exit", usd.format(archive * egR));
+      out("o_share", total ? (100 * t.staff / total).toFixed(1) + "%" : "—");
+    }
+
+    ids.forEach(function (id) {
+      var el = document.getElementById(id);
+      var saved = get("radops.tco." + id);
+      if (saved !== null && saved !== "") el.value = saved;
+      el.addEventListener("input", function () { set("radops.tco." + id, el.value); compute(); });
+    });
+    document.getElementById("tco-reset").addEventListener("click", function () {
+      ids.forEach(function (id) { document.getElementById(id).value = defaults[id]; del("radops.tco." + id); });
+      compute();
+    });
+    compute();
+  }
+
+  /* ---- readiness memo -------------------------------------------------- */
+  var memo = document.getElementById("memo-text");
+  if (memo) {
+    var TEMPLATE = [
+      "OPERATIONS READINESS MEMO",
+      "Platform / site: ______________________    Date: __________    Owner: ______________",
+      "",
+      "1. BOUNDARY",
+      "   Studies are submitted by ........................................",
+      "   Interpretation is performed by ..................................",
+      "   Reports are received by .........................................",
+      "   Identity source of truth is .....................................",
+      "   Original imaging objects are retained by ........................",
+      "",
+      "2. COMMISSIONING (section 02)",
+      "   Devices in scope (AE title / IP / port / model / software version):",
+      "     ..............................................................",
+      "   Bring-up steps completed: ___ of 14.   Steps waived and why:",
+      "     ..............................................................",
+      "   Buffer capacity at each site, in hours: .........................",
+      "   Clock synchronisation verified after reboot?  yes / no",
+      "",
+      "3. COMPLETENESS AND IDENTITY",
+      "   Completeness rule, per modality (mechanism and value):",
+      "     CT ......... MR ......... US ......... DX ......... MG .........",
+      "   Attribute coercion at ingest:  none / documented (list attributes):",
+      "     ..............................................................",
+      "   Wrong-patient correction path is owned by .......................",
+      "   Dual control enforced on merge, move, reject, delete?  yes / no",
+      "",
+      "4. EXCEPTION DESK (section 04)",
+      "   Queues monitored: ...............................................",
+      "   Coverage hours: .......................  On-call after hours: ....",
+      "   Age target per queue: ...........................................",
+      "   Authority matrix reviewed and signed by .........................",
+      "",
+      "5. DEGRADED OPERATIONS (section 05)",
+      "   Downtime declaration authority: .................................",
+      "   Return-to-service authority: ....................................",
+      "   Alternate urgent route, agreed per site:  yes / no",
+      "   Last full recovery test, at production scale:  ______________",
+      "   Measured index rebuild time at current object count: ............",
+      "   Measured bulk ingest rate during drain: .........................",
+      "",
+      "6. SERVICE LEVELS (section 06)",
+      "   Turnaround clock starts at ......................................",
+      "   Turnaround clock stops at .......................................",
+      "   Availability published per path?  yes / no",
+      "   Indicators measured at which boundary: ..........................",
+      "   Remedies beyond service credits: ................................",
+      "",
+      "7. ECONOMICS (section 07)",
+      "   Studies per month ......  MB per study ......  instances ........",
+      "   Five-year total (model) .........................................",
+      "   Staffing share of total .........................................",
+      "   One-time exit egress ............................................",
+      "   Excluded from the model and budgeted separately: ................",
+      "",
+      "8. OPEN RISKS",
+      "   1. ..............................................................",
+      "   2. ..............................................................",
+      "   3. ..............................................................",
+      "",
+      "9. DECISION",
+      "   Ready for go-live:  yes / no / conditional on ...................",
+      "   Signed: ______________________   Role: _________________________"
+    ].join("\n");
+
+    var savedMemo = get("radops.memo");
+    memo.value = savedMemo !== null && savedMemo !== "" ? savedMemo : TEMPLATE;
+    memo.addEventListener("input", function () { set("radops.memo", memo.value); });
+
+    var status = document.getElementById("memo-status");
+    function flash(msg) {
+      status.textContent = msg;
+      setTimeout(function () { status.textContent = ""; }, 2500);
+    }
+    document.getElementById("memo-copy").addEventListener("click", function () {
+      var done = function () { flash("Copied to clipboard."); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(memo.value).then(done, function () { flash("Copy blocked — select the text and copy manually."); });
+      } else {
+        memo.select();
+        try { document.execCommand("copy"); done(); } catch (e) { flash("Copy blocked — select the text and copy manually."); }
+      }
+    });
+    document.getElementById("memo-reset").addEventListener("click", function () {
+      memo.value = TEMPLATE; del("radops.memo"); flash("Template restored.");
+    });
+  }
+
+  /* ---- print: open every drawer, restore afterwards --------------------- */
+  var reopened = [], names = [];
+  addEventListener("beforeprint", function () {
+    reopened = []; names = [];
+    [].forEach.call(document.querySelectorAll("details.drawer"), function (d) {
+      if (d.hasAttribute("name")) { names.push([d, d.getAttribute("name")]); d.removeAttribute("name"); }
+      if (!d.open) { reopened.push(d); d.open = true; }
+    });
+  });
+  addEventListener("afterprint", function () {
+    reopened.forEach(function (d) { d.open = false; });
+    names.forEach(function (p) { p[0].setAttribute("name", p[1]); });
+    reopened = []; names = [];
+  });
+})();
+</script>
+</body></html>
