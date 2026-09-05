@@ -259,6 +259,18 @@ $sheetParam = q_str('sheet');
 $viewParam = q_str('view');
 $pathParam = q_str('path');
 
+// Lens: grid (default), map or paths. The value rides on <body data-view>, so
+// the CSS decides what is visible and a no-JS reader still gets a real document
+// for every lens.
+$view = in_array($viewParam, ['grid', 'map', 'paths'], true) ? $viewParam : 'grid';
+$activePath = null;
+if ($pathParam !== '') {
+    foreach ($trails as $tr) {
+        if (is_array($tr) && (string)($tr['id'] ?? '') === $pathParam) { $activePath = $tr; break; }
+    }
+    if ($activePath) $view = 'paths';
+}
+
 $catValid = ($catRaw !== '' && isset($catIndex[$catRaw]));
 $activeCat = $catValid ? $catRaw : '';
 $catUnknown = ($catRaw !== '' && !$catValid);
@@ -525,6 +537,27 @@ function render_card(array $r, int $now, int $newWindow, int $reviewWindow, bool
        . ($r['updated'] ? ' · upd ' . h(gmdate('M j, Y', $r['updated'])) : '') . '</small>';
     echo '<a href="' . $f . '">Open</a></article>' . "\n";
 }
+
+/**
+ * One trail as a card: title link into ?path=, promise, a progress line the JS
+ * fills in from localStorage, and the full ordered list so a reader without
+ * JavaScript still gets the trail itself rather than a teaser.
+ */
+function trail_card(array $tr, array $rows, array $byFile): void {
+    $id = (string)($tr['id'] ?? '');
+    $steps = is_array($tr['steps'] ?? null) ? $tr['steps'] : [];
+    echo '<article class="trail" id="path-' . h($id) . '" data-path="' . h($id) . '">';
+    echo '<h3><a href="?view=paths&amp;path=' . h(rawurlencode($id)) . '">' . h((string)($tr['title'] ?? '')) . '</a></h3>';
+    echo '<p>' . h((string)($tr['promise'] ?? '')) . '</p>';
+    echo '<p class="tprog" data-steps="' . count($steps) . '">' . count($steps) . ' steps</p><ol>';
+    foreach ($steps as $st) {
+        if (!is_array($st) || empty($st['file'])) continue;
+        $sf = (string)$st['file'];
+        $stitle = isset($byFile[$sf]) ? $rows[$byFile[$sf]]['title'] : $sf;
+        echo '<li><a href="' . h($sf) . '">' . h(clamp_text($stitle, 64)) . '</a><span>' . h((string)($st['why'] ?? '')) . '</span></li>';
+    }
+    echo '</ol></article>' . "\n";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -533,6 +566,7 @@ function render_card(array $r, int $now, int $newWindow, int $reviewWindow, bool
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>
 /* Theme before first paint: no flash, two statements, no dependencies. */
+document.documentElement.className='js';
 try{var t=localStorage.getItem('cs-explorer:v1:theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}
 </script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
@@ -787,6 +821,77 @@ footer.site a{color:var(--muted)}
 .trail li{margin:.35em 0}
 .trail li span{display:block;color:var(--muted);font-size:12.5px}
 
+/* --- Lens switcher ----------------------------------------------------- */
+.lenses{display:flex;gap:6px;margin:0 0 16px;flex-wrap:wrap}
+.lenses a{font-size:13px;padding:5px 15px;border:1px solid var(--rule);border-radius:999px;text-decoration:none;color:var(--muted);background:var(--surface)}
+.lenses a:hover{border-color:var(--accent)}
+.lenses a[aria-current="page"]{color:var(--ink);border-color:var(--accent);background:var(--accent-surface);font-weight:620}
+
+/* --- Map lens ----------------------------------------------------------
+   The canvas is the only pixel surface on the page. It redraws on interaction
+   and never in a loop; every colour it paints is read back out of the tokens
+   above through a probe element, so the theme toggle repaints it correctly. */
+#mapwrap{display:none}
+.maptop{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px}
+.lgd{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:999px;background:var(--surface);padding:2px 10px;font-size:12px;cursor:pointer;color:var(--ink)}
+.lgd:hover{border-color:var(--accent)}
+.lgd .cdot{width:8px;height:8px;border-radius:50%;background:var(--cat);flex:none}
+.lgd .n{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.lgd[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-surface);font-weight:620}
+.maptop .grow{margin-left:auto;display:flex;gap:6px}
+#mapfig{position:relative;margin:0;border:1px solid var(--rule);border-radius:8px;background:var(--surface);overflow:hidden;touch-action:none;height:clamp(360px,calc(100dvh - 190px),840px)}
+#mapc{display:block;width:100%;height:100%;cursor:grab}
+#mapc.drag{cursor:grabbing}
+#maptip{position:absolute;pointer-events:none;background:var(--raised);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;font-size:12.5px;max-width:280px;z-index:2;box-shadow:0 6px 18px rgb(0 0 0 / .2)}
+#maptip[hidden]{display:none}
+#maptip b{display:block;font-weight:620}
+#maptip span{color:var(--muted);font-family:var(--mono);font-size:11.5px}
+#egoAll{position:absolute;left:12px;bottom:12px;background:var(--raised);border:1px solid var(--accent);color:var(--ink);border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer}
+#egoAll[hidden]{display:none}
+.maphint{margin:8px 0 0;font-size:12.5px;color:var(--muted)}
+#maplist{margin:14px 0 0;font-size:13.5px}
+#maplist[hidden]{display:none}
+#maplist>ul{list-style:none;margin:0;padding:0;columns:2;column-gap:28px}
+#maplist>ul>li{break-inside:avoid;margin:0 0 12px}
+#maplist ul ul{margin:.2em 0 .6em;padding-left:1.1em;color:var(--muted);font-size:12.5px}
+#maplist h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+@media (max-width:760px){#maplist>ul{columns:1}}
+/* Phone: the 15 legend chips would otherwise push the canvas a screen and a
+   half down, so the controls take their own row and the chips scroll. */
+@media (max-width:700px){
+  .maptop{max-height:104px;overflow-y:auto;align-content:flex-start}
+  .maptop .grow{order:-1;margin-left:0;flex:1 0 100%}
+  #mapfig{height:min(64dvh,520px)}
+  .maphint{display:none}
+}
+
+/* --- Paths lens --------------------------------------------------------- */
+.trail h3 a{color:var(--ink);text-decoration:none}
+.trail h3 a:hover{text-decoration:underline}
+.tprog{margin:0 0 8px;font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tprog .bar{display:inline-block;width:70px;height:5px;border-radius:3px;background:var(--rule);vertical-align:middle;margin-left:6px;overflow:hidden}
+.tprog .bar i{display:block;height:100%;background:var(--success);width:0}
+.trail.open{border-top:3px solid var(--accent)}
+.stepper{display:flex;gap:14px;list-style:none;margin:14px 0 6px;padding:0;align-items:stretch}
+.stepper li{flex:1 1 0;min-width:0;border-top:2px solid var(--rule);padding:10px 0 0;position:relative}
+.stepper li.done{border-top-color:var(--success)}
+.stepper .sn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1px solid var(--rule);background:var(--surface);font-family:var(--mono);font-size:12px;margin-bottom:6px}
+.stepper li.done .sn{border-color:var(--success);color:var(--success)}
+.stepper a{display:block;font-weight:600;font-size:14px;color:var(--ink);text-decoration:none;margin-bottom:4px}
+.stepper a:hover{text-decoration:underline}
+.stepper .why{display:block;color:var(--muted);font-size:12.5px;margin-bottom:8px}
+.stepbtn{margin-top:auto;background:var(--surface);border:1px solid var(--rule);border-radius:999px;padding:2px 11px;font-size:12px;cursor:pointer;color:var(--muted)}
+.stepbtn:hover{border-color:var(--accent);color:var(--ink)}
+.stepbtn[aria-pressed="true"]{border-color:var(--success);color:var(--success);font-weight:620}
+.related{margin-top:26px}
+@media (max-width:760px){
+  .stepper{display:block}
+  .stepper li{border-top:0;border-left:2px solid var(--rule);padding:0 0 14px 14px;margin-left:10px}
+  .stepper li.done{border-top:0;border-left-color:var(--success)}
+  .stepper .sn{position:absolute;left:-12px;top:0}
+  .stepper li>*:first-child+a{margin-top:0}
+}
+
 /* --- Signup band + footer --------------------------------------------- */
 .signup{border-top:1px solid var(--rule);background:var(--surface);padding:22px 0}
 .signup .wrap{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center}
@@ -854,10 +959,23 @@ dialog#help dd{margin:0}
 @media (prefers-reduced-motion: reduce){
   .c:hover{border-color:var(--accent)}
 }
+/* Lens visibility. `html.js` is set by the pre-paint head script, so the rules
+   that only make sense with a canvas never fire for a no-JS reader: ?view=map
+   then keeps the grid plus one explanatory line. */
+body[data-view="grid"] .paths,
+body[data-view="map"] .paths,
+body[data-view="paths"] .explorer{display:none}
+.nojsmap{display:none}
+body[data-view="map"] .nojsmap{display:block;margin:0 0 16px;color:var(--muted);font-size:13.5px}
+html.js body[data-view="map"] .nojsmap{display:none}
+html.js body[data-view="map"] .results{display:none}
+html.js body[data-view="map"] #mapwrap{display:block}
+
 /* Print: the Grid becomes a two-column list of title, URL and category; the
    Paths section keeps its ordered lists, which are already its print form. */
 @media print{
   .topbar,.hero,.pulse,.band,.rail,.toolbar,.signup,.skip,#palette,#drawer,#help,#toast,
+  .lenses,#mapwrap,
   .c img,.c>a,.c em,.c small,.c>p{display:none !important}
   body{background:#fff;color:#000}
   .explorer{display:block}
@@ -881,7 +999,7 @@ dialog#help dd{margin:0}
     })(window, document, "clarity", "script", "y8ixg9wg4h");
 </script>
 </head>
-<body>
+<body data-view="<?php echo h($view); ?>">
 <a class="skip" href="#grid">Skip to the grid</a>
 
 <header class="topbar">
@@ -994,6 +1112,16 @@ dialog#help dd{margin:0}
 </section>
 <?php endif; ?>
 
+<nav class="lenses" aria-label="Lens">
+  <?php
+  // Real links first: every lens is a document the server can render on its own.
+  // JS intercepts them and flips <body data-view> instead of navigating.
+  $lensList = ['grid' => 'Grid', 'map' => 'Map', 'paths' => 'Paths'];
+  foreach ($lensList as $lv => $ll):
+    $lurl = $lv === 'grid' ? grid_url(['view' => '']) : grid_url(['view' => $lv]);
+  ?><a data-view="<?php echo h($lv); ?>" aria-current="<?php echo $view === $lv ? 'page' : 'false'; ?>" href="<?php echo h($lurl); ?>"><?php echo h($ll); ?></a><?php endforeach; ?>
+</nav>
+
 <div class="explorer">
   <aside class="rail" id="rail" aria-label="Filters">
     <button class="railtoggle" type="button" id="railToggle" aria-expanded="false">Filters and categories</button>
@@ -1059,29 +1187,71 @@ dialog#help dd{margin:0}
     </div>
     <p class="empty" id="empty"<?php echo $visibleCount > 0 ? ' hidden' : ''; ?>>Nothing matches those filters. <a href="./">Clear them</a> and start again.</p>
   </div>
+
+  <section id="mapwrap" aria-label="Constellation map">
+    <p class="nojsmap">The map draws itself with JavaScript, which is off. The grid below lists every sheet, and each sheet's detail view names its neighbours.</p>
+    <div class="maptop">
+      <?php foreach ($catNames as $ci => $cn): if (empty($catCounts[$cn])) continue; ?>
+      <button class="lgd k<?php echo (int)$ci; ?>" type="button" data-lg="<?php echo (int)$ci; ?>" aria-pressed="false"><span class="cdot"></span><?php echo h($cn); ?><span class="n"><?php echo (int)$catCounts[$cn]; ?></span></button>
+      <?php endforeach; ?>
+      <span class="grow"><button class="tbtn" id="maplistBtn" type="button" aria-pressed="false">List this map</button><button class="tbtn" id="mapreset" type="button">Reset view</button></span>
+    </div>
+    <figure id="mapfig">
+      <canvas id="mapc" role="img" aria-label="Constellation map of <?php echo (int)$totalCount; ?> cheatsheets joined by <?php echo (int)($stats['edges'] ?? 0); ?> cross-links, clustered into <?php echo (int)$fieldCount; ?> category regions. Use the List this map button for a text equivalent."></canvas>
+      <div id="maptip" hidden></div>
+      <button id="egoAll" type="button" hidden>Show the whole map</button>
+    </figure>
+    <p class="maphint">Drag to pan, scroll to zoom, double-click to reset. Click a node to open its detail. Colour is category; size is how much it is read this month.</p>
+    <div id="maplist" hidden></div>
+  </section>
 </div>
 
+<?php /* The trails carry their full step lists, about 15 KB, so they are rendered
+         only in their own lens; the switcher navigates there instead of paying
+         for them on every grid and map view. */ ?>
+<?php if ($view === 'paths'): ?>
 <section class="paths" id="paths">
+<?php if ($activePath):
+  $apId = (string)($activePath['id'] ?? '');
+  $apSteps = is_array($activePath['steps'] ?? null) ? array_values(array_filter($activePath['steps'], fn($x) => is_array($x) && !empty($x['file']))) : [];
+  $apFiles = array_column($apSteps, 'file');
+  ?>
   <h2>Curated paths</h2>
-  <p style="color:var(--muted);margin:0">Hand-written trails, in the order the sheets actually make sense. Progress tracking and the Paths lens arrive in phase 2.</p>
-  <div class="trails">
-    <?php foreach ($trails as $tr):
-      if (!is_array($tr) || empty($tr['steps'])) continue; ?>
-    <article class="trail" id="path-<?php echo h($tr['id'] ?? ''); ?>">
-      <h3><?php echo h($tr['title'] ?? ''); ?></h3>
-      <p><?php echo h($tr['promise'] ?? ''); ?></p>
-      <ol>
-        <?php foreach ($tr['steps'] as $st):
-          if (!is_array($st) || empty($st['file'])) continue;
-          $sf = (string)$st['file'];
-          $stitle = isset($byFile[$sf]) ? $rows[$byFile[$sf]]['title'] : $sf; ?>
-        <li><a href="<?php echo h($sf); ?>"><?php echo h(clamp_text($stitle, 64)); ?></a><span><?php echo h($st['why'] ?? ''); ?></span></li>
-        <?php endforeach; ?>
-      </ol>
-    </article>
-    <?php endforeach; ?>
+  <p class="maphint" style="margin:0 0 10px"><a href="<?php echo h(grid_url(['view' => 'paths', 'path' => ''])); ?>">All paths</a></p>
+  <article class="trail open" id="path-<?php echo h($apId); ?>" data-path="<?php echo h($apId); ?>">
+    <h3><?php echo h((string)($activePath['title'] ?? '')); ?></h3>
+    <p><?php echo h((string)($activePath['promise'] ?? '')); ?></p>
+    <p class="tprog" data-steps="<?php echo count($apSteps); ?>"><?php echo count($apSteps); ?> steps</p>
+    <ol class="stepper">
+      <?php foreach ($apSteps as $si => $st):
+        $sf = (string)$st['file'];
+        $stitle = isset($byFile[$sf]) ? $rows[$byFile[$sf]]['title'] : $sf; ?>
+      <li data-i="<?php echo (int)$si; ?>"><span class="sn num"><?php echo (int)$si + 1; ?></span><a href="<?php echo h($sf); ?>"><?php echo h(clamp_text($stitle, 58)); ?></a><span class="why"><?php echo h((string)($st['why'] ?? '')); ?></span><button class="stepbtn" type="button" data-i="<?php echo (int)$si; ?>" aria-pressed="false">Mark done</button></li>
+      <?php endforeach; ?>
+    </ol>
+  </article>
+  <?php
+  $related = [];
+  foreach ($trails as $tr) {
+      if (!is_array($tr) || (string)($tr['id'] ?? '') === $apId || empty($tr['steps'])) continue;
+      foreach ($tr['steps'] as $st) {
+          if (is_array($st) && !empty($st['file']) && in_array((string)$st['file'], $apFiles, true)) { $related[] = $tr; break; }
+      }
+  }
+  if ($related): ?>
+  <div class="related">
+    <h2>Related paths</h2>
+    <p class="maphint" style="margin:0 0 10px">Trails that share at least one sheet with this one.</p>
+    <div class="trails"><?php foreach ($related as $tr) trail_card($tr, $rows, $byFile); ?></div>
   </div>
+  <?php endif; ?>
+<?php else: ?>
+  <h2>Curated paths</h2>
+  <p style="color:var(--muted);margin:0">Hand-written trails, in the order the sheets actually make sense. Open one to track your way through it; progress stays in this browser.</p>
+  <div class="trails"><?php foreach ($trails as $tr) { if (is_array($tr) && !empty($tr['steps'])) trail_card($tr, $rows, $byFile); } ?></div>
+<?php endif; ?>
 </section>
+<?php endif; ?>
 </div><!-- /wrap -->
 </main>
 
@@ -1150,6 +1320,9 @@ dialog#help dd{margin:0}
 (function(){
 'use strict';
 var NS='cs-explorer:v1:';
+// Bridge to the map/paths block below: it registers setView, showOnMap and the
+// two redraw hooks, and reads the lite catalog and helpers back out of here.
+var CS=window.CS={setView:function(){},showOnMap:function(){},onFilter:null,onTheme:null};
 var CATV=<?php echo json_encode($catalogVersion); ?>;
 var SERVER_CAT=<?php echo json_encode($activeCat); ?>;
 var TOTAL=<?php echo (int)$totalCount; ?>;
@@ -1211,6 +1384,7 @@ function currentTheme(){
 function toggleTheme(){
   var next=currentTheme()==='dark'?'light':'dark';
   document.documentElement.dataset.theme=next;ls('theme',next);ga('explorer_theme',{theme:next});
+  if(CS.onTheme)CS.onTheme();
 }
 el('themeToggle').addEventListener('click',toggleTheme);
 
@@ -1289,6 +1463,7 @@ function apply(reorder){
   }
   var dc=el('deepcut');
   if(dc)dc.hidden=!!(state.q||state.shape.length||state.fresh.length||state.interactive);
+  if(CS.onFilter)CS.onFilter();
   syncURL();
   paintFacets();
   document.title=state.cat?state.cat+' Cheatsheets | David Veksler':SITE_TITLE;
@@ -1303,6 +1478,8 @@ function syncURL(){
   if(state.fresh.length)p.set('fresh',state.fresh.join(','));
   if(state.interactive)p.set('interactive','1');
   if(state.sort)p.set('sort',state.sort);
+  var lens=document.body.dataset.view;
+  if(lens&&lens!=='grid')p.set('view',lens);
   var s=p.toString();
   history.replaceState(history.state,'',s?'?'+s:location.pathname);
 }
@@ -1428,8 +1605,8 @@ function matchHeadings(f,qt){
 
 function commandsFor(qt){
   var cmds=[
-    {label:'Open map',act:function(){toast('Map arrives in phase 2.');}},
-    {label:'Open paths',act:function(){dlg.close();el('paths').scrollIntoView({behavior:'auto'});}},
+    {label:'Open map',act:function(){dlg.close();CS.setView('map','palette');}},
+    {label:'Open paths',act:function(){dlg.close();CS.setView('paths','palette');}},
     {label:'Surprise me',act:function(){dlg.close();surprise();}},
     {label:'Toggle theme',act:toggleTheme}
   ];
@@ -1561,7 +1738,7 @@ function drawerHTML(s){
    +popRankOf(s.file)+' of '+TOTAL+' this month</p>'
    +'<p class="acts"><a class="primary" href="'+esc(s.file)+'" data-open="'+esc(s.file)+'">Open</a>'
    +'<button type="button" id="dcopy">Copy link</button>'
-   +'<button type="button" disabled title="Map arrives in phase 2">Show on map</button></p>'
+   +'<button type="button" data-map="'+esc(s.file)+'">Show on map</button></p>'
    +'</div>';
 }
 
@@ -1608,6 +1785,8 @@ drawer.addEventListener('click',function(e){
     else toast(u);
     return;
   }
+  var mp=e.target.closest('[data-map]');
+  if(mp){CS.showOnMap(mp.dataset.map);return;}
   var op=e.target.closest('[data-open]');
   if(op)markVisited(op.dataset.open);
 });
@@ -1624,8 +1803,10 @@ grid.addEventListener('click',function(e){
 });
 
 window.addEventListener('popstate',function(e){
-  var st=(e.state&&e.state.sheet)||new URLSearchParams(location.search).get('sheet');
+  var pp=new URLSearchParams(location.search);
+  var st=(e.state&&e.state.sheet)||pp.get('sheet');
   drawerPushed=false;
+  CS.setView(pp.get('view')||'grid','history',true);
   if(st)openDrawer(st,'history',true);
   else hideDrawer();
 });
@@ -1659,9 +1840,9 @@ document.addEventListener('keydown',function(e){
   if(e.key==='t'){e.preventDefault();toggleTheme();return;}
   if(chord){
     chord=false;clearTimeout(chordT);
-    if(e.key==='g'){e.preventDefault();el('grid').scrollIntoView();}
-    else if(e.key==='m'){e.preventDefault();toast('Map arrives in phase 2.');}
-    else if(e.key==='p'){e.preventDefault();el('paths').scrollIntoView();}
+    if(e.key==='g'){e.preventDefault();CS.setView('grid','key');}
+    else if(e.key==='m'){e.preventDefault();CS.setView('map','key');}
+    else if(e.key==='p'){e.preventDefault();CS.setView('paths','key');}
     return;
   }
   if(e.key==='g'){chord=true;chordT=setTimeout(function(){chord=false;},1200);}
@@ -1694,6 +1875,9 @@ document.querySelectorAll('[data-ga-linkedin]').forEach(function(a){
 });
 
 /* ------------------------------------------------------------- start up --- */
+CS.L=L;CS.byFile=byFile;CS.TITLE=TITLE;CS.loadFull=loadFull;CS.openDrawer=openDrawer;
+CS.matches=matches;CS.toast=toast;CS.ga=ga;CS.ls=ls;CS.lsj=lsj;CS.el=el;CS.esc=esc;
+CS.syncURL=syncURL;
 paintVisited();
 renderChips();
 paintFacets();
@@ -1701,6 +1885,435 @@ paintFacets();
   var sp=new URLSearchParams(location.search).get('sheet');
   if(sp&&byFile[sp]!==undefined)openDrawer(sp,'url',true);
 })();
+})();
+</script>
+<script>
+/* ============================================================================
+   Map and Paths lenses. A second inline block, parsed after the one above, so
+   the grid, palette and drawer are interactive before any of this runs. It
+   reads window.CS from that block; it adds no network request of its own
+   beyond the catalog.json fetch the palette already knows how to make.
+   ========================================================================== */
+(function(){
+'use strict';
+var CS=window.CS;if(!CS||!CS.L)return;
+var L=CS.L,N=L.f.length,el=CS.el,esc=CS.esc,body=document.body;
+
+/* ---------------------------------------------------------------- lenses -- */
+var VIEWS={grid:1,map:1,paths:1};
+function setView(v,src,quiet){
+  if(!VIEWS[v])v='grid';
+  var was=body.dataset.view||'grid';
+  body.dataset.view=v;
+  document.querySelectorAll('.lenses a').forEach(function(a){
+    a.setAttribute('aria-current',a.dataset.view===v?'page':'false');
+  });
+  if(!quiet){
+    var p=new URLSearchParams(location.search);
+    if(v==='grid')p.delete('view');else p.set('view',v);
+    if(v!=='paths')p.delete('path');
+    var qs=p.toString();
+    history.replaceState(history.state,'',qs?'?'+qs:location.pathname);
+    if(was!==v)CS.ga('explorer_view',{view:v});
+  }
+  if(v==='map'){openMap().then(scrollMapIntoView);return;}
+  if(v==='paths'){
+    // The trails are only rendered in their own lens, so reach them by
+    // navigating when this document does not carry them.
+    if(!el('paths')){location.href='?view=paths';return;}
+    paintPaths();
+  }
+  if(was!==v&&!quiet)window.scrollTo(0,0);
+}
+CS.setView=setView;
+
+/* ------------------------------------------------------------------ map --- */
+var fig=el('mapfig'),cv=el('mapc'),tip=el('maptip'),ctx=cv&&cv.getContext('2d');
+var POS=null,EDG=null,NBR=null,OUT=null,PMAX=1,ALWAYS=null,READY=false,FULLREF=null;
+var HUE=[],INK='#111',SURF='#fff',MUT='#888';
+var M={k:1,tx:0,ty:0,hover:null,legend:[],ego:null,whole:false};
+var W=0,H=0,DPR=1,PAD=30,EGO=null,EGOIDX=null,ALLIDX=null,drawMs=0;
+var TAU=Math.PI*2;
+
+/* Colours are read back out of the CSS tokens through a probe element, so the
+   canvas always agrees with the theme, including the manual toggle. */
+function readPalette(){
+  var pr=document.createElement('span');
+  pr.style.cssText='position:absolute;left:-9999px;top:0';
+  body.appendChild(pr);
+  HUE=[];
+  for(var i=0;i<L.cats.length;i++){pr.className='k'+i;pr.style.color='var(--cat)';HUE.push(getComputedStyle(pr).color);}
+  pr.className='';
+  pr.style.color='var(--ink)';INK=getComputedStyle(pr).color;
+  pr.style.color='var(--surface)';SURF=getComputedStyle(pr).color;
+  pr.style.color='var(--muted)';MUT=getComputedStyle(pr).color;
+  pr.parentNode.removeChild(pr);
+}
+
+function prep(d){
+  FULLREF=d;
+  POS=new Array(N);OUT=new Array(N);NBR=new Array(N);ALLIDX=new Array(N);
+  var i,s;
+  for(i=0;i<N;i++){
+    s=d.sheets[d.idx[L.f[i]]];
+    POS[i]=s?[s.x||0,s.y||0]:[.5,.5];
+    OUT[i]=s&&s.outlinks?s.outlinks.length:0;
+    NBR[i]={};ALLIDX[i]=i;
+  }
+  var m=new Array(d.sheets.length);
+  for(i=0;i<d.sheets.length;i++)m[i]=CS.byFile[d.sheets[i].file];
+  EDG=[];
+  (d.edges||[]).forEach(function(e){
+    var a=m[e[0]],b=m[e[1]];
+    if(a===undefined||b===undefined||a===b)return;
+    EDG.push([a,b]);NBR[a][b]=1;NBR[b][a]=1;
+  });
+  PMAX=0;for(i=0;i<N;i++)if(L.p[i]>PMAX)PMAX=L.p[i];
+  if(!PMAX)PMAX=1;
+  // Always-on labels: the 25 most read plus every hub. "Hub" is out-degree 12+
+  // (13 sheets); total degree would qualify 144 of 197 and bury the map in text.
+  ALWAYS={};
+  ALLIDX.slice().sort(function(a,b){return L.p[b]-L.p[a];}).slice(0,25).forEach(function(i){ALWAYS[i]=1;});
+  for(i=0;i<N;i++)if(OUT[i]>=12)ALWAYS[i]=1;
+  READY=true;
+}
+
+function sizeCanvas(){
+  var r=fig.getBoundingClientRect();
+  var w=Math.max(1,Math.round(r.width)),h=Math.max(1,Math.round(r.height));
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  if(w!==W||h!==H||cv.width!==Math.round(w*DPR)){
+    W=w;H=h;cv.width=Math.round(w*DPR);cv.height=Math.round(h*DPR);
+    cv.style.width=w+'px';cv.style.height=h+'px';
+  }
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+function proj(i){
+  if(EGO)return EGO[i];
+  var p=POS[i];
+  return [(PAD+p[0]*(W-2*PAD))*M.k+M.tx,(PAD+p[1]*(H-2*PAD))*M.k+M.ty];
+}
+function rad(i){return 4+6*Math.sqrt((L.p[i]||0)/PMAX);}
+function alphaOf(i){
+  if(!CS.matches(i))return .15;
+  if(M.legend.length&&M.legend.indexOf(L.c[i])<0)return .15;
+  if(M.hover!==null&&i!==M.hover&&!NBR[M.hover][i])return .35;
+  return 1;
+}
+function shortTitle(i){
+  var t=CS.TITLE[i]||L.f[i],c=t.indexOf(':');
+  if(c>6)t=t.slice(0,c);
+  return t.length>30?t.slice(0,29)+'…':t;
+}
+
+function draw(){
+  if(!READY)return;
+  var t0=performance.now(),i,j,e,p,vi;
+  sizeCanvas();
+  ctx.clearRect(0,0,W,H);
+  var vis=EGO?EGOIDX:ALLIDX,P=new Array(N),hv=M.hover;
+  for(vi=0;vi<vis.length;vi++){i=vis[vi];P[i]=proj(i);}
+  ctx.lineWidth=.5;ctx.strokeStyle=MUT;
+  ctx.globalAlpha=hv===null?.12:.04;
+  ctx.beginPath();
+  for(j=0;j<EDG.length;j++){
+    e=EDG[j];if(!P[e[0]]||!P[e[1]])continue;
+    if(hv!==null&&(e[0]===hv||e[1]===hv))continue;
+    ctx.moveTo(P[e[0]][0],P[e[0]][1]);ctx.lineTo(P[e[1]][0],P[e[1]][1]);
+  }
+  ctx.stroke();
+  if(hv!==null){
+    ctx.globalAlpha=.6;ctx.strokeStyle=INK;ctx.beginPath();
+    for(j=0;j<EDG.length;j++){
+      e=EDG[j];if(!P[e[0]]||!P[e[1]])continue;
+      if(e[0]!==hv&&e[1]!==hv)continue;
+      ctx.moveTo(P[e[0]][0],P[e[0]][1]);ctx.lineTo(P[e[1]][0],P[e[1]][1]);
+    }
+    ctx.stroke();
+  }
+  ctx.lineWidth=1;ctx.strokeStyle=SURF;
+  for(vi=0;vi<vis.length;vi++){
+    i=vis[vi];p=P[i];
+    if(p[0]<-40||p[0]>W+40||p[1]<-40||p[1]>H+40)continue;
+    var r=rad(i)*(i===hv?1.5:1);
+    ctx.globalAlpha=alphaOf(i);ctx.fillStyle=HUE[L.c[i]]||MUT;
+    ctx.beginPath();ctx.arc(p[0],p[1],r,0,TAU);ctx.fill();ctx.stroke();
+  }
+  // Labels sit on the surface colour as a halo so they stay readable where they
+  // cross an edge; the fill is the on-surface ink token, never the category hue.
+  ctx.globalAlpha=1;ctx.fillStyle=INK;ctx.strokeStyle=SURF;ctx.lineWidth=2.5;
+  ctx.lineJoin='round';
+  ctx.font='11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='top';
+  var cands=[];
+  for(vi=0;vi<vis.length;vi++){i=vis[vi];if(i===hv||EGO||M.k>1.6||ALWAYS[i])cands.push(i);}
+  cands.sort(function(a,b){return (b===hv?1e9:L.p[b])-(a===hv?1e9:L.p[a]);});
+  var rects=[],rc,o,ok,q;
+  for(vi=0;vi<cands.length;vi++){
+    i=cands[vi];p=P[i];if(!p)continue;
+    if(i!==hv&&alphaOf(i)<.4)continue;
+    var t=shortTitle(i),w=ctx.measureText(t).width;
+    var x=p[0],y=p[1]+rad(i)*(i===hv?1.5:1)+3;
+    if(x-w/2<0||x+w/2>W||y<0||y>H-13)continue;
+    rc=[x-w/2-3,y-2,w+6,15];ok=true;
+    for(q=0;q<rects.length;q++){
+      o=rects[q];
+      if(rc[0]<o[0]+o[2]&&o[0]<rc[0]+rc[2]&&rc[1]<o[1]+o[3]&&o[1]<rc[1]+rc[3]){ok=false;break;}
+    }
+    if(!ok)continue;
+    rects.push(rc);ctx.strokeText(t,x,y);ctx.fillText(t,x,y);
+  }
+  drawMs=performance.now()-t0;
+}
+
+function hit(mx,my){
+  if(!READY)return null;
+  var vis=EGO?EGOIDX:ALLIDX,best=null,bd=1e9;
+  for(var vi=0;vi<vis.length;vi++){
+    var i=vis[vi],p=proj(i);if(!p)continue;
+    var dx=mx-p[0],dy=my-p[1],d=dx*dx+dy*dy,r=rad(i)+4;
+    if(d<r*r&&d<bd){bd=d;best=i;}
+  }
+  return best;
+}
+function showTip(i,x,y){
+  var deg=0;for(var k in NBR[i])deg++;
+  tip.innerHTML='<b>'+esc(CS.TITLE[i]||L.f[i])+'</b><span>'+esc(L.cats[L.c[i]])+' · '+deg+' link'+(deg===1?'':'s')+'</span>';
+  tip.hidden=false;
+  var tw=tip.offsetWidth,th=tip.offsetHeight;
+  tip.style.left=Math.max(4,Math.min(W-tw-4,x+14))+'px';
+  tip.style.top=Math.max(4,Math.min(H-th-4,y+14))+'px';
+}
+function hideTip(){tip.hidden=true;}
+function clampK(k){return Math.max(.6,Math.min(4,k));}
+function resetView(){M.k=1;M.tx=0;M.ty=0;M.hover=null;hideTip();draw();}
+function centerNode(i){
+  if(EGO){M.ego=L.f[i];egoLayout();draw();return;}
+  sizeCanvas();
+  M.k=Math.max(M.k,1.6);
+  var p=POS[i];
+  M.tx=W/2-(PAD+p[0]*(W-2*PAD))*M.k;
+  M.ty=H/2-(PAD+p[1]*(H-2*PAD))*M.k;
+  draw();
+}
+
+/* Under 768 px the whole graph is unreadable, so the map opens as the ego graph
+   of the sheet in the drawer (or the most read sheet) until "show the whole
+   map" is pressed. */
+function egoLayout(){
+  if(!READY)return;
+  sizeCanvas();
+  var btn=el('egoAll');
+  if(window.innerWidth>=768||M.whole){EGO=null;EGOIDX=ALLIDX;if(btn)btn.hidden=(window.innerWidth>=768);return;}
+  var f=M.ego,c=(f!==null&&f!==undefined)?CS.byFile[f]:undefined;
+  if(c===undefined){c=0;for(var i=1;i<N;i++)if(L.p[i]>L.p[c])c=i;}
+  var nb=Object.keys(NBR[c]).map(Number);
+  nb.sort(function(a,b){return L.p[b]-L.p[a];});
+  nb=nb.slice(0,26);
+  nb.sort(function(a,b){return L.c[a]-L.c[b]||L.p[b]-L.p[a];});
+  EGO={};EGO[c]=[W/2,H/2];
+  var RX=W*.38,RY=H*.36,rings=nb.length>13?2:1,per=Math.ceil(nb.length/rings)||1;
+  nb.forEach(function(i,k){
+    var ring=Math.floor(k/per),inRing=k%per,cnt=Math.min(per,nb.length-ring*per);
+    var ang=inRing/cnt*TAU-Math.PI/2+(ring?Math.PI/cnt:0);
+    var f=rings===1?1:(ring===0?.56:1);
+    EGO[i]=[W/2+RX*f*Math.cos(ang),H/2+RY*f*Math.sin(ang)];
+  });
+  EGOIDX=Object.keys(EGO).map(Number);
+  M.k=1;M.tx=0;M.ty=0;
+  if(btn)btn.hidden=false;
+}
+
+/* The map is the content of its lens, so bring it up under the sticky topbar
+   rather than leaving it below the fold. */
+function scrollMapIntoView(){
+  var w=el('mapwrap');if(!w)return;
+  var top=Math.max(0,w.getBoundingClientRect().top+window.pageYOffset-58);
+  if(Math.abs(window.pageYOffset-top)>8)window.scrollTo(0,top);
+}
+
+var mapP=null;
+function openMap(){
+  if(!cv)return Promise.resolve();
+  if(!mapP)mapP=CS.loadFull().then(function(d){
+    if(!d)return null;
+    prep(d);readPalette();bindMap();return d;
+  });
+  return mapP.then(function(d){
+    if(!d){CS.toast('The catalog did not load, so the map is unavailable.');return;}
+    egoLayout();draw();
+  });
+}
+
+var bound=false;
+function bindMap(){
+  if(bound)return;bound=true;
+  var pts={},dragFrom=null,dragged=false,pinchD=0;
+  function ids(){return Object.keys(pts);}
+  function two(){var k=ids();return[pts[k[0]],pts[k[1]]];}
+  function pdist(){var t=two();return Math.hypot(t[0][0]-t[1][0],t[0][1]-t[1][1])||1;}
+  function pcenter(){var t=two();return[(t[0][0]+t[1][0])/2,(t[0][1]+t[1][1])/2];}
+  cv.addEventListener('pointerdown',function(e){
+    try{cv.setPointerCapture(e.pointerId);}catch(err){}
+    pts[e.pointerId]=[e.offsetX,e.offsetY];
+    if(ids().length===2){pinchD=pdist();dragFrom=null;return;}
+    dragFrom=[e.offsetX,e.offsetY,M.tx,M.ty];dragged=false;cv.classList.add('drag');
+  });
+  cv.addEventListener('pointermove',function(e){
+    if(pts[e.pointerId])pts[e.pointerId]=[e.offsetX,e.offsetY];
+    if(ids().length>=2){
+      if(!EGO){
+        var d=pdist();
+        if(pinchD){
+          var f=clampK(M.k*(d/pinchD))/M.k,c=pcenter();
+          M.tx=c[0]-(c[0]-M.tx)*f;M.ty=c[1]-(c[1]-M.ty)*f;M.k*=f;draw();
+        }
+        pinchD=d;
+      }
+      return;
+    }
+    if(dragFrom&&!EGO){
+      var dx=e.offsetX-dragFrom[0],dy=e.offsetY-dragFrom[1];
+      if(!dragged&&Math.abs(dx)+Math.abs(dy)<4)return;
+      dragged=true;M.tx=dragFrom[2]+dx;M.ty=dragFrom[3]+dy;hideTip();draw();return;
+    }
+    var h=hit(e.offsetX,e.offsetY);
+    if(h!==M.hover){M.hover=h;draw();}
+    if(h!==null)showTip(h,e.offsetX,e.offsetY);else hideTip();
+  });
+  function up(e){
+    delete pts[e.pointerId];pinchD=0;cv.classList.remove('drag');
+    if(dragFrom&&!dragged){
+      var h=hit(e.offsetX,e.offsetY);
+      if(h!==null){CS.openDrawer(L.f[h],'map');centerNode(h);}
+    }
+    dragFrom=null;
+  }
+  cv.addEventListener('pointerup',up);
+  cv.addEventListener('pointercancel',function(e){delete pts[e.pointerId];pinchD=0;dragFrom=null;cv.classList.remove('drag');});
+  cv.addEventListener('pointerleave',function(){if(M.hover!==null){M.hover=null;draw();}hideTip();});
+  cv.addEventListener('wheel',function(e){
+    if(EGO)return;
+    e.preventDefault();
+    var f=e.deltaY<0?1.12:1/1.12,k2=clampK(M.k*f);
+    f=k2/M.k;
+    M.tx=e.offsetX-(e.offsetX-M.tx)*f;M.ty=e.offsetY-(e.offsetY-M.ty)*f;M.k=k2;
+    hideTip();draw();
+  },{passive:false});
+  cv.addEventListener('dblclick',function(e){e.preventDefault();resetView();});
+  var rt=null;
+  window.addEventListener('resize',function(){
+    clearTimeout(rt);
+    rt=setTimeout(function(){if(body.dataset.view==='map'){egoLayout();draw();}},150);
+  });
+  var ea=el('egoAll');
+  if(ea)ea.addEventListener('click',function(){M.whole=true;egoLayout();this.hidden=true;draw();});
+  var mr=el('mapreset');
+  if(mr)mr.addEventListener('click',function(){M.whole=false;M.legend=[];document.querySelectorAll('.lgd').forEach(function(b){b.setAttribute('aria-pressed','false');});egoLayout();resetView();});
+  var mb=el('maplistBtn');
+  if(mb)mb.addEventListener('click',function(){
+    var on=this.getAttribute('aria-pressed')!=='true';
+    this.setAttribute('aria-pressed',on?'true':'false');
+    var ml=el('maplist');
+    if(on&&!ml.dataset.built)buildList(ml);
+    ml.hidden=!on;
+  });
+}
+
+/* The keyboard and screen-reader equivalent of the canvas: the same nodes and
+   the same edges, as category > sheet > links to. */
+function buildList(ml){
+  var d=FULLREF,groups={},i;
+  for(i=0;i<N;i++)(groups[L.c[i]]=groups[L.c[i]]||[]).push(i);
+  var out='<h3>Every sheet, by category, with what it links to</h3><ul>';
+  Object.keys(groups).sort(function(a,b){return L.cats[a].localeCompare(L.cats[b]);}).forEach(function(c){
+    out+='<li><b>'+esc(L.cats[c])+'</b><ul>';
+    groups[c].sort(function(a,b){return L.p[b]-L.p[a];}).forEach(function(i){
+      var s=d.sheets[d.idx[L.f[i]]],o=(s&&s.outlinks)||[];
+      out+='<li><a href="'+esc(L.f[i])+'">'+esc(CS.TITLE[i]||L.f[i])+'</a>';
+      if(o.length)out+='<ul>'+o.map(function(f){
+        var j=d.idx[f];
+        return j===undefined?'':'<li><a href="'+esc(f)+'">'+esc(d.sheets[j].title)+'</a></li>';
+      }).join('')+'</ul>';
+      out+='</li>';
+    });
+    out+='</ul></li>';
+  });
+  ml.innerHTML=out+'</ul>';ml.dataset.built='1';
+}
+
+CS.showOnMap=function(file){
+  var i=CS.byFile[file];
+  if(i===undefined)return;
+  M.ego=file;M.hover=null;
+  setView('map','drawer');
+  openMap().then(function(){if(READY)centerNode(i);});
+};
+CS.onTheme=function(){if(READY){readPalette();if(body.dataset.view==='map')draw();}};
+CS.onFilter=function(){if(READY&&body.dataset.view==='map')draw();};
+
+/* ---------------------------------------------------------------- paths --- */
+function pget(id){var v=CS.lsj('path:'+id,[]);return Array.isArray(v)?v:[];}
+function pset(id,a){try{CS.ls('path:'+id,JSON.stringify(a));}catch(e){}}
+function paintPaths(){
+  document.querySelectorAll('.trail[data-path]').forEach(function(t){
+    var id=t.dataset.path,done=pget(id),pr=t.querySelector('.tprog');
+    var n=pr?parseInt(pr.dataset.steps,10)||0:0;
+    var k=0,i;
+    for(i=0;i<n;i++)if(done.indexOf(i)>=0)k++;
+    var first=-1;
+    for(i=0;i<n;i++)if(done.indexOf(i)<0){first=i;break;}
+    if(pr)pr.innerHTML=k?k+' of '+n+' done<span class="bar"><i style="width:'+Math.round(k/n*100)+'%"></i></span>':n+' steps';
+    t.querySelectorAll('.stepper li').forEach(function(li){
+      var si=parseInt(li.dataset.i,10),is=done.indexOf(si)>=0,btn=li.querySelector('.stepbtn');
+      li.classList.toggle('done',is);
+      if(!btn)return;
+      btn.setAttribute('aria-pressed',is?'true':'false');
+      btn.textContent=is?'Done':(si===first?(k?'Continue':'Start'):'Mark done');
+      btn.title=is?'Mark this step not done':'Mark this step done';
+    });
+  });
+}
+
+/* --------------------------------------------------------------- clicks --- */
+document.addEventListener('click',function(e){
+  var a=e.target.closest('.lenses a');
+  if(a){
+    if(e.metaKey||e.ctrlKey||e.shiftKey||e.button===1)return;
+    e.preventDefault();setView(a.dataset.view,'lens');return;
+  }
+  var lg=e.target.closest('.lgd');
+  if(lg){
+    var ci=parseInt(lg.dataset.lg,10),k=M.legend.indexOf(ci);
+    if(k<0)M.legend.push(ci);else M.legend.splice(k,1);
+    lg.setAttribute('aria-pressed',k<0?'true':'false');
+    draw();return;
+  }
+  var sb=e.target.closest('.stepbtn');
+  if(sb){
+    var t=sb.closest('.trail'),id=t.dataset.path,si=parseInt(sb.dataset.i,10),d=pget(id),j=d.indexOf(si);
+    if(j<0){d.push(si);CS.ga('explorer_path_step',{id:id,step:si});}else d.splice(j,1);
+    pset(id,d);paintPaths();return;
+  }
+  var sl=e.target.closest('.stepper a');
+  if(sl){
+    // Optimistic: the reader is leaving for the sheet, so the step is done.
+    var li=sl.closest('li'),tr=sl.closest('.trail');
+    if(!li||!tr)return;
+    var pid=tr.dataset.path,pi=parseInt(li.dataset.i,10),pd=pget(pid);
+    if(pd.indexOf(pi)<0){pd.push(pi);pset(pid,pd);CS.ga('explorer_path_step',{id:pid,step:pi});paintPaths();}
+  }
+});
+
+/* ------------------------------------------------------------- start up --- */
+setView(body.dataset.view||'grid','init',true);
+paintPaths();
+(function(){
+  var open=document.querySelector('.trail.open');
+  if(open)CS.ga('explorer_path_start',{id:open.dataset.path});
+})();
+// Measurement hook for the performance budget (see the spec's Map lens section).
+window.csExplorer={mapDrawMs:function(){return drawMs;},redraw:draw,mapState:M};
 })();
 </script>
 </body>
