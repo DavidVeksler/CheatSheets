@@ -9,10 +9,11 @@
  * (scripts/deploy.py --check) guarantees the catalog is current, so this file
  * only formats data it is handed.
  *
- * Phase 1 of TODO/index-explorer-redesign.md: Grid lens, facet rail, search
- * palette, drawer, Pulse strip, serendipity, category landing pages. The Map
- * and Paths lenses arrive in Phase 2; the Paths section below is the static,
- * no-JS list the spec requires now.
+ * Grid + facet rail + search palette + drawer + Pulse strip + serendipity +
+ * category landing pages + Map + Paths lenses. See docs/index-explorer.md for
+ * the data flow, the measured budgets, and how to add a curated path (the
+ * implementation spec that built this shipped and was deleted per
+ * TODO/README.md's "a shipped spec is deleted" rule).
  *
  * No frameworks, no CDN assets, no web fonts, no backdrop-filter, no continuous
  * animation. The only external script is the Microsoft Clarity tag.
@@ -275,11 +276,20 @@ $catValid = ($catRaw !== '' && isset($catIndex[$catRaw]));
 $activeCat = $catValid ? $catRaw : '';
 $catUnknown = ($catRaw !== '' && !$catValid);
 
+// ?og=1: a minimal render mode used only by scripts/render_og_map.py (headless
+// Chromium, never a real visitor) to screenshot the Map lens at exactly
+// 1200x630 for images/cheatsheets-og-portfolio.png. Forces the map lens and
+// dark theme, and the CSS below (body[data-og="1"]) strips everything but the
+// canvas and a small caption. Always noindex; a stray real visitor who finds
+// this URL sees the same map lens, just stripped of chrome.
+$ogMode = q_str('og') === '1';
+if ($ogMode) $view = 'map';
+
 // noindex on every parameter that expresses client state rather than a distinct
 // document, and on an unknown category (which renders the unfiltered index).
 $noindex = ($qRaw !== '' || $sortRaw !== '' || $shapeRaw !== '' || $viewParam !== ''
     || $sheetParam !== '' || $pathParam !== '' || $freshRaw !== ''
-    || q_str('interactive') !== '' || $catUnknown);
+    || q_str('interactive') !== '' || $catUnknown || $ogMode);
 
 $openSheet = ($sheetParam !== '' && isset($byFile[$sheetParam])) ? $rows[$byFile[$sheetParam]] : null;
 
@@ -473,24 +483,56 @@ foreach ($rows as $r) {
 
 /* ---------------------------------------------------------- sparkline ----- */
 
+/**
+ * Points string + last value for a small inline sparkline <polyline>, oldest
+ * value first. Returns ['', 0] when fewer than $minPoints values are given,
+ * so callers omit the <svg> entirely rather than draw an empty placeholder.
+ * Shared by the Pulse strip's site-wide sparkline (totalViewsHistory) and
+ * the drawer/detail block's per-sheet sparkline (popularity.json's
+ * dailyHistory, written by fetch-popularity.py's accumulate_daily_history).
+ */
+function sparkline_points(array $vals, int $minPoints, int $w, int $hgt): array {
+    $vals = array_values(array_map('intval', $vals));
+    if (count($vals) < $minPoints) return ['', 0];
+    $max = max($vals); $min = min($vals);
+    $span = max(1, $max - $min);
+    $n = count($vals);
+    $pts = [];
+    foreach ($vals as $i => $v) {
+        $x = round($i * ($w / max(1, $n - 1)), 1);
+        $y = round($hgt - 2 - (($v - $min) / $span) * ($hgt - 4), 1);
+        $pts[] = $x . ',' . $y;
+    }
+    return [implode(' ', $pts), (int)end($vals)];
+}
+
 $sparkPoints = '';
 $sparkLast = 0;
 if ($viewsHistory) {
     ksort($viewsHistory);
-    $vals = array_slice(array_map('intval', array_values($viewsHistory)), -24);
-    if (count($vals) >= 2) {
-        $max = max($vals); $min = min($vals);
-        $span = max(1, $max - $min);
-        $w = 118; $hgt = 26; $n = count($vals);
-        $pts = [];
-        foreach ($vals as $i => $v) {
-            $x = round($i * ($w / ($n - 1)), 1);
-            $y = round($hgt - 2 - (($v - $min) / $span) * ($hgt - 4), 1);
-            $pts[] = $x . ',' . $y;
-        }
-        $sparkPoints = implode(' ', $pts);
-        $sparkLast = end($vals);
-    }
+    [$sparkPoints, $sparkLast] = sparkline_points(array_slice(array_values($viewsHistory), -24), 2, 118, 26);
+}
+
+/* ------------------------------------------- per-sheet daily history ----- */
+// Restricted to catalogued files, matching the spec's ".html-only" rule one
+// more time on the read side (accumulate_daily_history already filters on
+// write). Today popularity.json has no "dailyHistory" key yet (it appears
+// after fetch-popularity.py's first run with this feature), so this is an
+// empty object and costs about 2 bytes of inline JSON; it fills in over the
+// following 30 days of nightly runs.
+$dailyHistoryAll = (isset($popularity['dailyHistory']) && is_array($popularity['dailyHistory'])) ? $popularity['dailyHistory'] : [];
+$dailyHistoryLite = [];
+foreach ($dailyHistoryAll as $dhFile => $dhDays) {
+    if (!isset($byFile[$dhFile]) || !is_array($dhDays)) continue;
+    ksort($dhDays);
+    $dailyHistoryLite[$dhFile] = array_map('intval', array_slice($dhDays, -30, null, true));
+}
+$SPARK_MIN_POINTS = 7; // spec: "when it has at least 7 points"
+
+$osSparkPoints = '';
+$osSparkLast = 0;
+if ($openSheet && isset($dailyHistoryLite[$openSheet['file']])) {
+    [$osSparkPoints, $osSparkLast] = sparkline_points(array_values($dailyHistoryLite[$openSheet['file']]), $SPARK_MIN_POINTS, 118, 26);
 }
 
 /* --------------------------------------------------------- shape labels --- */
@@ -560,14 +602,18 @@ function trail_card(array $tr, array $rows, array $byFile): void {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"<?php echo $ogMode ? ' data-theme="dark"' : ''; ?>>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>
-/* Theme before first paint: no flash, two statements, no dependencies. */
+/* Theme before first paint: no flash, two statements, no dependencies. The
+   ?og=1 render mode (scripts/render_og_map.py) forces dark via the
+   data-theme attribute already on <html>, so this leaves it alone then. */
 document.documentElement.className='js';
+<?php if (!$ogMode): ?>
 try{var t=localStorage.getItem('cs-explorer:v1:theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}
+<?php endif; ?>
 </script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
 
@@ -865,6 +911,43 @@ footer.site a{color:var(--muted)}
   .maphint{display:none}
 }
 
+/* --- OG map render (?og=1) -----------------------------------------------
+   Headless-Chromium only (scripts/render_og_map.py); never seen by a real
+   visitor's stylesheet cascade in practice, since ?og=1 is not linked from
+   anywhere on the page. Strips every element but the map canvas down to a
+   fixed 1200x630 box and adds a small caption, so a straight screenshot of
+   #mapfig is the finished OG image with no post-processing crop needed. */
+.ogcap{display:none}
+body[data-og="1"] .topbar,
+body[data-og="1"] .hero,
+body[data-og="1"] .pulse,
+body[data-og="1"] .band,
+body[data-og="1"] .detail,
+body[data-og="1"] nav.lenses,
+body[data-og="1"] .rail,
+body[data-og="1"] .results,
+body[data-og="1"] .maptop,
+body[data-og="1"] .maphint,
+body[data-og="1"] .nojsmap,
+body[data-og="1"] #maptip,
+body[data-og="1"] #egoAll,
+body[data-og="1"] .paths,
+body[data-og="1"] .signup,
+body[data-og="1"] footer,
+body[data-og="1"] #palette,
+body[data-og="1"] #drawer,
+body[data-og="1"] #help,
+body[data-og="1"] #toast{display:none!important}
+body[data-og="1"]{overflow:hidden}
+body[data-og="1"] main{padding:0;margin:0}
+body[data-og="1"] .wrap{max-width:none;padding:0;margin:0}
+body[data-og="1"] .explorer{display:block;padding:0;gap:0}
+body[data-og="1"] #mapwrap{display:block!important;position:fixed;inset:0;width:1200px;height:630px;margin:0;padding:0;background:var(--page)}
+body[data-og="1"] #mapfig{position:absolute;inset:0;width:1200px;height:630px;margin:0;border:0;border-radius:0}
+body[data-og="1"] .ogcap{display:flex;position:absolute;left:26px;bottom:20px;gap:16px;align-items:baseline;z-index:5;font-family:var(--mono);font-variant-numeric:tabular-nums}
+body[data-og="1"] .ogcap b{color:var(--ink);font-size:18px;font-weight:700;letter-spacing:-.01em}
+body[data-og="1"] .ogcap span{color:var(--muted);font-size:13.5px}
+
 /* --- Paths lens --------------------------------------------------------- */
 .trail h3 a{color:var(--ink);text-decoration:none}
 .trail h3 a:hover{text-decoration:underline}
@@ -999,7 +1082,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
     })(window, document, "clarity", "script", "y8ixg9wg4h");
 </script>
 </head>
-<body data-view="<?php echo h($view); ?>">
+<body data-view="<?php echo h($view); ?>"<?php echo $ogMode ? ' data-og="1"' : ''; ?>>
 <a class="skip" href="#grid">Skip to the grid</a>
 
 <header class="topbar">
@@ -1108,6 +1191,9 @@ html.js body[data-view="map"] #mapwrap{display:block}
     ~<?php echo number_format($os['words']); ?> words · <?php echo (int)$os['tables']; ?> tables · <?php echo (int)$os['sections']; ?> sections
     <?php if (isset($popRank[$os['file']])): ?>· #<?php echo (int)$popRank[$os['file']]; ?> of <?php echo (int)$totalCount; ?> this month<?php endif; ?>
   </p>
+  <?php if ($osSparkPoints !== ''): ?>
+  <p class="spark plain"><svg width="118" height="26" viewBox="0 0 118 26" aria-label="Views for this page, last <?php echo count($dailyHistoryLite[$os['file']]); ?> days" role="img"><polyline points="<?php echo h($osSparkPoints); ?>" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg> <span class="num"><?php echo number_format($osSparkLast); ?> views/day</span></p>
+  <?php endif; ?>
   <p class="acts"><a class="primary" href="<?php echo h($os['file']); ?>">Open</a> <a href="./">Back to all cheatsheets</a></p>
 </section>
 <?php endif; ?>
@@ -1200,6 +1286,9 @@ html.js body[data-view="map"] #mapwrap{display:block}
       <canvas id="mapc" role="img" aria-label="Constellation map of <?php echo (int)$totalCount; ?> cheatsheets joined by <?php echo (int)($stats['edges'] ?? 0); ?> cross-links, clustered into <?php echo (int)$fieldCount; ?> category regions. Use the List this map button for a text equivalent."></canvas>
       <div id="maptip" hidden></div>
       <button id="egoAll" type="button" hidden>Show the whole map</button>
+      <?php if ($ogMode): ?>
+      <div class="ogcap"><b>Cheatsheets by David Veksler</b><span><?php echo (int)$totalCount; ?> references · <?php echo (int)($stats['edges'] ?? 0); ?> cross-links</span></div>
+      <?php endif; ?>
     </figure>
     <p class="maphint">Drag to pan, scroll to zoom, double-click to reset. Click a node to open its detail. Colour is category; size is how much it is read this month.</p>
     <div id="maplist" hidden></div>
@@ -1316,6 +1405,14 @@ html.js body[data-view="map"] #mapwrap{display:block}
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script type="application/json" id="catalog-lite"><?php echo json_encode($lite, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
+<?php /* Per-sheet 30-day view history for the drawer's sparkline (see the
+       "per-sheet daily history" block above). A second small inline block
+       rather than a catalog-lite column: it is sparse (only files with
+       recorded views carry an entry at all) and irrelevant to search/filter,
+       so folding it into catalog-lite would tax every page load for a
+       feature only the drawer uses. Empty object today until
+       fetch-popularity.py has run with dailyHistory a few times. */ ?>
+<script type="application/json" id="daily-history"><?php echo json_encode($dailyHistoryLite, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
 <script>
 (function(){
 'use strict';
@@ -1329,6 +1426,10 @@ var TOTAL=<?php echo (int)$totalCount; ?>;
 // The server may have rendered a sheet or category title, so the "no filters"
 // title is passed in rather than read back off document.title.
 var SITE_TITLE=<?php echo json_encode($SITE_TITLE); ?>;
+// scripts/render_og_map.py's ?og=1 render mode: the map block reads this to
+// draw labels for only the top 12 by popularity (see prep() below) instead
+// of the normal top-25-plus-hubs rule.
+CS.og=<?php echo $ogMode ? 'true' : 'false'; ?>;
 
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(NS+k);localStorage.setItem(NS+k,v);}catch(e){}return null;}
 function lsj(k,d){try{var r=JSON.parse(ls(k)||'null');return r===null?d:r;}catch(e){return d;}}
@@ -1339,6 +1440,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;
 /* ---------------------------------------------------------------- data --- */
 var L=JSON.parse(el('catalog-lite').textContent);
 var N=L.f.length;
+var DH=JSON.parse(el('daily-history').textContent); // per-file {date:views}, see index.php's PHP block above
 var byFile={};
 function toks(s){return String(s).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);}
 for(var i=0;i<N;i++)byFile[L.f[i]]=i;
@@ -1706,6 +1808,21 @@ function popRankOf(file){
   var order=L.f.map(function(_,k){return k;}).sort(function(a,b){return L.p[b]-L.p[a];});
   return order.indexOf(i)+1;
 }
+/* Mirrors index.php's sparkline_points(): same maths, same 118x26 box, so the
+   server-rendered ?sheet= detail block and the client-rendered drawer agree
+   pixel for pixel. Returns '' (never a placeholder) below 7 points, per spec. */
+function sparkSVG(vals,file){
+  vals=(vals||[]).map(Number);
+  if(vals.length<7)return '';
+  var w=118,hgt=26,n=vals.length,max=Math.max.apply(null,vals),min=Math.min.apply(null,vals),span=Math.max(1,max-min);
+  var pts=vals.map(function(v,i){
+    var x=Math.round(i*(w/Math.max(1,n-1))*10)/10;
+    var y=Math.round((hgt-2-((v-min)/span)*(hgt-4))*10)/10;
+    return x+','+y;
+  }).join(' ');
+  var last=vals[vals.length-1];
+  return '<p class="spark plain"><svg width="'+w+'" height="'+hgt+'" viewBox="0 0 '+w+' '+hgt+'" role="img" aria-label="Views for '+esc(file)+', last '+n+' days"><polyline points="'+pts+'" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg> <span class="num">'+last.toLocaleString()+' views/day</span></p>';
+}
 function drawerHTML(s){
   var i=byFile[s.file],cls='k'+L.c[i];
   var heads=(s.headings||[]);
@@ -1736,6 +1853,7 @@ function drawerHTML(s){
    +(s.reviewed?'Reviewed '+esc(s.reviewed)+' · ':'')
    +'~'+(s.words||0).toLocaleString()+' words · '+(s.tables||0)+' tables · '+(s.sections||0)+' sections · #'
    +popRankOf(s.file)+' of '+TOTAL+' this month</p>'
+   +sparkSVG(DH[s.file]?Object.keys(DH[s.file]).sort().map(function(d){return DH[s.file][d];}):[],s.file)
    +'<p class="acts"><a class="primary" href="'+esc(s.file)+'" data-open="'+esc(s.file)+'">Open</a>'
    +'<button type="button" id="dcopy">Copy link</button>'
    +'<button type="button" data-map="'+esc(s.file)+'">Show on map</button></p>'
@@ -1974,9 +2092,13 @@ function prep(d){
   if(!PMAX)PMAX=1;
   // Always-on labels: the 25 most read plus every hub. "Hub" is out-degree 12+
   // (13 sheets); total degree would qualify 144 of 197 and bury the map in text.
+  // In ?og=1 (see CS.og above), the spec asks for the top 12 by popularity
+  // only, no hub bonus: a static 1200x630 social image has far less room
+  // than an interactive canvas a reader can zoom into.
   ALWAYS={};
-  ALLIDX.slice().sort(function(a,b){return L.p[b]-L.p[a];}).slice(0,25).forEach(function(i){ALWAYS[i]=1;});
-  for(i=0;i<N;i++)if(OUT[i]>=12)ALWAYS[i]=1;
+  var ogTopN=CS.og?12:25;
+  ALLIDX.slice().sort(function(a,b){return L.p[b]-L.p[a];}).slice(0,ogTopN).forEach(function(i){ALWAYS[i]=1;});
+  if(!CS.og)for(i=0;i<N;i++)if(OUT[i]>=12)ALWAYS[i]=1;
   READY=true;
 }
 
