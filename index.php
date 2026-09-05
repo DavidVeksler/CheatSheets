@@ -1752,7 +1752,9 @@ function openDrawer(file,from,replace){
     drawer.hidden=false;
     drawer.focus();
     var det=el('sheet-detail');if(det)det.hidden=true;
-    var url='?sheet='+encodeURIComponent(file);
+    // Keep the lens in the drawer's URL so Back returns to the map, not the grid.
+    var lens=document.body.dataset.view;
+    var url='?sheet='+encodeURIComponent(file)+(lens&&lens!=='grid'?'&view='+lens:'');
     if(replace){history.replaceState({sheet:file},'',url);}
     else{history.pushState({sheet:file},'',url);drawerPushed=true;}
     ga('explorer_drawer',{file:file,from:from||'grid'});
@@ -2105,7 +2107,8 @@ function egoLayout(){
   sizeCanvas();
   var btn=el('egoAll');
   if(window.innerWidth>=768||M.whole){EGO=null;EGOIDX=ALLIDX;if(btn)btn.hidden=(window.innerWidth>=768);return;}
-  var f=M.ego,c=(f!==null&&f!==undefined)?CS.byFile[f]:undefined;
+  var f=M.ego||(history.state&&history.state.sheet);
+  var c=f?CS.byFile[f]:undefined;
   if(c===undefined){c=0;for(var i=1;i<N;i++)if(L.p[i]>L.p[c])c=i;}
   var nb=Object.keys(NBR[c]).map(Number);
   nb.sort(function(a,b){return L.p[b]-L.p[a];});
