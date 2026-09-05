@@ -15,8 +15,8 @@ Sources
                          issue with noise
   * Most-read        -- popularity.json dailyViews, top N, excluding anything
                          already listed under "new"
-  * Titles/descriptions/images -- reuses generate-metadata.py's extraction
-                         (imported, not reimplemented) so the two never drift
+  * Titles/descriptions/images -- read from catalog.json (scripts/build_catalog.py's
+                         output; the extraction lives there once, not reimplemented here)
   * Category          -- category-map.php (regex-parsed; it's a flat PHP
                          array literal)
 
@@ -35,7 +35,6 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import importlib.util
 import json
 import re
 import subprocess
@@ -52,14 +51,18 @@ POPULAR_TOP_N = 5
 SKIP_THRESHOLD = 3            # len(new) + len(updated) below this -> no issue this month
 
 
-def _load_metadata_module():
-    """Import generate-metadata.py's extraction functions without duplicating them."""
-    spec = importlib.util.spec_from_file_location(
-        "cheatsheets_generate_metadata", REPO_DIR / "generate-metadata.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def load_catalog() -> Dict[str, Dict]:
+    """filename -> catalog.json sheet entry (title, description, image, ...).
+
+    catalog.json is the single extraction of every sheet's metadata
+    (scripts/build_catalog.py); reading it here means this script never
+    re-parses HTML and can't drift from what the index actually shows.
+    """
+    path = REPO_DIR / "catalog.json"
+    if not path.exists():
+        raise RuntimeError("catalog.json is missing. Run: python3 scripts/build_catalog.py")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return {s["file"]: s for s in data.get("sheets", [])}
 
 
 def git(*args: str) -> str:
@@ -141,13 +144,6 @@ def find_updated_pages(since: str, until: str, exclude: set) -> Dict[str, Dict]:
     return {f: c for f, c in changes.items() if c["lines_changed"] >= UPDATED_LINE_THRESHOLD}
 
 
-def all_cheatsheet_files(excluded: set) -> List[str]:
-    return sorted(
-        p.name for p in REPO_DIR.glob("*.html")
-        if p.name not in excluded and "/" not in p.name
-    )
-
-
 def load_popular(top_n: int, exclude: set, valid_files: set) -> List[Dict]:
     pop_path = REPO_DIR / "popularity.json"
     if not pop_path.exists():
@@ -161,13 +157,13 @@ def load_popular(top_n: int, exclude: set, valid_files: set) -> List[Dict]:
     return [{"file": f, "daily_views": v} for f, v in ranked[:top_n]]
 
 
-def build_item(metadata_mod, filename: str, base_url: str, category_map: Dict[str, str], extra: Dict) -> Dict:
-    meta = metadata_mod.extract_metadata(REPO_DIR / filename, base_url)
+def build_item(catalog_by_file: Dict[str, Dict], filename: str, category_map: Dict[str, str], extra: Dict) -> Dict:
+    sheet = catalog_by_file.get(filename, {})
     item = {
         "file": filename,
-        "title": meta["title"],
-        "description": meta["description"],
-        "og_image": meta["image"],
+        "title": sheet.get("title", filename),
+        "description": sheet.get("description", ""),
+        "og_image": sheet.get("image"),
         "category": category_map.get(filename, "Other"),
     }
     item.update(extra)
@@ -178,7 +174,6 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--issue", default=dt.date.today().strftime("%Y-%m"), help="Issue month, YYYY-MM (default: current month).")
     parser.add_argument("--output", default=None, help="Output path (default: newsletter/digest-<issue>.json).")
-    parser.add_argument("--base-url", default="https://cheatsheets.davidveksler.com/")
     args = parser.parse_args()
 
     if not re.match(r"^\d{4}-\d{2}$", args.issue):
@@ -186,8 +181,8 @@ def main() -> int:
 
     try:
         since, until = issue_window(args.issue)
-        metadata_mod = _load_metadata_module()
-        excluded = set(metadata_mod.EXCLUDED_FILES)
+        catalog_by_file = load_catalog()
+        catalogued = set(catalog_by_file)  # catalog.json already applies the exclusion/hide rules
         category_map = load_category_map()
 
         new_raw = find_new_pages(since, until)
@@ -195,29 +190,33 @@ def main() -> int:
         # one name and rebranded to another a week later. Only the file that survives to
         # today is addressable in a newsletter link.
         new_raw = {f: info for f, info in new_raw.items() if (REPO_DIR / f).exists()}
-        new_filenames = set(new_raw) - excluded
-        updated_raw = find_updated_pages(since, until, exclude=new_filenames | excluded)
+        new_filenames = set(new_raw) & catalogued
+        # Dedup: a page added and further edited within the same window is
+        # "new", not also "updated". Files outside the catalog (hidden via
+        # catalog-overrides.json, or the one hardcoded exclusion) are dropped
+        # by the "if f in catalogued" filters on new_items/updated_items below.
+        updated_raw = find_updated_pages(since, until, exclude=set(new_raw))
         updated_raw = {f: info for f, info in updated_raw.items() if (REPO_DIR / f).exists()}
 
-        base_url = args.base_url if args.base_url.endswith("/") else args.base_url + "/"
         new_items = [
-            build_item(metadata_mod, f, base_url, category_map, {"added": info["date"], "commit": info["commit"]})
+            build_item(catalog_by_file, f, category_map, {"added": info["date"], "commit": info["commit"]})
             for f, info in sorted(new_raw.items(), key=lambda kv: kv[1]["date"])
-            if f not in excluded
+            if f in catalogued
         ]
         updated_items = [
-            build_item(metadata_mod, f, base_url, category_map, {
+            build_item(catalog_by_file, f, category_map, {
                 "lines_changed": info["lines_changed"],
                 "commits": info["commits"],
                 "summary_hint": info["summary_hint"],
             })
             for f, info in sorted(updated_raw.items(), key=lambda kv: -kv[1]["lines_changed"])
+            if f in catalogued
         ]
 
-        valid_files = set(all_cheatsheet_files(excluded))
+        valid_files = catalogued
         popular_raw = load_popular(POPULAR_TOP_N, exclude=new_filenames, valid_files=valid_files)
         popular_items = [
-            build_item(metadata_mod, p["file"], base_url, category_map, {"daily_views": p["daily_views"]})
+            build_item(catalog_by_file, p["file"], category_map, {"daily_views": p["daily_views"]})
             for p in popular_raw
         ]
 

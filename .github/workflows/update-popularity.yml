@@ -16,6 +16,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # Full history: scripts/build_catalog.py shells out to
+          # `git log --follow` per file for created/updated dates; a shallow
+          # checkout would make every sheet look freshly created.
+          fetch-depth: 0
 
       - name: Fetch Cloudflare analytics
         env:
@@ -25,12 +30,25 @@ jobs:
           CLOUDFLARE_ZONE_ID: 3d96473d69977c5c828b3079d9b9869c
         run: python3 fetch-popularity.py
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install catalog builder dependencies
+        run: python3 -m pip install --upgrade pip beautifulsoup4
+
+      - name: Rebuild catalog.json
+        # Keeps `reviewed` (refresh-status.json) and `updated` (git dates)
+        # current on catalog.json even on nights nobody commits by hand.
+        run: python3 scripts/build_catalog.py
+
       - name: Commit updated scores
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add popularity.json
-          # Only commit if the file actually changed
+          git add popularity.json catalog.json
+          # Only commit if something actually changed
           git diff --staged --quiet || \
             git commit -m "chore: update popularity scores [skip ci]"
           git push

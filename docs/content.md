@@ -23,8 +23,15 @@ Where this file and AGENTS.md disagree, AGENTS.md wins.
    "Last verified" line (review status lives in `refresh-status.json`, not the page).
 3. Add the file to the `$categoryMap` array in `category-map.php`, or it lands under "Other"
    (AGENTS.md > *Adding New Cheatsheets*).
-4. Generate + optimize the `images/{filename}.png` preview.
-5. Commit the `.html` + its `images/*.png` by explicit path. One cheatsheet per commit.
+4. Regenerate `catalog.json`: run `python3 scripts/build_catalog.py`, or let the tracked
+   `.githooks/pre-commit` hook do it for you and stage the result automatically. Enable
+   the hook once per clone with `git config core.hooksPath .githooks` (see *The gate
+   that must pass* below). `catalog.json` is the data layer behind the index's search,
+   map, and facets; a commit that adds a new `.html` or an entry to `category-map.php`
+   without also updating `catalog.json` fails the deploy gate (`scripts/deploy.py --check`).
+5. Generate + optimize the `images/{filename}.png` preview.
+6. Commit the `.html` + its `images/*.png` + `catalog.json` by explicit path. One
+   cheatsheet per commit.
 
 Reviewing an existing page: run [`../TODO/CHEATSHEET-AUDIT.md`](../TODO/CHEATSHEET-AUDIT.md).
 Writing/reviewing a spec: [`../TODO/SPEC-AUDIT.md`](../TODO/SPEC-AUDIT.md).
@@ -53,9 +60,16 @@ documented in [`economics-data-refresh.md`](economics-data-refresh.md).
 - **SEO gate** — `scripts/seo_check.py` on changed `.html`: title <= 60 chars, meta
   description 150-200, canonical present, valid JSON-LD.
 - **Link/asset integrity, JSON parse, `php -l`** — also run by the deploy validator.
+- **Catalog freshness**: `python scripts/build_catalog.py --check` fails if `catalog.json`
+  is older than any catalogued `.html`, `category-map.php`, `paths.json`, or
+  `catalog-overrides.json`, or if a `paths.json` step points at a file that no longer
+  exists. Part of `scripts/deploy.py --check`.
 - **`.githooks/pre-push`** guards the `production` remote only (it runs
   `python scripts/deploy.py --check`). Pushes to `origin` are **not** blocked.
-  Enable it once per clone with `git config core.hooksPath .githooks`.
+- **`.githooks/pre-commit`** regenerates `catalog.json` (and stages it) whenever a staged
+  change touches a catalogued `.html`, `category-map.php`, `paths.json`, or
+  `catalog-overrides.json`, so the freshness gate above almost never fires locally.
+- Enable both hooks once per clone with `git config core.hooksPath .githooks`.
 
 ## Who deploys
 

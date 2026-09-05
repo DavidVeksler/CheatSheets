@@ -214,6 +214,23 @@ def validate(args, base: str) -> None:
         else:
             ok("crypto custody hub parity and anchors passed")
 
+    # catalog.json backs the Explorer index (search, map, drawer). It must be
+    # newer than every catalogued .html, category-map.php, paths.json, and
+    # catalog-overrides.json, and paths.json must validate against it. The
+    # pre-commit hook (.githooks/pre-commit) keeps this from ever going stale
+    # locally; this is the fail-closed check for a deploy that skipped it.
+    catalog_check = os.path.join(ROOT, "scripts", "build_catalog.py")
+    res = subprocess.run([sys.executable, catalog_check, "--check"], cwd=ROOT,
+                         capture_output=True, text=True)
+    if res.returncode != 0:
+        detail = (res.stdout.strip() + "\n" + res.stderr.strip()).strip()
+        failures.append(
+            "catalog: " + (detail or "build_catalog.py --check failed") +
+            "\n         fix with: python3 scripts/build_catalog.py"
+        )
+    else:
+        ok("catalog.json is current and paths.json validates")
+
     if not (html or json_files or php_files):
         if failures:
             for f in failures:

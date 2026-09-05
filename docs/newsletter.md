@@ -144,7 +144,7 @@ stays there.
 | `newsletter/digest-YYYY-MM.json` | Deterministic raw material for the issue. Committed (it is the audit trail). |
 | `newsletter/broadcast-YYYY-MM.json` | `{issue, broadcast_id, segment_id, subject, created, sent, sent_at?}` — written by `newsletter_broadcast.py`, updated in place by `newsletter_send.py`. Committed; it's the record of when (or whether) an issue actually sent. |
 | `scripts/newsletter_common.py` | Shared: `.resend.env` loader, minimal stdlib `resend_request()`, `newsletter_dir()`. |
-| `scripts/newsletter_digest.py` | Builds the digest JSON. Stdlib + the repo's existing bs4 (reuses `generate-metadata.py`'s extraction by import, not duplication). No LLM. |
+| `scripts/newsletter_digest.py` | Builds the digest JSON. Stdlib only, no bs4 needed here: reads title/description/image straight from `catalog.json` (`scripts/build_catalog.py`'s output; the HTML extraction lives there once, not duplicated). No LLM. |
 | `scripts/newsletter_sync.py` | SSH-pulls `.confirmed.jsonl`, upserts Resend contacts, reports deltas. Add-only — never unsubscribes or deletes. |
 | `scripts/newsletter_broadcast.py` | Creates the **draft** broadcast (`send` left at its default `false`; no `--send` flag exists on this script). Writes `newsletter/broadcast-<issue>.json` as the audit/handoff record for `newsletter_send.py`. |
 | `scripts/newsletter_send.py` | The human gate: preflight → preview → `[y/N]` → send → verify. Not run by the routine. |
@@ -267,7 +267,7 @@ Sources, all already in the repo:
   do not fill the issue with noise.
 - **Popular** — `popularity.json` → `dailyViews`, top 5, excluding anything already
   listed under *new*.
-- **Titles / descriptions / images** — same extraction as `generate-metadata.py`.
+- **Titles / descriptions / images**: read from `catalog.json` (`scripts/build_catalog.py`).
 - **Category** — `category-map.php`.
 
 ### Issue structure

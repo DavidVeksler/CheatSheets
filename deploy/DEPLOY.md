@@ -48,6 +48,12 @@ Five phases; it aborts at the first failure (see escape hatches below).
    - **JSON:** every changed `.json` data file must parse.
    - **PHP:** `php -l` on changed `.php` — skipped cleanly if `php` isn't on PATH
      locally (it usually isn't on the dev box).
+   - **Catalog freshness (runs on every deploy, not scoped to changed files):**
+     [`scripts/build_catalog.py --check`](../scripts/build_catalog.py) fails closed if
+     `catalog.json` is older than any catalogued `.html`, `category-map.php`,
+     `paths.json`, or `catalog-overrides.json`, or if a `paths.json` step points at a
+     file that no longer exists. Fix with `python3 scripts/build_catalog.py` (or let
+     `.githooks/pre-commit` keep it current automatically; see its setup below).
 3. **Changeset preview:** prints `git diff --stat production/main..HEAD` — exactly
    what goes live.
 4. **Confirm:** `[y/N]` prompt (skip with `--yes`).
@@ -83,17 +89,24 @@ Escape hatches — use sparingly, they exist so you're never truly stuck:
 
 ## First-time setup in a fresh clone
 
-The tracked pre-push hook lives in `.githooks/` and is **not** active until you
-point git at it (this is local config, not committed):
+The tracked hooks live in `.githooks/` and are **not** active until you point git
+at them (this is local config, not committed):
 
 ```bash
 git config core.hooksPath .githooks
 ```
 
-With that set, even a raw `git push production` runs the preflight + validation
-first (`scripts/deploy.py --check`) and is blocked if anything fails. Pushes to
-`origin` are unaffected. `deploy.py` sets `CHEATSHEETS_DEPLOY=1` when it issues its
-own push, so the hook no-ops and validation doesn't run twice.
+With that set:
+
+- **pre-push**: even a raw `git push production` runs the preflight + validation
+  first (`scripts/deploy.py --check`) and is blocked if anything fails. Pushes to
+  `origin` are unaffected. `deploy.py` sets `CHEATSHEETS_DEPLOY=1` when it issues its
+  own push, so the hook no-ops and validation doesn't run twice.
+- **pre-commit**: regenerates `catalog.json` and stages it whenever a commit touches
+  a catalogued `.html`, `category-map.php`, `paths.json`, or `catalog-overrides.json`,
+  so the catalog-freshness gate above almost never fires. Needs the repo's Python deps
+  (`beautifulsoup4`, from `requirements.txt`; see `activate-venv.sh`) importable by
+  whichever `python`/`python3` is on `PATH` when you commit.
 
 Line endings: `.gitattributes` pins `*.sh`, `.githooks/*`, and `scripts/*.py` to LF
 so the bash hook and wrappers don't break under Git Bash on Windows. If a hook ever
