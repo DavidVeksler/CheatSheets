@@ -139,6 +139,27 @@ class ShapeHeuristicTests(unittest.TestCase):
         counts["max_table_rows"] = 12
         self.assertIn("comparison", bc.compute_shapes(counts, "T", [], []))
 
+    def test_comparison_by_two_tables(self):
+        # 2026-09 corpus tuning: two tables is enough on its own (was 3), so a
+        # sheet like tesla-products.html (2 spec-comparison tables) is caught.
+        counts = self.base_counts()
+        counts["tables"] = 2
+        self.assertIn("comparison", bc.compute_shapes(counts, "T", [], []))
+
+    def test_comparison_by_nine_row_table(self):
+        # 2026-09 corpus tuning: a single 9-row table is enough (was 12), so
+        # a sheet like ai-models-compared.html (1 table, 9 rows) is caught.
+        counts = self.base_counts()
+        counts["tables"] = 1
+        counts["max_table_rows"] = 9
+        self.assertIn("comparison", bc.compute_shapes(counts, "T", [], []))
+
+    def test_comparison_not_triggered_below_new_thresholds(self):
+        counts = self.base_counts()
+        counts["tables"] = 1
+        counts["max_table_rows"] = 8
+        self.assertNotIn("comparison", bc.compute_shapes(counts, "T", [], []))
+
     def test_procedure_by_ordered_lists(self):
         counts = self.base_counts()
         counts["ordered_lists"] = 3
@@ -148,6 +169,18 @@ class ShapeHeuristicTests(unittest.TestCase):
         counts = self.base_counts()
         counts["checkboxes"] = 10
         self.assertIn("procedure", bc.compute_shapes(counts, "T", [], []))
+
+    def test_procedure_by_eight_checkboxes(self):
+        # 2026-09 corpus tuning: 8 checkboxes is enough (was 10), so a sheet
+        # like selfish-reasons-to-have-more-kids.html (8 checkboxes) is caught.
+        counts = self.base_counts()
+        counts["checkboxes"] = 8
+        self.assertIn("procedure", bc.compute_shapes(counts, "T", [], []))
+
+    def test_procedure_not_triggered_below_new_checkbox_threshold(self):
+        counts = self.base_counts()
+        counts["checkboxes"] = 7
+        self.assertNotIn("procedure", bc.compute_shapes(counts, "T", [], []))
 
     def test_calculator_needs_inputs_and_script(self):
         counts = self.base_counts()
@@ -186,6 +219,20 @@ class ShapeHeuristicTests(unittest.TestCase):
         counts = self.base_counts()
         counts["words"] = 4500
         counts["tables"] = 3
+        self.assertNotIn("essay", bc.compute_shapes(counts, "T", [], []))
+
+    def test_essay_by_2900_words(self):
+        # 2026-09 corpus tuning: lowered from 4,000 words, so a sheet like
+        # islam.html (3,709 words, 0 tables) is caught.
+        counts = self.base_counts()
+        counts["words"] = 2900
+        counts["tables"] = 0
+        self.assertIn("essay", bc.compute_shapes(counts, "T", [], []))
+
+    def test_essay_not_triggered_below_new_word_threshold(self):
+        counts = self.base_counts()
+        counts["words"] = 2899
+        counts["tables"] = 0
         self.assertNotIn("essay", bc.compute_shapes(counts, "T", [], []))
 
     def test_timeline_by_title_word_boundary(self):

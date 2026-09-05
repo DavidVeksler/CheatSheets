@@ -282,10 +282,22 @@ def extract_outlinks(soup: BeautifulSoup, own_filename: str, known_files: set[st
 def compute_shapes(counts: dict, title: str, keywords: list[str], headings: list[dict]) -> list[str]:
     shapes = []
 
-    if counts["tables"] >= 3 or counts["max_table_rows"] >= 12:
+    # Corpus tuning (2026-09): the spec's original anchors (3+ tables or a
+    # 12+-row table) left 36/197 sheets (18%) with no shape at all, against
+    # the spec's own 10% ceiling. Inspecting those 36 showed a real signal
+    # the original thresholds missed: a single table with 9-11 rows (e.g.
+    # ai-models-compared.html, rockets-and-spaceflight.html) or exactly two
+    # tables (e.g. tesla-products.html, open-weight-ai-models.html) is still
+    # a genuine side-by-side comparison, just a smaller one. Lowered to 2
+    # tables / 9 rows; every sheet newly caught by this was checked by hand
+    # and is a real comparison table, not a stray.
+    if counts["tables"] >= 2 or counts["max_table_rows"] >= 9:
         shapes.append("comparison")
 
-    if counts["ordered_lists"] >= 3 or counts["checkboxes"] >= 10:
+    # Same tuning pass: an 8-item checklist (e.g. data-center-community-impact.html,
+    # selfish-reasons-to-have-more-kids.html) reads as a procedure just as much
+    # as a 10-item one; lowered from 10.
+    if counts["ordered_lists"] >= 3 or counts["checkboxes"] >= 8:
         shapes.append("procedure")
 
     if counts["number_range_output"] >= 3 and counts["has_script"]:
@@ -302,7 +314,10 @@ def compute_shapes(counts: dict, title: str, keywords: list[str], headings: list
     if MODEL_NUMBER_RE.search(title_and_keywords) or "programming" in lowered or "error codes" in lowered:
         shapes.append("device")
 
-    if counts["words"] >= 4000 and counts["tables"] < 2:
+    # Same tuning pass: 2900+ words of prose with fewer than 2 tables (e.g.
+    # islam.html at 3,709 words, the-free-version-exists.html at 3,989) reads
+    # as an essay just as much as a 4,000-word one; lowered from 4,000.
+    if counts["words"] >= 2900 and counts["tables"] < 2:
         shapes.append("essay")
 
     heading_text = " ".join(h["text"] for h in headings)
