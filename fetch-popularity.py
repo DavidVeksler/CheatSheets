@@ -17,7 +17,13 @@ Run this once a day (e.g. via GitHub Actions). Each run:
      lifetime view counter per page, and to "totalViewsHistory", a per-day
      total-site view count keyed by ISO date (kept for the last 90 days) so
      the popularity page can chart a trend line.
-  6. Saves result back to popularity.json.
+  6. Adds yesterday's raw counts, per catalogued .html file, to "dailyHistory"
+     ({"<file>": {"<ISO date>": views, ...}}), a rolling 30-day ring buffer
+     per file (see accumulate_daily_history) that feeds the index.php
+     Explorer drawer's per-sheet sparkline. The accumulation step is a pure
+     function so it can be unit-tested with synthetic counts without calling
+     Cloudflare (see scripts/test_fetch_popularity.py).
+  7. Saves result back to popularity.json.
 
 The decay means a page visited 1,000 times today will score ~630 after 15 days,
 ~370 after 30 days, ~50 after 90 days – natural "trending" window.
@@ -128,10 +134,68 @@ def load_popularity() -> dict:
                 data = json.load(f)
                 data.setdefault("totalViews", {})
                 data.setdefault("totalViewsHistory", {})
+                data.setdefault("dailyHistory", {})
                 return data
         except (json.JSONDecodeError, OSError):
             pass
-    return {"lastUpdated": None, "scores": {}, "dailyViews": {}, "totalViews": {}, "totalViewsHistory": {}}
+    return {
+        "lastUpdated": None, "scores": {}, "dailyViews": {}, "totalViews": {},
+        "totalViewsHistory": {}, "dailyHistory": {},
+    }
+
+
+def accumulate_daily_history(
+    daily_history: dict[str, dict[str, int]],
+    new_counts: dict[str, int],
+    day: str,
+    cutoff: str,
+    seed_views: dict[str, int] | None = None,
+    seed_date: str | None = None,
+) -> dict[str, dict[str, int]]:
+    """Pure function: return an updated per-file 30-day daily-view ring buffer.
+
+    ``daily_history`` is the existing ``{"<file>": {"<ISO date>": views}}``
+    structure (may be empty). ``new_counts`` is one day's per-path counts
+    (already restricted to top-level ``.html`` files by
+    ``fetch_path_counts``, but filtered again here so a caller passing
+    unfiltered data can't leak a non-.html key in). ``day`` is the ISO date
+    those counts belong to; ``cutoff`` is the oldest ISO date to keep
+    (inclusive) — dates before it are pruned, giving each file a rolling
+    window rather than an ever-growing history.
+
+    ``seed_views``/``seed_date``: when ``daily_history`` is empty (this
+    feature's first run against an existing popularity.json), the caller may
+    pass the *already-recorded* ``dailyViews`` snapshot and the date it
+    represents so the sparkline has one real data point immediately instead
+    of an empty chart for 30 days. This never fabricates numbers — it reuses
+    a count Cloudflare already reported and stores it under its own date.
+    Only fires when ``daily_history`` starts empty, so it can't overwrite or
+    duplicate real accumulated history on later runs.
+
+    Every existing key of the popularity.json schema and its semantics are
+    left untouched by this function; it only computes the "dailyHistory"
+    value.
+    """
+    result: dict[str, dict[str, int]] = {
+        f: dict(days) for f, days in daily_history.items() if f.endswith(".html")
+    }
+
+    if not result and seed_views and seed_date:
+        for filename, views in seed_views.items():
+            if filename.endswith(".html") and views:
+                result.setdefault(filename, {})[seed_date] = int(views)
+
+    for filename, count in new_counts.items():
+        if not filename.endswith(".html"):
+            continue
+        result.setdefault(filename, {})[day] = int(count)
+
+    pruned: dict[str, dict[str, int]] = {}
+    for filename, days in result.items():
+        kept = {d: v for d, v in days.items() if d >= cutoff}
+        if kept:
+            pruned[filename] = kept
+    return pruned
 
 
 def save_popularity(data: dict) -> None:
@@ -188,18 +252,30 @@ def main() -> None:
     # Per-day total-site view count, kept for the last 90 days (trend line)
     history: dict[str, int] = popularity.get("totalViewsHistory", {})
     history[yesterday] = sum(new_counts.values())
-    cutoff = (date.today() - timedelta(days=90)).isoformat()
-    history = {d: v for d, v in history.items() if d >= cutoff}
+    cutoff90 = (date.today() - timedelta(days=90)).isoformat()
+    history = {d: v for d, v in history.items() if d >= cutoff90}
+
+    # Per-file 30-day daily-view ring buffer for the index.php Explorer
+    # drawer's sparkline. Seeded from the dailyViews snapshot this popularity.json
+    # already had on this feature's first run, so the sparkline is not empty
+    # for 30 days; see accumulate_daily_history's docstring.
+    cutoff30 = (date.today() - timedelta(days=30)).isoformat()
+    daily_history = accumulate_daily_history(
+        popularity.get("dailyHistory", {}), new_counts, yesterday, cutoff30,
+        seed_views=popularity.get("dailyViews"), seed_date=popularity.get("lastUpdated"),
+    )
 
     popularity["lastUpdated"] = today
     popularity["scores"] = scores
     popularity["dailyViews"] = dict(new_counts)  # raw, undecayed — last complete 24h
     popularity["totalViews"] = total_views
     popularity["totalViewsHistory"] = history
+    popularity["dailyHistory"] = daily_history
 
     save_popularity(popularity)
     print(f"Saved {len(scores)} page scores, {len(new_counts)} daily view counts, "
-          f"{len(total_views)} lifetime totals to popularity.json — done.")
+          f"{len(total_views)} lifetime totals, {len(daily_history)} per-file "
+          f"histories to popularity.json — done.")
 
 
 if __name__ == "__main__":
