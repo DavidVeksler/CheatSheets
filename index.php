@@ -854,16 +854,21 @@ dialog#help dd{margin:0}
 @media (prefers-reduced-motion: reduce){
   .card:hover{border-color:var(--accent)}
 }
+/* Print: the Grid becomes a two-column list of title, URL and category; the
+   Paths section keeps its ordered lists, which are already its print form. */
 @media print{
-  .topbar,.hero,.pulse,.band,.rail,.toolbar,.signup,#palette,#drawer,#help,.deepcut .acts,.copen,.shot{display:none !important}
+  .topbar,.hero,.pulse,.band,.rail,.toolbar,.signup,.skip,#palette,#drawer,#help,#toast,
+  .c img,.c>a,.c em,.c small,.c>p{display:none !important}
   body{background:#fff;color:#000}
   .explorer{display:block}
   .grid{display:block;column-count:2;column-gap:24px}
-  .card{break-inside:avoid;border:0;border-top:1px solid #999;border-radius:0;padding:0;margin:0 0 8px;display:block}
-  .cdesc,.cchips,.cmeta,.crow .rev{display:none}
-  .cbody{padding:6px 0}
-  .ctitle a::after{content:" — " attr(href);font-family:monospace;font-size:10px;color:#555}
-  .crow{margin:0}
+  .c{break-inside:avoid;border:0;border-top:1px solid #999;border-radius:0;margin:0 0 8px;display:block;padding:4px 0}
+  .c b{margin:0;border:0;background:none;padding:0;font-size:10px;color:#555;display:block}
+  .c h3{margin:0;font-size:12px}
+  .c h3 a{color:#000}
+  .c h3 a::after{content:" · " attr(href);font-family:monospace;font-weight:400;font-size:10px;color:#555}
+  .trails{display:block;column-count:2}
+  .trail{break-inside:avoid;border:0;padding:0;margin:0 0 10px}
 }
 }
 </style>
