@@ -28,8 +28,11 @@ done <<< "$staged"
 
 [ "$needs_rebuild" -eq 1 ] || exit 0
 
-if   command -v python  >/dev/null 2>&1; then py=python
-elif command -v python3 >/dev/null 2>&1; then py=python3
+# The repo venv is the only interpreter guaranteed to have beautifulsoup4, which
+# the builder needs to parse the sheets; the bare interpreters are fallbacks.
+if   [ -x "$root/.venv/bin/python" ];        then py="$root/.venv/bin/python"
+elif command -v python  >/dev/null 2>&1;     then py=python
+elif command -v python3 >/dev/null 2>&1;     then py=python3
 else echo "pre-commit: no python found; run scripts/build_catalog.py manually and git add catalog.json." >&2; exit 1
 fi
 

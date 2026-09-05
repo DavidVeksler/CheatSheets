@@ -307,5 +307,51 @@ class DiscoverFilesTests(unittest.TestCase):
         self.assertNotIn("judo.html", files)
 
 
+class InputsHashTests(unittest.TestCase):
+    """The --check gate compares content hashes, never mtimes."""
+
+    def test_hash_is_stable_across_calls(self):
+        self.assertEqual(bc.compute_inputs_hash(), bc.compute_inputs_hash())
+
+    def test_hash_is_a_sha256_hex_digest(self):
+        digest = bc.compute_inputs_hash()
+        self.assertEqual(len(digest), 64)
+        self.assertTrue(all(c in "0123456789abcdef" for c in digest))
+
+    def test_touching_a_file_does_not_change_the_hash(self):
+        """A rebase or fresh clone rewrites mtimes; content-identical stays equal."""
+        before = bc.compute_inputs_hash()
+        target = ROOT / "judo.html"
+        original_mtime = target.stat().st_mtime
+        try:
+            target.touch()
+            self.assertEqual(bc.compute_inputs_hash(), before)
+        finally:
+            import os
+            os.utime(target, (original_mtime, original_mtime))
+
+    def test_content_change_changes_the_hash(self):
+        before = bc.compute_inputs_hash()
+        extra = ROOT / "zzz-inputs-hash-probe.html"
+        self.assertFalse(extra.exists(), "probe file name is already taken")
+        try:
+            extra.write_text("<html><title>probe</title></html>", encoding="utf-8")
+            self.assertNotEqual(bc.compute_inputs_hash(), before)
+        finally:
+            extra.unlink(missing_ok=True)
+        self.assertEqual(bc.compute_inputs_hash(), before)
+
+    def test_committed_catalog_records_a_matching_hash(self):
+        import json
+        catalog = json.loads((ROOT / "catalog.json").read_text(encoding="utf-8"))
+        self.assertIn("inputs_hash", catalog)
+        self.assertEqual(catalog["inputs_hash"], bc.compute_inputs_hash())
+
+
+class CheckGateTests(unittest.TestCase):
+    def test_check_passes_on_the_committed_tree(self):
+        self.assertEqual(bc.run_check(), 0)
+
+
 if __name__ == "__main__":
     unittest.main()

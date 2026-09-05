@@ -15,7 +15,8 @@ Usage:
 
 Exit codes: 0 on success. Non-zero (with a message on stderr) when:
   - a paths.json step references a file not in the catalog
-  - --check finds catalog.json older than a catalogued source file
+  - --check finds catalog.json's recorded inputs_hash no longer matches the
+    content hash of the catalogued sources
 Warnings (unmapped category, missing hue, thin category-hue coverage, count
 crossing the "190+" rounding boundary, palette examples with no heading
 match, shape heuristics degrading, layout drift) print to stderr but do not
@@ -25,6 +26,7 @@ fail the build.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import random
@@ -35,12 +37,28 @@ from collections import Counter
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
-try:
-    from bs4 import BeautifulSoup, FeatureNotFound
-except ImportError:  # pragma: no cover - environment guard, not a code path under test
-    raise SystemExit(
-        "Error: BeautifulSoup is not installed. Run: python3 -m pip install beautifulsoup4"
-    )
+# BeautifulSoup is imported lazily (see _bs4()) so that --check, which never
+# parses HTML, runs on a bare interpreter without the dependency installed.
+BeautifulSoup = None  # type: ignore[assignment]
+FeatureNotFound = None  # type: ignore[assignment]
+
+
+def _bs4():
+    """Import bs4 on first use and publish it at module scope.
+
+    Only the parsing paths need it; --check works off content hashes.
+    """
+    global BeautifulSoup, FeatureNotFound
+    if BeautifulSoup is None:
+        try:
+            from bs4 import BeautifulSoup as _Soup, FeatureNotFound as _NotFound
+        except ImportError:  # pragma: no cover - environment guard
+            raise SystemExit(
+                "Error: BeautifulSoup is not installed. "
+                "Run: python3 -m pip install beautifulsoup4"
+            )
+        BeautifulSoup, FeatureNotFound = _Soup, _NotFound
+    return BeautifulSoup
 
 ROOT = Path(__file__).resolve().parent.parent
 BASE_URL = "https://cheatsheets.davidveksler.com/"
@@ -106,8 +124,9 @@ PALETTE_EXAMPLES = ("torque", "ukemi", "ufw")
 # the stdlib html.parser when lxml is not installed).
 # --------------------------------------------------------------------------- #
 def get_html_parser() -> str:
+    soup_cls = _bs4()
     try:
-        BeautifulSoup("<html></html>", "lxml")
+        soup_cls("<html></html>", "lxml")
         return "lxml"
     except FeatureNotFound:
         return "html.parser"
@@ -302,7 +321,7 @@ def analyze_counts(soup: BeautifulSoup, raw_content: str, parser_name: str) -> d
 
     # Strip script/style text before counting words so JS source and CSS
     # never inflate the word count (a plain get_text() would include it).
-    words_soup = BeautifulSoup(raw_content, parser_name)
+    words_soup = _bs4()(raw_content, parser_name)
     for tag in words_soup(["script", "style"]):
         tag.decompose()
     words = len(words_soup.get_text(separator=" ").split())
@@ -332,7 +351,7 @@ def extract_sheet(filename: str, parser_name: str, category_map: dict, overrides
                    reviewed: dict[str, str], unmapped_warnings: list[str]) -> dict:
     path = ROOT / filename
     content = path.read_text(encoding="utf-8", errors="replace")
-    soup = BeautifulSoup(content, parser_name)
+    soup = _bs4()(content, parser_name)
 
     default_title = humanize(filename)
     title = default_title
@@ -593,6 +612,45 @@ def discover_files(overrides: dict) -> list[str]:
     return files
 
 
+# --------------------------------------------------------------------------- #
+# Inputs hash: a content fingerprint of everything the catalog is derived from.
+#
+# mtimes cannot answer "is catalog.json stale?" — `git pull --rebase`, a fresh
+# clone, and rsync all rewrite mtimes on files whose bytes never changed, which
+# made the old mtime comparison fire on unchanged trees. Hashing the content
+# answers the real question and costs about 30 ms over the whole corpus.
+# --------------------------------------------------------------------------- #
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def compute_inputs_hash(overrides: dict | None = None) -> str:
+    """sha256 over the sorted (path, content-sha256) pairs of every input."""
+    if overrides is None:
+        overrides = load_overrides(OVERRIDES_PATH)
+
+    entries: list[tuple[str, str]] = []
+    for filename in discover_files(overrides):
+        path = ROOT / filename
+        if path.exists():
+            entries.append((filename, _file_sha256(path)))
+    for tracked in (CATEGORY_MAP_PATH, PATHS_PATH, OVERRIDES_PATH, REFRESH_STATUS_PATH):
+        if tracked.exists():
+            entries.append((tracked.name, _file_sha256(tracked)))
+
+    rollup = hashlib.sha256()
+    for name, digest in sorted(entries):
+        rollup.update(name.encode("utf-8"))
+        rollup.update(b"\0")
+        rollup.update(digest.encode("ascii"))
+        rollup.update(b"\n")
+    return rollup.hexdigest()
+
+
 def build(warn_only: bool = False) -> dict:
     parser_name = get_html_parser()
     category_map = parse_category_map(CATEGORY_MAP_PATH)
@@ -649,6 +707,7 @@ def build(warn_only: bool = False) -> dict:
 
     catalog = {
         "generated": _iso_now(),
+        "inputs_hash": compute_inputs_hash(overrides),
         "count": len(sheets),
         "categories": categories,
         "edges": [[a, b] for a, b in edges],
@@ -731,28 +790,26 @@ def run_check() -> int:
         print("catalog.json is missing. Run: python3 scripts/build_catalog.py", file=sys.stderr)
         return 1
 
-    catalog_mtime = CATALOG_PATH.stat().st_mtime
-    stale: list[str] = []
-
-    overrides = load_overrides(OVERRIDES_PATH)
-    for filename in discover_files(overrides):
-        p = ROOT / filename
-        if p.exists() and p.stat().st_mtime > catalog_mtime:
-            stale.append(filename)
-
-    for tracked in (CATEGORY_MAP_PATH, PATHS_PATH, OVERRIDES_PATH):
-        if tracked.exists() and tracked.stat().st_mtime > catalog_mtime:
-            stale.append(tracked.name)
-
-    if stale:
-        print("catalog.json is stale relative to: " + ", ".join(sorted(set(stale))), file=sys.stderr)
-        print("Run: python3 scripts/build_catalog.py", file=sys.stderr)
-        return 1
-
     try:
         catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         print(f"catalog.json does not parse: {exc}", file=sys.stderr)
+        return 1
+
+    # Content fingerprint, not mtimes: a rebase or fresh clone rewrites mtimes
+    # on identical bytes, which used to fail this gate for no reason.
+    recorded = catalog.get("inputs_hash")
+    actual = compute_inputs_hash()
+    if not recorded:
+        print("catalog.json has no inputs_hash (built by an older build_catalog.py).",
+              file=sys.stderr)
+        print("Run: python3 scripts/build_catalog.py", file=sys.stderr)
+        return 1
+    if recorded != actual:
+        print("catalog.json is stale: the catalogued sources have changed since it was built.",
+              file=sys.stderr)
+        print(f"  recorded inputs_hash {recorded[:12]}, actual {actual[:12]}", file=sys.stderr)
+        print("Run: python3 scripts/build_catalog.py", file=sys.stderr)
         return 1
 
     if PATHS_PATH.exists():
@@ -785,7 +842,8 @@ def write_catalog(catalog: dict, output: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build catalog.json for the cheatsheets index.")
-    parser.add_argument("--check", action="store_true", help="freshness + paths.json gate only; no write")
+    parser.add_argument("--check", action="store_true",
+                        help="inputs-hash freshness + paths.json gate only; no write, no bs4 needed")
     parser.add_argument("--output", default=str(CATALOG_PATH), help="output path (default catalog.json)")
     parser.add_argument("--print-hues", action="store_true", help="print the light/dark category hue table and exit")
     args = parser.parse_args()
