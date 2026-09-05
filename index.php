@@ -1,1064 +1,1679 @@
 <?php
-// Set content type and encoding
+/**
+ * index.php — the Explorer: one page, one catalog, one search box that reaches
+ * inside every sheet.
+ *
+ * Data comes from catalog.json (built by scripts/build_catalog.py), plus
+ * popularity.json, refresh-status.json, paths.json and a single `git log -1`.
+ * Nothing is parsed out of the sheets at request time any more: the deploy gate
+ * (scripts/deploy.py --check) guarantees the catalog is current, so this file
+ * only formats data it is handed.
+ *
+ * Phase 1 of TODO/index-explorer-redesign.md: Grid lens, facet rail, search
+ * palette, drawer, Pulse strip, serendipity, category landing pages. The Map
+ * and Paths lenses arrive in Phase 2; the Paths section below is the static,
+ * no-JS list the spec requires now.
+ *
+ * No frameworks, no CDN assets, no web fonts, no backdrop-filter, no continuous
+ * animation. The only external script is the Microsoft Clarity tag.
+ */
+
 header('Content-Type: text/html; charset=utf-8');
-// Short edge/browser cache: content changes whenever a cheatsheet is added/updated,
-// but a 5-minute TTL lets Cloudflare absorb repeat hits without staling the grid noticeably.
+// Short edge/browser cache: the grid changes whenever a sheet ships, but a
+// 5-minute TTL lets Cloudflare absorb repeat hits without staling it noticeably.
 header('Cache-Control: public, max-age=300');
 
-// --- Configuration ---
-$excludedItems = [
-    '.',
-    '..',
-    'index.php', // Exclude this script itself
-    'images',    // Exclude images directory if it's in the root
-    'LICENSE',
-    'README.md',
-    'PROMPT.txt', // Assuming this was part of your dev files
-    'etz-chaim-tree-of-life.html',
-    // Add any other specific files or directories to exclude by name:
-    // 'old_gallery.html',
-];
+$ROOT = __DIR__;
 
-$cheatsheetDir = '.'; // Current directory where cheatsheet HTML files are located
+/* ------------------------------------------------------------------ utils -- */
 
-// --- Email signup endpoint ---
-// Same-origin native-PHP handler (subscribe.php): validates the address, records
-// it to a gitignored local store, and emails a notification via mail(). The form
-// posts here directly so it degrades gracefully without JavaScript; no third-party
-// scripts or trackers are loaded. See AGENTS.md → "Email signup endpoint" for the
-// one env var to set (CHEATSHEET_NOTIFY_EMAIL).
-$emailSignupEndpoint = 'subscribe.php';
+function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
-// --- Category Map ---
-// Single source of truth: filename => category. Unmapped sheets fall back to "Other".
-// Stored in category-map.php — add one line there when you publish a new cheatsheet.
-$categoryMap = require __DIR__ . '/category-map.php';
+/** Read one GET parameter as a trimmed string; never notices on a missing key. */
+function q_str(string $key): string {
+    $v = $_GET[$key] ?? '';
+    return is_string($v) ? trim($v) : '';
+}
 
-// --- Category Styles ---
-// Per-category accent color, light background tint, and Bootstrap Icons class.
-$categoryStyles = [
-    'AI & Safety'             => ['color' => '#0891b2', 'bg' => '#cffafe', 'icon' => 'bi-robot'],
-    'Software & DevOps'       => ['color' => '#4338ca', 'bg' => '#e0e7ff', 'icon' => 'bi-terminal-fill'],
-    'Security & Privacy'      => ['color' => '#dc2626', 'bg' => '#fee2e2', 'icon' => 'bi-shield-lock-fill'],
-    'Risk & Preparedness'     => ['color' => '#0f766e', 'bg' => '#ccfbf1', 'icon' => 'bi-activity'],
-    'Bitcoin & Finance'       => ['color' => '#d97706', 'bg' => '#fef3c7', 'icon' => 'bi-currency-bitcoin'],
-    'Crypto Custody & Compliance' => ['color' => '#a21caf', 'bg' => '#fae8ff', 'icon' => 'bi-safe2-fill'],
-    'Martial Arts & Strategy' => ['color' => '#9f1239', 'bg' => '#ffe4e6', 'icon' => 'bi-person-arms-up'],
-    'Firearms & Military'     => ['color' => '#3f6212', 'bg' => '#ecfccb', 'icon' => 'bi-crosshair2'],
-    'Radio'                   => ['color' => '#1e40af', 'bg' => '#dbeafe', 'icon' => 'bi-broadcast-pin'],
-    'Health & Fitness'        => ['color' => '#065f46', 'bg' => '#d1fae5', 'icon' => 'bi-heart-pulse-fill'],
-    'Economics & Politics'    => ['color' => '#7c2d12', 'bg' => '#ffedd5', 'icon' => 'bi-bar-chart-line-fill'],
-    'Philosophy & Religion'   => ['color' => '#6b21a8', 'bg' => '#f3e8ff', 'icon' => 'bi-yin-yang'],
-    'Engineering & Science'   => ['color' => '#0c4a6e', 'bg' => '#e0f2fe', 'icon' => 'bi-gear-fill'],
-    'Home & Lifestyle'        => ['color' => '#0f766e', 'bg' => '#ccfbf1', 'icon' => 'bi-house-heart-fill'],
-    'Life Admin & Consumer Defense' => ['color' => '#4b5563', 'bg' => '#f1f5f9', 'icon' => 'bi-clipboard2-check-fill'],
-    'Other'                   => ['color' => '#374151', 'bg' => '#f3f4f6', 'icon' => 'bi-file-earmark-text'],
-];
+/** Clamp to $n characters on a word boundary, appending an ellipsis if cut. */
+function clamp_text(string $s, int $n): string {
+    if (mb_strlen($s) <= $n) return $s;
+    $cut = mb_substr($s, 0, $n - 1);
+    $sp = mb_strrpos($cut, ' ');
+    if ($sp !== false && $sp > $n * 0.6) $cut = mb_substr($cut, 0, $sp);
+    return rtrim($cut, " ,;:.") . '…';
+}
 
-// --- Base URL Calculation ---
-$scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-$host = $_SERVER['HTTP_HOST'];
-$scriptName = $_SERVER['SCRIPT_NAME'];
-$scriptDir = dirname($scriptName);
-$scriptDir = ($scriptDir === '.' || $scriptDir === DIRECTORY_SEPARATOR) ? '' : $scriptDir;
+/** Human relative time, past tense, from a unix timestamp. */
+function rel_time(int $ts): string {
+    $d = time() - $ts;
+    if ($d < 0) $d = 0;
+    foreach ([[31536000,'year'],[2592000,'month'],[604800,'week'],[86400,'day'],[3600,'hour'],[60,'minute']] as $u) {
+        if ($d >= $u[0]) { $n = (int)floor($d / $u[0]); return $n . ' ' . $u[1] . ($n === 1 ? '' : 's') . ' ago'; }
+    }
+    return 'just now';
+}
+
+/**
+ * Read-only git, same shape as history.php's helper: every argument goes
+ * through escapeshellarg(), safe.directory neutralises "dubious ownership"
+ * when the web user differs from the repo owner.
+ */
+function cs_git(array $args): array {
+    global $ROOT;
+    $cmd = 'git -C ' . escapeshellarg($ROOT)
+         . ' -c safe.directory=' . escapeshellarg($ROOT)
+         . ' --no-pager';
+    foreach ($args as $a) $cmd .= ' ' . escapeshellarg($a);
+    $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $proc = @proc_open($cmd . ' 2>/dev/null', $descriptors, $pipes);
+    if (!is_resource($proc)) return ['out' => '', 'code' => 127];
+    $out = stream_get_contents($pipes[1]); fclose($pipes[1]);
+    if (isset($pipes[2])) { stream_get_contents($pipes[2]); fclose($pipes[2]); }
+    $code = proc_close($proc);
+    return ['out' => (string)$out, 'code' => $code];
+}
+
+function read_json(string $path) {
+    if (!is_readable($path)) return null;
+    $raw = @file_get_contents($path);
+    if ($raw === false) return null;
+    $data = json_decode($raw, true);
+    return is_array($data) ? $data : null;
+}
+
+/* ------------------------------------------------------------- base URL --- */
+
+$scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+$host = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== ''
+    ? (string)$_SERVER['HTTP_HOST'] : 'cheatsheets.davidveksler.com';
+$scriptDir = dirname(isset($_SERVER['SCRIPT_NAME']) ? (string)$_SERVER['SCRIPT_NAME'] : '/index.php');
+if ($scriptDir === '.' || $scriptDir === DIRECTORY_SEPARATOR) $scriptDir = '';
 $baseUrl = rtrim($scheme . '://' . $host . $scriptDir, '/') . '/';
 
+/* -------------------------------------------------------------- catalog --- */
 
-// --- Helper Function: Extract raw, host-independent metadata (the expensive part) ---
-// Reads + parses the file. Returns only values that do NOT depend on the request
-// host, so the result is safe to cache across requests. URL/image resolution that
-// needs $host happens later in resolveMetadata().
-function extractRawMetadata(string $filepath, int $mtime): array {
-    global $baseUrl; // host-independent base; the 'url' below is re-resolved in resolveMetadata()
-    $filename = basename($filepath);
-    $defaultTitle = preg_replace('/\.html$/i', '', $filename); // Remove .html extension
-    $defaultTitle = ucwords(str_replace(['-', '_'], ' ', $defaultTitle)); // Capitalize and replace hyphens/underscores
+$catalog = read_json($ROOT . '/catalog.json');
+if (!$catalog || empty($catalog['sheets']) || !is_array($catalog['sheets'])) {
+    // Fail closed and loud, exactly once, with the command that fixes it.
+    // No runtime HTML parsing fallback: the deploy gate guarantees the file.
+    http_response_code(503);
+    header('Cache-Control: no-store');
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+       . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+       . '<meta name="robots" content="noindex"><title>Catalog missing</title>'
+       . '<style>body{font:16px/1.6 system-ui,sans-serif;margin:3rem auto;max-width:44rem;padding:0 1.25rem;color:#16181d;background:#f6f6f2}'
+       . 'code{font:15px ui-monospace,Menlo,Consolas,monospace;background:#e8e7fb;padding:.15em .4em;border-radius:4px}</style>'
+       . '</head><body><h1>The catalog has not been built</h1>'
+       . '<p>This page renders from <code>catalog.json</code>, which is missing or unreadable. Build it from the repository root:</p>'
+       . '<p><code>python3 scripts/build_catalog.py</code></p>'
+       . '</body></html>';
+    exit;
+}
 
-    $raw = [
-        'title' => $defaultTitle,
-        'description' => 'Explore this ' . htmlspecialchars($defaultTitle) . ' cheatsheet for a concise overview of key concepts.',
-        'image' => null,
-        'url' => $baseUrl . $filename,
-        'mtime' => @filectime($filepath) ?: 0,
-        'error' => null
+$sheets = $catalog['sheets'];
+$generated = isset($catalog['generated']) && is_string($catalog['generated']) ? $catalog['generated'] : '';
+$catalogVersion = substr(preg_replace('/[^0-9A-Za-z]/', '', $generated), 0, 14);
+$stats = isset($catalog['stats']) && is_array($catalog['stats']) ? $catalog['stats'] : [];
+$catalogCats = (isset($catalog['categories']) && is_array($catalog['categories'])) ? $catalog['categories'] : [];
+
+// Category name -> ordinal, used for the .k<n> hue class and the lite payload.
+$catNames = [];
+$catCounts = [];
+$catHues = [];
+foreach ($catalogCats as $c) {
+    if (!isset($c['name'])) continue;
+    $catNames[] = (string)$c['name'];
+    $catCounts[(string)$c['name']] = (int)($c['count'] ?? 0);
+    $hue = (isset($c['hue']) && is_array($c['hue'])) ? $c['hue'] : [];
+    $catHues[(string)$c['name']] = [
+        'light' => isset($hue['light']) ? (string)$hue['light'] : '#374151',
+        'dark'  => isset($hue['dark'])  ? (string)$hue['dark']  : '#526178',
     ];
+}
+$catIndex = array_flip($catNames);
 
-    $content = @file_get_contents($filepath);
-    if ($content === false) {
-        $raw['error'] = "Could not read file: " . htmlspecialchars($filename);
-        return $raw;
-    }
+/* ---------------------------------------------------- popularity + review -- */
 
-    $dom = new DOMDocument();
-    // Suppress warnings during loading of potentially invalid HTML, and add XML encoding hint for better parsing
-    @$dom->loadHTML('<?xml encoding="utf-8" ?>' . $content, LIBXML_NOERROR | LIBXML_NOWARNING);
-    $xpath = new DOMXPath($dom);
+$popularity = read_json($ROOT . '/popularity.json') ?: [];
+$scores = (isset($popularity['scores']) && is_array($popularity['scores'])) ? $popularity['scores'] : [];
+$viewsHistory = (isset($popularity['totalViewsHistory']) && is_array($popularity['totalViewsHistory']))
+    ? $popularity['totalViewsHistory'] : [];
 
-    $titleNode = $xpath->query('//title')->item(0);
-    if ($titleNode) {
-        $raw['title'] = trim($titleNode->textContent);
-    }
-
-    $descNode = $xpath->query('//meta[@name="description"]/@content')->item(0);
-    if ($descNode) {
-        $raw['description'] = trim($descNode->nodeValue);
-    } else {
-        $ogDescNode = $xpath->query('//meta[@property="og:description"]/@content')->item(0);
-        if ($ogDescNode) {
-            $raw['description'] = trim($ogDescNode->nodeValue);
-        }
-    }
-
-    $imgNode = $xpath->query('//meta[@property="og:image"]/@content')->item(0);
-    if ($imgNode) {
-        $raw['image_raw'] = trim($imgNode->nodeValue);
-    }
-
-    // Ensure description isn't excessively long for the card display
-    if (mb_strlen($raw['description']) > 150) {
-        $raw['description'] = mb_substr($raw['description'], 0, 147) . '...';
-    }
-
-    return $raw;
+$refresh = read_json($ROOT . '/refresh-status.json') ?: [];
+$refreshFiles = (isset($refresh['files']) && is_array($refresh['files'])) ? $refresh['files'] : [];
+$reviewedThisWeek = 0;
+$weekAgo = time() - 7 * 86400;
+foreach ($refreshFiles as $f => $entry) {
+    if (!is_array($entry) || empty($entry['last_reviewed'])) continue;
+    $ts = strtotime((string)$entry['last_reviewed']);
+    if ($ts && $ts >= $weekAgo) $reviewedThisWeek++;
 }
 
-// --- Helper Function: Get the git timestamp when a file was first committed ---
-// Returns 0 if git is unavailable or the file is untracked; caller falls back to mtime.
-// Result is immutable once a file is committed, so it is cached indefinitely.
-function getGitCreationTime(string $filepath): int {
-    $dir = realpath(dirname($filepath)) ?: dirname($filepath);
-    $file = basename($filepath);
-    // --diff-filter=A: only the commit that added the file; --follow: handle renames
-    $cmd = 'git -C ' . escapeshellarg($dir) . ' log --follow --diff-filter=A --format=%ct -- ' . escapeshellarg($file);
-    $output = [];
-    @exec($cmd, $output);
-    return isset($output[0]) && ctype_digit(trim($output[0])) ? (int)$output[0] : 0;
+$paths = read_json($ROOT . '/paths.json') ?: [];
+$trails = (isset($paths['paths']) && is_array($paths['paths'])) ? $paths['paths'] : [];
+
+// One git call, cached by the 300 s page cache.
+$lastCommitSubject = '';
+$lastCommitTime = 0;
+$gitOut = cs_git(['log', '-1', '--format=%s%n%ct']);
+if ($gitOut['code'] === 0 && $gitOut['out'] !== '') {
+    $lines = explode("\n", trim($gitOut['out']));
+    $lastCommitSubject = trim($lines[0] ?? '');
+    $lastCommitTime = isset($lines[1]) && ctype_digit(trim($lines[1])) ? (int)trim($lines[1]) : 0;
 }
 
-// --- Helper Function: Resolve cached raw metadata into request-specific URLs ---
-function resolveMetadata(array $raw, string $filename): array {
-    global $baseUrl, $scheme, $host;
+/* ------------------------------------------------- normalise sheet records - */
 
-    $meta = $raw;
-    $meta['url'] = $baseUrl . $filename;
-    $meta['image'] = null;
+$now = time();
+$NEW_WINDOW = 30 * 86400;
+$UPDATED_WINDOW = 30 * 86400;
+$REVIEW_WINDOW = 90 * 86400;
 
-    $imageUrl = $raw['image_raw'] ?? null;
-    if ($imageUrl) {
-        if (preg_match('/^https?:\/\//i', $imageUrl)) { // Absolute URL
-            $meta['image'] = $imageUrl;
-        } elseif (str_starts_with($imageUrl, '/')) { // Root-relative URL
-            $meta['image'] = $scheme . '://' . $host . $imageUrl;
-        } else { // Relative URL to the cheatsheet's path
-            $baseCheatsheetWebPath = dirname($meta['url']);
-            $resolvedImageUrl = rtrim($baseCheatsheetWebPath, '/') . '/' . $imageUrl;
-
-            // Normalize path (e.g., /path/../image.png to /image.png)
-            $parsedResolved = parse_url($resolvedImageUrl);
-            if ($parsedResolved && isset($parsedResolved['scheme']) && isset($parsedResolved['host']) && isset($parsedResolved['path'])) {
-                $path = $parsedResolved['path'];
-                $newPathParts = [];
-                $pathSegments = explode('/', $path);
-                foreach ($pathSegments as $segment) {
-                    if ($segment === '.' || $segment === '') continue;
-                    if ($segment === '..') {
-                        if (count($newPathParts) > 0) array_pop($newPathParts);
-                    } else {
-                        $newPathParts[] = $segment;
-                    }
-                }
-                $finalPath = '/' . implode('/', $newPathParts);
-                 // Correct for cases like /../ resolving to root
-                if (empty($newPathParts) && str_starts_with($path, '/')) {
-                    $finalPath = '/';
-                }
-
-                $meta['image'] = $parsedResolved['scheme'] . '://' . $parsedResolved['host'] .
-                                     (isset($parsedResolved['port']) ? ':' . $parsedResolved['port'] : '') .
-                                     $finalPath;
-            } else {
-                $meta['image'] = $resolvedImageUrl; // Fallback if parsing or normalization fails
-            }
-        }
+$shapeCounts = [];
+$rows = [];
+foreach ($sheets as $s) {
+    if (!is_array($s) || empty($s['file'])) continue;
+    $file = (string)$s['file'];
+    $cat = isset($s['category']) ? (string)$s['category'] : 'Other';
+    $shape = (isset($s['shape']) && is_array($s['shape'])) ? array_values(array_map('strval', $s['shape'])) : [];
+    foreach ($shape as $sh) $shapeCounts[$sh] = ($shapeCounts[$sh] ?? 0) + 1;
+    $reviewedTs = 0;
+    if (!empty($s['reviewed'])) {
+        $t = strtotime((string)$s['reviewed']);
+        if ($t) $reviewedTs = $t;
     }
-    unset($meta['image_raw']);
+    // Card images are same-origin; store them relative so 197 cards do not each
+    // carry the absolute origin (about 9 KB of HTML across the page).
+    $img = isset($s['image']) ? (string)$s['image'] : '';
+    if ($img !== '' && str_starts_with($img, 'https://cheatsheets.davidveksler.com/')) {
+        $img = substr($img, strlen('https://cheatsheets.davidveksler.com/'));
+    }
+    $rows[] = [
+        'file' => $file,
+        'title' => isset($s['title']) ? (string)$s['title'] : $file,
+        'description' => isset($s['description']) ? (string)$s['description'] : '',
+        'keywords' => (isset($s['keywords']) && is_array($s['keywords'])) ? array_map('strval', $s['keywords']) : [],
+        'image' => $img,
+        'category' => $cat,
+        'catk' => $catIndex[$cat] ?? (count($catNames) ? count($catNames) : 0),
+        'shape' => $shape,
+        'interactive' => !empty($s['interactive']),
+        'words' => (int)($s['words'] ?? 0),
+        'tables' => (int)($s['tables'] ?? 0),
+        'sections' => (int)($s['sections'] ?? 0),
+        'headings' => (isset($s['headings']) && is_array($s['headings'])) ? $s['headings'] : [],
+        'outlinks' => (isset($s['outlinks']) && is_array($s['outlinks'])) ? array_map('strval', $s['outlinks']) : [],
+        'created' => (int)($s['created'] ?? 0),
+        'updated' => (int)($s['updated'] ?? 0),
+        'reviewed' => isset($s['reviewed']) && is_string($s['reviewed']) ? $s['reviewed'] : '',
+        'reviewedTs' => $reviewedTs,
+        'pop' => (float)($scores[$file] ?? 0),
+    ];
+}
+$totalCount = count($rows);
+$fieldCount = count($catNames);
 
-    return $meta;
+// Reverse edges for the server-rendered drawer block.
+$linkedFrom = [];
+foreach ($rows as $r) {
+    foreach ($r['outlinks'] as $target) $linkedFrom[$target][] = $r['file'];
+}
+$byFile = [];
+foreach ($rows as $i => $r) $byFile[$r['file']] = $i;
+
+// Popularity rank, most popular first, over the whole catalog.
+$rankOrder = $rows;
+usort($rankOrder, fn($a, $b) => $b['pop'] <=> $a['pop']);
+$popRank = [];
+foreach ($rankOrder as $i => $r) $popRank[$r['file']] = $i + 1;
+
+/* -------------------------------------------------------- request state --- */
+
+$SORTS = [
+    'new'      => 'Newest',
+    'updated'  => 'Recently updated',
+    'popular'  => 'Most popular',
+    'reviewed' => 'Recently reviewed',
+    'title'    => 'Title',
+];
+// The old index shipped these values in shared links; keep them working.
+$SORT_ALIASES = [
+    'date-desc' => 'new', 'recently-updated' => 'updated', 'date-asc' => 'oldest',
+    'title-asc' => 'title', 'title-desc' => 'title-desc',
+];
+
+$qRaw   = q_str('q');
+$catRaw = q_str('cat');
+$sortRaw = q_str('sort');
+$sort = $SORT_ALIASES[$sortRaw] ?? $sortRaw;
+if (!isset($SORTS[$sort]) && !in_array($sort, ['oldest', 'title-desc'], true)) $sort = 'new';
+
+$shapeRaw = q_str('shape');
+$activeShapes = array_values(array_filter(array_map('trim', explode(',', $shapeRaw)), fn($x) => $x !== '' && isset($shapeCounts[$x])));
+$freshRaw = q_str('fresh');
+$VALID_FRESH = ['reviewed90', 'updated30', 'new30'];
+$activeFresh = array_values(array_filter(array_map('trim', explode(',', $freshRaw)), fn($x) => in_array($x, $VALID_FRESH, true)));
+$wantInteractive = q_str('interactive') === '1';
+$sheetParam = q_str('sheet');
+$viewParam = q_str('view');
+$pathParam = q_str('path');
+
+$catValid = ($catRaw !== '' && isset($catIndex[$catRaw]));
+$activeCat = $catValid ? $catRaw : '';
+$catUnknown = ($catRaw !== '' && !$catValid);
+
+// noindex on every parameter that expresses client state rather than a distinct
+// document, and on an unknown category (which renders the unfiltered index).
+$noindex = ($qRaw !== '' || $sortRaw !== '' || $shapeRaw !== '' || $viewParam !== ''
+    || $sheetParam !== '' || $pathParam !== '' || $freshRaw !== ''
+    || q_str('interactive') !== '' || $catUnknown);
+
+$openSheet = ($sheetParam !== '' && isset($byFile[$sheetParam])) ? $rows[$byFile[$sheetParam]] : null;
+
+/* ------------------------------------------------------------ filtering --- */
+
+// The category is a hard filter (it is its own indexable document). Everything
+// else is client state: those cards stay in the DOM and are hidden with a class,
+// so the JS filter has the whole collection to work with.
+$rendered = $activeCat === '' ? $rows : array_values(array_filter($rows, fn($r) => $r['category'] === $activeCat));
+
+$qLower = mb_strtolower($qRaw);
+function row_matches(array $r, string $qLower, array $shapes, array $fresh, bool $wantInteractive, int $now, int $newW, int $updW, int $revW): bool {
+    if ($qLower !== '') {
+        $hay = mb_strtolower($r['title'] . ' ' . $r['description'] . ' ' . implode(' ', $r['keywords']));
+        if (!str_contains($hay, $qLower)) return false;
+    }
+    if ($shapes) {
+        $hit = false;
+        foreach ($shapes as $sh) { if (in_array($sh, $r['shape'], true)) { $hit = true; break; } }
+        if (!$hit) return false;
+    }
+    if ($wantInteractive && !$r['interactive']) return false;
+    if ($fresh) {
+        $hit = false;
+        foreach ($fresh as $f) {
+            if ($f === 'reviewed90' && $r['reviewedTs'] && $r['reviewedTs'] >= $now - $revW) $hit = true;
+            if ($f === 'updated30' && $r['updated'] && $r['updated'] >= $now - $updW) $hit = true;
+            if ($f === 'new30' && $r['created'] && $r['created'] >= $now - $newW) $hit = true;
+        }
+        if (!$hit) return false;
+    }
+    return true;
 }
 
-// --- Main Logic: Scan Directory and Build Cheatsheet List ---
-$cheatsheets = [];
-$categories = [];
-$errors = [];
-
-// Per-mtime metadata cache: avoids re-parsing every HTML file on every request.
-// Stores only host-independent raw fields, keyed by filename; an entry is reused
-// only while its cached mtime matches the file's current mtime.
-$cacheFile = rtrim($cheatsheetDir, '/') . '/.metadata-cache.json';
-$cache = [];
-if (is_readable($cacheFile)) {
-    $decoded = json_decode((string)@file_get_contents($cacheFile), true);
-    if (is_array($decoded)) {
-        $cache = $decoded;
-    }
-}
-$cacheDirty = false;
-$seenFiles = [];
-
-try {
-    $files = scandir($cheatsheetDir);
-    if ($files === false) {
-        throw new Exception("Could not scan directory: " . htmlspecialchars($cheatsheetDir));
-    }
-
-    foreach ($files as $file) {
-        $filePath = rtrim($cheatsheetDir, '/') . '/' . $file;
-        if (in_array($file, $excludedItems, true) || !is_file($filePath) || !is_readable($filePath) || !str_ends_with(strtolower($file), '.html')) {
-            continue;
-        }
-        $seenFiles[$file] = true;
-        $mtime = @filemtime($filePath) ?: 0;
-
-        // Preserve git_ctime across mtime invalidations — it is immutable once committed.
-        $cachedGitCtime = $cache[$file]['git_ctime'] ?? null;
-
-        // Reuse cached raw metadata only if the file hasn't changed since it was cached.
-        if (isset($cache[$file]) && ($cache[$file]['mtime'] ?? null) === $mtime) {
-            $raw = $cache[$file];
-        } else {
-            $raw = extractRawMetadata($filePath, $mtime);
-            $cacheDirty = true;
-        }
-
-        // git_ctime: fetch once and keep forever (first commit timestamp).
-        if (!isset($raw['git_ctime'])) {
-            $raw['git_ctime'] = $cachedGitCtime ?? getGitCreationTime($filePath);
-            $cacheDirty = true;
-        }
-        $cache[$file] = $raw;
-
-        if (!empty($raw['error'])) {
-            $errors[] = $raw['error'];
-            continue;
-        }
-        $meta = resolveMetadata($raw, $file);
-        $meta['git_ctime'] = $raw['git_ctime'] ?? 0;
-        $meta['filename'] = $file;
-        $meta['category'] = $categoryMap[$file] ?? 'Other';
-        $catStyle = $categoryStyles[$meta['category']] ?? $categoryStyles['Other'];
-        $meta['cat_color'] = $catStyle['color'];
-        $meta['cat_bg']    = $catStyle['bg'];
-        $meta['cat_icon']  = $catStyle['icon'];
-        $cheatsheets[] = $meta;
-    }
-
-    // Drop cache entries for files that no longer exist.
-    foreach (array_keys($cache) as $cachedFile) {
-        if (!isset($seenFiles[$cachedFile])) {
-            unset($cache[$cachedFile]);
-            $cacheDirty = true;
-        }
-    }
-    // Persist the cache if anything changed (best-effort; ignore read-only filesystems).
-    if ($cacheDirty) {
-        @file_put_contents($cacheFile, json_encode($cache), LOCK_EX);
-    }
-
-    // Sort by git creation date (first commit) newest first by default
-    usort($cheatsheets, fn($a, $b) => ($b['git_ctime'] ?? 0) <=> ($a['git_ctime'] ?? 0));
-
-    // Distinct categories for the filter dropdown (alphabetical, "Other" last)
-    $categories = array_values(array_unique(array_column($cheatsheets, 'category')));
-    usort($categories, function ($a, $b) {
-        if ($a === 'Other') return 1;
-        if ($b === 'Other') return -1;
-        return strcasecmp($a, $b);
-    });
-
-} catch (Exception $e) {
-    $errors[] = "An error occurred: " . $e->getMessage();
+$visibleCount = 0;
+foreach ($rendered as $i => $r) {
+    $ok = row_matches($r, $qLower, $activeShapes, $activeFresh, $wantInteractive, $now, $NEW_WINDOW, $UPDATED_WINDOW, $REVIEW_WINDOW);
+    $rendered[$i]['_visible'] = $ok;
+    if ($ok) $visibleCount++;
 }
 
-// Cheatsheets updated within this window are flagged "New" in the grid.
-$newThreshold = time() - 30 * 24 * 60 * 60;
-
-// Popularity scores — generated nightly by fetch-popularity.py via GitHub Actions.
-// Keys are filenames (e.g. "ai-coding-agents-compared.html"), values are
-// 30-day decayed view counts (floats). Falls back to an empty array gracefully.
-$popularityScores = [];
-$popularityFile = rtrim($cheatsheetDir, '/') . '/popularity.json';
-if (is_readable($popularityFile)) {
-    $pd = json_decode((string)@file_get_contents($popularityFile), true);
-    if (is_array($pd) && isset($pd['scores'])) {
-        $popularityScores = $pd['scores'];
+usort($rendered, function ($a, $b) use ($sort) {
+    switch ($sort) {
+        case 'updated':    return $b['updated'] <=> $a['updated'];
+        case 'popular':    return $b['pop'] <=> $a['pop'];
+        case 'reviewed':   return $b['reviewedTs'] <=> $a['reviewedTs'];
+        case 'title':      return strcasecmp($a['title'], $b['title']);
+        case 'title-desc': return strcasecmp($b['title'], $a['title']);
+        case 'oldest':     return $a['created'] <=> $b['created'];
+        default:           return $b['created'] <=> $a['created'];
     }
+});
+
+$hasFilters = ($qRaw !== '' || $activeShapes || $activeFresh || $wantInteractive);
+
+/* ------------------------------------------------------------ deep cut ----- */
+// Deterministic for a full UTC day, drawn from the bottom two-thirds by
+// popularity so the long tail gets its turn. Server-rendered, so it caches.
+$deepCut = null;
+if (!$hasFilters && $activeCat === '' && !$openSheet) {
+    $pool = $rankOrder;
+    $start = (int)floor(count($pool) / 3);
+    $pool = array_slice($pool, $start);
+    if ($pool) {
+        $today = gmdate('Y-m-d');
+        $best = null; $bestKey = '';
+        foreach ($pool as $cand) {
+            $key = sha1($today . $cand['file']);
+            if ($best === null || $key < $bestKey) { $best = $cand; $bestKey = $key; }
+        }
+        $deepCut = $best;
+    }
+}
+
+/* ------------------------------------------------------- URL construction -- */
+
+/** Build a query string for the grid state, dropping empty values. */
+function grid_url(array $overrides = []): string {
+    global $qRaw, $activeCat, $sortRaw, $activeShapes, $activeFresh, $wantInteractive;
+    $params = [
+        'cat'   => $activeCat,
+        'q'     => $qRaw,
+        'shape' => implode(',', $activeShapes),
+        'fresh' => implode(',', $activeFresh),
+        'interactive' => $wantInteractive ? '1' : '',
+        'sort'  => $sortRaw,
+    ];
+    foreach ($overrides as $k => $v) $params[$k] = $v;
+    $params = array_filter($params, fn($v) => $v !== '' && $v !== null);
+    return $params ? '?' . http_build_query($params) : './';
+}
+
+function toggle_list(array $current, string $value): string {
+    $i = array_search($value, $current, true);
+    if ($i === false) $current[] = $value; else array_splice($current, $i, 1);
+    sort($current);
+    return implode(',', $current);
+}
+
+/* ------------------------------------------------------------- metadata --- */
+
+$SITE_TITLE = 'Cheatsheets by David Veksler: Explore 190+ References';
+$SITE_DESC = 'Search inside 190+ interactive reference guides on AI, software, security, crypto custody, radio, health, philosophy and more. Built by a governed Claude Code pipeline with a public git audit trail.';
+
+/**
+ * Category description: lead with the count, then name sheets until the string
+ * clears the 150-character SEO floor, clamped to 200. No prose claims.
+ */
+function category_description(string $cat, int $n, array $titles): string {
+    $lead = $n . ' cheatsheet' . ($n === 1 ? '' : 's') . ' on ' . $cat . ': ';
+    $parts = [];
+    $len = mb_strlen($lead);
+    foreach ($titles as $t) {
+        $t = trim(preg_replace('/\s+/u', ' ', (string)$t));
+        if ($t === '') continue;
+        $add = ($parts ? 2 : 0) + mb_strlen($t);
+        if ($len + $add > 188) {
+            if ($parts) break;              // a title is never cut mid-word to fit
+            $t = clamp_text($t, max(20, 188 - $len));
+            $add = mb_strlen($t);
+        }
+        $parts[] = $t;
+        $len += $add;
+    }
+    $out = $lead . implode('; ', $parts) . '.';
+    if (mb_strlen($out) < 150) {
+        // Longest tail that still fits under 200; the shortest always does.
+        foreach ([' Dense, verified references from the David Veksler cheatsheet collection.',
+                  ' Dense, verified references you can keep open while you work.',
+                  ' Dense, verified references.'] as $tail) {
+            if (mb_strlen($out . $tail) <= 200) { $out .= $tail; break; }
+        }
+    }
+    if (mb_strlen($out) > 200) $out = clamp_text($out, 199);
+    return $out;
+}
+
+$pageTitle = $SITE_TITLE;
+$pageDesc = $SITE_DESC;
+$canonical = $baseUrl;
+$h1 = "Find the one page you'll keep open.";
+$catIntro = '';
+
+if ($activeCat !== '') {
+    $n = count($rendered);
+    $spec = $activeCat . ' Cheatsheets (' . $n . ') | David Veksler';
+    // The 60-character gate wins over the suffix when the category name is long.
+    $pageTitle = mb_strlen($spec) <= 60 ? $spec : $activeCat . ' Cheatsheets (' . $n . ')';
+    $firstTitles = array_slice(array_column($rendered, 'title'), 0, 8);
+    $pageDesc = category_description($activeCat, $n, $firstTitles);
+    $canonical = $baseUrl . '?cat=' . rawurlencode($activeCat);
+    $h1 = $activeCat;
+    $topThree = array_values(array_filter($rankOrder, fn($r) => $r['category'] === $activeCat));
+    $topThree = array_slice(array_column($topThree, 'title'), 0, 3);
+    $catIntro = $n . ' reference' . ($n === 1 ? '' : 's') . ' filed under ' . $activeCat . '.'
+        . ($topThree ? ' Most read right now: ' . implode('; ', $topThree) . '.' : '');
+} elseif ($openSheet) {
+    $pageTitle = clamp_text($openSheet['title'], 58);
+    $pageDesc = $SITE_DESC;
+    $canonical = $baseUrl . $openSheet['file'];
+}
+
+/* ------------------------------------------------------- catalog-lite ----- */
+// Columnar so the field names are paid for once, not 197 times, and carrying
+// only what the DOM cannot already supply. Titles are read off the rendered
+// cards rather than duplicated here (11 KB), and keywords, descriptions,
+// headings, outlinks and edges arrive with the lazy catalog.json fetch that
+// the palette kicks off the moment it opens (another 40 KB saved). Dates are
+// days since the epoch, not seconds, because the filter only compares days.
+$shapeVocab = array_keys($shapeCounts);
+sort($shapeVocab);
+$shapeIdx = array_flip($shapeVocab);
+$lite = [
+    'cats' => $catNames,
+    'shapes' => $shapeVocab,
+    'f' => [], 'c' => [], 's' => [], 'p' => [],
+    'cr' => [], 'up' => [], 'rv' => [], 'ix' => [],
+];
+foreach ($rows as $r) {
+    $lite['f'][] = $r['file'];
+    $lite['c'][] = $r['catk'];
+    $sh = [];
+    foreach ($r['shape'] as $x) if (isset($shapeIdx[$x])) $sh[] = $shapeIdx[$x];
+    $lite['s'][] = $sh;
+    $lite['p'][] = round($r['pop'], 1);
+    $lite['cr'][] = intdiv($r['created'], 86400);
+    $lite['up'][] = intdiv($r['updated'], 86400);
+    $lite['rv'][] = $r['reviewedTs'] ? intdiv($r['reviewedTs'], 86400) : 0;
+    $lite['ix'][] = $r['interactive'] ? 1 : 0;
+}
+
+/* ---------------------------------------------------------- sparkline ----- */
+
+$sparkPoints = '';
+$sparkLast = 0;
+if ($viewsHistory) {
+    ksort($viewsHistory);
+    $vals = array_slice(array_map('intval', array_values($viewsHistory)), -24);
+    if (count($vals) >= 2) {
+        $max = max($vals); $min = min($vals);
+        $span = max(1, $max - $min);
+        $w = 118; $hgt = 26; $n = count($vals);
+        $pts = [];
+        foreach ($vals as $i => $v) {
+            $x = round($i * ($w / ($n - 1)), 1);
+            $y = round($hgt - 2 - (($v - $min) / $span) * ($hgt - 4), 1);
+            $pts[] = $x . ',' . $y;
+        }
+        $sparkPoints = implode(' ', $pts);
+        $sparkLast = end($vals);
+    }
+}
+
+/* --------------------------------------------------------- shape labels --- */
+
+$SHAPE_LABEL = [
+    'comparison' => 'Comparison', 'procedure' => 'Procedure', 'calculator' => 'Calculator',
+    'tracker' => 'Tracker', 'commands' => 'Commands', 'device' => 'Device',
+    'essay' => 'Essay', 'timeline' => 'Timeline', 'visual' => 'Visual', 'reference' => 'Reference',
+];
+function shape_label(string $s): string {
+    global $SHAPE_LABEL;
+    return $SHAPE_LABEL[$s] ?? ucfirst($s);
+}
+
+/* ------------------------------------------------------- card renderer ---- */
+
+/**
+ * Card markup is deliberately terse: 197 of these ship in one document, so
+ * every attribute is paid for 197 times. Structure is carried by element type
+ * rather than class names (see the "Card element map" comment in the CSS):
+ *   img = preview, b = category badge (b.r carries the reviewed marker and the
+ *   date in its title), h3>a = title link, p = description, em = shape chips,
+ *   small = dates,
+ *   the trailing bare <a> = Open, span.n = NEW badge. The file is read off the
+ *   title link, so it is not repeated in a data attribute.
+ */
+function render_card(array $r, int $now, int $newWindow, int $reviewWindow, bool $visible = true): void {
+    $isNew = $r['created'] && $r['created'] >= $now - $newWindow;
+    $fresh = $r['reviewedTs'] && $r['reviewedTs'] >= $now - $reviewWindow;
+    $chips = array_map('shape_label', array_slice($r['shape'], 0, 2));
+    $f = h($r['file']);
+    echo '<article class="c k' . (int)$r['catk'] . ($visible ? '' : ' off') . '">';
+    // No width/height attributes: .c img pins aspect-ratio:40/21 in CSS, which
+    // reserves the box just as well and costs 26 bytes less on every card.
+    if ($r['image']) echo '<img src="' . h($r['image']) . '" alt="" loading="lazy">';
+    if ($isNew) echo '<span class="n">New</span>';
+    echo $fresh
+        ? '<b class="r" title="Reviewed ' . h($r['reviewed']) . '">' . h($r['category']) . '</b>'
+        : '<b>' . h($r['category']) . '</b>';
+    echo '<h3><a href="' . $f . '">' . h($r['title']) . '</a></h3>';
+    echo '<p>' . h(clamp_text($r['description'], 104)) . '</p>';
+    if ($chips) echo '<em>' . h(implode(' · ', $chips)) . '</em>';
+    echo '<small>' . ($r['created'] ? h(gmdate('M j, Y', $r['created'])) : '')
+       . ($r['updated'] ? ' · upd ' . h(gmdate('M j, Y', $r['updated'])) : '') . '</small>';
+    echo '<a href="' . $f . '">Open</a></article>' . "\n";
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+/* Theme before first paint: no flash, two statements, no dependencies. */
+try{var t=localStorage.getItem('cs-explorer:v1:theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}
+</script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
 
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+<title><?php echo h($pageTitle); ?></title>
+<meta name="description" content="<?php echo h($pageDesc); ?>">
+<meta name="keywords" content="cheatsheets, reference guides, david veksler, AI, software, security, crypto custody, ham radio, health, philosophy, engineering">
+<meta name="author" content="David Veksler">
+<?php if ($noindex): ?><meta name="robots" content="noindex, follow">
+<?php endif; ?><link rel="canonical" href="<?php echo h($canonical); ?>">
+<link rel="sitemap" type="application/xml" href="<?php echo h($baseUrl); ?>sitemap.php">
+<link rel="alternate" type="text/plain" title="Cheatsheets LLM summary" href="https://cheatsheets.davidveksler.com/llms.txt">
+<link rel="alternate" type="application/json" title="Cheatsheets machine-readable catalog" href="https://cheatsheets.davidveksler.com/catalog.json">
 
-    <!-- === SEO & Portfolio Metadata === -->
-    <title>David Veksler's Cheatsheets | Governed Agentic-AI Output at Scale</title>
-    <meta name="description" content="80+ interactive reference guides produced by a governed Claude Code pipeline: a version-controlled AGENTS.md spec as acceptance criteria, a self-verification gate, and a public git audit trail. A working exhibit of agentic-AI architecture and information design at scale.">
-    <meta name="keywords" content="agentic AI, Claude Code, AI governance, AGENTS.md, AI delivery, information design at scale, interactive reference guides, software architecture, AI pipeline, structured generation, version control, cheatsheets, david veksler">
-    <meta name="author" content="David Veksler">
-    <link rel="canonical" href="<?php echo htmlspecialchars($baseUrl); ?>">
+<meta property="og:title" content="<?php echo h($pageTitle); ?>">
+<meta property="og:description" content="<?php echo h($pageDesc); ?>">
+<meta property="og:type" content="website">
+<meta property="og:url" content="<?php echo h($canonical); ?>">
+<meta property="og:image" content="<?php echo h(rtrim($baseUrl, '/')); ?>/images/cheatsheets-og-portfolio.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A preview card for David Veksler's cheatsheet collection.">
+<meta property="og:site_name" content="David Veksler's Cheatsheets">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<?php echo h($pageTitle); ?>">
+<meta name="twitter:description" content="<?php echo h($pageDesc); ?>">
+<meta name="twitter:image" content="<?php echo h(rtrim($baseUrl, '/')); ?>/images/cheatsheets-og-portfolio.png">
+<meta name="twitter:image:alt" content="A preview card for David Veksler's cheatsheet collection.">
+<meta name="twitter:creator" content="@HeroicLife">
 
-    <!-- Sitemap reference for search engines -->
-    <link rel="sitemap" type="application/xml" href="<?php echo htmlspecialchars($baseUrl); ?>sitemap.php">
+<script type="application/ld+json">
+<?php
+// Items trimmed to name / url / genre to stay inside the HTML budget with all
+// 197 cards server-rendered (see the spec's Budgets table).
+$ld = [
+    '@context' => 'https://schema.org',
+    '@type' => 'CollectionPage',
+    'name' => $pageTitle,
+    'description' => $pageDesc,
+    'url' => $canonical,
+    'author' => ['@type' => 'Person', 'name' => 'David Veksler', 'url' => 'https://www.linkedin.com/in/davidveksler/'],
+    'publisher' => ['@type' => 'Person', 'name' => 'David Veksler', 'url' => 'https://www.linkedin.com/in/davidveksler/'],
+];
+$items = [];
+$pos = 0;
+foreach ($rendered as $r) {
+    if (!$r['_visible']) continue;
+    $pos++;
+    // Minimum viable ListItem: the spec's Budgets table authorises trimming the
+    // items when 197 server-rendered cards squeeze the HTML budget, and every
+    // one of these URLs is also a real <a href> on the page and a sitemap entry.
+    $items[] = ['@type' => 'ListItem', 'position' => $pos, 'url' => $baseUrl . $r['file']];
+}
+$ld['mainEntity'] = ['@type' => 'ItemList', 'numberOfItems' => count($items), 'itemListElement' => $items];
+echo json_encode($ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+?>
+</script>
 
-    <!-- LLM / AI answer-engine discovery: curated summary + full machine-readable index -->
-    <link rel="alternate" type="text/plain" title="Cheatsheets LLM summary" href="https://cheatsheets.davidveksler.com/llms.txt">
-    <link rel="alternate" type="text/plain" title="Cheatsheets full LLM context" href="https://cheatsheets.davidveksler.com/llms-full.txt">
+<style>
+/* ============================================================================
+   Chart Room: paper and ink, thin rules, small-caps labels, monospace numerals.
+   Colour encodes category and nothing else.
 
-    <!-- === Open Graph / Facebook / LinkedIn === -->
-    <meta property="og:title" content="David Veksler's Cheatsheets | Governed Agentic-AI Output at Scale">
-    <meta property="og:description" content="80+ interactive references produced by a governed Claude Code pipeline — a version-controlled spec as acceptance criteria, a self-verification gate, and a public git audit trail. A working exhibit of agentic-AI architecture and information design at scale.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="<?php echo htmlspecialchars($baseUrl); ?>">
-    <meta property="og:image" content="<?php echo htmlspecialchars(rtrim($baseUrl, '/')); ?>/images/cheatsheets-og-portfolio.png">
-    <meta property="og:image:type" content="image/png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="A branded preview card for David Veksler's Cheatsheets, highlighting interactive reference guides from a governed agentic-AI pipeline.">
-    <meta property="og:site_name" content="David Veksler's Cheatsheets">
-    <meta property="og:locale" content="en_US">
+   Category hue pairs (light / dark), generated by scripts/build_catalog.py
+   --print-hues and checked to 3:1 against the dark page (#0e1013) for
+   non-text use. Hue is never used for body text.
 
-    <!-- === Twitter Card === -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="David Veksler's Cheatsheets | Governed Agentic-AI Output at Scale">
-    <meta name="twitter:description" content="80+ interactive references from a governed Claude Code pipeline: a version-controlled spec as acceptance criteria, a self-verification gate, and a public git audit trail.">
-    <meta name="twitter:url" content="<?php echo htmlspecialchars($baseUrl); ?>">
-    <meta name="twitter:image" content="<?php echo htmlspecialchars(rtrim($baseUrl, '/')); ?>/images/cheatsheets-og-portfolio.png">
-    <meta name="twitter:image:alt" content="A branded preview card for David Veksler's Cheatsheets, highlighting interactive reference guides from a governed agentic-AI pipeline.">
-    <meta name="twitter:creator" content="@HeroicLife" />
+     AI & Safety                   #0891b2 / #0891b2
+     Software & DevOps             #4338ca / #564ccf
+     Security & Privacy            #dc2626 / #dc2626
+     Risk & Preparedness           #0f766e / #0f766e
+     Bitcoin & Finance             #d97706 / #d97706
+     Crypto Custody & Compliance   #a21caf / #a21caf
+     Martial Arts & Strategy       #9f1239 / #bf1644
+     Firearms & Military           #3f6212 / #456b14
+     Radio                         #1e40af / #2b54db
+     Health & Fitness              #065f46 / #076d51
+     Economics & Politics          #7c2d12 / #a93d18
+     Philosophy & Religion         #6b21a8 / #892cd5
+     Engineering & Science         #0c4a6e / #116697
+     Home & Lifestyle              #0f766e / #0f766e
+     Life Admin & Consumer Defense #4b5563 / #566172
+     (fallback / Other)            #374151 / #526178
+   ========================================================================== */
+@layer base, layout, components, state;
 
-    <!-- Schema.org Markup for CollectionPage -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "CollectionPage",
-      "name": "David Veksler's Cheatsheets | Governed Agentic-AI Output at Scale",
-      "description": "A collection of 80+ interactive reference guides produced by a governed Claude Code pipeline — a version-controlled AGENTS.md specification as binding acceptance criteria, a self-verification gate, human review, and a public git audit trail. A working exhibit of agentic-AI architecture and information design at scale.",
-      "url": "<?php echo htmlspecialchars($baseUrl); ?>",
-      "author": {
-        "@type": "Person",
-        "name": "David Veksler",
-        "url": "https://www.linkedin.com/in/davidveksler/"
-      },
-      "publisher": {
-        "@type": "Person",
-        "name": "David Veksler",
-        "url": "https://www.linkedin.com/in/davidveksler/"
-      },
-      "mainEntity": {
-        "@type": "ItemList",
-        "itemListElement": [
-          <?php foreach ($cheatsheets as $index => $sheet): ?>
-          {
-            "@type": "ListItem",
-            "position": <?php echo $index + 1; ?>,
-            "item": {
-              "@type": "CreativeWork",
-              "name": "<?php echo htmlspecialchars($sheet['title']); ?>",
-              "url": "<?php echo htmlspecialchars($sheet['url']); ?>",
-              "description": "<?php echo htmlspecialchars($sheet['description']); ?>"
-              <?php if (!empty($sheet['category']) && $sheet['category'] !== 'Other'): ?>
-              ,"genre": "<?php echo htmlspecialchars($sheet['category']); ?>"
-              <?php endif; ?>
-              <?php if (!empty($sheet['mtime'])): ?>
-              ,"dateModified": "<?php echo htmlspecialchars(date('Y-m-d', $sheet['mtime'])); ?>"
-              <?php endif; ?>
-              <?php if (!empty($sheet['image'])): ?>
-              ,"image": "<?php echo htmlspecialchars($sheet['image']); ?>"
-              <?php endif; ?>
-            }
-          }<?php if ($index < count($cheatsheets) - 1) echo ','; ?>
-          <?php endforeach; ?>
-        ]
-      }
-    }
-    </script>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
-
-    <style>
-        :root {
-             --card-lift-height: -5px; /* Slightly more subtle lift */
-             --card-shadow-intensity: rgba(0, 0, 0, .1); /* Softer shadow */
-        }
-        html { scroll-behavior: smooth; }
-        body { display: flex; flex-direction: column; min-height: 100vh; background-color: #f4f5fb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
-        /* Fixed, lightly-tinted animated mesh so the frosted cards refract colour.
-           position: fixed keeps it out of the flex flow and off the scroll path. */
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            pointer-events: none;
-            background-color: #f4f5fb;
-            background-image:
-                radial-gradient(40% 50% at 15% 18%, rgba(99, 102, 241, .18) 0%, transparent 60%),  /* indigo */
-                radial-gradient(45% 55% at 85% 25%, rgba(139, 92, 246, .16) 0%, transparent 60%),  /* violet */
-                radial-gradient(50% 60% at 78% 85%, rgba(34, 211, 238, .14) 0%, transparent 60%),  /* cyan  */
-                radial-gradient(45% 55% at 18% 90%, rgba(67, 56, 202, .14) 0%, transparent 62%);   /* deep indigo */
-            background-size: 200% 200%;
-            background-position: 0% 50%;
-            animation: heroGradientShift 28s ease-in-out infinite alternate;
-        }
-        .main-content { flex: 1; }
-        .navbar { background-image: linear-gradient(to bottom, #343a40, #2c3034); } /* Darker, less contrast gradient */
-        .navbar-brand { font-weight: 500; color: #f8f9fa !important; }
-        .card {
-            transition: transform .15s ease-out, box-shadow .2s ease-out, background-color .2s ease-out;
-            border: 1px solid rgba(255, 255, 255, .5);
-            border-radius: .6rem; overflow: hidden;
-            background-color: rgba(255, 255, 255, .45); /* Frosted glass */
-            background-image: linear-gradient(160deg, rgba(255, 255, 255, .35) 0%, rgba(255, 255, 255, 0) 40%);
-            backdrop-filter: blur(14px) saturate(160%);
-            -webkit-backdrop-filter: blur(14px) saturate(160%);
-            box-shadow: 0 4px 18px rgba(30, 27, 75, .08), inset 0 1px 0 rgba(255, 255, 255, .6);
-            display: flex; flex-direction: column;
-            border-top: 3px solid var(--cat-color, #dee2e6);
-        }
-        .card:hover {
-            transform: translateY(var(--card-lift-height));
-            background-color: rgba(255, 255, 255, .6);
-            box-shadow: 0 0.75rem 1.75rem var(--card-shadow-intensity), 0 0 0 1px color-mix(in srgb, var(--cat-color, #dee2e6) 35%, transparent), inset 0 1px 0 rgba(255, 255, 255, .7);
-        }
-        .card-img-top-container {
-            aspect-ratio: 40 / 21;
-            width: 100%;
-            overflow: hidden;
-            background: linear-gradient(135deg, var(--cat-bg, #e9ecef) 0%, #fff 100%);
-            border-bottom: 1px solid #dee2e6;
-            position: relative;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .card-img-top-container img {
-            width: 100%; height: 100%; object-fit: contain; object-position: center; display: block;
-            position: relative; z-index: 1; /* Cover the ::before placeholder icon */
-        }
-        .card-img-top-container img.error { display: none; } /* Reveal ::before icon on broken image */
-
-        .card-title a { text-decoration: none; color: #1a508b; font-weight: 600; } /* Darker blue */
-        .card-title a:hover { color: #003d73; text-decoration: underline; }
-
-
-
-/* --- UPDATED CARD TEXT AND TITLE STYLES --- */
-.card-title { /* This is an <h5> */
-    font-size: 1.25rem;  /* Standard Bootstrap H5 font-size */
-    font-weight: 600;    /* Set on H5, will be inherited by <a> */
-    line-height: 1.3;    /* Consistent line height for calculation.
-                           1.25rem * 1.3 = 1.625rem per line. */
-
-    /* Explicit height for 2 lines on the H5 container. */
-    /* 2 lines * 1.625rem/line = 3.25rem */
-    height: 3.25rem;
-
-    overflow: hidden; /* CRITICAL: H5 must clip its content if it overflows this height. */
-    margin-bottom: .5rem; /* Standard Bootstrap h5 margin. */
-    padding: 0; /* Ensure no padding on H5 itself interferes with height. */
-    position: relative; /* For positioning child if needed, though not used here. */
+@layer base {
+:root{
+  color-scheme: light dark;
+  --page: light-dark(#f6f6f2, #0e1013);
+  --surface: light-dark(#ffffff, #161a20);
+  --raised: light-dark(#ffffff, #1c2129);
+  --rule: light-dark(#d9d9d2, #2a3038);
+  --ink: light-dark(#16181d, #e8e9ec);
+  --muted: light-dark(#5b6068, #9aa1ab);
+  --accent: light-dark(#4338ca, #a5b4fc);
+  --accent-surface: light-dark(#e8e7fb, #26294a);
+  --success: light-dark(#15803d, #4ade80);
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --cat: var(--muted);
+}
+:root[data-theme="light"]{ color-scheme: light; }
+:root[data-theme="dark"]{ color-scheme: dark; }
+<?php foreach ($catNames as $i => $cn): $hu = $catHues[$cn]; ?>
+.k<?php echo $i; ?>{--cat:light-dark(<?php echo h($hu['light']); ?>,<?php echo h($hu['dark']); ?>)}
+<?php endforeach; ?>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.55 var(--sans);text-wrap:pretty;-webkit-text-size-adjust:100%}
+h1,h2,h3{text-wrap:balance;margin:0 0 .4em;line-height:1.2}
+h1{font-size:clamp(34px,5vw,44px);font-weight:650;letter-spacing:-.015em}
+h2{font-size:22px;font-weight:620}
+h3{font-size:17px;font-weight:600}
+a{color:var(--accent)}
+a:where(.plain,.brand,.ctitle a,.copen){text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+button{font:inherit;color:inherit}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:absolute;left:-999px;top:0;background:var(--raised);padding:.6rem 1rem;z-index:60}
+.skip:focus{left:.5rem;top:.5rem}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
 }
 
-.card-title a {
-    text-decoration: none;
-    color: #1a508b;
-    /* Inherits font-size, font-weight, line-height from .card-title (h5) */
-
-    /* Apply line clamping directly to the <a> tag */
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2; /* Target 2 lines */
-    overflow: hidden; /* Needed for -webkit-line-clamp to work effectively on the <a> */
-    text-overflow: ellipsis;
-
-    /* Make the <a> tag take up the full height of its parent h5.
-       This helps ensure the clamping mechanism has the correct box to work with. */
-    /* It might not be strictly necessary if the h5's overflow:hidden is enough,
-       but can help in some cases. */
-    /* max-height: 100%; /* Consider if needed if h5 overflow doesn't catch it. */
+@layer layout {
+.wrap{max-width:1440px;margin:0 auto;padding:0 clamp(14px,3vw,28px)}
+.topbar{position:sticky;top:0;z-index:30;background:var(--page);border-bottom:1px solid var(--rule)}
+.topbar .wrap{display:flex;align-items:center;gap:12px;min-height:52px}
+.brand{font-weight:650;color:var(--ink);letter-spacing:-.01em;white-space:nowrap}
+.topnav{display:flex;gap:14px;margin-left:auto;font-size:13px;align-items:center}
+.topnav a{color:var(--muted);text-decoration:none}
+.topnav a:hover{color:var(--ink);text-decoration:underline}
+.tbtn{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:5px 9px;font-size:13px;cursor:pointer;color:var(--ink)}
+.tbtn:hover{border-color:var(--accent)}
+.tbtn kbd{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--rule);border-radius:3px;padding:0 4px}
+.hero{padding:clamp(20px,4vh,40px) 0 clamp(14px,2vh,20px);max-height:40vh}
+.hero p.lead{color:var(--muted);max-width:60ch;margin:0 0 16px;font-size:16px}
+.herosearch{display:flex;gap:8px;max-width:620px}
+.herosearch input{flex:1;min-width:0;font:16px var(--sans);padding:11px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)}
+.herosearch input:focus-visible{border-color:var(--accent)}
+.herosearch button{padding:11px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--page);border-radius:8px;font-weight:600;cursor:pointer}
+.herohint{margin:10px 0 0;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline;font-size:13px}
+.explorer{display:grid;grid-template-columns:240px minmax(0,1fr);gap:26px;align-items:start;padding-bottom:36px}
+.rail{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto;padding-right:4px;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+footer.site{border-top:1px solid var(--rule);padding:22px 0 34px;color:var(--muted);font-size:13px}
+footer.site a{color:var(--muted)}
+@media (max-width:860px){
+  .explorer{grid-template-columns:1fr;gap:14px}
+  .rail{position:static;max-height:none}
+  .hero{max-height:30vh;padding-top:14px}
+  .topnav a.hidesm{display:none}
+}
 }
 
-.card-body {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 1rem;
+@layer components {
+/* --- Pulse strip ------------------------------------------------------- */
+.pulse{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 0;margin-bottom:14px}
+.pulse .wrap{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font-size:13px;color:var(--muted)}
+.pulse b{font-weight:620;color:var(--ink)}
+.pulse .sep{color:var(--rule)}
+.spark{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--muted)}
+.spark svg{display:block}
+.band{font-size:14px;color:var(--muted);padding:0 0 18px}
+.band p{margin:0;max-width:78ch}
+
+/* --- Facet rail -------------------------------------------------------- */
+.fgroup{border:0;margin:0 0 16px;padding:0}
+.fgroup .lbl{display:block;margin-bottom:6px}
+.fgroup ul{list-style:none;margin:0;padding:0}
+.fgroup li a{display:flex;gap:8px;align-items:baseline;padding:3px 6px;border-radius:5px;text-decoration:none;color:var(--ink)}
+.fgroup li a:hover{background:var(--accent-surface)}
+.fgroup li a[aria-pressed="true"]{background:var(--accent-surface);font-weight:620}
+.fgroup .cdot{width:8px;height:8px;border-radius:50%;background:var(--cat);flex:none;translate:0 -1px}
+.fgroup .n{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.railtoggle{display:none}
+@media (max-width:860px){
+  .railtoggle{display:block;width:100%;text-align:left;padding:9px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);cursor:pointer}
+  .rail .fbody{display:none}
+  .rail.open .fbody{display:block;padding-top:12px}
 }
 
-.card-text {
-    flex-grow: 1;
-    margin-bottom: .8rem;
-    color: #495057;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    min-height: calc(0.875rem * 1.5 * 3); /* Reserve space for 3 lines */
+/* --- Toolbar and chips ------------------------------------------------- */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:0 0 14px}
+.count{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:999px;padding:2px 10px;font-size:12px;text-decoration:none;color:var(--ink);background:var(--surface)}
+.chip:hover{border-color:var(--accent)}
+.chip .x{color:var(--muted)}
+.sorts{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.sorts a{font-size:12px;padding:3px 9px;border:1px solid var(--rule);border-radius:999px;text-decoration:none;color:var(--muted);background:var(--surface)}
+.sorts a[aria-current="true"]{color:var(--ink);border-color:var(--accent);font-weight:620}
 
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    overflow: hidden;
-    text-overflow: ellipsis;
+/* --- Cards -------------------------------------------------------------
+   Card element map (markup is terse because it ships 197 times):
+     img = preview   b = category badge (b.r = reviewed, title = the date)
+     h3>a = title    p  = description     em = shape chips
+     small = dates   .c>a = Open link      span.n = NEW badge
+   ---------------------------------------------------------------------- */
+.c{container-type:inline-size;position:relative;background:var(--surface);border:1px solid var(--rule);border-top:3px solid var(--cat);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer}
+.c.off{display:none}
+.c img{width:100%;aspect-ratio:40/21;object-fit:contain;display:block;background:color-mix(in srgb,var(--cat) 9%,var(--surface));border-bottom:1px solid var(--rule)}
+.c>span.n{position:absolute;top:8px;right:8px;background:var(--success);color:var(--page);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px}
+.c b{align-self:flex-start;margin:12px 14px 8px;font-size:11px;font-weight:500;letter-spacing:.02em;padding:1px 8px;border-radius:999px;border:1px solid color-mix(in srgb,var(--cat) 45%,transparent);background:color-mix(in srgb,var(--cat) 12%,transparent);color:var(--ink)}
+.c b.r::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--success);margin-left:7px;translate:0 -1px}
+.c h3{margin:0 14px 6px}
+.c h3 a{color:var(--ink)}
+.c:hover h3 a{text-decoration:underline}
+.c>p{margin:0 14px 10px;font-size:13.5px;color:var(--muted);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
+.c em{font-style:normal;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 14px 8px}
+.c small{margin:auto 14px 10px;font-family:var(--mono);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.c>a{display:block;padding:9px 14px;border-top:1px solid var(--rule);font-size:13px;font-weight:600;color:var(--accent);text-align:center}
+.c>a:hover{background:var(--accent-surface)}
+.c.seen h3 a{color:var(--muted)}
+@container (max-width: 339px){ .c img{display:none} }
+
+.deepcut{margin:0 0 20px;padding:14px 16px;border:1px solid var(--rule);border-left:3px solid var(--cat);border-radius:8px;background:var(--surface)}
+.deepcut h2{font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.deepcut p{margin:.3em 0 0;color:var(--muted);font-size:13.5px}
+.empty{padding:28px 0;color:var(--muted)}
+
+/* --- Sheet detail (no-JS ?sheet=) and drawer share this markup --------- */
+.detail{border:1px solid var(--rule);border-top:3px solid var(--cat);border-radius:8px;background:var(--surface);padding:16px 18px;margin:0 0 20px}
+.detail h2{margin-bottom:8px}
+.detail .facts{font-family:var(--mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.detail ul{margin:.3em 0 1em;padding-left:1.1em;font-size:13.5px}
+.detail li{margin:.15em 0}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.acts a,.acts button{font-size:13px;padding:6px 12px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);text-decoration:none;color:var(--ink);cursor:pointer}
+.acts .primary{background:var(--accent);border-color:var(--accent);color:var(--page);font-weight:600}
+.acts [disabled]{opacity:.5;cursor:not-allowed}
+
+/* --- Paths ------------------------------------------------------------- */
+.paths{padding:26px 0;border-top:1px solid var(--rule)}
+.trails{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;margin-top:14px}
+.trail{border:1px solid var(--rule);border-radius:8px;background:var(--surface);padding:14px 16px}
+.trail h3{margin-bottom:4px}
+.trail>p{margin:0 0 10px;color:var(--muted);font-size:13.5px}
+.trail ol{margin:0;padding-left:1.3em;font-size:13.5px}
+.trail li{margin:.35em 0}
+.trail li span{display:block;color:var(--muted);font-size:12.5px}
+
+/* --- Signup band + footer --------------------------------------------- */
+.signup{border-top:1px solid var(--rule);background:var(--surface);padding:22px 0}
+.signup .wrap{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center}
+.signup .copy{flex:1 1 280px}
+.signup h2{font-size:17px;margin-bottom:2px}
+.signup p{margin:0;color:var(--muted);font-size:13px}
+.email-signup{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.email-signup input[type=email]{padding:9px 12px;border:1px solid var(--rule);border-radius:6px;background:var(--page);color:var(--ink);font:14px var(--sans);min-width:230px}
+.email-signup button{padding:9px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--page);border-radius:6px;font-weight:600;cursor:pointer}
+.signup-status{width:100%;margin:0;font-size:13px;font-weight:600;color:var(--success)}
+.signup-status.is-error{color:light-dark(#b91c1c,#fca5a5)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+footer.site .frow{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+footer.site .fcta{margin-left:auto}
+
+/* --- Palette ----------------------------------------------------------- */
+dialog#palette{width:min(640px,94vw);max-height:70vh;margin:12vh auto auto;padding:0;border:1px solid var(--rule);border-radius:12px;background:var(--raised);color:var(--ink);box-shadow:0 18px 48px rgb(0 0 0 / .28);overflow:hidden}
+dialog::backdrop{background:rgb(9 10 12 / .45)}
+#palette form{margin:0;border-bottom:1px solid var(--rule)}
+#palette input{width:100%;border:0;background:transparent;color:var(--ink);font:17px var(--sans);padding:15px 18px;outline:none}
+#pres{list-style:none;margin:0;padding:6px;overflow-y:auto;max-height:46vh}
+#pres li{border-radius:7px}
+#pres .row{display:flex;gap:9px;align-items:baseline;padding:7px 10px;cursor:pointer;text-decoration:none;color:var(--ink)}
+#pres .row.sel{background:var(--accent-surface)}
+#pres .row .cdot{width:8px;height:8px;border-radius:50%;background:var(--cat);flex:none}
+#pres .row .meta{margin-left:auto;font-size:11px;color:var(--muted);font-family:var(--mono)}
+#pres .sub{padding:4px 10px 4px 34px;font-size:13px;color:var(--muted);text-decoration:none;display:block;border-radius:6px}
+#pres .sub.sel{background:var(--accent-surface);color:var(--ink)}
+#pres .sub .hash{color:var(--accent);font-family:var(--mono)}
+#pres .glabel{padding:8px 10px 3px}
+#pfoot{border-top:1px solid var(--rule);padding:7px 12px;font-size:11.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+#pfoot kbd{font-family:var(--mono);border:1px solid var(--rule);border-radius:3px;padding:0 4px}
+
+/* --- Drawer ------------------------------------------------------------ */
+#drawer{position:fixed;top:0;right:0;width:420px;max-width:100vw;height:100dvh;overflow-y:auto;background:var(--raised);border-left:1px solid var(--rule);padding:18px 20px 40px;z-index:40;box-shadow:-8px 0 32px rgb(0 0 0 / .18)}
+#drawer[hidden]{display:none}
+#drawer .dhead{display:flex;align-items:flex-start;gap:10px}
+#drawer .dclose{margin-left:auto;background:none;border:1px solid var(--rule);border-radius:6px;padding:3px 9px;cursor:pointer}
+#drawer .dshot{aspect-ratio:40/21;width:100%;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--surface);margin:10px 0}
+#drawer .dshot img{width:100%;height:100%;object-fit:contain;display:block}
+#drawer .nbr{display:block;padding:4px 6px;border-radius:5px;font-size:13.5px;text-decoration:none;color:var(--ink);cursor:pointer}
+#drawer .nbr:hover{background:var(--accent-surface)}
+@media (max-width:700px){
+  #drawer{top:auto;bottom:0;right:0;left:0;width:auto;height:85dvh;border-left:0;border-top:1px solid var(--rule);border-radius:14px 14px 0 0}
+  #drawer::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--rule);margin:0 auto 12px}
 }
-/* --- END UPDATED CARD TEXT AND TITLE STYLES --- */
 
+dialog#help{width:min(420px,92vw);border:1px solid var(--rule);border-radius:12px;background:var(--raised);color:var(--ink);padding:18px 20px}
+dialog#help dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:10px 0 0;font-size:13.5px}
+dialog#help dt{font-family:var(--mono);color:var(--muted)}
+dialog#help dd{margin:0}
+.toast{position:fixed;left:50%;bottom:22px;translate:-50% 0;background:var(--raised);border:1px solid var(--rule);border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:70;box-shadow:0 8px 24px rgb(0 0 0 / .22)}
+.toast[hidden]{display:none}
+}
 
-
-
-
-        .card-footer {
-            background-color:transparent;
-            border-top: 1px solid #e9ecef;
-            padding: 0.75rem 1rem;
-            text-align:center;
-            margin-top: auto; /* This is critical for pushing footer to bottom */
-        }
-        .footer { background-color: #343a40; color: #adb5bd; border-top: 1px solid #495057; }
-        .footer a { color: #f8f9fa; } .footer a:hover { color: #ced4da; }
-        /* === Animated glassmorphism hero (cool indigo / violet / cyan mesh) === */
-        .page-hero {
-            position: relative;
-            overflow: hidden;
-            isolation: isolate;
-            padding: 4.5rem 0;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, .15);
-            background-color: #1e1b4b; /* Deep indigo base behind the blobs */
-            background-image:
-                radial-gradient(42% 55% at 18% 28%, rgba(99, 102, 241, .85) 0%, transparent 60%),  /* indigo */
-                radial-gradient(46% 60% at 82% 22%, rgba(139, 92, 246, .80) 0%, transparent 60%),  /* violet */
-                radial-gradient(50% 65% at 72% 80%, rgba(34, 211, 238, .55) 0%, transparent 60%),  /* cyan  */
-                radial-gradient(46% 60% at 25% 82%, rgba(67, 56, 202, .80) 0%, transparent 62%);   /* deep indigo */
-            background-size: 200% 200%;
-            background-position: 0% 50%;
-            animation: heroGradientShift 22s ease-in-out infinite alternate;
-        }
-        @keyframes heroGradientShift {
-            0%   { background-position: 0%   50%; }
-            50%  { background-position: 100% 50%; }
-            100% { background-position: 50%  100%; }
-        }
-        /* Cursor-following highlight; --mx/--my default to centre until JS updates them */
-        .hero-glow {
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-            pointer-events: none;
-            background: radial-gradient(
-                30rem 30rem at var(--mx, 50%) var(--my, 40%),
-                rgba(255, 255, 255, .22) 0%,
-                rgba(255, 255, 255, .08) 25%,
-                transparent 60%);
-            transition: background .12s linear;
-        }
-        .hero-glass {
-            max-width: 760px;
-            margin: 0 auto;
-            padding: 2.25rem 2.5rem;
-            background: rgba(255, 255, 255, .12);
-            border: 1px solid rgba(255, 255, 255, .25);
-            border-radius: 1rem;
-            box-shadow: 0 8px 32px rgba(30, 27, 75, .35);
-            backdrop-filter: blur(14px) saturate(140%);
-            -webkit-backdrop-filter: blur(14px) saturate(140%);
-        }
-        .page-hero h1 { color: #fff; font-weight: 600; text-shadow: 0 2px 12px rgba(30, 27, 75, .45); }
-        .page-hero .lead { color: rgba(255, 255, 255, .9); font-size: 1.1rem; margin-bottom: 1.25rem; }
-        #filterInput { border-radius: .25rem; font-size: 1rem; padding: .6rem 1rem; }
-        #filterInput:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25); }
-        .cta-scroll-link { font-size: 0.9rem; text-decoration: none; color: #e0e7ff; font-weight: 500; }
-        .cta-scroll-link:hover { color: #fff; text-decoration: underline; }
-        /* Frosted filter/search toolbar (sits on the light page, so the frost is subtle) */
-        .filter-toolbar .input-group-text,
-        .filter-toolbar .form-control,
-        .filter-toolbar .form-select {
-            background-color: rgba(255, 255, 255, .6) !important; /* override Bootstrap .bg-white */
-            backdrop-filter: blur(8px) saturate(130%);
-            -webkit-backdrop-filter: blur(8px) saturate(130%);
-            border-color: rgba(255, 255, 255, .55);
-        }
-        .cta-section { background-color: #ffffff; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; padding: 3rem 0; margin: 3rem 0;}
-        .cta-section h3 {font-weight: 600; color: #212529;}
-        .portfolio-item .card {
-            height: 100%; /* This is critical for making cards in a row the same height */
-        }
-        .category-badge {
-            background-color: color-mix(in srgb, var(--cat-bg, #e7f1ff) 70%, transparent);
-            color: var(--cat-color, #1a508b);
-            font-weight: 500;
-            font-size: 0.7rem;
-            letter-spacing: .02em;
-            border: 1px solid color-mix(in srgb, var(--cat-color, #1a508b) 20%, transparent);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        }
-        .new-badge {
-            position: absolute;
-            top: .5rem;
-            right: .5rem;
-            z-index: 2; /* Above the preview image */
-            background-color: #198754;
-            color: #fff;
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: .03em;
-            text-transform: uppercase;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
-        }
-        .cat-placeholder-icon {
-            position: absolute;
-            font-size: 3.5rem;
-            color: var(--cat-color, #adb5bd);
-            opacity: 0.3;
-            z-index: 0;
-        }
-        /* Graceful fallback where backdrop-filter is unsupported: solid surfaces */
-        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-            .card { background-color: #fff; background-image: none; }
-            .hero-glass { background: rgba(30, 27, 75, .55); }
-            .filter-toolbar .input-group-text,
-            .filter-toolbar .form-control,
-            .filter-toolbar .form-select { background-color: #fff !important; }
-            .category-badge { background-color: var(--cat-bg, #e7f1ff) !important; }
-        }
-        /* Hero call-to-action buttons */
-        .hero-cta { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
-        .hero-cta .btn-light { color: #1e1b4b; }
-        .hero-cta .btn-outline-light:hover { color: #1e1b4b; }
-        /* Email signup card (sits on the white CTA section) */
-        .signup-card {
-            max-width: 560px;
-            background: #f8f9fc;
-            border: 1px solid #e3e6ef;
-            border-radius: .75rem;
-            padding: 1.5rem;
-            text-align: center;
-        }
-        .signup-card h4 { font-weight: 600; color: #212529; font-size: 1.1rem; margin-bottom: .35rem; }
-        .signup-card p.signup-sub { color: #6c757d; font-size: .9rem; margin-bottom: 1rem; }
-        .signup-card .signup-note { color: #6c757d; font-size: .78rem; margin: .6rem 0 0; }
-        .signup-card .signup-status { font-size: .9rem; font-weight: 600; margin: .6rem 0 0; color: #198754; }
-        .signup-card .signup-status.is-error { color: #dc3545; }
-        .cta-actions { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
-        /* Respect reduced-motion: freeze the drift and disable the cursor-follow easing */
-        @media (prefers-reduced-motion: reduce) {
-            .page-hero,
-            body::before { animation: none; }
-            .hero-glow { transition: none; }
-        }
-    </style>
-    <!-- Clarity tracking code for https://cheatsheets.davidveksler.com/ -->
-    <script>
-        (function(c,l,a,r,i,t,y){
-            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
-            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, "clarity", "script", "y8ixg9wg4h");
-    </script>
+@layer state {
+@media (prefers-reduced-motion: no-preference){
+  .card{transition:transform .12s ease-out,border-color .12s ease-out}
+  .card:hover{transform:translateY(-2px);border-color:var(--accent);border-top-color:var(--cat)}
+  #drawer{animation:slidein .2s ease-out}
+  dialog#palette{animation:fadein .12s ease-out}
+  @keyframes slidein{from{transform:translateX(16px);opacity:.4}to{transform:none;opacity:1}}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+}
+@media (prefers-reduced-motion: reduce){
+  .card:hover{border-color:var(--accent)}
+}
+@media print{
+  .topbar,.hero,.pulse,.band,.rail,.toolbar,.signup,#palette,#drawer,#help,.deepcut .acts,.copen,.shot{display:none !important}
+  body{background:#fff;color:#000}
+  .explorer{display:block}
+  .grid{display:block;column-count:2;column-gap:24px}
+  .card{break-inside:avoid;border:0;border-top:1px solid #999;border-radius:0;padding:0;margin:0 0 8px;display:block}
+  .cdesc,.cchips,.cmeta,.crow .rev{display:none}
+  .cbody{padding:6px 0}
+  .ctitle a::after{content:" — " attr(href);font-family:monospace;font-size:10px;color:#555}
+  .crow{margin:0}
+}
+}
+</style>
+<!-- Clarity tracking code for https://cheatsheets.davidveksler.com/ -->
+<script>
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "y8ixg9wg4h");
+</script>
 </head>
-<body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
-        <div class="container">
-            <a class="navbar-brand" href="<?php echo htmlspecialchars($baseUrl); ?>">
-                 <i class="bi bi-journal-richtext me-2"></i>David Veksler's Cheatsheet Portfolio
-            </a>
-            <div class="ms-auto d-flex gap-2">
-                <a class="btn btn-sm btn-outline-light" href="<?php echo htmlspecialchars($baseUrl); ?>how-its-built.html">
-                    <i class="bi bi-gear-wide-connected me-1"></i>How it's built
-                </a>
-                <a class="btn btn-sm btn-outline-light" href="<?php echo htmlspecialchars($baseUrl); ?>history.php">
-                    <i class="bi bi-clock-history me-1"></i>Change History
-                </a>
-                <a class="btn btn-sm btn-outline-light" href="<?php echo htmlspecialchars($baseUrl); ?>popularity.php">
-                    <i class="bi bi-bar-chart-fill me-1"></i>Popularity
-                </a>
-            </div>
-        </div>
+<body>
+<a class="skip" href="#grid">Skip to the grid</a>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="./">Cheatsheets<span class="sr"> home</span></a>
+    <nav class="topnav" aria-label="Site">
+      <a class="hidesm" href="how-its-built.html">How it's built</a>
+      <a class="hidesm" href="history.php">Change history</a>
+      <a class="hidesm" href="popularity.php">Popularity</a>
+      <button class="tbtn" id="openPalette" type="button" aria-haspopup="dialog">
+        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+        Search <kbd>⌘K</kbd>
+      </button>
+      <button class="tbtn" id="themeToggle" type="button" aria-label="Toggle dark mode" title="Toggle theme (t)">
+        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8 5.6 5.6 0 1 0 13.2 9.6Z"/></svg>
+      </button>
     </nav>
+  </div>
+</header>
 
-    <main class="main-content">
-        <header class="page-hero text-center" id="pageHero">
-            <span class="hero-glow" aria-hidden="true"></span>
-            <div class="container">
-                <div class="hero-glass">
-                    <h1 class="display-5">Cheatsheet Directory</h1>
-                    <p class="lead">160+ interactive references, built and maintained by one person plus AI agents through a disciplined, version-controlled pipeline — written specs, primary-source research, a self-verification gate, and a public git audit trail.</p>
-                    <div class="hero-cta">
-                        <a href="how-its-built.html" class="btn btn-light btn-lg fw-semibold">
-                            <i class="bi bi-gear-wide-connected me-1"></i>How this site is built
-                        </a>
-                        <a href="https://github.com/DavidVeksler/CheatSheets" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-lg">
-                            <i class="bi bi-github me-1"></i>View source on GitHub
-                        </a>
-                        <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" class="btn btn-outline-light btn-lg" data-ga-linkedin="hero">
-                            <i class="bi bi-linkedin me-1"></i>Connect on LinkedIn
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </header>
+<main>
+<section class="hero">
+  <div class="wrap">
+    <h1><?php echo h($h1); ?></h1>
+    <?php if ($activeCat !== ''): ?>
+      <p class="lead"><?php echo h($catIntro); ?></p>
+    <?php else: ?>
+      <p class="lead"><span class="num"><?php echo (int)$totalCount; ?></span> dense, verified references across <span class="num"><?php echo (int)$fieldCount; ?></span> fields, built by one person plus AI agents under a public, git-audited spec. The search box reads inside every page, not just the titles.</p>
+    <?php endif; ?>
+    <form class="herosearch" method="get" action="./" role="search">
+      <?php if ($activeCat !== ''): ?><input type="hidden" name="cat" value="<?php echo h($activeCat); ?>"><?php endif; ?>
+      <label class="sr" for="heroq">Search the cheatsheets</label>
+      <input type="search" id="heroq" name="q" value="<?php echo h($qRaw); ?>" placeholder="Search inside every page (try torque, ukemi, ufw)" autocomplete="off" spellcheck="false">
+      <button type="submit">Search</button>
+    </form>
+    <p class="herohint">
+      <span>Press <kbd class="num">⌘K</kbd> or <kbd class="num">/</kbd> to search section headings.</span>
+      <button class="linkbtn" type="button" id="surprise">Surprise me</button>
+      <button class="linkbtn" type="button" id="helpBtn">Keyboard map</button>
+    </p>
+  </div>
+</section>
 
-        <div class="container mt-4 mb-5">
-            <div class="row mb-4 justify-content-center g-2 filter-toolbar">
-                <div class="col-md-8 col-lg-5">
-                    <div class="input-group input-group-lg shadow-sm">
-                        <span class="input-group-text bg-white border-end-0 text-primary" id="filter-addon"><i class="bi bi-search"></i></span>
-                        <input type="search" id="filterInput" class="form-control border-start-0" placeholder="Filter by title or topic (e.g., Buddhism, Python)..." aria-label="Filter cheatsheets" aria-describedby="filter-addon">
-                    </div>
-                </div>
-                <div class="col-md-8 col-lg-4">
-                    <div class="input-group input-group-lg shadow-sm">
-                        <label class="input-group-text bg-white border-end-0 text-primary" for="categorySelect"><i class="bi bi-tags"></i></label>
-                        <select id="categorySelect" class="form-select border-start-0" aria-label="Filter by category">
-                            <option value="" selected>All categories</option>
-                            <?php foreach ($categories as $cat): ?>
-                                <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-8 col-lg-3">
-                    <div class="input-group input-group-lg shadow-sm">
-                        <label class="input-group-text bg-white border-end-0 text-primary" for="sortSelect"><i class="bi bi-sort-down"></i></label>
-                        <select id="sortSelect" class="form-select border-start-0" aria-label="Sort cheatsheets">
-                            <option value="date-desc" selected>Newest first</option>
-                            <option value="recently-updated">Recently updated</option>
-                            <option value="popular">Most popular</option>
-                            <option value="date-asc">Oldest first</option>
-                            <option value="title-asc">Title (A–Z)</option>
-                            <option value="title-desc">Title (Z–A)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+<section class="pulse" aria-label="Collection pulse">
+  <div class="wrap">
+    <span><b class="num"><?php echo (int)$totalCount; ?></b> references <span class="sep">·</span>
+      <b class="num"><?php echo (int)$fieldCount; ?></b> fields <span class="sep">·</span>
+      <b class="num"><?php echo (int)($stats['sections'] ?? 0); ?></b> sections indexed <span class="sep">·</span>
+      <b class="num"><?php echo (int)($stats['edges'] ?? 0); ?></b> cross-links</span>
+    <?php if ($lastCommitSubject !== '' && $lastCommitTime): ?>
+    <span>Last change: <a class="plain" href="history.php"><b><?php echo h(clamp_text($lastCommitSubject, 62)); ?></b></a> <span class="num"><?php echo h(rel_time($lastCommitTime)); ?></span></span>
+    <?php endif; ?>
+    <?php if ($reviewedThisWeek > 0): ?>
+    <span>Reviewed this week: <b class="num"><?php echo (int)$reviewedThisWeek; ?></b></span>
+    <?php endif; ?>
+    <?php if ($sparkPoints !== ''): ?>
+    <a class="spark" href="popularity.php" title="Site views, last 24 days">
+      <svg width="118" height="26" viewBox="0 0 118 26" aria-label="Site views over the last 24 days" role="img"><polyline points="<?php echo h($sparkPoints); ?>" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      <span class="num"><?php echo number_format($sparkLast); ?> views/day</span>
+    </a>
+    <?php endif; ?>
+    <?php
+    $trend = array_slice(array_filter($rankOrder, fn($r) => $r['pop'] > 0), 0, 3);
+    if ($trend): ?>
+    <span>Trending: <?php $first = true; foreach ($trend as $t) { echo $first ? '' : ' <span class="sep">·</span> '; $first = false; echo '<a class="plain" href="' . h($t['file']) . '">' . h(clamp_text($t['title'], 34)) . '</a>'; } ?></span>
+    <?php endif; ?>
+  </div>
+</section>
 
-            <?php if (!empty($errors)): ?>
-                <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                    <h4 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Notice</h4>
-                    <p>There were some issues loading details for all cheatsheets:</p>
-                    <ul class="mb-0">
-                        <?php foreach ($errors as $error): ?>
-                            <li><?php echo $error; ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php endif; ?>
+<div class="band"><div class="wrap">
+  <p>Every sheet here is produced by a governed Claude Code pipeline: a version-controlled spec as acceptance criteria, primary-source research, a self-verification gate, and a public git audit trail. <a href="how-its-built.html">Read how it is built</a> or <a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener">browse the source on GitHub</a>.</p>
+</div></div>
 
-            <?php if (empty($cheatsheets) && empty($errors)): ?>
-                <div class="alert alert-info text-center mt-4 py-4" role="alert">
-                    <i class="bi bi-info-circle-fill me-2 fs-4 align-middle"></i>No cheatsheet examples found. Please check back soon for updates!
-                </div>
-            <?php endif; ?>
+<div class="wrap">
+<?php if ($openSheet):
+    $os = $openSheet;
+    $inbound = $linkedFrom[$os['file']] ?? [];
+    ?>
+<section class="detail k<?php echo (int)$os['catk']; ?>" id="sheet-detail">
+  <p class="crow"><span class="cbadge"><?php echo h($os['category']); ?></span><?php foreach (array_slice($os['shape'], 0, 3) as $sc): ?><span class="cbadge"><?php echo h(shape_label($sc)); ?></span><?php endforeach; ?></p>
+  <h2><?php echo h($os['title']); ?></h2>
+  <p><?php echo h($os['description']); ?></p>
+  <?php if ($os['headings']): ?>
+  <p class="lbl">What's inside</p>
+  <ul>
+    <?php foreach (array_slice($os['headings'], 0, 14) as $hd):
+        $ht = isset($hd['text']) ? (string)$hd['text'] : '';
+        $hi = isset($hd['id']) && $hd['id'] ? (string)$hd['id'] : ''; ?>
+    <li><?php if ($hi): ?><a href="<?php echo h($os['file']); ?>#<?php echo h($hi); ?>"><?php echo h($ht); ?></a><?php else: echo h($ht); endif; ?></li>
+    <?php endforeach; ?>
+    <?php if (count($os['headings']) > 14): ?><li>and <?php echo count($os['headings']) - 14; ?> more</li><?php endif; ?>
+  </ul>
+  <?php endif; ?>
+  <p class="lbl">Neighbours</p>
+  <p class="facts">Links to <?php echo count($os['outlinks']); ?> · Linked from <?php echo count($inbound); ?></p>
+  <ul>
+    <?php foreach (array_slice($os['outlinks'], 0, 8) as $ol): if (!isset($byFile[$ol])) continue; ?>
+    <li><a href="?sheet=<?php echo h(rawurlencode($ol)); ?>"><?php echo h($rows[$byFile[$ol]]['title']); ?></a></li>
+    <?php endforeach; ?>
+  </ul>
+  <p class="lbl">Facts</p>
+  <p class="facts">
+    <?php if ($os['created']): ?>Created <?php echo h(gmdate('M j, Y', $os['created'])); ?> · <?php endif; ?>
+    <?php if ($os['updated']): ?>Updated <?php echo h(gmdate('M j, Y', $os['updated'])); ?> · <?php endif; ?>
+    <?php if ($os['reviewed']): ?>Reviewed <?php echo h($os['reviewed']); ?> · <?php endif; ?>
+    ~<?php echo number_format($os['words']); ?> words · <?php echo (int)$os['tables']; ?> tables · <?php echo (int)$os['sections']; ?> sections
+    <?php if (isset($popRank[$os['file']])): ?>· #<?php echo (int)$popRank[$os['file']]; ?> of <?php echo (int)$totalCount; ?> this month<?php endif; ?>
+  </p>
+  <p class="acts"><a class="primary" href="<?php echo h($os['file']); ?>">Open</a> <a href="./">Back to all cheatsheets</a></p>
+</section>
+<?php endif; ?>
 
-            <div id="cheatsheetGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                <?php foreach ($cheatsheets as $sheet): ?>
-                    <div class="col portfolio-item" data-title="<?php echo htmlspecialchars($sheet['title']); ?>" data-mtime="<?php echo (int)$sheet['mtime']; ?>" data-git-ctime="<?php echo (int)($sheet['git_ctime'] ?? 0); ?>" data-category="<?php echo htmlspecialchars($sheet['category']); ?>" data-popularity="<?php echo number_format($popularityScores[$sheet['filename']] ?? 0, 4, '.', ''); ?>">
-                        <article class="card" style="--cat-color: <?php echo htmlspecialchars($sheet['cat_color']); ?>; --cat-bg: <?php echo htmlspecialchars($sheet['cat_bg']); ?>;">
-                            <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" class="card-img-top-container" aria-label="Open <?php echo htmlspecialchars($sheet['title']); ?>">
-                                <i class="bi <?php echo htmlspecialchars($sheet['cat_icon']); ?> cat-placeholder-icon" aria-hidden="true"></i>
-                                <?php if (!empty($sheet['mtime']) && $sheet['mtime'] >= $newThreshold): ?>
-                                    <span class="badge new-badge"><i class="bi bi-stars me-1"></i>New</span>
-                                <?php endif; ?>
-                                <?php if (!empty($sheet['image'])): ?>
-                                    <img src="<?php echo htmlspecialchars($sheet['image']); ?>" alt="Preview for <?php echo htmlspecialchars($sheet['title']); ?>" loading="lazy" onerror="this.classList.add('error');">
-                                <?php endif; ?>
-                            </a>
-                            <div class="card-body">
-                                <?php if (!empty($sheet['category'])): ?>
-                                    <span class="badge category-badge mb-2 align-self-start"><i class="bi <?php echo htmlspecialchars($sheet['cat_icon']); ?> me-1"></i><?php echo htmlspecialchars($sheet['category']); ?></span>
-                                <?php endif; ?>
-                                <h5 class="card-title">
-                                    <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank">
-                                        <?php echo htmlspecialchars($sheet['title']); ?>
-                                    </a>
-                                </h5>
-                                <p class="card-text">
-                                    <?php echo htmlspecialchars($sheet['description']); ?>
-                                </p>
-                                <div class="card-dates text-muted small mb-0">
-                                    <?php if (!empty($sheet['git_ctime'])): ?>
-                                        <span><i class="bi bi-calendar-plus me-1"></i>Created <?php echo htmlspecialchars(date('M j, Y', $sheet['git_ctime'])); ?></span>
-                                    <?php endif; ?>
-                                    <?php if (!empty($sheet['mtime'])): ?>
-                                        <?php if (!empty($sheet['git_ctime'])): ?><span class="mx-1">·</span><?php endif; ?>
-                                        <span><i class="bi bi-calendar3 me-1"></i>Updated <?php echo htmlspecialchars(date('M j, Y', $sheet['mtime'])); ?></span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <a href="<?php echo htmlspecialchars($sheet['url']); ?>" target="_blank" class="btn btn-sm btn-outline-primary w-100" style="--bs-btn-color: var(--cat-color); --bs-btn-border-color: var(--cat-color); --bs-btn-hover-bg: var(--cat-color); --bs-btn-hover-border-color: var(--cat-color); --bs-btn-hover-color: #fff; --bs-btn-active-bg: var(--cat-color); --bs-btn-active-border-color: var(--cat-color); --bs-btn-active-color: #fff;">
-                                    View Cheatsheet <i class="bi bi-box-arrow-up-right ms-1"></i>
-                                </a>
-                            </div>
-                        </article>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+<div class="explorer">
+  <aside class="rail" id="rail" aria-label="Filters">
+    <button class="railtoggle" type="button" id="railToggle" aria-expanded="false">Filters and categories</button>
+    <div class="fbody">
+      <fieldset class="fgroup"><span class="lbl">Category</span>
+        <ul>
+          <?php foreach ($catNames as $ci => $cn): if (empty($catCounts[$cn])) continue;
+            $on = ($activeCat === $cn); ?>
+          <li><a class="k<?php echo (int)$ci; ?>" data-facet="cat" data-val="<?php echo h($cn); ?>" aria-pressed="<?php echo $on ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['cat' => $on ? '' : $cn])); ?>"><span class="cdot"></span><?php echo h($cn); ?><span class="n"><?php echo (int)$catCounts[$cn]; ?></span></a></li>
+          <?php endforeach; ?>
+        </ul>
+      </fieldset>
+      <fieldset class="fgroup"><span class="lbl">Shape</span>
+        <ul>
+          <?php ksort($shapeCounts); foreach ($shapeCounts as $sname => $sn):
+            $on = in_array($sname, $activeShapes, true); ?>
+          <li><a data-facet="shape" data-val="<?php echo h($sname); ?>" aria-pressed="<?php echo $on ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['shape' => toggle_list($activeShapes, $sname)])); ?>"><?php echo h(shape_label($sname)); ?><span class="n"><?php echo (int)$sn; ?></span></a></li>
+          <?php endforeach; ?>
+        </ul>
+      </fieldset>
+      <fieldset class="fgroup"><span class="lbl">Freshness</span>
+        <ul>
+          <?php
+          $freshLabels = ['reviewed90' => 'Reviewed in 90 days', 'updated30' => 'Updated in 30 days', 'new30' => 'New in 30 days'];
+          foreach ($freshLabels as $fk => $fl):
+            $on = in_array($fk, $activeFresh, true); ?>
+          <li><a data-facet="fresh" data-val="<?php echo h($fk); ?>" aria-pressed="<?php echo $on ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['fresh' => toggle_list($activeFresh, $fk)])); ?>"><?php echo h($fl); ?></a></li>
+          <?php endforeach; ?>
+          <li><a data-facet="interactive" data-val="1" aria-pressed="<?php echo $wantInteractive ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['interactive' => $wantInteractive ? '' : '1'])); ?>">Interactive</a></li>
+        </ul>
+      </fieldset>
+      <p><a class="plain" href="./">Clear all filters</a></p>
+    </div>
+  </aside>
 
-            <div id="noResults" class="alert alert-warning text-center mt-4 py-3 d-none" role="alert">
-                <i class="bi bi-emoji-frown me-2"></i>No cheatsheets match your filter. Try a different term.
-            </div>
-        </div>
-    </main>
+  <div class="results">
+    <div class="toolbar">
+      <span class="count" id="count"><span id="countN"><?php echo (int)$visibleCount; ?></span> of <?php echo (int)$totalCount; ?></span>
+      <span class="chips" id="chips">
+        <?php if ($activeCat !== ''): ?><a class="chip" href="<?php echo h(grid_url(['cat' => ''])); ?>"><?php echo h($activeCat); ?><span class="x">×</span></a><?php endif; ?>
+        <?php if ($qRaw !== ''): ?><a class="chip" href="<?php echo h(grid_url(['q' => ''])); ?>">"<?php echo h(clamp_text($qRaw, 28)); ?>"<span class="x">×</span></a><?php endif; ?>
+        <?php foreach ($activeShapes as $s): ?><a class="chip" href="<?php echo h(grid_url(['shape' => toggle_list($activeShapes, $s)])); ?>"><?php echo h(shape_label($s)); ?><span class="x">×</span></a><?php endforeach; ?>
+        <?php foreach ($activeFresh as $f): ?><a class="chip" href="<?php echo h(grid_url(['fresh' => toggle_list($activeFresh, $f)])); ?>"><?php echo h($freshLabels[$f] ?? $f); ?><span class="x">×</span></a><?php endforeach; ?>
+        <?php if ($wantInteractive): ?><a class="chip" href="<?php echo h(grid_url(['interactive' => ''])); ?>">Interactive<span class="x">×</span></a><?php endif; ?>
+      </span>
+      <nav class="sorts" aria-label="Sort">
+        <?php foreach ($SORTS as $sk => $sl): $cur = ($sort === $sk); ?>
+        <a data-sort="<?php echo h($sk); ?>" aria-current="<?php echo $cur ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['sort' => $sk === 'new' ? '' : $sk])); ?>"><?php echo h($sl); ?></a>
+        <?php endforeach; ?>
+      </nav>
+    </div>
 
-    <section id="custom-cheatsheet-cta" class="cta-section text-center">
-        <div class="container">
-              <h3 class="mb-3">How this collection is built</h3>
-              <p class="text-muted mb-4 mx-auto" style="max-width: 720px;">
-                  This whole collection is a working exhibit: a Claude Code pipeline producing polished, accurate references at scale, kept honest by a version-controlled spec, a self-verification gate, and a public git audit trail. If that's the kind of thing you're working on, I'm happy to compare notes.
-              </p>
-              <div class="cta-actions mb-5">
-                  <a href="how-its-built.html" class="btn btn-primary btn-lg px-4">
-                      <i class="bi bi-gear-wide-connected me-2"></i>See how it's built
-                  </a>
-                  <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" class="btn btn-outline-primary btn-lg px-4" data-ga-linkedin="cta">
-                      <i class="bi bi-linkedin me-2"></i>Let's talk on LinkedIn
-                  </a>
-              </div>
-
-              <div class="signup-card mx-auto">
-                  <h4><i class="bi bi-envelope-paper me-1"></i>Get new references &amp; build notes</h4>
-                  <p class="signup-sub">Occasional email when a new reference ships or the pipeline changes. No spam, no tracking, unsubscribe anytime.</p>
-                  <!-- Form posts to $emailSignupEndpoint (subscribe.php, same origin). Degrades
-                       gracefully without JS; JS enhances to an inline confirmation. No tracking scripts. -->
-                  <form action="<?php echo htmlspecialchars($emailSignupEndpoint); ?>" method="post" class="email-signup">
-                      <label class="visually-hidden" for="emailSignupField">Email address</label>
-                      <div class="visually-hidden" aria-hidden="true">
-                          <label for="website-hp">Leave this field empty</label>
-                          <input type="text" id="website-hp" name="website" tabindex="-1" autocomplete="off">
-                      </div>
-                      <div class="input-group input-group-lg shadow-sm">
-                          <span class="input-group-text bg-white text-primary"><i class="bi bi-envelope"></i></span>
-                          <input type="email" id="emailSignupField" name="email" class="form-control" required autocomplete="email" inputmode="email" placeholder="you@example.com" aria-label="Email address">
-                          <button class="btn btn-primary" type="submit"><i class="bi bi-bell me-1"></i>Notify me</button>
-                      </div>
-                      <p class="signup-note">A single field, no third-party scripts. Falls back to a plain form post without JavaScript.</p>
-                      <p class="signup-status" role="status" aria-live="polite" hidden></p>
-                  </form>
-              </div>
-        </div>
+    <?php if ($deepCut): ?>
+    <section class="deepcut k<?php echo (int)$deepCut['catk']; ?>" id="deepcut">
+      <h2>Deep cut of the day</h2>
+      <h3><a href="<?php echo h($deepCut['file']); ?>"><?php echo h($deepCut['title']); ?></a></h3>
+      <p><?php echo h(clamp_text($deepCut['description'], 190)); ?></p>
     </section>
+    <?php endif; ?>
 
-    <footer class="footer py-4 mt-auto">
-        <div class="container text-center">
-            <p class="mb-2 small">
-                Cheatsheet Portfolio © <?php echo date("Y"); ?> David Veksler. All rights reserved.
-            </p>
-            <div>
-              <a href="https://www.linkedin.com/in/davidveksler/" title="David Veksler on LinkedIn" target="_blank" class="mx-2 small" data-ga-linkedin="footer">
-                <i class="bi bi-linkedin"></i> LinkedIn
-              </a>
-              <span class="mx-1 small">|</span>
-              <a href="<?php echo htmlspecialchars($baseUrl); ?>how-its-built.html" title="How this site is built" class="mx-2 small">
-                <i class="bi bi-gear-wide-connected"></i> How It's Built
-              </a>
-              <span class="mx-1 small">|</span>
-              <a href="https://github.com/DavidVeksler/CheatSheets" title="Public source repository" target="_blank" rel="noopener noreferrer" class="mx-2 small">
-                <i class="bi bi-github"></i> GitHub
-              </a>
-              <span class="mx-1 small">|</span>
-              <a href="<?php echo htmlspecialchars($baseUrl); ?>" title="Browse all cheatsheets" class="mx-2 small">
-                <i class="bi bi-collection-fill"></i> All Cheatsheets
-              </a>
-              <span class="mx-1 small">|</span>
-              <a href="<?php echo htmlspecialchars($baseUrl); ?>history.php" title="Browse the git change history" class="mx-2 small">
-                <i class="bi bi-clock-history"></i> Change History
-              </a>
-            </div>
-        </div>
-    </footer>
+    <div class="grid" id="grid">
+      <?php foreach ($rendered as $r) render_card($r, $now, $NEW_WINDOW, $REVIEW_WINDOW, $r['_visible']); ?>
+    </div>
+    <p class="empty" id="empty"<?php echo $visibleCount > 0 ? ' hidden' : ''; ?>>Nothing matches those filters. <a href="./">Clear them</a> and start again.</p>
+  </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const filterInput = document.getElementById('filterInput');
-        const categorySelect = document.getElementById('categorySelect');
-        const sortSelect = document.getElementById('sortSelect');
-        const grid = document.getElementById('cheatsheetGrid');
-        const noResultsMessage = document.getElementById('noResults');
-        const items = grid ? Array.from(grid.querySelectorAll('.portfolio-item')) : [];
+<section class="paths" id="paths">
+  <h2>Curated paths</h2>
+  <p style="color:var(--muted);margin:0">Hand-written trails, in the order the sheets actually make sense. Progress tracking and the Paths lens arrive in phase 2.</p>
+  <div class="trails">
+    <?php foreach ($trails as $tr):
+      if (!is_array($tr) || empty($tr['steps'])) continue; ?>
+    <article class="trail" id="path-<?php echo h($tr['id'] ?? ''); ?>">
+      <h3><?php echo h($tr['title'] ?? ''); ?></h3>
+      <p><?php echo h($tr['promise'] ?? ''); ?></p>
+      <ol>
+        <?php foreach ($tr['steps'] as $st):
+          if (!is_array($st) || empty($st['file'])) continue;
+          $sf = (string)$st['file'];
+          $stitle = isset($byFile[$sf]) ? $rows[$byFile[$sf]]['title'] : $sf; ?>
+        <li><a href="<?php echo h($sf); ?>"><?php echo h(clamp_text($stitle, 64)); ?></a><span><?php echo h($st['why'] ?? ''); ?></span></li>
+        <?php endforeach; ?>
+      </ol>
+    </article>
+    <?php endforeach; ?>
+  </div>
+</section>
+</div><!-- /wrap -->
+</main>
 
-        // --- Title sync ---
-        const BASE_TITLE = document.title;
-        function updateTitle(cat) {
-            document.title = cat ? `${cat} Cheatsheets | David Veksler` : BASE_TITLE;
-        }
+<section class="signup">
+  <div class="wrap">
+    <div class="copy">
+      <h2>Get new references and build notes</h2>
+      <p>Occasional email when a new reference ships or the pipeline changes. No spam, no tracking, unsubscribe anytime.</p>
+    </div>
+    <form action="subscribe.php" method="post" class="email-signup">
+      <label class="sr" for="emailSignupField">Email address</label>
+      <div class="hp" aria-hidden="true">
+        <label for="website-hp">Leave this field empty</label>
+        <input type="text" id="website-hp" name="website" tabindex="-1" autocomplete="off">
+      </div>
+      <input type="email" id="emailSignupField" name="email" required autocomplete="email" inputmode="email" placeholder="you@example.com" aria-label="Email address">
+      <button type="submit">Notify me</button>
+      <p class="signup-status" role="status" aria-live="polite" hidden></p>
+    </form>
+  </div>
+</section>
 
-        // --- URL sync helpers ---
-        const SORT_DEFAULT = 'date-desc';
-        function syncToURL() {
-            const params = new URLSearchParams();
-            const q = filterInput ? filterInput.value.trim() : '';
-            const cat = categorySelect ? categorySelect.value : '';
-            const sort = sortSelect ? sortSelect.value : SORT_DEFAULT;
-            if (q)   params.set('q', q);
-            if (cat) params.set('cat', cat);
-            if (sort && sort !== SORT_DEFAULT) params.set('sort', sort);
-            const qs = params.toString();
-            history.replaceState(null, '', qs ? '?' + qs : location.pathname);
-        }
+<footer class="site">
+  <div class="wrap frow">
+    <span>Cheatsheets © <?php echo date('Y'); ?> David Veksler.</span>
+    <a href="how-its-built.html">How it's built</a>
+    <a href="history.php">Change history</a>
+    <a href="popularity.php">Popularity</a>
+    <a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener">GitHub</a>
+    <a href="catalog.json">catalog.json</a>
+    <span class="fcta"><a href="https://www.linkedin.com/in/davidveksler/" rel="noopener" data-ga-linkedin="footer">Working on something similar? Compare notes on LinkedIn.</a></span>
+  </div>
+</footer>
 
-        function initFromURL() {
-            const params = new URLSearchParams(location.search);
-            if (filterInput && params.has('q'))   filterInput.value = params.get('q');
-            if (categorySelect && params.has('cat')) {
-                const opt = Array.from(categorySelect.options).find(o => o.value === params.get('cat'));
-                if (opt) categorySelect.value = params.get('cat');
-            }
-            if (sortSelect && params.has('sort')) {
-                const opt = Array.from(sortSelect.options).find(o => o.value === params.get('sort'));
-                if (opt) sortSelect.value = params.get('sort');
-            }
-            updateTitle(categorySelect ? categorySelect.value : '');
-        }
+<dialog id="palette" aria-label="Search the collection">
+  <form method="dialog" onsubmit="return false">
+    <label class="sr" for="pq">Search inside every cheatsheet</label>
+    <input id="pq" type="search" autocomplete="off" spellcheck="false" placeholder="Search inside every page">
+  </form>
+  <ul id="pres"></ul>
+  <p class="sr" id="plive" role="status" aria-live="polite"></p>
+  <div id="pfoot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>enter</kbd> open</span><span><kbd>g</kbd> then <kbd>g</kbd>/<kbd>m</kbd>/<kbd>p</kbd> lens</span><span><kbd>esc</kbd> close</span></div>
+</dialog>
 
-        initFromURL();
+<aside id="drawer" hidden aria-label="Sheet detail" tabindex="-1"></aside>
 
-        if (sortSelect && grid && items.length > 0) {
-            const sortItems = function() {
-                const mode = sortSelect.value;
-                const sorted = items.slice().sort((a, b) => {
-                    switch (mode) {
-                        case 'title-desc':
-                            return b.dataset.title.localeCompare(a.dataset.title, undefined, { sensitivity: 'base' });
-                        case 'date-desc':
-                            return (Number(b.dataset.gitCtime) || 0) - (Number(a.dataset.gitCtime) || 0);
-                        case 'date-asc':
-                            return (Number(a.dataset.gitCtime) || 0) - (Number(b.dataset.gitCtime) || 0);
-                        case 'recently-updated':
-                            return (Number(b.dataset.mtime) || 0) - (Number(a.dataset.mtime) || 0);
-                        case 'popular':
-                            return (Number(b.dataset.popularity) || 0) - (Number(a.dataset.popularity) || 0);
-                        case 'title-asc':
-                        default:
-                            return a.dataset.title.localeCompare(b.dataset.title, undefined, { sensitivity: 'base' });
-                    }
-                });
-                sorted.forEach(item => grid.appendChild(item));
-                syncToURL();
-            };
-            sortSelect.addEventListener('change', sortItems);
-            // Apply initial sort from URL on load
-            if (sortSelect.value !== SORT_DEFAULT) sortItems();
-        }
+<dialog id="help" aria-label="Keyboard map">
+  <h2>Keyboard</h2>
+  <dl>
+    <dt>⌘K / Ctrl K / /</dt><dd>Open the search palette</dd>
+    <dt>↑ ↓ enter</dt><dd>Move and open inside results</dd>
+    <dt>esc</dt><dd>Close the palette or the drawer</dd>
+    <dt>g then g</dt><dd>Grid lens</dd>
+    <dt>g then m</dt><dd>Map lens</dd>
+    <dt>g then p</dt><dd>Paths</dd>
+    <dt>t</dt><dd>Toggle theme</dd>
+    <dt>?</dt><dd>This map</dd>
+  </dl>
+  <p class="acts"><button type="button" class="primary" onclick="document.getElementById('help').close()">Close</button></p>
+</dialog>
 
-        if (filterInput && grid && items.length > 0) {
-            const applyFilters = function() {
-                const filterText = filterInput.value.toLowerCase().trim();
-                const selectedCategory = categorySelect ? categorySelect.value : '';
-                let itemsVisible = 0;
+<div class="toast" id="toast" hidden role="status"></div>
 
-                items.forEach(item => {
-                    const titleElement = item.querySelector('.card-title a');
-                    const descriptionElement = item.querySelector('.card-text');
-                    const title = titleElement ? titleElement.textContent.toLowerCase() : '';
-                    const description = descriptionElement ? descriptionElement.textContent.toLowerCase() : '';
+<script type="application/json" id="catalog-lite"><?php echo json_encode($lite, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
+<script>
+(function(){
+'use strict';
+var NS='cs-explorer:v1:';
+var CATV=<?php echo json_encode($catalogVersion); ?>;
+var SERVER_CAT=<?php echo json_encode($activeCat); ?>;
+var TOTAL=<?php echo (int)$totalCount; ?>;
 
-                    const matchesText = filterText === '' || title.includes(filterText) || description.includes(filterText);
-                    const matchesCategory = selectedCategory === '' || item.dataset.category === selectedCategory;
-                    const isVisible = matchesText && matchesCategory;
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(NS+k);localStorage.setItem(NS+k,v);}catch(e){}return null;}
+function lsj(k,d){try{var r=JSON.parse(ls(k)||'null');return r===null?d:r;}catch(e){return d;}}
+function ga(name,params){try{if(typeof gtag==='function')gtag('event',name,params||{});}catch(e){}}
+function el(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
-                    if (isVisible) {
-                        item.style.display = '';
-                        itemsVisible++;
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-                noResultsMessage.classList.toggle('d-none', itemsVisible > 0);
-                updateTitle(selectedCategory);
-                syncToURL();
-            };
+/* ---------------------------------------------------------------- data --- */
+var L=JSON.parse(el('catalog-lite').textContent);
+var N=L.f.length;
+var byFile={};
+function toks(s){return String(s).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);}
+for(var i=0;i<N;i++)byFile[L.f[i]]=i;
+// Titles come off the rendered cards; they are already in the document, so the
+// lite payload does not carry them. On a ?cat= page only that category's cards
+// are present, and the rest arrive with catalog.json a moment later.
+var TITLE=new Array(N),tokTitle=new Array(N);
+for(i=0;i<N;i++){TITLE[i]='';tokTitle[i]=[];}
+var FULL=null,fullPending=null,tokHead=null,tokDesc=null,tokKw=null,inbound=null;
 
-            filterInput.addEventListener('input', applyFilters);
-            if (categorySelect) categorySelect.addEventListener('change', applyFilters);
-            // Apply initial filters from URL on load
-            if (filterInput.value || (categorySelect && categorySelect.value)) applyFilters();
-        } else if (filterInput) {
-             filterInput.disabled = true;
-             filterInput.placeholder = "No cheatsheets available to filter.";
-        }
-
-        // Catch images cached as broken: a 'complete' image with zero dimensions
-        // may never fire 'error', so the inline onerror handler won't run for it.
-        document.querySelectorAll('.card-img-top-container img').forEach(img => {
-            if (img.complete && img.naturalWidth === 0 && img.src) {
-                img.classList.add('error');
-            }
-        });
-
-        // Email signup: progressive enhancement over a plain same-origin form post.
-        //   No JS  → posts natively to subscribe.php, which renders a confirmation page.
-        //   With JS → submits asynchronously and confirms inline from the JSON response.
-        document.querySelectorAll('form.email-signup').forEach(function (form) {
-            const status = form.querySelector('.signup-status');
-            const show = function (msg, isError) {
-                if (!status) return;
-                status.hidden = false;
-                status.textContent = msg;
-                status.classList.toggle('is-error', !!isError);
-            };
-            form.addEventListener('submit', function (e) {
-                const email = form.querySelector('input[type="email"]');
-                if (email && !email.checkValidity()) return; // native validation surfaces the error
-                e.preventDefault();
-                const btn = form.querySelector('button');
-                if (btn) btn.disabled = true;
-                fetch(form.action, { method: 'POST', headers: { 'Accept': 'application/json' }, body: new FormData(form) })
-                    .then(function (r) { return r.json().catch(function () { return { ok: r.ok }; }); })
-                    .then(function (d) {
-                        if (d && d.ok) { show('Thanks — you’re on the list.'); form.reset(); }
-                        else { show((d && d.error) || 'Sorry, that didn’t go through. Please try again.', true); }
-                    })
-                    .catch(function () { show('Network error — please try again later.', true); })
-                    .finally(function () { if (btn) btn.disabled = false; });
-            });
-        });
-
-        // LinkedIn click tracking (gtag injected by Cloudflare)
-        document.querySelectorAll('[data-ga-linkedin]').forEach(function(el) {
-            el.addEventListener('click', function() {
-                if (typeof gtag === 'function') {
-                    gtag('event', 'linkedin_click', {
-                        link_location: el.dataset.gaLinkedin
-                    });
-                }
-            });
-        });
-
-        // Hero highlight follows the cursor (fine pointers only, skipped under reduced-motion).
-        // Updates are coalesced into one rAF tick per frame to avoid layout thrash.
-        const hero = document.getElementById('pageHero');
-        const wantsMotion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (hero && wantsMotion && window.matchMedia('(pointer: fine)').matches) {
-            let ticking = false, mx = 50, my = 40;
-            hero.addEventListener('pointermove', function(e) {
-                const rect = hero.getBoundingClientRect();
-                mx = ((e.clientX - rect.left) / rect.width) * 100;
-                my = ((e.clientY - rect.top) / rect.height) * 100;
-                if (!ticking) {
-                    ticking = true;
-                    requestAnimationFrame(function() {
-                        hero.style.setProperty('--mx', mx + '%');
-                        hero.style.setProperty('--my', my + '%');
-                        ticking = false;
-                    });
-                }
-            });
-        }
+function loadFull(){
+  if(FULL)return Promise.resolve(FULL);
+  if(fullPending)return fullPending;
+  fullPending=fetch('catalog.json?v='+encodeURIComponent(CATV)).then(function(r){return r.json();}).then(function(d){
+    FULL=d;
+    var idx={};d.sheets.forEach(function(s,i){idx[s.file]=i;});
+    FULL.idx=idx;
+    inbound={};
+    d.sheets.forEach(function(s){(s.outlinks||[]).forEach(function(t){(inbound[t]=inbound[t]||[]).push(s.file);});});
+    tokHead={};tokDesc={};tokKw={};
+    d.sheets.forEach(function(s){
+      tokHead[s.file]=(s.headings||[]).map(function(hh){return{t:hh.text,id:hh.id,k:toks(hh.text)};});
+      tokDesc[s.file]=toks(s.description||'');
+      tokKw[s.file]=toks((s.keywords||[]).join(' '));
+      var k=byFile[s.file];
+      if(k!==undefined&&!TITLE[k]){TITLE[k]=s.title;tokTitle[k]=toks(s.title);}
     });
-    </script>
+    return FULL;
+  }).catch(function(){fullPending=null;return null;});
+  return fullPending;
+}
 
+/* --------------------------------------------------------------- toast --- */
+var toastT=null;
+function toast(msg){var t=el('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true;},2600);}
+
+/* --------------------------------------------------------------- theme --- */
+function currentTheme(){
+  var d=document.documentElement.dataset.theme;
+  if(d)return d;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+}
+function toggleTheme(){
+  var next=currentTheme()==='dark'?'light':'dark';
+  document.documentElement.dataset.theme=next;ls('theme',next);ga('explorer_theme',{theme:next});
+}
+el('themeToggle').addEventListener('click',toggleTheme);
+
+/* -------------------------------------------------------------- visited -- */
+var visited=lsj('visited',{});
+function markVisited(f){visited[f]=1;try{ls('visited',JSON.stringify(visited));}catch(e){}paintVisited();}
+function paintVisited(){cards.forEach(function(c,k){if(visited[cardFile[k]])c.classList.add('seen');});}
+
+/* ------------------------------------------------------------ filtering -- */
+var grid=el('grid'),cards=Array.prototype.slice.call(grid.querySelectorAll('.c'));
+var cardFile=[];
+cards.forEach(function(c,k){
+  var a=c.querySelector('h3 a');
+  var f=a?a.getAttribute('href'):'';
+  cardFile[k]=f;
+  var i=byFile[f];
+  if(i!==undefined){TITLE[i]=a.textContent;tokTitle[i]=toks(TITLE[i]);}
+});
+function fileOf(card){return cardFile[cards.indexOf(card)]||'';}
+var state={cat:SERVER_CAT||'',q:'',shape:[],fresh:[],interactive:false,sort:''};
+(function initState(){
+  var p=new URLSearchParams(location.search);
+  state.q=p.get('q')||'';
+  state.cat=p.get('cat')||'';
+  state.shape=(p.get('shape')||'').split(',').filter(Boolean);
+  state.fresh=(p.get('fresh')||'').split(',').filter(Boolean);
+  state.interactive=p.get('interactive')==='1';
+  state.sort=p.get('sort')||'';
+})();
+var TODAY=Math.floor(Date.now()/86400000);
+
+function matches(i){
+  if(state.q){
+    var q=state.q.toLowerCase();
+    var hay=TITLE[i].toLowerCase();
+    if(FULL){var s=FULL.sheets[FULL.idx[L.f[i]]];hay+=' '+(s.description||'')+' '+(s.keywords||[]).join(' ');hay=hay.toLowerCase();}
+    if(hay.indexOf(q)<0)return false;
+  }
+  if(state.cat&&L.cats[L.c[i]]!==state.cat)return false;
+  if(state.shape.length){
+    var hit=false;
+    for(var j=0;j<state.shape.length;j++){if(L.s[i].indexOf(L.shapes.indexOf(state.shape[j]))>=0){hit=true;break;}}
+    if(!hit)return false;
+  }
+  if(state.interactive&&!L.ix[i])return false;
+  if(state.fresh.length){
+    var f=false;
+    if(state.fresh.indexOf('reviewed90')>=0&&L.rv[i]&&TODAY-L.rv[i]<=90)f=true;
+    if(state.fresh.indexOf('updated30')>=0&&L.up[i]&&TODAY-L.up[i]<=30)f=true;
+    if(state.fresh.indexOf('new30')>=0&&L.cr[i]&&TODAY-L.cr[i]<=30)f=true;
+    if(!f)return false;
+  }
+  return true;
+}
+
+var SORTS={'new':function(a,b){return L.cr[b]-L.cr[a];},
+ 'updated':function(a,b){return L.up[b]-L.up[a];},
+ 'popular':function(a,b){return L.p[b]-L.p[a];},
+ 'reviewed':function(a,b){return L.rv[b]-L.rv[a];},
+ 'title':function(a,b){return TITLE[a].localeCompare(TITLE[b],undefined,{sensitivity:'base'});}};
+
+function apply(reorder){
+  var n=0;
+  cards.forEach(function(c,k){
+    var i=byFile[cardFile[k]];
+    var ok=(i!==undefined)&&matches(i);
+    c.classList.toggle('off',!ok);
+    if(ok)n++;
+  });
+  el('countN').textContent=n;
+  el('empty').hidden=n>0;
+  if(reorder&&SORTS[state.sort||'new']){
+    var cmp=SORTS[state.sort||'new'];
+    cards.slice().sort(function(a,b){return cmp(byFile[fileOf(a)],byFile[fileOf(b)]);})
+      .forEach(function(c){grid.appendChild(c);});
+  }
+  var dc=el('deepcut');
+  if(dc)dc.hidden=!!(state.q||state.shape.length||state.fresh.length||state.interactive);
+  syncURL();
+  paintFacets();
+  document.title=state.cat?state.cat+' Cheatsheets | David Veksler':BASE_TITLE;
+  return n;
+}
+var BASE_TITLE=document.title;
+
+function syncURL(){
+  var p=new URLSearchParams();
+  if(state.cat)p.set('cat',state.cat);
+  if(state.q)p.set('q',state.q);
+  if(state.shape.length)p.set('shape',state.shape.join(','));
+  if(state.fresh.length)p.set('fresh',state.fresh.join(','));
+  if(state.interactive)p.set('interactive','1');
+  if(state.sort)p.set('sort',state.sort);
+  var s=p.toString();
+  history.replaceState(history.state,'',s?'?'+s:location.pathname);
+}
+
+function paintFacets(){
+  document.querySelectorAll('[data-facet]').forEach(function(a){
+    var f=a.dataset.facet,v=a.dataset.val,on=false;
+    if(f==='cat')on=state.cat===v;
+    else if(f==='shape')on=state.shape.indexOf(v)>=0;
+    else if(f==='fresh')on=state.fresh.indexOf(v)>=0;
+    else if(f==='interactive')on=state.interactive;
+    a.setAttribute('aria-pressed',on?'true':'false');
+  });
+  document.querySelectorAll('.sorts a').forEach(function(a){
+    a.setAttribute('aria-current',(state.sort||'new')===a.dataset.sort?'true':'false');
+  });
+  renderChips();
+}
+
+var FRESH_LABEL={reviewed90:'Reviewed in 90 days',updated30:'Updated in 30 days',new30:'New in 30 days'};
+function shapeLabel(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function renderChips(){
+  var out=[];
+  if(state.cat)out.push(['cat',state.cat,state.cat]);
+  if(state.q)out.push(['q','','"'+state.q+'"']);
+  state.shape.forEach(function(s){out.push(['shape',s,shapeLabel(s)]);});
+  state.fresh.forEach(function(f){out.push(['fresh',f,FRESH_LABEL[f]||f]);});
+  if(state.interactive)out.push(['interactive','1','Interactive']);
+  el('chips').innerHTML=out.map(function(c){
+    return '<button class="chip" type="button" data-chip="'+esc(c[0])+'" data-val="'+esc(c[1])+'">'+esc(c[2])+'<span class="x">×</span></button>';
+  }).join('');
+}
+
+document.addEventListener('click',function(e){
+  var chip=e.target.closest('[data-chip]');
+  if(chip){e.preventDefault();clearFacet(chip.dataset.chip,chip.dataset.val);return;}
+  var fa=e.target.closest('[data-facet]');
+  if(fa){
+    // A server-rendered category page holds only its own cards, so changing the
+    // category there has to be a real navigation.
+    if(fa.dataset.facet==='cat'&&SERVER_CAT)return;
+    e.preventDefault();toggleFacet(fa.dataset.facet,fa.dataset.val);return;
+  }
+  var so=e.target.closest('.sorts a');
+  if(so){e.preventDefault();state.sort=so.dataset.sort==='new'?'':so.dataset.sort;apply(true);return;}
+});
+
+function toggleFacet(f,v){
+  if(f==='cat')state.cat=state.cat===v?'':v;
+  else if(f==='interactive')state.interactive=!state.interactive;
+  else{
+    var arr=state[f],k=arr.indexOf(v);
+    if(k<0)arr.push(v);else arr.splice(k,1);
+    arr.sort();
+  }
+  apply(false);
+}
+function clearFacet(f,v){
+  if(f==='cat'){if(SERVER_CAT){location.href='./';return;}state.cat='';}
+  else if(f==='q'){state.q='';var hq=el('heroq');if(hq)hq.value='';}
+  else if(f==='interactive')state.interactive=false;
+  else{var arr=state[f],k=arr.indexOf(v);if(k>=0)arr.splice(k,1);}
+  apply(false);
+}
+
+/* -------------------------------------------------------- rail on mobile -- */
+el('railToggle').addEventListener('click',function(){
+  var r=el('rail');r.classList.toggle('open');
+  this.setAttribute('aria-expanded',r.classList.contains('open')?'true':'false');
+});
+
+/* ---------------------------------------------------------------- search -- */
+var dlg=el('palette'),pq=el('pq'),pres=el('pres'),plive=el('plive');
+var EXAMPLES=['torque','ukemi','ufw'],exN=0;
+var pmodel=[],psel=0;
+
+function openPalette(seed){
+  if(!dlg.open){
+    pq.placeholder='Search inside every page (try '+EXAMPLES[exN%EXAMPLES.length]+')';
+    exN++;
+    dlg.showModal();
+    loadFull().then(function(){if(dlg.open)rank(pq.value);});
+  }
+  if(seed!==undefined){pq.value=seed;}
+  pq.focus();pq.select();
+  rank(pq.value);
+}
+el('openPalette').addEventListener('click',function(){openPalette();});
+dlg.addEventListener('close',function(){pmodel=[];pres.innerHTML='';});
+
+function score(i,qt){
+  var total=0;
+  for(var a=0;a<qt.length;a++){
+    var t=qt[a],w=0,j;
+    for(j=0;j<tokTitle[i].length;j++)if(tokTitle[i][j].indexOf(t)===0){w=5;break;}
+    if(w<3&&tokKw){var kw=tokKw[L.f[i]]||[];for(j=0;j<kw.length;j++)if(kw[j].indexOf(t)===0){w=3;break;}}
+    if(w<3&&tokHead){
+      var hs=tokHead[L.f[i]]||[];
+      for(j=0;j<hs.length&&w<3;j++)for(var m=0;m<hs[j].k.length;m++)if(hs[j].k[m].indexOf(t)===0){w=3;break;}
+    }
+    if(w<1&&tokDesc){
+      var dt=tokDesc[L.f[i]]||[];
+      for(j=0;j<dt.length;j++)if(dt[j].indexOf(t)===0){w=1;break;}
+    }
+    if(w===0)return 0;
+    total+=w;
+  }
+  return total+Math.log10(L.p[i]+1)*0.5;
+}
+
+function matchHeadings(f,qt){
+  if(!tokHead)return [];
+  var out=[],hs=tokHead[f]||[];
+  for(var j=0;j<hs.length&&out.length<3;j++){
+    for(var a=0;a<qt.length;a++){
+      var hit=false;
+      for(var m=0;m<hs[j].k.length;m++)if(hs[j].k[m].indexOf(qt[a])===0){hit=true;break;}
+      if(hit){out.push(hs[j]);break;}
+    }
+  }
+  return out;
+}
+
+function commandsFor(qt){
+  var cmds=[
+    {label:'Open map',act:function(){toast('Map arrives in phase 2.');}},
+    {label:'Open paths',act:function(){dlg.close();el('paths').scrollIntoView({behavior:'auto'});}},
+    {label:'Surprise me',act:function(){dlg.close();surprise();}},
+    {label:'Toggle theme',act:toggleTheme}
+  ];
+  var q=qt.join(' ');
+  var cats=L.cats.filter(function(c){return !q||c.toLowerCase().indexOf(q)>=0;}).slice(0,3);
+  cats.forEach(function(c){cmds.push({label:'Category: '+c,act:function(){dlg.close();if(SERVER_CAT){location.href='?cat='+encodeURIComponent(c);}else{state.cat=c;apply(false);}}});});
+  if(q)cmds=cmds.filter(function(c){return c.label.toLowerCase().indexOf(q)>=0||c.label.indexOf('Category: ')===0;});
+  return cmds.slice(0,6);
+}
+
+function rank(qs){
+  var qt=toks(qs),rows=[];
+  if(qt.length){
+    var scored=[];
+    for(var i=0;i<N;i++){var s=score(i,qt);if(s>0)scored.push([s,i]);}
+    scored.sort(function(a,b){return b[0]-a[0];});
+    scored.slice(0,10).forEach(function(p){
+      rows.push({kind:'sheet',i:p[1],heads:matchHeadings(L.f[p[1]],qt)});
+    });
+  }else{
+    var recent=lsj('recent',[]).slice(0,5);
+    if(recent.length){
+      rows.push({kind:'label',text:'Recent'});
+      recent.forEach(function(f){if(byFile[f]!==undefined)rows.push({kind:'sheet',i:byFile[f],heads:[]});});
+    }
+    var trend=L.f.map(function(_,i){return i;}).sort(function(a,b){return L.p[b]-L.p[a];}).slice(0,5);
+    rows.push({kind:'label',text:'Trending'});
+    trend.forEach(function(i){rows.push({kind:'sheet',i:i,heads:[]});});
+  }
+  var cmds=commandsFor(qt);
+  if(cmds.length){
+    rows.push({kind:'label',text:'Commands'});
+    cmds.forEach(function(c){rows.push({kind:'cmd',cmd:c});});
+  }
+  pmodel=[];
+  var html=rows.map(function(r){
+    if(r.kind==='label')return '<li class="glabel lbl">'+esc(r.text)+'</li>';
+    if(r.kind==='cmd'){
+      var ci=pmodel.push({type:'cmd',cmd:r.cmd})-1;
+      return '<li><a class="row" data-p="'+ci+'" href="#">'+esc(r.cmd.label)+'</a></li>';
+    }
+    var i=r.i,si=pmodel.push({type:'sheet',file:L.f[i]})-1;
+    var out='<li><a class="row k'+L.c[i]+'" data-p="'+si+'" href="'+esc(L.f[i])+'"><span class="cdot"></span><span>'+esc(TITLE[i]||L.f[i])+'</span><span class="meta">'+esc(L.cats[L.c[i]])+'</span></a>';
+    r.heads.forEach(function(hh){
+      if(hh.id){
+        var hi=pmodel.push({type:'sheet',file:L.f[i],hash:hh.id})-1;
+        out+='<a class="sub" data-p="'+hi+'" href="'+esc(L.f[i])+'#'+esc(hh.id)+'"><span class="hash">#</span> '+esc(hh.t)+'</a>';
+      }else{
+        out+='<span class="sub"><span class="hash">#</span> '+esc(hh.t)+' <em>(no anchor)</em></span>';
+      }
+    });
+    return out+'</li>';
+  }).join('');
+  pres.innerHTML=html;
+  psel=0;paintSel();
+  var sheetCount=pmodel.filter(function(p){return p.type==='sheet'&&!p.hash;}).length;
+  plive.textContent=sheetCount+' result'+(sheetCount===1?'':'s');
+}
+
+function paintSel(){
+  var nodes=pres.querySelectorAll('[data-p]');
+  nodes.forEach(function(n){n.classList.toggle('sel',Number(n.dataset.p)===psel);});
+  var cur=pres.querySelector('.sel');
+  if(cur&&cur.scrollIntoView)cur.scrollIntoView({block:'nearest'});
+}
+
+function activate(p,fromKey){
+  var item=pmodel[p];
+  if(!item)return;
+  ga('explorer_search',{chars:pq.value.length,results:pmodel.length});
+  if(item.type==='cmd'){item.cmd.act();return;}
+  dlg.close();
+  if(item.hash){markVisited(item.file);location.href=item.file+'#'+item.hash;}
+  else openDrawer(item.file,'palette');
+}
+
+pq.addEventListener('input',function(){rank(pq.value);});
+pres.addEventListener('click',function(e){
+  var a=e.target.closest('[data-p]');
+  if(!a)return;
+  if(e.metaKey||e.ctrlKey||e.shiftKey||e.button===1)return;
+  e.preventDefault();activate(Number(a.dataset.p));
+});
+dlg.addEventListener('keydown',function(e){
+  var max=pmodel.length-1;
+  if(e.key==='ArrowDown'){e.preventDefault();psel=Math.min(max,psel+1);paintSel();}
+  else if(e.key==='ArrowUp'){e.preventDefault();psel=Math.max(0,psel-1);paintSel();}
+  else if(e.key==='Enter'){e.preventDefault();activate(psel,true);}
+});
+
+/* ---------------------------------------------------------------- drawer -- */
+var drawer=el('drawer'),lastFocus=null;
+function fmtDate(ts){if(!ts)return '';var d=new Date(ts*1000);return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'});}
+function popRankOf(file){
+  var i=byFile[file];if(i===undefined)return 0;
+  var order=L.f.map(function(_,k){return k;}).sort(function(a,b){return L.p[b]-L.p[a];});
+  return order.indexOf(i)+1;
+}
+function drawerHTML(s){
+  var i=byFile[s.file],cls='k'+L.c[i];
+  var heads=(s.headings||[]);
+  var shown=heads.slice(0,14);
+  var ins=shown.map(function(hh){
+    return '<li>'+(hh.id?'<a href="'+esc(s.file)+'#'+esc(hh.id)+'">'+esc(hh.text)+'</a>':esc(hh.text))+'</li>';
+  }).join('');
+  if(heads.length>14)ins+='<li>and '+(heads.length-14)+' more</li>';
+  var outs=(s.outlinks||[]).map(function(f){
+    var j=FULL.idx[f];return j===undefined?'':'<a class="nbr" data-nbr="'+esc(f)+'">'+esc(FULL.sheets[j].title)+'</a>';
+  }).join('');
+  var ins2=(inbound[s.file]||[]).slice(0,12).map(function(f){
+    var j=FULL.idx[f];return j===undefined?'':'<a class="nbr" data-nbr="'+esc(f)+'">'+esc(FULL.sheets[j].title)+'</a>';
+  }).join('');
+  var img=s.image?String(s.image).replace('https://cheatsheets.davidveksler.com/',''):'';
+  return '<div class="detail '+cls+'" style="border:0;padding:0;margin:0">'
+   +'<div class="dhead"><p class="crow" style="margin:0"><span class="cbadge">'+esc(s.category)+'</span>'
+   +(s.shape||[]).slice(0,3).map(function(x){return '<span class="cbadge">'+esc(shapeLabel(x))+'</span>';}).join('')
+   +'</p><button class="dclose" type="button" id="dclose" aria-label="Close">Close</button></div>'
+   +(img?'<div class="dshot"><img src="'+esc(img)+'" alt="" loading="lazy" onerror="this.hidden=true"></div>':'')
+   +'<h2>'+esc(s.title)+'</h2><p>'+esc(s.description||'')+'</p>'
+   +(ins?'<p class="lbl">What\'s inside</p><ul>'+ins+'</ul>':'')
+   +'<p class="lbl">Neighbours</p><p class="facts">Links to '+((s.outlinks||[]).length)+' · Linked from '+((inbound[s.file]||[]).length)+'</p>'
+   +outs+ins2
+   +'<p class="lbl">Facts</p><p class="facts">'
+   +(s.created?'Created '+fmtDate(s.created)+' · ':'')
+   +(s.updated?'Updated '+fmtDate(s.updated)+' · ':'')
+   +(s.reviewed?'Reviewed '+esc(s.reviewed)+' · ':'')
+   +'~'+(s.words||0).toLocaleString()+' words · '+(s.tables||0)+' tables · '+(s.sections||0)+' sections · #'
+   +popRankOf(s.file)+' of '+TOTAL+' this month</p>'
+   +'<p class="acts"><a class="primary" href="'+esc(s.file)+'" data-open="'+esc(s.file)+'">Open</a>'
+   +'<button type="button" id="dcopy">Copy link</button>'
+   +'<button type="button" disabled title="Map arrives in phase 2">Show on map</button></p>'
+   +'</div>';
+}
+
+function openDrawer(file,from,replace){
+  loadFull().then(function(d){
+    if(!d||d.idx[file]===undefined)return;
+    var s=d.sheets[d.idx[file]];
+    lastFocus=document.activeElement;
+    drawer.innerHTML=drawerHTML(s);
+    drawer.hidden=false;
+    drawer.focus();
+    var det=el('sheet-detail');if(det)det.hidden=true;
+    var url='?sheet='+encodeURIComponent(file);
+    if(replace)history.replaceState({sheet:file},'',url);
+    else history.pushState({sheet:file},'',url);
+    ga('explorer_drawer',{file:file,from:from||'grid'});
+    var rec=lsj('recent',[]).filter(function(x){return x!==file;});
+    rec.unshift(file);try{ls('recent',JSON.stringify(rec.slice(0,10)));}catch(e){}
+  });
+}
+function closeDrawer(push){
+  if(drawer.hidden)return;
+  drawer.hidden=true;drawer.innerHTML='';
+  if(lastFocus&&lastFocus.focus)lastFocus.focus();
+  if(push)history.pushState({},'',location.pathname+location.search.replace(/([?&])sheet=[^&]*&?/,'$1').replace(/[?&]$/,''));
+}
+drawer.addEventListener('click',function(e){
+  if(e.target.closest('#dclose')){history.back();return;}
+  var nb=e.target.closest('[data-nbr]');
+  if(nb){e.preventDefault();openDrawer(nb.dataset.nbr,'neighbour');return;}
+  if(e.target.closest('#dcopy')){
+    var st=history.state&&history.state.sheet;
+    var u=location.origin+location.pathname+(st?'?sheet='+encodeURIComponent(st):'');
+    if(navigator.clipboard)navigator.clipboard.writeText(u).then(function(){toast('Link copied.');},function(){toast(u);});
+    else toast(u);
+    return;
+  }
+  var op=e.target.closest('[data-open]');
+  if(op)markVisited(op.dataset.open);
+});
+
+grid.addEventListener('click',function(e){
+  if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+  var link=e.target.closest('a');
+  var card=e.target.closest('.c');
+  if(!card)return;
+  var f=fileOf(card);
+  if(link&&(link.parentElement===card||link.closest('h3'))){markVisited(f);return;}
+  e.preventDefault();
+  openDrawer(f,'grid');
+});
+
+window.addEventListener('popstate',function(e){
+  var st=(e.state&&e.state.sheet)||new URLSearchParams(location.search).get('sheet');
+  if(st)openDrawer(st,'history',true);
+  else{drawer.hidden=true;drawer.innerHTML='';}
+});
+
+/* ------------------------------------------------------------ serendipity - */
+function surprise(){
+  var order=L.f.map(function(_,i){return i;}).sort(function(a,b){return L.p[b]-L.p[a];});
+  var pool=order.slice(Math.floor(order.length/3));
+  var recentS=lsj('surprises',[]);
+  var choices=pool.filter(function(i){return recentS.indexOf(L.f[i])<0;});
+  if(!choices.length)choices=pool;
+  var pick=choices[Math.floor(Math.random()*choices.length)];
+  var f=L.f[pick];
+  recentS.unshift(f);try{ls('surprises',JSON.stringify(recentS.slice(0,10)));}catch(e){}
+  ga('explorer_surprise',{file:f});
+  openDrawer(f,'surprise');
+}
+el('surprise').addEventListener('click',surprise);
+
+/* --------------------------------------------------------------- keys ----- */
+var chord=false,chordT=null;
+el('helpBtn').addEventListener('click',function(){el('help').showModal();});
+document.addEventListener('keydown',function(e){
+  var tag=(e.target.tagName||'').toLowerCase();
+  var typing=tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable;
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette();return;}
+  if(e.key==='Escape'){if(!drawer.hidden&&!dlg.open){e.preventDefault();history.back();}return;}
+  if(typing||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key==='/'){e.preventDefault();openPalette();return;}
+  if(e.key==='?'){e.preventDefault();el('help').showModal();return;}
+  if(e.key==='t'){e.preventDefault();toggleTheme();return;}
+  if(chord){
+    chord=false;clearTimeout(chordT);
+    if(e.key==='g'){e.preventDefault();el('grid').scrollIntoView();}
+    else if(e.key==='m'){e.preventDefault();toast('Map arrives in phase 2.');}
+    else if(e.key==='p'){e.preventDefault();el('paths').scrollIntoView();}
+    return;
+  }
+  if(e.key==='g'){chord=true;chordT=setTimeout(function(){chord=false;},1200);}
+});
+
+/* -------------------------------------------------------------- signup ---- */
+document.querySelectorAll('form.email-signup').forEach(function(form){
+  var status=form.querySelector('.signup-status');
+  function show(msg,isError){if(!status)return;status.hidden=false;status.textContent=msg;status.classList.toggle('is-error',!!isError);}
+  form.addEventListener('submit',function(e){
+    var email=form.querySelector('input[type="email"]');
+    if(email&&!email.checkValidity())return;
+    e.preventDefault();
+    var btn=form.querySelector('button');
+    if(btn)btn.disabled=true;
+    fetch(form.action,{method:'POST',headers:{'Accept':'application/json'},body:new FormData(form)})
+      .then(function(r){return r.json().catch(function(){return{ok:r.ok};});})
+      .then(function(d){
+        if(d&&d.ok){show('Thanks, you are on the list.');form.reset();}
+        else show((d&&d.error)||'Sorry, that did not go through. Please try again.',true);
+      })
+      .catch(function(){show('Network error, please try again later.',true);})
+      .finally(function(){if(btn)btn.disabled=false;});
+  });
+});
+
+/* ------------------------------------------------------------ analytics --- */
+document.querySelectorAll('[data-ga-linkedin]').forEach(function(a){
+  a.addEventListener('click',function(){ga('linkedin_click',{link_location:a.dataset.gaLinkedin});});
+});
+
+/* ------------------------------------------------------------- start up --- */
+paintVisited();
+renderChips();
+paintFacets();
+(function(){
+  var sp=new URLSearchParams(location.search).get('sheet');
+  if(sp&&byFile[sp]!==undefined)openDrawer(sp,'url',true);
+})();
+})();
+</script>
 </body>
 </html>
