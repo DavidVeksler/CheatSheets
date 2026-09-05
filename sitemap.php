@@ -54,6 +54,30 @@ try {
     // Continue with empty array if scanning fails
 }
 
+// Category landing pages: ?cat=<Category> is server-rendered by index.php with
+// its own title, description, canonical and JSON-LD, so each one is a distinct
+// indexable document. The list comes from catalog.json (the single source of
+// category truth downstream of category-map.php); if the catalog is missing the
+// sitemap simply omits them rather than guessing.
+$categoryUrls = [];
+$catalogPath = __DIR__ . '/catalog.json';
+if (is_readable($catalogPath)) {
+    $catalog = json_decode((string)@file_get_contents($catalogPath), true);
+    if (is_array($catalog) && !empty($catalog['categories']) && is_array($catalog['categories'])) {
+        $catalogMtime = @filemtime($catalogPath) ?: time();
+        foreach ($catalog['categories'] as $category) {
+            if (empty($category['name'])) continue;
+            $categoryUrls[] = [
+                'url' => $baseUrl . '?cat=' . rawurlencode((string)$category['name']),
+                'lastmod' => date('c', $catalogMtime),
+                'priority' => '0.7',
+                'changefreq' => 'weekly',
+            ];
+        }
+    }
+}
+$htmlFiles = array_merge($htmlFiles, $categoryUrls);
+
 // Add the main index page
 array_unshift($htmlFiles, [
     'url' => $baseUrl,
@@ -69,7 +93,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <url>
         <loc><?php echo htmlspecialchars($file['url']); ?></loc>
         <lastmod><?php echo htmlspecialchars($file['lastmod']); ?></lastmod>
-        <changefreq>monthly</changefreq>
+        <changefreq><?php echo htmlspecialchars($file['changefreq'] ?? 'monthly'); ?></changefreq>
         <priority><?php echo htmlspecialchars($file['priority']); ?></priority>
     </url>
 <?php endforeach; ?>

@@ -240,9 +240,13 @@ def validate(args, base: str) -> None:
         return
 
     # 1. SEO acceptance gate (scripts/seo_check.py) on the pages being shipped.
-    if html and not args.skip_seo:
+    #    seo_check.py always also renders index.php and every ?cat= landing page
+    #    through the php CLI, so the front door is gated even when no sheet
+    #    changed; that is why this runs whether or not `html` is non-empty.
+    if not args.skip_seo:
         seo = os.path.join(ROOT, "scripts", "seo_check.py")
-        res = subprocess.run([sys.executable, seo, *html], cwd=ROOT,
+        seo_args = html if html else ["--only-rendered"]
+        res = subprocess.run([sys.executable, seo, *seo_args], cwd=ROOT,
                              capture_output=True, text=True)
         if res.returncode != 0:
             # seo_check.py prints a summary line, then indents each failure by 2 spaces.
@@ -252,7 +256,7 @@ def validate(args, base: str) -> None:
             else:
                 failures.append(f"seo: seo_check.py failed:\n{res.stdout}{res.stderr}".rstrip())
         else:
-            ok(f"SEO metadata gate passed ({len(html)} page(s))")
+            ok(f"SEO metadata gate passed ({len(html)} page(s) plus the rendered index)")
     elif args.skip_seo:
         warn("SEO gate skipped (--skip-seo)")
 
