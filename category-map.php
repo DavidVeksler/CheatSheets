@@ -45,6 +45,7 @@ return [
     'postgresql.html' => 'Software & DevOps',
     'programming-language-design-tradeoffs.html' => 'Software & DevOps',
     'python-for-architects.html' => 'Software & DevOps',
+    'radiology-imaging-platform-operations.html' => 'Software & DevOps',
     'radiology-imaging-software-stack.html' => 'Software & DevOps',
     'scrum.html' => 'Software & DevOps',
     'software-development-guides.html' => 'Software & DevOps',

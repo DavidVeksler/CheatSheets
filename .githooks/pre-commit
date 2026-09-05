@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Tracked pre-commit hook: keep catalog.json in sync with the content it indexes.
+#
+# If any staged change touches a catalogued *.html file, category-map.php,
+# paths.json, or catalog-overrides.json, regenerate catalog.json and stage
+# the result, so a commit can never ship a catalog that's stale relative to
+# the content it describes (scripts/deploy.py --check enforces the same
+# freshness rule as a deploy gate; this hook is what keeps it from firing).
+#
+# Enable in a clone with:  git config core.hooksPath .githooks
+set -euo pipefail
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$root"
+
+staged="$(git diff --cached --name-only --diff-filter=ACMR)"
+
+needs_rebuild=0
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  case "$f" in
+    *.html|category-map.php|paths.json|catalog-overrides.json)
+      needs_rebuild=1
+      break
+      ;;
+  esac
+done <<< "$staged"
+
+[ "$needs_rebuild" -eq 1 ] || exit 0
+
+if   command -v python  >/dev/null 2>&1; then py=python
+elif command -v python3 >/dev/null 2>&1; then py=python3
+else echo "pre-commit: no python found; run scripts/build_catalog.py manually and git add catalog.json." >&2; exit 1
+fi
+
+echo "pre-commit: staged changes touch cataloged content — rebuilding catalog.json..."
+if ! "$py" "$root/scripts/build_catalog.py"; then
+  echo "pre-commit: catalog build failed — commit blocked. Fix the issue or run scripts/build_catalog.py manually." >&2
+  exit 1
+fi
+
+git add "$root/catalog.json"
