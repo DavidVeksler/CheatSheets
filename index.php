@@ -844,15 +844,15 @@ dialog#help dd{margin:0}
 
 @layer state {
 @media (prefers-reduced-motion: no-preference){
-  .card{transition:transform .12s ease-out,border-color .12s ease-out}
-  .card:hover{transform:translateY(-2px);border-color:var(--accent);border-top-color:var(--cat)}
+  .c{transition:transform .12s ease-out,border-color .12s ease-out}
+  .c:hover{transform:translateY(-2px);border-color:var(--accent);border-top-color:var(--cat)}
   #drawer{animation:slidein .2s ease-out}
   dialog#palette{animation:fadein .12s ease-out}
   @keyframes slidein{from{transform:translateX(16px);opacity:.4}to{transform:none;opacity:1}}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
 }
 @media (prefers-reduced-motion: reduce){
-  .card:hover{border-color:var(--accent)}
+  .c:hover{border-color:var(--accent)}
 }
 /* Print: the Grid becomes a two-column list of title, URL and category; the
    Paths section keeps its ordered lists, which are already its print form. */
