@@ -648,7 +648,7 @@ h1{font-size:clamp(34px,5vw,44px);font-weight:650;letter-spacing:-.015em}
 h2{font-size:22px;font-weight:620}
 h3{font-size:17px;font-weight:600}
 a{color:var(--accent)}
-a:where(.plain,.brand,.ctitle a,.copen){text-decoration:none}
+a:where(.plain,.brand,.chip,.nbr),.c h3 a,.c>a,.deepcut h3 a{text-decoration:none}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
 button{font:inherit;color:inherit}
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
@@ -669,7 +669,7 @@ button{font:inherit;color:inherit}
 .tbtn{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:5px 9px;font-size:13px;cursor:pointer;color:var(--ink)}
 .tbtn:hover{border-color:var(--accent)}
 .tbtn kbd{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--rule);border-radius:3px;padding:0 4px}
-.hero{padding:clamp(20px,4vh,40px) 0 clamp(14px,2vh,20px);max-height:40vh}
+.hero{padding:clamp(18px,3.5vh,34px) 0 clamp(12px,2vh,18px)}
 .hero p.lead{color:var(--muted);max-width:60ch;margin:0 0 16px;font-size:16px}
 .herosearch{display:flex;gap:8px;max-width:620px}
 .herosearch input{flex:1;min-width:0;font:16px var(--sans);padding:11px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)}
@@ -682,10 +682,18 @@ button{font:inherit;color:inherit}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
 footer.site{border-top:1px solid var(--rule);padding:22px 0 34px;color:var(--muted);font-size:13px}
 footer.site a{color:var(--muted)}
+/* Under 600 px the hero drops the lead paragraph so it stays under 30vh with the
+   search box as its focal element; the Pulse strip directly below carries the
+   same counts, so nothing is actually lost. */
+@media (max-width:600px){
+  .hero{padding:6px 0 8px}
+  .hero h1{font-size:clamp(27px,7.4vw,34px);margin-bottom:.25em}
+  .hero p.lead{display:none}
+  .herohint{gap:14px;margin-top:8px}
+}
 @media (max-width:860px){
   .explorer{grid-template-columns:1fr;gap:14px}
   .rail{position:static;max-height:none}
-  .hero{max-height:30vh;padding-top:14px}
   .topnav a.hidesm{display:none}
 }
 }
@@ -757,6 +765,8 @@ footer.site a{color:var(--muted)}
 .empty{padding:28px 0;color:var(--muted)}
 
 /* --- Sheet detail (no-JS ?sheet=) and drawer share this markup --------- */
+.crow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.cbadge{font-size:11px;letter-spacing:.02em;padding:1px 8px;border-radius:999px;border:1px solid color-mix(in srgb,var(--cat) 45%,transparent);background:color-mix(in srgb,var(--cat) 12%,transparent);color:var(--ink)}
 .detail{border:1px solid var(--rule);border-top:3px solid var(--cat);border-radius:8px;background:var(--surface);padding:16px 18px;margin:0 0 20px}
 .detail h2{margin-bottom:8px}
 .detail .facts{font-family:var(--mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -1138,6 +1148,9 @@ var NS='cs-explorer:v1:';
 var CATV=<?php echo json_encode($catalogVersion); ?>;
 var SERVER_CAT=<?php echo json_encode($activeCat); ?>;
 var TOTAL=<?php echo (int)$totalCount; ?>;
+// The server may have rendered a sheet or category title, so the "no filters"
+// title is passed in rather than read back off document.title.
+var SITE_TITLE=<?php echo json_encode($SITE_TITLE); ?>;
 
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(NS+k);localStorage.setItem(NS+k,v);}catch(e){}return null;}
 function lsj(k,d){try{var r=JSON.parse(ls(k)||'null');return r===null?d:r;}catch(e){return d;}}
@@ -1273,10 +1286,9 @@ function apply(reorder){
   if(dc)dc.hidden=!!(state.q||state.shape.length||state.fresh.length||state.interactive);
   syncURL();
   paintFacets();
-  document.title=state.cat?state.cat+' Cheatsheets | David Veksler':BASE_TITLE;
+  document.title=state.cat?state.cat+' Cheatsheets | David Veksler':SITE_TITLE;
   return n;
 }
-var BASE_TITLE=document.title;
 
 function syncURL(){
   var p=new URLSearchParams();
@@ -1416,11 +1428,12 @@ function commandsFor(qt){
     {label:'Surprise me',act:function(){dlg.close();surprise();}},
     {label:'Toggle theme',act:toggleTheme}
   ];
+  // The four fixed commands are always offered; the category commands are the
+  // top 3 whose name matches what has been typed so far.
   var q=qt.join(' ');
-  var cats=L.cats.filter(function(c){return !q||c.toLowerCase().indexOf(q)>=0;}).slice(0,3);
-  cats.forEach(function(c){cmds.push({label:'Category: '+c,act:function(){dlg.close();if(SERVER_CAT){location.href='?cat='+encodeURIComponent(c);}else{state.cat=c;apply(false);}}});});
-  if(q)cmds=cmds.filter(function(c){return c.label.toLowerCase().indexOf(q)>=0||c.label.indexOf('Category: ')===0;});
-  return cmds.slice(0,6);
+  L.cats.filter(function(c){return !q||c.toLowerCase().indexOf(q)>=0;}).slice(0,3)
+    .forEach(function(c){cmds.push({label:'Category: '+c,act:function(){dlg.close();if(SERVER_CAT){location.href='?cat='+encodeURIComponent(c);}else{state.cat=c;apply(false);}}});});
+  return cmds;
 }
 
 function rank(qs){
@@ -1547,6 +1560,7 @@ function drawerHTML(s){
    +'</div>';
 }
 
+var drawerPushed=false;
 function openDrawer(file,from,replace){
   loadFull().then(function(d){
     if(!d||d.idx[file]===undefined)return;
@@ -1557,21 +1571,29 @@ function openDrawer(file,from,replace){
     drawer.focus();
     var det=el('sheet-detail');if(det)det.hidden=true;
     var url='?sheet='+encodeURIComponent(file);
-    if(replace)history.replaceState({sheet:file},'',url);
-    else history.pushState({sheet:file},'',url);
+    if(replace){history.replaceState({sheet:file},'',url);}
+    else{history.pushState({sheet:file},'',url);drawerPushed=true;}
     ga('explorer_drawer',{file:file,from:from||'grid'});
     var rec=lsj('recent',[]).filter(function(x){return x!==file;});
     rec.unshift(file);try{ls('recent',JSON.stringify(rec.slice(0,10)));}catch(e){}
   });
 }
-function closeDrawer(push){
+function hideDrawer(){
   if(drawer.hidden)return;
   drawer.hidden=true;drawer.innerHTML='';
   if(lastFocus&&lastFocus.focus)lastFocus.focus();
-  if(push)history.pushState({},'',location.pathname+location.search.replace(/([?&])sheet=[^&]*&?/,'$1').replace(/[?&]$/,''));
+}
+/* Close: step back through the pushState entry when this session created one;
+   otherwise (the drawer came from a ?sheet= landing) strip the parameter in
+   place so Esc never navigates the reader off the site. */
+function closeDrawer(){
+  if(drawerPushed){drawerPushed=false;history.back();return;}
+  hideDrawer();
+  var det=el('sheet-detail');if(det)det.hidden=false;
+  apply(false);   // also restores the title the server rendered for the sheet
 }
 drawer.addEventListener('click',function(e){
-  if(e.target.closest('#dclose')){history.back();return;}
+  if(e.target.closest('#dclose')){closeDrawer();return;}
   var nb=e.target.closest('[data-nbr]');
   if(nb){e.preventDefault();openDrawer(nb.dataset.nbr,'neighbour');return;}
   if(e.target.closest('#dcopy')){
@@ -1598,8 +1620,9 @@ grid.addEventListener('click',function(e){
 
 window.addEventListener('popstate',function(e){
   var st=(e.state&&e.state.sheet)||new URLSearchParams(location.search).get('sheet');
+  drawerPushed=false;
   if(st)openDrawer(st,'history',true);
-  else{drawer.hidden=true;drawer.innerHTML='';}
+  else hideDrawer();
 });
 
 /* ------------------------------------------------------------ serendipity - */
@@ -1624,7 +1647,7 @@ document.addEventListener('keydown',function(e){
   var tag=(e.target.tagName||'').toLowerCase();
   var typing=tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable;
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette();return;}
-  if(e.key==='Escape'){if(!drawer.hidden&&!dlg.open){e.preventDefault();history.back();}return;}
+  if(e.key==='Escape'){if(!drawer.hidden&&!dlg.open){e.preventDefault();closeDrawer();}return;}
   if(typing||e.metaKey||e.ctrlKey||e.altKey)return;
   if(e.key==='/'){e.preventDefault();openPalette();return;}
   if(e.key==='?'){e.preventDefault();el('help').showModal();return;}
