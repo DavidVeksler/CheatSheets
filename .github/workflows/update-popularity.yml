@@ -43,6 +43,25 @@ jobs:
         # current on catalog.json even on nights nobody commits by hand.
         run: python3 scripts/build_catalog.py
 
+      # scripts/render_og_map.py (images/cheatsheets-og-portfolio.png) is a
+      # manual step, not run here: it needs PHP plus a full Playwright
+      # Chromium download, neither of which this job installs today, and
+      # would meaningfully slow down a job that otherwise finishes in
+      # seconds. If PHP + `playwright install chromium` ever become cheap
+      # enough to add here, the step is:
+      #
+      # - name: Set up PHP
+      #   uses: shivammathur/setup-php@v2
+      #   with:
+      #     php-version: "8.3"
+      # - name: Install Playwright
+      #   run: python3 -m pip install playwright && python3 -m playwright install --with-deps chromium
+      # - name: Regenerate the OG social preview
+      #   run: python3 scripts/render_og_map.py
+      #
+      # Until then, re-run it by hand per docs/marketing.md > "Social preview
+      # image (OG)" and commit the PNG.
+
       - name: Commit updated scores
         run: |
           git config user.name  "github-actions[bot]"

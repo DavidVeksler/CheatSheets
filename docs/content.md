@@ -32,6 +32,10 @@ Where this file and AGENTS.md disagree, AGENTS.md wins.
 5. Generate + optimize the `images/{filename}.png` preview.
 6. Commit the `.html` + its `images/*.png` + `catalog.json` by explicit path. One
    cheatsheet per commit.
+7. Optional: if the new sheet fits a curated multi-step trail a reader would follow in
+   order, add a step to `paths.json` (the Explorer's Paths lens). Most sheets need no
+   entry here — see [`index-explorer.md`](index-explorer.md) for the format and how the
+   build validates every step's filename.
 
 Reviewing an existing page: run [`../TODO/CHEATSHEET-AUDIT.md`](../TODO/CHEATSHEET-AUDIT.md).
 Writing/reviewing a spec: [`../TODO/SPEC-AUDIT.md`](../TODO/SPEC-AUDIT.md).

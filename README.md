@@ -25,11 +25,27 @@ self-verification gate, creates its social preview, and records every change in 
 The collection spans AI and software, security, risk and preparedness, finance, martial arts,
 radio, health, philosophy and religion, engineering, home systems, and consumer defense.
 
+## The Explorer
+
+[`index.php`](https://cheatsheets.davidveksler.com/) is not a card grid over a folder listing.
+It reads a generated catalog of every sheet's title, description, keywords, and section
+headings, so its search box can find a page by a term that appears only in one of its
+headings and deep-link straight there, not just match a title. A Map lens draws the 197
+sheets and their ~1,500 cross-links as a constellation, clustered by category. A Paths lens
+holds hand-curated trails through 4-6 sheets at a time for a given task (harden a Linux box,
+plan crypto custody, program a radio). The data behind all three lenses is
+[`catalog.json`](https://cheatsheets.davidveksler.com/catalog.json), built by
+[`scripts/build_catalog.py`](scripts/build_catalog.py) and regenerated on every commit that
+touches a cheatsheet.
+
 ## Repository map
 
 - `*.html` — standalone cheatsheets
 - `images/*.png` — 1200×630 social and gallery previews
-- `index.php` — searchable gallery that auto-discovers root HTML files
+- `index.php` — the Explorer: search, category/shape/freshness facets, a constellation map,
+  and curated paths, built from `catalog.json`
+- `catalog.json` — generated data layer behind the Explorer (see `scripts/build_catalog.py`)
+- `paths.json` — hand-curated trails for the Paths lens
 - `category-map.php` — filename-to-category source of truth
 - `sitemap.php` and `llms.txt` — search and AI discovery surfaces
 - `TODO/` — queued page specs plus durable SEO and audit workflows

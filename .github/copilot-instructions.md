@@ -12,13 +12,22 @@ Interactive HTML cheatsheet collection covering technology, philosophy, AI, cryp
    - Interactive features: collapsible sections, filters, localStorage persistence
    - Print-optimized styles
 
-2. **`index.php`** - Dynamic portfolio gallery
-   - Scans root directory for `.html` files automatically
-   - Extracts metadata using DOMDocument/DOMXPath
-   - Generates card-based layout with thumbnails
+2. **`index.php`** - The Explorer (Grid / Map / Paths lenses over `catalog.json`)
+   - Renders from `catalog.json`, not by scanning or re-parsing HTML at request time
+   - Search reaches inside every page (title, keywords, description, section headings),
+     not just titles; a Map lens draws every sheet and its cross-links as a constellation;
+     a Paths lens holds hand-curated trails from `paths.json`
+   - Vanilla CSS/JS, no framework: Bootstrap and the icon font were removed from the index
+     in the Explorer redesign (the "do not rewrite existing Bootstrap sheets" rule in
+     AGENTS.md never applied to the index — it isn't a cheatsheet)
+   - `scripts/build_catalog.py` / `catalog.json` - **index data layer**: scans catalogued
+     `.html` + `category-map.php` + `paths.json` into `catalog.json` (titles, headings,
+     outlinks, shapes, map layout) that `index.php` reads. Regenerate with
+     `python3 scripts/build_catalog.py`, or let `.githooks/pre-commit` do it. Gated by
+     `scripts/deploy.py --check`.
 
 3. **`sitemap.php`** - SEO-optimized XML sitemap
-   - Auto-discovers HTML files in root
+   - Auto-discovers HTML files in root, plus the 15 category landing pages (`?cat=`)
    - Priority: 1.0 for index, 0.8 for cheatsheets
    - Uses file modification times for `<lastmod>`
 
@@ -26,12 +35,15 @@ Interactive HTML cheatsheet collection covering technology, philosophy, AI, cryp
    - Playwright-based screenshot generation (1200x630px for social media)
    - BeautifulSoup HTML parsing with intelligent metadata injection
    - Dry-run by default; use `--apply` flag to commit changes
+   - Separate from `scripts/render_og_map.py`, which renders `index.php`'s own social
+     preview (the live constellation map) rather than a per-sheet screenshot
 
 ### File Organization
 ```
 root/
 ├── *.html              # All cheatsheets (flat structure)
-├── index.php           # Main gallery (auto-discovers HTML)
+├── index.php           # The Explorer (Grid/Map/Paths, reads catalog.json)
+├── catalog.json         # Generated data layer behind the Explorer
 ├── sitemap.php         # SEO sitemap (auto-discovers HTML)
 ├── generate-image-previews.py  # Metadata validator & screenshot tool
 └── images/             # Social media preview images (filename.png)
@@ -152,4 +164,4 @@ Files are auto-discovered via `scandir()`, filtered by `$excludedItems` array.
 - [ ] Print styles functional
 - [ ] Interactive elements work without JavaScript fallback
 - [ ] Filename follows `topic-name.html` convention
-- [ ] File appears automatically in `index.php` gallery
+- [ ] File added to `category-map.php`, then `catalog.json` regenerated (`python3 scripts/build_catalog.py`, or let `.githooks/pre-commit` do it) so it appears in the `index.php` Explorer
