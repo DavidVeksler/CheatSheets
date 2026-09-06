@@ -440,7 +440,6 @@ chrome_open(
     <?php else: ?>
       No data yet — run <code>fetch-popularity.py</code> to seed.
     <?php endif; ?>
-    <a href="https://stats.davidveksler.com/" target="_blank" rel="noopener">Full analytics →</a>
   </p>
 </section>
 
