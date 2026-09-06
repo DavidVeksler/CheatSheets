@@ -132,9 +132,17 @@ Compute new hashes via `curl -sL <url> | openssl dgst -sha384 -binary | openssl 
   "@type": "TechArticle",
   "headline": "Title with Version",
   "description": "Detailed description",
-  "author": {"@type": "Person", "name": "David Veksler (AI Generated)"},
+  "author": {"@type": "Person", "@id": "https://davidveksler.com/#person", "name": "David Veksler", "url": "https://davidveksler.com/"},
+  "creditText": "Produced by a governed multi-agent Claude Code pipeline; author of record David Veksler",
   "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
   "datePublished": "YYYY-MM-DD",
   "keywords": "keyword list"
 }
 </script>
+
+The `author` node resolves to the hub's Person entity (`@id` `https://davidveksler.com/#person`,
+`name` "David Veksler", `url` `https://davidveksler.com/`) plus a sibling `creditText` string
+disclosing the production pipeline, as shown above. The older `"David Veksler (AI Generated)"`
+name suffix is retired on any page that carries the visible `author-byline` block: the byline's
+own provenance sentence, linking to [`how-its-built.html`](how-its-built.html), plus the JSON-LD
+`creditText` together cover the disclosure that the name suffix used to carry alone.
