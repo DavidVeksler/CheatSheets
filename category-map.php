@@ -105,6 +105,7 @@ return [
 
     // Firearms & Military
     'autonomous-defense-systems.html' => 'Firearms & Military',
+    'ccw-proficiency-drills.html' => 'Firearms & Military',
     'future-of-warfare-technology.html' => 'Firearms & Military',
     'handgun-calibers.html' => 'Firearms & Military',
     'military-aphorisms.html' => 'Firearms & Military',
