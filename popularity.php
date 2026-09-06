@@ -373,6 +373,7 @@ chrome_open(
 .panels-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:22px}
 
 .rank-row{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--rule)}
+.rank-row[hidden]{display:none}
 .rank-row:last-child{border-bottom:0}
 .rank-row:hover{background:var(--accent-surface)}
 .rank-row.top1{border-left:3px solid var(--gold)}
