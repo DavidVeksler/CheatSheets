@@ -208,6 +208,7 @@ return [
     'hot-tub-treatment.html' => 'Home & Lifestyle',
     'lawn-irrigation-watering-math.html' => 'Home & Lifestyle',
     'living-richly-guide.html' => 'Home & Lifestyle',
+    'meat-temperature-chart.html' => 'Home & Lifestyle',
     'raising-multilingual-kids.html' => 'Home & Lifestyle',
     'samsung-bespoke-oven-guide.html' => 'Home & Lifestyle',
     'selfish-reasons-to-have-more-kids.html' => 'Home & Lifestyle',
