@@ -11,6 +11,7 @@
  * already on the list.
  */
 
+require __DIR__ . '/lib/env.php';
 require __DIR__ . '/lib/newsletter.php';
 
 header('Cache-Control: no-store');

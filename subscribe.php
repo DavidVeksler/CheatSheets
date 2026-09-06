@@ -24,6 +24,7 @@
  *   - plain form post (no JS)         → a tiny self-contained confirmation page
  */
 
+require __DIR__ . '/lib/env.php';
 require __DIR__ . '/lib/newsletter.php';
 require __DIR__ . '/lib/resend.php';
 
