@@ -151,15 +151,50 @@ foreach ($dailyViewsRaw as $filename => $dayCount) {
 usort($trending, fn($a, $b) => $b['surge'] <=> $a['surge']);
 $trending = array_slice($trending, 0, 5);
 
+/* ---------- Daily-history prep, shared by the momentum panel and row sparklines ---------- */
+// "dailyHistory" is fetch-popularity.py's per-file 30-day ring buffer —
+// collected nightly but never rendered anywhere until now.
+$dailyHistory = $popData['dailyHistory'] ?? [];
+$allHistoryDates = [];
+foreach ($dailyHistory as $days) {
+    foreach (array_keys($days) as $d) { $allHistoryDates[$d] = true; }
+}
+$historyDatesSorted = array_keys($allHistoryDates);
+sort($historyDatesSorted);
+$historySpanDaysAvailable = count($historyDatesSorted);
+
+// Sparklines only switch on once a few real days have accumulated, so early
+// on every row quietly omits the chart instead of drawing a misleading flat
+// line from a single day of data.
+$sparklineReady = $historySpanDaysAvailable >= 4;
+$sparkDates = $sparklineReady ? array_slice($historyDatesSorted, -14) : [];
+function row_sparkline_points(array $days, array $dates, float $w, float $h): string {
+    $n = count($dates);
+    if ($n < 2) return '';
+    $max = 0.0;
+    foreach ($dates as $d) $max = max($max, (float) ($days[$d] ?? 0));
+    if ($max <= 0) return '';
+    $pts = [];
+    foreach ($dates as $i => $d) {
+        $x = round($i / ($n - 1) * $w, 1);
+        $y = round($h - ((float) ($days[$d] ?? 0) / $max) * $h, 1);
+        $pts[] = "$x,$y";
+    }
+    return implode(' ', $pts);
+}
+
 /* ---------- Build ranked rows ---------- */
 $rows = [];
 $rank = 0;
 foreach ($scores as $filename => $score) {
     $rank++;
-    $title = $metaCache[$filename]['title'] ?? filename_to_title($filename);
-    $pct   = $totalScore > 0 ? round($score / $totalScore * 100, 1) : 0;
-    $bar   = $maxScore > 0   ? round($score / $maxScore * 100, 2) : 0;
-    $rows[] = compact('rank', 'filename', 'title', 'score', 'pct', 'bar');
+    $title    = $metaCache[$filename]['title'] ?? filename_to_title($filename);
+    $pct      = $totalScore > 0 ? round($score / $totalScore * 100, 1) : 0;
+    $bar      = $maxScore > 0   ? round($score / $maxScore * 100, 2) : 0;
+    $category = $categoryMap[$filename] ?? 'Other';
+    $views    = (int) ($totalViews[$filename] ?? 0);
+    $spark    = $sparklineReady ? row_sparkline_points($dailyHistory[$filename] ?? [], $sparkDates, 60, 18) : '';
+    $rows[] = compact('rank', 'filename', 'title', 'score', 'pct', 'bar', 'category', 'views', 'spark');
 }
 
 /* ---------- Rising stars: pages published in the last 30 days, ranked by score ---------- */
@@ -179,6 +214,77 @@ foreach ($scores as $filename => $score) {
 usort($risingStars, fn($a, $b) => $b['score'] <=> $a['score']);
 $risingStarCount = count($risingStars);
 $risingStars      = array_slice($risingStars, 0, 5);
+
+/* ---------- Needs attention: well-trafficked pages overdue for a fact review ---------- */
+// Cross-references refresh-status.json (written only by the weekly-freshness
+// routine) against the popularity score, so the busiest pages with the
+// stalest facts surface first — the highest-leverage review queue.
+$refreshFile = __DIR__ . '/refresh-status.json';
+$refreshData = [];
+if (is_readable($refreshFile)) {
+    $raw = @file_get_contents($refreshFile);
+    if ($raw !== false) {
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded) && !empty($decoded['files']) && is_array($decoded['files'])) {
+            $refreshData = $decoded['files'];
+        }
+    }
+}
+$staleCutoffDays = 60;
+$needsAttention = [];
+foreach ($scores as $filename => $score) {
+    if ($score < $medianScore) continue; // only pages that actually get traffic
+    $lastReviewed = $refreshData[$filename]['last_reviewed'] ?? null;
+    $daysSince = $lastReviewed !== null ? (int) floor((time() - strtotime($lastReviewed)) / 86400) : null;
+    if ($daysSince !== null && $daysSince < $staleCutoffDays) continue;
+    $needsAttention[] = [
+        'filename'  => $filename,
+        'title'     => $metaCache[$filename]['title'] ?? filename_to_title($filename),
+        'score'     => $score,
+        'daysSince' => $daysSince,
+    ];
+}
+usort($needsAttention, fn($a, $b) => $b['score'] <=> $a['score']);
+$needsAttention = array_slice($needsAttention, 0, 6);
+
+/* ---------- Momentum: trailing 7-day traffic swing per page ---------- */
+// Reuses the $dailyHistory / $historyDatesSorted prep above. Needs at least
+// two full trailing 7-day windows of real history before the comparison
+// means anything, so it degrades to an honest "collecting data" message
+// rather than showing noise from a handful of days.
+$momentumReady = $historySpanDaysAvailable >= 10;
+$movers = [];
+if ($momentumReady) {
+    $recentWindow = array_slice($historyDatesSorted, -7);
+    $priorWindow  = array_slice($historyDatesSorted, -14, 7);
+    foreach ($dailyHistory as $filename => $days) {
+        $recentSum = 0; foreach ($recentWindow as $d) $recentSum += $days[$d] ?? 0;
+        $priorSum  = 0; foreach ($priorWindow as $d)  $priorSum  += $days[$d] ?? 0;
+        if ($recentSum + $priorSum < 5) continue; // skip pages too quiet to read a trend from
+        $delta = $recentSum - $priorSum;
+        $pct = $priorSum > 0 ? round($delta / $priorSum * 100) : ($recentSum > 0 ? 100 : 0);
+        $movers[] = [
+            'filename' => $filename,
+            'title'    => $metaCache[$filename]['title'] ?? filename_to_title($filename),
+            'recent'   => $recentSum,
+            'prior'    => $priorSum,
+            'pct'      => $pct,
+        ];
+    }
+    usort($movers, fn($a, $b) => abs($b['pct']) <=> abs($a['pct']));
+    $movers = array_slice($movers, 0, 6);
+}
+
+/* ---------- Zero-view pages, grouped by category (detail behind the summary stat) ---------- */
+$untrackedByCategory = [];
+foreach ($untrackedPages as $filename) {
+    $cat = $categoryMap[$filename] ?? 'Other';
+    $untrackedByCategory[$cat][] = [
+        'filename' => $filename,
+        'title'    => $metaCache[$filename]['title'] ?? filename_to_title($filename),
+    ];
+}
+ksort($untrackedByCategory);
 
 /* ---------- Score distribution histogram ---------- */
 $buckets = [
@@ -282,6 +388,45 @@ chrome_open(
 .rank-score .val{font-family:var(--mono);font-weight:650;font-size:14px}
 .rank-score .pct{color:var(--muted);font-size:11.5px}
 @media (max-width:575px){ .rank-score{display:none} }
+.rank-spark{flex:none;color:var(--muted);opacity:.8}
+@media (max-width:800px){ .rank-spark{display:none} }
+
+.mv-row{display:grid;grid-template-columns:1fr auto auto;gap:2px 10px;align-items:center;padding:6px 0}
+.mv-row+.mv-row{border-top:1px dashed var(--rule)}
+.mv-row .mv-label{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:var(--ink)}
+.mv-pct{font-family:var(--mono);font-size:12px;font-weight:650;text-align:right;white-space:nowrap}
+.mv-pct.up{color:var(--success)}
+.mv-pct.down{color:var(--danger)}
+.mv-detail{color:var(--muted);font-size:11.5px;text-align:right;white-space:nowrap}
+.na-row{display:flex;align-items:baseline;gap:8px;padding:6px 0}
+.na-row+.na-row{border-top:1px dashed var(--rule)}
+.na-row .na-label{min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:var(--ink)}
+.na-row .na-days{font-family:var(--mono);font-size:11.5px;color:var(--danger);white-space:nowrap;flex:none}
+
+.rank-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.rank-toolbar input[type=search]{flex:1 1 200px;min-width:0;padding:7px 10px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
+.rank-toolbar select{padding:7px 10px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
+.rank-sort{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.rank-sort button{background:var(--surface);border:0;padding:7px 10px;font-size:13px;cursor:pointer;color:var(--muted)}
+.rank-sort button+button{border-left:1px solid var(--rule)}
+.rank-sort button.cur{background:var(--accent-surface);color:var(--accent);font-weight:620}
+.rank-empty{padding:20px 16px;color:var(--muted);font-size:13.5px;text-align:center}
+.zero-detail{margin-bottom:22px}
+.zero-detail summary{cursor:pointer;font-size:13.5px;color:var(--muted);padding:2px 0}
+.zero-detail summary:hover{color:var(--ink)}
+.zero-cat{margin:12px 0}
+.zero-cat h3{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 6px}
+.zero-list{display:flex;flex-wrap:wrap;gap:6px 10px}
+.zero-list a{font-size:13px}
+
+@media (prefers-reduced-motion: no-preference){
+  .rank-bar-fill,.mini-bar i,.dist-fill{transition:width .8s cubic-bezier(.16,1,.3,1)}
+  .mini-panel,.rank-toolbar,.list-card{animation:fadeInUp .45s ease both}
+  .panels .mini-panel:nth-child(2){animation-delay:.06s}
+  .panels .mini-panel:nth-child(3){animation-delay:.12s}
+  .panels-2 .mini-panel:nth-child(2){animation-delay:.06s}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+}
 </style>
 
 <div class="wrap">
@@ -394,24 +539,137 @@ chrome_open(
       </div>
     <?php endforeach; endif; ?>
   </div>
+
+  <div class="mini-panel">
+    <h2>Needs attention <span class="age">(popular, ≥<?php echo $staleCutoffDays; ?>d since fact review)</span></h2>
+    <?php if (empty($needsAttention)): ?>
+      <p class="mini-empty">Every well-trafficked page has been reviewed within <?php echo $staleCutoffDays; ?> days. Nothing overdue.</p>
+    <?php else: foreach ($needsAttention as $na): ?>
+      <div class="na-row">
+        <a class="na-label" href="<?php echo h($na['filename']); ?>" target="_blank" title="<?php echo h($na['title']); ?>"><?php echo h($na['title']); ?></a>
+        <span class="na-days"><?php echo $na['daysSince'] === null ? 'never reviewed' : $na['daysSince'] . 'd stale'; ?></span>
+      </div>
+    <?php endforeach; endif; ?>
+  </div>
+
+  <div class="mini-panel">
+    <h2>Momentum <span class="age">(last 7 days vs. the 7 before)</span></h2>
+    <?php if (!$momentumReady): ?>
+      <p class="mini-empty">Collecting daily history — this panel unlocks once <?php echo 10 - $historySpanDaysAvailable; ?> more day<?php echo (10 - $historySpanDaysAvailable) === 1 ? '' : 's'; ?> of Cloudflare data has accumulated.</p>
+    <?php elseif (empty($movers)): ?>
+      <p class="mini-empty">No page has enough recent traffic yet to read a clear trend from.</p>
+    <?php else: foreach ($movers as $m): $dir = $m['pct'] > 0 ? 'up' : ($m['pct'] < 0 ? 'down' : ''); ?>
+      <div class="mv-row">
+        <a class="mv-label" href="<?php echo h($m['filename']); ?>" target="_blank" title="<?php echo h($m['title']); ?>"><?php echo h($m['title']); ?></a>
+        <span class="mv-pct <?php echo $dir; ?>"><?php echo $m['pct'] > 0 ? '+' : ''; ?><?php echo $m['pct']; ?>&thinsp;%</span>
+        <span class="mv-detail"><?php echo number_format($m['prior']); ?>→<?php echo number_format($m['recent']); ?></span>
+      </div>
+    <?php endforeach; endif; ?>
+  </div>
 </div>
 
+<?php if (!empty($untrackedByCategory)): ?>
+<details class="zero-detail">
+  <summary><?php echo number_format($untrackedCount); ?> page<?php echo $untrackedCount === 1 ? '' : 's'; ?> with zero recorded views — show which ones, by category</summary>
+  <?php foreach ($untrackedByCategory as $cat => $pages): ?>
+    <div class="zero-cat">
+      <h3><?php echo h($cat); ?> (<?php echo count($pages); ?>)</h3>
+      <div class="zero-list">
+        <?php foreach ($pages as $p): ?>
+          <a href="<?php echo h($p['filename']); ?>" target="_blank"><?php echo h($p['title']); ?></a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  <?php endforeach; ?>
+</details>
+<?php endif; ?>
+
 <p class="lbl sectlbl">Ranked by decayed 30-day score</p>
-<div class="list-card" role="list">
+<div class="rank-toolbar">
+  <input type="search" id="rankSearch" placeholder="Filter by title&hellip;" aria-label="Filter ranked list by title" autocomplete="off" spellcheck="false">
+  <select id="rankCategory" aria-label="Filter by category">
+    <option value="">All categories</option>
+    <?php foreach (array_keys($categoryTotals) as $cat): ?>
+      <option value="<?php echo h($cat); ?>"><?php echo h($cat); ?></option>
+    <?php endforeach; ?>
+  </select>
+  <div class="rank-sort" role="group" aria-label="Sort ranked list">
+    <button type="button" data-sort="score" class="cur">Score</button>
+    <button type="button" data-sort="views">All-time views</button>
+    <button type="button" data-sort="title">Title A&ndash;Z</button>
+  </div>
+</div>
+<div class="list-card" role="list" id="rankList">
   <?php foreach ($rows as $row): $isTop1 = $row['rank'] === 1; ?>
-  <div class="rank-row<?php echo $isTop1 ? ' top1' : ''; ?>" role="listitem">
+  <div class="rank-row<?php echo $isTop1 ? ' top1' : ''; ?>" role="listitem"
+       data-title="<?php echo h(mb_strtolower($row['title'])); ?>" data-category="<?php echo h($row['category']); ?>"
+       data-score="<?php echo $row['score']; ?>" data-views="<?php echo $row['views']; ?>">
     <div class="rank-num" aria-label="Rank <?php echo $row['rank']; ?>"><?php echo $row['rank']; ?></div>
     <div class="rank-info">
       <a class="rank-title" href="<?php echo h($row['filename']); ?>" target="_blank" title="<?php echo h($row['filename']); ?>"><?php echo h($row['title']); ?></a>
       <div class="rank-bar-track" aria-hidden="true"><div class="rank-bar-fill" style="width:<?php echo $row['bar']; ?>%"></div></div>
     </div>
+    <?php if ($row['spark'] !== ''): ?>
+    <svg class="rank-spark" width="60" height="18" viewBox="0 0 60 18" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="<?php echo h($row['spark']); ?>" fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
+    </svg>
+    <?php endif; ?>
     <div class="rank-score">
       <div class="val num"><?php echo number_format($row['score'], 0); ?></div>
       <div class="pct"><?php echo $row['pct']; ?>&thinsp;%</div>
     </div>
   </div>
   <?php endforeach; ?>
+  <p class="rank-empty" id="rankEmpty" hidden>No pages match that filter.</p>
 </div>
+
+<script>
+(function(){
+  var list = document.getElementById('rankList');
+  if (!list) return;
+  var rows = Array.prototype.slice.call(list.querySelectorAll('.rank-row'));
+  var search = document.getElementById('rankSearch');
+  var catSel = document.getElementById('rankCategory');
+  var sortBtns = Array.prototype.slice.call(document.querySelectorAll('.rank-sort button'));
+  var empty = document.getElementById('rankEmpty');
+  var curSort = 'score';
+
+  function applyFilter(){
+    var q = (search.value || '').toLowerCase().trim();
+    var cat = catSel.value;
+    var visible = 0;
+    rows.forEach(function(r){
+      var match = (!q || r.dataset.title.indexOf(q) !== -1) && (!cat || r.dataset.category === cat);
+      r.hidden = !match;
+      if (match) visible++;
+    });
+    empty.hidden = visible !== 0;
+  }
+  function applySort(){
+    rows.slice().sort(function(a, b){
+      if (curSort === 'title') return a.dataset.title.localeCompare(b.dataset.title);
+      return (parseFloat(b.dataset[curSort]) || 0) - (parseFloat(a.dataset[curSort]) || 0);
+    }).forEach(function(r){ list.insertBefore(r, empty); });
+  }
+  search.addEventListener('input', applyFilter);
+  catSel.addEventListener('change', applyFilter);
+  sortBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      curSort = btn.dataset.sort;
+      sortBtns.forEach(function(b){ b.classList.toggle('cur', b === btn); });
+      applySort();
+    });
+  });
+
+  if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    document.querySelectorAll('.rank-bar-fill, .mini-bar i, .dist-fill').forEach(function(el){
+      var w = el.style.width;
+      el.style.width = '0%';
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.style.width = w; }); });
+    });
+  }
+})();
+</script>
 
 <?php endif; ?>
 </div>
