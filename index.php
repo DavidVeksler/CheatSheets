@@ -553,11 +553,15 @@ function shape_label(string $s): string {
  * Card markup is deliberately terse: 197 of these ship in one document, so
  * every attribute is paid for 197 times. Structure is carried by element type
  * rather than class names (see the "Card element map" comment in the CSS):
- *   img = preview, b = category badge (b.r carries the reviewed marker and the
- *   date in its title), h3>a = title link, p = description, em = shape chips,
- *   small = dates,
- *   the trailing bare <a> = Open, span.n = NEW badge. The file is read off the
- *   title link, so it is not repeated in a data attribute.
+ *   img = preview, button[data-info] = the secondary "open detail pane"
+ *   affordance overlaid on the image, b = category badge (b.r carries the
+ *   reviewed marker and the date in its title), h3>a = title link, p =
+ *   description, em = shape chips, small = dates,
+ *   the trailing bare <a> = Open, span.n = NEW badge. The file is read off
+ *   the title link, so it is not repeated in a data attribute. Clicking
+ *   anywhere else on the card (including the image) navigates straight to
+ *   the sheet, which is the primary action; only [data-info] opens the
+ *   drawer (see grid's click handler).
  */
 function render_card(array $r, int $now, int $newWindow, int $reviewWindow, bool $visible = true): void {
     $isNew = $r['created'] && $r['created'] >= $now - $newWindow;
@@ -568,6 +572,7 @@ function render_card(array $r, int $now, int $newWindow, int $reviewWindow, bool
     // No width/height attributes: .c img pins aspect-ratio:40/21 in CSS, which
     // reserves the box just as well and costs 26 bytes less on every card.
     if ($r['image']) echo '<img src="' . h($r['image']) . '" alt="" loading="lazy">';
+    echo '<button type="button" class="info" data-info aria-label="Details for ' . h($r['title']) . '"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.3"/><path d="M8 7.3v4.2" stroke-linecap="round"/><circle cx="8" cy="5.1" r=".9" fill="currentColor" stroke="none"/></svg></button>';
     if ($isNew) echo '<span class="n">New</span>';
     echo $fresh
         ? '<b class="r" title="Reviewed ' . h($r['reviewed']) . '">' . h($r['category']) . '</b>'
@@ -818,13 +823,18 @@ footer.site a{color:var(--muted)}
 
 /* --- Cards -------------------------------------------------------------
    Card element map (markup is terse because it ships 197 times):
-     img = preview   b = category badge (b.r = reviewed, title = the date)
+     img = preview   button.info = secondary "open detail pane" affordance
+     b = category badge (b.r = reviewed, title = the date)
      h3>a = title    p  = description     em = shape chips
      small = dates   .c>a = Open link      span.n = NEW badge
+   The card itself navigates to the sheet on click (primary action); .info
+   is the only part of the card that opens the drawer instead.
    ---------------------------------------------------------------------- */
 .c{container-type:inline-size;position:relative;background:var(--surface);border:1px solid var(--rule);border-top:3px solid var(--cat);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer}
 .c.off{display:none}
 .c img{width:100%;aspect-ratio:40/21;object-fit:contain;display:block;background:color-mix(in srgb,var(--cat) 9%,var(--surface));border-bottom:1px solid var(--rule)}
+.c .info{position:absolute;top:8px;left:8px;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--rule);background:color-mix(in srgb,var(--page) 80%,transparent);color:var(--ink);cursor:pointer}
+.c .info:hover,.c .info:focus-visible{border-color:var(--accent);color:var(--accent)}
 .c>span.n{position:absolute;top:8px;right:8px;background:var(--success);color:var(--page);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px}
 .c b{align-self:flex-start;margin:12px 14px 8px;font-size:11px;font-weight:500;letter-spacing:.02em;padding:1px 8px;border-radius:999px;border:1px solid color-mix(in srgb,var(--cat) 45%,transparent);background:color-mix(in srgb,var(--cat) 12%,transparent);color:var(--ink)}
 .c b.r::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--success);margin-left:7px;translate:0 -1px}
@@ -1165,6 +1175,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
   <p class="crow"><span class="cbadge"><?php echo h($os['category']); ?></span><?php foreach (array_slice($os['shape'], 0, 3) as $sc): ?><span class="cbadge"><?php echo h(shape_label($sc)); ?></span><?php endforeach; ?></p>
   <h2><?php echo h($os['title']); ?></h2>
   <p><?php echo h($os['description']); ?></p>
+  <p class="acts"><a class="primary" href="<?php echo h($os['file']); ?>">Open</a></p>
   <?php if ($os['headings']): ?>
   <p class="lbl">What's inside</p>
   <ul>
@@ -1194,7 +1205,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
   <?php if ($osSparkPoints !== ''): ?>
   <p class="spark plain"><svg width="118" height="26" viewBox="0 0 118 26" aria-label="Views for this page, last <?php echo count($dailyHistoryLite[$os['file']]); ?> days" role="img"><polyline points="<?php echo h($osSparkPoints); ?>" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg> <span class="num"><?php echo number_format($osSparkLast); ?> views/day</span></p>
   <?php endif; ?>
-  <p class="acts"><a class="primary" href="<?php echo h($os['file']); ?>">Open</a> <a href="./">Back to all cheatsheets</a></p>
+  <p class="acts"><a href="./">Back to all cheatsheets</a></p>
 </section>
 <?php endif; ?>
 
@@ -1844,6 +1855,8 @@ function drawerHTML(s){
    +'</p><button class="dclose" type="button" id="dclose" aria-label="Close">Close</button></div>'
    +(img?'<div class="dshot"><img src="'+esc(img)+'" alt="" loading="lazy" onerror="this.hidden=true"></div>':'')
    +'<h2>'+esc(s.title)+'</h2><p>'+esc(s.description||'')+'</p>'
+   +'<p class="acts"><a class="primary" href="'+esc(s.file)+'" data-open="'+esc(s.file)+'">Open</a>'
+   +'<button type="button" data-map="'+esc(s.file)+'">Show on map</button></p>'
    +(ins?'<p class="lbl">What\'s inside</p><ul>'+ins+'</ul>':'')
    +'<p class="lbl">Neighbours</p><p class="facts">Links to '+((s.outlinks||[]).length)+' · Linked from '+((inbound[s.file]||[]).length)+'</p>'
    +outs+ins2
@@ -1854,9 +1867,7 @@ function drawerHTML(s){
    +'~'+(s.words||0).toLocaleString()+' words · '+(s.tables||0)+' tables · '+(s.sections||0)+' sections · #'
    +popRankOf(s.file)+' of '+TOTAL+' this month</p>'
    +sparkSVG(DH[s.file]?Object.keys(DH[s.file]).sort().map(function(d){return DH[s.file][d];}):[],s.file)
-   +'<p class="acts"><a class="primary" href="'+esc(s.file)+'" data-open="'+esc(s.file)+'">Open</a>'
-   +'<button type="button" id="dcopy">Copy link</button>'
-   +'<button type="button" data-map="'+esc(s.file)+'">Show on map</button></p>'
+   +'<p class="acts"><button type="button" id="dcopy">Copy link</button></p>'
    +'</div>';
 }
 
@@ -1913,13 +1924,15 @@ drawer.addEventListener('click',function(e){
 
 grid.addEventListener('click',function(e){
   if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
-  var link=e.target.closest('a');
   var card=e.target.closest('.c');
   if(!card)return;
   var f=fileOf(card);
-  if(link&&(link.parentElement===card||link.closest('h3'))){markVisited(f);return;}
+  if(e.target.closest('[data-info]')){e.preventDefault();openDrawer(f,'grid');return;}
+  var link=e.target.closest('a');
+  if(link){markVisited(f);return;}
   e.preventDefault();
-  openDrawer(f,'grid');
+  markVisited(f);
+  location.href=f;
 });
 
 window.addEventListener('popstate',function(e){
