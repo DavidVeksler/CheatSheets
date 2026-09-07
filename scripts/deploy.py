@@ -22,13 +22,20 @@ Usage:
   python scripts/deploy.py --check         # preflight + validate only (used by pre-push hook)
   python scripts/deploy.py --all           # validate every page, not just changed ones
 
+A local branch behind origin/main is auto-synced (rebase + push to origin),
+not just reported: full deploy.py runs continue straight through, while a raw
+`git push production` (via the pre-push hook's --check) syncs then blocks that
+one attempt, since git already decided what it's pushing before the hook ran -
+re-running the same push goes straight through against the now-synced branch.
+
 Escape hatches (use sparingly):
   --force        the "just ship it" override: allow a non-main branch, skip the
-                 origin-sync check, force-push HEAD to production/main (overrides
-                 non-fast-forward), AND bypass every validation gate (implies
-                 --skip-seo, --skip-links, --skip-verify). The working tree must
-                 still be clean - a push only ships committed content, so a dirty
-                 tree would silently deploy something other than what's on disk.
+                 origin-sync check (and its auto-sync), force-push HEAD to
+                 production/main (overrides non-fast-forward), AND bypass every
+                 validation gate (implies --skip-seo, --skip-links,
+                 --skip-verify). The working tree must still be clean - a push
+                 only ships committed content, so a dirty tree would silently
+                 deploy something other than what's on disk.
   --skip-seo     skip scripts/seo_check.py
   --skip-links   skip internal link/asset integrity check
   --skip-verify  skip the post-deploy live curl checks
@@ -133,6 +140,42 @@ def git(*args: str, check: bool = True) -> str:
 # --------------------------------------------------------------------------- #
 # Preflight
 # --------------------------------------------------------------------------- #
+def sync_with_origin(args) -> None:
+    """Rebase local DEPLOY_BRANCH onto origin/DEPLOY_BRANCH and push the result.
+
+    Called only after preflight has confirmed we're on DEPLOY_BRANCH with a
+    clean tree, so the rebase always has a safe base to replay onto. A
+    conflicting rebase is aborted (never left half-applied) and reported for
+    manual resolution.
+
+    When this runs as `--check` from the pre-push hook, git has already
+    decided (before the hook even started) which local commit THIS push will
+    send — a rebase here can't change that. So instead of letting the stale
+    commit through, this pushes the rebased branch to origin and then blocks
+    the current attempt; the retry sees a clean sync and goes straight through.
+    A direct `deploy.py`/`./deploy.sh` run has no such staleness: push() runs
+    later in the same process against the now-current HEAD, so it just
+    continues.
+    """
+    rebase = subprocess.run(
+        ["git", "rebase", f"{ORIGIN_REMOTE}/{DEPLOY_BRANCH}"],
+        cwd=ROOT, capture_output=True, text=True)
+    if rebase.returncode != 0:
+        subprocess.run(["git", "rebase", "--abort"], cwd=ROOT, capture_output=True)
+        fail(f"auto-sync failed: rebasing onto {ORIGIN_REMOTE}/{DEPLOY_BRANCH} hit a "
+             f"conflict. Resolve manually: git pull --rebase {ORIGIN_REMOTE} {DEPLOY_BRANCH}")
+    ok(f"rebased onto {ORIGIN_REMOTE}/{DEPLOY_BRANCH}")
+
+    git("push", ORIGIN_REMOTE, f"HEAD:{DEPLOY_BRANCH}")
+    ok(f"pushed rebased {DEPLOY_BRANCH} to {ORIGIN_REMOTE}")
+
+    if args.check:
+        print(c(YELLOW, "\nLocal was behind origin, so it was auto-synced "
+                         "(rebased + pushed to GitHub). Re-run your push - "
+                         "the retry will go straight through."))
+        sys.exit(1)
+
+
 def preflight(args) -> str:
     """Return the diff base (production/main, or empty-tree hash) after checks."""
     step("Preflight")
@@ -158,8 +201,11 @@ def preflight(args) -> str:
     if origin and local != origin and not args.force:
         ahead = git("rev-list", "--count", f"{ORIGIN_REMOTE}/{DEPLOY_BRANCH}..HEAD", check=False)
         behind = git("rev-list", "--count", f"HEAD..{ORIGIN_REMOTE}/{DEPLOY_BRANCH}", check=False)
-        fail(f"local {DEPLOY_BRANCH} is not in sync with {ORIGIN_REMOTE}/{DEPLOY_BRANCH} "
-             f"(ahead {ahead}, behind {behind}). Push/pull GitHub first, or pass --force.")
+        warn(f"local {DEPLOY_BRANCH} is out of sync with {ORIGIN_REMOTE}/{DEPLOY_BRANCH} "
+             f"(ahead {ahead}, behind {behind}) - auto-syncing")
+        sync_with_origin(args)
+        local = git("rev-parse", "HEAD")
+        origin = git("rev-parse", f"{ORIGIN_REMOTE}/{DEPLOY_BRANCH}")
     ok(f"in sync with {ORIGIN_REMOTE}/{DEPLOY_BRANCH}" if origin else
        f"no {ORIGIN_REMOTE}/{DEPLOY_BRANCH} to compare (skipped)")
 
