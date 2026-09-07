@@ -387,10 +387,9 @@ chrome_open(
 );
 ?>
 <style>
-.stat{display:flex;align-items:center;gap:11px}
-.stat-icon{flex:none;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--accent-surface);color:var(--accent)}
-.stat-icon svg{width:17px;height:17px}
-.stat-body{min-width:0}
+.stat .l{display:flex;align-items:center;gap:5px}
+.stat-icon{flex:none;width:12px;height:12px;color:var(--muted)}
+.stat-icon svg{width:12px;height:12px;display:block}
 .mini-panel{border:1px solid var(--rule);border-radius:8px;background:var(--surface);padding:14px 16px;height:100%}
 .mini-panel h2{font-size:13px;margin-bottom:10px;display:flex;align-items:baseline;gap:8px}
 .mini-panel h2 .age{font-size:11.5px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0}
@@ -488,18 +487,18 @@ chrome_open(
 <?php else: ?>
 
 <div class="stats">
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('pages'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($rankedCount); ?></div><div class="l">Pages tracked</div></div></div>
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('top'); ?></div><div class="stat-body"><div class="n"><?php echo number_format((int) $maxScore); ?></div><div class="l">Top page score</div></div></div>
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('sum'); ?></div><div class="stat-body"><div class="n"><?php echo number_format((int) $totalScore); ?></div><div class="l">Total score sum</div></div></div>
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('clock'); ?></div><div class="stat-body"><div class="n" style="font-size:14px"><?php echo $lastUpdated ? h($lastUpdated) : '—'; ?></div><div class="l">Last updated</div></div></div>
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('avg'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($avgScore, 1); ?></div><div class="l">Avg score / page</div></div></div>
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('median'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($medianScore, 1); ?></div><div class="l">Median score</div></div></div>
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('share'); ?></div><div class="stat-body"><div class="n"><?php echo $top3Share; ?>&thinsp;%</div><div class="l">Top 3 share of views</div></div></div>
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('rising'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($risingStarCount); ?></div><div class="l">Rising stars (&le;30d)</div></div></div>
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('eye'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($totalDailyViews); ?></div><div class="l">Views yesterday</div></div></div>
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('layers'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($totalViewsAllTime); ?></div><div class="l">All-time views tracked</div></div></div>
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('list'); ?></div><div class="stat-body"><div class="n"><?php echo $top10Share; ?>&thinsp;%</div><div class="l">Top 10 share of views</div></div></div>
-  <div class="stat"><div class="stat-icon"><?php echo stat_icon('eyeoff'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($untrackedCount); ?> <span style="color:var(--muted);font-size:.85em">/ <?php echo number_format($totalPageCount); ?></span></div><div class="l">Pages with zero views</div></div></div>
+  <div class="stat"><div class="n"><?php echo number_format($rankedCount); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('pages'); ?></span>Pages tracked</div></div>
+  <div class="stat"><div class="n"><?php echo number_format((int) $maxScore); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('top'); ?></span>Top page score</div></div>
+  <div class="stat"><div class="n"><?php echo number_format((int) $totalScore); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('sum'); ?></span>Total score sum</div></div>
+  <div class="stat"><div class="n" style="font-size:14px"><?php echo $lastUpdated ? h($lastUpdated) : '—'; ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('clock'); ?></span>Last updated</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($avgScore, 1); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('avg'); ?></span>Avg score / page</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($medianScore, 1); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('median'); ?></span>Median score</div></div>
+  <div class="stat"><div class="n"><?php echo $top3Share; ?>&thinsp;%</div><div class="l"><span class="stat-icon"><?php echo stat_icon('share'); ?></span>Top 3 share of views</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($risingStarCount); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('rising'); ?></span>Rising stars (&le;30d)</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($totalDailyViews); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('eye'); ?></span>Views yesterday</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($totalViewsAllTime); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('layers'); ?></span>All-time views tracked</div></div>
+  <div class="stat"><div class="n"><?php echo $top10Share; ?>&thinsp;%</div><div class="l"><span class="stat-icon"><?php echo stat_icon('list'); ?></span>Top 10 share of views</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($untrackedCount); ?> <span style="color:var(--muted);font-size:.85em">/ <?php echo number_format($totalPageCount); ?></span></div><div class="l"><span class="stat-icon"><?php echo stat_icon('eyeoff'); ?></span>Pages with zero views</div></div>
 </div>
 
 <div class="note" style="margin-bottom:22px">
