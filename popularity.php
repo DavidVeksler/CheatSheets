@@ -56,6 +56,25 @@ if (is_readable($cacheFile)) {
 /* ---------- Category map (single source of truth: filename => category) ---------- */
 $categoryMap = require __DIR__ . '/category-map.php';
 
+/* ---------- Which cheatsheets actually exist on disk right now ---------- */
+// Computed early so every panel below can drop scores/history for pages that
+// have since been deleted — popularity.json (and its dailyHistory ring buffer)
+// keeps a filename's old Cloudflare numbers forever, since fetch-popularity.py
+// only ever adds to it. Without this filter a deleted page (e.g.
+// anduril-products.html, removed from the repo but still holding a decayed
+// score of ~279 from before deletion) outranks the median and shows up in
+// "Needs attention" as perpetually "never reviewed", in the ranked list, and
+// in every other panel below — a dead link nobody can act on.
+$excludedFromCoverage = ['etz-chaim-tree-of-life.html'];
+$allHtmlFiles = array_filter(glob(__DIR__ . '/*.html') ?: [], fn($p) => is_file($p));
+$allHtmlNames = array_map('basename', $allHtmlFiles);
+$allHtmlNames = array_values(array_diff($allHtmlNames, $excludedFromCoverage));
+$totalPageCount = count($allHtmlNames);
+$existingLookup = array_flip($allHtmlNames);
+
+$scores = array_intersect_key($scores, $existingLookup);
+arsort($scores);
+
 /* ---------- Cumulative (never-decayed) lifetime view counts + 90-day history ---------- */
 $totalViews        = $popData['totalViews'] ?? [];
 $totalViewsHistory = $popData['totalViewsHistory'] ?? [];
@@ -85,6 +104,27 @@ function rel_time(?string $dateStr): string {
     return 'just now';
 }
 
+// Hand-drawn 16x16 stroke icons for the top stat tiles — matches the
+// inline-SVG convention chrome.php already uses for the topbar (no icon
+// font, no extra CDN dependency to SRI-pin).
+function stat_icon(string $name): string {
+    $icons = [
+        'pages'  => '<path d="M4 1.5h4.5L12 5v9.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 .5-.5Z"/><path d="M8.5 1.5V5H12"/>',
+        'top'    => '<path d="M8 1.8l1.7 3.5 3.9.6-2.8 2.7.7 3.9L8 10.6l-3.5 1.9.7-3.9-2.8-2.7 3.9-.6L8 1.8Z"/>',
+        'sum'    => '<rect x="2" y="9" width="2.4" height="5" rx=".6" fill="currentColor" stroke="none"/><rect x="6.8" y="5.5" width="2.4" height="8.5" rx=".6" fill="currentColor" stroke="none"/><rect x="11.6" y="2" width="2.4" height="12" rx=".6" fill="currentColor" stroke="none"/>',
+        'clock'  => '<circle cx="8" cy="8" r="6.3"/><path d="M8 4.5V8l3 1.8"/>',
+        'avg'    => '<path d="M1.5 8.5h3l1.5-4 3 7 1.5-4h3.5"/>',
+        'median' => '<path d="M3 3v10M8 1.5v13M13 5v6"/><circle cx="3" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="8" cy="10" r="1.3" fill="currentColor" stroke="none"/><circle cx="13" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>',
+        'share'  => '<circle cx="8" cy="8" r="6"/><path d="M8 8V2a6 6 0 0 1 6 6H8Z" fill="currentColor" stroke="none"/>',
+        'rising' => '<path d="M2 12.5l4-4.5 3 3 5-6"/><path d="M10.5 4.5H14V8"/>',
+        'eye'    => '<path d="M1.3 8S3.8 3 8 3s6.7 5 6.7 5-2.5 5-6.7 5-6.7-5-6.7-5Z"/><circle cx="8" cy="8" r="2"/>',
+        'layers' => '<path d="M8 2 14 5.5 8 9 2 5.5 8 2Z"/><path d="M2 8.5 8 12l6-3.5"/><path d="M2 11.5 8 15l6-3.5"/>',
+        'list'   => '<path d="M6 3.5h8M6 8h8M6 12.5h8"/><circle cx="2.2" cy="3.5" r=".9" fill="currentColor" stroke="none"/><circle cx="2.2" cy="8" r=".9" fill="currentColor" stroke="none"/><circle cx="2.2" cy="12.5" r=".9" fill="currentColor" stroke="none"/>',
+        'eyeoff' => '<path d="M1.3 8S3.8 3 8 3s6.7 5 6.7 5-2.5 5-6.7 5-6.7-5-6.7-5Z"/><circle cx="8" cy="8" r="2"/><path d="M2 2l12 12"/>',
+    ];
+    return '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ($icons[$name] ?? '') . '</svg>';
+}
+
 /* ---------- Derived stats ---------- */
 $rankedCount = count($scores);
 $totalScore  = array_sum($scores);
@@ -107,12 +147,8 @@ $top10Share = $totalScore > 0 ? round(array_sum(array_slice($scoreVals, 0, 10)) 
 $totalViewsAllTime = array_sum($totalViews);
 
 /* ---------- Coverage: published cheatsheets with zero recorded views ---------- */
+// $allHtmlNames / $totalPageCount come from the existence filter above.
 // Mirrors index.php's own $excludedItems — the one other place that decides what counts as a real cheatsheet.
-$excludedFromCoverage = ['etz-chaim-tree-of-life.html'];
-$allHtmlFiles = array_filter(glob(__DIR__ . '/*.html') ?: [], fn($p) => is_file($p));
-$allHtmlNames = array_map('basename', $allHtmlFiles);
-$allHtmlNames = array_values(array_diff($allHtmlNames, $excludedFromCoverage));
-$totalPageCount = count($allHtmlNames);
 $untrackedPages = array_values(array_diff($allHtmlNames, array_keys($scores)));
 $untrackedCount = count($untrackedPages);
 
@@ -134,7 +170,7 @@ foreach ($categoryTotals as $cat => $catScore) {
 $maxCategoryScore = $categoryRows ? $categoryRows[0]['score'] : 1.0;
 
 /* ---------- Trending now: today's raw views far outpacing the page's accumulated score ---------- */
-$dailyViewsRaw = $popData['dailyViews'] ?? [];
+$dailyViewsRaw = array_intersect_key($popData['dailyViews'] ?? [], $existingLookup);
 $trending = [];
 foreach ($dailyViewsRaw as $filename => $dayCount) {
     if ($dayCount < 5) continue; // filter noise from single-digit blips
@@ -154,7 +190,7 @@ $trending = array_slice($trending, 0, 5);
 /* ---------- Daily-history prep, shared by the momentum panel and row sparklines ---------- */
 // "dailyHistory" is fetch-popularity.py's per-file 30-day ring buffer —
 // collected nightly but never rendered anywhere until now.
-$dailyHistory = $popData['dailyHistory'] ?? [];
+$dailyHistory = array_intersect_key($popData['dailyHistory'] ?? [], $existingLookup);
 $allHistoryDates = [];
 foreach ($dailyHistory as $days) {
     foreach (array_keys($days) as $d) { $allHistoryDates[$d] = true; }
@@ -304,7 +340,7 @@ foreach ($scores as $score) {
 $maxBucketCount = max(1, max(array_column($buckets, 'count')));
 
 /* ---------- Last 24 hours (raw, undecayed view counts) ---------- */
-$dailyViews = $popData['dailyViews'] ?? [];
+$dailyViews = array_intersect_key($popData['dailyViews'] ?? [], $existingLookup);
 arsort($dailyViews);
 $totalDailyViews = array_sum($dailyViews);
 $dailyRows = [];
@@ -351,6 +387,10 @@ chrome_open(
 );
 ?>
 <style>
+.stat{display:flex;align-items:center;gap:11px}
+.stat-icon{flex:none;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--accent-surface);color:var(--accent)}
+.stat-icon svg{width:17px;height:17px}
+.stat-body{min-width:0}
 .mini-panel{border:1px solid var(--rule);border-radius:8px;background:var(--surface);padding:14px 16px;height:100%}
 .mini-panel h2{font-size:13px;margin-bottom:10px;display:flex;align-items:baseline;gap:8px}
 .mini-panel h2 .age{font-size:11.5px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0}
@@ -448,18 +488,18 @@ chrome_open(
 <?php else: ?>
 
 <div class="stats">
-  <div class="stat"><div class="n"><?php echo number_format($rankedCount); ?></div><div class="l">Pages tracked</div></div>
-  <div class="stat"><div class="n"><?php echo number_format((int) $maxScore); ?></div><div class="l">Top page score</div></div>
-  <div class="stat"><div class="n"><?php echo number_format((int) $totalScore); ?></div><div class="l">Total score sum</div></div>
-  <div class="stat"><div class="n" style="font-size:14px"><?php echo $lastUpdated ? h($lastUpdated) : '—'; ?></div><div class="l">Last updated</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($avgScore, 1); ?></div><div class="l">Avg score / page</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($medianScore, 1); ?></div><div class="l">Median score</div></div>
-  <div class="stat"><div class="n"><?php echo $top3Share; ?>&thinsp;%</div><div class="l">Top 3 share of views</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($risingStarCount); ?></div><div class="l">Rising stars (&le;30d)</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($totalDailyViews); ?></div><div class="l">Views yesterday</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($totalViewsAllTime); ?></div><div class="l">All-time views tracked</div></div>
-  <div class="stat"><div class="n"><?php echo $top10Share; ?>&thinsp;%</div><div class="l">Top 10 share of views</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($untrackedCount); ?> <span style="color:var(--muted);font-size:.85em">/ <?php echo number_format($totalPageCount); ?></span></div><div class="l">Pages with zero views</div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('pages'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($rankedCount); ?></div><div class="l">Pages tracked</div></div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('top'); ?></div><div class="stat-body"><div class="n"><?php echo number_format((int) $maxScore); ?></div><div class="l">Top page score</div></div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('sum'); ?></div><div class="stat-body"><div class="n"><?php echo number_format((int) $totalScore); ?></div><div class="l">Total score sum</div></div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('clock'); ?></div><div class="stat-body"><div class="n" style="font-size:14px"><?php echo $lastUpdated ? h($lastUpdated) : '—'; ?></div><div class="l">Last updated</div></div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('avg'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($avgScore, 1); ?></div><div class="l">Avg score / page</div></div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('median'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($medianScore, 1); ?></div><div class="l">Median score</div></div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('share'); ?></div><div class="stat-body"><div class="n"><?php echo $top3Share; ?>&thinsp;%</div><div class="l">Top 3 share of views</div></div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('rising'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($risingStarCount); ?></div><div class="l">Rising stars (&le;30d)</div></div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('eye'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($totalDailyViews); ?></div><div class="l">Views yesterday</div></div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('layers'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($totalViewsAllTime); ?></div><div class="l">All-time views tracked</div></div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('list'); ?></div><div class="stat-body"><div class="n"><?php echo $top10Share; ?>&thinsp;%</div><div class="l">Top 10 share of views</div></div></div>
+  <div class="stat"><div class="stat-icon"><?php echo stat_icon('eyeoff'); ?></div><div class="stat-body"><div class="n"><?php echo number_format($untrackedCount); ?> <span style="color:var(--muted);font-size:.85em">/ <?php echo number_format($totalPageCount); ?></span></div><div class="l">Pages with zero views</div></div></div>
 </div>
 
 <div class="note" style="margin-bottom:22px">
