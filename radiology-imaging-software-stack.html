@@ -155,6 +155,12 @@
   .callout.stop{border-left-color:var(--stop)}
   .callout h3{margin-top:0;font-size:.91rem}
 
+  .primer{border:1px solid var(--line);border-left:3px solid var(--faint);background:var(--surface-2);
+    padding:.6rem .8rem;margin:.55rem 0 .9rem;font-size:.88rem;line-height:1.55}
+  .primer b.pl{display:block;font:700 .62rem/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:.22rem}
+  .primer p{margin:.35rem 0 0}
+
   .pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:1px;
     background:var(--line);border:1px solid var(--line);margin-top:.9rem}
   .pair > div{background:var(--surface);padding:.7rem .8rem;font-size:.88rem}
@@ -919,25 +925,34 @@
     <div><span class="n">Proof</span><b>Connectathon</b>A supervised, face-to-face event where implementations test the transactions against other vendors&rsquo; systems. Results are published; ask for the year and the actor.</div>
   </div>
 
-  <h3 id="system-categories">System categories, one line each</h3>
-  <p class="section-note">These are market words, not standardised terms. Nobody owns their definitions, which is why
-  <a href="#pacs-vs-vna">the PACS-versus-VNA question</a> has to be settled by capability rather than by label.
+  <h3 id="system-categories">System categories: what the product words mean</h3>
+  <p class="section-note">The standards above are written down somewhere. These words are not: they are market
+  categories, and nobody owns their definitions. Two products called the same thing routinely have different
+  boundaries, and two products called different things routinely overlap. So each row below gives the working
+  definition, the problem the category exists to solve, and the specific way the word misleads people in a vendor
+  call. This is why <a href="#pacs-vs-vna">PACS versus VNA</a> has to be settled by capability rather than by label.
   <span class="ev ev-prac">Common practice</span></p>
-  <div class="glossary">
-    <div><b>Modality:</b> the device that acquires the image: a CT scanner, an ultrasound machine, a digital radiography plate. In DICOM it is also a two-letter code in <code>(0008,0060)</code>: <code>CT</code>, <code>MR</code>, <code>US</code>, <code>DX</code>.</div>
-    <div><b>RIS:</b> the radiology department&rsquo;s order, scheduling, and workflow system. Usually where the accession number is born.</div>
-    <div><b>PACS:</b> the traditional bundle of image archive, workflow, and diagnostic viewer sold as one product. The word says nothing about the boundaries of any particular product.</div>
-    <div><b>VNA:</b> an archive deliberately separated from any one viewer or department, so images outlive the application that created them. Judge it on migration and tag-morphing behaviour, not on the label.</div>
-    <div><b>Image manager / image archive:</b> the IHE actor pair behind both words: the thing that knows what exists and where, and the thing that holds the bytes. Useful when a product blurs them.</div>
-    <div><b>EHR / EMR:</b> the clinical record system for the whole organisation. Usually the launch point for imaging through a link, not an imaging system itself.</div>
-    <div><b>PIMS:</b> practice information management system: the veterinary equivalent of an EHR plus a practice-management and billing system, and typically the identity source of truth in a clinic.</div>
-    <div><b>Interface engine:</b> the middleware that translates, routes, and buffers HL7 and DICOM traffic between systems that disagree. A component with an owner, not a script.</div>
-    <div><b>DICOM gateway / router:</b> the process that accepts DIMSE from modalities and re-emits it, often as DICOMweb, with queueing, retry, and routing rules. Usually the first thing a cloud imaging product builds.</div>
-    <div><b>Edge uploader:</b> the on-site agent that gets studies out of a clinic across a consumer-grade link, surviving reboots and outages. Distinct from the gateway by where it runs and who owns the network.</div>
-    <div><b>Viewer:</b> anything that displays images, spanning a thumbnail preview, a review viewer, and a diagnostic workstation. Regulatory status and required calibration differ across those three. See <a href="#viewer-tiers">the tiers</a>.</div>
-    <div><b>Workbench / worklist:</b> the radiologist&rsquo;s working surface: what to read next, in what order, with which priors and context. Almost none of it is standardised, which is where product differentiation lives.</div>
-    <div><b>AI orchestrator:</b> the layer deciding which studies go to which model, tracking the job, and filing the result as a DICOM SR, GSPS, or secondary capture. Separate from the models themselves.</div>
-  </div>
+  <div class="table-wrap"><table class="wide">
+    <caption>Table 2B.3: The system categories, and where each word misleads</caption>
+    <thead><tr><th scope="col">Term</th><th scope="col">What it is</th><th scope="col">The problem it exists to solve</th><th scope="col">Where the word misleads</th></tr></thead>
+    <tbody>
+      <tr><td><b>Modality</b></td><td>The device that acquires the image: a CT scanner, an ultrasound machine, a digital radiography plate, an intraoral dental sensor. In DICOM the word is also a two-letter code in <code>(0008,0060)</code>: <code>CT</code>, <code>MR</code>, <code>US</code>, <code>DX</code>, <code>MG</code>.</td><td>Nothing: it is the source. Everything downstream exists because the modality produces objects that must reach a reader with the right patient attached.</td><td>The device and the code are not the same thing. One scanner can produce several modality codes, and a code tells you the acquisition type, never the manufacturer or the protocol.</td></tr>
+      <tr><td><b>RIS</b></td><td>Radiology information system: the department&rsquo;s order, scheduling, and workflow system. Usually where the accession number is born and where the exam&rsquo;s administrative state lives.</td><td>Getting from &ldquo;a clinician wants a chest CT&rdquo; to a scheduled procedure step a scanner can pull off a worklist, then tracking the exam to billing.</td><td>Many small practices have no RIS at all: the EHR or PIMS carries the order, and the identity source of truth moves with it. Do not design as if a RIS is always there.</td></tr>
+      <tr><td><b>PACS</b></td><td>Picture Archiving and Communication System: the traditional bundle of image archive, workflow, and diagnostic viewer sold and deployed as one product. NIST notes FDA classifies PACS as a Class&nbsp;II device.</td><td>Being the department&rsquo;s single place where images land, are read, and are found again, replacing film and the light box.</td><td>The word says nothing about a specific product&rsquo;s boundaries. Two &ldquo;PACS&rdquo; can differ on whether they hold reports, drive worklists, do routing, or offer a web viewer. Ask for the capability list, never the category.</td></tr>
+      <tr><td><b>VNA</b></td><td>Vendor-neutral archive: the imaging store deliberately separated from any one viewer, department, or PACS, so studies outlive the application that created them. It keeps original objects, normalises metadata across sources, owns retention and holds, and serves several readers over standards-based interfaces.</td><td>PACS lock-in. When archive, workflow, and viewer ship as one product, replacing the viewer means migrating every image out of a system whose vendor has no incentive to make that easy.</td><td>&ldquo;Vendor-neutral&rdquo; is a claim, not a property, and no standard defines it. Test it: demand a timed bulk export of a real cohort in original form, and ask whether metadata normalisation is auditable and reversible. If it owns workflow state, you have bought a second PACS. See <a href="#exit-test">the exit test</a>.</td></tr>
+      <tr><td><b>Image manager / image archive</b></td><td>The IHE actor pair underneath both product words: the manager knows what exists, where it is, and what may be released; the archive holds the bytes.</td><td>Naming the two responsibilities separately, so a workflow claim can be tested against the right one.</td><td>Products fuse them and market the pair as one box. The split is how you ask a precise question: which actor implements storage commitment, and which one answers the query?</td></tr>
+      <tr><td><b>EHR / EMR</b></td><td>The organisation-wide clinical record system. In imaging it is usually the launch point (a link into a viewer in patient and study context) and the consumer of the finished report.</td><td>Holding the patient&rsquo;s whole record, of which imaging is one section.</td><td>It is rarely an imaging system. &ldquo;Images in the EHR&rdquo; almost always means a launched viewer or an embedded link, not stored DICOM. See <a href="#ihe">IID</a> for the standards-based way to do that launch.</td></tr>
+      <tr><td><b>PIMS</b></td><td>Practice information management system: the veterinary equivalent of an EHR plus practice management and billing, and typically the identity source of truth in a clinic.</td><td>Running the whole practice: appointments, records, inventory, invoicing. Imaging is a small module inside it.</td><td>Veterinary identity is not human identity: no national patient identifier, owner and animal are separate entities, and the same pet is re-registered across clinics. Identity reconciliation is harder here, not easier. See <a href="#identity">identity</a>.</td></tr>
+      <tr><td><b>Interface engine</b></td><td>The middleware that translates, routes, filters, and buffers HL7 and DICOM traffic between systems that disagree about message content, codes, and identifiers.</td><td>HL7 v2&rsquo;s optionality. Two conformant feeds still need a per-site mapping, and somebody has to own that mapping, monitor it, and replay what it drops.</td><td>It gets treated as &ldquo;a script the integration guy wrote&rdquo;. It is a production component with uptime, versioning, and an owner, and it is where undiagnosed data loss hides.</td></tr>
+      <tr><td><b>DICOM gateway / router</b></td><td>The process that accepts DIMSE associations from modalities and re-emits the objects elsewhere, commonly as DICOMweb, with queueing, retry, routing rules, and often de-identification or tag morphing.</td><td>Modalities speak DIMSE and will for the life of the hardware; a cloud product speaks HTTP. Something has to sit on the boundary. See <a href="#gateway">the gateway section</a>.</td><td>&ldquo;We have a DICOM receiver&rdquo; is roughly ten percent of the job. The other ninety is state: what arrived, what is incomplete, what failed, and what a human does about it. See <a href="#ingestion">ingestion failure scenarios</a>.</td></tr>
+      <tr><td><b>Edge uploader</b></td><td>The on-site agent that gets studies out of a clinic across a consumer-grade link, surviving reboots, outages, sleeping workstations, and NAT.</td><td>The last mile. Small sites have no IT staff, no static address, and no tolerance for a device that needs attention.</td><td>Confused with the gateway. The difference is where it runs and who owns the network: you cannot assume a firewall change, a fixed address, or a machine nobody switches off.</td></tr>
+      <tr><td><b>Viewer</b></td><td>Anything that displays images, spanning three tiers: a thumbnail or preview, a review viewer for referrers, and a diagnostic workstation for primary interpretation.</td><td>Getting pixels in front of the person who has to make a call, with the tools that decision needs.</td><td>One word, three regulatory and calibration situations. Diagnostic reading carries display and device obligations a review viewer does not. Never evaluate one from screenshots. See <a href="#viewer-tiers">the tiers</a>.</td></tr>
+      <tr><td><b>Workbench / worklist</b></td><td>The radiologist&rsquo;s working surface: what to read next, in what order, with which priors, context, and prior reports loaded.</td><td>Throughput and safety in the reading session itself: assignment, prioritisation, hand-off, escalation of critical findings.</td><td>Almost none of it is standardised, so it is invisible in a standards conversation and is exactly where product differentiation and most of the build cost live. See <a href="#workbench">the workbench</a>.</td></tr>
+      <tr><td><b>AI orchestrator</b></td><td>The layer that decides which studies go to which model, runs and tracks the job, and files the output as a DICOM SR, GSPS, or secondary capture. Separate from the models.</td><td>Models are point solutions; the routing, queueing, provenance, and result-filing around them is a platform problem you own whether you buy or build the models.</td><td>Vendors sell the model and imply the orchestration. Ask where results land, in what object type, with what model and version recorded. See <a href="#ai">AI orchestration</a>.</td></tr>
+      <tr><td><b>Teleradiology platform</b></td><td>A product that moves studies from sites that acquire to radiologists who read somewhere else, adding assignment, licensure and credentialing rules, turnaround commitments, and report delivery.</td><td>The reader is not in the building, and often not in the same organisation, state, or country as the patient.</td><td>It sounds like a viewer plus a queue. The hard parts are contractual and jurisdictional: who may read what, under which licence, with what turnaround, and what happens when the commitment is missed.</td></tr>
+      <tr><td><b>Enterprise imaging</b></td><td>The programme word for handling imaging from every service line, not just radiology: dermatology photographs, endoscopy video, point-of-care ultrasound, pathology.</td><td>Non-radiology images that live on phones, on cameras, and in departmental silos, unreconciled and unretained.</td><td>It describes a scope and a budget line, not a product. When a supplier sells &ldquo;enterprise imaging&rdquo;, ask which encounter-based capture workflow they actually implement. See <a href="#ihe">EBIW and WIC</a>.</td></tr>
+    </tbody>
+  </table></div>
 
   <div class="callout rec">
     <h3>Use this to weigh a claim, not just to decode it <span class="ev ev-rec">Recommendation</span></h3>
@@ -1014,6 +1029,7 @@
 <section class="sheet-section" id="dicom-parts" data-purpose="Lookup" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 04 / Standards</span><span>DICOM 2026C</span></p>
   <h2>DICOM, part by part</h2>
+  <div class="primer"><b class="pl">What a &ldquo;part&rdquo; is</b>DICOM is not published as one document with a version number. It is one standard cut into twenty-two numbered <em>parts</em>, each governing a separate concern, and every part is republished together several times a year under an edition label such as 2026c. <code>PS3.4</code> is a part, not a release: PS is NEMA&rsquo;s publication-standard prefix. Citing &ldquo;DICOM&rdquo; without a part is how requirements documents become unfalsifiable.</div>
   <p class="section-note">The standard is republished several times a year; the current edition when this page
   was written is <b>2026c</b> (each part&rsquo;s cover page carries the edition label, e.g. &ldquo;DICOM PS3.1 2026c&rdquo;).
   UIDs and tags are stable across editions; the edition label is not. Parts 9 and 13 were retired and are listed
@@ -1051,6 +1067,7 @@
 <section class="sheet-section" id="dimse" data-purpose="Trace" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 05 / DIMSE</span><span>ASSOC &#183; PRES CTX &#183; AE</span></p>
   <h2>DIMSE services and the association model</h2>
+  <div class="primer"><b class="pl">What DIMSE is</b>DIMSE is the original way two DICOM systems talk to each other over a network: its own protocol running directly on TCP/IP rather than over HTTP, which is why it needs its own port and its own firewall rules. Before anything moves, the two applications open an <em>association</em> and negotiate which object types and encodings they will accept. Only then do the verbs run: C-STORE sends, C-FIND searches, C-MOVE and C-GET retrieve. Every modality in the world speaks this, and will for the life of the hardware.</div>
   <p class="section-note">Classic DICOM networking. Composite services start with <code>C-</code>, normalized services
   with <code>N-</code>. Every one of these runs inside an <em>association</em> negotiated over TCP, and everything
   a modality can do to you is bounded by what that association negotiated.
@@ -1078,6 +1095,7 @@
 <section class="sheet-section" id="dicomweb" data-purpose="Compare" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 06 / DICOMweb</span><span>PS3.18 &#183; HTTP</span></p>
   <h2>DICOMweb endpoints</h2>
+  <div class="primer"><b class="pl">What DICOMweb is</b>DICOMweb is the name for the family of RESTful web services defined for sending, retrieving, and querying medical images and related information over HTTP. The objects and identifiers are identical to DIMSE&rsquo;s; only the transport changes, from a negotiated association to an ordinary URL with an HTTP verb and a media type. Four services carry the traffic: QIDO-RS searches, WADO-RS retrieves, STOW-RS stores, UPS-RS manages worklist items. This is the transport a browser-based product actually runs on.</div>
   <p class="section-note">PS3.18 defines six services. The Studies Service is the one your browser application lives on.
   URI templates below are quoted from PS3.18 &sect;10.4&ndash;10.6 and &sect;11. <span class="ev ev-std">Standard</span></p>
   <div class="table-wrap"><table class="wide">
@@ -1105,6 +1123,7 @@
 <section class="sheet-section" id="gateway" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 07 / Transport</span><span>DIMSE &#8644; HTTP</span></p>
   <h2>DIMSE vs DICOMweb, and when you need a gateway</h2>
+  <div class="primer"><b class="pl">Why a gateway exists at all</b>A gateway is simply a process that terminates DIMSE on the clinic side and speaks DICOMweb, or your own API, on the cloud side. It exists because the two transports carry the same objects but meet different halves of the world: scanners are fixed-function devices that will speak DIMSE for a decade, while a web product wants HTTP, TLS, and an identity model. The gateway is where that mismatch is absorbed, along with queueing and retry.</div>
   <p class="section-note">These are not competing standards. They are two transports for the same objects, aimed at
   different clients, and a real deployment usually runs both. <span class="ev ev-arch">Architecture pattern</span></p>
   <div class="table-wrap"><table>
@@ -1139,6 +1158,7 @@
 <section class="sheet-section" id="sop-classes" data-purpose="Lookup" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 08 / SOP Classes</span><span>PS3.6 ANNEX A</span></p>
   <h2>SOP Classes beyond images</h2>
+  <div class="primer"><b class="pl">What a SOP Class is</b>A SOP Class (Service-Object Pair Class) is one object definition paired with the services allowed on it, named by a UID: &ldquo;CT images, and the operations you may perform on them&rdquo;. It is the unit of DICOM support. When a conformance statement says a product supports something, it means it accepts or sends that SOP Class UID as a specific role, so a product can happily store CT images and reject the Encapsulated PDF sitting next to them.</div>
   <p class="section-note">Storage SOP Classes live under the root <code>1.2.840.10008.5.1.4.1.1.</code> Every UID below was
   read from the PS3.6 Annex&nbsp;A registry of DICOM UIDs (edition 2026c). The non-image objects are the ones that decide
   whether your data survives a viewer or archive replacement. <span class="ev ev-std">Standard</span></p>
@@ -1178,6 +1198,7 @@
 <section class="sheet-section" id="transfer-syntax" data-purpose="Lookup" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 09 / Encoding</span><span>PS3.5 &#183; TRANSFER SYNTAX</span></p>
   <h2>Transfer syntaxes and compression</h2>
+  <div class="primer"><b class="pl">What a transfer syntax is</b>A transfer syntax is how the bytes are written: byte ordering, whether value representations are stated explicitly, and which compression, if any, is applied to the pixel data. Each combination has its own UID, and the pair of systems negotiates one per association or names one per request. It is orthogonal to the SOP Class: the same CT image can arrive uncompressed, JPEG&nbsp;2000, or HTJ2K, and a receiver that accepts the object may still refuse the encoding.</div>
   <p class="section-note">A transfer syntax specifies byte ordering, VR encoding, and any compression. It is negotiated
   per presentation context in DIMSE and requested through <code>Accept</code> in DICOMweb. UIDs verified against the
   PS3.6 Annex&nbsp;A registry, edition 2026c. &ldquo;Browser decode&rdquo; describes what a mainstream browser can do without a
@@ -1264,6 +1285,7 @@
 <section class="sheet-section" id="ihe" data-purpose="Compare" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 10 / IHE Radiology</span><span>RAD TF REV. 23.0</span></p>
   <h2>IHE Radiology profiles and their maturity</h2>
+  <div class="primer"><b class="pl">What an IHE Radiology profile is</b>IHE (Integrating the Healthcare Enterprise) is not a standards body and publishes no new protocol. It publishes <em>integration profiles</em>: named recipes saying exactly how to combine standards that already exist, mostly DICOM and HL7, to solve one workflow problem end to end. Each profile is written as <em>actors</em> (functional roles such as Image Manager or Acquisition Modality) exchanging numbered <em>transactions</em>. So &ldquo;we support SWF.b&rdquo; means the product implements some actor&rsquo;s side of that recipe, which is why a profile claim without an actor role tells you nothing. RAD is the radiology domain; the maturity label below tells you whether the recipe is settled (Final Text) or still moving (Trial Implementation).</div>
   <p class="section-note">IHE profiles say how DICOM, HL7, FHIR and security standards are combined to solve one
   defined integration problem. <b>Maturity is the whole point of reading this table</b>: a Final Text profile is
   incorporated into the Technical Framework; a Trial Implementation supplement may still change. Status below is as
@@ -1345,6 +1367,7 @@
 <section class="sheet-section" id="fhir" data-purpose="Trace" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 11 / FHIR &amp; HL7</span><span>R5 v5.0.0</span></p>
   <h2>FHIR imaging resources, and where they stop</h2>
+  <div class="primer"><b class="pl">What FHIR is, in imaging terms</b>FHIR is HL7&rsquo;s modern standard: an ordinary REST API over a library of typed <em>resources</em> (Patient, ServiceRequest, ImagingStudy, DiagnosticReport), each with its own maturity level, which is why &ldquo;we support FHIR&rdquo; is not a claim until the resources are named. In an imaging product it carries the clinical context <em>around</em> the study: who the patient is, what was ordered, what the report says. It never carries pixels.</div>
   <p class="section-note">FHIR carries the clinical context around images; DICOM carries the images. The published
   current version at <a href="https://hl7.org/fhir/" rel="noopener">hl7.org/fhir</a> is <b>R5 (v5.0.0)</b> as of
   Sep&nbsp;2026; maturity levels below are each resource&rsquo;s own, and <b>N</b> means Normative.
@@ -1382,6 +1405,7 @@
 <section class="sheet-section" id="identity" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 12 / Identity</span><span>SOURCE OF TRUTH</span></p>
   <h2>Identity and the source-of-truth worksheet</h2>
+  <div class="primer"><b class="pl">The three identifiers people confuse</b>Three different things identify a study, and mixing them up is the root of most reconciliation incidents. The <b>patient identifier</b> (MRN, or the PIMS record in veterinary) says who the subject is and is only unique within its issuing organisation. The <b>accession number</b> identifies one requested procedure and links order, study, and report; its uniqueness scope is whatever the issuing system decides. The <b>Study Instance UID</b> is globally unique, assigned once at acquisition, and must never be regenerated.</div>
   <p class="section-note">Identity is an architecture problem and a clinical-safety problem at the same time. Fill one
   row per entity before you compare vendors; the column that exposes trouble is always <em>update owner</em>. Tags
   verified against the PS3.6 data dictionary. <span class="ev ev-std">Standard</span> <span class="ev ev-rec">Recommendation</span></p>
@@ -1441,6 +1465,7 @@
 <section class="sheet-section" id="ingestion" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 13 / Ingestion</span><span>EXCEPTION QUEUE</span></p>
   <h2>Ingestion failure scenarios</h2>
+  <div class="primer"><b class="pl">What &ldquo;ingestion&rdquo; actually covers</b>Ingestion is not the DICOM receiver. Accepting an association and writing objects to disk is the easy tenth of the problem. The rest is knowing what a complete study looks like, detecting what never arrived, holding the objects that cannot be matched to a patient, retrying what failed, and putting a human in front of the exceptions. Every scenario below is a state your system has to be able to name.</div>
   <p class="section-note">A DICOM receiver is the first ten percent of ingestion. The rest is detection, state, and a
   human-usable exception path. If a scenario below has no admin surface in the product you are evaluating, it becomes
   an engineering ticket every time it happens. <span class="ev ev-prac">Common practice</span> <span class="ev ev-arch">Architecture pattern</span></p>
@@ -1473,6 +1498,7 @@
 <section class="sheet-section" id="repository" data-purpose="Decide" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 14 / Repository</span><span>HOT / COOL / ARCHIVE</span></p>
   <h2>Repository, storage lifecycle, and scale</h2>
+  <div class="primer"><b class="pl">What a repository is, beyond a bucket</b>A logical DICOM repository is object storage plus a metadata database plus the rules that keep them consistent: the bytes in one place, the index of what exists in another, and an agreement about which is authoritative when they disagree. Retention, tiering, holds, and deletion are properties of the repository, not of the storage vendor, and they are what turns a bucket into an archive you can be audited against.</div>
   <p class="section-note">A logical DICOM repository is not a bucket. Object storage plus a metadata database is an
   <em>implementation</em> of a repository; the responsibilities below are what makes it one.
   <span class="ev ev-arch">Architecture pattern</span></p>
@@ -1545,6 +1571,7 @@
 <section class="sheet-section" id="market" data-purpose="Compare" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 15 / Market</span><span>CATEGORY BOUNDARIES</span></p>
   <h2>PACS, VNA, and the market categories</h2>
+  <div class="primer"><b class="pl">What the category words mean</b><b>PACS</b> is the traditional bundle of archive, workflow, and diagnostic viewer sold as one product. <b>VNA</b> is an archive deliberately separated from any one viewer or department, so images outlive the application that created them. Neither term is defined by any standard, so both are claims rather than properties: a product prints the word on a datasheet and you find out at migration time whether it was true. Hence the capability questions below rather than the labels.</div>
   <p class="section-note">Suppliers use the same words for products with different boundaries. Define capabilities
   first, map suppliers to them second. For each category below, the third column is <em>the one question that exposes
   the boundary</em> in a demo. <span class="ev ev-arch">Architecture pattern</span></p>
@@ -1609,6 +1636,7 @@
 <section class="sheet-section" id="viewers" data-purpose="Compare" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 16 / Viewers</span><span>W:400 L:40 &#183; ZOOM 100%</span></p>
   <h2>Viewer tiers, architectures, and evaluation</h2>
+  <div class="primer"><b class="pl">Why &ldquo;viewer&rdquo; is three products</b>A thumbnail preview, a review viewer for a referring clinician, and a diagnostic workstation for primary interpretation are all called viewers, and they sit in different regulatory, display-calibration, and performance situations. Most imaging products need at least two of the three. Decide which tier you are building before you compare features, because the obligations differ more than the screenshots do.</div>
   <p class="section-note">Most products need more than one viewing experience, and the differences are regulatory and
   ergonomic before they are technical. Calling all three &ldquo;the viewer&rdquo; is how a review tool ends up being used
   for primary interpretation.</p>
@@ -1697,6 +1725,7 @@
 <section class="sheet-section" id="workbench" data-purpose="Trace" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 17 / Workbench</span><span>STATE MACHINE</span></p>
   <h2>The radiologist workbench as a state machine</h2>
+  <div class="primer"><b class="pl">What a workbench is</b>The workbench is the radiologist&rsquo;s working surface, as distinct from the viewer inside it: what to read next, in what order, with which priors and prior reports loaded, and what happens when a study is escalated, reassigned, or handed to the next shift. Almost none of it is standardised, which is why it is invisible in a standards conversation and is where most of the build cost and most of the differentiation live.</div>
   <p class="section-note">In a teleradiology or consultation product the back office is not a worklist beside a viewer;
   it is often <em>the</em> differentiating capability. Model it as explicit states with entry and exit conditions, then
   instrument every transition. <span class="ev ev-arch">Architecture pattern</span></p>
@@ -1736,6 +1765,7 @@
 <section class="sheet-section" id="reports" data-purpose="Trace" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 18 / Delivery</span><span>ORU^R01 &#183; FHIR &#183; SR</span></p>
   <h2>Report lifecycle and delivery channels</h2>
+  <div class="primer"><b class="pl">Encoding, then delivery</b>Two separate problems hide in the word &ldquo;report&rdquo;. <b>Encoding</b> is how the findings are represented: a DICOM Structured Report, an encapsulated PDF, an HL7 v2 <code>ORU^R01</code>, a FHIR DiagnosticReport. That part is largely standardised. <b>Delivery</b> is getting the released report to every system and person that needs it, proving it arrived, and tracking turnaround. That part is yours, and it is where products fail.</div>
   <p class="section-note">Report <em>encoding</em> is largely standardised. Turnaround visibility, delivery reliability,
   escalation, and correction propagation are not, and that is where the product experience lives.</p>
 
@@ -1769,6 +1799,7 @@
 <section class="sheet-section" id="ai" data-purpose="Decide" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 19 / AI</span><span>MODEL v&#183; PROVENANCE</span></p>
   <h2>AI orchestration</h2>
+  <div class="primer"><b class="pl">What orchestration means here</b>The model is the small part. Orchestration is everything around it: deciding which studies are eligible, routing them to the right model, tracking the job, and filing the output as an object the rest of the system understands, typically a DICOM SR, a presentation state, or a secondary capture, with the model and version recorded. You own that layer whether you build the models or buy them.</div>
   <p class="section-note">Separate four decisions that are usually collapsed into one: buy or build the model; buy or
   build the orchestration; how results are encoded and versioned; and what validation and monitoring you owe.</p>
 
@@ -1834,6 +1865,7 @@
 <section class="sheet-section" id="security" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 20 / Security</span><span>ATNA &#183; TLS &#183; DE-ID</span></p>
   <h2>Security, privacy, and clinical safety</h2>
+  <div class="primer"><b class="pl">The four separate problems</b>Security in imaging is four problems that get collapsed into one word. <b>Transport</b>: is the traffic encrypted, and is the peer authenticated. <b>Access</b>: who may open which study, which DICOM answers barely at all, since an AE Title is an identifier and never a credential. <b>Audit</b>: what was recorded, in what format, and where it was sent. <b>De-identification</b>: which attributes were removed or replaced, under which PS3.15 profile and options. A product can be strong at one and absent at the others.</div>
   <div class="callout stop">
     <h3>Scope, stated once</h3>
     <p><b>Veterinary imaging generally falls outside HIPAA and outside FDA medical-device premarket scope.</b> HIPAA&rsquo;s
@@ -1970,6 +2002,7 @@
 <section class="sheet-section" id="change" data-purpose="Execute" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 21 / Change</span><span>IOCM &#183; KOS &#183; CID 7010</span></p>
   <h2>Change, correction, and migration</h2>
+  <div class="primer"><b class="pl">Why correction is a protocol problem</b>Once an object has left your system, fixing it is no longer a database update. Copies exist in other archives, viewers, and reports, and every one of them has to learn that the original is withdrawn or superseded. That is what IOCM is for: a standards-based way to say &ldquo;this object is rejected, for this coded reason&rdquo; so downstream systems purge, hide, or re-fetch. A product without it corrects data by phoning people.</div>
   <p class="section-note">Imaging objects are immutable by design, so &ldquo;correcting&rdquo; a study means issuing new
   objects and telling everyone who already has a copy. That telling is what IHE Imaging Object Change Management does.</p>
 
