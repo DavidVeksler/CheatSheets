@@ -473,6 +473,7 @@
   </p>
   <nav class="task-launchpad" aria-label="Common tasks">
     <a href="#stack-map">Understand the stack</a>
+    <a href="#entities">Decode a standard or acronym</a>
     <a href="#dicom-parts">Resolve a protocol boundary</a>
     <a href="#scorecard">Evaluate a product or vendor</a>
   </nav>
@@ -489,6 +490,7 @@
   <div class="rail-group" data-chapter="Orientation"><h2>1. Orientation</h2>
     <a href="#quickref"><span class="rail-n">01</span><span>Quick reference</span></a>
     <a href="#stack-map"><span class="rail-n">02</span><span>Stack map</span></a>
+    <a href="#entities"><span class="rail-n">02B</span><span>Standards &amp; bodies</span></a>
     <a href="#vocabulary"><span class="rail-n">03</span><span>Vocabulary</span></a>
   </div>
   <div class="rail-group" data-chapter="Protocols and exchange"><h2>2. Protocols and exchange</h2>
@@ -847,6 +849,108 @@
 <text class="s-legend" x="8" y="1262" style="font-size:10px">Stamps are default leans, not requirements.</text>
 </svg>
   </figure>
+</section>
+
+<section class="sheet-section" id="entities" data-purpose="Lookup" data-f>
+  <p class="overlay matrix-key" aria-hidden="true"><span>Series 02B / Entities</span><span>WHO SAYS SO</span></p>
+  <h2>What each standard and body actually is</h2>
+  <p class="section-note">The rest of this page uses about forty acronyms as if you already knew them. This section
+  is the one place that says what each one <em>is</em>, in a sentence, and who stands behind it. Read it once and the
+  later tables stop being alphabet soup: the difference between a standard, a profile of a standard, a professional
+  guideline, and a regulation is exactly the difference between the evidence badges used everywhere else on this page.
+  <span class="ev ev-std">Standard</span> <span class="ev ev-guid">Prof. guidance</span></p>
+
+  <h3 id="entity-standards">Standards and service families</h3>
+  <div class="table-wrap"><table class="wide">
+    <caption>Table 2B.1: What each standard is, in one sentence</caption>
+    <thead><tr><th scope="col">Name</th><th scope="col">What it is</th><th scope="col">Published by</th><th scope="col">Where it stops</th></tr></thead>
+    <tbody>
+      <tr><td><b>DICOM</b></td><td>Digital Imaging and Communications in Medicine: the standard defining how medical images and their related information are encoded, stored, queried, and moved between systems. It is both a file format and a set of network services, which is why one word covers a <code>.dcm</code> file on disk and a conversation between two servers. Recognised as ISO&nbsp;12052; first published under the DICOM name in 1993.</td><td>NEMA, developed by the DICOM Standards Committee</td><td>At the wire and the object. It defines nothing about your product: no viewer, no workflow, no user model. See <a href="#vocabulary">what DICOM does not provide</a>.</td></tr>
+      <tr><td><b>PS3.1 &hellip; PS3.22</b></td><td>Not versions: <em>parts</em>. DICOM is published as one standard split into twenty-two numbered parts, each governing one concern (PS3.4 services, PS3.5 encoding, PS3.6 the data dictionary, PS3.18 web services). &ldquo;PS&rdquo; is the NEMA publication-standard prefix. The edition label (2026c) moves several times a year; part numbers do not.</td><td>Same standard, one document per part</td><td>Part numbers tell you where to look, not what a product does. A conformance claim cites a part <em>and</em> a service.</td></tr>
+      <tr><td><b>DIMSE</b></td><td>DICOM Message Service Element: the original DICOM networking layer, running its own protocol directly over TCP/IP rather than over HTTP. Two applications open an <em>association</em>, negotiate what they may send, then exchange messages such as C-STORE (send an image) and C-FIND (search). This is what people mean by &ldquo;classic DICOM&rdquo; or &ldquo;port 104&rdquo;.</td><td>DICOM PS3.7 and PS3.8</td><td>It is a transport, not a workflow. No session concept, no user identity worth the name, no web-friendly story. See <a href="#dimse">DIMSE</a>.</td></tr>
+      <tr><td><b>DICOMweb</b></td><td>The name for the family of RESTful web services defined for sending, retrieving, and querying medical images and related information over HTTP. Same objects and same identifiers as DIMSE, addressed as URLs: QIDO-RS searches, WADO-RS retrieves, STOW-RS stores, UPS-RS manages worklist items. This is the transport a browser-based product actually uses.</td><td>DICOM PS3.18</td><td>It is DIMSE&rsquo;s peer, not its replacement: modalities still speak DIMSE, so most real systems need a <a href="#gateway">gateway</a> between the two.</td></tr>
+      <tr><td><b>DICOM SR</b></td><td>Structured Report: a DICOM object whose content is a coded tree of observations rather than pixels. It is how measurements, CAD output, dose records, and AI results travel as first-class imaging objects that reference the exact images they describe. TID&nbsp;1500 is its measurement-report template.</td><td>DICOM PS3.3 and PS3.16</td><td>It is an encoding, not a reporting application. Nothing in SR gives you templates, dictation, or a sign-off workflow.</td></tr>
+      <tr><td><b>GSDF</b></td><td>Grayscale Standard Display Function: a curve, not a service. It defines how a grayscale display maps stored pixel values to luminance so the same image looks the same on any calibrated monitor.</td><td>DICOM PS3.14</td><td>Conformance is a property of the display and its calibration, not of your software alone.</td></tr>
+      <tr><td><b>HL7 v2</b></td><td>The pipe-and-caret messaging standard that still carries most real-world clinical traffic: orders (<code>ORM</code>, <code>OMI</code>) and results (<code>ORU^R01</code>), usually over a minimal framing protocol called MLLP. Elderly, ubiquitous, and heavily site-customised, which is why interface engines exist.</td><td>HL7 International</td><td>It carries the words around the images; it never carries the images. Optionality is so wide that two conformant v2 feeds can still need a mapping project.</td></tr>
+      <tr><td><b>HL7 CDA</b></td><td>Clinical Document Architecture: an XML document standard for clinical documents, including imaging reports. DICOM PS3.20 defines the transformation from an imaging report into CDA.</td><td>HL7 International</td><td>A document format. It says nothing about how the document is produced, delivered, or acknowledged.</td></tr>
+      <tr><td><b>HL7 FHIR</b></td><td>Fast Healthcare Interoperability Resources: the modern HL7 standard, built as REST plus a library of typed <em>resources</em> (Patient, ServiceRequest, ImagingStudy, DiagnosticReport). Current published version R5 (v5.0.0). Each resource carries its own maturity level, so &ldquo;we support FHIR&rdquo; means nothing until you name the resources.</td><td>HL7 International</td><td>At the pixels. ImagingStudy is an index that points at a DICOMweb service; it is not a store. See <a href="#fhir">FHIR</a>.</td></tr>
+      <tr><td><b>FHIRcast</b></td><td>An HL7 specification for context synchronisation between applications on one user&rsquo;s desktop: when the radiologist opens a study in the viewer, the reporting application follows. The IHE IRA profile depends on it. <span class="ev ev-emg">Emerging</span></td><td>HL7 International</td><td>Version dependency matters: IRA needs FHIRcast&nbsp;3.0.0, still under development, which is why IRA says it is not production-ready.</td></tr>
+      <tr><td><b>IHE integration profile</b></td><td>A named recipe saying how to combine existing standards to solve one integration problem, written in terms of <em>actors</em> and <em>transactions</em>. A profile invents no new standard: SWF.b, IOCM, and PDI are all DICOM and HL7 underneath, constrained until two vendors can actually interoperate.</td><td>IHE International</td><td>A profile claim is worthless without an actor role and a maturity level. See <a href="#ihe">IHE profiles</a>.</td></tr>
+      <tr><td><b>IHE Technical Framework</b></td><td>The volumes holding the Final Text profiles for one domain. Radiology is at Revision&nbsp;23.0 (2025-08-08). A profile that is &ldquo;in the framework&rdquo; is Final Text; anything else is a supplement at a lower maturity.</td><td>IHE International</td><td>It is not a certification. Testing happens at a Connectathon and those results are published separately.</td></tr>
+      <tr><td><b>XDS-I.b / XCA-I</b></td><td>The cross-organisation sharing family: publish a manifest of a study to a registry so another organisation can find and retrieve it (XDS-I.b), or query across communities of registries (XCA-I). The document-sharing model of health information exchanges, applied to imaging.</td><td>IHE International</td><td>Heavy infrastructure. Point-to-point DICOMweb or a shared archive is the usual alternative for a single product.</td></tr>
+      <tr><td><b>ACR&ndash;AAPM&ndash;SIIM technical standards</b></td><td>Consensus documents from three professional bodies covering the electronic practice of medical imaging: compression, display luminance, teleradiology practice. The source of the DAIC concept.</td><td>ACR, AAPM, and SIIM jointly</td><td>Guidance, not regulation: ACR states its practice parameters and technical standards are educational tools, not a legal standard of care. Cite as <span class="ev ev-guid">Prof. guidance</span>, never as &ldquo;required&rdquo;.</td></tr>
+      <tr><td><b>NIST SP 1800-24</b></td><td>A practice guide, <em>Securing Picture Archiving and Communication System (PACS)</em> (December&nbsp;2020): a reference architecture and capability list for locking down an imaging environment.</td><td>NIST, US Department of Commerce</td><td>Voluntary guidance. It is not HIPAA, though it maps to it. See <a href="#nist">the control areas</a>.</td></tr>
+      <tr><td><b>HIPAA Security Rule</b></td><td>US federal regulation (45&nbsp;CFR Part&nbsp;164 Subpart&nbsp;C) setting administrative, physical, and technical safeguards for electronic protected health information. Deliberately technology-neutral: it names no cipher, no protocol, and no product.</td><td>US HHS, enforced by the Office for Civil Rights</td><td>It never says &ldquo;use TLS&nbsp;1.3&rdquo;. Anyone telling you HIPAA requires a specific product feature is quoting a vendor, not the rule.</td></tr>
+      <tr><td><b>JPEG family, HTJ2K</b></td><td>The image codecs DICOM wraps rather than invents: baseline and lossless JPEG, JPEG-LS, JPEG&nbsp;2000, and High-Throughput JPEG&nbsp;2000 (the same wavelet transform with a much faster block coder). Each appears in DICOM as a transfer syntax UID.</td><td>ISO/IEC codecs, registered as DICOM transfer syntaxes</td><td>Support is per transfer syntax UID, per direction. &ldquo;We support JPEG&nbsp;2000&rdquo; is not a decoder list. See <a href="#transfer-syntax">transfer syntaxes</a>.</td></tr>
+      <tr><td><b>TLS, syslog, ATNA</b></td><td>The ordinary internet security stack as DICOM and IHE constrain it: TLS for transport, syslog for audit transport, and the ATNA profile plus the PS3.15 audit message format for what an audit record must contain and where it goes.</td><td>IETF protocols, profiled by DICOM PS3.15 and IHE</td><td>Encryption and audit are necessary, never sufficient. Neither tells you who was allowed to open the study.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 id="entity-bodies">The bodies behind them</h3>
+  <p class="section-note">Four kinds of organisation appear on this page, and which kind it is decides how much weight
+  a claim carries: a standards developer, an initiative that profiles standards, a professional society, and a
+  regulator. Each row below was checked against that body&rsquo;s own pages, Sep&nbsp;2026.</p>
+  <div class="table-wrap"><table class="wide">
+    <caption>Table 2B.2: Organisations named on this page</caption>
+    <thead><tr><th scope="col">Body</th><th scope="col">What it is</th><th scope="col">What it owns or publishes</th><th scope="col">Why it appears here</th></tr></thead>
+    <tbody>
+      <tr><td><b>NEMA</b></td><td>National Electrical Manufacturers Association: a US trade association whose members include the medical imaging equipment manufacturers. A standards developer, not a clinical body.</td><td>Holds the DICOM copyright and publishes the standard as NEMA Standard PS3.</td><td>Every <code>dicom.nema.org</code> link on this page, and the normative text behind every <span class="ev ev-std">Standard</span> badge.</td></tr>
+      <tr><td><b>MITA</b></td><td>Medical Imaging &amp; Technology Alliance: the division of NEMA representing medical imaging manufacturers.</td><td>Serves as the DICOM Secretariat: meetings, balloting administration, publication.</td><td>The &ldquo;Secretariat: MITA/NEMA&rdquo; line on working-group minutes, if you ever chase a change proposal.</td></tr>
+      <tr><td><b>DICOM Standards Committee</b></td><td>The committee that actually develops the standard, working through 35 numbered working groups as of Sep&nbsp;2026 (WG-06 Base Standard, WG-14 Security, WG-23 Artificial Intelligence, WG-27 Web Services, among them).</td><td>Supplements (new capability) and Change Proposals (corrections), which accumulate into the next edition label.</td><td>Why the standard has several editions a year, and why a UID never changes underneath you.</td></tr>
+      <tr><td><b>ACR</b></td><td>American College of Radiology: the professional body for radiologists, radiation oncologists, and medical physicists.</td><td>Practice parameters and technical standards; co-author of the ACR&ndash;AAPM&ndash;SIIM documents.</td><td>With NEMA it formed the 1983 standards committee that produced ACR-NEMA&nbsp;300 in 1985, DICOM&rsquo;s ancestor. That history is why IANA still calls port&nbsp;104 <code>acr-nema</code>.</td></tr>
+      <tr><td><b>AAPM</b></td><td>American Association of Physicists in Medicine: the medical physics scientific and professional society, founded 1958.</td><td>Task group reports on image quality, dose, and display QA; co-author of the joint technical standards.</td><td>The display luminance and calibration numbers a diagnostic viewer gets judged against.</td></tr>
+      <tr><td><b>SIIM</b></td><td>Society for Imaging Informatics in Medicine: the professional society for imaging informatics, founded 1989 as SCAR and renamed in 2006.</td><td>Enterprise imaging guidance; co-author of the joint technical standards.</td><td>The informatics half of the ACR&ndash;AAPM&ndash;SIIM standard that defines diagnostically acceptable irreversible compression.</td></tr>
+      <tr><td><b>IHE International</b></td><td>Not a standards developer: an initiative by healthcare professionals and industry to make existing standards work together, begun in 1998 by HIMSS and RSNA.</td><td>Integration profiles, domain Technical Frameworks, and Connectathon testing events.</td><td>Everything in <a href="#ihe">Table&nbsp;10.1</a>. When a vendor says &ldquo;we do IHE&rdquo;, they mean they implement some actor in some profile.</td></tr>
+      <tr><td><b>RSNA and HIMSS</b></td><td>The Radiological Society of North America (a radiology professional society) and the Healthcare Information and Management Systems Society (a health IT society).</td><td>IHE itself, which they founded jointly.</td><td>Context for why IHE profiles are shaped by radiology workflow first and enterprise IT second.</td></tr>
+      <tr><td><b>HL7 International</b></td><td>Health Level Seven International: a not-for-profit, ANSI-accredited standards developing organisation founded in 1987. &ldquo;Level Seven&rdquo; is the application layer of the OSI model.</td><td>HL7 v2, CDA, and FHIR.</td><td>Every order, result, and clinical-context integration your imaging product has to live inside.</td></tr>
+      <tr><td><b>ISO</b></td><td>International Organization for Standardization.</td><td>Recognises DICOM as ISO&nbsp;12052.</td><td>Useful when a procurement document demands an ISO reference. It is the same DICOM.</td></tr>
+      <tr><td><b>FDA</b></td><td>US Food and Drug Administration: the medical device regulator, covering software as a medical device and animal devices.</td><td>Device classification, clearance pathways, and the public list of AI-enabled devices.</td><td>Whether your viewer or model is a regulated device at all, and on which side of the human/veterinary line. <span class="ev ev-reg">Regulatory (US)</span></td></tr>
+      <tr><td><b>NIST</b></td><td>National Institute of Standards and Technology: a US federal measurement and standards agency. It regulates nothing.</td><td>SP&nbsp;1800-24 and the wider cybersecurity practice-guide series.</td><td>The most usable public checklist for securing an imaging estate.</td></tr>
+      <tr><td><b>HHS OCR</b></td><td>The Office for Civil Rights inside the US Department of Health and Human Services.</td><td>Enforces the HIPAA Privacy and Security Rules.</td><td>The authority behind every <span class="ev ev-reg">Regulatory</span> row in <a href="#security">security</a>.</td></tr>
+      <tr><td><b>IANA</b></td><td>Internet Assigned Numbers Authority: the registry for protocol numbers, including TCP ports.</td><td>The service name and transport protocol port number registry.</td><td>The authority for <code>acr-nema</code> 104, <code>dicom</code> 11112, and <code>dicom-tls</code> 2762.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 id="ihe-grammar">IHE&rsquo;s four words, which vendors use loosely and you should not</h3>
+  <div class="ladder">
+    <div><span class="n">Unit</span><b>Actor</b>A functional unit that produces, manages, or acts on information: Image Manager, Acquisition Modality, Report Creator. Products implement actors, not whole profiles.</div>
+    <div><span class="n">Exchange</span><b>Transaction</b>One information exchange between two actors, defined on top of an existing standard such as DICOM or HL7 and given a number (RAD-x).</div>
+    <div><span class="n">Recipe</span><b>Integration profile</b>A named set of actors and transactions that solves one workflow problem end to end. The unit a vendor claims and you test.</div>
+    <div><span class="n">Proof</span><b>Connectathon</b>A supervised, face-to-face event where implementations test the transactions against other vendors&rsquo; systems. Results are published; ask for the year and the actor.</div>
+  </div>
+
+  <h3 id="system-categories">System categories, one line each</h3>
+  <p class="section-note">These are market words, not standardised terms. Nobody owns their definitions, which is why
+  <a href="#pacs-vs-vna">the PACS-versus-VNA question</a> has to be settled by capability rather than by label.
+  <span class="ev ev-prac">Common practice</span></p>
+  <div class="glossary">
+    <div><b>Modality:</b> the device that acquires the image: a CT scanner, an ultrasound machine, a digital radiography plate. In DICOM it is also a two-letter code in <code>(0008,0060)</code>: <code>CT</code>, <code>MR</code>, <code>US</code>, <code>DX</code>.</div>
+    <div><b>RIS:</b> the radiology department&rsquo;s order, scheduling, and workflow system. Usually where the accession number is born.</div>
+    <div><b>PACS:</b> the traditional bundle of image archive, workflow, and diagnostic viewer sold as one product. The word says nothing about the boundaries of any particular product.</div>
+    <div><b>VNA:</b> an archive deliberately separated from any one viewer or department, so images outlive the application that created them. Judge it on migration and tag-morphing behaviour, not on the label.</div>
+    <div><b>Image manager / image archive:</b> the IHE actor pair behind both words: the thing that knows what exists and where, and the thing that holds the bytes. Useful when a product blurs them.</div>
+    <div><b>EHR / EMR:</b> the clinical record system for the whole organisation. Usually the launch point for imaging through a link, not an imaging system itself.</div>
+    <div><b>PIMS:</b> practice information management system: the veterinary equivalent of an EHR plus a practice-management and billing system, and typically the identity source of truth in a clinic.</div>
+    <div><b>Interface engine:</b> the middleware that translates, routes, and buffers HL7 and DICOM traffic between systems that disagree. A component with an owner, not a script.</div>
+    <div><b>DICOM gateway / router:</b> the process that accepts DIMSE from modalities and re-emits it, often as DICOMweb, with queueing, retry, and routing rules. Usually the first thing a cloud imaging product builds.</div>
+    <div><b>Edge uploader:</b> the on-site agent that gets studies out of a clinic across a consumer-grade link, surviving reboots and outages. Distinct from the gateway by where it runs and who owns the network.</div>
+    <div><b>Viewer:</b> anything that displays images, spanning a thumbnail preview, a review viewer, and a diagnostic workstation. Regulatory status and required calibration differ across those three. See <a href="#viewer-tiers">the tiers</a>.</div>
+    <div><b>Workbench / worklist:</b> the radiologist&rsquo;s working surface: what to read next, in what order, with which priors and context. Almost none of it is standardised, which is where product differentiation lives.</div>
+    <div><b>AI orchestrator:</b> the layer deciding which studies go to which model, tracking the job, and filing the result as a DICOM SR, GSPS, or secondary capture. Separate from the models themselves.</div>
+  </div>
+
+  <div class="callout rec">
+    <h3>Use this to weigh a claim, not just to decode it <span class="ev ev-rec">Recommendation</span></h3>
+    <p>Every sentence in a vendor conversation has an author, and the author sets the ceiling on what the sentence can
+    prove. A <b>standards developer</b> (NEMA, HL7) produces normative text you can cite by section. A <b>profiling
+    initiative</b> (IHE) produces a recipe plus a maturity level and a testing record. A <b>professional society</b>
+    (ACR, AAPM, SIIM) produces guidance whose own front matter usually says it is educational rather than a legal
+    standard of care. A <b>regulator</b> (FDA, HHS OCR) produces obligations with a jurisdiction attached, while a
+    guidance agency such as NIST produces none at all.</p>
+    <p style="margin-top:.5rem">So when you are told something is required, the useful question is not
+    &ldquo;required by whom?&rdquo; but <b>&ldquo;which of those four, and can you name the section?&rdquo;</b> The
+    <a href="#prescriptive-vocab">prescriptive vocabulary table</a> applies the same test to your own writing.</p>
+  </div>
 </section>
 
 <section class="sheet-section" id="vocabulary" data-purpose="Lookup" data-f>
@@ -2240,44 +2344,67 @@
 <section class="sheet-section" id="glossary" data-purpose="Lookup" data-f>
   <p class="overlay matrix-key" aria-hidden="true"><span>Series 26 / Glossary</span><span>36 TERMS</span></p>
   <h2>Glossary</h2>
+  <p class="section-note">Sixty terms in one alphabet. For the longer form of what each standard and body <em>is</em>, and who stands behind it, see <a href="#entities">standards and bodies</a>.</p>
   <div class="glossary">
+    <div><b>AAPM:</b> American Association of Physicists in Medicine: the US medical physics society, founded 1958. Co-author of the ACR&ndash;AAPM&ndash;SIIM technical standards and the source of most display-QA guidance.</div>
     <div><b>Accession Number:</b> a workflow identifier connecting an imaging request, study, and report. Carried in <code>(0008,0050)</code>. Ownership and uniqueness scope vary by system, which is why it needs an assigning authority.</div>
+    <div><b>ACR:</b> American College of Radiology: the US professional body for radiologists and medical physicists. With NEMA it formed the 1983 committee that produced ACR-NEMA&nbsp;300, DICOM&rsquo;s ancestor.</div>
+    <div><b>Actor:</b> In IHE, a functional unit that produces, manages, or acts on information (Image Manager, Acquisition Modality, Report Creator). Products implement actors; a profile claim without an actor role is not a claim.</div>
     <div><b>AE Title:</b> a 16-byte identifier for a DICOM Application Entity, carried in an association request. An identifier, never a credential.</div>
     <div><b>Association:</b> the negotiated connection between two DICOM Application Entities, carrying one or more presentation contexts.</div>
     <div><b>ATNA:</b> Audit Trail and Node Authentication; in DICOM terms, the PS3.15 Audit Trail Message Format Profile plus its transmission profiles.</div>
     <div><b>Bulk data:</b> large binary values (usually pixel data) referenced from DICOMweb metadata by a <code>BulkDataURI</code> rather than inlined.</div>
+    <div><b>CDA:</b> HL7 Clinical Document Architecture: an XML document standard for clinical documents. DICOM PS3.20 defines the imaging-report-to-CDA transformation.</div>
+    <div><b>Connectathon:</b> IHE&rsquo;s supervised interoperability testing event, where implementations test profile transactions against other vendors&rsquo; systems. Results are published by year and actor.</div>
     <div><b>DAIC:</b> diagnostically acceptable irreversible compression: lossy compression that does not affect a particular diagnostic task, as defined by the ACR&ndash;AAPM&ndash;SIIM standard.</div>
     <div><b>DICOM:</b> Digital Imaging and Communications in Medicine: the standard for representing, storing, and exchanging medical imaging information. Republished several times a year; 2026c at the time of writing.</div>
     <div><b>DICOMweb:</b> the web services defined in DICOM PS3.18: QIDO-RS, WADO-RS, STOW-RS, WADO-URI, UPS-RS and more.</div>
     <div><b>DIMSE:</b> DICOM Message Service Element: the classic message layer carrying C-STORE, C-FIND, C-MOVE, C-GET and the N-services.</div>
+    <div><b>FHIR:</b> Fast Healthcare Interoperability Resources: the modern HL7 standard, REST plus typed resources. Current published version R5 (v5.0.0). Each resource carries its own maturity level.</div>
+    <div><b>FHIRcast:</b> The HL7 specification for context synchronisation between desktop applications, so the reporting application follows the viewer. IHE IRA depends on it.</div>
     <div><b>Frame:</b> one image within a multi-frame instance. Addressed by number, starting at 1; frames have no UID.</div>
     <div><b>GSDF:</b> Grayscale Standard Display Function (PS3.14): the perceptually linearised luminance response curve that display calibration targets.</div>
     <div><b>GSPS:</b> Grayscale Softcopy Presentation State: a DICOM object storing display settings and annotations separately from the images they apply to.</div>
     <div><b>Hanging protocol:</b> rules for arranging series and priors on screen automatically at study open.</div>
+    <div><b>HIMSS:</b> Healthcare Information and Management Systems Society: the health IT society that co-founded IHE with RSNA in 1998.</div>
     <div><b>HL7 v2:</b> the pipe-delimited messaging standard still carrying most real-world orders (<code>ORM</code>, <code>OMI</code>) and results (<code>ORU^R01</code>).</div>
     <div><b>HTJ2K:</b> High-Throughput JPEG&nbsp;2000: the same wavelet transform with a much faster block coder. Transfer syntaxes <code>1.2.840.10008.1.2.4.201</code> to <code>.203</code>.</div>
     <div><b>IHE:</b> Integrating the Healthcare Enterprise: the organisation that publishes integration profiles combining existing standards to solve defined workflow problems.</div>
     <div><b>Instance:</b> a DICOM SOP Instance: one image, report, presentation state, or other object, identified by SOP Instance UID <code>(0008,0018)</code>.</div>
+    <div><b>Interface engine:</b> Middleware that translates, routes, and buffers HL7 and DICOM traffic between systems that disagree. Budget it as a component with an owner, not as a script.</div>
     <div><b>IOCM:</b> Imaging Object Change Management: the IHE Final Text profile for communicating rejection and correction of already-distributed objects.</div>
+    <div><b>IOD:</b> Information Object Definition: the DICOM specification of an object&rsquo;s modules and attributes, in PS3.3. Paired with the services allowed on it, it becomes a SOP Class.</div>
+    <div><b>ISO&nbsp;12052:</b> The ISO designation under which DICOM is recognised. The same standard; useful when a procurement document insists on an ISO reference.</div>
     <div><b>KOS:</b> Key Object Selection Document: a titled, coded list of referenced instances. The carrier for IOCM rejections, key images, and manifests.</div>
+    <div><b>MITA:</b> Medical Imaging &amp; Technology Alliance, a division of NEMA: serves as the DICOM Secretariat.</div>
+    <div><b>MLLP:</b> Minimal Lower Layer Protocol: the framing that carries HL7 v2 messages over TCP. Not a security layer.</div>
     <div><b>MPPS:</b> Modality Performed Procedure Step: the DICOM service by which a modality announces that acquisition started and completed.</div>
     <div><b>MPR / MIP:</b> multi-planar reconstruction and maximum-intensity projection: two standard reformatting operations on volumetric data.</div>
     <div><b>MRRT:</b> Management of Radiology Report Templates: the IHE Final Text profile giving report templates an interoperable format.</div>
     <div><b>Modality Worklist:</b> the DICOM service (<code>1.2.840.10008.5.1.4.31</code>) that delivers scheduled procedure and patient information to a modality so identity is selected rather than typed.</div>
+    <div><b>NEMA:</b> National Electrical Manufacturers Association: holds the DICOM copyright and publishes the standard as NEMA Standard PS3.</div>
+    <div><b>ORM / OMI / ORU:</b> HL7 v2 message types: order (<code>ORM</code>), imaging order (<code>OMI</code>), and observation result (<code>ORU^R01</code>, the usual carrier for a released report).</div>
     <div><b>PACS:</b> Picture Archiving and Communication System. Scope varies enormously by product; NIST classifies it as an FDA Class&nbsp;II device.</div>
     <div><b>PIMS:</b> practice information management system: the veterinary equivalent of an EHR plus a practice-management system.</div>
     <div><b>Presentation context:</b> the pairing, negotiated at association time, of one abstract syntax (SOP Class) with acceptable transfer syntaxes.</div>
+    <div><b>PS3.<em>n</em>:</b> A numbered part of DICOM, not a version. PS is the NEMA publication-standard prefix and the standard runs PS3.1 to PS3.22. The edition label (2026c) changes several times a year; part numbers do not.</div>
     <div><b>QIDO-RS:</b> the DICOMweb search service. Queries are hierarchical or relational depending on the resource.</div>
     <div><b>RIS:</b> radiology information system: the order, scheduling, and workflow system in a human-health radiology department.</div>
+    <div><b>RSNA:</b> Radiological Society of North America: the radiology professional society that co-founded IHE with HIMSS in 1998.</div>
     <div><b>SCU / SCP:</b> Service Class User (the requester) and Service Class Provider (the responder). A product is usually both, in different roles.</div>
     <div><b>Series:</b> a group of instances acquired or produced in a common context within a study. Identified by <code>(0020,000E)</code>.</div>
+    <div><b>SIIM:</b> Society for Imaging Informatics in Medicine: the imaging informatics society, founded 1989 as SCAR and renamed in 2006. Co-author of the ACR&ndash;AAPM&ndash;SIIM technical standards.</div>
     <div><b>SOP Class:</b> a Service-Object Pair Class: an information object definition paired with the services allowed on it, identified by a UID.</div>
+    <div><b>SR:</b> DICOM Structured Report: an object whose content is a coded tree of observations referencing the images they describe. The standards-based carrier for measurements, CAD, dose, and AI output.</div>
+    <div><b>Storage Commitment:</b> The DICOM service by which a receiver takes documented responsibility for retaining instances, so the sender may delete its copy. Carried by N-ACTION and N-EVENT-REPORT.</div>
     <div><b>STOW-RS:</b> the DICOMweb store transaction. A 202 response can contain per-instance failures; parse the body.</div>
     <div><b>Study:</b> the top-level grouping of an imaging examination, identified by Study Instance UID <code>(0020,000D)</code>. Globally unique and never regenerated.</div>
     <div><b>TID 1500:</b> the DICOM Measurement Report structured-report template (PS3.16). The standards-based home for AI and quantitative measurements.</div>
+    <div><b>Transaction:</b> In IHE, one defined information exchange between two actors, built on an existing standard and numbered (RAD-x in Radiology).</div>
     <div><b>Transfer syntax:</b> the encoding of a DICOM data set: byte ordering, VR representation, and any compression. Identified by a UID.</div>
     <div><b>UPS:</b> Unified Procedure Step: DICOM&rsquo;s general worklist service for post-acquisition work, including AI tasks. Push, Watch, Pull, Event, and Query SOP Classes, plus a web form, UPS-RS.</div>
     <div><b>VNA:</b> vendor-neutral archive: durable, application-independent imaging storage. Judge it by demonstrated capability, never by the label.</div>
+    <div><b>VR:</b> Value Representation: the data type of a DICOM attribute (<code>AE</code>, <code>UI</code>, <code>PN</code>, <code>DS</code>&hellip;), defined in PS3.5 along with its length limit.</div>
     <div><b>WADO-RS:</b> the DICOMweb retrieve service, addressing studies, series, instances, frames, metadata, bulk data, rendered images, and thumbnails.</div>
   </div>
 </section>
@@ -2317,6 +2444,17 @@
       <li><a href="https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-software-medical-device" rel="noopener">FDA: Artificial Intelligence in Software as a Medical Device</a>.</li>
       <li><a href="https://www.fda.gov/animal-veterinary/animal-health-literacy/how-fda-regulates-animal-devices" rel="noopener">FDA: How FDA Regulates Animal Devices</a>: source for the veterinary premarket-scope statement.</li>
       <li><a href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml" rel="noopener">IANA Service Name and Transport Protocol Port Number Registry</a>: <code>acr-nema</code> 104, <code>dicom</code> 11112, <code>dicom-tls</code> 2762.</li>
+    </ul></div>
+    <div class="card"><h3>Organisations and governance</h3><ul class="sources">
+      <li><a href="https://www.dicomstandard.org/about" rel="noopener">DICOM: About</a>: source for &ldquo;NEMA serves as the DICOM Secretariat&rdquo; and for DICOM&rsquo;s recognition as ISO&nbsp;12052.</li>
+      <li><a href="https://www.dicomstandard.org/history" rel="noopener">DICOM: History</a>: the 1983 ACR&ndash;NEMA committee, ACR-NEMA&nbsp;300 v1.0 (1985) and v2.0 (1988), and the 1993 rename to DICOM published as NEMA Standard PS3.</li>
+      <li><a href="https://www.dicomstandard.org/activity/wgs" rel="noopener">DICOM Working Groups</a>: the 35 working groups counted Sep&nbsp;2026, including WG-06, WG-14, WG-23, and WG-27.</li>
+      <li><a href="https://www.dicomstandard.org/using/dicomweb" rel="noopener">DICOMweb overview</a>: the service family (QIDO-RS, WADO-RS, WADO-URI, STOW-RS, UPS-RS, capabilities).</li>
+      <li><a href="https://www.nema.org/membership/products/view/Medical-Imaging" rel="noopener">NEMA: Medical Imaging &amp; Technology Alliance (MITA)</a>: MITA as a division of NEMA and as DICOM Secretariat.</li>
+      <li><a href="https://www.ihe.net/about_ihe/faq/" rel="noopener">IHE FAQ</a>: &ldquo;IHE began in 1998 with the mutual realization by HIMSS and RSNA&hellip;&rdquo;, plus the definitions of actor, transaction, integration profile, and Technical Framework.</li>
+      <li><a href="https://www.hl7.org/about/" rel="noopener">HL7 International: About</a>: founded 1987, not-for-profit ANSI-accredited SDO; V2, CDA, and FHIR product lines.</li>
+      <li><a href="https://www.aapm.org/" rel="noopener">AAPM</a>: scientific and professional organisation of medical physicists, founded 1958.</li>
+      <li><a href="https://siim.org/about-siim/history/" rel="noopener">SIIM: History</a>: founded 1989 as the Society for Computer Applications in Radiology, renamed SIIM in 2006.</li>
     </ul></div>
     <div class="card"><h3>Professional guidance and literature</h3><ul class="sources">
       <li><a href="https://gravitas.acr.org/PPTS/GetDocumentView?docId=136" rel="noopener">ACR&ndash;AAPM&ndash;SIIM Technical Standard for Electronic Practice of Medical Imaging</a>: Revised 2022 (Res.&nbsp;48), Amended 2023. Source for the DAIC definition, the &ldquo;no general statement&rdquo; position on compression ratios, the mammography compression restriction, and the display luminance figures.</li>
