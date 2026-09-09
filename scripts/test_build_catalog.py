@@ -357,6 +357,19 @@ class DiscoverFilesTests(unittest.TestCase):
 class InputsHashTests(unittest.TestCase):
     """The --check gate compares content hashes, never mtimes."""
 
+    def test_git_line_ending_conversion_preserves_fingerprint(self):
+        """A Windows checkout must validate the catalog built on Linux."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sheet.html"
+            source = '<h1>Denver’s ledger</h1>\n<p>Cost: $12,500</p>\n'.encode("utf-8")
+            path.write_bytes(source)
+            original = bc._file_sha256(path)
+            path.write_bytes(source.replace(b"\n", b"\r\n"))
+            self.assertEqual(original, bc._file_sha256(path))
+            path.write_bytes(source.replace(b"12,500", b"15,000"))
+            self.assertNotEqual(original, bc._file_sha256(path))
+
     def test_hash_is_stable_across_calls(self):
         self.assertEqual(bc.compute_inputs_hash(), bc.compute_inputs_hash())
 

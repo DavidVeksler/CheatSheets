@@ -86,3 +86,16 @@ automated requests with 403, and HUD returned a 202 challenge. No 404s. Restrict
 links were retained; source retrieval used the research tool where available.
 PHP is unavailable locally, so PHP lint and rendered PHP index/category checks
 are skipped, not passed. Production deployment was not authorized.
+
+The initial clean-clone gate exposed a pre-existing raw-byte catalog fingerprint:
+Git's Windows CRLF conversion changed the hash without changing parsed content.
+The catalog builder now normalizes line endings, matching its text reader. A
+regression test checks cross-platform equivalence while retaining detection of
+substantive content changes. No validation flags or deployment guards were bypassed.
+
+After the fix, all 51 catalog unit tests passed. The committed snapshot passed
+`python scripts/deploy.py --check --all` in a clean local clone: SEO and internal
+links/assets for 201 HTML files, parsing of 15 JSON files, custody-cluster parity,
+and catalog/path freshness. The validator's generic SEO success message mentions
+the rendered index, but PHP was unavailable; rendered PHP checks and lint of the
+8 PHP files remain explicitly skipped. Neither GitHub push nor deployment ran.

@@ -636,11 +636,11 @@ def discover_files(overrides: dict) -> list[str]:
 # answers the real question and costs about 30 ms over the whole corpus.
 # --------------------------------------------------------------------------- #
 def _file_sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(65536), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    # All catalog inputs are text. Match read_text()'s universal-newline
+    # semantics so core.autocrlf checkouts fingerprint the same content as
+    # Linux production. Keep every other byte significant.
+    content = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(content).hexdigest()
 
 
 def compute_inputs_hash(overrides: dict | None = None) -> str:
