@@ -140,6 +140,7 @@ return [
     'weightloss-cheatsheet.html' => 'Health & Fitness',
 
     // Economics & Politics
+    'homelessness-externalized-costs.html' => 'Economics & Politics',
     'capitalism.html' => 'Economics & Politics',
     'economic-systems-compared.html' => 'Economics & Politics',
     'political-ideologies-compared.html' => 'Economics & Politics',
