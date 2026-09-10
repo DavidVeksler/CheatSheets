@@ -12,6 +12,22 @@ Each entry: date, window covered, source, and the numbers. Keep it terse.
 
 <!-- KPI blocks are appended below this line, newest first -->
 
+## 2026-09-10 — Title change: homelessness-externalized-costs.html
+
+Not a measurement pulse. Recording a deliberate title/URL-metadata change so the next pulse reads
+the discontinuity correctly.
+
+| Field | Before | After |
+|---|---|---|
+| `<title>` | Homelessness: The Cost of Removing the Bottom Rungs | Homelessness: The Costs We Hide and the Options We Banned |
+| H1 | Remove the bottom rungs. The street becomes the fallback. | Homelessness tracks rents. Rents track the rules. |
+| Primary query target | "cost of homelessness" framing | "why is homelessness higher in california than west virginia", "homelessness rent vs poverty" |
+
+The page was rewritten from an externalized-cost essay into a tiered argument (rent explains where,
+individual factors explain who), so the query set it should match changes with it. **Expect GSC
+history for the old title's queries to reset**; do not read the drop in the next pulse as a ranking
+loss. Slug and canonical URL are unchanged. Judged by the advocacy goal, not by traffic.
+
 ## 2026-07-21 — 28-day GSC pulse (2026-06-23 → 2026-07-20)
 
 Source: Search Console API, property `https://cheatsheets.davidveksler.com/`. Pre-checkpoint
