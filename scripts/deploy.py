@@ -277,6 +277,26 @@ def validate(args, base: str) -> None:
     else:
         ok("catalog.json is current and paths.json validates")
 
+    # category-hubs.json declares the /<slug> hub pages index.php serves and
+    # the breadcrumb every sheet carries back to its hub. Both are gated:
+    # an invalid hub file would 404 or mis-title a category page, and a sheet
+    # without its breadcrumb is a hub without that inbound link.
+    hubs_check = os.path.join(ROOT, "scripts", "check_hubs.py")
+    res = subprocess.run([sys.executable, hubs_check], cwd=ROOT, capture_output=True, text=True)
+    if res.returncode != 0:
+        detail = (res.stdout.strip() + "\n" + res.stderr.strip()).strip()
+        failures.append("hubs: " + (detail or "check_hubs.py failed"))
+    else:
+        ok(res.stdout.strip() or "category-hubs.json validates")
+    crumbs_check = os.path.join(ROOT, "scripts", "add_hub_breadcrumbs.py")
+    res = subprocess.run([sys.executable, crumbs_check, "--check"], cwd=ROOT,
+                         capture_output=True, text=True)
+    if res.returncode != 0:
+        detail = (res.stdout.strip() + "\n" + res.stderr.strip()).strip()
+        failures.append("breadcrumbs: " + (detail or "add_hub_breadcrumbs.py --check failed"))
+    else:
+        ok(res.stdout.strip() or "sheet breadcrumbs are current")
+
     if not (html or json_files or php_files):
         if failures:
             for f in failures:
@@ -348,8 +368,20 @@ def validate(args, base: str) -> None:
         fail(f"{len(failures)} validation issue(s) - fix or use the matching --skip-* flag.")
 
 
+def hub_slugs() -> set[str]:
+    """Slugs from category-hubs.json: /<slug> is served by index.php via the
+    nginx rewrite in conf/nginx/category-hubs.conf, not by a file on disk."""
+    try:
+        with open(os.path.join(ROOT, "category-hubs.json"), encoding="utf-8") as fh:
+            hubs = json.load(fh).get("hubs", {})
+    except (OSError, ValueError):
+        return set()
+    return {str(h.get("slug")) for h in hubs.values() if isinstance(h, dict) and h.get("slug")}
+
+
 def check_links(html_files: list[str]) -> list[str]:
     missing: list[str] = []
+    slugs = hub_slugs()
     for rel in html_files:
         path = os.path.join(ROOT, rel)
         try:
@@ -371,6 +403,8 @@ def check_links(html_files: list[str]) -> list[str]:
             if not clean or clean in seen:
                 continue
             seen.add(clean)
+            if clean.strip("/") in slugs and "/" not in clean.strip("/"):
+                continue
             if clean.startswith("/"):
                 resolved = os.path.join(ROOT, clean.lstrip("/"))
             else:

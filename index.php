@@ -134,6 +134,33 @@ foreach ($catalogCats as $c) {
 }
 $catIndex = array_flip($catNames);
 
+/* ----------------------------------------------------------------- hubs --- */
+// category-hubs.json: one entry per category with the slug it is served at
+// (/<slug>, rewritten to ?hub=<slug> by conf/nginx/category-hubs.conf), its
+// own title, description, hand-written intro and "start here" picks. Validated
+// by scripts/check_hubs.py at deploy time; a category without an entry still
+// renders, at ?cat=, with the generated metadata below.
+$hubsFile = read_json($ROOT . '/category-hubs.json');
+$HUBS = (isset($hubsFile['hubs']) && is_array($hubsFile['hubs'])) ? $hubsFile['hubs'] : [];
+$CAT_BY_SLUG = [];
+foreach ($HUBS as $hubCat => $hubDef) {
+    if (is_array($hubDef) && !empty($hubDef['slug']) && isset($catIndex[$hubCat])) {
+        $CAT_BY_SLUG[(string)$hubDef['slug']] = (string)$hubCat;
+    }
+}
+function hub_slug(string $cat): string {
+    global $HUBS;
+    return isset($HUBS[$cat]['slug']) ? (string)$HUBS[$cat]['slug'] : '';
+}
+/** Root-relative URL of a category hub ("/ai-safety"), or '' when it has no slug. */
+function hub_path(string $cat): string {
+    global $scriptDir;
+    $slug = hub_slug($cat);
+    return $slug === '' ? '' : ($scriptDir === '' ? '/' : $scriptDir . '/') . $slug;
+}
+$hubPaths = [];
+foreach ($catNames as $cn) { if (hub_path($cn) !== '') $hubPaths[$cn] = hub_path($cn); }
+
 /* ---------------------------------------------------- popularity + review -- */
 
 $popularity = read_json($ROOT . '/popularity.json') ?: [];
@@ -247,6 +274,56 @@ $SORT_ALIASES = [
 $qRaw   = q_str('q');
 $catRaw = q_str('cat');
 $sortRaw = q_str('sort');
+
+/**
+ * Hub URLs. /<slug> is the one canonical address of a category page; nginx
+ * rewrites it to index.php?hub=<slug>. Every other spelling of the same
+ * document (?cat=<Category>, the pre-2026 ?category=, or a direct hit on
+ * ?hub= that bypassed the rewrite) 301s to the slug so Search Console sees a
+ * single URL per category instead of the %20 / + encoding variants it used
+ * to collect. Other parameters ride along on the redirect; they are all
+ * noindex client state either way.
+ */
+function redirect_permanent(string $url): void {
+    header('Cache-Control: public, max-age=3600');
+    header('Location: ' . $url, true, 301);
+    exit;
+}
+function hub_redirect_url(string $cat, array $drop): string {
+    $params = $_GET;
+    foreach ($drop as $k) unset($params[$k]);
+    $params = array_filter($params, fn($v) => is_string($v) && $v !== '');
+    return hub_path($cat) . ($params ? '?' . http_build_query($params) : '');
+}
+$hubRaw = q_str('hub');
+$legacyCatRaw = q_str('category');
+$reqPath = (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+if ($hubRaw !== '') {
+    if (isset($CAT_BY_SLUG[$hubRaw])) {
+        $hubCat = $CAT_BY_SLUG[$hubRaw];
+        if ($reqPath !== hub_path($hubCat)) redirect_permanent(hub_redirect_url($hubCat, ['hub', 'cat', 'category']));
+        $catRaw = $hubCat;
+    } elseif (preg_match('/^[a-z0-9][a-z0-9-]*$/', $hubRaw) && is_file($ROOT . '/' . $hubRaw . '.html')) {
+        // An extensionless sheet URL. People type them and Search Console
+        // shows impressions for them; send them to the real file.
+        redirect_permanent(($scriptDir === '' ? '/' : $scriptDir . '/') . $hubRaw . '.html');
+    } else {
+        http_response_code(404);
+        header('Cache-Control: no-store');
+        echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+           . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+           . '<meta name="robots" content="noindex"><title>Not found</title>'
+           . '<style>body{font:16px/1.6 system-ui,sans-serif;margin:3rem auto;max-width:44rem;padding:0 1.25rem;color:#16181d;background:#f6f6f2}</style>'
+           . '</head><body><h1>There is no page at /' . h($hubRaw) . '</h1>'
+           . '<p>It may have moved. <a href="' . h($baseUrl) . '">Search the cheatsheets</a> instead.</p>'
+           . '</body></html>';
+        exit;
+    }
+} elseif ($catRaw !== '' && isset($catIndex[$catRaw]) && hub_path($catRaw) !== '') {
+    redirect_permanent(hub_redirect_url($catRaw, ['cat', 'category']));
+} elseif ($legacyCatRaw !== '' && isset($catIndex[$legacyCatRaw]) && hub_path($legacyCatRaw) !== '') {
+    redirect_permanent(hub_redirect_url($legacyCatRaw, ['cat', 'category']));
+}
 $sort = $SORT_ALIASES[$sortRaw] ?? $sortRaw;
 if (!isset($SORTS[$sort]) && !in_array($sort, ['oldest', 'title-desc'], true)) $sort = 'new';
 
@@ -379,7 +456,15 @@ function grid_url(array $overrides = []): string {
     ];
     foreach ($overrides as $k => $v) $params[$k] = $v;
     $params = array_filter($params, fn($v) => $v !== '' && $v !== null);
-    return $params ? '?' . http_build_query($params) : './';
+    // A category lives at its hub path; everything else is a query on the
+    // index root. './?' rather than a bare '?' so a link built on /ai-safety
+    // that drops the category resolves to /?... and not /ai-safety?...
+    $cat = (string)($params['cat'] ?? '');
+    if ($cat !== '' && hub_path($cat) !== '') {
+        unset($params['cat']);
+        return hub_path($cat) . ($params ? '?' . http_build_query($params) : '');
+    }
+    return $params ? './?' . http_build_query($params) : './';
 }
 
 function toggle_list(array $current, string $value): string {
@@ -391,8 +476,8 @@ function toggle_list(array $current, string $value): string {
 
 /* ------------------------------------------------------------- metadata --- */
 
-$SITE_TITLE = 'Cheatsheets by David Veksler: Explore 190+ References';
-$SITE_DESC = 'Search inside 190+ interactive reference guides on AI, software, security, crypto custody, radio, health, philosophy and more. Built by a governed Claude Code pipeline with a public git audit trail.';
+$SITE_TITLE = 'Cheat Sheets by David Veksler: ' . (int)$totalCount . ' Dense Reference Guides';
+$SITE_DESC = 'Search inside ' . (int)$totalCount . ' interactive cheat sheets on AI, software, security, crypto custody, radio, health, philosophy and more. Built by a governed Claude Code pipeline with a public git audit trail.';
 
 /**
  * Category description: lead with the count, then name sheets until the string
@@ -432,16 +517,30 @@ $pageDesc = $SITE_DESC;
 $canonical = $baseUrl;
 $h1 = "Find the one page you'll keep open.";
 $catIntro = '';
+$hubIntro = [];
+$hubStart = [];
 
 if ($activeCat !== '') {
     $n = count($rendered);
+    $hub = (isset($HUBS[$activeCat]) && is_array($HUBS[$activeCat])) ? $HUBS[$activeCat] : [];
     $spec = $activeCat . ' Cheatsheets (' . $n . ') | David Veksler';
-    // The 60-character gate wins over the suffix when the category name is long.
-    $pageTitle = mb_strlen($spec) <= 60 ? $spec : $activeCat . ' Cheatsheets (' . $n . ')';
+    // Hand-written hub metadata wins; the generated form is the fallback for a
+    // category that has no category-hubs.json entry yet. The 60-character gate
+    // wins over the suffix when the category name is long.
+    $pageTitle = !empty($hub['title']) ? (string)$hub['title']
+        : (mb_strlen($spec) <= 60 ? $spec : $activeCat . ' Cheatsheets (' . $n . ')');
     $firstTitles = array_slice(array_column($rendered, 'title'), 0, 8);
-    $pageDesc = category_description($activeCat, $n, $firstTitles);
-    $canonical = $baseUrl . '?cat=' . rawurlencode($activeCat);
-    $h1 = $activeCat;
+    $pageDesc = !empty($hub['description']) ? (string)$hub['description'] : category_description($activeCat, $n, $firstTitles);
+    $canonical = hub_path($activeCat) !== ''
+        ? $scheme . '://' . $host . hub_path($activeCat)
+        : $baseUrl . '?cat=' . rawurlencode($activeCat);
+    $h1 = !empty($hub['h1']) ? (string)$hub['h1'] : $activeCat;
+    $hubIntro = array_values(array_filter(is_array($hub['intro'] ?? null) ? $hub['intro'] : [], 'is_string'));
+    foreach ((is_array($hub['start_here'] ?? null) ? $hub['start_here'] : []) as $st) {
+        if (is_array($st) && !empty($st['file']) && isset($byFile[$st['file']])) {
+            $hubStart[] = ['file' => (string)$st['file'], 'title' => $rows[$byFile[$st['file']]]['title'], 'why' => (string)($st['why'] ?? '')];
+        }
+    }
     $topThree = array_values(array_filter($rankOrder, fn($r) => $r['category'] === $activeCat));
     $topThree = array_slice(array_column($topThree, 'title'), 0, 3);
     $catIntro = $n . ' reference' . ($n === 1 ? '' : 's') . ' filed under ' . $activeCat . '.'
@@ -670,9 +769,21 @@ foreach ($rendered as $r) {
     // Minimum viable ListItem: the spec's Budgets table authorises trimming the
     // items when 197 server-rendered cards squeeze the HTML budget, and every
     // one of these URLs is also a real <a href> on the page and a sitemap entry.
-    $items[] = ['@type' => 'ListItem', 'position' => $pos, 'url' => $baseUrl . $r['file']];
+    $item = ['@type' => 'ListItem', 'position' => $pos, 'url' => $baseUrl . $r['file']];
+    // A hub lists 5-25 sheets, so it can afford the name the 200-card index cannot.
+    if ($activeCat !== '') $item['name'] = $r['title'];
+    $items[] = $item;
 }
 $ld['mainEntity'] = ['@type' => 'ItemList', 'numberOfItems' => count($items), 'itemListElement' => $items];
+if ($activeCat !== '') {
+    $ld['breadcrumb'] = [
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Cheat sheets', 'item' => $baseUrl],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => $activeCat, 'item' => $canonical],
+        ],
+    ];
+}
 echo json_encode($ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 ?>
 </script>
@@ -756,6 +867,16 @@ button{font:inherit;color:inherit}
 .tbtn kbd{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--rule);border-radius:3px;padding:0 4px}
 .hero{padding:clamp(18px,3.5vh,34px) 0 clamp(12px,2vh,18px)}
 .hero p.lead{color:var(--muted);max-width:60ch;margin:0 0 16px;font-size:16px}
+.hero p.lead.hub{color:var(--ink);max-width:68ch;margin-bottom:12px;text-wrap:pretty}
+.hero p.lead.facts{font-size:14px}
+.crumbs{font-size:13px;color:var(--muted);margin:0 0 8px}
+.crumbs a{color:var(--muted)}
+.starthere{margin:0 0 18px;max-width:68ch}
+.starthere .lbl{margin:0 0 6px}
+.starthere ol{margin:0;padding:0 0 0 1.4em;display:grid;gap:5px}
+.starthere li{font-size:15px}
+.starthere li a{font-weight:600}
+.starthere li span{display:block;color:var(--muted);font-size:13px}
 .herosearch{display:flex;gap:8px;max-width:620px}
 .herosearch input{flex:1;min-width:0;font:16px var(--sans);padding:11px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)}
 .herosearch input:focus-visible{border-color:var(--accent)}
@@ -774,6 +895,8 @@ footer.site a{color:var(--muted)}
   .hero{padding:6px 0 8px}
   .hero h1{font-size:clamp(27px,7.4vw,34px);margin-bottom:.25em}
   .hero p.lead{display:none}
+  /* Hub copy is the page; keep it on phones (the facts line can go). */
+  .hero p.lead.hub{display:block;font-size:15px}
   .herohint{gap:14px;margin-top:8px}
 }
 @media (max-width:860px){
@@ -1116,9 +1239,25 @@ html.js body[data-view="map"] #mapwrap{display:block}
 <main>
 <section class="hero">
   <div class="wrap">
+    <?php if ($activeCat !== ''): ?>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="./">Cheat sheets</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page"><?php echo h($activeCat); ?></span></nav>
+    <?php endif; ?>
     <h1><?php echo h($h1); ?></h1>
     <?php if ($activeCat !== ''): ?>
-      <p class="lead"><?php echo h($catIntro); ?></p>
+      <?php foreach ($hubIntro as $para): ?>
+      <p class="lead hub"><?php echo h($para); ?></p>
+      <?php endforeach; ?>
+      <p class="lead facts"><?php echo h($catIntro); ?></p>
+      <?php if ($hubStart): ?>
+      <div class="starthere">
+        <p class="lbl">Start here</p>
+        <ol>
+          <?php foreach ($hubStart as $st): ?>
+          <li><a href="<?php echo h($st['file']); ?>"><?php echo h($st['title']); ?></a><span><?php echo h($st['why']); ?></span></li>
+          <?php endforeach; ?>
+        </ol>
+      </div>
+      <?php endif; ?>
     <?php else: ?>
       <p class="lead"><span class="num"><?php echo (int)$totalCount; ?></span> dense, verified references across <span class="num"><?php echo (int)$fieldCount; ?></span> fields, built by one person plus AI agents under a public, git-audited spec. The search box reads inside every page, not just the titles.</p>
     <?php endif; ?>
@@ -1433,6 +1572,7 @@ var NS='cs-explorer:v1:';
 var CS=window.CS={setView:function(){},showOnMap:function(){},onFilter:null,onTheme:null};
 var CATV=<?php echo json_encode($catalogVersion); ?>;
 var SERVER_CAT=<?php echo json_encode($activeCat); ?>;
+var HUB=<?php echo json_encode($hubPaths, JSON_UNESCAPED_SLASHES); ?>;
 var TOTAL=<?php echo (int)$totalCount; ?>;
 // The server may have rendered a sheet or category title, so the "no filters"
 // title is passed in rather than read back off document.title.
@@ -1521,7 +1661,7 @@ var state={cat:SERVER_CAT||'',q:'',shape:[],fresh:[],interactive:false,sort:''};
 (function initState(){
   var p=new URLSearchParams(location.search);
   state.q=p.get('q')||'';
-  state.cat=p.get('cat')||'';
+  state.cat=p.get('cat')||SERVER_CAT||'';
   state.shape=(p.get('shape')||'').split(',').filter(Boolean);
   state.fresh=(p.get('fresh')||'').split(',').filter(Boolean);
   state.interactive=p.get('interactive')==='1';
@@ -1585,7 +1725,7 @@ function apply(reorder){
 
 function syncURL(){
   var p=new URLSearchParams();
-  if(state.cat)p.set('cat',state.cat);
+  if(state.cat&&!SERVER_CAT)p.set('cat',state.cat);
   if(state.q)p.set('q',state.q);
   if(state.shape.length)p.set('shape',state.shape.join(','));
   if(state.fresh.length)p.set('fresh',state.fresh.join(','));
@@ -1727,7 +1867,7 @@ function commandsFor(qt){
   // top 3 whose name matches what has been typed so far.
   var q=qt.join(' ');
   L.cats.filter(function(c){return !q||c.toLowerCase().indexOf(q)>=0;}).slice(0,3)
-    .forEach(function(c){cmds.push({label:'Category: '+c,act:function(){dlg.close();if(SERVER_CAT){location.href='?cat='+encodeURIComponent(c);}else{state.cat=c;apply(false);}}});});
+    .forEach(function(c){cmds.push({label:'Category: '+c,act:function(){dlg.close();if(SERVER_CAT){location.href=HUB[c]||('./?cat='+encodeURIComponent(c));}else{state.cat=c;apply(false);}}});});
   return cmds;
 }
 

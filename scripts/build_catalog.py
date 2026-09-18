@@ -17,10 +17,9 @@ Exit codes: 0 on success. Non-zero (with a message on stderr) when:
   - a paths.json step references a file not in the catalog
   - --check finds catalog.json's recorded inputs_hash no longer matches the
     content hash of the catalogued sources
-Warnings (unmapped category, missing hue, thin category-hue coverage, count
-crossing the "190+" rounding boundary, palette examples with no heading
-match, shape heuristics degrading, layout drift) print to stderr but do not
-fail the build.
+Warnings (unmapped category, missing hue, thin category-hue coverage,
+palette examples with no heading match, shape heuristics degrading, layout
+drift) print to stderr but do not fail the build.
 """
 
 from __future__ import annotations
@@ -735,9 +734,6 @@ def build(warn_only: bool = False) -> dict:
         print(f"WARNING: {filename} has no entry in category-map.php; filed under Other", file=sys.stderr)
     for cat in unknown_hue_categories:
         print(f"WARNING: category '{cat}' has no hue defined in build_catalog.py's CATEGORY_LIGHT_HUES", file=sys.stderr)
-    if len(sheets) >= 200:
-        print(f"WARNING: catalog count is {len(sheets)}; the spec's '190+' title round-down is now wrong", file=sys.stderr)
-
     shape_counts = Counter(sh for s in sheets for sh in s["shape"])
     reference_only = sum(1 for s in sheets if s["shape"] == ["reference"])
     if len(sheets) and reference_only / len(sheets) > 0.10:

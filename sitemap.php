@@ -54,22 +54,40 @@ try {
     // Continue with empty array if scanning fails
 }
 
-// Category landing pages: ?cat=<Category> is server-rendered by index.php with
-// its own title, description, canonical and JSON-LD, so each one is a distinct
-// indexable document. The list comes from catalog.json (the single source of
-// category truth downstream of category-map.php); if the catalog is missing the
-// sitemap simply omits them rather than guessing.
+// Category hub pages: /<slug> (declared in category-hubs.json) is server-rendered
+// by index.php with its own title, description, canonical and JSON-LD, so each
+// one is a distinct indexable document. The category list comes from
+// catalog.json (the single source of category truth downstream of
+// category-map.php); a category with no hub slug falls back to ?cat=, which
+// index.php still serves. lastmod is the newest commit touching any sheet in
+// the category, not the catalog's build time, so it only moves when the hub's
+// content actually changed.
 $categoryUrls = [];
 $catalogPath = __DIR__ . '/catalog.json';
+$hubsPath = __DIR__ . '/category-hubs.json';
+$hubs = [];
+if (is_readable($hubsPath)) {
+    $hubsFile = json_decode((string)@file_get_contents($hubsPath), true);
+    if (is_array($hubsFile) && !empty($hubsFile['hubs']) && is_array($hubsFile['hubs'])) $hubs = $hubsFile['hubs'];
+}
 if (is_readable($catalogPath)) {
     $catalog = json_decode((string)@file_get_contents($catalogPath), true);
     if (is_array($catalog) && !empty($catalog['categories']) && is_array($catalog['categories'])) {
-        $catalogMtime = @filemtime($catalogPath) ?: time();
+        $latestByCat = [];
+        foreach ((is_array($catalog['sheets'] ?? null) ? $catalog['sheets'] : []) as $sheet) {
+            if (empty($sheet['category'])) continue;
+            $ts = max((int)($sheet['updated'] ?? 0), (int)($sheet['created'] ?? 0));
+            $latestByCat[$sheet['category']] = max($latestByCat[$sheet['category']] ?? 0, $ts);
+        }
+        $hubsMtime = @filemtime($hubsPath) ?: 0;
         foreach ($catalog['categories'] as $category) {
             if (empty($category['name'])) continue;
+            $name = (string)$category['name'];
+            $slug = isset($hubs[$name]['slug']) ? (string)$hubs[$name]['slug'] : '';
+            $lastmod = max($latestByCat[$name] ?? 0, $hubsMtime) ?: time();
             $categoryUrls[] = [
-                'url' => $baseUrl . '?cat=' . rawurlencode((string)$category['name']),
-                'lastmod' => date('c', $catalogMtime),
+                'url' => $slug !== '' ? $baseUrl . $slug : $baseUrl . '?cat=' . rawurlencode($name),
+                'lastmod' => date('c', $lastmod),
                 'priority' => '0.7',
                 'changefreq' => 'weekly',
             ];

@@ -17,7 +17,9 @@ scripts/build_catalog.py   (BeautifulSoup parse, git dates, shape heuristics,
 catalog.json                (committed; ~350 KB)
         │
         ├─► index.php        server-renders Grid + facet rail + Pulse + category
-        │                    landing pages; inlines a "catalog-lite" JSON for instant
+        │                    hub pages (/<slug>, copy from category-hubs.json, routed
+        │                    by conf/nginx/category-hubs.conf and, locally,
+        │                    scripts/dev_router.php); inlines a "catalog-lite" JSON for instant
         │                    client-side filtering; lazy-fetches catalog.json itself
         │                    on first palette/map/drawer open for headings/outlinks/edges
         │
@@ -134,8 +136,10 @@ run, so the sparkline is not empty for a full 30 days after shipping.
    applied to it (it isn't a cheatsheet).
 2. **Keep the Microsoft Clarity tag?** Kept, unchanged, for heatmap visibility into palette
    and map usage.
-3. **Make `?cat=` pages indexable?** Yes — self-canonical, own title/description/JSON-LD,
-   listed in `sitemap.php` and `llms.txt`.
+3. **Make category pages indexable?** Yes — self-canonical, own title/description/JSON-LD,
+   listed in `sitemap.php` and `llms.txt`. Since 2026-09-17 they live at `/<slug>` with
+   hand-written copy in `category-hubs.json` and a breadcrumb back from every sheet;
+   the `?cat=` form 301s there. See `docs/marketing.md` for the why.
 4. **Which of the 11 draft paths ship?** All 11, as drafted; `paths.json` is a data file
    David can edit directly without a code change.
 5. **Title framing.** The content-first draft shipped (`Cheatsheets by David Veksler:

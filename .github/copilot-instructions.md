@@ -165,3 +165,4 @@ Files are auto-discovered via `scandir()`, filtered by `$excludedItems` array.
 - [ ] Interactive elements work without JavaScript fallback
 - [ ] Filename follows `topic-name.html` convention
 - [ ] File added to `category-map.php`, then `catalog.json` regenerated (`python3 scripts/build_catalog.py`, or let `.githooks/pre-commit` do it) so it appears in the `index.php` Explorer
+- [ ] `python3 scripts/add_hub_breadcrumbs.py` run so the sheet carries its footer breadcrumb to the category hub (`deploy.py --check` fails without it)

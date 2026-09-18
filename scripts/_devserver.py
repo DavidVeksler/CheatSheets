@@ -1,4 +1,5 @@
-"""Shared helper: start `php -S 127.0.0.1:<port>` from the repo root and wait
+"""Shared helper: start `php -S 127.0.0.1:<port> scripts/dev_router.php` from the
+repo root (the router emulates the production hub-slug rewrite) and wait
 for it to accept connections. Used by scripts/render_og_map.py and
 scripts/shot_index.py so the two headless-Chromium tools that both need a
 live index.php don't duplicate the same subprocess/poll logic.
@@ -20,7 +21,7 @@ def serve_php(root: Path, port: int, timeout: float = 10.0) -> subprocess.Popen:
         print("php is not on PATH; needed to serve index.php locally.", file=sys.stderr)
         sys.exit(1)
     proc = subprocess.Popen(
-        [php, "-S", f"127.0.0.1:{port}"],
+        [php, "-S", f"127.0.0.1:{port}", str(root / "scripts" / "dev_router.php")],
         cwd=str(root),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,

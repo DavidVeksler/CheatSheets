@@ -16,14 +16,25 @@ Discoverability rules live in [`../AGENTS.md`](../AGENTS.md) (> *Discoverability
   full category index for LLM crawlers), `../sitemap.php` (category-priority sitemap),
   and `../robots.txt` (points at the sitemap). There is no `llms-full.txt`.
 - The site is verified in Google Search Console (see `seo-planning.md` for the baseline).
-- **Category landing pages are indexable URLs**: `?cat=<Category>` (all 15 listed in
-  `llms.txt` and `sitemap.php`) is server-rendered by `index.php` with its own
-  self-canonical `<title>`, description, H1, intro paragraph, and filtered
-  `CollectionPage`/`ItemList` JSON-LD — a distinct document per category, not a
-  client-side filter. An unknown `cat` value falls back to the unfiltered index with
-  `noindex`. Every other Explorer query parameter (`q`, `sort`, `shape`, `view`,
-  `sheet`, `path`, `fresh`, `interactive`) expresses client state, not a document, and
-  is `noindex`.
+- **Category hub pages are indexable URLs at `/<slug>`** (`/ai-safety`, `/radio`, all
+  15 listed in `llms.txt` and `sitemap.php`), server-rendered by `index.php` with a
+  hand-written title, description, H1, intro and "start here" list from
+  [`../category-hubs.json`](../category-hubs.json), plus `CollectionPage`/`ItemList`
+  (with item names) and `BreadcrumbList` JSON-LD. nginx hands `/<slug>` to
+  `index.php?hub=<slug>` via [`../conf/nginx/category-hubs.conf`](../conf/nginx/category-hubs.conf);
+  `?cat=<Category>`, the old `?category=`, and `/<slug>/` all 301 to the slug so Search
+  Console sees one URL per hub. Every sheet links back to its hub from a footer
+  breadcrumb (`scripts/add_hub_breadcrumbs.py`, gated by `deploy.py --check`), which is
+  what gives the hubs inbound links; before 2026-09 they had none and did not rank.
+  Hub titles target the two-word "cheat sheets" query family Search Console actually
+  shows ("git cheat sheet", "ham radio cheat sheet"), not the category name. Every
+  other Explorer query parameter (`q`, `sort`, `shape`, `view`, `sheet`, `path`,
+  `fresh`, `interactive`) expresses client state, not a document, and is `noindex`.
+- **To add or rename a category**: add the sheets to `category-map.php`, add the hub
+  entry (slug, title <= 60, description 150-200, h1, intro, start_here) to
+  `category-hubs.json`, rebuild the catalog, run `python3 scripts/add_hub_breadcrumbs.py`,
+  and if a slug changed add a `location = /old-slug { return 301 /new-slug; }` to
+  `conf/nginx/redirects.conf`. No nginx change is needed for a new slug.
 
 ## Social preview image (OG)
 

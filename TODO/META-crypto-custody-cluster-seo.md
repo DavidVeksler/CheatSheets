@@ -3,7 +3,7 @@
 Durable working doc for the 9-sheet custody cluster. Sibling to `TODO/META-seo-planning.md`
 (site-wide). Update in place.
 
-Cluster URL (browse view): `https://cheatsheets.davidveksler.com/?cat=Crypto+Custody+%26+Compliance`
+Cluster URL (browse view): `https://cheatsheets.davidveksler.com/crypto-custody` (the former `?cat=Crypto+Custody+%26+Compliance` 301s there since 2026-09-17)
 Category membership is defined in `category-map.php:85-94`.
 
 ## Situation as of 2026-09-02

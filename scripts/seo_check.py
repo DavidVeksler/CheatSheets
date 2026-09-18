@@ -5,7 +5,7 @@ Two passes:
 
 1. Static ``*.html`` sheets (title <= 65, description 150-200, canonical,
    valid JSON-LD).
-2. The rendered front door: ``index.php`` and each ``?cat=`` landing page,
+2. The rendered front door: ``index.php`` and each category hub (``/<slug>``),
    rendered through the ``php`` CLI with a stubbed ``$_SERVER``. These carry a
    tighter title budget (<= 60) because the Explorer spec sets one, and any PHP
    warning or notice in the output is itself a failure. Skipped with a printed
@@ -88,23 +88,28 @@ class Head(HTMLParser):
             self._title_parts.append(data)
 
 
-def render_index(query: str) -> tuple[str, str]:
+def render_index(query: str, path: str = "/") -> tuple[str, str]:
     """Render index.php through the php CLI with a stubbed request.
 
     Returns (stdout, stderr). The query string arrives via the environment so
-    that category names containing '&' survive intact.
+    that category names containing '&' survive intact. ``path`` is the request
+    path nginx would have seen; a hub is rendered as path=/<slug> with
+    query=hub=<slug>, exactly what conf/nginx/category-hubs.conf rewrites to
+    (index.php 301s any other spelling of a hub, so rendering ?cat= would
+    only ever produce an empty redirect body).
     """
     code = (
         '$_SERVER["HTTP_HOST"]="cheatsheets.davidveksler.com";'
         '$_SERVER["SCRIPT_NAME"]="/index.php";'
+        '$_SERVER["REQUEST_URI"]=(string)getenv("SEO_PATH");'
         '$_SERVER["HTTPS"]="on";'
         'parse_str((string)getenv("SEO_QS"),$_GET);'
         'include "index.php";'
     )
-    env = dict(os.environ, SEO_QS=query)
+    env = dict(os.environ, SEO_QS=query, SEO_PATH=path)
     result = subprocess.run(
         ["php", "-d", "display_errors=1", "-d", "error_reporting=E_ALL", "-r", code],
-        cwd=ROOT, capture_output=True, text=True, env=env,
+        cwd=ROOT, capture_output=True, encoding="utf-8", errors="replace", env=env,
     )
     return result.stdout, result.stderr
 
@@ -146,7 +151,7 @@ def check_rendered(label: str, source: str, stderr: str, failures: list) -> None
 
 
 def check_front_door(failures: list) -> None:
-    """Gate index.php and every ?cat= landing page it renders."""
+    """Gate index.php and every category hub page it renders."""
     if not shutil.which("php"):
         print("note: php not on PATH, skipping the rendered index and category gate")
         return
@@ -167,13 +172,27 @@ def check_front_door(failures: list) -> None:
         failures.append(f"catalog.json: does not parse: {error}")
         return
 
+    hubs = {}
+    hubs_path = ROOT / "category-hubs.json"
+    if hubs_path.is_file():
+        try:
+            hubs = json.loads(hubs_path.read_text(encoding="utf-8")).get("hubs", {})
+        except Exception as error:  # noqa: BLE001
+            failures.append(f"category-hubs.json: does not parse: {error}")
+            return
+
     from urllib.parse import quote
     for category in categories:
         name = category.get("name")
         if not name:
             continue
-        page, page_err = render_index("cat=" + quote(name, safe=""))
-        check_rendered(f"index.php?cat={name}", page, page_err, failures)
+        slug = str((hubs.get(name) or {}).get("slug", ""))
+        if slug:
+            page, page_err = render_index("hub=" + slug, "/" + slug)
+            check_rendered(f"/{slug} ({name})", page, page_err, failures)
+        else:
+            page, page_err = render_index("cat=" + quote(name, safe=""))
+            check_rendered(f"index.php?cat={name}", page, page_err, failures)
 
 
 def main() -> int:

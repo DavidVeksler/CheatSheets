@@ -113,6 +113,30 @@ so the bash hook and wrappers don't break under Git Bash on Windows. If a hook e
 fails with `bad interpreter`, re-checkout: `rm .githooks/pre-push && git checkout --
 .githooks/pre-push`.
 
+## nginx drop-ins (server config that lives in this repo)
+
+`conf/nginx/*.conf` are copied by hand to
+`/var/www/cheatsheets.davidveksler.com/conf/nginx/` (the vhost includes that
+directory). They are not part of `git push production`; the server has no other
+backup of them. After changing one:
+
+```bash
+scp conf/nginx/*.conf johngalt@198.211.102.9:/var/www/cheatsheets.davidveksler.com/conf/nginx/
+```
+
+```bash
+ssh johngalt@198.211.102.9 'sudo nginx -t && sudo systemctl reload nginx'
+```
+
+- `category-hubs.conf` routes `/<slug>` to `index.php?hub=<slug>` (the category hub
+  pages) and 301s `/<slug>/` to `/<slug>`. It must be live before a deploy that ships
+  slug links, otherwise every sheet's breadcrumb 404s.
+- `redirects.conf` holds permanent redirects for retired URLs.
+- `php-routing.conf`, `cache-control.conf`, `ssl.conf` exist on the server only.
+
+Verify after a reload: `curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/radio` → 200,
+and `curl -o /dev/null -w "%{http_code} %{redirect_url}\n" "https://cheatsheets.davidveksler.com/?cat=Radio"` → 301 to `/radio`.
+
 ## Manual fallback
 
 If the wrapper can't run (no local Python, etc.), the raw deploy is still:

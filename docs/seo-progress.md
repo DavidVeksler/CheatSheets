@@ -154,3 +154,42 @@ head-to-head family (~2,300 @ 6–11), and "eid cheat sheet" (317 @ 8.7). Full t
 resulting ten specs: [`TODO/niche-utility-batch-2026-08.md`](../TODO/niche-utility-batch-2026-08.md).
 
 AI-crawler and GA4 legs not re-pulled this session — no change to the 2026-08-06 figures.
+
+## 2026-09-17 — Homepage and category-hub baseline (index.php SEO tier 1)
+
+Pulled 2026-09-17 via `scripts/gsc_query.py` and the `search-console` MCP, 90 days
+(2026-06-18 → 2026-09-15). Baseline for judging the hub work shipped the same day.
+
+### Front door — 90 days
+
+| URL | Clicks | Impressions | CTR | Position |
+|---|---|---|---|---|
+| `/` (homepage) | 11 | 2,410 | 0.46% | 17.9 |
+| `?cat=AI & Safety` (both encodings) | 0 | 70 | 0% | 7.1 |
+| other 14 `?cat=` pages combined | 0 | 18 | 0% | n/a |
+| `index.php?category=AI & Safety` (legacy) | 0 | 8 | 0% | 7.9 |
+
+Homepage queries that GSC will name: `site:` searches, "david veksler" (15 impr @ 9.7),
+"technology cheat sheets" (16 @ 42.8), "cheatsheets" (1 @ 43), leftover "anduril" queries from
+the withdrawn page. Everything else is anonymised long tail. Site-wide, the two-word "cheat sheet"
+query family shows real demand the hubs did not capture: "git cheat sheet" 163 impr @ 70,
+"database management system cheat sheet" 76 @ 38, "cooking cheat sheets" 56 @ 29,
+"ham radio cheat sheet" 84 @ 9.2, "technology cheat sheets" 16 @ 42.8.
+
+Diagnosis (code, not data): 0 of 200 sheets linked to any `?cat=` page; the rail used `+`
+encoding while canonical/sitemap used `%20`; hub titles targeted the category name
+("AI & Safety Cheatsheets (22)"), which nobody types; hub body was one generated sentence.
+
+### Shipped 2026-09-17
+
+Category hubs moved to `/<slug>` (15 slugs in `category-hubs.json`) with hand-written title,
+description, H1, intro and start-here list; `?cat=`, `?category=` and `/<slug>/` 301 to the
+slug; every sheet carries a footer breadcrumb + `BreadcrumbList` to its hub (200 new inbound
+links per cluster); sitemap `lastmod` for hubs now tracks the newest sheet commit in the category
+instead of the catalog build time; homepage title moved to the two-word form with the live count.
+Requires the nginx drop-in `conf/nginx/category-hubs.conf` to be live before the deploy.
+
+**Re-pull on or after 2026-10-17** (30 days) and again at 60/90: per-hub clicks/impressions/position,
+the "cheat sheet(s)" query family positions above, and whether the breadcrumb trail appears in
+SERPs for sheet pages. Success bar for continuing hub investment: any hub with >= 50 impressions
+in the 30-day window, or the "ham radio cheat sheet" / "git cheat sheet" families moving to page 1.

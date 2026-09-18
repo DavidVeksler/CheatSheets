@@ -703,3 +703,12 @@ title work has no mechanism to succeed.
   `TODO/niche-utility-batch-2026-08.md` plus one file per sheet, all passing the title/description
   constraints of `scripts/seo_check.py` at spec time. Build order is seasonal-first: the High Holiday
   services follow-along has a hard 2026-09-01 deadline.
+- 2026-09-17 — **index.php SEO tier 1 shipped** (homepage + category hubs). Baseline and what
+  shipped are in `docs/seo-progress.md` (2026-09-17 section). Root causes were structural: no
+  sheet linked to a category page, two URL encodings per category, one-sentence hub bodies, titles
+  targeting the category name. Fix: `/<slug>` hubs from `category-hubs.json` (nginx drop-in
+  `conf/nginx/category-hubs.conf`), 301s from every old spelling, hand-written hub copy, footer
+  breadcrumbs on all 200 sheets (`scripts/add_hub_breadcrumbs.py`), `scripts/check_hubs.py` in the
+  deploy gate, sitemap lastmod fix. Tiers 2-4 of the same brainstorm (indexable curated paths,
+  homepage "browse by field" block, WebSite/SearchAction + Person `@id` alignment, link-equity
+  shaping on the 400-link homepage grid) are not started. Measurement checkpoint 2026-10-17.
