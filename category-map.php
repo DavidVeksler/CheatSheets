@@ -171,6 +171,7 @@ return [
     'stoicism-practice-texts-misreadings.html' => 'Philosophy & Religion',
 
     // Engineering & Science
+    'how-do-rainbows-work.html' => 'Engineering & Science',
     'ai-accelerator-comparison.html' => 'Engineering & Science',
     'ai-datacenter-infrastructure.html' => 'Engineering & Science',
     'ai-infrastructure-numbers.html' => 'Engineering & Science',
