@@ -141,6 +141,125 @@
                 overflow: clip;
             }
 
+            .hero::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                background:
+                    linear-gradient(90deg, transparent 49.8%, rgba(47, 219, 122, 0.035) 50%, transparent 50.2%),
+                    linear-gradient(0deg, transparent 49.8%, rgba(47, 219, 122, 0.035) 50%, transparent 50.2%);
+                background-size: 4rem 4rem;
+                mask-image: linear-gradient(90deg, transparent 32%, #000 100%);
+            }
+
+            .hero-grid {
+                position: relative;
+                z-index: 1;
+                display: grid;
+                grid-template-columns: minmax(0, 1.22fr) minmax(330px, 0.78fr);
+                align-items: center;
+                gap: clamp(1.5rem, 4vw, 4.5rem);
+            }
+
+            .hero-copy { min-width: 0; }
+
+            .hero-visual {
+                position: relative;
+                min-width: 0;
+                padding: 0.8rem;
+                border: 1px solid rgba(47, 219, 122, 0.28);
+                border-radius: calc(var(--radius) + 2px);
+                background:
+                    radial-gradient(circle at 50% 48%, rgba(47, 219, 122, 0.12), transparent 42%),
+                    color-mix(in srgb, var(--bg) 76%, transparent);
+                box-shadow: inset 0 0 0 1px rgba(255,255,255,0.025), 0 18px 45px rgba(0,0,0,0.2);
+                color: var(--accent);
+                isolation: isolate;
+            }
+
+            .hero-visual::before,
+            .hero-visual::after {
+                content: "";
+                position: absolute;
+                width: 18px;
+                height: 18px;
+                border-color: var(--accent);
+                opacity: 0.72;
+                pointer-events: none;
+            }
+            .hero-visual::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+            .hero-visual::after { right: -1px; bottom: -1px; border-right: 2px solid; border-bottom: 2px solid; }
+
+            .display-head,
+            .display-foot {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+                font-family: var(--font-mono);
+                font-size: 0.64rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+            .display-head { padding: 0.05rem 0.15rem 0.55rem; color: var(--muted); }
+            .display-head strong { color: var(--accent); font-weight: 700; }
+            .display-foot { padding: 0.55rem 0.15rem 0.05rem; color: var(--muted); }
+            .display-foot span { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+            .status-dot {
+                width: 0.45rem;
+                height: 0.45rem;
+                border-radius: 50%;
+                background: var(--accent);
+                box-shadow: 0 0 0 4px rgba(47, 219, 122, 0.1);
+            }
+            .status-dot.amber { background: var(--accent-2); box-shadow: 0 0 0 4px rgba(255, 176, 32, 0.1); }
+
+            .system-map {
+                display: block;
+                width: 100%;
+                height: auto;
+                border-block: 1px solid rgba(47, 219, 122, 0.12);
+            }
+            .system-map text { font-family: var(--font-mono); }
+            .map-grid { stroke: currentColor; opacity: 0.08; }
+            .map-ring { fill: none; stroke: currentColor; opacity: 0.2; }
+            .map-axis { fill: none; stroke: currentColor; opacity: 0.14; stroke-dasharray: 3 7; }
+            .map-path { fill: none; stroke: currentColor; opacity: 0.7; stroke-width: 1.5; stroke-dasharray: 4 5; }
+            .map-node { fill: color-mix(in srgb, var(--panel) 82%, transparent); stroke: currentColor; stroke-width: 1.3; }
+            .map-node-core { fill: currentColor; }
+            .map-label { fill: var(--muted); font-size: 8px; letter-spacing: 0.1em; }
+            .map-value { fill: var(--text); font-size: 9px; font-weight: 700; }
+            .map-accent { fill: var(--accent); }
+            .map-amber { fill: var(--accent-2); stroke: var(--accent-2); }
+            .map-track { fill: none; stroke: var(--accent-2); stroke-width: 1.5; opacity: 0.9; }
+            .map-sweep { fill: rgba(47, 219, 122, 0.09); transform-origin: 170px 112px; }
+
+            @media (prefers-reduced-motion: no-preference) {
+                .map-sweep { animation: sweep 7s linear infinite; }
+                .map-path { animation: signal-flow 1.8s linear infinite; }
+                .status-dot { animation: status-pulse 2.4s ease-in-out infinite; }
+            }
+
+            @keyframes sweep { to { transform: rotate(360deg); } }
+            @keyframes signal-flow { to { stroke-dashoffset: -18; } }
+            @keyframes status-pulse { 50% { box-shadow: 0 0 0 7px rgba(47, 219, 122, 0.025); } }
+
+            @media (max-width: 1040px) {
+                .hero-grid { grid-template-columns: 1fr; }
+                .hero-copy { max-width: 920px; }
+                .hero-visual { width: min(100%, 720px); }
+                h1 { max-width: 24ch; }
+            }
+
+            @media (max-width: 560px) {
+                .hero-visual { padding: 0.55rem; }
+                .display-head, .display-foot { font-size: 0.56rem; }
+                .display-head span:last-child, .display-foot span:last-child { display: none; }
+            }
+
             .eyebrow {
                 display: inline-flex;
                 align-items: center;
@@ -290,7 +409,25 @@
             }
 
             .kc-num { font-family: var(--font-mono); color: var(--accent); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; }
+            .kc-stage-head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.7rem; }
+            .stage-glyph {
+                display: grid;
+                flex: 0 0 auto;
+                width: 2.65rem;
+                height: 2.65rem;
+                place-items: center;
+                border: 1px solid rgba(47, 219, 122, 0.3);
+                border-radius: 50%;
+                color: var(--accent);
+                background: radial-gradient(circle, rgba(47, 219, 122, 0.12), transparent 68%);
+            }
+            .stage-glyph svg { width: 1.65rem; height: 1.65rem; overflow: visible; }
+            .stage-glyph .ghost-ring { fill: none; stroke: currentColor; opacity: 0.22; }
+            .stage-glyph .ink { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+            .stage-glyph .ink-fill { fill: currentColor; }
+            .kc-stage-head > div { min-width: 0; }
             .kc-stage h3 { margin: 0.3rem 0 0.4rem; font-size: 1.05rem; color: var(--text); }
+            .kc-stage-head h3 { margin: 0.15rem 0 0; }
             .kc-stage p { margin: 0; color: var(--muted); font-size: 0.85rem; line-height: 1.45; }
             .kc-stage ul { margin: 0.5rem 0 0; padding-left: 1.05rem; color: var(--muted); font-size: 0.8rem; line-height: 1.5; }
 
@@ -391,16 +528,96 @@
     </div>
 
     <header class="hero">
-        <span class="eyebrow"><i class="bi bi-shield-exclamation"></i> Multi-vendor reference &middot; not a product catalog</span>
-        <h1>Autonomous Defense Systems: C-UAS, CCA &amp; Loitering Munitions</h1>
-        <p class="lead">Counter-drone interceptors, electronic warfare, collaborative combat aircraft, loitering munitions, EO/IR sensor payloads, and mission-autonomy software &mdash; a working reference across <strong>30+ vendors</strong>, with every spec traced to a vendor datasheet, government release, or defense trade publication.</p>
-        <div class="hero-actions">
-            <a class="action-link primary" href="#cuas-detect"><i class="bi bi-broadcast"></i> Counter-UAS</a>
-            <a class="action-link" href="#ew-de"><i class="bi bi-lightning"></i> EW &amp; Directed Energy</a>
-            <a class="action-link" href="#cca"><i class="bi bi-airplane"></i> CCA Program</a>
-            <a class="action-link" href="#loitering"><i class="bi bi-bullseye"></i> Loitering Munitions</a>
-            <a class="action-link" href="#autonomy-sw"><i class="bi bi-diagram-3"></i> Mission Autonomy SW</a>
-            <a class="action-link" href="#glossary"><i class="bi bi-journal-text"></i> Glossary</a>
+        <div class="hero-grid">
+            <div class="hero-copy">
+                <span class="eyebrow"><i class="bi bi-shield-exclamation"></i> Multi-vendor reference &middot; not a product catalog</span>
+                <h1>Autonomous Defense Systems: C-UAS, CCA &amp; Loitering Munitions</h1>
+                <p class="lead">Counter-drone interceptors, electronic warfare, collaborative combat aircraft, loitering munitions, EO/IR sensor payloads, and mission-autonomy software &mdash; a working reference across <strong>30+ vendors</strong>, with every spec traced to a vendor datasheet, government release, or defense trade publication.</p>
+                <div class="hero-actions">
+                    <a class="action-link primary" href="#cuas-detect"><i class="bi bi-broadcast"></i> Counter-UAS</a>
+                    <a class="action-link" href="#ew-de"><i class="bi bi-lightning"></i> EW &amp; Directed Energy</a>
+                    <a class="action-link" href="#cca"><i class="bi bi-airplane"></i> CCA Program</a>
+                    <a class="action-link" href="#loitering"><i class="bi bi-bullseye"></i> Loitering Munitions</a>
+                    <a class="action-link" href="#autonomy-sw"><i class="bi bi-diagram-3"></i> Mission Autonomy SW</a>
+                    <a class="action-link" href="#glossary"><i class="bi bi-journal-text"></i> Glossary</a>
+                </div>
+            </div>
+
+            <figure class="hero-visual" aria-labelledby="system-map-title system-map-desc">
+                <div class="display-head" aria-hidden="true">
+                    <strong>Common operating picture</strong>
+                    <span>Track correlation / nominal</span>
+                </div>
+                <svg class="system-map" viewBox="0 0 340 224" role="img" aria-labelledby="system-map-title system-map-desc">
+                    <title id="system-map-title">Sensor-fusion and human-authorization map</title>
+                    <desc id="system-map-desc">Radio-frequency, radar, and optical sensors feed a fused track. The system classifies it, presents it to a human authorization gate, and then routes an approved response.</desc>
+                    <defs>
+                        <pattern id="map-grid" width="17" height="17" patternUnits="userSpaceOnUse">
+                            <path d="M 17 0 L 0 0 0 17" class="map-grid" fill="none"/>
+                        </pattern>
+                    </defs>
+                    <rect width="340" height="224" fill="url(#map-grid)"/>
+
+                    <circle class="map-ring" cx="170" cy="112" r="82"/>
+                    <circle class="map-ring" cx="170" cy="112" r="56"/>
+                    <circle class="map-ring" cx="170" cy="112" r="30"/>
+                    <path class="map-axis" d="M170 20V204M78 112H262M105 47L235 177M235 47L105 177"/>
+                    <path class="map-sweep" d="M170 112L170 30A82 82 0 0 1 228 54Z"/>
+
+                    <path class="map-path" d="M53 48C92 48 111 71 145 97M51 166C93 166 115 148 145 126M102 195C123 180 137 155 155 137"/>
+                    <path class="map-path" d="M194 103C222 92 244 78 271 70M192 127C221 139 239 155 265 168"/>
+
+                    <g transform="translate(38 34)">
+                        <circle class="map-node" cx="15" cy="14" r="14"/>
+                        <path d="M8 17c4-4 10-4 14 0M11 13c2-2 6-2 8 0M15 9v10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <text class="map-label" x="34" y="11">PASSIVE</text>
+                        <text class="map-value" x="34" y="22">RF</text>
+                    </g>
+                    <g transform="translate(36 152)">
+                        <circle class="map-node" cx="15" cy="14" r="14"/>
+                        <path d="M7 17h16M9 17a6 6 0 0 1 12 0M15 11V6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <text class="map-label" x="34" y="11">ACTIVE</text>
+                        <text class="map-value" x="34" y="22">RADAR</text>
+                    </g>
+                    <g transform="translate(86 181)">
+                        <circle class="map-node" cx="15" cy="14" r="14"/>
+                        <circle cx="15" cy="14" r="5" fill="none" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M4 14h4M22 14h4M15 3v4M15 21v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        <text class="map-label" x="34" y="11">VISUAL</text>
+                        <text class="map-value" x="34" y="22">EO / IR</text>
+                    </g>
+
+                    <g transform="translate(144 86)">
+                        <circle class="map-node" cx="26" cy="26" r="25"/>
+                        <circle class="map-ring" cx="26" cy="26" r="18"/>
+                        <path d="M26 13v26M13 26h26" stroke="currentColor" stroke-width="1" opacity=".55"/>
+                        <circle class="map-node-core" cx="26" cy="26" r="4"/>
+                        <text class="map-label" x="26" y="59" text-anchor="middle">FUSED TRACK</text>
+                    </g>
+
+                    <g transform="translate(265 56)">
+                        <path class="map-track" d="M5 0h11M0 5v11M21 5v11M5 21h11"/>
+                        <path d="M7 8h7l4 3-4 1-2 4h-3l1-4-5-1Z" class="map-amber" stroke-width=".5"/>
+                        <text class="map-label" x="-3" y="34">CLASSIFIED</text>
+                        <text class="map-value" x="-3" y="45">TRACK 07</text>
+                    </g>
+
+                    <g transform="translate(259 151)">
+                        <rect class="map-node" x="0" y="0" width="32" height="32" rx="3"/>
+                        <path d="M8 17l5 5 11-12" fill="none" stroke="var(--accent-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <text class="map-label" x="16" y="44" text-anchor="middle">HUMAN</text>
+                        <text class="map-value" x="16" y="55" text-anchor="middle">AUTH GATE</text>
+                    </g>
+
+                    <text class="map-label" x="9" y="216">DETECT</text>
+                    <text class="map-label" x="147" y="216">FUSE</text>
+                    <text class="map-label" x="279" y="216">DECIDE</text>
+                </svg>
+                <figcaption class="display-foot">
+                    <span><i class="status-dot" aria-hidden="true"></i> Multi-sensor fusion</span>
+                    <span><i class="status-dot amber" aria-hidden="true"></i> Human authorization</span>
+                </figcaption>
+            </figure>
         </div>
         <div class="disclaimer">
             <strong class="tag"><i class="bi bi-info-circle"></i> Disclaimer</strong>
@@ -456,8 +673,15 @@
         </div>
         <div class="kill-chain">
             <div class="kc-stage">
-                <span class="kc-num">STAGE 1</span>
-                <h3><i class="bi bi-broadcast"></i> Detect</h3>
+                <div class="kc-stage-head">
+                    <span class="stage-glyph" aria-hidden="true">
+                        <svg viewBox="0 0 32 32">
+                            <circle class="ghost-ring" cx="16" cy="16" r="14"/>
+                            <path class="ink" d="M16 25V15m-7.5 7.5a10.6 10.6 0 0 1 15 0M11.8 18.3a6 6 0 0 1 8.4 0M14.7 14.7a1.8 1.8 0 0 1 2.6 0"/>
+                        </svg>
+                    </span>
+                    <div><span class="kc-num">STAGE 1</span><h3>Detect</h3></div>
+                </div>
                 <p>Passive RF direction-finding, radar, and acoustic sensors pick up a drone's presence.</p>
                 <ul>
                     <li>DroneShield RfPatrol</li>
@@ -467,8 +691,16 @@
                 </ul>
             </div>
             <div class="kc-stage">
-                <span class="kc-num">STAGE 2</span>
-                <h3><i class="bi bi-diagram-3"></i> Track &amp; Fuse</h3>
+                <div class="kc-stage-head">
+                    <span class="stage-glyph" aria-hidden="true">
+                        <svg viewBox="0 0 32 32">
+                            <circle class="ghost-ring" cx="16" cy="16" r="14"/>
+                            <path class="ink" d="M8 9l8 7 8-7M8 23l8-7 8 7"/>
+                            <circle class="ink-fill" cx="8" cy="9" r="2"/><circle class="ink-fill" cx="24" cy="9" r="2"/><circle class="ink-fill" cx="8" cy="23" r="2"/><circle class="ink-fill" cx="24" cy="23" r="2"/><circle class="ink-fill" cx="16" cy="16" r="2.5"/>
+                        </svg>
+                    </span>
+                    <div><span class="kc-num">STAGE 2</span><h3>Track &amp; Fuse</h3></div>
+                </div>
                 <p>RF, radar, and EO/IR tracks are correlated into one shared picture.</p>
                 <ul>
                     <li>Anduril Lattice</li>
@@ -478,8 +710,16 @@
                 </ul>
             </div>
             <div class="kc-stage">
-                <span class="kc-num">STAGE 3</span>
-                <h3><i class="bi bi-patch-check"></i> Classify</h3>
+                <div class="kc-stage-head">
+                    <span class="stage-glyph" aria-hidden="true">
+                        <svg viewBox="0 0 32 32">
+                            <circle class="ghost-ring" cx="16" cy="16" r="14"/>
+                            <path class="ink" d="M10 6H6v4m16-4h4v4M10 26H6v-4m16 4h4v-4M10 16h12M16 10v12"/>
+                            <circle class="ink-fill" cx="16" cy="16" r="3"/>
+                        </svg>
+                    </span>
+                    <div><span class="kc-num">STAGE 3</span><h3>Classify</h3></div>
+                </div>
                 <p>AI/ML models separate hostile drones from birds, aircraft, and clutter.</p>
                 <ul>
                     <li>Fortem TrueView microdoppler AI</li>
@@ -489,8 +729,16 @@
                 </ul>
             </div>
             <div class="kc-stage">
-                <span class="kc-num">STAGE 4</span>
-                <h3><i class="bi bi-crosshair"></i> Engage</h3>
+                <div class="kc-stage-head">
+                    <span class="stage-glyph" aria-hidden="true">
+                        <svg viewBox="0 0 32 32">
+                            <circle class="ghost-ring" cx="16" cy="16" r="14"/>
+                            <rect class="ink" x="9" y="9" width="14" height="14" rx="2"/>
+                            <path class="ink" d="M12 16l3 3 6-7"/>
+                        </svg>
+                    </span>
+                    <div><span class="kc-num">STAGE 4</span><h3>Engage</h3></div>
+                </div>
                 <p>A kinetic, electronic, or directed-energy effector defeats the confirmed threat.</p>
                 <ul>
                     <li>Anduril Anvil (kinetic ram)</li>
