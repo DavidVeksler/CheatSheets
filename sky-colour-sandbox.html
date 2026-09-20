@@ -173,7 +173,7 @@
 <div class="wrap">
 <header class="hero">
   <h1>Why is the sky blue? Build a planet and find out.</h1>
-  <p class="deck">Earth is never told to be blue. The engine takes a star temperature, a pressure, a gas and a haze, runs Rayleigh scattering, Planck spectra and the CIE colour-matching functions, and blue is what comes out. Turn the same knobs and the same equations give you Mars, Titan, the Archean, a lava world, or a sky no one has seen.</p>
+  <p class="deck">Earth is never told to be blue. The engine takes a star temperature, a pressure, a gas and a haze, runs Rayleigh scattering, Planck spectra and the CIE colour-matching functions, and blue is what comes out. Turn the same knobs and the same equations give you the black sky of the Moon, Mars, Titan, the Archean, a lava world, or a sky no one has seen.</p>
 </header>
 
 <div id="testpanel" hidden>
@@ -185,7 +185,7 @@
 <main class="bench" aria-label="Sky colour sandbox" data-og-capture>
   <section class="panel stage" aria-label="Rendered sky">
     <canvas id="dome" width="960" height="540" role="img" aria-label="Rendered sky dome, brightness normalised, with sun disc at its elevation"></canvas>
-    <p class="stage-note">Sky image is <strong>brightness-normalised</strong>: the dome shows chromaticity and relative brightness only. Absolute illuminance is on the lux bar below. Plane-parallel single scattering; left edge faces the sun, right edge faces away.</p>
+    <p class="stage-note">Sky image is <strong>brightness-normalised</strong>: the dome shows chromaticity and relative brightness only, with one floor: a sky dimmer than about 1/180 of Earth's (relative to its own star) is shown dark rather than gained up, so an airless world goes black. Absolute illuminance is on the lux bar below. Plane-parallel single scattering; left edge faces the sun, right edge faces away.</p>
 
     <div class="ctl elev">
       <label for="elev">Sun elevation <span class="tag fp">first-principles</span></label>
@@ -224,6 +224,7 @@
 
   <section class="panel controls" aria-label="Planet parameters">
     <div class="presets" role="group" aria-label="Presets">
+      <button type="button" data-preset="moon">Moon (no atmosphere)</button>
       <button type="button" data-preset="earth">Earth</button>
       <button type="button" data-preset="mars">Mars</button>
       <button type="button" data-preset="lava">Lava world</button>
@@ -251,8 +252,8 @@
     <div class="ctl">
       <label for="pressure">Surface pressure <span class="tag fp">λ⁻⁴ Rayleigh</span> <span class="tag fit">gas coefficient</span></label>
       <output id="pressure-out" for="pressure">1.00 bar</output>
-      <input type="range" id="pressure" min="0" max="5" step="any" value="3" aria-describedby="pressure-readout">
-      <span class="hint"><span>1 mbar</span><span>log axis</span><span>100 bar</span></span>
+      <input type="range" id="pressure" min="-3" max="5" step="any" value="3" aria-describedby="pressure-readout">
+      <span class="hint"><span>1 µbar (airless)</span><span>log axis</span><span>100 bar</span></span>
       <div class="readout" id="pressure-readout">column: <b id="ro-col">2.15e29</b> molecules/m² (Earth g) · scattering column vs Earth: <b id="ro-colrel">1.00×</b><br>τ<sub>Rayleigh</sub>(550 nm) = <b id="ro-tauR">0.0973</b> · τ<sub>total</sub>(550 nm) = <b id="ro-tau">0.147</b> · multi-scatter blend <b id="ro-blend">0%</b></div>
     </div>
     <fieldset>
@@ -294,15 +295,16 @@
 </main>
 
 <section class="prose">
-  <h2>Six skies, one engine</h2>
+  <h2>Eight skies, one engine</h2>
   <p>Every preset runs through exactly the same code path as the free sandbox. Nothing in the engine knows which planet it is rendering. What differs between worlds is only where the sliders sit, and the table says which slider carries the colour.</p>
   <div class="tablewrap">
   <table>
     <thead><tr><th>Preset</th><th>What sets the colour</th><th>The knob that matters</th><th>Reads as</th></tr></thead>
     <tbody>
+      <tr><td>Moon</td><td>Nothing. At 1 µbar (the slider floor; the real lunar exosphere is around 3 × 10⁻¹⁵ bar) τ<sub>R</sub>(550) ≈ 10⁻⁷, so the sky radiance is a few 10⁻⁸ of the sunlight and the exposure floor leaves it black. The sun disc is the unattenuated Planck curve of a 5772 K star</td><td>Pressure. Drag it up from the floor and watch the sky fade in: a dark navy appears near 1 mbar, a full blue dome by about 10 mbar. The dome is the same equation at every step; only the column changes</td><td>Black sky, hard white sun, 12 % grey ground (lunar regolith albedo happens to be about 0.12), 88,000 lx from the direct beam alone</td></tr>
       <tr><td>Earth</td><td>Rayleigh λ⁻⁴ on a 1 bar N₂ column, τ<sub>R</sub>(550) ≈ 0.097, almost no haze</td><td>Pressure. Watch the τ<sub>R</sub> readout: 1 bar is the sweet spot where blue is scattered strongly but not yet self-shielded</td><td>Blue zenith, pale horizon, red sun at sunset</td></tr>
       <tr><td>Mars</td><td>6 mbar of CO₂ gives τ<sub>R</sub>(550) ≈ 0.0014, three hundred times weaker than the dust (haze 0.5, ω ≈ 0.55)</td><td>Pressure again. Mars fails to be blue on <em>column density</em>, not chemistry: switch its gas to N₂ and nothing changes</td><td>Butterscotch, low saturation</td></tr>
-      <tr><td>Titan</td><td>Haze τ ≈ 8 with dark aerosols: the light you see has already crossed airmasses of haze that eats blue first, then multiple scattering (blend ≈ 0.7) washes it toward sunlight</td><td>Haze optical depth. Drop it to 1 and the orange collapses to grey-white</td><td>Peach-orange, dim (0.011 S⊕)</td></tr>
+      <tr><td>Titan</td><td>Haze τ = 5 with dark aerosols and 5 % CH₄: the light you see has already crossed airmasses of haze that eats blue first, then multiple scattering (blend ≈ 0.5) washes it toward sunlight</td><td>Haze optical depth. Drop it to 1 and the orange collapses to grey-white</td><td>Peach-orange, dim (0.011 S⊕)</td></tr>
       <tr><td>Archean Earth</td><td>Same N₂ column as today under a 5400 K younger Sun, plus a dark organic haze at τ ≈ 3 and 1.5 % CH₄</td><td>Haze darkness. Bright haze at the same τ gives a white sky; sooty haze gives orange</td><td>Orange-tan, no blue anywhere</td></tr>
       <tr><td>Lava world</td><td>A 2400 K surface out-radiates the star. Absorbing haze re-emits that glow into the sky (thermal term, weighted by 1 − e<sup>−τ<sub>abs</sub></sup>)</td><td>Surface temperature. Below about 1200 K the glow vanishes and the thin N₂ sky returns</td><td>Incandescent orange-red dome, lux off the chart</td></tr>
       <tr><td>M-dwarf terrestrial</td><td>A 2550 K star has almost no blue to scatter. Rayleigh still prefers blue, but it is scattering a red-orange illuminant</td><td>The Eye toggle. Camera: pale peach. Adapted eye: the star's white is divided out and the sky is blue again</td><td>Depends entirely on adaptation</td></tr>
@@ -339,7 +341,7 @@
     <summary>How accurate is this?</summary>
     <div class="callout">
       <p><strong>First-principles</strong> (the equation is the real one, only the geometry is simplified): Rayleigh λ⁻⁴ scaling, the Planck illuminant and thermal term, the exact single-scattering slab solution, Kasten-Young airmass, CIE 1931 integration, the XYZ to sRGB matrix, Bradford chromatic adaptation, the lux integral (683 lm/W × ȳ).</p>
-      <p><strong>Fitted</strong> (a number or a shape chosen to look right, not derived): the per-gas scattering coefficients, the methane band curve and its strength constant, the haze wavelength exponent, the haze albedo range and its blue-tilted absorption, the Henyey-Greenstein asymmetry g = 0.7, the multiple-scattering chromaticity blend (its 0.5 threshold, its 0.85 ceiling and its linear ramp), the dome tone curve, and every preset value.</p>
+      <p><strong>Fitted</strong> (a number or a shape chosen to look right, not derived): the per-gas scattering coefficients, the methane band curve and its strength constant, the haze wavelength exponent, the haze albedo range and its blue-tilted absorption, the Henyey-Greenstein asymmetry g = 0.7, the multiple-scattering chromaticity blend (its 0.5 threshold, its 0.85 ceiling and its linear ramp), the dome tone curve and its exposure floor (skies below 10⁻⁴ of the star's irradiance are shown dark instead of normalised), and every preset value.</p>
       <p>Known omissions: no Mie theory or aerosol size distributions, no ozone Chappuis band (real Earth twilight is bluer than this), no spherical-shell geometry (so twilight is wrong and cut at −10°), no polarisation, no clouds, no surface reflection into the sky, no equilibrium temperature, no check that the world could exist. Real Mars dust and Titan tholins have albedo spectra measured across many wavelengths; here they are one number and one tilt.</p>
       <p>The reason to take the invented worlds semi-seriously: Earth and Mars are not special-cased anywhere. They are produced by the same equations, with the same fitted constants, that produce the lava world and the M-dwarf sky. Add <code>?test</code> to the URL to see the regression harness assert that Earth comes out blue, its sunset red, Mars butterscotch and Titan orange, with the actual hex values printed. If that harness ever fails, the presets are not to be adjusted to hide it.</p>
     </div>
@@ -347,6 +349,7 @@
 
   <h2>Things worth trying</h2>
   <ul>
+    <li>Moon, then drag pressure up slowly. The sky is black until the column reaches a few hundred µbar, navy at 1 mbar, blue by 10 mbar. This is the reference every other preset is measured against: colour needs a column, and Mars at 6 mbar only escapes the dark because dust is doing the scattering.</li>
     <li>Earth, then drag the sun to 2°. The disc goes red before the sky does. Drag to −4° and watch the beam fade (that fade is the wrong part).</li>
     <li>Earth at 1 bar, then push pressure to 10 bar. Saturation falls: blue is now scattered out of the view path before it arrives, and the multiple-scattering blend starts. A thicker atmosphere is a paler one.</li>
     <li>Mars, then toggle the gas. Nothing. Then pressure to 1 bar. Blue.</li>
@@ -578,7 +581,8 @@ function compute(st) {
   const tau550 = tau[I550];
   const tauBlue = tau[I450];
   const blend = tauBlue > 0.5 ? 0.85 * Math.min(1, (tauBlue - 0.5) / 9.5) : 0;
-  const xyIll = xyOf(integrateXYZ(F));
+  const illXYZ = integrateXYZ(F);
+  const xyIll = xyOf(illXYZ);
 
   const starWhite = (() => { const w = integrateXYZ(F); return [w[0] / w[1], 1, w[2] / w[1]]; })();
   const cat = st.adapt ? adaptMatrix(starWhite) : null;
@@ -632,7 +636,7 @@ function compute(st) {
   }
 
   return {
-    cols, sunXYZ, starWhite, blend, tau550, tauR550: tauR[I550], tauH550: tauH[I550],
+    cols, sunXYZ, starWhite, blend, tau550, tauR550: tauR[I550], tauH550: tauH[I550], illY: illXYZ[1],
     column: EARTH_COLUMN * st.P, columnRel: k * st.P,
     lux: luxDirect + luxDiffuse, luxDirect, luxDiffuse, twilight
   };
@@ -640,6 +644,7 @@ function compute(st) {
 
 /* ---------- presets (fitted, allowed to be tuned; the engine is not) ---------- */
 const PRESETS = {
+  moon:     { T: 5772, S: 1.0,   P: 1e-6,  gas: 0, ch4: 0,   haze: 0,    dark: 1.0,  Ts: 390,  elev: 45 },
   earth:    { T: 5772, S: 1.0,   P: 1.0,   gas: 0, ch4: 0,   haze: 0.03, dark: 1.0,  Ts: 288,  elev: 45 },
   mars:     { T: 5772, S: 0.43,  P: 0.006, gas: 1, ch4: 0,   haze: 0.5,  dark: 0.45, Ts: 210,  elev: 45 },
   lava:     { T: 5772, S: 3.0,   P: 0.1,   gas: 0, ch4: 0,   haze: 0.3,  dark: 0.2,  Ts: 2400, elev: 45 },
@@ -679,7 +684,7 @@ function writeState(st) {
   $('mode-eye').setAttribute('aria-pressed', adapt ? 'true' : 'false');
 }
 
-const fmtP = P => P >= 1 ? `${P.toFixed(P < 10 ? 2 : 1)} bar` : P >= 0.01 ? `${(P * 1000).toFixed(0)} mbar` : `${(P * 1000).toFixed(1)} mbar`;
+const fmtP = P => P >= 1 ? `${P.toFixed(P < 10 ? 2 : 1)} bar` : P >= 0.01 ? `${(P * 1000).toFixed(0)} mbar` : P >= 1e-4 ? `${(P * 1000).toFixed(P >= 1e-3 ? 1 : 2)} mbar` : `${(P * 1e6).toFixed(P >= 1e-5 ? 0 : 1)} µbar`;
 const fmtLux = v => v >= 1e6 ? `${(v / 1e6).toFixed(2)} Mlx` : v >= 1000 ? `${Math.round(v).toLocaleString('en-US')} lx` : v >= 1 ? `${v.toFixed(1)} lx` : `${v.toPrecision(2)} lx`;
 
 const dome = $('dome'), ctx = dome.getContext('2d');
@@ -687,15 +692,28 @@ const off = document.createElement('canvas'); off.width = 320; off.height = 180;
 const octx = off.getContext('2d');
 const img = octx.createImageData(off.width, off.height);
 
+/* Auto-exposure with a floor. The key is the log-average sky luminance; the floor stops the exposure amplifying a
+   sky dimmer than SKY_FLOOR x the star's own irradiance (Earth's key sits at ~1.8e-2, so the floor is Earth/180).
+   Without it an airless world would still render as a full-brightness blue dome, because 1 ubar of N2 scatters
+   a little blue light and the normaliser would happily gain it up. `dim` is the fraction of nominal exposure
+   actually applied (1 = normal, ->0 = airless). [fitted, display only] */
+const SKY_FLOOR = 1e-4;
+function exposure(R) {
+  let logSum = 0, n = 0;
+  for (const col of R.cols) for (const s of col) if (s.XYZ[1] > 0) { logSum += Math.log(s.XYZ[1]); n++; }
+  const Ykey = n ? Math.exp(logSum / n) : 0;
+  const want = Ykey > 0 ? 0.45 / Ykey : 0;
+  const cap = R.illY > 0 ? 0.45 / (SKY_FLOOR * R.illY) : Infinity;
+  const expo = Math.min(want, cap);
+  return { expo, dim: want > 0 ? expo / want : 0, Ykey };
+}
+
 function lerp3(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
 
 function render(st, R) {
   // exposure: auto-expose so the mean sky luminance lands on mid-grey, then a luminance-only Reinhard curve with a
   // white point so the solar aureole rolls off instead of clipping. Chromaticity is untouched. [fitted, display only]
-  let logSum = 0, n = 0;
-  for (const col of R.cols) for (const s of col) if (s.XYZ[1] > 0) { logSum += Math.log(s.XYZ[1]); n++; }
-  const Ykey = n ? Math.exp(logSum / n) : 0;   // log-average luminance, the usual auto-exposure key
-  const expo = Ykey > 0 ? 0.45 / Ykey : 0;
+  const { expo, dim } = exposure(R);
   const W2 = 9; // white point squared: y = 3 maps to 1.0
   const tone = Y => { const y = Y * expo; return y * (1 + y / W2) / (1 + y); };
   const toLin = XYZ => { const y = XYZ[1]; if (!(y > 0)) return [0, 0, 0]; const s = tone(y) / y; return xyz2lin([XYZ[0] * s, XYZ[1] * s, XYZ[2] * s]); };
@@ -733,7 +751,8 @@ function render(st, R) {
     const sy = HY - (st.elev / 90) * HY, sx = sunX * dome.width, r = dome.width * 0.022;
     const sunHex = swatchHex(R.sunXYZ, 1.0);
     const glow = ctx.createRadialGradient(sx, sy, r * 0.6, sx, sy, r * 5);
-    glow.addColorStop(0, sunHex + '99'); glow.addColorStop(1, sunHex + '00');
+    const ga = Math.round(0x99 * Math.min(1, dim)).toString(16).padStart(2, '0'); // aureole is scattered light: none on an airless world
+    glow.addColorStop(0, sunHex + ga); glow.addColorStop(1, sunHex + '00');
     ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(sx, sy, r * 5, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = sunHex; ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.lineWidth = 1.5; ctx.stroke();
@@ -757,7 +776,9 @@ function updateReadouts(st, R) {
   $('surfT-out').textContent = `${st.Ts} K${st.Ts > 900 ? ' · glowing' : ''}`;
   $('elev-out').textContent = `${st.elev.toFixed(1)}°${st.elev < 0 ? ' (below horizon)' : ''}`;
 
-  const zenith = swatchHex(R.cols[0][0].XYZ, 0.9), horizon = swatchHex(R.cols[0][7].XYZ, 0.9), sun = swatchHex(R.sunXYZ, 0.95);
+  // sky swatches carry the same exposure floor as the dome, so an airless sky reads black here too; the sun disc does not
+  const skyPeak = 0.9 * Math.min(1, exposure(R).dim);
+  const zenith = swatchHex(R.cols[0][0].XYZ, skyPeak), horizon = swatchHex(R.cols[0][7].XYZ, skyPeak), sun = swatchHex(R.sunXYZ, 0.95);
   $('sw-zenith').style.background = zenith; $('hex-zenith').textContent = zenith;
   $('sw-horizon').style.background = horizon; $('hex-horizon').textContent = horizon;
   $('sw-sun').style.background = sun; $('hex-sun').textContent = sun;
@@ -772,7 +793,7 @@ let hashTimer = null;
 function writeHash(st) {
   clearTimeout(hashTimer);
   hashTimer = setTimeout(() => {
-    const v = [st.T, st.S, Math.round(st.P * 1000 * 100) / 100, st.gas, st.ch4, st.haze, st.dark, st.Ts, st.elev, st.adapt];
+    const v = [st.T, st.S, +(st.P * 1000).toPrecision(4), st.gas, st.ch4, st.haze, st.dark, st.Ts, st.elev, st.adapt];
     history.replaceState(null, '', '#' + v.join(','));
   }, 300);
 }
@@ -782,7 +803,7 @@ function readHash() {
   const p = h.split(',').map(Number);
   if (p.length < 10 || p.some(n => !Number.isFinite(n))) return null;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  return { T: clamp(p[0], 2300, 12000), S: clamp(p[1], 0.1, 3), P: clamp(p[2], 1, 1e5) / 1000, gas: clamp(Math.round(p[3]), 0, 3),
+  return { T: clamp(p[0], 2300, 12000), S: clamp(p[1], 0.1, 3), P: clamp(p[2], 1e-3, 1e5) / 1000, gas: clamp(Math.round(p[3]), 0, 3),
            ch4: clamp(p[4], 0, 5), haze: clamp(p[5], 0, 10), dark: clamp(p[6], 0, 1), Ts: clamp(p[7], 200, 3000), elev: clamp(p[8], -10, 90), adapt: p[9] ? 1 : 0 };
 }
 
@@ -874,6 +895,18 @@ function runTests() {
     const st = withP(PRESETS.titan, {}); const R = compute(st); const hex = swatchHex(R.cols[0][0].XYZ, 0.9); const c = hexToHSV(hex);
     line(c.h >= 20 && c.h <= 50 && R.blend > 0, 'Titan, sun 45°, zenith: hue 20–50, multi-scatter blend engaged', `${hex} hue=${c.h.toFixed(0)}° sat=${c.s.toFixed(2)} τ550=${R.tau550.toFixed(2)} blend=${R.blend.toFixed(2)}`);
   }
+  // Moon: airless reference. Sky radiance must be negligible against the star, the exposure floor must leave the
+  // dome black, and the ground lux must be the direct beam alone.
+  {
+    const st = withP(PRESETS.moon, {}); const R = compute(st); const { expo, dim } = exposure(R);
+    const skyRel = R.cols[0][0].XYZ[1] / R.illY;
+    const zenithLin = xyz2lin(R.cols[0][0].XYZ.map(v => v * expo));
+    const peak = Math.max(...zenithLin);
+    const diffuseFrac = R.luxDiffuse / R.lux;
+    line(skyRel < 1e-6 && peak < 0.005 && diffuseFrac < 1e-4,
+      'Moon, sun 45°: zenith radiance < 1e-6 of sunlight, rendered black (< 0.5 % linear), lux is direct beam only',
+      `sky/star=${skyRel.toExponential(2)} rendered peak=${(peak * 100).toFixed(3)}% exposure=${(dim * 100).toFixed(4)}% of nominal · diffuse ${(diffuseFrac * 100).toExponential(1)}% of ${fmtLux(R.lux)}`);
+  }
   // Monotonicity in pressure. "Blue saturation" = HSV saturation when the hue is blue (180–270°), else 0: past
   // ~5 bar the zenith passes through white and comes back orange (self-shielding, then the blend), and a
   // hue-blind saturation metric would count that reddening as blue returning.
@@ -892,8 +925,9 @@ function runTests() {
   // informational: every preset's zenith hex in both modes
   out.push('');
   for (const name in PRESETS) {
-    const cam = zenithHex(withP(PRESETS[name], {})), eye = zenithHex(withP(PRESETS[name], { adapt: 1 }));
     const R = compute(withP(PRESETS[name], {}));
+    const skyPeak = 0.9 * Math.min(1, exposure(R).dim); // same floor as the swatches: the Moon prints black, not the hue of 1 ubar
+    const cam = swatchHex(R.cols[0][0].XYZ, skyPeak), eye = swatchHex(compute(withP(PRESETS[name], { adapt: 1 })).cols[0][0].XYZ, skyPeak);
     out.push(`      ${name.padEnd(9)} zenith camera ${cam} (hue ${hexToHSV(cam).h.toFixed(0)}°)  adapted ${eye} (hue ${hexToHSV(eye).h.toFixed(0)}°)  τ550=${R.tau550.toFixed(3)}  lux=${fmtLux(R.lux)}`);
   }
   const panel = $('testpanel'); panel.hidden = false;
