@@ -12,9 +12,9 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 PORT = 8797
 OUT = ROOT / "images" / "why-is-grass-green.png"
 CSS = """
-.masthead,.deck,.callout,.bench-controls,.bench-readout,figcaption,.depth-nav,main,footer,.eyebrow{display:none!important}
+.hero-image,.masthead,.deck,.callout,.bench-controls,.bench-readout,figcaption,.depth-nav,main,footer,.eyebrow{display:none!important}
 .hero{display:grid;grid-template-columns:400px 1fr;align-items:center;height:630px;min-height:0;column-gap:0}
-.hero .intro{padding:0 0 0 44px;max-width:none}
+.hero .intro{display:block;padding:0 0 0 44px;max-width:none}
 .hero h1{font-size:4.9rem;line-height:.95}
 .bench-wrap{width:auto;margin:0 34px 0 0;padding:0}
 .bench{padding:10px 8px 4px;border-color:rgba(255,255,255,.2)}
