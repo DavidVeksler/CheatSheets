@@ -87,7 +87,6 @@
           var(--ai-body-bg);
         background-repeat: no-repeat, no-repeat, repeat, repeat, no-repeat;
         background-size: auto, auto, 50px 50px, 50px 50px, auto;
-        animation: blueprintGridAnimation 120s linear infinite;
         font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         padding-bottom: 3rem;
         font-size: 16px;
@@ -142,6 +141,17 @@
       }
       .page-header > * { position: relative; z-index: 1; }
 
+      .page-header__inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(23rem, 0.85fr);
+        align-items: center;
+        gap: clamp(2rem, 5vw, 5rem);
+        width: min(1180px, 100%);
+        margin: 0 auto;
+        text-align: left;
+      }
+      .page-header__copy { min-width: 0; }
+
       .page-header__kicker {
         display: inline-flex;
         align-items: center;
@@ -161,7 +171,7 @@
         margin: 0 0 0.9rem 0;
         font-weight: 700;
         letter-spacing: 0.5px;
-        font-size: clamp(2rem, 5vw, 3.1rem);
+        font-size: clamp(2.25rem, 4.25vw, 4rem);
         line-height: 1.1;
         text-wrap: balance;
         background: linear-gradient(120deg, #ffffff 0%, #cfe3ff 45%, #82aaff 100%);
@@ -169,27 +179,113 @@
         background-clip: text;
         color: transparent;
       }
-      .page-header h1 .bi {
-        font-size: 0.92em;
-        vertical-align: -0.08em;
-        margin-right: 0.35em;
-        color: var(--ai-text-highlight);
-        -webkit-text-fill-color: var(--ai-text-highlight); /* keep icon solid under background-clip:text */
-      }
       .page-header .lead {
         color: var(--ai-text-secondary);
         font-size: clamp(1rem, 2.2vw, 1.18rem);
-        max-width: 920px;
-        margin: 0 auto;
+        max-width: 720px;
+        margin: 0;
         text-wrap: pretty;
       }
+      .frontier-visual {
+        position: relative;
+        min-width: 0;
+        padding: 0.75rem;
+        border: 1px solid rgba(147, 197, 253, 0.2);
+        border-radius: 18px;
+        background:
+          radial-gradient(circle at 50% 50%, rgba(30, 136, 229, 0.16), transparent 58%),
+          rgba(2, 6, 23, 0.38);
+        box-shadow: inset 0 0 40px rgba(2, 6, 23, 0.65), 0 24px 70px rgba(0, 0, 0, 0.2);
+      }
+      .frontier-visual::before,
+      .frontier-visual::after {
+        content: "";
+        position: absolute;
+        width: 7px;
+        height: 7px;
+        border-color: rgba(147, 197, 253, 0.55);
+        pointer-events: none;
+      }
+      .frontier-visual::before {
+        inset: 10px auto auto 10px;
+        border-top: 1px solid;
+        border-left: 1px solid;
+      }
+      .frontier-visual::after {
+        inset: auto 10px 10px auto;
+        border-right: 1px solid;
+        border-bottom: 1px solid;
+      }
+      .frontier-visual svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+      }
+      .frontier-visual__orbit {
+        fill: none;
+        stroke: rgba(147, 197, 253, 0.24);
+        stroke-width: 1;
+        stroke-dasharray: 4 7;
+        transform-origin: center;
+      }
+      .frontier-visual__axis {
+        fill: none;
+        stroke: rgba(148, 163, 184, 0.3);
+        stroke-width: 1;
+      }
+      .frontier-visual__core {
+        fill: rgba(8, 15, 31, 0.92);
+        stroke: rgba(147, 197, 253, 0.5);
+        stroke-width: 1;
+      }
+      .frontier-visual__core-label {
+        fill: #f8fbff;
+        font: 700 14px/1 "Segoe UI", sans-serif;
+        letter-spacing: 0.16em;
+        text-anchor: middle;
+      }
+      .frontier-visual__lens {
+        fill: #a8bdd8;
+        font: 600 9px/1 "Segoe UI", sans-serif;
+        letter-spacing: 0.12em;
+        text-anchor: middle;
+      }
+      .frontier-node { color: var(--node); }
+      .frontier-node__halo {
+        fill: color-mix(in srgb, var(--node), transparent 84%);
+        stroke: color-mix(in srgb, var(--node), transparent 20%);
+        stroke-width: 1;
+      }
+      .frontier-node__mark {
+        width: 28px;
+        height: 28px;
+        color: var(--node);
+      }
+      .frontier-node__label {
+        fill: #eaf2ff;
+        font: 600 10px/1 "Segoe UI", sans-serif;
+        letter-spacing: 0.02em;
+      }
+      .frontier-visual__caption {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin: 0.25rem 0.45rem 0.15rem;
+        color: var(--ai-text-secondary);
+        font-size: 0.68rem;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+      .frontier-visual__caption strong { color: #dbeafe; font-weight: 600; }
       .header-stats {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
         gap: 1.25rem 2.6rem;
-        max-width: 900px;
-        margin: 2rem auto 0;
+        max-width: 1180px;
+        margin: 2.25rem auto 0;
         padding-top: 1.6rem;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
       }
@@ -235,7 +331,9 @@
         border-bottom: none;
         padding: 0.6rem 1.5rem;
         background-color: var(--ai-card-bg);
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.72rem;
         position: relative;
         left: 1rem;
         z-index: 15;
@@ -244,6 +342,21 @@
         border-radius: 8px 8px 0 0;
         transition: opacity 0.3s ease-in-out;
         box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.05);
+      }
+      .section-title__mark {
+        display: inline-grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        color: var(--ai-category-color);
+        background: color-mix(in srgb, var(--ai-category-color), transparent 86%);
+        border: 1px solid color-mix(in srgb, var(--ai-category-color), transparent 56%);
+        border-radius: 7px;
+        box-shadow: inset 0 0 14px color-mix(in srgb, var(--ai-category-color), transparent 86%);
+      }
+      .section-title__mark svg {
+        width: 1.28rem;
+        height: 1.28rem;
       }
 
       .info-card {
@@ -655,17 +768,53 @@
         background-color: #11161c;
       }
       @media (prefers-reduced-motion: no-preference) {
+        body { animation: blueprintGridAnimation 120s linear infinite; }
         .ql-chip:hover { transform: translateY(-2px); }
+        .frontier-visual__orbit { animation: frontierOrbit 48s linear infinite; }
       }
+      @keyframes frontierOrbit { to { transform: rotate(360deg); } }
       /* Offset anchored section titles so the sticky nav doesn't cover them */
       .section-title { scroll-margin-top: 5rem; }
 
       @media (max-width: 575.98px) {
-        .quicklinks { gap: 0.4rem; padding: 0.6rem 0.7rem; }
-        .ql-chip { font-size: 0.82rem; padding: 0.28rem 0.7rem; }
+        .quicklinks {
+          flex-wrap: nowrap;
+          gap: 0.4rem;
+          padding: 0.55rem 0.7rem;
+          margin-inline: 0.65rem;
+          overflow-x: auto;
+          scrollbar-width: thin;
+          scroll-snap-type: x proximity;
+        }
+        .quicklinks-label,
+        .ql-chip { flex: 0 0 auto; }
+        .ql-chip {
+          font-size: 0.82rem;
+          padding: 0.28rem 0.7rem;
+          scroll-snap-align: start;
+        }
+        .section-title { scroll-margin-top: 4.75rem; }
+      }
+      @media (max-width: 991.98px) {
+        .page-header__inner {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+          text-align: center;
+        }
+        .page-header .lead { margin-inline: auto; }
+        .frontier-visual { width: min(34rem, 100%); margin-inline: auto; }
+      }
+      @media (max-width: 575.98px) {
+        .page-header { padding: 3.5rem 1rem 3rem; }
+        .page-header h1 { font-size: clamp(2rem, 11vw, 3rem); }
+        .frontier-visual { padding: 0.4rem; border-radius: 12px; }
+        .frontier-visual__caption { font-size: 0.58rem; }
+        .header-stats { gap: 1.4rem; }
+        .header-stat { flex: 1 1 7rem; }
       }
       @media print {
         .quicklinks { display: none; }
+        .frontier-visual { box-shadow: none; }
         details.detail-panel > summary { display: none; }
         details.detail-panel:not([open]) > .collapse-content { display: block; }
       }
@@ -837,19 +986,110 @@
   </script>
  </head>
  <body>
+  <svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+   <defs>
+    <symbol id="lab-mark-deepmind" viewBox="0 0 32 32">
+     <circle cx="16" cy="16" r="3" fill="currentColor"/>
+     <ellipse cx="16" cy="16" rx="12" ry="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+     <ellipse cx="16" cy="16" rx="6.5" ry="12" fill="none" stroke="currentColor" stroke-width="1.8" transform="rotate(42 16 16)"/>
+    </symbol>
+    <symbol id="lab-mark-anthropic" viewBox="0 0 32 32">
+     <path d="M16 3.5 26 8.7v7.5c0 6.1-3.7 10.2-10 12.3-6.3-2.1-10-6.2-10-12.3V8.7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+     <path d="M11 21V11m5 12V9m5 12V11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="lab-mark-openai" viewBox="0 0 32 32">
+     <circle cx="16" cy="16" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/>
+     <circle cx="16" cy="5" r="2" fill="currentColor"/><circle cx="25.5" cy="10.5" r="2" fill="currentColor"/>
+     <circle cx="25.5" cy="21.5" r="2" fill="currentColor"/><circle cx="16" cy="27" r="2" fill="currentColor"/>
+     <circle cx="6.5" cy="21.5" r="2" fill="currentColor"/><circle cx="6.5" cy="10.5" r="2" fill="currentColor"/>
+     <path d="M16 12V7m3.5 6 4.2-2.4m-4.2 8.4 4.2 2.4M16 20v5m-3.5-6-4.2 2.4m4.2-8.4-4.2-2.4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    </symbol>
+    <symbol id="lab-mark-xai" viewBox="0 0 32 32">
+     <path d="M7 6.5 25 25.5M25 6.5 7 25.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+     <circle cx="16" cy="16" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/>
+     <circle cx="25" cy="6.5" r="2" fill="currentColor"/>
+    </symbol>
+    <symbol id="lab-mark-meta" viewBox="0 0 32 32">
+     <path d="M4.5 18.7c2.2-7 4.8-10.5 8-10.5 4.8 0 6.2 15.6 10.8 15.6 2.2 0 3.6-2.4 4.2-5.7M27.5 13.3c-2.2-3.4-4.2-5.1-6.1-5.1-4.8 0-6.3 15.6-11 15.6-3 0-5-2.4-5.9-5.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="lab-mark-deepseek" viewBox="0 0 32 32">
+     <path d="M4 9c4.2 0 4.2 4 8.4 4s4.2-4 8.4-4 4.2 4 7.2 4M4 16c4.2 0 4.2 4 8.4 4s4.2-4 8.4-4 4.2 4 7.2 4M4 23c4.2 0 4.2 4 8.4 4s4.2-4 8.4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+     <circle cx="7" cy="6" r="2" fill="currentColor"/>
+    </symbol>
+    <symbol id="lab-mark-moonshot" viewBox="0 0 32 32">
+     <path d="M19.5 4.8A11.8 11.8 0 1 0 27 23.7 10 10 0 0 1 19.5 4.8Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+     <path d="m7 25 5.2-5.2M9.5 27.5 14 23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+     <circle cx="25.5" cy="7" r="2" fill="currentColor"/>
+    </symbol>
+    <symbol id="lab-mark-mistral" viewBox="0 0 32 32">
+     <path d="M6 6h7v4H6zm10 0h10v4H16zM6 14h12v4H6zm15 0h5v4h-5zM6 22h7v4H6zm10 0h10v4H16z" fill="currentColor"/>
+    </symbol>
+   </defs>
+  </svg>
   <header class="page-header">
-   <span class="page-header__kicker">
-    <i class="bi bi-cpu"></i>
-    Frontier AI · 2026 Landscape
-   </span>
-   <h1>
-    <i class="bi bi-robot">
-    </i>
-    Frontier AI Labs List: Companies, Models &amp; Strategy (2026)
-   </h1>
-   <p class="lead">
-    OpenAI, Anthropic, Google DeepMind, xAI, Meta, Mistral, DeepSeek, and Moonshot AI: the 8 labs building frontier AI, compared on model access, operating approach, and <a href="agi-development-guide.html">AGI strategy</a>. Not a valuation ranking or an exhaustive directory. For risk frameworks, see the <a href="aisafety.html">AI Safety Ecosystem Hub</a>; for threat models, see the <a href="airisk.html">AI existential risk cheatsheet</a>.
-   </p>
+   <div class="page-header__inner">
+    <div class="page-header__copy">
+     <span class="page-header__kicker">
+      <i class="bi bi-cpu"></i>
+      Frontier AI · 2026 Landscape
+     </span>
+     <h1>
+      Frontier AI Labs List: Companies, Models &amp; Strategy (2026)
+     </h1>
+     <p class="lead">
+      OpenAI, Anthropic, Google DeepMind, xAI, Meta, Mistral, DeepSeek, and Moonshot AI: the 8 labs building frontier AI, compared on model access, operating approach, and <a href="agi-development-guide.html">AGI strategy</a>. Not a valuation ranking or an exhaustive directory. For risk frameworks, see the <a href="aisafety.html">AI Safety Ecosystem Hub</a>; for threat models, see the <a href="airisk.html">AI existential risk cheatsheet</a>.
+     </p>
+    </div>
+    <figure class="frontier-visual">
+     <svg viewBox="0 0 520 340" role="img" aria-labelledby="frontier-visual-title frontier-visual-desc">
+      <title id="frontier-visual-title">Eight frontier AI labs viewed through three comparison lenses</title>
+      <desc id="frontier-visual-desc">A schematic network places eight lab symbols around access, strategy, and safety. Position is decorative and does not indicate rank.</desc>
+      <ellipse class="frontier-visual__orbit" cx="260" cy="165" rx="206" ry="119"/>
+      <ellipse class="frontier-visual__orbit" cx="260" cy="165" rx="169" ry="91" transform="rotate(-18 260 165)" opacity=".6"/>
+      <path class="frontier-visual__axis" d="M260 165 260 108M260 165 213 218M260 165 307 218M260 108 213 218 307 218Z"/>
+      <circle class="frontier-visual__core" cx="260" cy="165" r="45"/>
+      <text class="frontier-visual__core-label" x="260" y="161">FRONTIER</text>
+      <text class="frontier-visual__core-label" x="260" y="180">AI</text>
+      <text class="frontier-visual__lens" x="260" y="101">ACCESS</text>
+      <text class="frontier-visual__lens" x="202" y="231">STRATEGY</text>
+      <text class="frontier-visual__lens" x="318" y="231">SAFETY</text>
+
+      <g class="frontier-node" style="--node: var(--ai-color-deepmind)" transform="translate(260 37)">
+       <circle class="frontier-node__halo" r="23"/><use class="frontier-node__mark" href="#lab-mark-deepmind" x="-14" y="-14" width="28" height="28"/>
+       <text class="frontier-node__label" x="0" y="-31" text-anchor="middle">DeepMind</text>
+      </g>
+      <g class="frontier-node" style="--node: var(--ai-color-anthropic)" transform="translate(402 72)">
+       <circle class="frontier-node__halo" r="23"/><use class="frontier-node__mark" href="#lab-mark-anthropic" x="-14" y="-14" width="28" height="28"/>
+       <text class="frontier-node__label" x="31" y="4">Anthropic</text>
+      </g>
+      <g class="frontier-node" style="--node: var(--ai-color-openai)" transform="translate(470 165)">
+       <circle class="frontier-node__halo" r="23"/><use class="frontier-node__mark" href="#lab-mark-openai" x="-14" y="-14" width="28" height="28"/>
+       <text class="frontier-node__label" x="-31" y="4" text-anchor="end">OpenAI</text>
+      </g>
+      <g class="frontier-node" style="--node: var(--ai-color-xai)" transform="translate(405 260)">
+       <circle class="frontier-node__halo" r="23"/><use class="frontier-node__mark" href="#lab-mark-xai" x="-14" y="-14" width="28" height="28"/>
+       <text class="frontier-node__label" x="31" y="4">xAI</text>
+      </g>
+      <g class="frontier-node" style="--node: var(--ai-color-meta)" transform="translate(260 293)">
+       <circle class="frontier-node__halo" r="23"/><use class="frontier-node__mark" href="#lab-mark-meta" x="-14" y="-14" width="28" height="28"/>
+       <text class="frontier-node__label" x="0" y="38" text-anchor="middle">Meta AI</text>
+      </g>
+      <g class="frontier-node" style="--node: var(--ai-color-deepseek)" transform="translate(113 260)">
+       <circle class="frontier-node__halo" r="23"/><use class="frontier-node__mark" href="#lab-mark-deepseek" x="-14" y="-14" width="28" height="28"/>
+       <text class="frontier-node__label" x="-31" y="4" text-anchor="end">DeepSeek</text>
+      </g>
+      <g class="frontier-node" style="--node: var(--ai-color-moonshot)" transform="translate(50 165)">
+       <circle class="frontier-node__halo" r="23"/><use class="frontier-node__mark" href="#lab-mark-moonshot" x="-14" y="-14" width="28" height="28"/>
+       <text class="frontier-node__label" x="31" y="4">Moonshot</text>
+      </g>
+      <g class="frontier-node" style="--node: var(--ai-color-mistral)" transform="translate(116 72)">
+       <circle class="frontier-node__halo" r="23"/><use class="frontier-node__mark" href="#lab-mark-mistral" x="-14" y="-14" width="28" height="28"/>
+       <text class="frontier-node__label" x="-31" y="4" text-anchor="end">Mistral</text>
+      </g>
+     </svg>
+     <figcaption class="frontier-visual__caption"><strong>8 labs · 3 lenses</strong><span>Schematic · not a ranking</span></figcaption>
+    </figure>
+   </div>
    <div class="header-stats">
     <div class="header-stat">
      <span class="header-stat__num">8</span>
@@ -968,7 +1208,8 @@
    <!-- Google DeepMind Section -->
    <div class="schema-container cat-deepmind" data-section-id="section-deepmind">
     <h2 class="section-title" id="title-deepmind">
-     Google DeepMind
+     <span class="section-title__mark" aria-hidden="true"><svg><use href="#lab-mark-deepmind"></use></svg></span>
+     <span>Google DeepMind</span>
     </h2>
     <div class="valuation">
      <span class="valuation-label">Est. valuation</span>
@@ -1518,7 +1759,8 @@
    <!-- Anthropic Section -->
    <div class="schema-container cat-anthropic" data-section-id="section-anthropic">
     <h2 class="section-title" id="title-anthropic">
-     Anthropic
+     <span class="section-title__mark" aria-hidden="true"><svg><use href="#lab-mark-anthropic"></use></svg></span>
+     <span>Anthropic</span>
     </h2>
     <div class="valuation">
      <span class="valuation-label">Valuation</span>
@@ -2048,7 +2290,8 @@
    <!-- OpenAI Section -->
    <div class="schema-container cat-openai" data-section-id="section-openai">
     <h2 class="section-title" id="title-openai">
-     OpenAI
+     <span class="section-title__mark" aria-hidden="true"><svg><use href="#lab-mark-openai"></use></svg></span>
+     <span>OpenAI</span>
     </h2>
     <div class="valuation">
      <span class="valuation-label">Valuation</span>
@@ -2661,7 +2904,8 @@
    <!-- xAI Section -->
    <div class="schema-container cat-xai" data-section-id="section-xai">
     <h2 class="section-title" id="title-xai">
-     xAI
+     <span class="section-title__mark" aria-hidden="true"><svg><use href="#lab-mark-xai"></use></svg></span>
+     <span>xAI</span>
     </h2>
     <div class="valuation">
      <span class="valuation-label">Valuation</span>
@@ -3100,7 +3344,8 @@
    <!-- Meta AI Section -->
    <div class="schema-container cat-meta" data-section-id="section-meta">
     <h2 class="section-title" id="title-meta">
-     Meta AI (FAIR)
+     <span class="section-title__mark" aria-hidden="true"><svg><use href="#lab-mark-meta"></use></svg></span>
+     <span>Meta AI (FAIR)</span>
     </h2>
     <div class="valuation">
      <span class="valuation-label">Est. valuation</span>
@@ -3661,7 +3906,8 @@
    <!-- DeepSeek Section -->
    <div class="schema-container cat-deepseek" data-section-id="section-deepseek">
     <h2 class="section-title" id="title-deepseek">
-     DeepSeek
+     <span class="section-title__mark" aria-hidden="true"><svg><use href="#lab-mark-deepseek"></use></svg></span>
+     <span>DeepSeek</span>
     </h2>
     <div class="valuation">
      <span class="valuation-label">Valuation</span>
@@ -4112,7 +4358,8 @@
    <!-- Moonshot AI Section -->
    <div class="schema-container cat-moonshot" data-section-id="section-moonshot">
     <h2 class="section-title" id="title-moonshot">
-     Moonshot AI
+     <span class="section-title__mark" aria-hidden="true"><svg><use href="#lab-mark-moonshot"></use></svg></span>
+     <span>Moonshot AI</span>
     </h2>
     <div class="valuation">
      <span class="valuation-label">Valuation</span>
@@ -4549,7 +4796,8 @@
    <!-- Mistral AI Section -->
    <div class="schema-container cat-mistral" data-section-id="section-mistral">
     <h2 class="section-title" id="title-mistral">
-     Mistral AI
+     <span class="section-title__mark" aria-hidden="true"><svg><use href="#lab-mark-mistral"></use></svg></span>
+     <span>Mistral AI</span>
     </h2>
     <div class="valuation">
      <span class="valuation-label">Valuation</span>
