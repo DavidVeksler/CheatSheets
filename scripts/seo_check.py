@@ -28,6 +28,14 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 RENDER_TITLE_MAX = 60
 PHP_DIAGNOSTIC = re.compile(r"\b(Warning|Notice|Deprecated|Fatal error|Parse error)\b:")
+# Some local PHP builds (e.g. scoop's on Windows) double-register a handful of
+# extensions that are both ini-enabled and bundled, emitting this on every
+# single invocation regardless of what's being rendered. It's CLI startup
+# noise, not a page-rendering defect, so strip it before the diagnostic scan.
+PHP_STARTUP_NOISE = re.compile(
+    r'^PHP Warning:\s+Module "\w+" is already loaded in Unknown on line 0\s*$\n?',
+    re.MULTILINE,
+)
 
 
 class Head(HTMLParser):
@@ -111,7 +119,8 @@ def render_index(query: str, path: str = "/") -> tuple[str, str]:
         ["php", "-d", "display_errors=1", "-d", "error_reporting=E_ALL", "-r", code],
         cwd=ROOT, capture_output=True, encoding="utf-8", errors="replace", env=env,
     )
-    return result.stdout, result.stderr
+    stderr = PHP_STARTUP_NOISE.sub("", result.stderr)
+    return result.stdout, stderr
 
 
 def check_rendered(label: str, source: str, stderr: str, failures: list) -> None:
