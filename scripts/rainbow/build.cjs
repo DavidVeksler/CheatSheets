@@ -3,7 +3,9 @@ const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib');
 const dir=__dirname,root=path.resolve(dir,'../..'),R=require('./optics.js'),data=require('./data.json');
 const file=path.join(root,'how-do-rainbows-work.html');let html=fs.readFileSync(file,'utf8');
 const red=data.ray_presets[0].n,b=R.stationary(red).b;
+const hero=R.heroBow();
 const figures={
+ 'hero-band':hero.shade,'hero-bow':hero.bow,
  'trace-figure':R.drop(),'cone-figure':R.cone(),'full-cone':R.cone(),'sky-figure':R.sky(),'side-figure':R.side(),'inset-figure':R.observerDrop(),
  'ray-figure':R.drop(b,red,1,true),'deflection-figure':R.deflection(b,red),
  'primary-figure':R.drop(),'secondary-figure':R.drop(R.stationary(4/3,3).b,4/3,2),'sky-slice':R.skySlice(),'sky-slice-mobile':R.skySlice(true),

@@ -119,6 +119,29 @@ function elevated(){const P=v=>[175+v[0]*135,116-v[2]*135],beta=stationary(1.331
  const colors=['#D94B54','#E58A37','#E8BE49','#4AAB82','#478ED1','#8A6BD1'];colors.forEach((c,j)=>{const pts=Array.from({length:121},(_,i)=>P(direction(15,beta-j*.32,i*2*PI/120)));s+=`<path d="M${pts.map(xy).join(' L')}" fill="none" stroke="${c}" stroke-width="2"/>`;});
  s+=line([10,116],[340,116],'horizon')+label(12,104,'eye-level horizon');s+=dotmark(P([0,Math.cos(rad(15)),-Math.sin(rad(15))]),4);s+=label(35,259,'Drops below you can complete it.');
  return svg(s,350,290,'Elevated observer: the full circle can extend below eye level','Orthographic sky projection. The full bow is possible only where rain or spray supplies every sight direction. No ground clipping is applied to this elevated-observer example.');}
-const api={rad,deg,add,mul,dot,unit,refract,reflect,next,trace,stationary,project,direction,observerState,observerDrop,impactForBeta,svg,drop,cone,side,sky,deflection,wave,skySlice,density,elevated};
+// Hero bow: a physically shaped radial gradient. Angular radii come from stationary(n(λ)) for the
+// primary (p=2) and secondary (p=3); n(λ) interpolates the three IAPWS presets on a 1/λ² basis.
+const presetN=[[450,1.3396055544134375],[550,1.3346802542039415],[650,1.3316655570438782]];
+function indexAt(nm){const x=1/(nm*nm),xs=presetN.map(([l])=>1/(l*l));let n=0;for(let i=0;i<3;i++){let L=presetN[i][1];for(let j=0;j<3;j++)if(j!==i)L*=(x-xs[j])/(xs[i]-xs[j]);n+=L;}return n;}
+function spectrum(nm){let r=0,g=0,b=0;if(nm<440){r=(440-nm)/60;b=1;}else if(nm<490){g=(nm-440)/50;b=1;}else if(nm<510){g=1;b=(510-nm)/20;}else if(nm<580){r=(nm-510)/70;g=1;}else if(nm<645){r=1;g=(645-nm)/65;}else r=1;
+ const f=nm<420?.45+.55*(nm-400)/20:nm>680?.55+.45*(700-nm)/20:1;return [r,g,b].map(c=>Math.round(255*(.08+.92*Math.pow(c*f,.8))));}
+function heroBow(){const W=1000,H=700,cx=500,cy=780,k=11,rMax=56,stop=(beta,rgb,a)=>({beta,rgb,a});
+ const primary=[],secondary=[];for(let nm=400;nm<=700;nm+=5){const n=indexAt(nm),rgb=spectrum(nm),w=Math.exp(-Math.pow((nm-560)/110,2)),a=.32+.58*Math.sqrt(w);primary.push(stop(stationary(n,2).beta,rgb,a));secondary.push(stop(stationary(n,3).beta,rgb,a*.42));}
+ const pv=primary[0].beta,pr=primary[primary.length-1].beta,sr=Math.min(...secondary.map(s=>s.beta)),sv=Math.max(...secondary.map(s=>s.beta));
+ const white=[255,250,240];
+ const bright=[stop(0,white,.05),stop(pv-6,white,.07),stop(pv-2.2,white,.11),
+  stop(pv-1.35,[190,255,215],.2),stop(pv-1.05,white,.12),stop(pv-.75,[255,190,225],.3),stop(pv-.42,white,.16),stop(pv-.14,[200,180,255],.36),
+  ...primary,stop(pr+.18,primary[primary.length-1].rgb,.4),stop(pr+.45,[255,120,90],0),
+  stop(sr-.45,[255,120,90],0),stop(sr-.15,secondary.find(s=>s.beta===sr).rgb,.15),...secondary,stop(sv+.2,[150,120,255],.1),stop(sv+.55,[150,120,255],0),stop(rMax,white,0)].sort((a,b)=>a.beta-b.beta);
+ const dark=[10,22,40],band=[stop(0,dark,0),stop(pr+.35,dark,0),stop(pr+1.1,dark,.34),stop(sr-.9,dark,.3),stop(sr-.25,dark,0),stop(sv+.3,dark,0),stop(sv+1.2,dark,.14),stop(rMax,dark,.14)];
+ const stops=list=>list.map(s=>`<stop offset="${(s.beta/rMax).toFixed(4)}" stop-color="rgb(${s.rgb.join(' ')})" stop-opacity="${s.a.toFixed(2)}"/>`).join('');
+ const grad=(id,list)=>`<radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="${rMax*k}">${stops(list)}</radialGradient>`;
+ const open=(cls,extra='')=>`<svg class="${cls}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax meet" aria-hidden="true" ${extra}>`;
+ // The sheet overshoots the viewBox so the hero (overflow hidden) clips it, not the SVG box.
+ const sheet=(fill,extra='')=>`<rect x="-1500" y="-1500" width="4000" height="3000" fill="${fill}" ${extra}/>`;
+ const bow=open('hero-bow')+`<defs>${grad('hero-bow-grad',bright)}<linearGradient id="hero-bow-fade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${H}"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#fff"/><stop offset=".82" stop-color="#8a8a8a"/><stop offset="1" stop-color="#222"/></linearGradient><mask id="hero-bow-mask" maskUnits="userSpaceOnUse" x="-2000" y="-2000" width="5000" height="5000">${sheet('url(#hero-bow-fade)')}</mask></defs>${sheet('url(#hero-bow-grad)','mask="url(#hero-bow-mask)"')}</svg>`;
+ const shade=open('hero-band')+`<defs>${grad('hero-band-grad',band)}</defs>${sheet('url(#hero-band-grad)')}</svg>`;
+ return {bow,shade,primary:[pv,pr],secondary:[sr,sv]};}
+const api={rad,deg,add,mul,dot,unit,refract,reflect,next,trace,stationary,project,direction,observerState,observerDrop,impactForBeta,svg,drop,cone,side,sky,deflection,wave,skySlice,density,elevated,indexAt,spectrum,heroBow};
 if(typeof module!=='undefined')module.exports=api;else root.Rainbow=api;
 })(typeof window!=='undefined'?window:globalThis);
