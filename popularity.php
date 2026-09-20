@@ -104,27 +104,6 @@ function rel_time(?string $dateStr): string {
     return 'just now';
 }
 
-// Hand-drawn 16x16 stroke icons for the top stat tiles — matches the
-// inline-SVG convention chrome.php already uses for the topbar (no icon
-// font, no extra CDN dependency to SRI-pin).
-function stat_icon(string $name): string {
-    $icons = [
-        'pages'  => '<path d="M4 1.5h4.5L12 5v9.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 .5-.5Z"/><path d="M8.5 1.5V5H12"/>',
-        'top'    => '<path d="M8 1.8l1.7 3.5 3.9.6-2.8 2.7.7 3.9L8 10.6l-3.5 1.9.7-3.9-2.8-2.7 3.9-.6L8 1.8Z"/>',
-        'sum'    => '<rect x="2" y="9" width="2.4" height="5" rx=".6" fill="currentColor" stroke="none"/><rect x="6.8" y="5.5" width="2.4" height="8.5" rx=".6" fill="currentColor" stroke="none"/><rect x="11.6" y="2" width="2.4" height="12" rx=".6" fill="currentColor" stroke="none"/>',
-        'clock'  => '<circle cx="8" cy="8" r="6.3"/><path d="M8 4.5V8l3 1.8"/>',
-        'avg'    => '<path d="M1.5 8.5h3l1.5-4 3 7 1.5-4h3.5"/>',
-        'median' => '<path d="M3 3v10M8 1.5v13M13 5v6"/><circle cx="3" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="8" cy="10" r="1.3" fill="currentColor" stroke="none"/><circle cx="13" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>',
-        'share'  => '<circle cx="8" cy="8" r="6"/><path d="M8 8V2a6 6 0 0 1 6 6H8Z" fill="currentColor" stroke="none"/>',
-        'rising' => '<path d="M2 12.5l4-4.5 3 3 5-6"/><path d="M10.5 4.5H14V8"/>',
-        'eye'    => '<path d="M1.3 8S3.8 3 8 3s6.7 5 6.7 5-2.5 5-6.7 5-6.7-5-6.7-5Z"/><circle cx="8" cy="8" r="2"/>',
-        'layers' => '<path d="M8 2 14 5.5 8 9 2 5.5 8 2Z"/><path d="M2 8.5 8 12l6-3.5"/><path d="M2 11.5 8 15l6-3.5"/>',
-        'list'   => '<path d="M6 3.5h8M6 8h8M6 12.5h8"/><circle cx="2.2" cy="3.5" r=".9" fill="currentColor" stroke="none"/><circle cx="2.2" cy="8" r=".9" fill="currentColor" stroke="none"/><circle cx="2.2" cy="12.5" r=".9" fill="currentColor" stroke="none"/>',
-        'eyeoff' => '<path d="M1.3 8S3.8 3 8 3s6.7 5 6.7 5-2.5 5-6.7 5-6.7-5-6.7-5Z"/><circle cx="8" cy="8" r="2"/><path d="M2 2l12 12"/>',
-    ];
-    return '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ($icons[$name] ?? '') . '</svg>';
-}
-
 /* ---------- Derived stats ---------- */
 $rankedCount = count($scores);
 $totalScore  = array_sum($scores);
@@ -387,9 +366,21 @@ chrome_open(
 );
 ?>
 <style>
-.stat .l{display:flex;align-items:center;gap:5px}
-.stat-icon{flex:none;width:12px;height:12px;color:var(--muted)}
-.stat-icon svg{width:12px;height:12px;display:block}
+.mini-panel h2 .ico{width:13px;height:13px;margin-right:2px;align-self:center}
+.rank-toolbar .field{flex:1 1 200px;min-width:0;position:relative;display:flex;align-items:center}
+.rank-toolbar .field .ico{position:absolute;left:9px;width:13px;height:13px;color:var(--muted);pointer-events:none}
+.rank-toolbar .field input[type=search]{flex:1;padding-left:28px}
+.rank-toolbar .selwrap{position:relative;display:inline-flex;align-items:center}
+.rank-toolbar .selwrap .ico{position:absolute;left:9px;width:12px;height:12px;color:var(--muted);pointer-events:none}
+.rank-toolbar .selwrap select{padding-left:26px}
+.rank-sort .ico{width:12px;height:12px;margin-right:3px;opacity:.7}
+.rank-sort button{display:inline-flex;align-items:center}
+.rank-medal{flex:none;width:14px;height:14px;color:var(--gold)}
+.rank-row.top2 .rank-medal{color:light-dark(#6b7280,#c4c9d2)}
+.rank-row.top3 .rank-medal{color:light-dark(#9a5b2a,#d9a06c)}
+@media (max-width:575px){ .rank-medal{display:none} }
+.zero-detail summary .ico{width:13px;height:13px;margin-right:4px}
+.zero-cat h3 .ico{width:11px;height:11px;margin-right:3px;vertical-align:-.1em}
 .mini-panel{border:1px solid var(--rule);border-radius:8px;background:var(--surface);padding:14px 16px;height:100%}
 .mini-panel h2{font-size:13px;margin-bottom:10px;display:flex;align-items:baseline;gap:8px}
 .mini-panel h2 .age{font-size:11.5px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0}
@@ -483,26 +474,26 @@ chrome_open(
 </section>
 
 <?php if ($rankedCount === 0): ?>
-  <div class="note warn"><code>popularity.json</code> is empty or missing. Run <code>python3 fetch-popularity.py</code> to fetch data from Cloudflare.</div>
+  <div class="note warn"><?php echo chrome_icon('warning'); ?><code>popularity.json</code> is empty or missing. Run <code>python3 fetch-popularity.py</code> to fetch data from Cloudflare.</div>
 <?php else: ?>
 
 <div class="stats">
-  <div class="stat"><div class="n"><?php echo number_format($rankedCount); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('pages'); ?></span>Pages tracked</div></div>
-  <div class="stat"><div class="n"><?php echo number_format((int) $maxScore); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('top'); ?></span>Top page score</div></div>
-  <div class="stat"><div class="n"><?php echo number_format((int) $totalScore); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('sum'); ?></span>Total score sum</div></div>
-  <div class="stat"><div class="n" style="font-size:14px"><?php echo $lastUpdated ? h($lastUpdated) : '—'; ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('clock'); ?></span>Last updated</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($avgScore, 1); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('avg'); ?></span>Avg score / page</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($medianScore, 1); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('median'); ?></span>Median score</div></div>
-  <div class="stat"><div class="n"><?php echo $top3Share; ?>&thinsp;%</div><div class="l"><span class="stat-icon"><?php echo stat_icon('share'); ?></span>Top 3 share of views</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($risingStarCount); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('rising'); ?></span>Rising stars (&le;30d)</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($totalDailyViews); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('eye'); ?></span>Views yesterday</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($totalViewsAllTime); ?></div><div class="l"><span class="stat-icon"><?php echo stat_icon('layers'); ?></span>All-time views tracked</div></div>
-  <div class="stat"><div class="n"><?php echo $top10Share; ?>&thinsp;%</div><div class="l"><span class="stat-icon"><?php echo stat_icon('list'); ?></span>Top 10 share of views</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($untrackedCount); ?> <span style="color:var(--muted);font-size:.85em">/ <?php echo number_format($totalPageCount); ?></span></div><div class="l"><span class="stat-icon"><?php echo stat_icon('eyeoff'); ?></span>Pages with zero views</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($rankedCount); ?></div><div class="l"><?php echo chrome_icon('file'); ?>Pages tracked</div></div>
+  <div class="stat"><div class="n"><?php echo number_format((int) $maxScore); ?></div><div class="l"><?php echo chrome_icon('star'); ?>Top page score</div></div>
+  <div class="stat"><div class="n"><?php echo number_format((int) $totalScore); ?></div><div class="l"><?php echo chrome_icon('chart'); ?>Total score sum</div></div>
+  <div class="stat"><div class="n" style="font-size:14px"><?php echo $lastUpdated ? h($lastUpdated) : '—'; ?></div><div class="l"><?php echo chrome_icon('clock'); ?>Last updated</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($avgScore, 1); ?></div><div class="l"><?php echo chrome_icon('activity'); ?>Avg score / page</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($medianScore, 1); ?></div><div class="l"><?php echo chrome_icon('median'); ?>Median score</div></div>
+  <div class="stat"><div class="n"><?php echo $top3Share; ?>&thinsp;%</div><div class="l"><?php echo chrome_icon('pie'); ?>Top 3 share of views</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($risingStarCount); ?></div><div class="l"><?php echo chrome_icon('rising'); ?>Rising stars (&le;30d)</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($totalDailyViews); ?></div><div class="l"><?php echo chrome_icon('eye'); ?>Views yesterday</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($totalViewsAllTime); ?></div><div class="l"><?php echo chrome_icon('layers'); ?>All-time views tracked</div></div>
+  <div class="stat"><div class="n"><?php echo $top10Share; ?>&thinsp;%</div><div class="l"><?php echo chrome_icon('list'); ?>Top 10 share of views</div></div>
+  <div class="stat"><div class="n"><?php echo number_format($untrackedCount); ?> <span style="color:var(--muted);font-size:.85em">/ <?php echo number_format($totalPageCount); ?></span></div><div class="l"><?php echo chrome_icon('eye-off'); ?>Pages with zero views</div></div>
 </div>
 
 <div class="note" style="margin-bottom:22px">
-  Each day's raw view count is added to the score after multiplying existing values by <strong>29/30</strong>.
+  <?php echo chrome_icon('info'); ?>Each day's raw view count is added to the score after multiplying existing values by <strong>29/30</strong>.
   After 30 days a single visit contributes ~37&nbsp;% of its original weight, so this reflects
   <em>consistently popular</em> pages — not one-day spikes. Scores reset to zero over ~3 months of inactivity.
   "All-time views tracked" accumulates from the day this counter was added and does not include views from before then.
@@ -510,7 +501,7 @@ chrome_open(
 
 <?php if ($historyDays > 1): ?>
 <div class="mini-panel" style="margin-bottom:22px">
-  <h2>Site-wide traffic <span class="age">(<?php echo h($historySpanLabel); ?> · <?php echo number_format($historyTotal); ?> views)</span></h2>
+  <h2><?php echo chrome_icon('activity'); ?>Site-wide traffic <span class="age">(<?php echo h($historySpanLabel); ?> · <?php echo number_format($historyTotal); ?> views)</span></h2>
   <svg viewBox="0 0 <?php echo $sparkWidth; ?> <?php echo $sparkHeight; ?>" preserveAspectRatio="none" style="width:100%;height:60px;display:block" role="img" aria-label="Daily site-wide view count over the last <?php echo $historyDays; ?> days">
     <polyline points="<?php echo h($sparkPoints); ?>" fill="none" stroke="var(--accent)" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
   </svg>
@@ -519,7 +510,7 @@ chrome_open(
 
 <div class="panels">
   <div class="mini-panel">
-    <h2>Rising stars <span class="age">(published &le;30d ago)</span></h2>
+    <h2><?php echo chrome_icon('rising'); ?>Rising stars <span class="age">(published &le;30d ago)</span></h2>
     <?php if (empty($risingStars)): ?>
       <p class="mini-empty">No pages published in the last 30 days.</p>
     <?php else: foreach ($risingStars as $star): ?>
@@ -532,7 +523,7 @@ chrome_open(
   </div>
 
   <div class="mini-panel">
-    <h2>Score distribution</h2>
+    <h2><?php echo chrome_icon('bars'); ?>Score distribution</h2>
     <?php foreach ($buckets as $b): $w = round($b['count'] / $maxBucketCount * 100, 1); ?>
     <div class="dist-row">
       <span class="dl"><?php echo h($b['label']); ?></span>
@@ -543,7 +534,7 @@ chrome_open(
   </div>
 
   <div class="mini-panel">
-    <h2>Last 24 hours</h2>
+    <h2><?php echo chrome_icon('clock'); ?>Last 24 hours</h2>
     <?php if (empty($dailyRows)): ?>
       <p class="mini-empty">No daily view data yet — populated by the next nightly run.</p>
     <?php else: foreach ($dailyRows as $day): ?>
@@ -557,7 +548,7 @@ chrome_open(
 
 <div class="panels-2">
   <div class="mini-panel">
-    <h2>By category</h2>
+    <h2><?php echo chrome_icon('tag'); ?>By category</h2>
     <?php foreach ($categoryRows as $cr): $w = round($cr['score'] / $maxCategoryScore * 100, 1); ?>
     <div class="dist-row" style="grid-template-columns:9rem 1fr 2.8rem">
       <span class="dl" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="<?php echo h($cr['category']); ?>"><?php echo h($cr['category']); ?></span>
@@ -568,7 +559,7 @@ chrome_open(
   </div>
 
   <div class="mini-panel">
-    <h2>Trending now <span class="age">(today's views vs. accumulated score)</span></h2>
+    <h2><?php echo chrome_icon('bolt'); ?>Trending now <span class="age">(today's views vs. accumulated score)</span></h2>
     <?php if (empty($trending)): ?>
       <p class="mini-empty">No pages surging above the noise floor right now.</p>
     <?php else: foreach ($trending as $t): ?>
@@ -580,7 +571,7 @@ chrome_open(
   </div>
 
   <div class="mini-panel">
-    <h2>Needs attention <span class="age">(popular, ≥<?php echo $staleCutoffDays; ?>d since fact review)</span></h2>
+    <h2><?php echo chrome_icon('alert'); ?>Needs attention <span class="age">(popular, ≥<?php echo $staleCutoffDays; ?>d since fact review)</span></h2>
     <?php if (empty($needsAttention)): ?>
       <p class="mini-empty">Every well-trafficked page has been reviewed within <?php echo $staleCutoffDays; ?> days. Nothing overdue.</p>
     <?php else: foreach ($needsAttention as $na): ?>
@@ -592,7 +583,7 @@ chrome_open(
   </div>
 
   <div class="mini-panel">
-    <h2>Momentum <span class="age">(last 7 days vs. the 7 before)</span></h2>
+    <h2><?php echo chrome_icon('rising'); ?>Momentum <span class="age">(last 7 days vs. the 7 before)</span></h2>
     <?php if (!$momentumReady): ?>
       <p class="mini-empty">Collecting daily history — this panel unlocks once <?php echo 10 - $historySpanDaysAvailable; ?> more day<?php echo (10 - $historySpanDaysAvailable) === 1 ? '' : 's'; ?> of Cloudflare data has accumulated.</p>
     <?php elseif (empty($movers)): ?>
@@ -609,10 +600,10 @@ chrome_open(
 
 <?php if (!empty($untrackedByCategory)): ?>
 <details class="zero-detail">
-  <summary><?php echo number_format($untrackedCount); ?> page<?php echo $untrackedCount === 1 ? '' : 's'; ?> with zero recorded views — show which ones, by category</summary>
+  <summary><?php echo chrome_icon('eye-off'); ?><?php echo number_format($untrackedCount); ?> page<?php echo $untrackedCount === 1 ? '' : 's'; ?> with zero recorded views — show which ones, by category</summary>
   <?php foreach ($untrackedByCategory as $cat => $pages): ?>
     <div class="zero-cat">
-      <h3><?php echo h($cat); ?> (<?php echo count($pages); ?>)</h3>
+      <h3><?php echo chrome_icon('tag'); ?><?php echo h($cat); ?> (<?php echo count($pages); ?>)</h3>
       <div class="zero-list">
         <?php foreach ($pages as $p): ?>
           <a href="<?php echo h($p['filename']); ?>" target="_blank"><?php echo h($p['title']); ?></a>
@@ -623,27 +614,28 @@ chrome_open(
 </details>
 <?php endif; ?>
 
-<p class="lbl sectlbl">Ranked by decayed 30-day score</p>
+<p class="lbl sectlbl"><?php echo chrome_icon('trophy'); ?>Ranked by decayed 30-day score</p>
 <div class="rank-toolbar">
-  <input type="search" id="rankSearch" placeholder="Filter by title&hellip;" aria-label="Filter ranked list by title" autocomplete="off" spellcheck="false">
-  <select id="rankCategory" aria-label="Filter by category">
+  <span class="field"><?php echo chrome_icon('search'); ?><input type="search" id="rankSearch" placeholder="Filter by title&hellip;" aria-label="Filter ranked list by title" autocomplete="off" spellcheck="false"></span>
+  <span class="selwrap"><?php echo chrome_icon('funnel'); ?><select id="rankCategory" aria-label="Filter by category">
     <option value="">All categories</option>
     <?php foreach (array_keys($categoryTotals) as $cat): ?>
       <option value="<?php echo h($cat); ?>"><?php echo h($cat); ?></option>
     <?php endforeach; ?>
-  </select>
+  </select></span>
   <div class="rank-sort" role="group" aria-label="Sort ranked list">
-    <button type="button" data-sort="score" class="cur">Score</button>
-    <button type="button" data-sort="views">All-time views</button>
-    <button type="button" data-sort="title">Title A&ndash;Z</button>
+    <button type="button" data-sort="score" class="cur"><?php echo chrome_icon('star'); ?>Score</button>
+    <button type="button" data-sort="views"><?php echo chrome_icon('eye'); ?>All-time views</button>
+    <button type="button" data-sort="title"><?php echo chrome_icon('sort'); ?>Title A&ndash;Z</button>
   </div>
 </div>
 <div class="list-card" role="list" id="rankList">
-  <?php foreach ($rows as $row): $isTop1 = $row['rank'] === 1; ?>
-  <div class="rank-row<?php echo $isTop1 ? ' top1' : ''; ?>" role="listitem"
+  <?php foreach ($rows as $row): $medal = $row['rank'] <= 3 ? ' top' . $row['rank'] : ''; ?>
+  <div class="rank-row<?php echo $medal; ?>" role="listitem"
        data-title="<?php echo h(mb_strtolower($row['title'])); ?>" data-category="<?php echo h($row['category']); ?>"
        data-score="<?php echo $row['score']; ?>" data-views="<?php echo $row['views']; ?>">
     <div class="rank-num" aria-label="Rank <?php echo $row['rank']; ?>"><?php echo $row['rank']; ?></div>
+    <?php if ($medal !== ''): ?><?php echo chrome_icon('award', 'rank-medal'); ?><?php endif; ?>
     <div class="rank-info">
       <a class="rank-title" href="<?php echo h($row['filename']); ?>" target="_blank" title="<?php echo h($row['filename']); ?>"><?php echo h($row['title']); ?></a>
       <div class="rank-bar-track" aria-hidden="true"><div class="rank-bar-fill" style="width:<?php echo $row['bar']; ?>%"></div></div>
@@ -659,7 +651,7 @@ chrome_open(
     </div>
   </div>
   <?php endforeach; ?>
-  <p class="rank-empty" id="rankEmpty" hidden>No pages match that filter.</p>
+  <p class="rank-empty" id="rankEmpty" hidden><?php echo chrome_icon('inbox'); ?> No pages match that filter.</p>
 </div>
 
 <script>

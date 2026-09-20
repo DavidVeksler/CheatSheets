@@ -27,6 +27,7 @@
 require __DIR__ . '/lib/env.php';
 require __DIR__ . '/lib/newsletter.php';
 require __DIR__ . '/lib/resend.php';
+require __DIR__ . '/lib/chrome.php'; // chrome_icon() for the no-JS page
 
 // ---------------------------------------------------------------- Config ----
 header('Cache-Control: no-store'); // form-submission endpoint; never cache the response
@@ -60,12 +61,14 @@ function respond(bool $ok, string $msg, int $code = 200): void {
        . '<meta name="robots" content="noindex">'
        . '<title>' . ($ok ? 'Check your inbox' : 'Signup error') . ' · Cheatsheets</title>'
        . '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" '
-       . 'integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous"></head>'
+       . 'integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">'
+       . '<style>.ico{width:56px;height:56px;display:inline-block}.ico-ok{color:#198754}.ico-warn{color:#dc3545}.ico-mail{color:#0d6efd}.btn .ico{width:1em;height:1em;vertical-align:-.15em;margin-right:.35em}</style></head>'
        . '<body class="d-flex min-vh-100 align-items-center justify-content-center bg-light text-center">'
        . '<main class="p-4">'
-       . '<div class="display-5 mb-3">' . ($ok ? '&#10003;' : '&#9888;&#65039;') . '</div>'
+       // Success here means "we sent you a link", so the glyph is an envelope, not a tick.
+       . '<div class="mb-3">' . ($ok ? chrome_icon('envelope', 'ico-mail') : chrome_icon('warning', 'ico-warn')) . '</div>'
        . '<p class="lead mb-4">' . $safe . '</p>'
-       . '<a class="btn btn-primary" href="index.php">Back to the cheatsheets</a>'
+       . '<a class="btn btn-primary" href="index.php">' . chrome_icon('arrow-left') . 'Back to the cheatsheets</a>'
        . '</main></body></html>';
     exit;
 }

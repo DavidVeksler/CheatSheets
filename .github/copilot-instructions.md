@@ -20,6 +20,8 @@ Interactive HTML cheatsheet collection covering technology, philosophy, AI, cryp
    - Vanilla CSS/JS, no framework: Bootstrap and the icon font were removed from the index
      in the Explorer redesign (the "do not rewrite existing Bootstrap sheets" rule in
      AGENTS.md never applied to the index — it isn't a cheatsheet)
+   - Icons on the PHP pages come from the shared inline-SVG set in `lib/chrome.php`
+     (`chrome_icon('name')`), never an icon font or a CDN
    - `scripts/build_catalog.py` / `catalog.json` - **index data layer**: scans catalogued
      `.html` + `category-map.php` + `paths.json` into `catalog.json` (titles, headings,
      outlinks, shapes, map layout) that `index.php` reads. Regenerate with

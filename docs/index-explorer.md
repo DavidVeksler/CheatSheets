@@ -134,6 +134,13 @@ run, so the sparkline is not empty for a full 30 days after shipping.
 1. **Drop Bootstrap and the icon font from the index?** Yes. The index carries no CDN
    dependency; the "do not rewrite existing Bootstrap sheets" rule in `AGENTS.md` never
    applied to it (it isn't a cheatsheet).
+   Icons are inline SVG from one shared set, `chrome_icon()` in `lib/chrome.php`: 16-grid
+   stroke glyphs in the Bootstrap Icons idiom (1.5px stroke, round caps), inheriting
+   `currentColor` so light/dark theming is free. `index.php`, `history.php`,
+   `popularity.php`, and the newsletter pages all draw from it so one concept always gets
+   one glyph; the drawer template gets the handful it needs as a `#icons` JSON block.
+   Cards deliberately carry no icons beyond the existing info button (197 of them ship
+   per page, so every byte on a card is paid 197 times).
 2. **Keep the Microsoft Clarity tag?** Kept, unchanged, for heatmap visibility into palette
    and map usage.
 3. **Make category pages indexable?** Yes — self-canonical, own title/description/JSON-LD,

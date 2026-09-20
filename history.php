@@ -273,11 +273,18 @@ chrome_open(
 ?>
 <style>
 .searchbar{display:flex;gap:8px;max-width:520px;margin:0 0 20px}
-.searchbar input{flex:1;min-width:0;font:14px var(--sans);padding:9px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)}
+.searchbar .field{flex:1;min-width:0;position:relative;display:flex;align-items:center}
+.searchbar .field .ico{position:absolute;left:11px;width:14px;height:14px;color:var(--muted);pointer-events:none}
+.searchbar input{flex:1;min-width:0;font:14px var(--sans);padding:9px 12px 9px 32px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)}
 .searchbar input:focus-visible{border-color:var(--accent)}
-.searchbar button{padding:9px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--page);border-radius:8px;font-weight:600;cursor:pointer;font-size:14px}
-.searchbar .clear{border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:8px;padding:9px 14px;font-size:14px;text-decoration:none}
+.searchbar button{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--page);border-radius:8px;font-weight:600;cursor:pointer;font-size:14px}
+.searchbar .clear{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:8px;padding:9px 14px;font-size:14px;text-decoration:none}
 .searchbar .clear:hover{border-color:var(--accent)}
+.meta-row .ico,.parents .ico,.lead .ico{width:13px;height:13px;color:var(--muted);margin-right:4px}
+.meta-row .sha .ico{color:inherit;margin-right:3px;width:11px;height:11px}
+.filestat .ico{width:12px;height:12px;vertical-align:-.15em;margin-right:3px}
+.pager a{display:inline-flex;align-items:center;gap:4px}
+.pager a .ico{width:12px;height:12px}
 
 .commit-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 16px;border-bottom:1px solid var(--rule);color:inherit;text-decoration:none}
 .commit-row:last-child{border-bottom:0}
@@ -319,16 +326,16 @@ chrome_open(
 <div class="wrap">
 <?php if (!$repoReady): ?>
   <div class="note warn">
-    <strong>History unavailable.</strong> This page reads from the site's git repository, but git is not reachable here
+    <?php echo chrome_icon('warning'); ?><strong>History unavailable.</strong> This page reads from the site's git repository, but git is not reachable here
     (not a git checkout, or the <code>git</code> binary is unavailable to the web server).
     <?php $why = git(['status'])['err']; if ($why): ?><br><br><code><?php echo h($why); ?></code><?php endif; ?>
   </div>
 
 <?php elseif ($view === 'commit'): ?>
   <?php if (!$detail): ?>
-    <div class="note warn">Commit <code><?php echo h($commit); ?></code> was not found. <a href="history.php">Back to history</a>.</div>
+    <div class="note warn"><?php echo chrome_icon('warning'); ?>Commit <code><?php echo h($commit); ?></code> was not found. <a href="history.php">Back to history</a>.</div>
   <?php else: ?>
-    <p class="crumb"><a href="history.php">Change history</a> / <span class="sha"><?php echo h($detail['short']); ?></span></p>
+    <p class="crumb"><a href="history.php"><?php echo chrome_icon('history'); ?> Change history</a><?php echo chrome_icon('chevron-right', 'sep'); ?><span class="sha"><?php echo h($detail['short']); ?></span></p>
     <h1><?php echo h($detail['subject']); ?></h1>
     <div class="detail">
       <div class="meta-row">
@@ -336,12 +343,12 @@ chrome_open(
           <span class="author-dot" style="background:<?php echo h(author_color($detail['ae'])); ?>"><?php echo h(strtoupper(substr($detail['an'], 0, 1))); ?></span>
           <?php echo h($detail['an']); ?>
         </span>
-        <span><time datetime="<?php echo h($detail['iso']); ?>"><?php echo h(date('M j, Y g:i A', $detail['at'])); ?></time> · <?php echo h(rel_time($detail['at'])); ?></span>
-        <span class="sha" title="Full SHA"><?php echo h($detail['hash']); ?></span>
+        <span><?php echo chrome_icon('calendar'); ?><time datetime="<?php echo h($detail['iso']); ?>"><?php echo h(date('M j, Y g:i A', $detail['at'])); ?></time> · <?php echo h(rel_time($detail['at'])); ?></span>
+        <span class="sha" title="Full SHA"><?php echo chrome_icon('hash'); ?><?php echo h($detail['hash']); ?></span>
       </div>
       <?php if ($detail['parents'] !== ''): ?>
         <div class="parents">
-          Parent<?php echo strpos($detail['parents'], ' ') !== false ? 's' : ''; ?>:
+          <?php echo chrome_icon('branch'); ?>Parent<?php echo strpos($detail['parents'], ' ') !== false ? 's' : ''; ?>:
           <?php foreach (explode(' ', $detail['parents']) as $p): ?>
             <a class="sha" href="?commit=<?php echo h($p); ?>"><?php echo h(substr($p, 0, 9)); ?></a>
           <?php endforeach; ?>
@@ -354,7 +361,7 @@ chrome_open(
 
     <?php if ($detail['files']): ?>
     <p class="lbl sectlbl">
-      <?php echo count($detail['files']); ?> file<?php echo count($detail['files']) === 1 ? '' : 's'; ?> changed
+      <?php echo chrome_icon('files'); ?><?php echo count($detail['files']); ?> file<?php echo count($detail['files']) === 1 ? '' : 's'; ?> changed
       <span class="filestat"><span class="a">+<?php echo $detail['totAdd']; ?></span> <span class="d">−<?php echo $detail['totDel']; ?></span></span>
     </p>
     <div class="filelist">
@@ -374,7 +381,7 @@ chrome_open(
         </span>
         <span class="filestat">
           <?php if ($fl['add'] === null && $fl['del'] === null): ?>
-            <span class="l" style="color:var(--muted)">binary</span>
+            <span class="l" style="color:var(--muted)"><?php echo chrome_icon('binary'); ?>binary</span>
           <?php else: ?>
             <span class="a">+<?php echo $fl['add']; ?></span>
             <span class="d">−<?php echo $fl['del']; ?></span>
@@ -387,18 +394,18 @@ chrome_open(
     <?php endif; ?>
 
     <?php if (trim($detail['patch']) !== ''): ?>
-      <p class="lbl sectlbl">Diff</p>
+      <p class="lbl sectlbl"><?php echo chrome_icon('diff'); ?>Diff</p>
       <pre class="diff"><?php echo render_diff($detail['patch']); ?></pre>
     <?php endif; ?>
   <?php endif; ?>
 
 <?php elseif ($view === 'file'): ?>
-  <p class="crumb"><a href="history.php">Change history</a> / <?php echo h($file); ?></p>
+  <p class="crumb"><a href="history.php"><?php echo chrome_icon('history'); ?> Change history</a><?php echo chrome_icon('chevron-right', 'sep'); ?><?php echo h($file); ?></p>
   <h1><?php echo h($file); ?></h1>
   <p class="lead" style="color:var(--muted);margin:0 0 18px">
-    <?php echo count($commitsList); ?> commit<?php echo count($commitsList) === 1 ? '' : 's'; ?> touched this file.
+    <?php echo chrome_icon('commit'); ?><?php echo count($commitsList); ?> commit<?php echo count($commitsList) === 1 ? '' : 's'; ?> touched this file.
     <?php $isHtml = str_ends_with(strtolower($file), '.html'); if ($isHtml): ?>
-      <a href="<?php echo h($file); ?>" target="_blank">View current version →</a>
+      <a href="<?php echo h($file); ?>" target="_blank">View current version <?php echo chrome_icon('external'); ?></a>
     <?php endif; ?>
   </p>
   <div class="list-card">
@@ -426,21 +433,21 @@ chrome_open(
   </section>
 
   <div class="stats">
-    <div class="stat"><div class="n"><?php echo number_format($summary['commits']); ?></div><div class="l">Commits</div></div>
-    <div class="stat"><div class="n"><?php echo number_format($summary['files']); ?></div><div class="l">Tracked files</div></div>
-    <div class="stat"><div class="n"><?php echo number_format($summary['authors']); ?></div><div class="l">Contributors</div></div>
-    <div class="stat"><div class="n" style="font-size:15px"><?php echo $summary['last'] ? h(date('M j, Y', $summary['last'])) : '—'; ?></div><div class="l">Last change</div></div>
+    <div class="stat"><div class="n"><?php echo number_format($summary['commits']); ?></div><div class="l"><?php echo chrome_icon('commit'); ?>Commits</div></div>
+    <div class="stat"><div class="n"><?php echo number_format($summary['files']); ?></div><div class="l"><?php echo chrome_icon('files'); ?>Tracked files</div></div>
+    <div class="stat"><div class="n"><?php echo number_format($summary['authors']); ?></div><div class="l"><?php echo chrome_icon('people'); ?>Contributors</div></div>
+    <div class="stat"><div class="n" style="font-size:15px"><?php echo $summary['last'] ? h(date('M j, Y', $summary['last'])) : '—'; ?></div><div class="l"><?php echo chrome_icon('calendar'); ?>Last change</div></div>
   </div>
 
   <form method="get" action="history.php" class="searchbar" role="search">
     <label class="sr" for="hq">Search commit messages or authors</label>
-    <input type="search" id="hq" name="q" value="<?php echo h($q); ?>" placeholder="Search commit messages or authors…" autocomplete="off">
+    <span class="field"><?php echo chrome_icon('search'); ?><input type="search" id="hq" name="q" value="<?php echo h($q); ?>" placeholder="Search commit messages or authors…" autocomplete="off"></span>
     <button type="submit">Search</button>
-    <?php if ($q !== ''): ?><a class="clear" href="history.php">Clear</a><?php endif; ?>
+    <?php if ($q !== ''): ?><a class="clear" href="history.php"><?php echo chrome_icon('x'); ?>Clear</a><?php endif; ?>
   </form>
 
   <?php if (empty($commitsList)): ?>
-    <div class="note">No commits<?php echo $q !== '' ? ' match "' . h($q) . '"' : ' found'; ?>.</div>
+    <div class="note"><?php echo chrome_icon('inbox'); ?>No commits<?php echo $q !== '' ? ' match "' . h($q) . '"' : ' found'; ?>.</div>
   <?php else: ?>
     <div class="list-card">
       <?php foreach ($commitsList as $c): ?>
@@ -465,9 +472,9 @@ chrome_open(
         $qParam = $q !== '' ? '&q=' . urlencode($q) : '';
         $prevPage = $page - 1; $nextPage = $page + 1;
       ?>
-      <div><?php if ($page > 1): ?><a href="?page=<?php echo $prevPage . $qParam; ?>">← Newer</a><?php endif; ?></div>
+      <div><?php if ($page > 1): ?><a href="?page=<?php echo $prevPage . $qParam; ?>"><?php echo chrome_icon('chevron-left'); ?>Newer</a><?php endif; ?></div>
       <span class="num">Page <?php echo $page; ?></span>
-      <div><?php if ($hasNext): ?><a href="?page=<?php echo $nextPage . $qParam; ?>">Older →</a><?php endif; ?></div>
+      <div><?php if ($hasNext): ?><a href="?page=<?php echo $nextPage . $qParam; ?>">Older<?php echo chrome_icon('chevron-right'); ?></a><?php endif; ?></div>
     </nav>
   <?php endif; ?>
 <?php endif; ?>

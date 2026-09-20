@@ -30,6 +30,10 @@ $ROOT = __DIR__;
 
 function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
+// Inline icon set (chrome_icon / chrome_icon_css). Only the icon helpers are
+// used here; this page keeps its own tokens and layout CSS below.
+require __DIR__ . '/lib/chrome.php';
+
 /** Read one GET parameter as a trimmed string; never notices on a missing key. */
 function q_str(string $key): string {
     $v = $_GET[$key] ?? '';
@@ -907,6 +911,46 @@ footer.site a{color:var(--muted)}
 }
 
 @layer components {
+<?php echo chrome_icon_css(); ?>
+.herosearch button{display:inline-flex;align-items:center;gap:6px}
+.linkbtn{display:inline-flex;align-items:center;gap:4px}
+.linkbtn .ico{width:13px;height:13px}
+.pulse .wrap>span{display:inline-flex;align-items:center;gap:5px}
+.pulse .ico{width:13px;height:13px;opacity:.7;flex:none}
+.pulse a.spark{display:inline-flex;align-items:center;gap:6px}
+.band .ico{width:14px;height:14px;color:var(--accent);margin-right:5px;vertical-align:-.18em}
+.lenses a{display:inline-flex;align-items:center;gap:6px}
+.lenses a .ico{width:13px;height:13px;opacity:.7}
+.lenses a[aria-current="page"] .ico{opacity:1;color:var(--accent)}
+.railtoggle .ico{width:13px;height:13px;margin-right:5px}
+.fbody p a.plain{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
+.fbody p a.plain .ico{width:12px;height:12px}
+.sorts a{display:inline-flex;align-items:center;gap:4px}
+.sorts .ico{width:11px;height:11px;opacity:.7}
+.deepcut h2 .ico{width:12px;height:12px;color:var(--cat);margin-right:5px;vertical-align:-.15em}
+.empty .ico{width:15px;height:15px;margin-right:5px;vertical-align:-.2em}
+.maptop .tbtn .ico,#egoAll .ico{width:13px;height:13px}
+#egoAll{display:inline-flex;align-items:center;gap:6px}
+.paths h2 .ico{width:16px;height:16px;color:var(--accent);margin-right:6px;vertical-align:-.15em}
+.paths .maphint a{display:inline-flex;align-items:center;gap:4px}
+.tprog .ico{width:12px;height:12px;margin-right:3px;vertical-align:-.15em}
+.stepbtn{display:inline-flex;align-items:center;gap:4px}
+.stepbtn .ico{width:11px;height:11px}
+.detail .lbl .ico,#drawer .lbl .ico{color:var(--muted)}
+.acts a,.acts button{display:inline-flex;align-items:center;gap:6px}
+.acts .ico{width:13px;height:13px}
+.signup h2{display:flex;align-items:center;gap:8px}
+.signup h2 .ico{width:16px;height:16px;color:var(--accent)}
+.email-signup button{display:inline-flex;align-items:center;gap:6px}
+.email-signup button .ico{width:13px;height:13px}
+footer.site .fcta a .ico{color:var(--accent);opacity:1}
+#palette form{position:relative;display:flex;align-items:center}
+#palette form .ico{position:absolute;left:16px;width:16px;height:16px;color:var(--muted);pointer-events:none}
+#palette input{padding-left:42px}
+#help h2{display:flex;align-items:center;gap:8px}
+#help h2 .ico{width:16px;height:16px;color:var(--accent)}
+#drawer .dclose{display:inline-flex;align-items:center;gap:4px}
+#drawer .dclose .ico{width:12px;height:12px}
 /* --- Pulse strip ------------------------------------------------------- */
 .pulse{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 0;margin-bottom:14px}
 .pulse .wrap{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font-size:13px;color:var(--muted)}
@@ -1220,17 +1264,17 @@ html.js body[data-view="map"] #mapwrap{display:block}
 
 <header class="topbar">
   <div class="wrap">
-    <a class="brand" href="./">Cheatsheets<span class="sr"> home</span></a>
+    <a class="brand" href="./"><?php echo chrome_icon('layers'); ?>Cheatsheets<span class="sr"> home</span></a>
     <nav class="topnav" aria-label="Site">
-      <a class="hidesm" href="how-its-built.html">How it's built</a>
-      <a class="hidesm" href="history.php">Change history</a>
-      <a class="hidesm" href="popularity.php">Popularity</a>
+      <a class="hidesm" href="how-its-built.html"><?php echo chrome_icon('hammer'); ?>How it's built</a>
+      <a class="hidesm" href="history.php"><?php echo chrome_icon('history'); ?>Change history</a>
+      <a class="hidesm" href="popularity.php"><?php echo chrome_icon('chart'); ?>Popularity</a>
       <button class="tbtn" id="openPalette" type="button" aria-haspopup="dialog">
-        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+        <?php echo chrome_icon('search'); ?>
         Search <kbd>⌘K</kbd>
       </button>
       <button class="tbtn" id="themeToggle" type="button" aria-label="Toggle dark mode" title="Toggle theme (t)">
-        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8 5.6 5.6 0 1 0 13.2 9.6Z"/></svg>
+        <?php echo chrome_theme_icon(); ?>
       </button>
     </nav>
   </div>
@@ -1250,7 +1294,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
       <p class="lead facts"><?php echo h($catIntro); ?></p>
       <?php if ($hubStart): ?>
       <div class="starthere">
-        <p class="lbl">Start here</p>
+        <p class="lbl"><?php echo chrome_icon('signpost'); ?>Start here</p>
         <ol>
           <?php foreach ($hubStart as $st): ?>
           <li><a href="<?php echo h($st['file']); ?>"><?php echo h($st['title']); ?></a><span><?php echo h($st['why']); ?></span></li>
@@ -1265,27 +1309,27 @@ html.js body[data-view="map"] #mapwrap{display:block}
       <?php if ($activeCat !== ''): ?><input type="hidden" name="cat" value="<?php echo h($activeCat); ?>"><?php endif; ?>
       <label class="sr" for="heroq">Search the cheatsheets</label>
       <input type="search" id="heroq" name="q" value="<?php echo h($qRaw); ?>" placeholder="Search inside every page (try torque, ukemi, ufw)" autocomplete="off" spellcheck="false">
-      <button type="submit">Search</button>
+      <button type="submit"><?php echo chrome_icon('search'); ?>Search</button>
     </form>
     <p class="herohint">
       <span>Press <kbd class="num">⌘K</kbd> or <kbd class="num">/</kbd> to search section headings.</span>
-      <button class="linkbtn" type="button" id="surprise">Surprise me</button>
-      <button class="linkbtn" type="button" id="helpBtn">Keyboard map</button>
+      <button class="linkbtn" type="button" id="surprise"><?php echo chrome_icon('dice'); ?>Surprise me</button>
+      <button class="linkbtn" type="button" id="helpBtn"><?php echo chrome_icon('keyboard'); ?>Keyboard map</button>
     </p>
   </div>
 </section>
 
 <section class="pulse" aria-label="Collection pulse">
   <div class="wrap">
-    <span><b class="num"><?php echo (int)$totalCount; ?></b> references <span class="sep">·</span>
+    <span><?php echo chrome_icon('collection'); ?><b class="num"><?php echo (int)$totalCount; ?></b> references <span class="sep">·</span>
       <b class="num"><?php echo (int)$fieldCount; ?></b> fields <span class="sep">·</span>
       <b class="num"><?php echo (int)($stats['sections'] ?? 0); ?></b> sections indexed <span class="sep">·</span>
       <b class="num"><?php echo (int)($stats['edges'] ?? 0); ?></b> cross-links</span>
     <?php if ($lastCommitSubject !== '' && $lastCommitTime): ?>
-    <span>Last change: <a class="plain" href="history.php"><b><?php echo h(clamp_text($lastCommitSubject, 62)); ?></b></a> <span class="num"><?php echo h(rel_time($lastCommitTime)); ?></span></span>
+    <span><?php echo chrome_icon('history'); ?>Last change: <a class="plain" href="history.php"><b><?php echo h(clamp_text($lastCommitSubject, 62)); ?></b></a> <span class="num"><?php echo h(rel_time($lastCommitTime)); ?></span></span>
     <?php endif; ?>
     <?php if ($reviewedThisWeek > 0): ?>
-    <span>Reviewed this week: <b class="num"><?php echo (int)$reviewedThisWeek; ?></b></span>
+    <span><?php echo chrome_icon('check-circle'); ?>Reviewed this week: <b class="num"><?php echo (int)$reviewedThisWeek; ?></b></span>
     <?php endif; ?>
     <?php if ($sparkPoints !== ''): ?>
     <a class="spark" href="popularity.php" title="Site views, last 24 days">
@@ -1296,13 +1340,13 @@ html.js body[data-view="map"] #mapwrap{display:block}
     <?php
     $trend = array_slice(array_filter($rankOrder, fn($r) => $r['pop'] > 0), 0, 3);
     if ($trend): ?>
-    <span>Trending: <?php $first = true; foreach ($trend as $t) { echo $first ? '' : ' <span class="sep">·</span> '; $first = false; echo '<a class="plain" href="' . h($t['file']) . '">' . h(clamp_text($t['title'], 34)) . '</a>'; } ?></span>
+    <span><?php echo chrome_icon('bolt'); ?>Trending: <?php $first = true; foreach ($trend as $t) { echo $first ? '' : ' <span class="sep">·</span> '; $first = false; echo '<a class="plain" href="' . h($t['file']) . '">' . h(clamp_text($t['title'], 34)) . '</a>'; } ?></span>
     <?php endif; ?>
   </div>
 </section>
 
 <div class="band"><div class="wrap">
-  <p>Every sheet here is produced by a governed Claude Code pipeline: a version-controlled spec as acceptance criteria, primary-source research, a self-verification gate, and a public git audit trail. <a href="how-its-built.html">Read how it is built</a> or <a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener">browse the source on GitHub</a>.</p>
+  <p><?php echo chrome_icon('shield'); ?>Every sheet here is produced by a governed Claude Code pipeline: a version-controlled spec as acceptance criteria, primary-source research, a self-verification gate, and a public git audit trail. <a href="how-its-built.html">Read how it is built</a> or <a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener">browse the source on GitHub</a>.</p>
 </div></div>
 
 <div class="wrap">
@@ -1314,9 +1358,9 @@ html.js body[data-view="map"] #mapwrap{display:block}
   <p class="crow"><span class="cbadge"><?php echo h($os['category']); ?></span><?php foreach (array_slice($os['shape'], 0, 3) as $sc): ?><span class="cbadge"><?php echo h(shape_label($sc)); ?></span><?php endforeach; ?></p>
   <h2><?php echo h($os['title']); ?></h2>
   <p><?php echo h($os['description']); ?></p>
-  <p class="acts"><a class="primary" href="<?php echo h($os['file']); ?>">Open</a></p>
+  <p class="acts"><a class="primary" href="<?php echo h($os['file']); ?>"><?php echo chrome_icon('external'); ?>Open</a></p>
   <?php if ($os['headings']): ?>
-  <p class="lbl">What's inside</p>
+  <p class="lbl"><?php echo chrome_icon('list'); ?>What's inside</p>
   <ul>
     <?php foreach (array_slice($os['headings'], 0, 14) as $hd):
         $ht = isset($hd['text']) ? (string)$hd['text'] : '';
@@ -1326,14 +1370,14 @@ html.js body[data-view="map"] #mapwrap{display:block}
     <?php if (count($os['headings']) > 14): ?><li>and <?php echo count($os['headings']) - 14; ?> more</li><?php endif; ?>
   </ul>
   <?php endif; ?>
-  <p class="lbl">Neighbours</p>
+  <p class="lbl"><?php echo chrome_icon('map'); ?>Neighbours</p>
   <p class="facts">Links to <?php echo count($os['outlinks']); ?> · Linked from <?php echo count($inbound); ?></p>
   <ul>
     <?php foreach (array_slice($os['outlinks'], 0, 8) as $ol): if (!isset($byFile[$ol])) continue; ?>
     <li><a href="?sheet=<?php echo h(rawurlencode($ol)); ?>"><?php echo h($rows[$byFile[$ol]]['title']); ?></a></li>
     <?php endforeach; ?>
   </ul>
-  <p class="lbl">Facts</p>
+  <p class="lbl"><?php echo chrome_icon('info'); ?>Facts</p>
   <p class="facts">
     <?php if ($os['created']): ?>Created <?php echo h(gmdate('M j, Y', $os['created'])); ?> · <?php endif; ?>
     <?php if ($os['updated']): ?>Updated <?php echo h(gmdate('M j, Y', $os['updated'])); ?> · <?php endif; ?>
@@ -1344,7 +1388,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
   <?php if ($osSparkPoints !== ''): ?>
   <p class="spark plain"><svg width="118" height="26" viewBox="0 0 118 26" aria-label="Views for this page, last <?php echo count($dailyHistoryLite[$os['file']]); ?> days" role="img"><polyline points="<?php echo h($osSparkPoints); ?>" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg> <span class="num"><?php echo number_format($osSparkLast); ?> views/day</span></p>
   <?php endif; ?>
-  <p class="acts"><a href="./">Back to all cheatsheets</a></p>
+  <p class="acts"><a href="./"><?php echo chrome_icon('arrow-left'); ?>Back to all cheatsheets</a></p>
 </section>
 <?php endif; ?>
 
@@ -1352,17 +1396,17 @@ html.js body[data-view="map"] #mapwrap{display:block}
   <?php
   // Real links first: every lens is a document the server can render on its own.
   // JS intercepts them and flips <body data-view> instead of navigating.
-  $lensList = ['grid' => 'Grid', 'map' => 'Map', 'paths' => 'Paths'];
-  foreach ($lensList as $lv => $ll):
+  $lensList = ['grid' => ['Grid', 'grid'], 'map' => ['Map', 'map'], 'paths' => ['Paths', 'signpost']];
+  foreach ($lensList as $lv => [$ll, $li]):
     $lurl = $lv === 'grid' ? grid_url(['view' => '']) : grid_url(['view' => $lv]);
-  ?><a data-view="<?php echo h($lv); ?>" aria-current="<?php echo $view === $lv ? 'page' : 'false'; ?>" href="<?php echo h($lurl); ?>"><?php echo h($ll); ?></a><?php endforeach; ?>
+  ?><a data-view="<?php echo h($lv); ?>" aria-current="<?php echo $view === $lv ? 'page' : 'false'; ?>" href="<?php echo h($lurl); ?>"><?php echo chrome_icon($li); ?><?php echo h($ll); ?></a><?php endforeach; ?>
 </nav>
 
 <div class="explorer">
   <aside class="rail" id="rail" aria-label="Filters">
-    <button class="railtoggle" type="button" id="railToggle" aria-expanded="false">Filters and categories</button>
+    <button class="railtoggle" type="button" id="railToggle" aria-expanded="false"><?php echo chrome_icon('funnel'); ?>Filters and categories</button>
     <div class="fbody">
-      <fieldset class="fgroup"><span class="lbl">Category</span>
+      <fieldset class="fgroup"><span class="lbl"><?php echo chrome_icon('tag'); ?>Category</span>
         <ul>
           <?php foreach ($catNames as $ci => $cn): if (empty($catCounts[$cn])) continue;
             $on = ($activeCat === $cn); ?>
@@ -1370,7 +1414,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
           <?php endforeach; ?>
         </ul>
       </fieldset>
-      <fieldset class="fgroup"><span class="lbl">Shape</span>
+      <fieldset class="fgroup"><span class="lbl"><?php echo chrome_icon('shapes'); ?>Shape</span>
         <ul>
           <?php ksort($shapeCounts); foreach ($shapeCounts as $sname => $sn):
             $on = in_array($sname, $activeShapes, true); ?>
@@ -1378,7 +1422,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
           <?php endforeach; ?>
         </ul>
       </fieldset>
-      <fieldset class="fgroup"><span class="lbl">Freshness</span>
+      <fieldset class="fgroup"><span class="lbl"><?php echo chrome_icon('sparkles'); ?>Freshness</span>
         <ul>
           <?php
           $freshLabels = ['reviewed90' => 'Reviewed in 90 days', 'updated30' => 'Updated in 30 days', 'new30' => 'New in 30 days'];
@@ -1389,7 +1433,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
           <li><a data-facet="interactive" data-val="1" aria-pressed="<?php echo $wantInteractive ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['interactive' => $wantInteractive ? '' : '1'])); ?>">Interactive</a></li>
         </ul>
       </fieldset>
-      <p><a class="plain" href="./">Clear all filters</a></p>
+      <p><a class="plain" href="./"><?php echo chrome_icon('x-circle'); ?>Clear all filters</a></p>
     </div>
   </aside>
 
@@ -1404,15 +1448,16 @@ html.js body[data-view="map"] #mapwrap{display:block}
         <?php if ($wantInteractive): ?><a class="chip" href="<?php echo h(grid_url(['interactive' => ''])); ?>">Interactive<span class="x">×</span></a><?php endif; ?>
       </span>
       <nav class="sorts" aria-label="Sort">
-        <?php foreach ($SORTS as $sk => $sl): $cur = ($sort === $sk); ?>
-        <a data-sort="<?php echo h($sk); ?>" aria-current="<?php echo $cur ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['sort' => $sk === 'new' ? '' : $sk])); ?>"><?php echo h($sl); ?></a>
+        <?php $SORT_ICON = ['new' => 'sparkles', 'popular' => 'rising', 'updated' => 'history', 'reviewed' => 'check-circle', 'az' => 'sort', 'title' => 'sort'];
+        foreach ($SORTS as $sk => $sl): $cur = ($sort === $sk); ?>
+        <a data-sort="<?php echo h($sk); ?>" aria-current="<?php echo $cur ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['sort' => $sk === 'new' ? '' : $sk])); ?>"><?php echo chrome_icon($SORT_ICON[$sk] ?? 'sort'); ?><?php echo h($sl); ?></a>
         <?php endforeach; ?>
       </nav>
     </div>
 
     <?php if ($deepCut): ?>
     <section class="deepcut k<?php echo (int)$deepCut['catk']; ?>" id="deepcut">
-      <h2>Deep cut of the day</h2>
+      <h2><?php echo chrome_icon('gem'); ?>Deep cut of the day</h2>
       <h3><a href="<?php echo h($deepCut['file']); ?>"><?php echo h($deepCut['title']); ?></a></h3>
       <p><?php echo h(clamp_text($deepCut['description'], 190)); ?></p>
     </section>
@@ -1421,7 +1466,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
     <div class="grid" id="grid">
       <?php foreach ($rendered as $r) render_card($r, $now, $NEW_WINDOW, $REVIEW_WINDOW, $r['_visible']); ?>
     </div>
-    <p class="empty" id="empty"<?php echo $visibleCount > 0 ? ' hidden' : ''; ?>>Nothing matches those filters. <a href="./">Clear them</a> and start again.</p>
+    <p class="empty" id="empty"<?php echo $visibleCount > 0 ? ' hidden' : ''; ?>><?php echo chrome_icon('inbox'); ?>Nothing matches those filters. <a href="./">Clear them</a> and start again.</p>
   </div>
 
   <section id="mapwrap" aria-label="Constellation map">
@@ -1430,12 +1475,12 @@ html.js body[data-view="map"] #mapwrap{display:block}
       <?php foreach ($catNames as $ci => $cn): if (empty($catCounts[$cn])) continue; ?>
       <button class="lgd k<?php echo (int)$ci; ?>" type="button" data-lg="<?php echo (int)$ci; ?>" aria-pressed="false"><span class="cdot"></span><?php echo h($cn); ?><span class="n"><?php echo (int)$catCounts[$cn]; ?></span></button>
       <?php endforeach; ?>
-      <span class="grow"><button class="tbtn" id="maplistBtn" type="button" aria-pressed="false">List this map</button><button class="tbtn" id="mapreset" type="button">Reset view</button></span>
+      <span class="grow"><button class="tbtn" id="maplistBtn" type="button" aria-pressed="false"><?php echo chrome_icon('list'); ?>List this map</button><button class="tbtn" id="mapreset" type="button"><?php echo chrome_icon('reset'); ?>Reset view</button></span>
     </div>
     <figure id="mapfig">
       <canvas id="mapc" role="img" aria-label="Constellation map of <?php echo (int)$totalCount; ?> cheatsheets joined by <?php echo (int)($stats['edges'] ?? 0); ?> cross-links, clustered into <?php echo (int)$fieldCount; ?> category regions. Use the List this map button for a text equivalent."></canvas>
       <div id="maptip" hidden></div>
-      <button id="egoAll" type="button" hidden>Show the whole map</button>
+      <button id="egoAll" type="button" hidden><?php echo chrome_icon('map'); ?>Show the whole map</button>
       <?php if ($ogMode): ?>
       <div class="ogcap"><b>Cheatsheets by David Veksler</b><span><?php echo (int)$totalCount; ?> references · <?php echo (int)($stats['edges'] ?? 0); ?> cross-links</span></div>
       <?php endif; ?>
@@ -1455,17 +1500,17 @@ html.js body[data-view="map"] #mapwrap{display:block}
   $apSteps = is_array($activePath['steps'] ?? null) ? array_values(array_filter($activePath['steps'], fn($x) => is_array($x) && !empty($x['file']))) : [];
   $apFiles = array_column($apSteps, 'file');
   ?>
-  <h2>Curated paths</h2>
-  <p class="maphint" style="margin:0 0 10px"><a href="<?php echo h(grid_url(['view' => 'paths', 'path' => ''])); ?>">All paths</a></p>
+  <h2><?php echo chrome_icon('signpost'); ?>Curated paths</h2>
+  <p class="maphint" style="margin:0 0 10px"><a href="<?php echo h(grid_url(['view' => 'paths', 'path' => ''])); ?>"><?php echo chrome_icon('arrow-left'); ?>All paths</a></p>
   <article class="trail open" id="path-<?php echo h($apId); ?>" data-path="<?php echo h($apId); ?>">
     <h3><?php echo h((string)($activePath['title'] ?? '')); ?></h3>
     <p><?php echo h((string)($activePath['promise'] ?? '')); ?></p>
-    <p class="tprog" data-steps="<?php echo count($apSteps); ?>"><?php echo count($apSteps); ?> steps</p>
+    <p class="tprog" data-steps="<?php echo count($apSteps); ?>"><?php echo chrome_icon('list'); ?><?php echo count($apSteps); ?> steps</p>
     <ol class="stepper">
       <?php foreach ($apSteps as $si => $st):
         $sf = (string)$st['file'];
         $stitle = isset($byFile[$sf]) ? $rows[$byFile[$sf]]['title'] : $sf; ?>
-      <li data-i="<?php echo (int)$si; ?>"><span class="sn num"><?php echo (int)$si + 1; ?></span><a href="<?php echo h($sf); ?>"><?php echo h(clamp_text($stitle, 58)); ?></a><span class="why"><?php echo h((string)($st['why'] ?? '')); ?></span><button class="stepbtn" type="button" data-i="<?php echo (int)$si; ?>" aria-pressed="false">Mark done</button></li>
+      <li data-i="<?php echo (int)$si; ?>"><span class="sn num"><?php echo (int)$si + 1; ?></span><a href="<?php echo h($sf); ?>"><?php echo h(clamp_text($stitle, 58)); ?></a><span class="why"><?php echo h((string)($st['why'] ?? '')); ?></span><button class="stepbtn" type="button" data-i="<?php echo (int)$si; ?>" aria-pressed="false"><?php echo chrome_icon('check'); ?>Mark done</button></li>
       <?php endforeach; ?>
     </ol>
   </article>
@@ -1479,13 +1524,13 @@ html.js body[data-view="map"] #mapwrap{display:block}
   }
   if ($related): ?>
   <div class="related">
-    <h2>Related paths</h2>
+    <h2><?php echo chrome_icon('link'); ?>Related paths</h2>
     <p class="maphint" style="margin:0 0 10px">Trails that share at least one sheet with this one.</p>
     <div class="trails"><?php foreach ($related as $tr) trail_card($tr, $rows, $byFile); ?></div>
   </div>
   <?php endif; ?>
 <?php else: ?>
-  <h2>Curated paths</h2>
+  <h2><?php echo chrome_icon('signpost'); ?>Curated paths</h2>
   <p style="color:var(--muted);margin:0">Hand-written trails, in the order the sheets actually make sense. Open one to track your way through it; progress stays in this browser.</p>
   <div class="trails"><?php foreach ($trails as $tr) { if (is_array($tr) && !empty($tr['steps'])) trail_card($tr, $rows, $byFile); } ?></div>
 <?php endif; ?>
@@ -1497,7 +1542,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
 <section class="signup">
   <div class="wrap">
     <div class="copy">
-      <h2>Get new references and build notes</h2>
+      <h2><?php echo chrome_icon('envelope'); ?>Get new references and build notes</h2>
       <p>Occasional email when a new reference ships or the pipeline changes. No spam, no tracking, unsubscribe anytime.</p>
     </div>
     <form action="subscribe.php" method="post" class="email-signup">
@@ -1507,7 +1552,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
         <input type="text" id="website-hp" name="website" tabindex="-1" autocomplete="off">
       </div>
       <input type="email" id="emailSignupField" name="email" required autocomplete="email" inputmode="email" placeholder="you@example.com" aria-label="Email address">
-      <button type="submit">Notify me</button>
+      <button type="submit"><?php echo chrome_icon('bell'); ?>Notify me</button>
       <p class="signup-status" role="status" aria-live="polite" hidden></p>
     </form>
   </div>
@@ -1516,18 +1561,19 @@ html.js body[data-view="map"] #mapwrap{display:block}
 <footer class="site">
   <div class="wrap frow">
     <span>Cheatsheets © <?php echo date('Y'); ?> David Veksler.</span>
-    <a href="how-its-built.html">How it's built</a>
-    <a href="history.php">Change history</a>
-    <a href="popularity.php">Popularity</a>
-    <a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener">GitHub</a>
-    <a href="catalog.json">catalog.json</a>
-    <span class="fcta"><a href="https://www.linkedin.com/in/davidveksler/" rel="noopener" data-ga-linkedin="footer">Working on something similar? Compare notes on LinkedIn.</a></span>
+    <a href="how-its-built.html"><?php echo chrome_icon('hammer'); ?>How it's built</a>
+    <a href="history.php"><?php echo chrome_icon('history'); ?>Change history</a>
+    <a href="popularity.php"><?php echo chrome_icon('chart'); ?>Popularity</a>
+    <a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener"><?php echo chrome_icon('git'); ?>GitHub</a>
+    <a href="catalog.json"><?php echo chrome_icon('braces'); ?>catalog.json</a>
+    <span class="fcta"><a href="https://www.linkedin.com/in/davidveksler/" rel="noopener" data-ga-linkedin="footer"><?php echo chrome_icon('people'); ?>Working on something similar? Compare notes on LinkedIn.</a></span>
   </div>
 </footer>
 
 <dialog id="palette" aria-label="Search the collection">
   <form method="dialog" onsubmit="return false">
     <label class="sr" for="pq">Search inside every cheatsheet</label>
+    <?php echo chrome_icon('search'); ?>
     <input id="pq" type="search" autocomplete="off" spellcheck="false" placeholder="Search inside every page">
   </form>
   <ul id="pres"></ul>
@@ -1538,7 +1584,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
 <aside id="drawer" hidden aria-label="Sheet detail" tabindex="-1"></aside>
 
 <dialog id="help" aria-label="Keyboard map">
-  <h2>Keyboard</h2>
+  <h2><?php echo chrome_icon('keyboard'); ?>Keyboard</h2>
   <dl>
     <dt>⌘K / Ctrl K / /</dt><dd>Open the search palette</dd>
     <dt>↑ ↓ enter</dt><dd>Move and open inside results</dd>
@@ -1554,6 +1600,10 @@ html.js body[data-view="map"] #mapwrap{display:block}
 
 <div class="toast" id="toast" hidden role="status"></div>
 
+<script type="application/json" id="icons"><?php echo json_encode([
+    'x' => chrome_icon('x'), 'external' => chrome_icon('external'), 'map' => chrome_icon('map'),
+    'list' => chrome_icon('list'), 'info' => chrome_icon('info'), 'link' => chrome_icon('link'),
+], JSON_UNESCAPED_SLASHES); ?></script>
 <script type="application/json" id="catalog-lite"><?php echo json_encode($lite, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
 <?php /* Per-sheet 30-day view history for the drawer's sparkline (see the
        "per-sheet daily history" block above). A second small inline block
@@ -1592,6 +1642,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;
 var L=JSON.parse(el('catalog-lite').textContent);
 var N=L.f.length;
 var DH=JSON.parse(el('daily-history').textContent); // per-file {date:views}, see index.php's PHP block above
+var ICO=JSON.parse(el('icons').textContent); // the few chrome_icon() glyphs the drawer template needs
 var byFile={};
 function toks(s){return String(s).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);}
 for(var i=0;i<N;i++)byFile[L.f[i]]=i;
@@ -1992,22 +2043,22 @@ function drawerHTML(s){
   return '<div class="detail '+cls+'" style="border:0;padding:0;margin:0">'
    +'<div class="dhead"><p class="crow" style="margin:0"><span class="cbadge">'+esc(s.category)+'</span>'
    +(s.shape||[]).slice(0,3).map(function(x){return '<span class="cbadge">'+esc(shapeLabel(x))+'</span>';}).join('')
-   +'</p><button class="dclose" type="button" id="dclose" aria-label="Close">Close</button></div>'
+   +'</p><button class="dclose" type="button" id="dclose" aria-label="Close">'+ICO.x+'Close</button></div>'
    +(img?'<div class="dshot"><img src="'+esc(img)+'" alt="" loading="lazy" onerror="this.hidden=true"></div>':'')
    +'<h2>'+esc(s.title)+'</h2><p>'+esc(s.description||'')+'</p>'
-   +'<p class="acts"><a class="primary" href="'+esc(s.file)+'" data-open="'+esc(s.file)+'">Open</a>'
-   +'<button type="button" data-map="'+esc(s.file)+'">Show on map</button></p>'
-   +(ins?'<p class="lbl">What\'s inside</p><ul>'+ins+'</ul>':'')
-   +'<p class="lbl">Neighbours</p><p class="facts">Links to '+((s.outlinks||[]).length)+' · Linked from '+((inbound[s.file]||[]).length)+'</p>'
+   +'<p class="acts"><a class="primary" href="'+esc(s.file)+'" data-open="'+esc(s.file)+'">'+ICO.external+'Open</a>'
+   +'<button type="button" data-map="'+esc(s.file)+'">'+ICO.map+'Show on map</button></p>'
+   +(ins?'<p class="lbl">'+ICO.list+'What\'s inside</p><ul>'+ins+'</ul>':'')
+   +'<p class="lbl">'+ICO.map+'Neighbours</p><p class="facts">Links to '+((s.outlinks||[]).length)+' · Linked from '+((inbound[s.file]||[]).length)+'</p>'
    +outs+ins2
-   +'<p class="lbl">Facts</p><p class="facts">'
+   +'<p class="lbl">'+ICO.info+'Facts</p><p class="facts">'
    +(s.created?'Created '+fmtDate(s.created)+' · ':'')
    +(s.updated?'Updated '+fmtDate(s.updated)+' · ':'')
    +(s.reviewed?'Reviewed '+esc(s.reviewed)+' · ':'')
    +'~'+(s.words||0).toLocaleString()+' words · '+(s.tables||0)+' tables · '+(s.sections||0)+' sections · #'
    +popRankOf(s.file)+' of '+TOTAL+' this month</p>'
    +sparkSVG(DH[s.file]?Object.keys(DH[s.file]).sort().map(function(d){return DH[s.file][d];}):[],s.file)
-   +'<p class="acts"><button type="button" id="dcopy">Copy link</button></p>'
+   +'<p class="acts"><button type="button" id="dcopy">'+ICO.link+'Copy link</button></p>'
    +'</div>';
 }
 
