@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sky Colour Sandbox: Why Is the Sky Blue on Any Planet?</title>
+<meta name="description" content="Set a star temperature, pressure, gas, methane and haze, then watch the sky colour fall out of Rayleigh scattering, Planck spectra and CIE colour matching. Earth comes out blue without being told to.">
+<meta name="keywords" content="why is the sky blue, Rayleigh scattering, sky colour simulator, planetary atmosphere, Mars sky colour, Titan sky, exoplanet sky, Planck spectrum, CIE colour matching functions, chromatic adaptation">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/sky-colour-sandbox.html">
+<meta property="og:title" content="Sky Colour Sandbox: Why Is the Sky Blue on Any Planet?">
+<meta property="og:description" content="Set a star, a pressure, a gas and a haze. The same equations that make Earth blue and Mars butterscotch render the sky of any world you invent.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/sky-colour-sandbox.html">
+<meta property="og:image" content="https://cheatsheets.davidveksler.com/images/sky-colour-sandbox.png">
+<meta property="og:image:alt" content="Rendered sky dome gradient with a sun disc beside sliders for star temperature, pressure, gas, methane and haze">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sky Colour Sandbox: Why Is the Sky Blue on Any Planet?">
+<meta name="twitter:description" content="Set a star, a pressure, a gas and a haze. The same equations that make Earth blue and Mars butterscotch render the sky of any world you invent.">
+<meta name="twitter:image" content="https://cheatsheets.davidveksler.com/images/sky-colour-sandbox.png">
+<meta name="twitter:creator" content="@heroiclife">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Sky Colour Sandbox: Why Is the Sky Blue on Any Planet?",
+  "description": "An interactive single-scattering sky colour engine. Planck illuminant, Rayleigh and haze optical depths, Kasten-Young airmass, CIE 1931 integration and von Kries adaptation compute the sky of Earth, Mars, Titan, a lava world, an M-dwarf planet, Archean Earth and any free-parameter world.",
+  "author": {"@type": "Person", "@id": "https://davidveksler.com/#person", "name": "David Veksler", "url": "https://davidveksler.com/"},
+  "creditText": "Produced by a governed multi-agent Claude Code pipeline; author of record David Veksler",
+  "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+  "datePublished": "2026-09-19",
+  "keywords": "Rayleigh scattering, sky colour, planetary atmospheres, Planck spectrum, CIE 1931, chromatic adaptation, single scattering"
+}
+</script>
+<style>
+@layer base, layout, components, utilities;
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+    --bg: light-dark(#f3f1ea, #0c1119);
+    --bg-2: light-dark(#e9e6dc, #131b27);
+    --panel: light-dark(#fbfaf6, #172130);
+    --line: light-dark(#cfcabb, #2a3648);
+    --ink: light-dark(#1a2230, #e7ecf3);
+    --ink-2: light-dark(#4b5563, #9aa7b8);
+    --mono-ink: light-dark(#0f4c5c, #7fd3e6);
+    --accent: light-dark(#0b6e8a, #5fc4e0);
+    --fp: light-dark(#0f7a5a, #4fd1a1);
+    --fp-bg: light-dark(#dff3ea, #0f2b22);
+    --fit: light-dark(#a35a00, #f2b35a);
+    --fit-bg: light-dark(#fbe9cf, #3a2609);
+    --fail: light-dark(#b42318, #ff7b6e);
+    --pass: light-dark(#0f7a5a, #4fd1a1);
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.15; margin: 0 0 .5rem; }
+  h1 { font-size: clamp(1.9rem, 4.5vw, 3rem); }
+  h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); margin-top: 2.5rem; }
+  h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+  p, li { text-wrap: pretty; }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  code, .mono { font-family: var(--mono); font-size: .92em; color: var(--mono-ink); }
+  table { border-collapse: collapse; width: 100%; font-size: .93rem; }
+  th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; color: var(--ink-2); font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
+  summary { cursor: pointer; font-weight: 600; }
+}
+
+@layer layout {
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 1.25rem 16px 3rem; }
+  header.hero { padding: 1.5rem 0 1rem; }
+  .deck { font-size: 1.1rem; color: var(--ink-2); max-width: 70ch; margin: .25rem 0 0; }
+  .bench { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr); gap: 1.25rem; align-items: start; margin-top: 1rem; }
+  @media (max-width: 900px) { .bench { grid-template-columns: 1fr; } }
+  .prose { max-width: 78ch; }
+  .tablewrap { overflow-x: auto; }
+}
+
+@layer components {
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; }
+  .stage { padding: .75rem; }
+  canvas#dome { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; background: #000; }
+  .stage-note { font-size: .78rem; color: var(--ink-2); margin: .5rem 0 0; }
+
+  .presets { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .9rem; }
+  .presets button, .seg button, .btn {
+    font: inherit; font-size: .88rem; padding: .38rem .7rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--bg-2); color: var(--ink); cursor: pointer;
+  }
+  .presets button:hover, .btn:hover { border-color: var(--accent); }
+  .presets button[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .ctl { display: grid; grid-template-columns: 1fr auto; gap: .15rem .6rem; align-items: baseline; margin: .7rem 0; }
+  .ctl label { font-weight: 600; font-size: .92rem; }
+  .ctl output { font-family: var(--mono); font-size: .88rem; color: var(--mono-ink); text-align: right; white-space: nowrap; }
+  .ctl input[type=range] { grid-column: 1 / -1; width: 100%; margin: .15rem 0 0; accent-color: var(--accent); }
+  .ctl .hint { grid-column: 1 / -1; font-size: .76rem; color: var(--ink-2); display: flex; justify-content: space-between; gap: .5rem; }
+  .ctl .readout { grid-column: 1 / -1; font-family: var(--mono); font-size: .8rem; color: var(--ink-2); background: var(--bg-2); border-radius: 6px; padding: .35rem .5rem; margin-top: .25rem; line-height: 1.6; }
+  .ctl .readout b { color: var(--mono-ink); font-weight: 600; }
+  fieldset { border: 0; padding: 0; margin: .7rem 0; }
+  fieldset legend { font-weight: 600; font-size: .92rem; padding: 0; margin-bottom: .3rem; }
+  .gas { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .gas label { border: 1px solid var(--line); border-radius: 8px; padding: .3rem .6rem; cursor: pointer; font-family: var(--mono); font-size: .88rem; background: var(--bg-2); }
+  .gas label:has(input:checked) { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .gas input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .group-title { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); margin: 1.1rem 0 .1rem; border-top: 1px solid var(--line); padding-top: .7rem; }
+
+  .tag { display: inline-block; font-family: var(--mono); font-size: .66rem; letter-spacing: .03em; padding: .08rem .38rem; border-radius: 4px; vertical-align: middle; margin-left: .3rem; text-transform: uppercase; }
+  .tag.fp { color: var(--fp); background: var(--fp-bg); }
+  .tag.fit { color: var(--fit); background: var(--fit-bg); }
+
+  .swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-top: .8rem; }
+  .sw { text-align: center; font-size: .78rem; color: var(--ink-2); }
+  .sw .chip { height: 54px; border-radius: 8px; border: 1px solid var(--line); margin-bottom: .3rem; }
+  .sw .hex { font-family: var(--mono); color: var(--mono-ink); display: block; }
+
+  .lux { margin-top: 1rem; }
+  .lux .bar { position: relative; height: 14px; border-radius: 7px; background: linear-gradient(90deg, #0b0f1a, #3b4a6b 45%, #d9d2b8 80%, #fff6d6); border: 1px solid var(--line); margin: 1.2rem 0 2.6rem; }
+  .lux .needle { position: absolute; top: -6px; width: 3px; height: 26px; background: var(--fail); border-radius: 2px; transform: translateX(-50%); transition: left .12s linear; }
+  .lux .mark { position: absolute; top: 16px; transform: translateX(-50%); font-size: .68rem; color: var(--ink-2); white-space: nowrap; text-align: center; line-height: 1.25; }
+  .lux .mark::before { content: ""; position: absolute; left: 50%; top: -12px; width: 1px; height: 10px; background: var(--ink-2); }
+  .lux .val { font-family: var(--mono); color: var(--mono-ink); font-size: .95rem; }
+  .lux .head { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; flex-wrap: wrap; font-size: .85rem; }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; background: transparent; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .row { display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: center; justify-content: space-between; margin-top: .9rem; font-size: .85rem; }
+
+  .elev { margin-top: .8rem; }
+
+  .pipe { counter-reset: step; list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
+  .pipe li { position: relative; padding-left: 2.4rem; }
+  .pipe li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: .1rem; width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--bg-2); border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--mono); font-size: .8rem; color: var(--mono-ink); }
+
+  .testout { font-family: var(--mono); font-size: .84rem; white-space: pre-wrap; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin-top: 1rem; }
+  .testout .ok { color: var(--pass); }
+  .testout .bad { color: var(--fail); font-weight: 700; }
+  .banner { border: 2px solid var(--fail); color: var(--fail); padding: .6rem .9rem; border-radius: 8px; font-weight: 700; margin-top: .75rem; }
+
+  details.acc { margin-top: 1rem; }
+  details.acc summary { padding: .6rem 0; }
+  .callout { border-left: 4px solid var(--accent); padding: .4rem .9rem; background: var(--bg-2); border-radius: 0 8px 8px 0; margin: 1rem 0; }
+  .related ul { columns: 2; column-gap: 2rem; padding-left: 1.2rem; }
+  @media (max-width: 640px) { .related ul { columns: 1; } .swatches { grid-template-columns: repeat(3, 1fr); } }
+  footer { margin-top: 3rem; border-top: 1px solid var(--line); padding-top: 1rem; font-size: .88rem; color: var(--ink-2); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .presets button { transition: background .15s, border-color .15s; }
+}
+@media print {
+  .presets, .seg, .btn, .elev { display: none; }
+  canvas#dome { max-height: 40vh; }
+  .panel { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <h1>Why is the sky blue? Build a planet and find out.</h1>
+  <p class="deck">Earth is never told to be blue. The engine takes a star temperature, a pressure, a gas and a haze, runs Rayleigh scattering, Planck spectra and the CIE colour-matching functions, and blue is what comes out. Turn the same knobs and the same equations give you Mars, Titan, the Archean, a lava world, or a sky no one has seen.</p>
+</header>
+
+<div id="testpanel" hidden>
+  <h2 style="margin-top:0">Regression harness</h2>
+  <p class="prose">Run because the URL contains <code>?test</code>. Assertions are on computed sRGB in <em>camera</em> mode (no chromatic adaptation), the raw engine output. If Earth or Mars fail, the engine is wrong; presets are not to be tuned to hide it.</p>
+  <div id="testout" class="testout" aria-live="polite"></div>
+</div>
+
+<main class="bench" aria-label="Sky colour sandbox" data-og-capture>
+  <section class="panel stage" aria-label="Rendered sky">
+    <canvas id="dome" width="960" height="540" role="img" aria-label="Rendered sky dome, brightness normalised, with sun disc at its elevation"></canvas>
+    <p class="stage-note">Sky image is <strong>brightness-normalised</strong>: the dome shows chromaticity and relative brightness only. Absolute illuminance is on the lux bar below. Plane-parallel single scattering; left edge faces the sun, right edge faces away.</p>
+
+    <div class="ctl elev">
+      <label for="elev">Sun elevation <span class="tag fp">first-principles</span></label>
+      <output id="elev-out" for="elev">45.0°</output>
+      <input type="range" id="elev" min="-10" max="90" step="0.5" value="45" aria-describedby="elev-hint">
+      <span class="hint" id="elev-hint"><span>−10° (twilight cut-off)</span><span>time of day, not a planet parameter</span><span>90° zenith</span></span>
+    </div>
+
+    <div class="swatches" aria-label="Colour swatches">
+      <div class="sw"><div class="chip" id="sw-zenith"></div>Zenith sky<span class="hex" id="hex-zenith">#000000</span></div>
+      <div class="sw"><div class="chip" id="sw-horizon"></div>Horizon toward sun<span class="hex" id="hex-horizon">#000000</span></div>
+      <div class="sw"><div class="chip" id="sw-sun"></div>Sun disc (transmitted)<span class="hex" id="hex-sun">#000000</span></div>
+    </div>
+
+    <div class="row">
+      <div>
+        <span style="font-weight:600">Eye</span>
+        <span class="seg" role="group" aria-label="Chromatic adaptation mode">
+          <button type="button" id="mode-camera" aria-pressed="true">Camera (D65, no adaptation)</button>
+          <button type="button" id="mode-eye" aria-pressed="false">Adapted eye (von Kries to D65)</button>
+        </span>
+      </div>
+      <button type="button" class="btn" id="copylink">Copy link to this sky</button>
+    </div>
+
+    <div class="lux" aria-label="Ground illuminance">
+      <div class="head"><span><strong>Ground illuminance</strong> (direct + diffuse, horizontal surface) <span class="tag fp">first-principles</span></span><span class="val" id="lux-val">0 lx</span></div>
+      <div class="bar" role="img" aria-label="Logarithmic illuminance scale from 0.01 lux to 10 million lux">
+        <div class="needle" id="lux-needle" style="left:50%"></div>
+        <span class="mark" style="left:15.6%">full moon<br>0.25 lx</span>
+        <span class="mark" style="left:55.6%">overcast<br>1,000 lx</span>
+        <span class="mark" style="left:77.8%">Earth noon<br>100,000 lx</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel controls" aria-label="Planet parameters">
+    <div class="presets" role="group" aria-label="Presets">
+      <button type="button" data-preset="earth">Earth</button>
+      <button type="button" data-preset="mars">Mars</button>
+      <button type="button" data-preset="lava">Lava world</button>
+      <button type="button" data-preset="mdwarf">M-dwarf terrestrial</button>
+      <button type="button" data-preset="archean">Archean Earth</button>
+      <button type="button" data-preset="titan">Titan</button>
+      <button type="button" data-preset="icegiant">Ice giant</button>
+    </div>
+
+    <div class="group-title" style="border-top:0;padding-top:0;margin-top:0">Star</div>
+    <div class="ctl">
+      <label for="starTemp">Star temperature <span class="tag fp">Planck</span></label>
+      <output id="starTemp-out" for="starTemp">5772 K <span id="starchip" style="display:inline-block;width:.9em;height:.9em;border-radius:50%;vertical-align:-.1em;border:1px solid var(--line)"></span></output>
+      <input type="range" id="starTemp" min="3.3617" max="4.0792" step="any" value="3.7613">
+      <span class="hint"><span>2300 K (late M)</span><span>12,000 K (A star)</span></span>
+    </div>
+    <div class="ctl">
+      <label for="insol">Insolation <span class="tag fp">drives lux only</span></label>
+      <output id="insol-out" for="insol">1.00 S⊕</output>
+      <input type="range" id="insol" min="0.1" max="3" step="0.01" value="1">
+      <span class="hint"><span>0.1 S⊕</span><span>3 S⊕</span></span>
+    </div>
+
+    <div class="group-title">Atmosphere</div>
+    <div class="ctl">
+      <label for="pressure">Surface pressure <span class="tag fp">λ⁻⁴ Rayleigh</span> <span class="tag fit">gas coefficient</span></label>
+      <output id="pressure-out" for="pressure">1.00 bar</output>
+      <input type="range" id="pressure" min="0" max="5" step="any" value="3" aria-describedby="pressure-readout">
+      <span class="hint"><span>1 mbar</span><span>log axis</span><span>100 bar</span></span>
+      <div class="readout" id="pressure-readout">column: <b id="ro-col">2.15e29</b> molecules/m² (Earth g) · scattering column vs Earth: <b id="ro-colrel">1.00×</b><br>τ<sub>Rayleigh</sub>(550 nm) = <b id="ro-tauR">0.0973</b> · τ<sub>total</sub>(550 nm) = <b id="ro-tau">0.147</b> · multi-scatter blend <b id="ro-blend">0%</b></div>
+    </div>
+    <fieldset>
+      <legend>Main gas <span class="tag fit">scattering ratio vs N₂</span></legend>
+      <div class="gas" id="gas">
+        <label><input type="radio" name="gas" value="0" checked>N₂ ×1.00</label>
+        <label><input type="radio" name="gas" value="1">CO₂ ×2.40</label>
+        <label><input type="radio" name="gas" value="2">H₂ ×0.22</label>
+        <label><input type="radio" name="gas" value="3">H₂O ×0.60</label>
+      </div>
+    </fieldset>
+    <div class="ctl">
+      <label for="ch4">Methane <span class="tag fit">band curve</span></label>
+      <output id="ch4-out" for="ch4">0.00 %</output>
+      <input type="range" id="ch4" min="0" max="5" step="0.01" value="0">
+      <span class="hint"><span>0 %</span><span>absorbs 600 to 730 nm, scaled by column</span><span>5 %</span></span>
+    </div>
+    <div class="ctl">
+      <label for="haze">Haze optical depth <span class="tag fit">λ⁻¹, HG g = 0.7</span></label>
+      <output id="haze-out" for="haze">0.05</output>
+      <input type="range" id="haze" min="0" max="10" step="0.01" value="0.05">
+      <span class="hint"><span>0 (clear)</span><span>10 (Titan-thick)</span></span>
+    </div>
+    <div class="ctl">
+      <label for="dark">Haze darkness <span class="tag fit">ω 0.20 to 0.99 at 550 nm</span></label>
+      <output id="dark-out" for="dark">ω = 0.99</output>
+      <input type="range" id="dark" min="0" max="1" step="0.01" value="1">
+      <span class="hint"><span>sooty, absorbing</span><span>bright, scattering</span></span>
+    </div>
+
+    <div class="group-title">Surface</div>
+    <div class="ctl">
+      <label for="surfT">Surface temperature <span class="tag fp">Planck, above 900 K</span></label>
+      <output id="surfT-out" for="surfT">288 K</output>
+      <input type="range" id="surfT" min="200" max="3000" step="1" value="288">
+      <span class="hint"><span>200 K</span><span>free parameter, not derived</span><span>3000 K</span></span>
+    </div>
+  </section>
+</main>
+
+<section class="prose">
+  <h2>Six skies, one engine</h2>
+  <p>Every preset runs through exactly the same code path as the free sandbox. Nothing in the engine knows which planet it is rendering. What differs between worlds is only where the sliders sit, and the table says which slider carries the colour.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Preset</th><th>What sets the colour</th><th>The knob that matters</th><th>Reads as</th></tr></thead>
+    <tbody>
+      <tr><td>Earth</td><td>Rayleigh λ⁻⁴ on a 1 bar N₂ column, τ<sub>R</sub>(550) ≈ 0.097, almost no haze</td><td>Pressure. Watch the τ<sub>R</sub> readout: 1 bar is the sweet spot where blue is scattered strongly but not yet self-shielded</td><td>Blue zenith, pale horizon, red sun at sunset</td></tr>
+      <tr><td>Mars</td><td>6 mbar of CO₂ gives τ<sub>R</sub>(550) ≈ 0.0014, three hundred times weaker than the dust (haze 0.5, ω ≈ 0.55)</td><td>Pressure again. Mars fails to be blue on <em>column density</em>, not chemistry: switch its gas to N₂ and nothing changes</td><td>Butterscotch, low saturation</td></tr>
+      <tr><td>Titan</td><td>Haze τ ≈ 8 with dark aerosols: the light you see has already crossed airmasses of haze that eats blue first, then multiple scattering (blend ≈ 0.7) washes it toward sunlight</td><td>Haze optical depth. Drop it to 1 and the orange collapses to grey-white</td><td>Peach-orange, dim (0.011 S⊕)</td></tr>
+      <tr><td>Archean Earth</td><td>Same N₂ column as today under a 5400 K younger Sun, plus a dark organic haze at τ ≈ 3 and 1.5 % CH₄</td><td>Haze darkness. Bright haze at the same τ gives a white sky; sooty haze gives orange</td><td>Orange-tan, no blue anywhere</td></tr>
+      <tr><td>Lava world</td><td>A 2400 K surface out-radiates the star. Absorbing haze re-emits that glow into the sky (thermal term, weighted by 1 − e<sup>−τ<sub>abs</sub></sup>)</td><td>Surface temperature. Below about 1200 K the glow vanishes and the thin N₂ sky returns</td><td>Incandescent orange-red dome, lux off the chart</td></tr>
+      <tr><td>M-dwarf terrestrial</td><td>A 2550 K star has almost no blue to scatter. Rayleigh still prefers blue, but it is scattering a red-orange illuminant</td><td>The Eye toggle. Camera: pale peach. Adapted eye: the star's white is divided out and the sky is blue again</td><td>Depends entirely on adaptation</td></tr>
+      <tr><td>Ice giant</td><td>Deep H₂ column (10 bar, k = 0.22) with 3 % CH₄: methane bands remove 600 to 730 nm from the transmitted and scattered light, so even the sun disc goes green-white</td><td>Methane. Slide it to zero and the sky goes from cyan-blue to plain Rayleigh blue with a whiter horizon</td><td>Cyan-blue</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>The pipeline</h2>
+  <p>Everything flows one direction. No feedback loops, no solving for equilibrium, no radiative transfer solver. Tags mark which steps are physics and which are fitted.</p>
+  <ol class="pipe">
+    <li><strong>Illuminant.</strong> Normalised Planck curve at the star temperature, scaled by insolation to W/m²/nm at the top of the atmosphere. No absorption lines. <span class="tag fp">first-principles</span></li>
+    <li><strong>Rayleigh optical depth.</strong> τ<sub>R</sub>(λ) = 0.0973 · k<sub>gas</sub> · (P/P⊕) · (550/λ)⁴, with 0.0973 Earth's sea-level Rayleigh optical depth at 550 nm. <span class="tag fp">λ⁻⁴</span> The per-gas factors N₂ 1.0, CO₂ 2.4, H₂ 0.22, H₂O 0.6 come from squared refractivity ratios. <span class="tag fit">fitted</span></li>
+    <li><strong>Methane absorption.</strong> Empirical band curve, zero below 600 nm, rising to a strong cut at 730 nm, scaled by mixing ratio and column. Pure absorber: it removes light, it never adds scattering. <span class="tag fit">fitted</span></li>
+    <li><strong>Haze.</strong> Optical depth with a mild (550/λ)¹ dependence, single-scattering albedo from the darkness slider (0.20 sooty to 0.99 bright at 550 nm, absorption tilted toward blue like real soot, tholin and iron-oxide dust), Henyey-Greenstein phase function with g = 0.7. <span class="tag fit">fitted</span></li>
+    <li><strong>Airmass.</strong> Kasten-Young from elevation, clamped at 40. Below 0° the direct beam fades to zero by −6°; the page cuts at −10° because plane-parallel twilight is wrong. <span class="tag fp">first-principles</span></li>
+    <li><strong>Radiance.</strong> Exact single-scattering slab solution for 8 view zenith angles (0° to 88°) in three azimuths (toward the sun, 90°, away): incident irradiance × phase function at the sun-view scattering angle × albedo × the slab geometry factor m<sub>v</sub>(e<sup>−τm<sub>s</sub></sup> − e<sup>−τm<sub>v</sub></sup>)/(m<sub>v</sub> − m<sub>s</sub>). <span class="tag fp">first-principles</span></li>
+    <li><strong>Multiple-scattering correction.</strong> When τ<sub>total</sub>(550) exceeds 0.5, chromaticity is blended toward the illuminant's own chromaticity by a factor rising to 0.85 at τ = 10. This is the largest approximation on the page: a desaturation hack standing in for successive orders of scattering. <span class="tag fit">fitted</span></li>
+    <li><strong>Thermal emission.</strong> Above 900 K the surface Planck curve is added, weighted by 1 − e<sup>−τ<sub>abs</sub>·m</sup> over the absorbing (non-scattering) part of the column. Below 900 K it is invisible and skipped. <span class="tag fp">first-principles</span></li>
+    <li><strong>Colour.</strong> Integrate against the CIE 1931 2° colour-matching functions (embedded, 5 nm, 380 to 730 nm), preserve chromaticity, convert to linear sRGB with D65 primaries, desaturate toward white when out of gamut rather than clamping per channel, then sRGB gamma. <span class="tag fp">first-principles</span></li>
+    <li><strong>Adaptation.</strong> Camera mode assumes D65 and applies nothing. Adapted-eye mode applies a von Kries (Bradford) transform from the star's white point to D65. <span class="tag fp">first-principles</span></li>
+  </ol>
+
+  <h2>Why Earth is blue, in three lines</h2>
+  <p>Rayleigh scattering goes as λ⁻⁴, so 450 nm light is scattered about 4.4 times more than 650 nm light. Sunlight is a 5772 K Planck curve that already peaks in the green and falls off in the violet, and the CIE ȳ curve says the eye is nearly blind below 420 nm, so the scattered spectrum, when integrated, lands at a chromaticity of roughly x = 0.25, y = 0.26: a sky blue, not violet. Toward the horizon the view path crosses many airmasses, blue is scattered out again before it reaches you, and the colour whitens.</p>
+
+  <h2>Why Mars is not blue</h2>
+  <p>Set the Mars preset and read the pressure panel. At 6 mbar the Rayleigh optical depth at 550 nm is about 0.0014. The dust haze is 0.5. Molecular scattering is losing by a factor of several hundred, so the sky is whatever the dust makes it, and iron-oxide dust absorbs blue. Switch Mars to N₂, or to H₂O, and the colour does not move. Now drag the pressure to 1 bar and Mars goes blue with CO₂ still selected. The lesson is in the τ<sub>R</sub> readout, not in the chemistry.</p>
+
+  <h2>The self-check you can see</h2>
+  <p>The sun disc is drawn in the <em>transmitted</em> beam colour, the illuminant attenuated by e<sup>−τ(λ)·m</sup>, while the dome is the <em>scattered</em> colour. They are computed separately from the same τ(λ). At an Earth sunset the two must come apart: red disc, blue-then-orange sky. If they ever agree at low sun, the engine is broken.</p>
+
+  <details class="acc">
+    <summary>How accurate is this?</summary>
+    <div class="callout">
+      <p><strong>First-principles</strong> (the equation is the real one, only the geometry is simplified): Rayleigh λ⁻⁴ scaling, the Planck illuminant and thermal term, the exact single-scattering slab solution, Kasten-Young airmass, CIE 1931 integration, the XYZ to sRGB matrix, Bradford chromatic adaptation, the lux integral (683 lm/W × ȳ).</p>
+      <p><strong>Fitted</strong> (a number or a shape chosen to look right, not derived): the per-gas scattering coefficients, the methane band curve and its strength constant, the haze wavelength exponent, the haze albedo range and its blue-tilted absorption, the Henyey-Greenstein asymmetry g = 0.7, the multiple-scattering chromaticity blend (its 0.5 threshold, its 0.85 ceiling and its linear ramp), the dome tone curve, and every preset value.</p>
+      <p>Known omissions: no Mie theory or aerosol size distributions, no ozone Chappuis band (real Earth twilight is bluer than this), no spherical-shell geometry (so twilight is wrong and cut at −10°), no polarisation, no clouds, no surface reflection into the sky, no equilibrium temperature, no check that the world could exist. Real Mars dust and Titan tholins have albedo spectra measured across many wavelengths; here they are one number and one tilt.</p>
+      <p>The reason to take the invented worlds semi-seriously: Earth and Mars are not special-cased anywhere. They are produced by the same equations, with the same fitted constants, that produce the lava world and the M-dwarf sky. Add <code>?test</code> to the URL to see the regression harness assert that Earth comes out blue, its sunset red, Mars butterscotch and Titan orange, with the actual hex values printed. If that harness ever fails, the presets are not to be adjusted to hide it.</p>
+    </div>
+  </details>
+
+  <h2>Things worth trying</h2>
+  <ul>
+    <li>Earth, then drag the sun to 2°. The disc goes red before the sky does. Drag to −4° and watch the beam fade (that fade is the wrong part).</li>
+    <li>Earth at 1 bar, then push pressure to 10 bar. Saturation falls: blue is now scattered out of the view path before it arrives, and the multiple-scattering blend starts. A thicker atmosphere is a paler one.</li>
+    <li>Mars, then toggle the gas. Nothing. Then pressure to 1 bar. Blue.</li>
+    <li>M-dwarf, then flip Camera to Adapted eye. This is the whole argument about whether an alien sky "is" blue.</li>
+    <li>Titan, then push haze darkness to bright. Orange becomes white: the colour was in the absorption, not the scattering.</li>
+    <li>Any world, methane to 5 %, pressure to 30 bar of H₂. Red is eaten, the sky is cyan. The same slider at 1.5 % under Archean haze barely moves the colour, because the methane only bites above 600 nm where the haze has already turned the sky orange.</li>
+  </ul>
+
+  <section class="related">
+    <h2>Related</h2>
+    <ul>
+      <li><a href="celestial-navigation.html">Celestial navigation</a>: measuring the sun's elevation the engine takes as input</li>
+      <li><a href="geoengineering-approaches.html">Geoengineering approaches</a>: stratospheric aerosols are a deliberate haze slider</li>
+      <li><a href="sensors-cameras-lidar-radar-imu-gps.html">Sensors: cameras, lidar, radar</a>: white balance is chromatic adaptation done by a chip</li>
+      <li><a href="quantum-physics-vs-quantum-bullshit.html">Quantum physics vs quantum bullshit</a>: knowing which parts of a model are load-bearing</li>
+    </ul>
+  </section>
+</section>
+
+<p class="author-byline" style="max-width:70ch;margin:1.5rem auto;text-align:center;font-size:0.92em;">David Veksler is a Principal AI Engineer in Denver. He leads agentic AI engineering at Antech, a Mars company, and builds AI platforms for regulated financial firms. This page was produced by a governed, multi-agent Claude Code pipeline with a git audit trail. <a href="how-its-built.html">How it's built</a> <a href="https://davidveksler.com/work/?ref=cheatsheets">Case studies</a></p>
+
+<footer><div class="narrow" data-site-build-note>Sky Colour Sandbox · An explanatory toy, not a radiative transfer code. Plane-parallel single scattering with a fitted multiple-scattering blend; every constant is tagged on the page. By <a href="https://davidveksler.com/?ref=cheatsheets">David Veksler</a>.</div><nav class="cs-breadcrumb" data-site-breadcrumb aria-label="Breadcrumb" style="margin:1.25rem auto 0;max-width:72ch;text-align:center;font-size:.88em;line-height:1.6;">
+  <a href="./">Cheat sheets</a> <span aria-hidden="true">&rsaquo;</span> <a href="engineering-science">Engineering &amp; Science cheat sheets</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Sky Colour Sandbox: Why Is the Sky Blue on Any Planet?</span>
+</nav>
+<script type="application/ld+json" data-site-breadcrumb-ld>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Cheat sheets","item":"https://cheatsheets.davidveksler.com/"},{"@type":"ListItem","position":2,"name":"Engineering & Science","item":"https://cheatsheets.davidveksler.com/engineering-science"},{"@type":"ListItem","position":3,"name":"Sky Colour Sandbox: Why Is the Sky Blue on Any Planet?"}]}</script>
+</footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- wavelength grid: 380 to 730 nm, 5 nm, 71 samples ---------- */
+const N = 71, DL = 5;
+const LAM = new Float64Array(N);
+for (let i = 0; i < N; i++) LAM[i] = 380 + DL * i;
+const I550 = 34; // LAM[34] === 550
+const I450 = 14; // LAM[14] === 450
+
+/* CIE 1931 2 degree colour-matching functions, x y z per row, 380..730 nm at 5 nm. */
+const CMF = [
+0.001368,0.000039,0.006450, 0.002236,0.000064,0.010550, 0.004243,0.000120,0.020050, 0.007650,0.000217,0.036210,
+0.014310,0.000396,0.067850, 0.023190,0.000640,0.110200, 0.043510,0.001210,0.207400, 0.077630,0.002180,0.371300,
+0.134380,0.004000,0.645600, 0.214770,0.007300,1.039050, 0.283900,0.011600,1.385600, 0.328500,0.016840,1.622960,
+0.348280,0.023000,1.747060, 0.348060,0.029800,1.782600, 0.336200,0.038000,1.772110, 0.318700,0.048000,1.744100,
+0.290800,0.060000,1.669200, 0.251100,0.073900,1.528100, 0.195360,0.090980,1.287640, 0.142100,0.112600,1.041900,
+0.095640,0.139020,0.812950, 0.057950,0.169300,0.616200, 0.032010,0.208020,0.465180, 0.014700,0.258600,0.353300,
+0.004900,0.323000,0.272000, 0.002400,0.407300,0.212300, 0.009300,0.503000,0.158200, 0.029100,0.608200,0.111700,
+0.063270,0.710000,0.078250, 0.109600,0.793200,0.057250, 0.165500,0.862000,0.042160, 0.225750,0.914850,0.029840,
+0.290400,0.954000,0.020300, 0.359700,0.980300,0.013400, 0.433450,0.994950,0.008750, 0.512050,1.000000,0.005750,
+0.594500,0.995000,0.003900, 0.678400,0.978600,0.002750, 0.762100,0.952000,0.002100, 0.842500,0.915400,0.001800,
+0.916300,0.870000,0.001650, 0.978600,0.816300,0.001400, 1.026300,0.757000,0.001100, 1.056700,0.694900,0.001000,
+1.062200,0.631000,0.000800, 1.045600,0.566800,0.000600, 1.002600,0.503000,0.000340, 0.938400,0.441200,0.000240,
+0.854450,0.381000,0.000190, 0.751400,0.321000,0.000100, 0.642400,0.265000,0.000050, 0.541900,0.217000,0.000030,
+0.447900,0.175000,0.000020, 0.360800,0.138200,0.000010, 0.283500,0.107000,0.000000, 0.218700,0.081600,0.000000,
+0.164900,0.061000,0.000000, 0.121200,0.044580,0.000000, 0.087400,0.032000,0.000000, 0.063600,0.023200,0.000000,
+0.046770,0.017000,0.000000, 0.032900,0.011920,0.000000, 0.022700,0.008210,0.000000, 0.015840,0.005723,0.000000,
+0.011359,0.004102,0.000000, 0.008111,0.002929,0.000000, 0.005790,0.002091,0.000000, 0.004109,0.001484,0.000000,
+0.002899,0.001047,0.000000, 0.002049,0.000740,0.000000, 0.001440,0.000520,0.000000];
+
+/* ---------- physical constants ---------- */
+const C1 = 1.191042e-16;   // 2hc^2, W m^2
+const C2 = 1.438777e-2;    // hc/k, m K
+const SIGMA = 5.670374e-8; // Stefan-Boltzmann
+const S_EARTH = 1361;      // W/m^2 at 1 S_earth
+const TAU_R_EARTH_550 = 0.0973;
+const GAS_K = [1.0, 2.4, 0.22, 0.6];            // N2, CO2, H2, H2O relative Rayleigh cross-section  [fitted]
+const GAS_NAME = ['N₂', 'CO₂', 'H₂', 'H₂O'];
+const EARTH_COLUMN = 2.15e29;                    // molecules/m^2 at 1 bar, Earth gravity
+const CH4_STRENGTH = 25;                         // tau at 730 nm per (mixing fraction x bar)          [fitted]
+const HG_G = 0.7;                                // Henyey-Greenstein asymmetry                        [fitted]
+const HAZE_TILT = 1.5;                           // absorption ~ (550/lambda)^tilt around 550 nm       [fitted]
+const VIEW_Z = [0, 12.571, 25.143, 37.714, 50.286, 62.857, 75.429, 88]; // view zenith angles, degrees
+const AZ = [0, 90, 180];                          // azimuth from the sun, degrees
+const D65 = [0.95047, 1.0, 1.08883];
+
+/* Planck spectral radiance, W / (m^2 sr nm) */
+function planck(lamNm, T) {
+  const l = lamNm * 1e-9;
+  const x = C2 / (l * T);
+  if (x > 700) return 0;
+  return C1 / Math.pow(l, 5) / Math.expm1(x) * 1e-9;
+}
+
+/* Top-of-atmosphere spectral irradiance for a star of temperature T at `insol` Earth insolations */
+function illuminant(T, insol) {
+  const F = new Float64Array(N);
+  const scale = insol * S_EARTH * Math.PI / (SIGMA * Math.pow(T, 4));
+  for (let i = 0; i < N; i++) F[i] = planck(LAM[i], T) * scale;
+  return F;
+}
+
+/* Kasten-Young 1989 airmass from elevation in degrees, clamped at 40 */
+function airmass(elevDeg) {
+  if (elevDeg <= 0) return 40;
+  const h = elevDeg;
+  const m = 1 / (Math.sin(h * Math.PI / 180) + 0.50572 * Math.pow(h + 6.07995, -1.6364));
+  return Math.min(40, m);
+}
+
+/* Methane band shape: 0 below 600 nm, cubic rise to 1 at 730 nm plus a weak 619 nm bump. [fitted] */
+function ch4Shape(lam) {
+  if (lam < 600) return 0;
+  const t = (lam - 600) / 130;
+  return t * t * t + 0.04 * Math.exp(-((lam - 619) * (lam - 619)) / (2 * 7 * 7));
+}
+
+function phaseRayleigh(cosT) { return 3 / (16 * Math.PI) * (1 + cosT * cosT); }
+function phaseHG(cosT) {
+  const g = HG_G;
+  return (1 - g * g) / (4 * Math.PI * Math.pow(1 + g * g - 2 * g * cosT, 1.5));
+}
+
+/* Exact plane-parallel single-scatter slab factor for optical depth tau, view airmass mv, sun airmass ms */
+function slab(tau, mv, ms) {
+  if (Math.abs(mv - ms) < 1e-6) return mv * tau * Math.exp(-tau * mv);
+  return mv * (Math.exp(-tau * ms) - Math.exp(-tau * mv)) / (mv - ms);
+}
+
+/* ---------- colour ---------- */
+function integrateXYZ(L) {
+  let X = 0, Y = 0, Z = 0;
+  for (let i = 0; i < N; i++) { const v = L[i] * DL; X += v * CMF[3 * i]; Y += v * CMF[3 * i + 1]; Z += v * CMF[3 * i + 2]; }
+  return [X, Y, Z];
+}
+function xyOf(XYZ) { const s = XYZ[0] + XYZ[1] + XYZ[2]; return s > 0 ? [XYZ[0] / s, XYZ[1] / s] : [0.3127, 0.3290]; }
+function xyYtoXYZ(x, y, Y) { return y > 0 ? [x * Y / y, Y, (1 - x - y) * Y / y] : [0, 0, 0]; }
+
+const M_XYZ2RGB = [3.2406, -1.5372, -0.4986, -0.9689, 1.8758, 0.0415, 0.0557, -0.2040, 1.0570];
+function xyz2lin(XYZ) {
+  const m = M_XYZ2RGB;
+  return [m[0] * XYZ[0] + m[1] * XYZ[1] + m[2] * XYZ[2],
+          m[3] * XYZ[0] + m[4] * XYZ[1] + m[5] * XYZ[2],
+          m[6] * XYZ[0] + m[7] * XYZ[1] + m[8] * XYZ[2]];
+}
+/* Out-of-gamut handling: pull toward the luminance-matched grey until every channel is in [0,1]. */
+function fitGamut(rgb) {
+  let [r, g, b] = rgb;
+  const Y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const mn = Math.min(r, g, b);
+  if (mn < 0 && Y > 0) { const k = Y / (Y - mn); r = Y + (r - Y) * k; g = Y + (g - Y) * k; b = Y + (b - Y) * k; }
+  else if (mn < 0) { r = g = b = 0; }
+  const mx = Math.max(r, g, b);
+  if (mx > 1) {
+    if (Y >= 1) { r = g = b = 1; }
+    else { const k = (1 - Y) / (mx - Y); r = Y + (r - Y) * k; g = Y + (g - Y) * k; b = Y + (b - Y) * k; }
+  }
+  return [r, g, b];
+}
+function gamma(c) { return c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055; }
+function toHex(rgbLin) {
+  const f = fitGamut(rgbLin);
+  return '#' + f.map(c => Math.round(gamma(Math.max(0, Math.min(1, c))) * 255).toString(16).padStart(2, '0')).join('');
+}
+/* Negative-channel fix only (scale-invariant): pull toward the luminance-matched grey until min channel is 0 */
+function desatNeg(rgb) {
+  let [r, g, b] = rgb;
+  const Y = 0.2126 * r + 0.7152 * g + 0.0722 * b, mn = Math.min(r, g, b);
+  if (mn >= 0) return rgb;
+  if (!(Y > 0)) return [0, 0, 0];
+  const k = Y / (Y - mn);
+  return [Y + (r - Y) * k, Y + (g - Y) * k, Y + (b - Y) * k];
+}
+/* Chromaticity-only swatch: fix negatives first (absolute scale is irrelevant), then scale so the brightest channel is `peak` */
+function swatchHex(XYZ, peak) {
+  if (!(XYZ[1] > 0)) return '#000000';
+  const lin = desatNeg(xyz2lin(XYZ));
+  const mx = Math.max(lin[0], lin[1], lin[2]);
+  if (mx <= 0) return '#000000';
+  return toHex(lin.map(c => c * peak / mx));
+}
+function hexToHSV(hex) {
+  const r = parseInt(hex.slice(1, 3), 16) / 255, g = parseInt(hex.slice(3, 5), 16) / 255, b = parseInt(hex.slice(5, 7), 16) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d > 0) {
+    if (mx === r) h = 60 * (((g - b) / d) % 6);
+    else if (mx === g) h = 60 * ((b - r) / d + 2);
+    else h = 60 * ((r - g) / d + 4);
+    if (h < 0) h += 360;
+  }
+  return { h, s: mx > 0 ? d / mx : 0, v: mx, min: mn };
+}
+
+/* Bradford von Kries adaptation from a source white to D65 */
+const BFD = [0.8951, 0.2664, -0.1614, -0.7502, 1.7135, 0.0367, 0.0389, -0.0685, 1.0296];
+const BFD_INV = [0.9869929, -0.1470543, 0.1599627, 0.4323053, 0.5183603, 0.0492912, -0.0085287, 0.0400428, 0.9684867];
+function mul3(m, v) { return [m[0] * v[0] + m[1] * v[1] + m[2] * v[2], m[3] * v[0] + m[4] * v[1] + m[5] * v[2], m[6] * v[0] + m[7] * v[1] + m[8] * v[2]]; }
+function adaptMatrix(srcWhite) {
+  const s = mul3(BFD, srcWhite), d = mul3(BFD, D65);
+  const D = [d[0] / s[0], 0, 0, 0, d[1] / s[1], 0, 0, 0, d[2] / s[2]];
+  const t = mmul(D, BFD);
+  return mmul(BFD_INV, t);
+}
+function mmul(a, b) {
+  const r = new Array(9);
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) r[3 * i + j] = a[3 * i] * b[j] + a[3 * i + 1] * b[3 + j] + a[3 * i + 2] * b[6 + j];
+  return r;
+}
+
+/* ---------- the engine ---------- */
+/* state: {T, S, P (bar), gas (0..3), ch4 (%), haze, dark (0..1), Ts, elev, adapt (0/1)} */
+function compute(st) {
+  const F = illuminant(st.T, st.S);
+  const k = GAS_K[st.gas];
+  const omega0 = 0.20 + 0.79 * st.dark;              // haze single-scattering albedo at 550 nm  [fitted]
+  const tauR = new Float64Array(N), tauH = new Float64Array(N), tauC = new Float64Array(N), tau = new Float64Array(N), omegaH = new Float64Array(N);
+  for (let i = 0; i < N; i++) {
+    const r = 550 / LAM[i];
+    tauR[i] = TAU_R_EARTH_550 * k * st.P * r * r * r * r;   // Rayleigh lambda^-4  [first-principles]
+    tauH[i] = st.haze * r;
+    tauC[i] = CH4_STRENGTH * (st.ch4 / 100) * st.P * ch4Shape(LAM[i]);
+    tau[i] = tauR[i] + tauH[i] + tauC[i];
+    // Dark aerosols absorb blue more than red (soot, tholins, Fe-oxide dust): tilt the absorption around 550 nm. [fitted]
+    omegaH[i] = Math.max(0.02, Math.min(1, 1 - (1 - omega0) * Math.pow(r, HAZE_TILT)));
+  }
+
+  // sun geometry; below the horizon the direct beam fades linearly to zero at -6 deg (twilight is wrong by design)
+  const es = st.elev;
+  const ms = airmass(es);
+  const twilight = es >= 0 ? 1 : Math.max(0, 1 + es / 6);
+  const sinEs = Math.sin(es * Math.PI / 180), cosEs = Math.cos(es * Math.PI / 180);
+
+  // Multiple-scattering desaturation hack. THE single biggest approximation on the page: instead of computing
+  // successive orders of scattering, blend chromaticity toward the illuminant's own chromaticity once the
+  // vertical column is optically thick. Ramp: 0 at tau<=0.5, 0.85 at tau=10, linear between. Luminance untouched.
+  // The ramp is keyed to tau at 450 nm, the blue end, because that is where the column goes thick first: keyed
+  // to 550 nm, a 30 bar N2 world came out at sRGB saturation 0.75 orange from single-scatter self-shielding alone.
+  const tau550 = tau[I550];
+  const tauBlue = tau[I450];
+  const blend = tauBlue > 0.5 ? 0.85 * Math.min(1, (tauBlue - 0.5) / 9.5) : 0;
+  const xyIll = xyOf(integrateXYZ(F));
+
+  const starWhite = (() => { const w = integrateXYZ(F); return [w[0] / w[1], 1, w[2] / w[1]]; })();
+  const cat = st.adapt ? adaptMatrix(starWhite) : null;
+
+  const thermal = st.Ts > 900;
+  const Bsurf = thermal ? LAM.map(l => planck(l, st.Ts)) : null;
+
+  const L = new Float64Array(N);
+  const cols = AZ.map(az => {
+    const cosAz = Math.cos(az * Math.PI / 180);
+    return VIEW_Z.map(z => {
+      const ev = 90 - z;
+      const mv = airmass(ev);
+      const sinEv = Math.sin(ev * Math.PI / 180), cosEv = Math.cos(ev * Math.PI / 180);
+      const cosT = sinEv * sinEs + cosEv * cosEs * cosAz;   // scattering angle between view and sun directions
+      const pR = phaseRayleigh(cosT), pH = phaseHG(cosT);
+      for (let i = 0; i < N; i++) {
+        const src = tau[i] > 0 ? (tauR[i] * pR + omegaH[i] * tauH[i] * pH) / tau[i] : 0; // albedo x phase, per unit tau
+        let v = F[i] * twilight * src * slab(tau[i], mv, ms);
+        if (thermal) {
+          const tauAbs = tauC[i] + (1 - omegaH[i]) * tauH[i];
+          v += Bsurf[i] * (1 - Math.exp(-tauAbs * mv));
+        }
+        L[i] = v;
+      }
+      const raw = integrateXYZ(L);
+      let XYZ = raw;
+      if (blend > 0 && raw[1] > 0) {
+        const xy = xyOf(raw);
+        XYZ = xyYtoXYZ(xy[0] + (xyIll[0] - xy[0]) * blend, xy[1] + (xyIll[1] - xy[1]) * blend, raw[1]);
+      }
+      if (cat) XYZ = mul3(cat, XYZ);
+      return { z, XYZ, Yraw: raw[1] };
+    });
+  });
+
+  // transmitted beam (sun disc colour): illuminant attenuated along the sun path
+  const Tb = new Float64Array(N);
+  for (let i = 0; i < N; i++) Tb[i] = F[i] * Math.exp(-tau[i] * ms);
+  let sunXYZ = integrateXYZ(Tb);
+  if (cat) sunXYZ = mul3(cat, sunXYZ);
+
+  // ground illuminance in lux: direct beam on a horizontal surface plus the hemispheric integral of sky radiance
+  const luxDirect = 683 * sunXYZ[1] * Math.max(0, sinEs) * twilight; // sunXYZ[1] is int(T*ybar), in W/m^2 per beam-normal
+  const dz = (VIEW_Z[1] - VIEW_Z[0]) * Math.PI / 180;
+  let luxDiffuse = 0;
+  for (let j = 0; j < VIEW_Z.length; j++) {
+    const zr = VIEW_Z[j] * Math.PI / 180;
+    const Ybar = (cols[0][j].Yraw + 2 * cols[1][j].Yraw + cols[2][j].Yraw) / 4; // azimuthal average of the three columns
+    luxDiffuse += 683 * Ybar * 2 * Math.PI * Math.cos(zr) * Math.sin(zr) * dz;
+  }
+
+  return {
+    cols, sunXYZ, starWhite, blend, tau550, tauR550: tauR[I550], tauH550: tauH[I550],
+    column: EARTH_COLUMN * st.P, columnRel: k * st.P,
+    lux: luxDirect + luxDiffuse, luxDirect, luxDiffuse, twilight
+  };
+}
+
+/* ---------- presets (fitted, allowed to be tuned; the engine is not) ---------- */
+const PRESETS = {
+  earth:    { T: 5772, S: 1.0,   P: 1.0,   gas: 0, ch4: 0,   haze: 0.03, dark: 1.0,  Ts: 288,  elev: 45 },
+  mars:     { T: 5772, S: 0.43,  P: 0.006, gas: 1, ch4: 0,   haze: 0.5,  dark: 0.45, Ts: 210,  elev: 45 },
+  lava:     { T: 5772, S: 3.0,   P: 0.1,   gas: 0, ch4: 0,   haze: 0.3,  dark: 0.2,  Ts: 2400, elev: 45 },
+  mdwarf:   { T: 2550, S: 0.65,  P: 1.0,   gas: 0, ch4: 0,   haze: 0.1,  dark: 1.0,  Ts: 280,  elev: 45 },
+  archean:  { T: 5400, S: 0.8,   P: 1.0,   gas: 0, ch4: 1.5, haze: 3.0,  dark: 0.25, Ts: 290,  elev: 45 },
+  titan:    { T: 5772, S: 0.011, P: 1.5,   gas: 0, ch4: 5.0, haze: 5,    dark: 0.3,  Ts: 94,   elev: 45 },
+  icegiant: { T: 5772, S: 0.1,   P: 10,    gas: 2, ch4: 3,   haze: 0.2,  dark: 1.0,  Ts: 200,  elev: 45 }
+};
+
+/* ---------- UI ---------- */
+const $ = id => document.getElementById(id);
+const els = { starTemp: $('starTemp'), insol: $('insol'), pressure: $('pressure'), ch4: $('ch4'), haze: $('haze'), dark: $('dark'), surfT: $('surfT'), elev: $('elev') };
+let adapt = 0;
+
+function readState() {
+  return {
+    T: Math.round(Math.pow(10, +els.starTemp.value)),
+    S: +els.insol.value,
+    P: Math.pow(10, +els.pressure.value) / 1000,
+    gas: +document.querySelector('input[name=gas]:checked').value,
+    ch4: +els.ch4.value,
+    haze: +els.haze.value,
+    dark: +els.dark.value,
+    Ts: +els.surfT.value,
+    elev: +els.elev.value,
+    adapt
+  };
+}
+function writeState(st) {
+  els.starTemp.value = Math.log10(st.T);
+  els.insol.value = st.S;
+  els.pressure.value = Math.log10(st.P * 1000);
+  document.querySelector(`input[name=gas][value="${st.gas}"]`).checked = true;
+  els.ch4.value = st.ch4; els.haze.value = st.haze; els.dark.value = st.dark; els.surfT.value = st.Ts; els.elev.value = st.elev;
+  adapt = st.adapt ? 1 : 0;
+  $('mode-camera').setAttribute('aria-pressed', adapt ? 'false' : 'true');
+  $('mode-eye').setAttribute('aria-pressed', adapt ? 'true' : 'false');
+}
+
+const fmtP = P => P >= 1 ? `${P.toFixed(P < 10 ? 2 : 1)} bar` : P >= 0.01 ? `${(P * 1000).toFixed(0)} mbar` : `${(P * 1000).toFixed(1)} mbar`;
+const fmtLux = v => v >= 1e6 ? `${(v / 1e6).toFixed(2)} Mlx` : v >= 1000 ? `${Math.round(v).toLocaleString('en-US')} lx` : v >= 1 ? `${v.toFixed(1)} lx` : `${v.toPrecision(2)} lx`;
+
+const dome = $('dome'), ctx = dome.getContext('2d');
+const off = document.createElement('canvas'); off.width = 320; off.height = 180;
+const octx = off.getContext('2d');
+const img = octx.createImageData(off.width, off.height);
+
+function lerp3(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+
+function render(st, R) {
+  // exposure: auto-expose so the mean sky luminance lands on mid-grey, then a luminance-only Reinhard curve with a
+  // white point so the solar aureole rolls off instead of clipping. Chromaticity is untouched. [fitted, display only]
+  let logSum = 0, n = 0;
+  for (const col of R.cols) for (const s of col) if (s.XYZ[1] > 0) { logSum += Math.log(s.XYZ[1]); n++; }
+  const Ykey = n ? Math.exp(logSum / n) : 0;   // log-average luminance, the usual auto-exposure key
+  const expo = Ykey > 0 ? 0.45 / Ykey : 0;
+  const W2 = 9; // white point squared: y = 3 maps to 1.0
+  const tone = Y => { const y = Y * expo; return y * (1 + y / W2) / (1 + y); };
+  const toLin = XYZ => { const y = XYZ[1]; if (!(y > 0)) return [0, 0, 0]; const s = tone(y) / y; return xyz2lin([XYZ[0] * s, XYZ[1] * s, XYZ[2] * s]); };
+  const linCols = R.cols.map(col => col.map(s => toLin(s.XYZ)));
+
+  const W = off.width, H = off.height, hy = Math.round(H * 2 / 3);
+  const sunX = 0.18;
+  const d = img.data;
+  const zStep = VIEW_Z[1] - VIEW_Z[0];
+  for (let y = 0; y < hy; y++) {
+    const z = 90 * y / hy;
+    const fi = Math.min(VIEW_Z.length - 1, z / zStep);
+    const i0 = Math.floor(fi), i1 = Math.min(VIEW_Z.length - 1, i0 + 1), ft = fi - i0;
+    const rows = linCols.map(col => lerp3(col[i0], col[i1], ft));
+    for (let x = 0; x < W; x++) {
+      const xs = x / W;
+      const xp = xs >= sunX ? (xs - sunX) / (1 - sunX) : (sunX - xs) / (1 - sunX); // 0 at the sun, 1 at the far edge
+      const az = xp * 2; // 0..2 across the three azimuth columns
+      const a0 = Math.min(1, Math.floor(az)), at = az - a0;
+      let c = lerp3(rows[a0], rows[a0 + 1], at);
+      c = fitGamut(c);
+      const o = 4 * (y * W + x);
+      d[o] = Math.round(gamma(c[0]) * 255); d[o + 1] = Math.round(gamma(c[1]) * 255); d[o + 2] = Math.round(gamma(c[2]) * 255); d[o + 3] = 255;
+    }
+  }
+  for (let y = hy; y < H; y++) for (let x = 0; x < W; x++) { const o = 4 * (y * W + x); d[o] = d[o + 1] = d[o + 2] = 97; d[o + 3] = 255; } // 12% grey ground
+  octx.putImageData(img, 0, 0);
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(off, 0, 0, dome.width, dome.height);
+
+  // sun disc in the transmitted beam colour, at its elevation
+  if (st.elev >= 0 && R.twilight > 0) {
+    const HY = dome.height * 2 / 3;
+    const sy = HY - (st.elev / 90) * HY, sx = sunX * dome.width, r = dome.width * 0.022;
+    const sunHex = swatchHex(R.sunXYZ, 1.0);
+    const glow = ctx.createRadialGradient(sx, sy, r * 0.6, sx, sy, r * 5);
+    glow.addColorStop(0, sunHex + '99'); glow.addColorStop(1, sunHex + '00');
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(sx, sy, r * 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = sunHex; ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#616161'; ctx.fillRect(0, HY, dome.width, dome.height - HY);
+  }
+}
+
+function updateReadouts(st, R) {
+  $('starTemp-out').firstChild.nodeValue = `${st.T.toLocaleString('en-US')} K `;
+  $('starchip').style.background = swatchHex(R.starWhite, 0.95);
+  $('insol-out').textContent = `${st.S.toFixed(2)} S⊕`;
+  $('pressure-out').textContent = fmtP(st.P);
+  $('ro-col').textContent = R.column.toExponential(2).replace('e+', 'e');
+  $('ro-colrel').textContent = `${R.columnRel < 0.01 ? R.columnRel.toExponential(1) : R.columnRel.toFixed(2)}×`;
+  $('ro-tauR').textContent = R.tauR550 < 0.01 ? R.tauR550.toExponential(2) : R.tauR550.toFixed(3);
+  $('ro-tau').textContent = R.tau550 < 0.01 ? R.tau550.toExponential(2) : R.tau550.toFixed(3);
+  $('ro-blend').textContent = `${Math.round(R.blend * 100)}%`;
+  $('ch4-out').textContent = `${st.ch4.toFixed(2)} %`;
+  $('haze-out').textContent = st.haze.toFixed(2);
+  $('dark-out').textContent = `ω = ${(0.20 + 0.79 * st.dark).toFixed(2)}`;
+  $('surfT-out').textContent = `${st.Ts} K${st.Ts > 900 ? ' · glowing' : ''}`;
+  $('elev-out').textContent = `${st.elev.toFixed(1)}°${st.elev < 0 ? ' (below horizon)' : ''}`;
+
+  const zenith = swatchHex(R.cols[0][0].XYZ, 0.9), horizon = swatchHex(R.cols[0][7].XYZ, 0.9), sun = swatchHex(R.sunXYZ, 0.95);
+  $('sw-zenith').style.background = zenith; $('hex-zenith').textContent = zenith;
+  $('sw-horizon').style.background = horizon; $('hex-horizon').textContent = horizon;
+  $('sw-sun').style.background = sun; $('hex-sun').textContent = sun;
+
+  const lux = R.lux;
+  $('lux-val').textContent = fmtLux(lux);
+  const pos = Math.max(0, Math.min(1, (Math.log10(Math.max(lux, 1e-2)) + 2) / 9));
+  $('lux-needle').style.left = `${pos * 100}%`;
+}
+
+let hashTimer = null;
+function writeHash(st) {
+  clearTimeout(hashTimer);
+  hashTimer = setTimeout(() => {
+    const v = [st.T, st.S, Math.round(st.P * 1000 * 100) / 100, st.gas, st.ch4, st.haze, st.dark, st.Ts, st.elev, st.adapt];
+    history.replaceState(null, '', '#' + v.join(','));
+  }, 300);
+}
+function readHash() {
+  const h = location.hash.slice(1);
+  if (!h) return null;
+  const p = h.split(',').map(Number);
+  if (p.length < 10 || p.some(n => !Number.isFinite(n))) return null;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  return { T: clamp(p[0], 2300, 12000), S: clamp(p[1], 0.1, 3), P: clamp(p[2], 1, 1e5) / 1000, gas: clamp(Math.round(p[3]), 0, 3),
+           ch4: clamp(p[4], 0, 5), haze: clamp(p[5], 0, 10), dark: clamp(p[6], 0, 1), Ts: clamp(p[7], 200, 3000), elev: clamp(p[8], -10, 90), adapt: p[9] ? 1 : 0 };
+}
+
+let activePreset = null;
+function markPreset(name) {
+  activePreset = name;
+  document.querySelectorAll('.presets button').forEach(b => b.setAttribute('aria-pressed', b.dataset.preset === name ? 'true' : 'false'));
+}
+
+function update(fromUser) {
+  const st = readState();
+  const R = compute(st);
+  render(st, R);
+  updateReadouts(st, R);
+  writeHash(st);
+  if (fromUser) markPreset(null);
+}
+
+/* Presets animate the sliders over ~800 ms so the user sees which knobs moved. Animation runs in slider space
+   (log for temperature and pressure). The gas radio switches at the start. */
+let anim = null;
+function applyPreset(name) {
+  const t = PRESETS[name];
+  if (!t) return;
+  if (anim) cancelAnimationFrame(anim);
+  const from = { starTemp: +els.starTemp.value, insol: +els.insol.value, pressure: +els.pressure.value, ch4: +els.ch4.value, haze: +els.haze.value, dark: +els.dark.value, surfT: +els.surfT.value, elev: +els.elev.value };
+  const to = { starTemp: Math.log10(t.T), insol: t.S, pressure: Math.log10(t.P * 1000), ch4: t.ch4, haze: t.haze, dark: t.dark, surfT: t.Ts, elev: t.elev };
+  document.querySelector(`input[name=gas][value="${t.gas}"]`).checked = true;
+  markPreset(name);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const dur = reduce ? 0 : 800, t0 = performance.now();
+  const ease = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const step = now => {
+    const u = dur ? Math.min(1, (now - t0) / dur) : 1, e = ease(u);
+    for (const k in to) els[k].value = from[k] + (to[k] - from[k]) * e;
+    update(false);
+    if (u < 1) anim = requestAnimationFrame(step); else { anim = null; markPreset(name); }
+  };
+  step(t0);
+}
+
+document.querySelectorAll('.presets button').forEach(b => b.addEventListener('click', () => applyPreset(b.dataset.preset)));
+Object.values(els).forEach(el => el.addEventListener('input', () => update(true)));
+document.querySelectorAll('input[name=gas]').forEach(el => el.addEventListener('input', () => update(true)));
+$('mode-camera').addEventListener('click', () => { adapt = 0; $('mode-camera').setAttribute('aria-pressed', 'true'); $('mode-eye').setAttribute('aria-pressed', 'false'); update(false); });
+$('mode-eye').addEventListener('click', () => { adapt = 1; $('mode-camera').setAttribute('aria-pressed', 'false'); $('mode-eye').setAttribute('aria-pressed', 'true'); update(false); });
+$('copylink').addEventListener('click', async () => {
+  const btn = $('copylink');
+  try { await navigator.clipboard.writeText(location.href); btn.textContent = 'Copied'; }
+  catch { btn.textContent = location.href; }
+  setTimeout(() => { btn.textContent = 'Copy link to this sky'; }, 1800);
+});
+window.addEventListener('hashchange', () => { const s = readHash(); if (s) { writeState(s); update(false); } });
+
+/* ---------- regression harness (?test) ---------- */
+function runTests() {
+  const out = [];
+  let earthMarsFailed = false;
+  const line = (ok, name, detail) => { out.push(`${ok ? '<span class="ok">PASS</span>' : '<span class="bad">FAIL</span>'}  ${name}  ${detail}`); return ok; };
+  const zenithHex = st => swatchHex(compute(st).cols[0][0].XYZ, 0.9);
+  const withP = (base, over) => Object.assign({}, base, { adapt: 0 }, over);
+
+  // CIE table sanity: an equal-energy spectrum must land on x = y = 1/3
+  const E = new Float64Array(N).fill(1);
+  const xyE = xyOf(integrateXYZ(E));
+  line(Math.abs(xyE[0] - 1 / 3) < 0.004 && Math.abs(xyE[1] - 1 / 3) < 0.004, 'CIE table: equal-energy chromaticity', `x=${xyE[0].toFixed(4)} y=${xyE[1].toFixed(4)} (want 0.3333)`);
+
+  // Earth zenith, sun 45
+  {
+    const hex = zenithHex(withP(PRESETS.earth, {})); const c = hexToHSV(hex);
+    const ok = c.h >= 200 && c.h <= 240 && c.s > 0.25 && c.min < 200 / 255;
+    if (!line(ok, 'Earth, sun 45°, zenith: hue 200–240, sat > 0.25, not near-white', `${hex} hue=${c.h.toFixed(0)}° sat=${c.s.toFixed(2)}`)) earthMarsFailed = true;
+  }
+  // Earth sunset, horizon toward the sun
+  {
+    const R = compute(withP(PRESETS.earth, { elev: 2 })); const hex = swatchHex(R.cols[0][7].XYZ, 0.9); const c = hexToHSV(hex);
+    const sun = swatchHex(R.sunXYZ, 0.95), cs = hexToHSV(sun);
+    const ok = (c.h < 40 || c.h > 340);
+    if (!line(ok, 'Earth, sun 2°, horizon toward sun: hue < 40° or > 340°', `${hex} hue=${c.h.toFixed(0)}° sat=${c.s.toFixed(2)} · sun disc ${sun} hue=${cs.h.toFixed(0)}°`)) earthMarsFailed = true;
+  }
+  // Mars
+  {
+    const hex = zenithHex(withP(PRESETS.mars, {})); const c = hexToHSV(hex);
+    const ok = c.h >= 20 && c.h <= 60 && c.s >= 0.08 && c.s <= 0.6;
+    if (!line(ok, 'Mars, sun 45°, zenith: hue 20–60, sat 0.08–0.6 (butterscotch)', `${hex} hue=${c.h.toFixed(0)}° sat=${c.s.toFixed(2)}`)) earthMarsFailed = true;
+  }
+  // Titan
+  {
+    const st = withP(PRESETS.titan, {}); const R = compute(st); const hex = swatchHex(R.cols[0][0].XYZ, 0.9); const c = hexToHSV(hex);
+    line(c.h >= 20 && c.h <= 50 && R.blend > 0, 'Titan, sun 45°, zenith: hue 20–50, multi-scatter blend engaged', `${hex} hue=${c.h.toFixed(0)}° sat=${c.s.toFixed(2)} τ550=${R.tau550.toFixed(2)} blend=${R.blend.toFixed(2)}`);
+  }
+  // Monotonicity in pressure. "Blue saturation" = HSV saturation when the hue is blue (180–270°), else 0: past
+  // ~5 bar the zenith passes through white and comes back orange (self-shielding, then the blend), and a
+  // hue-blind saturation metric would count that reddening as blue returning.
+  {
+    const blueSat = hex => { const c = hexToHSV(hex); return c.h >= 180 && c.h <= 270 ? c.s : 0; };
+    const Ps = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0];
+    const sats = Ps.map(P => blueSat(zenithHex(withP(PRESETS.earth, { P }))));
+    let mono = true;
+    for (let i = 1; i < sats.length; i++) if (sats[i] < sats[i - 1] - 0.002) mono = false;
+    const at = P => { const h = zenithHex(withP(PRESETS.earth, { P })); const c = hexToHSV(h); return { s: blueSat(h), txt: `${fmtP(P)}:${blueSat(h).toFixed(3)} (${h} hue ${c.h.toFixed(0)}° sat ${c.s.toFixed(2)})` }; };
+    const a1 = at(1), a3 = at(3), a10 = at(10), a30 = at(30);
+    const down = a3.s < a1.s && a10.s < a3.s && a30.s <= a10.s;
+    line(mono, 'Blue saturation rises monotonically 1 mbar → 1 bar (Earth otherwise)', Ps.map((P, i) => `${fmtP(P)}:${sats[i].toFixed(3)}`).join(' '));
+    line(down, 'Blue saturation falls past ~3 bar', [a1, a3, a10, a30].map(a => a.txt).join('  '));
+  }
+  // informational: every preset's zenith hex in both modes
+  out.push('');
+  for (const name in PRESETS) {
+    const cam = zenithHex(withP(PRESETS[name], {})), eye = zenithHex(withP(PRESETS[name], { adapt: 1 }));
+    const R = compute(withP(PRESETS[name], {}));
+    out.push(`      ${name.padEnd(9)} zenith camera ${cam} (hue ${hexToHSV(cam).h.toFixed(0)}°)  adapted ${eye} (hue ${hexToHSV(eye).h.toFixed(0)}°)  τ550=${R.tau550.toFixed(3)}  lux=${fmtLux(R.lux)}`);
+  }
+  const panel = $('testpanel'); panel.hidden = false;
+  $('testout').innerHTML = out.join('\n') + (earthMarsFailed ? '\n\n<div class="banner">ENGINE FAILURE: Earth or Mars did not pass. Stop and report. Do not tune presets to hide this.</div>' : '\n\n<span class="ok">Earth and Mars pass: the engine is trusted for speculative worlds.</span>');
+  console.log(out.map(s => s.replace(/<[^>]+>/g, '')).join('\n'));
+}
+
+/* ---------- boot ---------- */
+const initial = readHash();
+if (initial) { writeState(initial); update(false); }
+else { writeState(Object.assign({ adapt: 0 }, PRESETS.earth)); markPreset('earth'); update(false); }
+if (new URLSearchParams(location.search).has('test')) runTests();
+})();
+</script>
+</body>
+</html>

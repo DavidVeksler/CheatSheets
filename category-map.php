@@ -191,6 +191,7 @@ return [
     'orbital-rockets-comparison.html' => 'Engineering & Science',
     'quantum-physics-vs-quantum-bullshit.html' => 'Engineering & Science',
     'rockets-and-spaceflight.html' => 'Engineering & Science',
+    'sky-colour-sandbox.html' => 'Engineering & Science',
     'semiconductor-manufacturing.html' => 'Engineering & Science',
     'sensors-cameras-lidar-radar-imu-gps.html' => 'Engineering & Science',
     'space-habitats-life-support.html' => 'Engineering & Science',
