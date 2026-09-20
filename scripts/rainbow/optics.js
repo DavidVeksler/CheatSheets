@@ -125,7 +125,7 @@ const presetN=[[450,1.3396055544134375],[550,1.3346802542039415],[650,1.33166555
 function indexAt(nm){const x=1/(nm*nm),xs=presetN.map(([l])=>1/(l*l));let n=0;for(let i=0;i<3;i++){let L=presetN[i][1];for(let j=0;j<3;j++)if(j!==i)L*=(x-xs[j])/(xs[i]-xs[j]);n+=L;}return n;}
 function spectrum(nm){let r=0,g=0,b=0;if(nm<440){r=(440-nm)/60;b=1;}else if(nm<490){g=(nm-440)/50;b=1;}else if(nm<510){g=1;b=(510-nm)/20;}else if(nm<580){r=(nm-510)/70;g=1;}else if(nm<645){r=1;g=(645-nm)/65;}else r=1;
  const f=nm<420?.45+.55*(nm-400)/20:nm>680?.55+.45*(700-nm)/20:1;return [r,g,b].map(c=>Math.round(255*(.08+.92*Math.pow(c*f,.8))));}
-function heroBow(){const W=1000,H=700,cx=500,cy=780,k=11,rMax=56,stop=(beta,rgb,a)=>({beta,rgb,a});
+function heroBow(elevation=15){const W=1000,H=700,cx=500,horizon=615,k=11,cy=horizon+elevation*k,rMax=56,stop=(beta,rgb,a)=>({beta,rgb,a});
  const primary=[],secondary=[];for(let nm=400;nm<=700;nm+=5){const n=indexAt(nm),rgb=spectrum(nm),w=Math.exp(-Math.pow((nm-560)/110,2)),a=.32+.58*Math.sqrt(w);primary.push(stop(stationary(n,2).beta,rgb,a));secondary.push(stop(stationary(n,3).beta,rgb,a*.42));}
  const pv=primary[0].beta,pr=primary[primary.length-1].beta,sr=Math.min(...secondary.map(s=>s.beta)),sv=Math.max(...secondary.map(s=>s.beta));
  const white=[255,250,240];
@@ -139,9 +139,9 @@ function heroBow(){const W=1000,H=700,cx=500,cy=780,k=11,rMax=56,stop=(beta,rgb,
  const open=(cls,extra='')=>`<svg class="${cls}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax meet" aria-hidden="true" ${extra}>`;
  // The sheet overshoots the viewBox so the hero (overflow hidden) clips it, not the SVG box.
  const sheet=(fill,extra='')=>`<rect x="-1500" y="-1500" width="4000" height="3000" fill="${fill}" ${extra}/>`;
- const bow=open('hero-bow')+`<defs>${grad('hero-bow-grad',bright)}<linearGradient id="hero-bow-fade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${H}"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#fff"/><stop offset=".82" stop-color="#8a8a8a"/><stop offset="1" stop-color="#222"/></linearGradient><mask id="hero-bow-mask" maskUnits="userSpaceOnUse" x="-2000" y="-2000" width="5000" height="5000">${sheet('url(#hero-bow-fade)')}</mask></defs>${sheet('url(#hero-bow-grad)','mask="url(#hero-bow-mask)"')}</svg>`;
+ const bow=open('hero-bow')+`<defs>${grad('hero-bow-grad',bright)}<linearGradient id="hero-bow-fade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${H}"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#fff"/><stop offset=".84" stop-color="#9c9c9c"/><stop offset="1" stop-color="#333"/></linearGradient><mask id="hero-bow-mask" maskUnits="userSpaceOnUse" x="-2000" y="-2000" width="5000" height="5000">${sheet('url(#hero-bow-fade)')}</mask></defs>${sheet('url(#hero-bow-grad)','mask="url(#hero-bow-mask)"')}</svg>`;
  const shade=open('hero-band')+`<defs>${grad('hero-band-grad',band)}</defs>${sheet('url(#hero-band-grad)')}</svg>`;
- return {bow,shade,primary:[pv,pr],secondary:[sr,sv]};}
+ return {bow,shade,primary:[pv,pr],secondary:[sr,sv],geometry:{cx,horizon,k,rMax,W,H}};}
 const api={rad,deg,add,mul,dot,unit,refract,reflect,next,trace,stationary,project,direction,observerState,observerDrop,impactForBeta,svg,drop,cone,side,sky,deflection,wave,skySlice,density,elevated,indexAt,spectrum,heroBow};
 if(typeof module!=='undefined')module.exports=api;else root.Rainbow=api;
 })(typeof window!=='undefined'?window:globalThis);
