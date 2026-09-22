@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Authoritative cross-agent guidance (Claude Code, Codex, Cursor). `CLAUDE.md` and `.cursorrules` point here.
+Authoritative cross-agent guidance (Claude Code, Codex, Cursor). `.cursorrules` points here.
 
 ## Project Overview
 
@@ -16,7 +16,6 @@ A collection of standalone, interactive HTML cheatsheets covering technology, fi
 | [`docs/economics-data-refresh.md`](docs/economics-data-refresh.md) | **Economics data** — Generator command, data vintages, pinned series, QA. |
 | [`docs/newsletter.md`](docs/newsletter.md) | **Newsletter spec** — Resend double opt-in, key-split security, digest routine. |
 | [`docs/seo-progress.md`](docs/seo-progress.md) | **SEO log** — Append-only KPI and traffic measurement history. |
-| [`CLAUDE.md`](CLAUDE.md) | Pointer only (`@AGENTS.md`). |
 | [`TODO/README.md`](TODO/README.md) | **Implementation spec rules** — Anchors, outline-first, definition of done. |
 | `TODO/<topic>.md` | One spec per planned cheatsheet (deleted after shipping). |
 | [`TODO/SPEC-AUDIT.md`](TODO/SPEC-AUDIT.md) | **Spec audit** — Search targeting, outcome, staleness register criteria. |
