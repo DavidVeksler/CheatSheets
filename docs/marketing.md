@@ -5,7 +5,6 @@ Thin router. SEO working doc: [`../TODO/META-seo-planning.md`](../TODO/META-seo-
 ## SEO standards
 
 - Per-page gate `scripts/seo_check.py` (title ≤ 60, description 150-200, canonical, valid JSON-LD) plus OG/X tags, keywords, image alt text, and `TechArticle` JSON-LD matching visible content.
-- Do not add `FAQPage`/`HowTo` schema to chase rich results (deprecated for SERP features).
 - Discovery files: [`../llms.txt`](../llms.txt), [`../llms-full.txt`](../llms-full.txt), `../sitemap.php` (category-priority), `../robots.txt` (points at the sitemap). Verified in Google Search Console.
 
 ## Category hub pages
