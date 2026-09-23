@@ -1,169 +1,76 @@
-# Deployment runbook — cheatsheets.davidveksler.com
+# Deployment runbook: cheatsheets.davidveksler.com
 
-**Production is the live site at `https://cheatsheets.davidveksler.com/`.** This is
-a repo of standalone `.html` / `.php` / `.json` / image files served directly by
-nginx — **there is no build step**. The files in the repo *are* the deployed site,
-so a push to the `production` remote *is* the deploy.
-
-Deploy is wrapped in a guarded script so a bare `git push production` can't ship a
-dirty, divergent, or broken tree. Use it:
+No build step: the repo files are the site, so pushing to the `production` remote is the deploy. Always go through the guarded script:
 
 ```bash
-git push origin main     # GitHub is the source of truth — push there first
-./deploy.sh              # guarded deploy (./deploy.ps1 on PowerShell)
+git push origin main     # GitHub first: live never gets a commit origin lacks
+./deploy.sh              # ./deploy.ps1 on PowerShell; both wrap scripts/deploy.py (stdlib only, no venv)
 ```
 
-`./deploy.sh` and `./deploy.ps1` are thin wrappers around
-[`scripts/deploy.py`](../scripts/deploy.py) (stdlib-only Python — no venv needed).
+## Remotes
 
-## Repositories and remotes
+| Remote | URL |
+|---|---|
+| `origin` | `https://github.com/DavidVeksler/CheatSheets.git` |
+| `production` | `johngalt@direct.vellum.capital:/var/www/cheatsheets.davidveksler.com/htdocs` (checked-out repo; a push updates the live docroot in place) |
 
-- **GitHub source repo** (`origin`): `https://github.com/DavidVeksler/CheatSheets.git`
-- **Production** (`production`): `johngalt@direct.vellum.capital:/var/www/cheatsheets.davidveksler.com/htdocs`
-  — pushes straight into the live docroot (a checked-out repo; the push updates the
-  working tree in place).
-- Local deploy branch: `main`.
+Deploy branch: `main`. Invariant: `production == origin == local main`.
 
-Invariant the pipeline enforces: **live never gets a commit GitHub doesn't have.**
-Push `main` to `origin` first, then deploy. `production == origin == local main`.
+## Pipeline (aborts at the first failure)
 
-## What `./deploy.sh` does
+1. **Preflight:** on `main`; clean tree; `main` in sync with `origin/main`; `git fetch production` so the diff is accurate.
+2. **Validate** (files changed vs `production/main`; `--all` for everything):
+   - SEO gate `scripts/seo_check.py` on changed `.html` (title ≤ 60, description 150-200, canonical, valid JSON-LD).
+   - Every local `href`/`src` in changed pages resolves to a committed file (catches a forgotten `git add` image).
+   - Changed `.json` parses; `php -l` on changed `.php` (skipped if `php` is not on PATH).
+   - Always, repo-wide: `scripts/build_catalog.py --check` fails if `catalog.json` is stale vs any catalogued `.html`, `category-map.php`, `paths.json`, `catalog-overrides.json`, or a `paths.json` step names a missing file. Fix: `python3 scripts/build_catalog.py`.
+   - Always: `scripts/check_hubs.py` (`category-hubs.json`), `scripts/add_hub_breadcrumbs.py --check` (every sheet's hub breadcrumb), and `scripts/check_cluster_hub.py` (crypto custody hub parity and anchors).
+3. **Preview:** `git diff --stat production/main..HEAD`.
+4. **Confirm** `[y/N]` (skip with `--yes`).
+5. **Push + verify:** `git push production main`, then curl homepage (200), each changed page (200 + `cache-control: max-age=1800`), and a known-bad URL (404). Non-zero exit if a live check fails (the push already landed; investigate the server).
 
-Five phases; it aborts at the first failure (see escape hatches below).
-
-1. **Preflight**
-   - On branch `main` (else abort, or `--force`).
-   - Working tree is clean (you deploy commits, not uncommitted files).
-   - `git fetch origin main`; local `main` is in sync with `origin/main` (else abort,
-     or `--force`).
-   - `git fetch production` to refresh the `production/main` tracking ref, so the
-     changeset diff is accurate.
-2. **Validate** (local — the robustness win). Scoped to files **changed vs
-   production** by default; `--all` validates the whole repo.
-   - **SEO gate:** runs [`scripts/seo_check.py`](../scripts/seo_check.py) on changed
-     `.html` (title ≤ 60, meta description 150–200, canonical, valid JSON-LD).
-   - **Internal link/asset integrity:** every local `href`/`src` in changed pages
-     must resolve to a committed file. This is the check that catches a
-     forgotten-`git add` image/script before it 404s in production.
-   - **JSON:** every changed `.json` data file must parse.
-   - **PHP:** `php -l` on changed `.php` — skipped cleanly if `php` isn't on PATH
-     locally (it usually isn't on the dev box).
-   - **Catalog freshness (runs on every deploy, not scoped to changed files):**
-     [`scripts/build_catalog.py --check`](../scripts/build_catalog.py) fails closed if
-     `catalog.json` is older than any catalogued `.html`, `category-map.php`,
-     `paths.json`, or `catalog-overrides.json`, or if a `paths.json` step points at a
-     file that no longer exists. Fix with `python3 scripts/build_catalog.py` (or let
-     `.githooks/pre-commit` keep it current automatically; see its setup below).
-3. **Changeset preview:** prints `git diff --stat production/main..HEAD` — exactly
-   what goes live.
-4. **Confirm:** `[y/N]` prompt (skip with `--yes`).
-5. **Deploy + verify:** `git push production main`, then curls the live site — the
-   homepage (expect `200`), each changed page (expect `200` + `cache-control:
-   max-age=1800`), and a known-bad URL (expect `404`). Prints a pass/fail table and
-   exits non-zero if any live check fails (the push already landed — investigate the
-   server, not the script).
-
-Cloudflare cache purging is **not** done by this script — it happens server-side in
-the repo's `post-receive` hook via [`purge-cache.py`](../purge-cache.py), which
-purges the edge cache for the changed `.html`. So the deploy box doesn't need the
-Cloudflare token.
+Cloudflare purge runs server-side in the `post-receive` hook via `purge-cache.py`, so the deploy box needs no Cloudflare token.
 
 ## Flags
 
 ```
-./deploy.sh                # full pipeline, interactive confirm
-./deploy.sh --yes          # skip the confirm prompt
-./deploy.sh --dry-run      # preflight + validate, then stop (no push)
-./deploy.sh --check        # preflight + validate only (what the pre-push hook runs)
-./deploy.sh --all          # validate every file, not just changed
+--yes          skip confirm            --dry-run   preflight + validate, no push
+--check        preflight + validate only (what pre-push runs)
+--all          validate every file, not just changed
+--force        allow non-main branch / skip origin-sync check
+--skip-seo | --skip-links | --skip-verify    escape hatches, use sparingly
 ```
 
-Escape hatches — use sparingly, they exist so you're never truly stuck:
+## Hooks (once per clone: `git config core.hooksPath .githooks`)
 
-```
---force        allow a non-main branch / skip the origin-sync check
---skip-seo     skip the SEO gate
---skip-links   skip internal link/asset integrity
---skip-verify  skip the post-deploy live curl checks
-```
+- **pre-push:** pushes to `production` run `scripts/deploy.py --check` and are blocked on failure; `origin` pushes are untouched. `deploy.py` sets `CHEATSHEETS_DEPLOY=1` on its own push so validation doesn't run twice.
+- **pre-commit:** regenerates and stages `catalog.json` when a commit touches a catalogued `.html`, `category-map.php`, `paths.json`, or `catalog-overrides.json`. Needs `beautifulsoup4` (`requirements.txt`, see `activate-venv.sh`) importable by the `python`/`python3` on PATH.
+- `.gitattributes` pins `*.sh`, `.githooks/*`, `scripts/*.py` to LF. On `bad interpreter`: `rm .githooks/pre-push && git checkout -- .githooks/pre-push`.
 
-## First-time setup in a fresh clone
+## nginx drop-ins (not deployed by `git push`)
 
-The tracked hooks live in `.githooks/` and are **not** active until you point git
-at them (this is local config, not committed):
-
-```bash
-git config core.hooksPath .githooks
-```
-
-With that set:
-
-- **pre-push**: even a raw `git push production` runs the preflight + validation
-  first (`scripts/deploy.py --check`) and is blocked if anything fails. Pushes to
-  `origin` are unaffected. `deploy.py` sets `CHEATSHEETS_DEPLOY=1` when it issues its
-  own push, so the hook no-ops and validation doesn't run twice.
-- **pre-commit**: regenerates `catalog.json` and stages it whenever a commit touches
-  a catalogued `.html`, `category-map.php`, `paths.json`, or `catalog-overrides.json`,
-  so the catalog-freshness gate above almost never fires. Needs the repo's Python deps
-  (`beautifulsoup4`, from `requirements.txt`; see `activate-venv.sh`) importable by
-  whichever `python`/`python3` is on `PATH` when you commit.
-
-Line endings: `.gitattributes` pins `*.sh`, `.githooks/*`, and `scripts/*.py` to LF
-so the bash hook and wrappers don't break under Git Bash on Windows. If a hook ever
-fails with `bad interpreter`, re-checkout: `rm .githooks/pre-push && git checkout --
-.githooks/pre-push`.
-
-## nginx drop-ins (server config that lives in this repo)
-
-`conf/nginx/*.conf` are copied by hand to
-`/var/www/cheatsheets.davidveksler.com/conf/nginx/` (the vhost includes that
-directory). They are not part of `git push production`; the server has no other
-backup of them. After changing one:
+`conf/nginx/*.conf` are copied by hand into the vhost include dir; the server has no other backup of them.
 
 ```bash
 scp conf/nginx/*.conf johngalt@198.211.102.9:/var/www/cheatsheets.davidveksler.com/conf/nginx/
-```
-
-```bash
 ssh johngalt@198.211.102.9 'sudo nginx -t && sudo systemctl reload nginx'
 ```
 
-- `category-hubs.conf` routes `/<slug>` to `index.php?hub=<slug>` (the category hub
-  pages) and 301s `/<slug>/` to `/<slug>`. It must be live before a deploy that ships
-  slug links, otherwise every sheet's breadcrumb 404s.
-- `redirects.conf` holds permanent redirects for retired URLs.
+- `category-hubs.conf`: `/<slug>` → `index.php?hub=<slug>`, `/<slug>/` 301 → `/<slug>`. Must be live before a deploy that ships slug links, or every breadcrumb 404s.
+- `redirects.conf`: permanent redirects for retired URLs.
 - `php-routing.conf`, `cache-control.conf`, `ssl.conf` exist on the server only.
 
-Verify after a reload: `curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/radio` → 200,
-and `curl -o /dev/null -w "%{http_code} %{redirect_url}\n" "https://cheatsheets.davidveksler.com/?cat=Radio"` → 301 to `/radio`.
+Verify after reload: `curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/radio` → 200; `curl -o /dev/null -w "%{http_code} %{redirect_url}\n" "https://cheatsheets.davidveksler.com/?cat=Radio"` → 301 to `/radio`.
 
-## Manual fallback
+## Manual fallback and hand verification
 
-If the wrapper can't run (no local Python, etc.), the raw deploy is still:
-
-```bash
-git push production main
-```
-
-The server-side `post-receive` hook and Cloudflare purge still fire. You lose the
-local preflight/validate/verify, so run the checks under **Verification** by hand.
-
-## Verification
-
-The pipeline runs these automatically; to check by hand after any deploy:
+If the wrapper can't run: `git push production main` (post-receive + purge still fire), then check by hand:
 
 ```bash
-# Homepage + a known 404 (server 404 routing)
-curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/                    # 200
-curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/no-such-page-xyz    # 404
-
-# A page you just shipped: served + correct cache TTL
-curl -sI https://cheatsheets.davidveksler.com/<page>.html | grep -i cache-control              # public, max-age=1800
-
-# Confirm the live content is the new version (Cloudflare purged)
-curl -s https://cheatsheets.davidveksler.com/<page>.html | grep -o "<title>[^<]*</title>"
+curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/                  # 200
+curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/no-such-page-xyz  # 404
+curl -sI https://cheatsheets.davidveksler.com/<page>.html | grep -i cache-control            # public, max-age=1800
+curl -s https://cheatsheets.davidveksler.com/<page>.html | grep -o "<title>[^<]*</title>"   # new version live
 ```
 
-Caching context (see AGENTS.md → *Server Configuration*): `.html` gets a 30-min TTL,
-images/CSS/JS get a 7-day `immutable` TTL. Editing an existing `images/*.png` in
-place can serve stale for up to a week — rename it or bump a query string.
+Caching: `.html` 30-min TTL; images/CSS/JS 7-day `immutable`. Editing an `images/*.png` in place can serve stale for a week, so rename it or bump a query string.
