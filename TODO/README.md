@@ -1,15 +1,8 @@
-# TODO/ — Implementation guidance for all specs in this folder
+# TODO/: implementation rules for specs in this folder
 
-Each `.md` file here is a spec for one cheatsheet. Specs cover the topic: content angle,
-section structure, and a page-specific visual identity. Everything else — quality bar,
-density floor, atomic entry rule, accuracy protocol, testing checklist — lives in
-`AGENTS.md` and is binding. Read AGENTS.md first, then the spec, then this file's rules.
-When done, delete the spec file. When **writing or reviewing** a spec, also check it
-against `SPEC-AUDIT.md` (spec-completeness criteria: search targeting, reader outcome,
-staleness register, etc.). For auditing **already-shipped** cheatsheets, use
-`CHEATSHEET-AUDIT.md` (per-file conformance procedure + corpus defect baseline).
+Each `<topic>.md` here is a spec for one cheatsheet (angle, sections, visual identity). Quality bar, density floor, atomic entry rule, and accuracy protocol live in `AGENTS.md` and are binding. Read AGENTS.md, then the spec, then these rules; delete the spec when the page ships. Writing/reviewing a spec: also check `SPEC-AUDIT.md`. Auditing a shipped page: `CHEATSHEET-AUDIT.md`.
 
-## Rule 0: Topic acceptance — the niche utility test (July 2026 pivot)
+## Rule 0: Topic acceptance: the niche utility test
 
 New cheatsheet topics must pass a **niche utility test** before a spec is written:
 
@@ -22,18 +15,7 @@ real time), **field diagnostics** (test/terminology lookup at the bench or clini
 **comparison tables with exact specs** (rockets, robots, metals — where the value is the
 dense verified numbers side by side, not a narrative).
 
-**Broad informational topics ("overview of X") are no longer accepted for goal-3
-(agentic-automation case study) purposes.** They may still be built for the personal-study
-or advocacy goals, and are then judged by those goals' criteria, not by traffic
-(per the site-goals rule in `seo-planning.md`).
-
-**Evidence (180-day GSC pull, 2026-01 → 2026-07):** site impressions fell ~60% from January
-to July 2026 — the broad-informational SEO play is structurally losing to AI answers and
-SERP features. The pages that held up are exactly the niche-utility shape:
-`baofeng-uv5r-quick-ref.html` (4.7% CTR), `shabbat-services-cheatsheet.html` (4.9% CTR),
-`veterinary-diagnostics.html` (9.2% CTR) — versus ~0.3% CTR on the broad pages despite far
-more impressions. People click through when the page is a tool they'll keep open, not an
-answer they've already been given.
+Broad "overview of X" topics are no longer accepted for the agentic-case-study goal (they lose to AI answers and SERP features; niche tools hold 4-9% CTR vs ~0.3% for broad pages). They may still be built for personal-study or advocacy goals and are judged by those goals, not traffic (see `META-seo-planning.md` > *Standing rules*).
 
 ## Rule 1: Numbers in specs are anchors, not facts
 
@@ -60,19 +42,17 @@ and build.
 
 ## Rule 3: Definition of done (applies to every spec)
 
-A page is done when all of these hold, in addition to the AGENTS.md testing checklist:
+A page is done when all of these hold, in addition to AGENTS.md and the `docs/content.md` local QA:
 
 - Every section named in the spec exists and is fully populated; every major table meets
   or exceeds the row coverage the spec describes.
 - Every worked example arrives at an actual final answer (a real latitude, a real dollar
   gap, a real NNT) — never "…and so on."
-- Every volatile fact carries an inline date or version tag. (The page itself carries no
-  visible "Last verified" line or JSON-LD `dateModified` — review status lives in
-  `refresh-status.json`, not on the page.)
+- Every volatile fact carries an inline date or version tag (no page-level "Last verified" line or `dateModified`).
 - The spec's **signature visual element** (see Rule 5) is implemented and is the most
   polished thing on the page.
-- The page renders correctly at 375 px wide and prints sanely (the celestial and nuclear
-  pages REQUIRE a deliberate print stylesheet; for the rest, sane defaults suffice).
+- The page renders correctly at 375 px wide and prints sanely (a deliberate print stylesheet
+  where the spec requires one; sane defaults otherwise).
 
 ## Rule 4: Anti-goals — what NOT to include
 
@@ -117,7 +97,7 @@ aesthetic. To keep that intent through implementation:
   `ham-radio-technician.html`, `emergency-radio-card.html`; insurance ↔
   `index-investing-tax-advantaged.html`; death logistics ↔ estate/aging content as it
   lands). Where natural, add a reciprocal link from the existing page.
-- Follow `SEO_PROMPT.txt` for metadata. Derive the `<title>` and meta description from
+- Metadata per AGENTS.md's template; footer cross-links per `SEO_PROMPT.txt`. Derive the `<title>` and meta description from
   the spec's "why this topic" paragraph — the unique angle IS the search hook (e.g., the
   honest-pricing angle, the fatalism-correction angle), so lead with it rather than a
   generic topic label.
