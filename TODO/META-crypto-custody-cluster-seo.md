@@ -4,7 +4,7 @@ Durable working doc for the 9-sheet custody cluster. Sibling to `TODO/META-seo-p
 (site-wide). Update in place.
 
 Cluster URL (browse view): `https://cheatsheets.davidveksler.com/crypto-custody` (the former `?cat=Crypto+Custody+%26+Compliance` 301s there since 2026-09-17)
-Category membership is defined in `category-map.php:85-94`.
+Category membership: the `// Crypto Custody & Compliance` block in `category-map.php`.
 
 ## Situation as of 2026-09-02
 
@@ -105,21 +105,9 @@ topical and cross-domain, and one link is worth more than all the rest:
       existing cluster → walletrecovery.info links and the 5+ inbound deep links are not tracked
       there; the register is already behind reality.
 
-### 3. Build an indexable hub page
+### 3. Indexable hub page (done)
 
-**Status: completed 2026-09-03.** `crypto-custody-index.html` is the indexable cluster hub;
-its nine-spoke roster, 34-row matrix, and deep anchors are enforced by
-`scripts/check_cluster_hub.py` during deploy validation.
-
-`?cat=Crypto+Custody+%26+Compliance` filters client-side and `index.php:310` emits a canonical to
-the site root for every filtered view. So the cluster has **no indexable landing page**: nothing
-can rank for the category head terms, nothing concentrates the internal links, and nothing gives
-an AI answer engine a single URL to cite for "crypto custody reference".
-
-Build `crypto-custody-index.html` as a real sheet, not a directory listing: a decision surface
-that routes a reader to the right sibling (custody model → tier → control → the sheet that covers
-it), with a `CollectionPage` + `ItemList` JSON-LD block enumerating the nine. It becomes the hub
-every external link in workstream 2 points at, and it inherits the mesh already built.
+`crypto-custody-index.html` is the cluster hub and the target for every external link in workstream 2. Its nine-spoke roster, 34-row matrix, and deep anchors are enforced by `scripts/check_cluster_hub.py` at deploy. The category also has an indexable hub at `/crypto-custody`.
 
 ### 4. AEO / citation surface
 
