@@ -37,6 +37,7 @@ Thin router. SEO working doc: [`../TODO/META-seo-planning.md`](../TODO/META-seo-
 Lead with the system (one person plus AI agents maintaining a governed, git-audited reference corpus), with separate mini-campaigns per audience: AI/dev → `how-its-built.html`; ham radio → `baofeng-uv5r-quick-ref.html`; martial arts → `judo.html`; space/engineering → `orbital-rockets-comparison.html`; advocacy → `objectivism.html` (kept separate from the developer campaign). Every shared link uses `utm_campaign=agentic_cheatsheets_2026` (full shape in the campaign plan).
 
 - **Reddit (daily, draft tier):** [`reddit-daily-drafts.md`](reddit-daily-drafts.md); map [`../marketing/reddit-subreddit-map.json`](../marketing/reddit-subreddit-map.json); scanner [`../scripts/reddit_scan.py`](../scripts/reddit_scan.py). Never posts; David posts and logs the result in the campaign plan.
+- **Cold email (draft tier):** [`cold-outreach.md`](cold-outreach.md); focus pages [`../marketing/cold-outreach/pages.json`](../marketing/cold-outreach/pages.json); gate/renderer [`../scripts/cold_outreach.py`](../scripts/cold_outreach.py). One pillar or spoke per email, drafted only when the address scores > 0.5. Prospect data stays in the private `cheatsheets-outreach` repo.
 - **Newsletter:** not sending yet; spec and status in [`newsletter.md`](newsletter.md). Its KPIs go in `seo-progress.md` once it ships.
 
 ## Cross-linking

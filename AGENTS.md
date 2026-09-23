@@ -13,6 +13,7 @@ Standalone, interactive HTML cheatsheets (tech, finance, philosophy, AI safety, 
 | `index.php` Explorer, `catalog.json`, `paths.json`, popularity history | [`docs/index-explorer.md`](docs/index-explorer.md) |
 | Weekly fact-drift refresh routine (`refresh-status.json`) | [`weekly-freshness-update.md`](weekly-freshness-update.md) |
 | Reddit draft routine | [`docs/reddit-daily-drafts.md`](docs/reddit-daily-drafts.md) |
+| Cold email outreach for pillar/focus pages (HTML Gmail drafts, >50% address confidence) | [`docs/cold-outreach.md`](docs/cold-outreach.md); prospect data in private `~/Projects/cheatsheets-outreach` |
 | Newsletter (Resend, double opt-in, monthly draft routine) | [`docs/newsletter.md`](docs/newsletter.md) |
 | Economics comparison batch refresh | [`docs/economics-data-refresh.md`](docs/economics-data-refresh.md) |
 | SEO KPI log (append-only, newest on top) | [`docs/seo-progress.md`](docs/seo-progress.md) |
