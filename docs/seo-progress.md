@@ -1,16 +1,47 @@
 # SEO progress log
 
-Append-only KPI/measurement log for cheatsheets.davidveksler.com. Newest block on top. Measurement is **pulled, not eyeballed** — Search Console (via the `search-console` MCP) for queries/impressions/clicks/position, and Cloudflare (via the `cloudflare-stats` skill) for traffic/bandwidth.
-
-This is the dated **results** log. Related docs:
-
-- `TODO/seo-planning.md` — the durable SEO working doc (GSC baseline, striking-distance opportunities, decision rules). Strategy lives there; numbers land here.
-- `TODO/marketing-campaign-plan.md` — campaign assets, UTM conventions, and the shared-link measurement log.
-- `docs/marketing.md` — the marketing quick-path router.
-
-Each entry: date, window covered, source, and the numbers. Keep it terse.
+Append-only KPI log for cheatsheets.davidveksler.com, newest block on top. Each entry: date, window, source, numbers; terse. Strategy lives in [`../TODO/META-seo-planning.md`](../TODO/META-seo-planning.md); shared-link measurement in [`../TODO/marketing-campaign-plan.md`](../TODO/marketing-campaign-plan.md). Older blocks: [`archive/seo-progress-2026.md`](archive/seo-progress-2026.md).
 
 <!-- KPI blocks are appended below this line, newest first -->
+
+## 2026-09-17 — Homepage and category-hub baseline (index.php SEO tier 1)
+
+Pulled 2026-09-17 via `scripts/gsc_query.py` and the `search-console` MCP, 90 days
+(2026-06-18 → 2026-09-15). Baseline for judging the hub work shipped the same day.
+
+### Front door — 90 days
+
+| URL | Clicks | Impressions | CTR | Position |
+|---|---|---|---|---|
+| `/` (homepage) | 11 | 2,410 | 0.46% | 17.9 |
+| `?cat=AI & Safety` (both encodings) | 0 | 70 | 0% | 7.1 |
+| other 14 `?cat=` pages combined | 0 | 18 | 0% | n/a |
+| `index.php?category=AI & Safety` (legacy) | 0 | 8 | 0% | 7.9 |
+
+Homepage queries that GSC will name: `site:` searches, "david veksler" (15 impr @ 9.7),
+"technology cheat sheets" (16 @ 42.8), "cheatsheets" (1 @ 43), leftover "anduril" queries from
+the withdrawn page. Everything else is anonymised long tail. Site-wide, the two-word "cheat sheet"
+query family shows real demand the hubs did not capture: "git cheat sheet" 163 impr @ 70,
+"database management system cheat sheet" 76 @ 38, "cooking cheat sheets" 56 @ 29,
+"ham radio cheat sheet" 84 @ 9.2, "technology cheat sheets" 16 @ 42.8.
+
+Diagnosis (code, not data): 0 of 200 sheets linked to any `?cat=` page; the rail used `+`
+encoding while canonical/sitemap used `%20`; hub titles targeted the category name
+("AI & Safety Cheatsheets (22)"), which nobody types; hub body was one generated sentence.
+
+### Shipped 2026-09-17
+
+Category hubs moved to `/<slug>` (15 slugs in `category-hubs.json`) with hand-written title,
+description, H1, intro and start-here list; `?cat=`, `?category=` and `/<slug>/` 301 to the
+slug; every sheet carries a footer breadcrumb + `BreadcrumbList` to its hub (200 new inbound
+links per cluster); sitemap `lastmod` for hubs now tracks the newest sheet commit in the category
+instead of the catalog build time; homepage title moved to the two-word form with the live count.
+Requires the nginx drop-in `conf/nginx/category-hubs.conf` to be live before the deploy.
+
+**Re-pull on or after 2026-10-17** (30 days) and again at 60/90: per-hub clicks/impressions/position,
+the "cheat sheet(s)" query family positions above, and whether the breadcrumb trail appears in
+SERPs for sheet pages. Success bar for continuing hub investment: any hub with >= 50 impressions
+in the 30-day window, or the "ham radio cheat sheet" / "git cheat sheet" families moving to page 1.
 
 ## 2026-09-10 — Title change: homelessness-externalized-costs.html
 
@@ -27,86 +58,6 @@ The page was rewritten from an externalized-cost essay into a tiered argument (r
 individual factors explain who), so the query set it should match changes with it. **Expect GSC
 history for the old title's queries to reset**; do not read the drop in the next pulse as a ranking
 loss. Slug and canonical URL are unchanged. Judged by the advocacy goal, not by traffic.
-
-## 2026-07-21 — 28-day GSC pulse (2026-06-23 → 2026-07-20)
-
-Source: Search Console API, property `https://cheatsheets.davidveksler.com/`. Pre-checkpoint
-pulse (the pre-registered decision checkpoint is 2026-08-06). No title/consolidation changes made
-— under the freeze. Top pages by clicks:
-
-| Page | Clicks | Impressions | CTR | Position | Note vs. prior pulse |
-|---|---|---|---|---|---|
-| ai-frontier.html | 158 | 51,150 | 0.31% | 9.0 | clicks 138→158, position 9.9→9.0 (both improving) |
-| baofeng-uv5r-quick-ref.html | 59 | 1,493 | 3.95% | 7.7 | steady |
-| orbital-rockets-comparison.html | 31 | 9,897 | 0.31% | 10.0 | steady |
-| shabbat-services-cheatsheet.html | 30 | 603 | 4.98% | 8.2 | up |
-| ashihara-karate.html | 22 | 2,041 | 1.08% | 8.2 | steady |
-| global_cuisine_guide.html | 20 | 1,465 | 1.37% | 12.5 | new entrant to top pages |
-| ham-radio-technician.html | 17 | 300 | 5.67% | 9.0 | strong CTR |
-| azure-devops.html | 16 | 352 | 4.55% | 20.7 | see striking-distance note |
-| yudkowsky-rationality-ai-cheatsheet.html | 10 | 2,824 | 0.35% | 5.9 | good position, low CTR |
-
-- **`ai-frontier.html` trajectory is positive** — clicks and average position both improving across
-  the last three pulses; the "frontier ai companies/labs/models/providers/list" query family holds
-  positions 2–6. Still the #1 traffic driver by a wide margin.
-- **Pillars (shipped 2026-07-15) not yet in the top 40 pages** — expected at ~6 days old; each is on
-  its own baseline from launch (see planning doc). Judge after ~28 days.
-- **Striking-distance note for the post-2026-08-06 window (do NOT act during the freeze):**
-  `azure-devops.html` ranks position 2 with 20% CTR on its head term "azure devops cheat sheet" yet
-  sits at page-level position 20.7 across 352 impressions — the head term is won, the long tail is
-  not. Several other dev spokes rank far back: `databases.html` 26.6, `dotnet-cheatsheet.html` 24.6,
-  `postgresql.html` 22.7 (2,507 impr, 0.16% CTR), `clean-architecture-dotnet.html` 30.7,
-  `aws-vs-azure.html` 53.6, `git-scm.html` 51.7. These are content/coverage signals, not listing
-  fixes — candidates to review once the freeze lifts.
-- **Optimization shipped this pulse (freeze-safe, not a title change):** added the three new pillars
-  (`ai-models-compared`, `ai-safety-existential-risk`, `rockets-and-spaceflight`) to `llms.txt`; they
-  had been omitted from the AI-crawler discovery index when they launched 2026-07-15.
-
-### Interim AI-crawler pull — Cloudflare, 7 days (2026-07-14 → 2026-07-20)
-
-Pulled 2026-07-21, host-filtered to `cheatsheets.davidveksler.com`, zone `davidveksler.com` (Free).
-Method note: the free plan caps `httpRequestsAdaptiveGroups` at a 1-day range and ~8-day retention,
-so this is 7 individual 1-day queries summed (2026-07-13 had already rolled off). Interim datapoint
-between the 2026-07-11 baseline and the 2026-08-06 checkpoint, captured now because the window
-otherwise disappears.
-
-| User agent | Requests (7d) | vs. 2026-07-11 baseline |
-|---|---|---|
-| ChatGPT-User | 4,925 | down (6,945) |
-| Bytespider | 1,029 | ~flat (1,184) |
-| PerplexityBot | 651 | **up ~2x (341)** |
-| Amazonbot | 415 | down (600) |
-| Applebot | 186 | down (278) |
-| DuckAssistBot | 80 | up (65) |
-| GPTBot | 51 | down (102) |
-| ClaudeBot | 45 | down (135) |
-| Claude-User | 35 | down (63) |
-| OAI-SearchBot | 29 | down (186) |
-| GoogleOther | 19 | down (620) |
-| MistralAI | 16 | ~flat |
-| **TOTAL** | **7,481 (~1,068/day)** | down from ~10,573 (~1,510/day) |
-
-- **Total AI run-rate is down ~30% week-over-week**, driven mostly by ChatGPT-User and the
-  Google/OAI search-indexers; **PerplexityBot roughly doubled**. Treat as one noisy week, not a trend —
-  ChatGPT-User volume tracks how often pages surface in live answers and swings. The real read comes
-  at the 2026-08-06 checkpoint against the same method.
-- `ai-frontier.html` remains the #1 fetched page (1,574 ChatGPT-User fetches), followed by `/` (656),
-  `humanoid-robots.html` (440), `bitcoin-whitepaper.html` (244), `orbital-rockets-comparison.html`
-  (190), `boom-supersonic.html` (182). The citability play still concentrates on the same flagships.
-
-### Infra verification — 2026-07-21
-
-- **404 handling is fixed:** `/no-such-page-xyz-test` returns `404 text/html`; `robots.txt` returns
-  `200 text/plain`. The AGENTS.md known-issue (404s served as 200 homepage HTML) is resolved live.
-- **Caching headers live:** cheatsheet HTML sends `cache-control: public, max-age=1800`; images send a
-  long-lived cache (`max-age=315360000`). Both fine; the image TTL differs from the documented
-  `max-age=604800, immutable` but is benign.
-- **`llms.txt` fix is committed but NOT yet live** — the live file still shows 0 of the 3 new pillars.
-  Needs a deploy to reach the crawlers.
-- **Checkpoint scheduled task not verifiable from this session.** The macOS `scheduled-tasks` MCP
-  reports zero tasks; the routine fleet (incl. `cheatsheets-pivot-checkpoint`) lives in the Windows
-  desktop-app registry, which a darwin session can't see. Confirm on the Windows box that the
-  one-time 2026-08-06 task is still present and enabled. Not recreated here (duplicate risk).
 
 ## 2026-08-24 — GSC pulse + demand mining
 
@@ -151,45 +102,6 @@ position 10.2 → 8.10). The niche-utility CTR pattern holds unchanged: task-sha
 impressions @ 5.9 — SERP-feature absorption, resolves the open `martial-arts-cheatsheet` guard-rail
 flag as innocent), the month-stamped AI-release family (~2,400 impressions @ 5–12), the New Glenn
 head-to-head family (~2,300 @ 6–11), and "eid cheat sheet" (317 @ 8.7). Full triage and the
-resulting ten specs: [`TODO/niche-utility-batch-2026-08.md`](../TODO/niche-utility-batch-2026-08.md).
+resulting ten specs: [`TODO/META-niche-utility-batch-2026-08.md`](../TODO/META-niche-utility-batch-2026-08.md).
 
 AI-crawler and GA4 legs not re-pulled this session — no change to the 2026-08-06 figures.
-
-## 2026-09-17 — Homepage and category-hub baseline (index.php SEO tier 1)
-
-Pulled 2026-09-17 via `scripts/gsc_query.py` and the `search-console` MCP, 90 days
-(2026-06-18 → 2026-09-15). Baseline for judging the hub work shipped the same day.
-
-### Front door — 90 days
-
-| URL | Clicks | Impressions | CTR | Position |
-|---|---|---|---|---|
-| `/` (homepage) | 11 | 2,410 | 0.46% | 17.9 |
-| `?cat=AI & Safety` (both encodings) | 0 | 70 | 0% | 7.1 |
-| other 14 `?cat=` pages combined | 0 | 18 | 0% | n/a |
-| `index.php?category=AI & Safety` (legacy) | 0 | 8 | 0% | 7.9 |
-
-Homepage queries that GSC will name: `site:` searches, "david veksler" (15 impr @ 9.7),
-"technology cheat sheets" (16 @ 42.8), "cheatsheets" (1 @ 43), leftover "anduril" queries from
-the withdrawn page. Everything else is anonymised long tail. Site-wide, the two-word "cheat sheet"
-query family shows real demand the hubs did not capture: "git cheat sheet" 163 impr @ 70,
-"database management system cheat sheet" 76 @ 38, "cooking cheat sheets" 56 @ 29,
-"ham radio cheat sheet" 84 @ 9.2, "technology cheat sheets" 16 @ 42.8.
-
-Diagnosis (code, not data): 0 of 200 sheets linked to any `?cat=` page; the rail used `+`
-encoding while canonical/sitemap used `%20`; hub titles targeted the category name
-("AI & Safety Cheatsheets (22)"), which nobody types; hub body was one generated sentence.
-
-### Shipped 2026-09-17
-
-Category hubs moved to `/<slug>` (15 slugs in `category-hubs.json`) with hand-written title,
-description, H1, intro and start-here list; `?cat=`, `?category=` and `/<slug>/` 301 to the
-slug; every sheet carries a footer breadcrumb + `BreadcrumbList` to its hub (200 new inbound
-links per cluster); sitemap `lastmod` for hubs now tracks the newest sheet commit in the category
-instead of the catalog build time; homepage title moved to the two-word form with the live count.
-Requires the nginx drop-in `conf/nginx/category-hubs.conf` to be live before the deploy.
-
-**Re-pull on or after 2026-10-17** (30 days) and again at 60/90: per-hub clicks/impressions/position,
-the "cheat sheet(s)" query family positions above, and whether the breadcrumb trail appears in
-SERPs for sheet pages. Success bar for continuing hub investment: any hub with >= 50 impressions
-in the 30-day window, or the "ham radio cheat sheet" / "git cheat sheet" families moving to page 1.
