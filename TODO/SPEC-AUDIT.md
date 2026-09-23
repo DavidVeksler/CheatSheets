@@ -1,16 +1,6 @@
-# Spec Audit Guide — criteria every cheatsheet spec should address
+# Spec Audit Guide: criteria every cheatsheet spec must address
 
-A checklist for **writing or reviewing specs in this folder**, distilled from an audit of the
-first 14 specs (2026-07-04). The existing template — target file, "why this topic," content
-approach, research sources, visual design — is strong on *what goes on the page* and *what it
-looks like*, and weak on *who arrives, via what query, and what they walk away able to do*.
-This guide closes that loop. It is **not** a spec itself; when a spec and this guide conflict,
-fix the spec.
-
-Layering reminder: AGENTS.md owns the global quality bar (density floor, accuracy protocol,
-metadata, a11y, print) and README.md here owns implementation rules. This guide owns **spec
-completeness** — the decisions that belong at spec time because deferring them to build time
-either loses information or makes the same collection-level call 14 separate times.
+Checklist for writing or reviewing specs in `TODO/`. Specs tend to cover what goes on the page and how it looks; this guide adds who arrives, via what query, and what they can then do. When a spec and this guide conflict, fix the spec. Layering: AGENTS.md owns the quality bar, `README.md` owns implementation rules, this guide owns spec completeness (decisions cheap at spec time, expensive to retrofit).
 
 ## Tier 1 — Required fields (add to every spec)
 
@@ -19,8 +9,6 @@ Name the **primary query** the page competes for, 3–5 secondary queries, and w
 searcher is in **crisis mode** (searches the symptom: "flight cancelled what to do") or
 **research mode** (searches the topic: "amish technology"). Crisis-mode pages lead the title
 and H1 with the crisis phrase; question-shaped H2s should match real queries.
-*Model: the SEO note in `flight-disruption-playbook.md` — the only first-generation spec that
-did this, and visibly the strongest spec because of it.*
 
 ### 2. Draft title / H1 / meta description
 The name is a strategic decision, not an implementation detail. A great internal codename can
@@ -51,7 +39,7 @@ STABLE (Amish, celestial, NNT) / SLOW-DRIFT (insurance, contractor) / VOLATILE (
 estate exemption sections).
 
 ### 6. Index category
-Name the `$categoryMap` category in `index.php` the file belongs to — reuse an existing
+Name the `$categoryMap` category in `category-map.php` the file belongs to (and its `category-hubs.json` hub) — reuse an existing
 label, or, if a batch of specs needs a new one (e.g., a "Life Admin" / "Consumer Defense"
 category for the legal-consumer cluster), decide that **once at spec-batch time**, not
 per-file at build time.
