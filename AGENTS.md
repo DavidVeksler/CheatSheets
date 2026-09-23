@@ -1,110 +1,70 @@
 # AGENTS.md
 
-Authoritative cross-agent guidance; Claude Code, Codex, and Cursor all read this file natively.
+Standalone, interactive HTML cheatsheets (tech, finance, philosophy, AI safety, crypto, martial arts, more), live at `https://cheatsheets.davidveksler.com/`.
+**Core bar:** a *terminal reference*: dense, comprehensive across edge cases, zero fabrication. A competent practitioner can do real work from one sheet without opening another tab.
 
-## Project Overview
+## Doc routing
 
-A collection of standalone, interactive HTML cheatsheets covering technology, finance, philosophy, AI safety, crypto, martial arts, and more.
-**Core bar:** *Terminal reference* — high density, comprehensive coverage across edge cases, and zero factual fabrication. A competent practitioner must be able to perform real work from a single sheet without opening another tab.
-
-## Repository Governance
-
-| Document | Purpose / Workflow |
+| Task | Read this |
 |---|---|
-| [`docs/content.md`](docs/content.md) | **Content workflow** — Quick path to add/edit/publish, local build/QA, SEO gate. |
-| [`docs/marketing.md`](docs/marketing.md) | **SEO & Promotion** — Discovery files, GSC/Cloudflare analytics, cross-linking. |
-| [`docs/economics-data-refresh.md`](docs/economics-data-refresh.md) | **Economics data** — Generator command, data vintages, pinned series, QA. |
-| [`docs/newsletter.md`](docs/newsletter.md) | **Newsletter spec** — Resend double opt-in, key-split security, digest routine. |
-| [`docs/seo-progress.md`](docs/seo-progress.md) | **SEO log** — Append-only KPI and traffic measurement history. |
-| [`TODO/README.md`](TODO/README.md) | **Implementation spec rules** — Anchors, outline-first, definition of done. |
-| `TODO/<topic>.md` | One spec per planned cheatsheet (deleted after shipping). |
-| [`TODO/SPEC-AUDIT.md`](TODO/SPEC-AUDIT.md) | **Spec audit** — Search targeting, outcome, staleness register criteria. |
-| [`TODO/CHEATSHEET-AUDIT.md`](TODO/CHEATSHEET-AUDIT.md) | **Sheet audit** — Conformance audit, SRI checks, defect baseline. |
-| [`TODO/META-seo-planning.md`](TODO/META-seo-planning.md) | **SEO planning** — GSC baselines and striking-distance opportunities. |
-| [`TODO/META-crypto-custody-cluster-seo.md`](TODO/META-crypto-custody-cluster-seo.md) | **Custody cluster SEO** — positioning, link equity, day-30/60/90 gates for the 9 crypto custody sheets. |
-| [`deploy/DEPLOY.md`](deploy/DEPLOY.md) | **Deployment runbook** — `./deploy.sh` pipeline (preflight, validate, push, verify). |
-| [`docs/index-explorer.md`](docs/index-explorer.md) | **Index Explorer runbook** — data flow (catalog builder, `paths.json`, overrides, hooks, gates, OG render, popularity history), measured budgets, and how to add a curated path. |
-| `category-hubs.json` / `conf/nginx/category-hubs.conf` | **Category hub pages** — one indexable `/<slug>` page per category (title, description, hand-written intro, start-here picks), served by `index.php`, routed by the nginx drop-in, back-linked from every sheet's footer breadcrumb (`scripts/add_hub_breadcrumbs.py`). Validated by `scripts/check_hubs.py` in the deploy gate. Workflow in [`docs/marketing.md`](docs/marketing.md). |
-| `scripts/build_catalog.py` / `catalog.json` | **Index data layer**: scans catalogued `.html` + `category-map.php` + `paths.json` into `catalog.json` (titles, headings, outlinks, shapes, map layout) for the `index.php` Explorer. Regenerate with `python3 scripts/build_catalog.py`, or let `.githooks/pre-commit` do it. Gated by `scripts/deploy.py --check`. `paths.json` is optional hand-curated trails for the Paths lens — a new sheet does not require a path entry, see `docs/index-explorer.md`. |
-| [`weekly-freshness-update.md`](weekly-freshness-update.md) | Scheduled fact-drift refresh routine. |
-| `refresh-status.json` | **Review-status data** — per-file last-reviewed date, written only by the freshness routine's Selector. Not hand-edited; not rendered on any page. |
-| [`README.md`](README.md) | Public repository readme. |
-| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | GitHub Copilot summary (sync when editing this file). |
-| `SEO_PROMPT.txt` | Footer cross-linking procedure. |
+| Add / edit / publish a sheet, local QA, gates | [`docs/content.md`](docs/content.md) |
+| SEO, category hubs, OG image, measurement, promotion | [`docs/marketing.md`](docs/marketing.md) |
+| Deploy (`./deploy.sh`), nginx drop-ins, live verification | [`deploy/DEPLOY.md`](deploy/DEPLOY.md) |
+| `index.php` Explorer, `catalog.json`, `paths.json`, popularity history | [`docs/index-explorer.md`](docs/index-explorer.md) |
+| Weekly fact-drift refresh routine (`refresh-status.json`) | [`weekly-freshness-update.md`](weekly-freshness-update.md) |
+| Reddit draft routine | [`docs/reddit-daily-drafts.md`](docs/reddit-daily-drafts.md) |
+| Newsletter (Resend, double opt-in, monthly draft routine) | [`docs/newsletter.md`](docs/newsletter.md) |
+| Economics comparison batch refresh | [`docs/economics-data-refresh.md`](docs/economics-data-refresh.md) |
+| SEO KPI log (append-only, newest on top) | [`docs/seo-progress.md`](docs/seo-progress.md) |
+| Writing a spec for a planned sheet | [`TODO/README.md`](TODO/README.md); one `TODO/<topic>.md` per sheet, deleted after shipping |
+| Auditing a spec / a shipped sheet | [`TODO/SPEC-AUDIT.md`](TODO/SPEC-AUDIT.md) / [`TODO/CHEATSHEET-AUDIT.md`](TODO/CHEATSHEET-AUDIT.md) |
+| SEO planning (GSC baselines, striking distance) | [`TODO/META-seo-planning.md`](TODO/META-seo-planning.md) |
+| Crypto custody cluster SEO (9 sheets, day-30/60/90 gates) | [`TODO/META-crypto-custody-cluster-seo.md`](TODO/META-crypto-custody-cluster-seo.md) |
+| Campaign assets, UTM shape, promotion log | [`TODO/marketing-campaign-plan.md`](TODO/marketing-campaign-plan.md) |
+| Footer cross-linking procedure | `SEO_PROMPT.txt` |
+| GitHub Copilot summary (sync when editing this file) | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) |
+| Public readme | [`README.md`](README.md) |
 
----
+Key data files: `category-map.php` (sheet → category), `category-hubs.json` (hub page copy, validated by `scripts/check_hubs.py`), `catalog.json` (generated by `scripts/build_catalog.py`; do not hand-edit), `paths.json` (optional curated trails), `refresh-status.json` (per-sheet last-reviewed date; written only by the freshness routine's Selector).
 
-## Generation & Quality Protocol
+## Generation & quality protocol
 
-1. **Research primary sources first:** Verify every version, API signature, default, benchmark, limit, date, and price. Never fabricate or guess numbers.
-2. **Coverage contract (3 Depths):**
-   - **Fundamentals:** Mental models, core definitions (the 20% explaining 80%).
-   - **Working knowledge:** Syntax, commands, daily production patterns, decisions.
-   - **Edge & advanced:** Gotchas, failure modes, performance, internals.
-   - *No placeholders or TODOs.* Every outlined section must be fully populated (≥3 substantive entries per section).
-3. **Atomic entry rule:** Every entry must have:
-   - Precise 1-line definition/purpose.
-   - Concrete example with real-world values (no `foo`/`bar`).
-   - Quantified metrics (e.g., "~O(log n), sub-ms for n < 10⁶", explicit token prices, exact cutoffs/defaults).
-   - Gotcha, pitfall, or explicit "when NOT to use".
-4. **Breadth requirements:**
-   - Comparison table (criteria × alternatives) when 2+ options exist.
-   - Decision guidance ("Use X when...; Use Y when...").
-   - Common Mistakes / Anti-Patterns section (MANDATORY for technical sheets).
-   - Quick Reference block near top (high-frequency lookups).
-   - Density floor: 20+ substantive entries per sheet.
-5. **Freshness & Provenance:**
-   - Date volatile facts inline ("as of <Mon YYYY>" or version tag).
-   - Do **not** add a visible "Last verified" line or a JSON-LD `dateModified` field to the page. A stamp bumped on a schedule without re-verification is a false claim, so review status is tracked outside the page, in `refresh-status.json` at the repo root (see [`weekly-freshness-update.md`](weekly-freshness-update.md)).
-   - `datePublished` in JSON-LD stays (it's a fact, not a claim about ongoing review) — see the template below.
+1. **Research primary sources first.** Verify every version, API signature, default, benchmark, limit, date, and price. Never guess numbers.
+2. **Three depths:** fundamentals (mental models, core definitions), working knowledge (syntax, commands, daily patterns, decisions), edge & advanced (gotchas, failure modes, performance, internals). No placeholders or TODOs; every section has ≥3 substantive entries.
+3. **Atomic entry:** 1-line definition; concrete example with real values (no `foo`/`bar`); quantified metrics (complexity, prices, exact defaults); a gotcha or "when NOT to use".
+4. **Breadth:** comparison table when 2+ options exist; decision guidance ("Use X when..."); Common Mistakes section (mandatory for technical sheets); Quick Reference block near the top; 20+ substantive entries per sheet.
+5. **Freshness:** date volatile facts inline ("as of Mon YYYY" or version tag). Never add a visible "Last verified" line or JSON-LD `dateModified` (review status lives in `refresh-status.json`). `datePublished` stays.
 
----
+## Change management
 
-## Change Management & Deployment
+Commit per logical batch, including WIP (quality gates deployment, not commits). Deploy only via `./deploy.sh` / `./deploy.ps1` and only with David's go-ahead; see [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
 
-- **Commit unconditionally:** Commit all work (including WIP, docs, scripts) per logical batch. Quality gates deployment, not commits.
-- **Never push unprompted:** Ask for user approval after committing before deploying.
-- **Deploy via pipeline:** Push `main` to `origin`, then run `./deploy.sh` (or `./deploy.ps1`). Pipeline runs preflight, local validation (SEO gate, links/assets, JSON, `php -l`), confirmation, push to `production`, and live `curl` verification. See [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
+## Tech baseline
 
----
+**Design approach, pick per topic:** vanilla modern CSS (recommended for new sheets); Bootstrap 5.3.x (incumbent for dense card/table sheets; do not rewrite existing Bootstrap sheets); Tailwind/utility; classless (Pico, Simple.css, Water.css) for essay-style sheets; bespoke themed (terminal/CRT, blueprint; use the `frontend-design` skill).
 
-## Tech Baseline & Invariant Layer
+**Non-negotiable invariants:**
+- Single self-contained `.html` file (embedded CSS/JS), no build step.
+- SRI on every CDN `<link>`/`<script>`: `integrity="sha384-..." crossorigin="anonymous"`; JS loads with `defer`.
+- Accordions: native `<details name="group">` + `<summary>`.
+- Theming: `color-scheme` + `light-dark()` honoring `prefers-color-scheme`; optional `[data-theme]` toggle.
+- CSS Grid, container queries, custom CSS inside `@layer`; `text-wrap: balance` (headings) / `pretty` (body).
+- Animations only inside `@media (prefers-reduced-motion: no-preference)`.
+- No fixed full-viewport `mix-blend-mode` or `backdrop-filter` (scroll compositing stalls; bake textures into `background`).
+- `localStorage` with feature detection and soft fallback.
+- WCAG 2.2 AA: landmarks (`<main>`, `<nav>`, `<section>`), `:focus-visible`, contrast ≥4.5:1 (3:1 large UI), explicit `alt`.
+- Core Web Vitals: LCP < 2.5s, INP < 200ms, CLS < 0.1.
 
-### Design Approaches (Pick per Topic)
-- **Vanilla + Modern CSS Platform** (*Recommended for new sheets*): Lightest payload, full visual identity.
-- **Bootstrap 5.3.x**: Incumbent standard for dense card/table references. Do not rewrite existing sheets.
-- **Utility / Tailwind**: Rapid custom layouts via prebuilt sheet or CDN.
-- **Classless (Pico / Simple.css / Water.css)**: Semantic, clean text/essay references (philosophy, finance).
-- **Bespoke Themed**: Strong metaphors (terminal/CRT for security/CLI, blueprint for architecture). Use `frontend-design` skill for direction.
+**Cached CDN SRI hashes** (new hash: `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`):
 
-### Non-Negotiable Technical Invariants
-- **Standalone HTML:** Single self-contained file (embedded CSS/JS), zero build step.
-- **SRI on CDN Assets:** Every `<link>`/`<script>` must include `integrity="sha384-..." crossorigin="anonymous"`. Load JS with `defer`.
-- **Modern CSS Baseline:**
-  - Accordions: Native `<details name="group">` + `<summary>` (no JS required, a11y & print native).
-  - Theming: `color-scheme` + `light-dark()` honoring `prefers-color-scheme`; optional `[data-theme]` toggle.
-  - Layout & Specificity: CSS Grid, container queries, custom CSS inside `@layer`.
-  - Typography: `text-wrap: balance` (headings), `text-wrap: pretty` (body).
-  - Motion: Gate animations behind `@media (prefers-reduced-motion: no-preference)`.
-  - Scroll Performance: Avoid fixed full-viewport `mix-blend-mode` or `backdrop-filter` (causes scroll compositing stalls; bake textures into element `background`).
-  - State: Native `localStorage` with feature-detection and soft fallback.
-- **Accessibility (WCAG 2.2 AA):** Semantic landmarks (`<main>`, `<nav>`, `<section>`), `:focus-visible`, contrast ≥4.5:1 (3:1 large UI), explicit `alt` text.
-- **Core Web Vitals:** LCP < 2.5s, INP < 200ms, CLS < 0.1.
+| Asset | URL | integrity |
+|---|---|---|
+| Bootstrap CSS 5.3.8 | `https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css` | `sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB` |
+| Bootstrap JS 5.3.8 | `https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js` | `sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI` |
+| Bootstrap Icons 1.13.1 | `https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css` | `sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk` |
 
-### Cached CDN Dependencies (SRI Hashes)
-Compute new hashes via `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`.
+## Required metadata template
 
-| Asset | Version | URL | integrity (sha384-…) |
-|---|---|---|---|
-| Bootstrap CSS | 5.3.8 | `https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css` | `sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB` |
-| Bootstrap JS | 5.3.8 | `https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js` | `sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI` |
-| Bootstrap Icons | 1.13.1 | `https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css` | `sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk` |
-
----
-
-## Required Metadata & Discoverability
-
-### HTML Metadata Template
 ```html
 <title>Topic: Descriptive Subtitle</title>
 <meta name="description" content="150-200 char comprehensive description"/>
@@ -138,10 +98,6 @@ Compute new hashes via `curl -sL <url> | openssl dgst -sha384 -binary | openssl 
   "keywords": "keyword list"
 }
 </script>
+```
 
-The `author` node resolves to the hub's Person entity (`@id` `https://davidveksler.com/#person`,
-`name` "David Veksler", `url` `https://davidveksler.com/`) plus a sibling `creditText` string
-disclosing the production pipeline, as shown above. Do not add a `"David Veksler (AI Generated)"`
-name suffix on a page that carries the visible `author-byline` block (some legacy pages without the
-byline still have it): the byline's own provenance sentence, linking to
-[`how-its-built.html`](how-its-built.html), plus the JSON-LD `creditText` together cover the disclosure.
+Do not append "(AI Generated)" to the author name on a page with the visible `author-byline` block (its provenance sentence links [`how-its-built.html`](how-its-built.html) and, with `creditText`, covers disclosure). Legacy pages without the byline still carry the suffix.
