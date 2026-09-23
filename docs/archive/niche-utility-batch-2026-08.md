@@ -1,5 +1,8 @@
 # Batch: Niche-utility cheatsheets — 2026-08 (10 specs)
 
+> **Archived 2026-09-22, batch closed.** Shipped: `gmrs-frs-murs-card`, `pet-poison-triage`, `fastener-torque-tap-drill`, `meat-temperature-chart`, `ai-model-release-log`. Dropped by David (`4ea0045`): meshtastic, high-holiday services, eid prayer, connector pinouts, appliance error codes. Open follow-ups moved to `TODO/META-seo-planning.md`. Relative links below are as written at the time.
+
+
 Brainstormed and specced 2026-08-24 from a fresh Search Console pull. Every candidate here
 had to pass `TODO/README.md` **Rule 0** (the niche-utility test) before it got a spec: a page
 a person keeps open *while doing a task*, not an overview an AI chat already answered.

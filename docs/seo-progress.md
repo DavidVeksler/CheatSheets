@@ -102,6 +102,6 @@ position 10.2 → 8.10). The niche-utility CTR pattern holds unchanged: task-sha
 impressions @ 5.9 — SERP-feature absorption, resolves the open `martial-arts-cheatsheet` guard-rail
 flag as innocent), the month-stamped AI-release family (~2,400 impressions @ 5–12), the New Glenn
 head-to-head family (~2,300 @ 6–11), and "eid cheat sheet" (317 @ 8.7). Full triage and the
-resulting ten specs: [`TODO/META-niche-utility-batch-2026-08.md`](../TODO/META-niche-utility-batch-2026-08.md).
+resulting ten specs: [`archive/niche-utility-batch-2026-08.md`](archive/niche-utility-batch-2026-08.md).
 
 AI-crawler and GA4 legs not re-pulled this session — no change to the 2026-08-06 figures.
