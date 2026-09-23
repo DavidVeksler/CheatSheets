@@ -58,6 +58,7 @@ ssh johngalt@198.211.102.9 'sudo nginx -t && sudo systemctl reload nginx'
 
 - `category-hubs.conf`: `/<slug>` → `index.php?hub=<slug>`, `/<slug>/` 301 → `/<slug>`. Must be live before a deploy that ships slug links, or every breadcrumb 404s.
 - `redirects.conf`: permanent redirects for retired URLs.
+- `internal-paths.conf`: 404 for repo internals the checkout puts in the docroot (`docs/`, `marketing/`, `TODO/`, `scripts/`, `deploy/`, `conf/`, `lib/`, non-archive `newsletter/` files, root dotfiles, every `.md`/`.py`/`.ps1`, `AGENTS.md`). Two provenance files linked from sheets are exempt by exact match; add another exemption there before linking a sheet to any internal file. Verify: `python3 scripts/check_internal_paths.py`.
 - `php-routing.conf`, `cache-control.conf`, `ssl.conf` exist on the server only.
 
 Verify after reload: `curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/radio` → 200; `curl -o /dev/null -w "%{http_code} %{redirect_url}\n" "https://cheatsheets.davidveksler.com/?cat=Radio"` → 301 to `/radio`.

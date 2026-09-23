@@ -66,7 +66,7 @@ human gate: scripts/newsletter_send.py --issue YYYY-MM   (preflight, preview, [y
 | `newsletter/broadcast-YYYY-MM.json` | `{issue, broadcast_id, segment_id, subject, created, sent, sent_at?}`; record of whether an issue sent |
 | `.claude/skills/cheatsheets-newsletter-monthly/SKILL.md` | the routine |
 
-Archive pages live in `newsletter/`, never the root (root `.html` becomes a cheatsheet card).
+Archive pages live in `newsletter/`, never the root (root `.html` becomes a cheatsheet card). nginx (`conf/nginx/internal-paths.conf`) serves only `newsletter/YYYY-MM.html` from that folder; every other file there 404s.
 
 ## 4. Resend API
 
