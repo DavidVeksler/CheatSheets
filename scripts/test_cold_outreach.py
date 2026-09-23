@@ -67,6 +67,7 @@ class ScoreTests(unittest.TestCase):
         self.assertTrue(co.page_has_email(page, email))
         self.assertTrue(co.page_has_email("write to dana [at] homelab [dot] example", email))
         self.assertTrue(co.page_has_email("email dana @ homelab . example", email))
+        self.assertTrue(co.page_has_email("dana (ät) homelab (Punkt) example", email))
 
     def test_pattern_single_is_just_above_threshold(self):
         p = prospect(evidence={"kind": "pattern_single", "checked": TODAY,
@@ -153,6 +154,11 @@ class RenderTests(unittest.TestCase):
         self.assertIn("must link the target page", errs)
         errs = " | ".join(self._gate(self.BODY.replace(TARGET, TARGET + "?utm_source=x")))
         self.assertIn("tracking", errs)
+
+    def test_per_run_cap_counts_todays_drafts(self):
+        drafted = [prospect(id=f"co-01{i:02d}", email=f"a{i}@x{i}.example", state="drafted",
+                            outreach={"drafted": TODAY}) for i in range(co.MAX_FIRST_TOUCHES)]
+        self.assertEqual(co.plan({"prospects": drafted}, with_scores=False)["first_touch_slots"], 0)
 
     def test_gate_blocks_low_confidence(self):
         p = prospect(evidence={"kind": "unpublished_generic", "checked": TODAY})
