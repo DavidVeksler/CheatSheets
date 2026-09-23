@@ -34,9 +34,6 @@
     </script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous"/>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous"/>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Roboto+Slab:wght@400;700&amp;display=swap" rel="stylesheet"/>
 <style>
     :root {
         --bs-body-bg: #f8f9fa;
@@ -316,7 +313,7 @@
         a { text-decoration: none; color: #000; }
         a[href^="http"]:after { content: " (" attr(href) ")"; font-size: 0.9em; }
     }
-    @layer clean-arch-redesign {
+    /* Page-specific design follows the legacy base rules so it wins the cascade. */
         :root {
             color-scheme: light dark;
             --ink: light-dark(#142033, #e8eef8);
@@ -343,7 +340,7 @@
                 radial-gradient(circle at top left, light-dark(rgba(37, 99, 235, .14), rgba(37, 99, 235, .22)), transparent 32rem),
                 linear-gradient(180deg, light-dark(#eef6ff, #0b1220) 0, light-dark(#f8fafc, #101827) 24rem);
             color: var(--ink);
-            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             line-height: 1.65;
         }
 
@@ -399,7 +396,7 @@
         .page-header h1 {
             max-width: 760px;
             margin: 0;
-            font-family: "Roboto Slab", Georgia, serif;
+            font-family: Georgia, "Times New Roman", serif;
             font-size: clamp(2.2rem, 4vw, 4.4rem);
             line-height: 1.04;
             letter-spacing: 0;
@@ -432,36 +429,112 @@
         }
 
         .architecture-map {
-            display: grid;
-            gap: .65rem;
-            padding: 1rem;
+            margin: 0;
+            padding: 1.1rem;
             border: 1px solid rgba(255,255,255,.18);
-            border-radius: 12px;
-            background: rgba(255,255,255,.08);
-            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            background: rgba(4, 16, 34, .56);
+            box-shadow: 0 24px 60px rgba(0, 7, 20, .28);
         }
 
-        .map-row {
-            display: grid;
-            grid-template-columns: 8.5rem 1fr;
+        .architecture-map figcaption {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: .45rem .8rem;
+            margin-bottom: .6rem;
+            color: #fff;
+        }
+
+        .figure-index {
+            color: #9ddfe5;
+            font-size: .7rem;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .architecture-map svg { display: block; width: 100%; height: auto; }
+        .dependency-mobile { display: none; }
+        .architecture-map p { margin: .35rem .25rem 0; color: #c7d7e7; font-size: .79rem; line-height: 1.45; }
+
+        .section-index {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .45rem;
             align-items: center;
-            gap: .8rem;
-            padding: .78rem .9rem;
-            border-radius: 8px;
-            background: rgba(255,255,255,.1);
-            color: rgba(255,255,255,.9);
+            margin: 0 0 1.35rem;
+            font-size: .85rem;
+        }
+        .section-index strong { margin-right: .35rem; color: var(--muted); }
+        .section-index a {
+            padding: .35rem .7rem;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: var(--surface);
+            color: var(--ink);
+            font-weight: 600;
+        }
+        .section-index a:hover { border-color: var(--brand); color: var(--brand); text-decoration: none; }
+        .section-index a:focus-visible, .global-controls button:focus-visible, summary:focus-visible {
+            outline: 3px solid #f59e0b;
+            outline-offset: 3px;
         }
 
-        .map-row strong { color: #fff; }
-        .map-row small { color: rgba(255,255,255,.7); }
-        .map-row.domain { border-left: 5px solid var(--domain); }
-        .map-row.application { border-left: 5px solid var(--app); }
-        .map-row.infrastructure { border-left: 5px solid var(--infra); }
-        .map-row.presentation { border-left: 5px solid var(--presentation); }
+        .request-figure {
+            margin: 0 0 1.5rem;
+            padding: 1.25rem;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--surface-2);
+        }
+        .request-figure figcaption { margin-bottom: 1rem; color: var(--ink); font-weight: 750; }
+        .request-figure .figure-index { display: block; margin-bottom: .15rem; color: light-dark(#075a72, #7ddce4); }
+        .request-path {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: .65rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .request-path li {
+            position: relative;
+            min-width: 0;
+            padding: .8rem .7rem;
+            border: 1px solid var(--line);
+            border-top: 4px solid var(--step-color);
+            border-radius: 8px;
+            background: var(--surface);
+        }
+        .request-path li:nth-child(1), .request-path li:nth-child(5) { --step-color: var(--presentation); }
+        .request-path li:nth-child(2) { --step-color: var(--app); }
+        .request-path li:nth-child(3) { --step-color: var(--domain); }
+        .request-path li:nth-child(4) { --step-color: var(--infra); }
+        .request-path li:not(:last-child)::after {
+            content: "→";
+            position: absolute;
+            z-index: 1;
+            top: 1.25rem;
+            right: -.54rem;
+            color: var(--ink);
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+        .request-path .step-number { display: block; color: var(--muted); font-size: .7rem; font-weight: 800; letter-spacing: .08em; }
+        .request-path strong { display: block; color: var(--ink); font-size: .9rem; line-height: 1.25; }
+        .request-path small { display: block; margin-top: .4rem; color: var(--muted); font-size: .76rem; line-height: 1.4; }
+        .request-figure > p { margin: .8rem 0 0; color: var(--muted); font-size: .8rem; }
+
+        @container (max-width: 760px) {
+            .request-path { grid-template-columns: 1fr; }
+            .request-path li:not(:last-child)::after { content: "↓"; top: auto; right: 1rem; bottom: -.7rem; }
+        }
 
         main.container {
             max-width: 1180px;
             padding-top: 2rem;
+            container-type: inline-size;
         }
 
         .global-controls {
@@ -524,7 +597,7 @@
         .section-title {
             margin: 0 0 1.15rem;
             color: var(--ink);
-            font-family: "Roboto Slab", Georgia, serif;
+            font-family: Georgia, "Times New Roman", serif;
             font-size: clamp(1.45rem, 2.3vw, 2.05rem);
             line-height: 1.16;
             text-wrap: balance;
@@ -712,10 +785,21 @@
             .global-controls .btn {
                 flex: 1 1 auto;
             }
-            .map-row {
-                grid-template-columns: 1fr;
-                gap: .15rem;
-            }
+            .architecture-map { padding: .8rem; }
+        }
+
+        @media (max-width: 520px) {
+            .architecture-map svg { display: none; }
+            .dependency-mobile { display: grid; gap: .35rem; margin: .9rem 0; text-align: center; }
+            .dependency-mobile-outer { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+            .dependency-mobile-node { padding: .7rem .3rem; border: 1px solid var(--node-line); border-radius: 8px; background: var(--node-bg); color: #fff; }
+            .dependency-mobile-node strong { display: block; font-size: .86rem; }
+            .dependency-mobile-node small { display: block; margin-top: .2rem; color: #d7e9f0; font-size: .68rem; line-height: 1.3; }
+            .dependency-mobile-node.presentation { --node-line: #57d2de; --node-bg: #0c3a4b; }
+            .dependency-mobile-node.infrastructure { --node-line: #ffbc61; --node-bg: #51300d; }
+            .dependency-mobile-node.application { --node-line: #b5a0ff; --node-bg: #352960; }
+            .dependency-mobile-node.domain { --node-line: #81dba8; --node-bg: #123e31; }
+            .dependency-mobile-arrow { color: #d7e9fb; font-size: 1.1rem; font-weight: 800; line-height: 1; }
         }
 
         @media print {
@@ -730,8 +814,8 @@
             details > .collapse-content {
                 display: block;
             }
+            .request-path { grid-template-columns: repeat(5, 1fr); }
         }
-    }
 </style>
 </head>
 <body>
@@ -739,18 +823,32 @@
 <div class="hero-inner">
 <div>
 <div class="eyebrow"><i class="bi bi-diagram-3"></i> .NET architecture reference</div>
-<h1><i class="bi bi-layers-half"></i> Clean Architecture in .NET Web API</h1>
+<h1>Clean Architecture in .NET Web API</h1>
 <p class="lead">A practical map for keeping domain rules independent from frameworks, databases, UI code, and third-party integrations while still shipping an ASP.NET Core API.</p>
-<div class="freshness">
-<span>Redesigned: July 8, 2026</span>
+<div class="freshness"><span>Four projects</span><span>One dependency rule</span><span>Concrete .NET examples</span></div>
 </div>
+<figure class="architecture-map" aria-labelledby="dependency-caption">
+<figcaption id="dependency-caption"><span class="figure-index">01 / dependency rule</span><strong>Source references point inward</strong></figcaption>
+<svg viewBox="0 0 560 345" role="img" aria-labelledby="dependency-title dependency-description" xmlns="http://www.w3.org/2000/svg">
+<title id="dependency-title">Clean Architecture project dependencies</title>
+<desc id="dependency-description">Presentation and Infrastructure reference Application; Application references Domain. Domain does not reference the other projects.</desc>
+<defs><marker id="dependency-arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="#d7e9fb"/></marker></defs>
+<path d="M142 128 225 169M418 128 335 169M280 240V272" fill="none" stroke="#d7e9fb" stroke-width="3" stroke-linecap="round" marker-end="url(#dependency-arrow)"/>
+<rect x="24" y="42" width="240" height="86" rx="11" fill="#0c3a4b" stroke="#57d2de" stroke-width="2"/>
+<rect x="296" y="42" width="240" height="86" rx="11" fill="#51300d" stroke="#ffbc61" stroke-width="2"/>
+<rect x="160" y="170" width="240" height="70" rx="11" fill="#352960" stroke="#b5a0ff" stroke-width="2"/>
+<rect x="160" y="274" width="240" height="62" rx="11" fill="#123e31" stroke="#81dba8" stroke-width="2"/>
+<g fill="#fff" font-family="system-ui, sans-serif" text-anchor="middle"><text x="144" y="76" font-size="18" font-weight="700">Presentation</text><text x="144" y="101" font-size="12" fill="#d1e7ed">HTTP endpoints · startup DI</text><text x="416" y="76" font-size="18" font-weight="700">Infrastructure</text><text x="416" y="101" font-size="12" fill="#f5dcb9">EF Core · external adapters</text><text x="280" y="199" font-size="18" font-weight="700">Application</text><text x="280" y="221" font-size="12" fill="#e2dafd">Use cases · interfaces</text><text x="280" y="301" font-size="18" font-weight="700">Domain</text><text x="280" y="322" font-size="12" fill="#cdeedc">Entities · invariants</text></g>
+</svg>
+<div class="dependency-mobile" role="img" aria-label="Presentation and Infrastructure reference Application. Application references Domain. Domain does not reference the other projects.">
+<div class="dependency-mobile-outer"><div class="dependency-mobile-node presentation"><strong>Presentation</strong><small>HTTP endpoints · startup DI</small></div><div class="dependency-mobile-node infrastructure"><strong>Infrastructure</strong><small>EF Core · external adapters</small></div></div>
+<span class="dependency-mobile-arrow" aria-hidden="true">↓</span>
+<div class="dependency-mobile-node application"><strong>Application</strong><small>Use cases · interfaces</small></div>
+<span class="dependency-mobile-arrow" aria-hidden="true">↓</span>
+<div class="dependency-mobile-node domain"><strong>Domain</strong><small>Entities · invariants</small></div>
 </div>
-<div class="architecture-map" aria-label="Clean Architecture dependency map">
-<div class="map-row presentation"><strong>Presentation</strong><small>HTTP endpoints, middleware, composition root</small></div>
-<div class="map-row infrastructure"><strong>Infrastructure</strong><small>EF Core, files, identity, email, external APIs</small></div>
-<div class="map-row application"><strong>Application</strong><small>Use cases, commands, queries, DTOs, ports</small></div>
-<div class="map-row domain"><strong>Domain</strong><small>Entities, value objects, invariants, domain events</small></div>
-</div>
+<p>The API also references Infrastructure at startup to register concrete implementations.</p>
+</figure>
 </div>
 </header>
 <main class="container">
@@ -761,6 +859,7 @@
 <button class="btn btn-outline-secondary btn-sm" id="collapseAllBtn" type="button"><i class="bi bi-arrows-angle-contract"></i> Collapse All</button>
 </div>
 </div>
+<nav class="section-index" aria-label="On this page"><strong>Jump to</strong><a href="#quick-reference-title">Quick reference</a><a href="#layers-title">Layers</a><a href="#request-flow-title">Request flow</a><a href="#project-structure-title">Project structure</a><a href="#mistakes-title">Common mistakes</a></nav>
 <section class="schema-container quick-reference" aria-labelledby="quick-reference-title">
 <h2 class="section-title" id="quick-reference-title"><i class="bi bi-compass-fill"></i> Quick Reference</h2>
 <div class="table-responsive">
@@ -883,7 +982,7 @@
 </div>
 <!-- Layers Overview & Responsibilities -->
 <div class="schema-container section-layers-overview">
-<h2 class="section-title"><i class="bi bi-stack"></i> Layers Overview &amp; Responsibilities</h2>
+<h2 class="section-title" id="layers-title"><i class="bi bi-stack"></i> Layers Overview &amp; Responsibilities</h2>
 <div class="row">
 <!-- Domain Layer -->
 <div class="col-md-6 col-lg-6">
@@ -1122,7 +1221,18 @@ public class ProductsController : ControllerBase
 <!-- Project Structure Example & Visual Studio Setup -->
 <!-- Request Flow -->
 <div class="schema-container section-layers-overview">
-<h2 class="section-title"><i class="bi bi-arrow-repeat"></i> How a Request Flows Through a .NET Clean Architecture Solution</h2>
+<h2 class="section-title" id="request-flow-title"><i class="bi bi-arrow-repeat"></i> How a Request Flows Through a .NET Clean Architecture Solution</h2>
+<figure class="request-figure" aria-labelledby="request-caption">
+<figcaption id="request-caption"><span class="figure-index">02 / runtime path</span>One product request, from HTTP to persistence and back</figcaption>
+<ol class="request-path">
+<li><span class="step-number">01 · IN</span><strong>Presentation</strong><small>Bind POST /api/products</small></li>
+<li><span class="step-number">02 · USE CASE</span><strong>Application</strong><small>Validate and handle command</small></li>
+<li><span class="step-number">03 · RULES</span><strong>Domain</strong><small>Enforce Product invariants</small></li>
+<li><span class="step-number">04 · ADAPTER</span><strong>Infrastructure</strong><small>Persist via EF Core</small></li>
+<li><span class="step-number">05 · OUT</span><strong>Presentation</strong><small>Return 201 Created</small></li>
+</ol>
+<p>The Application layer calls an interface it owns. Dependency injection supplies the Infrastructure implementation at runtime.</p>
+</figure>
 <div class="info-card card-application-layer">
 <div class="card-header"><i class="bi bi-signpost-2-fill"></i> A Single HTTP Request, End to End</div>
 <div class="card-body">
@@ -1153,7 +1263,7 @@ public class ProductsController : ControllerBase
 </div>
 <!-- Project Structure -->
 <div class="schema-container section-project-structure">
-<h2 class="section-title"><i class="bi bi-diagram-3-fill"></i> Project Structure & Visual Studio Setup</h2>
+<h2 class="section-title" id="project-structure-title"><i class="bi bi-diagram-3-fill"></i> Project Structure & Visual Studio Setup</h2>
 <div class="info-card card-project-structure">
 <div class="card-header"><i class="bi bi-folder2-open"></i> Typical Solution Structure</div>
 <div class="card-body">
@@ -1348,7 +1458,7 @@ dotnet ef database update \
 </div>
 <!-- Common Mistakes & Anti-Patterns -->
 <div class="schema-container section-best-practices">
-<h2 class="section-title"><i class="bi bi-exclamation-triangle-fill"></i> Common Mistakes &amp; Anti-Patterns</h2>
+<h2 class="section-title" id="mistakes-title"><i class="bi bi-exclamation-triangle-fill"></i> Common Mistakes &amp; Anti-Patterns</h2>
 <div class="info-card card-best-practices">
 <div class="card-header"><i class="bi bi-x-octagon-fill"></i> Where Clean Architecture in .NET Goes Wrong</div>
 <div class="card-body">
