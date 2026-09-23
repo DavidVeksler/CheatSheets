@@ -55,7 +55,7 @@ A collection of standalone, interactive HTML cheatsheets covering technology, fi
    - Density floor: 20+ substantive entries per sheet.
 5. **Freshness & Provenance:**
    - Date volatile facts inline ("as of <Mon YYYY>" or version tag).
-   - Do **not** add a visible "Last verified" line or a JSON-LD `dateModified` field to the page. A weekly routine used to bump these on a schedule regardless of whether it had actually re-verified anything, which made the stamp a lie more often than a fact. Review status is now tracked outside the page, in `refresh-status.json` at the repo root (see [`weekly-freshness-update.md`](weekly-freshness-update.md)).
+   - Do **not** add a visible "Last verified" line or a JSON-LD `dateModified` field to the page. A stamp bumped on a schedule without re-verification is a false claim, so review status is tracked outside the page, in `refresh-status.json` at the repo root (see [`weekly-freshness-update.md`](weekly-freshness-update.md)).
    - `datePublished` in JSON-LD stays (it's a fact, not a claim about ongoing review) — see the template below.
 
 ---
@@ -141,7 +141,7 @@ Compute new hashes via `curl -sL <url> | openssl dgst -sha384 -binary | openssl 
 
 The `author` node resolves to the hub's Person entity (`@id` `https://davidveksler.com/#person`,
 `name` "David Veksler", `url` `https://davidveksler.com/`) plus a sibling `creditText` string
-disclosing the production pipeline, as shown above. The older `"David Veksler (AI Generated)"`
-name suffix is retired on any page that carries the visible `author-byline` block: the byline's
-own provenance sentence, linking to [`how-its-built.html`](how-its-built.html), plus the JSON-LD
-`creditText` together cover the disclosure that the name suffix used to carry alone.
+disclosing the production pipeline, as shown above. Do not add a `"David Veksler (AI Generated)"`
+name suffix on a page that carries the visible `author-byline` block (some legacy pages without the
+byline still have it): the byline's own provenance sentence, linking to
+[`how-its-built.html`](how-its-built.html), plus the JSON-LD `creditText` together cover the disclosure.
