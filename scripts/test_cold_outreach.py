@@ -66,6 +66,7 @@ class ScoreTests(unittest.TestCase):
         page = f'<a href="/cdn-cgi/l/email-protection#{token}">[email protected]</a>'
         self.assertTrue(co.page_has_email(page, email))
         self.assertTrue(co.page_has_email("write to dana [at] homelab [dot] example", email))
+        self.assertTrue(co.page_has_email("email dana @ homelab . example", email))
 
     def test_pattern_single_is_just_above_threshold(self):
         p = prospect(evidence={"kind": "pattern_single", "checked": TODAY,

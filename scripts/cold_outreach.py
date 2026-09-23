@@ -186,7 +186,7 @@ def page_has_email(page: str, email: str) -> bool:
     if email in text or f"mailto:{email}" in text:
         return True
     local, dom = email.split("@", 1)
-    obf = re.escape(local) + r"\s*(\[at\]|\(at\)|\{at\}|\sat\s)\s*" + re.escape(dom).replace(r"\.", r"\s*(\.|\[dot\]|\(dot\)|\sdot\s)\s*")
+    obf = re.escape(local) + r"\s*(@|\[at\]|\(at\)|\{at\}|\sat\s)\s*" + re.escape(dom).replace(r"\.", r"\s*(\.|\[dot\]|\(dot\)|\sdot\s)\s*")
     if re.search(obf, text):
         return True
     for token in re.findall(r"email-protection#([0-9a-f]+)", text) + re.findall(r'data-cfemail="([0-9a-f]+)"', text):

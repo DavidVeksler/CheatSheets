@@ -51,9 +51,11 @@ Cloudflare purge runs server-side in the `post-receive` hook via `purge-cache.py
 
 `conf/nginx/*.conf` are copied by hand into the vhost include dir; the server has no other backup of them.
 
+The target dir is owned by `www-data`, so `johngalt` can't `scp` into it directly; stage in `/tmp` and `sudo install`:
+
 ```bash
-scp conf/nginx/*.conf johngalt@198.211.102.9:/var/www/cheatsheets.davidveksler.com/conf/nginx/
-ssh johngalt@198.211.102.9 'sudo nginx -t && sudo systemctl reload nginx'
+scp conf/nginx/<name>.conf johngalt@198.211.102.9:/tmp/
+ssh johngalt@198.211.102.9 'sudo install -o root -g root -m 644 /tmp/<name>.conf /var/www/cheatsheets.davidveksler.com/conf/nginx/ && rm /tmp/<name>.conf && sudo nginx -t && sudo systemctl reload nginx'
 ```
 
 - `category-hubs.conf`: `/<slug>` → `index.php?hub=<slug>`, `/<slug>/` 301 → `/<slug>`. Must be live before a deploy that ships slug links, or every breadcrumb 404s.
