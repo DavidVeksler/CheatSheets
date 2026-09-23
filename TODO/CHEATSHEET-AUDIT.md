@@ -1,33 +1,16 @@
-# Cheatsheet Audit — per-file conformance procedure
+# Cheatsheet Audit: per-file conformance procedure
 
-Instruction set for **auditing one completed cheatsheet per run** against the repo's current
-standards. Written to be executed systematically across all ~101 HTML files. Grounded in a
-corpus scan on **2026-07-04** (see Appendix for the baseline findings and priority lists).
+Audit **one shipped cheatsheet per run** against current standards; bring it up to standard or explicitly accept a legacy exception, never silently skip.
 
-**Division of labor with the other repo docs:**
-- `AGENTS.md` — owns the quality bar. This audit *applies* it retroactively; it never redefines it.
-- `weekly-freshness-update.md` — owns **fact drift** (stale versions, prices, model names) and
-  the `refresh-status.json` review-status record. This audit does NOT re-verify facts and does
-  NOT touch `refresh-status.json`; it only checks that volatile facts are dated inline. If you
-  find stale facts, note them for the freshness job.
-- `TODO/SPEC-AUDIT.md` — spec completeness for *future* pages; not used here.
-
-**Context that explains most defects:** the corpus spans several generations of the build
-pipeline. Old pages predate the SRI mandate, JSON-LD requirement, Bootstrap 5.3.8 pin, and
-no-web-fonts rule. The audit's job is to bring each page up to the current standard *or*
-explicitly accept a legacy exception — never to silently skip.
-
-**Policy change (2026-09-01):** pages used to carry a visible "Last verified" line and a
-JSON-LD `dateModified` field; both were removed repo-wide because the weekly freshness routine
-was bumping them without real review. A page that still carries either one is a **defect now**,
-not a requirement — see §2. Historical findings below that reference "missing `Last verified`"
-predate this change and are superseded; read them as "was true then," not as current defects.
+- `AGENTS.md` owns the quality bar; this audit applies it, never redefines it.
+- `weekly-freshness-update.md` owns fact drift and `refresh-status.json`. This audit does not re-verify facts or touch that file; it only checks volatile facts are dated inline. Hand stale facts to the freshness job.
+- `TODO/SPEC-AUDIT.md` is for future-page specs; not used here.
 
 ---
 
 ## 1. Execution model
 
-- **One file per run.** `FILE` = the cheatsheet path. Touch only `FILE` (plus `index.php`
+- **One file per run.** `FILE` = the cheatsheet path. Touch only `FILE` (plus `category-map.php`
   if adding a `$categoryMap` entry, and `images/` if generating a missing preview).
 - **Audit → fix → report.** Run all checks first, classify findings by severity, apply the
   in-place fixes (§6), then report (§7). Don't fix as you go — a full defect picture first.
@@ -41,7 +24,7 @@ predate this change and are superseded; read them as "was true then," not as cur
 | Tier | Meaning | Examples |
 |---|---|---|
 | **BLOCKER** | Visibly broken or lying to users/crawlers | placeholder URLs (`YOUR_IMAGE_URL_HERE`, `yourdomain.com`), broken internal links, JSON-LD describing content not on the page |
-| **HIGH** | Violates a hard AGENTS.md requirement | missing JSON-LD, a visible "Last verified" line or JSON-LD `dateModified` (deprecated 2026-09-01 — remove, don't add), CDN tags without SRI, unpinned/old Bootstrap, missing `$categoryMap` entry, missing preview image, missing `lang` attr |
+| **HIGH** | Violates a hard AGENTS.md requirement | missing JSON-LD, a visible "Last verified" line or JSON-LD `dateModified` (remove, never add), CDN tags without SRI, unpinned/old Bootstrap, missing `$categoryMap` entry, missing preview image, missing `lang` attr |
 | **MEDIUM** | Standard not met, degrades quality | web-font dependency (offline break), thin sections (<3 entries), no Quick Reference block, no Common Mistakes section, undated volatile facts, JS not deferred |
 | **LOW** | Modernization / polish | Bootstrap collapse instead of native `<details name>`, no `light-dark()` theming, no container queries, missing `text-wrap` niceties |
 
@@ -57,7 +40,7 @@ BASE="${FILE%.html}"
 
 # A. Metadata presence
 grep -c 'application/ld+json' "$FILE"                      # expect ≥1
-grep -ciE 'last verified|last updated' "$FILE"             # expect ≥1
+grep -ciE 'last verified|last updated|dateModified' "$FILE"  # expect 0
 grep -o 'rel="canonical" href="[^"]*"' "$FILE"             # expect .../$FILE exactly
 head -3 "$FILE" | grep -io '<html[^>]*lang="[a-z-]*"'      # expect lang="en"
 grep -c 'name="twitter:card"' "$FILE"                      # expect ≥1
@@ -79,19 +62,19 @@ grep -o 'href="[a-z0-9_-]*\.html"' "$FILE" | sed 's/href="//;s/"//' | sort -u \
   | while read t; do [ -f "$t" ] || echo "BROKEN: $t"; done
 
 # E. Site integration
-grep -c "'$FILE'" index.php                                # expect 1 ($categoryMap entry)
+grep -c "'$FILE'" category-map.php                         # expect 1 ($categoryMap entry)
 
 # F. JS delivery
 grep -oE '<script[^>]*src=[^>]*>' "$FILE" | grep -v defer  # expect empty (all deferred)
 ```
 
-SRI note: use the precomputed hashes in `AGENTS.md` (Tech Baseline → Cached CDN dependencies) for Bootstrap 5.3.8 / Icons 1.13.1.
+SRI note: `<link rel="preconnect">` needs no SRI. Use the precomputed hashes in `AGENTS.md` (*Tech baseline*) for Bootstrap 5.3.8 / Icons 1.13.1.
 For any *other* CDN asset, compute from real bytes
 (`curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`) — never recall a hash.
 
 ## 4. Manual content checks (read the page)
 
-Apply the AGENTS.md Testing Checklist's comprehensiveness half, as an auditor:
+Apply AGENTS.md > *Generation & quality protocol* as an auditor:
 
 1. **Coverage contract** — fundamentals + working knowledge + edge/advanced all present?
    Any hollow section (heading with <3 substantive entries)?
@@ -100,8 +83,8 @@ Apply the AGENTS.md Testing Checklist's comprehensiveness half, as an auditor:
 3. **Quick Reference block** near the top? **Common Mistakes** section (mandatory for
    technical topics)?
 4. **Self-containment test** — could a practitioner work from this page alone?
-5. **JSON-LD truthfulness** — does the schema describe what's visibly on the page? There
-   should be no `dateModified` field at all (removed 2026-09-01; see policy note above).
+5. **JSON-LD truthfulness** — does the schema describe what's visibly on the page? No
+   `dateModified` field at all.
 6. **Volatile facts dated?** Don't verify the facts (freshness job's work) — check they
    carry `as of <Mon YYYY>` tags so staleness is *visible*.
 7. **Cross-links** — does the page link its cluster (per `SEO_PROMPT.txt` groupings), and
@@ -112,9 +95,9 @@ Apply the AGENTS.md Testing Checklist's comprehensiveness half, as an auditor:
 JS data. Judge them by rendered output in a browser, not by markup volume. For article-style
 pages, under ~1,500 words of body text is a thinness signal worth a closer look.
 
-## 5. Browser checks (per AGENTS.md Build & Verify)
+## 5. Browser checks (see `docs/content.md` > *Local QA*)
 
-Serve locally (`python3 serve.py` or `nohup python3 -m http.server 8765 &`) and load the page:
+Serve locally (`python3 -m http.server 8765`) and load the page:
 
 - Console clean (favicon 404 is the only acceptable error). **If SRI was added/changed this
   run, this check is mandatory** — a wrong hash silently blocks the asset:
@@ -133,16 +116,15 @@ Serve locally (`python3 serve.py` or `nohup python3 -m http.server 8765 &`) and 
   (1200×630 per AGENTS.md; `generate-image-previews.py` is the batch fallback).
 - Missing JSON-LD → add the standard `TechArticle` block (no `dateModified` field), describing
   only what's on the page. Set `datePublished` from `git log --diff-filter=A --format=%cs -- "$FILE"`.
-- A visible "Last verified" line or a JSON-LD `dateModified` field is present → **remove it**,
-  following the same rules as the 2026-09-01 repo-wide cleanup (delete a self-contained stamp
-  element outright; if it's one clause among others, drop just the clause and fix the
-  surrounding punctuation/separators).
+- Visible "Last verified" line or JSON-LD `dateModified` → **remove it** (delete a
+  self-contained stamp element outright; if it's one clause among others, drop just the clause
+  and fix the surrounding punctuation).
 - Bootstrap 5.3.2/5.3.3 → bump to 5.3.8 + Icons 1.13.1 with the AGENTS.md SRI hashes; add
   `defer`. Then run the browser check — old pages occasionally use removed/renamed behaviors.
 - Missing SRI on existing CDN tags → add computed hashes + `crossorigin="anonymous"`.
 - Broken internal links → remove the link or retarget to an existing page (do NOT create the
   missing page; note it as a possible spec candidate).
-- Missing `$categoryMap` entry → add to `index.php`, reusing an existing category label.
+- Missing `$categoryMap` entry → add to `category-map.php`, reusing an existing category label.
 - Missing `lang`, missing `defer`, missing twitter:card → add.
 
 **Flag, don't fix (report for a separate decision):**
@@ -170,67 +152,10 @@ Keep a running log (append per file) so the systematic pass has a paper trail of
 
 ---
 
-## Appendix — corpus baseline, 2026-07-04 (101 files)
+## Appendix: corpus baseline, 2026-09-22 (204 root `.html`)
 
-Re-derive with the §3 commands before trusting these lists — the repo moves. Counts and
-lists below are the audit-priority queue as of the scan date.
+Re-derive with the §3 commands before trusting; the repo moves.
 
-**Placeholder/broken og:image (BLOCKER):** `bitcoin-whitepaper.html`
-(`YOUR_IMAGE_URL_HERE/...`), `compression-algorithms.html` (`yourdomain.com/...`),
-`etz-chaim-tree-of-life.html` (`etz-chaim-placeholder.png`). Several others point at
-non-convention filenames (e.g. `brazilian-jiu-jitsu.html` → a `.jpg` header image,
-`git-scm.html`/`versioncontrol.html` → `-preview.png` names) — verify each target exists;
-non-existent target = BLOCKER, existing-but-nonstandard = LOW.
-
-**Broken internal links (BLOCKER):** `automotive-innovation-timeline.html` and
-`engineering-metals-selection.html` both link `anduril-products.html`, which does not exist.
-
-**Missing JSON-LD (HIGH, 32 files):** ai-progress-dashboard, airisk, aisafety,
-anapanasati-mindfulness-of-breathing, ashihara-karate, bitcoin-exchanges-cards,
-bitcoin-self-custody-guide, bitcoin-wallet, bitcoin-whitepaper, brazilian-jiu-jitsu,
-compression-algorithms, conscious-leadership-contexts, cooking-guide, currency-timeline,
-databases, emergency-radio-card, human-evolution, human-skeleton, judo, leadership,
-living-richly-guide, medical-school-curriculum, modern-devops-pipelines, objectivism,
-p-doom-test-harness, post-quantum-cryptography, postgresql, scrum,
-shabbat-services-cheatsheet, versioncontrol, weightloss-cheatsheet,
-yudkowsky-rationality-ai-cheatsheet.
-
-**Missing `Last verified`/`last updated` (HIGH, 33 files):** anapanasati, art-of-war-sun-tzu,
-ashihara-karate, bitcoin-whitepaper, brazilian-jiu-jitsu, buddhism, capitalism, command-deck,
-conscious-leadership-contexts, cooking-guide, currency-timeline, cycling,
-emergency-radio-card, global_cuisine_guide, hot-tub-treatment, human-evolution,
-human-skeleton, islam, israel-history, judaism, judo, leadership, living-richly-guide,
-martial-arts-cheatsheet, medical-school-curriculum, military-aphorisms, objectivism,
-p-doom-test-harness, running, scrum, shabbat-services-cheatsheet, weightloss-cheatsheet,
-yudkowsky-rationality-ai-cheatsheet. (Mostly evergreen topics — the stamp still belongs;
-see freshness doc §7–8.)
-
-**CDN without any SRI (HIGH, 30 files):** ai-risk-timeline, anapanasati, aws-vs-azure,
-bitcoin-whitepaper, capitalism, command-deck, currency-timeline, cycling,
-emergency-radio-card, global_cuisine_guide, google-ai-studio-guide, hot-tub-treatment,
-human-skeleton, humanoid-robots, islam, judaism, living-richly-guide,
-martial-arts-cheatsheet, medical-school-curriculum, military-aphorisms, operator-loadouts,
-p-doom-test-harness, postgresql, privacy-data-broker-opt-out, running, scrum,
-shabbat-services-cheatsheet, tesla-products, weightloss-cheatsheet,
-yudkowsky-rationality-ai-cheatsheet. Additional files have *partial* SRI (some tags hashed,
-some not) — the §3C count comparison catches them.
-
-**Bootstrap version spread (HIGH where old):** 5.3.8 (current pin), 5.3.3 (~69 tag
-references across older files), 5.3.2 (4 references). Any non-5.3.8 file gets the bump+SRI
-treatment in §6.
-
-**Missing from `$categoryMap` (HIGH, 8):** anatta-not-self, buddhist-work-leadership,
-craving-desire-habit-loops, data-center-myths, five-hindrances-debugger,
-right-speech-modern-life, satipatthana-four-foundations, stellar-lifecycle. (The Buddhism
-cluster suggests adding one category label once, not eight ad-hoc decisions.)
-
-**Missing preview image (HIGH, 5):** buddhist-work-leadership, craving-desire-habit-loops,
-five-hindrances-debugger, right-speech-modern-life, satipatthana-four-foundations — the
-recent uncommitted batch; generate at 1200×630 before their commits.
-
-**Web-font dependency (MEDIUM, 38 files):** flag per §6; batch the swaps as a design pass.
-
-**Missing `lang` (HIGH, 1):** martial-arts-cheatsheet.
-
-**Clean across the corpus:** every file has a correct canonical URL and a viewport meta —
-no action needed on those dimensions.
+- **Clean corpus-wide:** JSON-LD present, no "Last verified" stamps, no JSON-LD `dateModified` (one prose mention in `how-its-built.html` is not a field), all Bootstrap tags at 5.3.8, every file in `$categoryMap`, every file has `images/<name>.png`, `lang` set, no placeholder og:images, no broken relative `.html` links. Canonical and viewport were already clean.
+- **CDN without SRI (HIGH):** `human-evolution.html` (Leaflet 1.9.4 CSS + JS from unpkg), `weightloss-cheatsheet.html` (`leader-line-new@1.1.9`).
+- **Web-font dependency (MEDIUM, 41 files):** flag per §6; batch swaps as a design pass.
