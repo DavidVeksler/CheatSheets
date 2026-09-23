@@ -1,8 +1,6 @@
-# Marketing campaign — execution plan
+# Marketing campaign: execution plan
 
-Implemented in-repo 2026-07-14. Companion to [`seo-planning.md`](seo-planning.md), which owns
-organic-search measurement. This document now contains the remaining human publishing queue and the
-ready-to-use campaign assets; completed prerequisites are recorded as evidence, not left as TODOs.
+Human publishing queue, ready-to-use campaign assets, and the shared-link measurement log. Organic-search measurement lives in [`META-seo-planning.md`](META-seo-planning.md). The Reddit routine uses the niche-community template and measurement log below.
 
 ## Positioning
 
@@ -12,25 +10,11 @@ The flagship story is the system, not any single page:
 > primary-source research, browser QA, deployment gates, and a public git audit trail.
 
 Individual cheatsheets are proof that the process repeatedly produces useful artifacts. Use separate
-mini-campaigns for separate audiences; do not market the whole 13-category collection as one product.
+mini-campaigns for separate audiences; do not market the whole multi-category collection as one product.
 
-## Implemented owned-media foundation
+## Owned-media foundation (in place)
 
-Verified 2026-07-14:
-
-- The public [`how-its-built.html`](../how-its-built.html) case study explains the pipeline, governance,
-  tradeoffs, live collection size, and audit trail.
-- [`README.md`](../README.md) now gives the public repository a useful landing page and links to the
-  live site, case study, and change history.
-- The homepage now leads with the 160+ page agentic-pipeline story and links directly to GitHub.
-- Every root cheatsheet carries a concise pipeline proof block linking to the case study and public
-  source repository.
-- Every root cheatsheet participates in a reciprocal, category-local discovery ring. The link audit
-  reports 0 orphan pages and a minimum of 4 inbound links per page.
-- Email capture is already implemented on the homepage and build-story page through `subscribe.php`;
-  no new provider or tracking dependency is needed.
-- The initial campaign pages below have valid local OG assets at 1200×630 or the exact 2× equivalent,
-  and their metadata points at those assets.
+[`how-its-built.html`](../how-its-built.html) case study, public [`README.md`](../README.md), homepage pipeline story + GitHub link, a pipeline proof block and category-local discovery ring on every sheet, email capture via `subscribe.php`, and valid 1200x630 OG assets on the campaign pages.
 
 ## Initial campaign pages
 
