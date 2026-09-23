@@ -25,7 +25,7 @@ Per-spec files in this folder:
 ## The SEO research behind this batch
 
 **Data.** Google Search Console, property `https://cheatsheets.davidveksler.com/`, pulled
-2026-08-24 with the new [`scripts/gsc_query.py`](../scripts/gsc_query.py). Two windows:
+2026-08-24 with the new [`scripts/gsc_query.py`](../../scripts/gsc_query.py). Two windows:
 28 days (2026-07-25 → 2026-08-22) for site health, 90 days (2026-05-25 → 2026-08-22,
 10,257 query rows) for demand mining.
 
