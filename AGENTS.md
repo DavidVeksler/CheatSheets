@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Authoritative cross-agent guidance (Claude Code, Codex, Cursor). `.cursorrules` points here.
+Authoritative cross-agent guidance; Claude Code, Codex, and Cursor all read this file natively.
 
 ## Project Overview
 
@@ -36,25 +36,24 @@ A collection of standalone, interactive HTML cheatsheets covering technology, fi
 
 ## Generation & Quality Protocol
 
-1. **Effort = High** (Opus 4.8 default).
-2. **Research primary sources first:** Verify every version, API signature, default, benchmark, limit, date, and price. Never fabricate or guess numbers.
-3. **Coverage contract (3 Depths):**
+1. **Research primary sources first:** Verify every version, API signature, default, benchmark, limit, date, and price. Never fabricate or guess numbers.
+2. **Coverage contract (3 Depths):**
    - **Fundamentals:** Mental models, core definitions (the 20% explaining 80%).
    - **Working knowledge:** Syntax, commands, daily production patterns, decisions.
    - **Edge & advanced:** Gotchas, failure modes, performance, internals.
    - *No placeholders or TODOs.* Every outlined section must be fully populated (≥3 substantive entries per section).
-4. **Atomic entry rule:** Every entry must have:
+3. **Atomic entry rule:** Every entry must have:
    - Precise 1-line definition/purpose.
    - Concrete example with real-world values (no `foo`/`bar`).
    - Quantified metrics (e.g., "~O(log n), sub-ms for n < 10⁶", explicit token prices, exact cutoffs/defaults).
    - Gotcha, pitfall, or explicit "when NOT to use".
-5. **Breadth requirements:**
+4. **Breadth requirements:**
    - Comparison table (criteria × alternatives) when 2+ options exist.
    - Decision guidance ("Use X when...; Use Y when...").
    - Common Mistakes / Anti-Patterns section (MANDATORY for technical sheets).
    - Quick Reference block near top (high-frequency lookups).
    - Density floor: 20+ substantive entries per sheet.
-6. **Freshness & Provenance:**
+5. **Freshness & Provenance:**
    - Date volatile facts inline ("as of <Mon YYYY>" or version tag).
    - Do **not** add a visible "Last verified" line or a JSON-LD `dateModified` field to the page. A weekly routine used to bump these on a schedule regardless of whether it had actually re-verified anything, which made the stamp a lie more often than a fact. Review status is now tracked outside the page, in `refresh-status.json` at the repo root (see [`weekly-freshness-update.md`](weekly-freshness-update.md)).
    - `datePublished` in JSON-LD stays (it's a fact, not a claim about ongoing review) — see the template below.
