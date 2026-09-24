@@ -4,6 +4,33 @@ Append-only KPI log for cheatsheets.davidveksler.com, newest block on top. Each 
 
 <!-- KPI blocks are appended below this line, newest first -->
 
+## 2026-09-23: Referral-channel baseline (origin logs + 16 months of GSC)
+
+Sources: `scripts/referrer_report.py` over the nginx logs (2026-09-06 → 09-24, 19 days, the full
+window logrotate keeps) and GSC by date since 2025-05-26. Cloudflare's free plan has no referrers
+and the sheets run no GA4, so **nothing keeps referrer history past ~3 weeks**.
+
+| Channel (19 days, human-filtered) | Landings | Share |
+|---|---|---|
+| Direct / no referrer | 16,733 | 80.7% (inflated by browser-UA scrapers; not trustworthy) |
+| Search (Google 2,383, DDG 482, Bing 390, other 183) | 3,438 | 16.6% |
+| AI assistants (ChatGPT 345, Gemini 40, Copilot 8, Perplexity 6, other 11) | 410 | 2.0% |
+| Reddit | 64 | 0.3% |
+| Other sites, social, own network | 79 | 0.4% |
+
+Google in the logs (2,383) is ~4x GSC clicks for the same days (617); for ai-frontier it is 961 vs 166.
+The Google-referred hits come from 653 distinct IPs, mostly desktop Chrome, some from Google's own
+2001:4860 range, which suggests SERP prefetch/prerender or Discover rather than clicks. Use GSC for
+search volume and the logs only for channel mix.
+
+GSC clicks/day by month: 2025-06 5.1, 09 15.4, 11 21.4, 2026-02 24.5, 04 18.7, 06 22.0, 07 25.7,
+08 31.9, 09 (1-21) 37.5. All-time top pages: ai-frontier 1,479, anduril-products 1,060 (withdrawn),
+orbital-rockets 518, brazilian-jiu-jitsu 507, google-ai-studio 440, baofeng-uv5r-quick-ref 380.
+Desktop 66% of clicks; US 44%, then GB, CA, IN, AU.
+
+ChatGPT lands on human-skeleton (141) and ai-accelerator-comparison (122) rather than on the search
+winners. Reddit lands on operator-loadouts (24) and the .NET sheets.
+
 ## 2026-09-17 — Homepage and category-hub baseline (index.php SEO tier 1)
 
 Pulled 2026-09-17 via `scripts/gsc_query.py` and the `search-console` MCP, 90 days
