@@ -1399,7 +1399,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
   $lensList = ['grid' => ['Grid', 'grid'], 'map' => ['Map', 'map'], 'paths' => ['Paths', 'signpost']];
   foreach ($lensList as $lv => [$ll, $li]):
     $lurl = $lv === 'grid' ? grid_url(['view' => '']) : grid_url(['view' => $lv]);
-  ?><a data-view="<?php echo h($lv); ?>" aria-current="<?php echo $view === $lv ? 'page' : 'false'; ?>" href="<?php echo h($lurl); ?>"><?php echo chrome_icon($li); ?><?php echo h($ll); ?></a><?php endforeach; ?>
+  ?><a rel="nofollow" data-view="<?php echo h($lv); ?>" aria-current="<?php echo $view === $lv ? 'page' : 'false'; ?>" href="<?php echo h($lurl); ?>"><?php echo chrome_icon($li); ?><?php echo h($ll); ?></a><?php endforeach; ?>
 </nav>
 
 <div class="explorer">
@@ -1418,7 +1418,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
         <ul>
           <?php ksort($shapeCounts); foreach ($shapeCounts as $sname => $sn):
             $on = in_array($sname, $activeShapes, true); ?>
-          <li><a data-facet="shape" data-val="<?php echo h($sname); ?>" aria-pressed="<?php echo $on ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['shape' => toggle_list($activeShapes, $sname)])); ?>"><?php echo h(shape_label($sname)); ?><span class="n"><?php echo (int)$sn; ?></span></a></li>
+          <li><a rel="nofollow" data-facet="shape" data-val="<?php echo h($sname); ?>" aria-pressed="<?php echo $on ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['shape' => toggle_list($activeShapes, $sname)])); ?>"><?php echo h(shape_label($sname)); ?><span class="n"><?php echo (int)$sn; ?></span></a></li>
           <?php endforeach; ?>
         </ul>
       </fieldset>
@@ -1428,9 +1428,9 @@ html.js body[data-view="map"] #mapwrap{display:block}
           $freshLabels = ['reviewed90' => 'Reviewed in 90 days', 'updated30' => 'Updated in 30 days', 'new30' => 'New in 30 days'];
           foreach ($freshLabels as $fk => $fl):
             $on = in_array($fk, $activeFresh, true); ?>
-          <li><a data-facet="fresh" data-val="<?php echo h($fk); ?>" aria-pressed="<?php echo $on ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['fresh' => toggle_list($activeFresh, $fk)])); ?>"><?php echo h($fl); ?></a></li>
+          <li><a rel="nofollow" data-facet="fresh" data-val="<?php echo h($fk); ?>" aria-pressed="<?php echo $on ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['fresh' => toggle_list($activeFresh, $fk)])); ?>"><?php echo h($fl); ?></a></li>
           <?php endforeach; ?>
-          <li><a data-facet="interactive" data-val="1" aria-pressed="<?php echo $wantInteractive ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['interactive' => $wantInteractive ? '' : '1'])); ?>">Interactive</a></li>
+          <li><a rel="nofollow" data-facet="interactive" data-val="1" aria-pressed="<?php echo $wantInteractive ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['interactive' => $wantInteractive ? '' : '1'])); ?>">Interactive</a></li>
         </ul>
       </fieldset>
       <p><a class="plain" href="./"><?php echo chrome_icon('x-circle'); ?>Clear all filters</a></p>
@@ -1442,15 +1442,15 @@ html.js body[data-view="map"] #mapwrap{display:block}
       <span class="count" id="count"><span id="countN"><?php echo (int)$visibleCount; ?></span> of <?php echo (int)$totalCount; ?></span>
       <span class="chips" id="chips">
         <?php if ($activeCat !== ''): ?><a class="chip" href="<?php echo h(grid_url(['cat' => ''])); ?>"><?php echo h($activeCat); ?><span class="x">×</span></a><?php endif; ?>
-        <?php if ($qRaw !== ''): ?><a class="chip" href="<?php echo h(grid_url(['q' => ''])); ?>">"<?php echo h(clamp_text($qRaw, 28)); ?>"<span class="x">×</span></a><?php endif; ?>
-        <?php foreach ($activeShapes as $s): ?><a class="chip" href="<?php echo h(grid_url(['shape' => toggle_list($activeShapes, $s)])); ?>"><?php echo h(shape_label($s)); ?><span class="x">×</span></a><?php endforeach; ?>
-        <?php foreach ($activeFresh as $f): ?><a class="chip" href="<?php echo h(grid_url(['fresh' => toggle_list($activeFresh, $f)])); ?>"><?php echo h($freshLabels[$f] ?? $f); ?><span class="x">×</span></a><?php endforeach; ?>
-        <?php if ($wantInteractive): ?><a class="chip" href="<?php echo h(grid_url(['interactive' => ''])); ?>">Interactive<span class="x">×</span></a><?php endif; ?>
+        <?php if ($qRaw !== ''): ?><a rel="nofollow" class="chip" href="<?php echo h(grid_url(['q' => ''])); ?>">"<?php echo h(clamp_text($qRaw, 28)); ?>"<span class="x">×</span></a><?php endif; ?>
+        <?php foreach ($activeShapes as $s): ?><a rel="nofollow" class="chip" href="<?php echo h(grid_url(['shape' => toggle_list($activeShapes, $s)])); ?>"><?php echo h(shape_label($s)); ?><span class="x">×</span></a><?php endforeach; ?>
+        <?php foreach ($activeFresh as $f): ?><a rel="nofollow" class="chip" href="<?php echo h(grid_url(['fresh' => toggle_list($activeFresh, $f)])); ?>"><?php echo h($freshLabels[$f] ?? $f); ?><span class="x">×</span></a><?php endforeach; ?>
+        <?php if ($wantInteractive): ?><a rel="nofollow" class="chip" href="<?php echo h(grid_url(['interactive' => ''])); ?>">Interactive<span class="x">×</span></a><?php endif; ?>
       </span>
       <nav class="sorts" aria-label="Sort">
         <?php $SORT_ICON = ['new' => 'sparkles', 'popular' => 'rising', 'updated' => 'history', 'reviewed' => 'check-circle', 'az' => 'sort', 'title' => 'sort'];
         foreach ($SORTS as $sk => $sl): $cur = ($sort === $sk); ?>
-        <a data-sort="<?php echo h($sk); ?>" aria-current="<?php echo $cur ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['sort' => $sk === 'new' ? '' : $sk])); ?>"><?php echo chrome_icon($SORT_ICON[$sk] ?? 'sort'); ?><?php echo h($sl); ?></a>
+        <a rel="nofollow" data-sort="<?php echo h($sk); ?>" aria-current="<?php echo $cur ? 'true' : 'false'; ?>" href="<?php echo h(grid_url(['sort' => $sk === 'new' ? '' : $sk])); ?>"><?php echo chrome_icon($SORT_ICON[$sk] ?? 'sort'); ?><?php echo h($sl); ?></a>
         <?php endforeach; ?>
       </nav>
     </div>
@@ -1617,6 +1617,10 @@ html.js body[data-view="map"] #mapwrap{display:block}
 (function(){
 'use strict';
 var NS='cs-explorer:v1:';
+// Marks a JS-capable browser for conf/nginx/facet-trap.conf: a filter URL
+// requested from our own page without this cookie is a scraper walking the
+// facet links (JS intercepts those clicks), and gets a 302 to the clean page.
+try{document.cookie='cs_js=1; path=/; SameSite=Lax; Secure';}catch(e){}
 // Bridge to the map/paths block below: it registers setView, showOnMap and the
 // two redraw hooks, and reads the lite catalog and helpers back out of here.
 var CS=window.CS={setView:function(){},showOnMap:function(){},onFilter:null,onTheme:null};

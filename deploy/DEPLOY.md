@@ -61,6 +61,7 @@ ssh johngalt@198.211.102.9 'sudo install -o root -g root -m 644 /tmp/<name>.conf
 - `category-hubs.conf`: `/<slug>` → `index.php?hub=<slug>`, `/<slug>/` 301 → `/<slug>`. Must be live before a deploy that ships slug links, or every breadcrumb 404s.
 - `redirects.conf`: permanent redirects for retired URLs.
 - `internal-paths.conf`: 404 for repo internals the checkout puts in the docroot (`docs/`, `marketing/`, `TODO/`, `scripts/`, `deploy/`, `conf/`, `lib/`, non-archive `newsletter/` files, root dotfiles, every `.md`/`.py`/`.ps1`, `AGENTS.md`). Two provenance files linked from sheets are exempt by exact match; add another exemption there before linking a sheet to any internal file. Verify: `python3 scripts/check_internal_paths.py`.
+- `facet-trap.conf`: 302 to the clean path for explorer filter/sort/view URLs requested with our own Referer and no `cs_js` cookie (scraper traversal of the combinatorial facet links). Needs the `index.php` that sets `cs_js` live first, or JS users reloading a filtered view lose their filters. Verify: `curl -s -o /dev/null -w "%{http_code}\n" -H "Referer: https://cheatsheets.davidveksler.com/" "https://cheatsheets.davidveksler.com/?shape=reference"` → 302; same URL without the Referer → 200.
 - `php-routing.conf`, `cache-control.conf`, `ssl.conf` exist on the server only.
 
 Verify after reload: `curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/radio` → 200; `curl -o /dev/null -w "%{http_code} %{redirect_url}\n" "https://cheatsheets.davidveksler.com/?cat=Radio"` → 301 to `/radio`.
