@@ -15,6 +15,22 @@ python scripts/build_economics_batch.py
 python scripts/seo_check.py economic-systems-compared.html political-ideologies-compared.html us-states-vs-countries-gdp.html red-vs-blue-state-economies.html
 ```
 
+## Keeping the generator in sync
+
+The four pages are generator output: a hand edit to one of them (copy edit,
+added link, related-sheet change) must be mirrored into the generator in the
+same commit, or the next refresh silently reverts it. Check with:
+
+```powershell
+python scripts/build_economics_batch.py --check   # exit 1 names each drifted page
+python scripts/build_economics_batch.py --out-dir $env:TEMP\econ   # then diff against the committed pages
+```
+
+`--check` fetches live source data, so a drift report after a new BEA, Census,
+or World Bank release can be real data change rather than a missed edit; diff
+with `--out-dir` to tell which. The hub breadcrumb comes from
+`scripts/add_hub_breadcrumbs.py`, which the generator imports.
+
 ## Data contract
 
 The generator downloads BEA state GDP and regional price parity ZIP files,

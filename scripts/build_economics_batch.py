@@ -7,6 +7,8 @@ Census, BLS, World Bank, and Tax Foundation source tables before rendering the
 standalone HTML files.  Run from the repository root:
 
     python scripts/build_economics_batch.py
+    python scripts/build_economics_batch.py --out-dir <dir>   # build elsewhere to diff against committed pages
+    python scripts/build_economics_batch.py --check           # exit 1 if a rebuild would change a committed page
 
 The generated pages remain fully static: no reader-side API calls or build step.
 """
@@ -517,13 +519,13 @@ def document(*, title: str, description: str, keywords: str, filename: str,
 <meta name="keywords" content="{esc(keywords)}"><link rel="canonical" href="{canonical}">
 <meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(description)}"><meta property="og:type" content="website"><meta property="og:url" content="{canonical}"><meta property="og:image" content="{image}"><meta property="og:image:alt" content="{esc(image_alt)}">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{esc(title)}"><meta name="twitter:description" content="{esc(description)}"><meta name="twitter:image" content="{image}"><meta name="twitter:creator" content="@heroiclife">
-<script type="application/ld+json">{json.dumps({"@context":"https://schema.org","@type":"TechArticle","headline":title,"description":description,"author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":VERIFIED,"dateModified":VERIFIED,"keywords":keywords})}</script>
+<script type="application/ld+json">{json.dumps({"@context":"https://schema.org","@type":"TechArticle","headline":title,"description":description,"author":{"@type":"Person","name":"David Veksler (AI Generated)"},"publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":VERIFIED,"keywords":keywords})}</script>
 <style>{COMMON_CSS}\n{theme_css}</style></head>
-<body><header class="hero"><div class="shell"><button class="theme-toggle no-print" type="button" aria-pressed="false"><span aria-hidden="true">◐</span><span>Dark theme</span></button><div class="eyebrow">{esc(eyebrow)}</div><h1>{esc(h1)}</h1><p class="lede">{lede}</p><div class="hero-meta"><span class="pill"><strong>Last verified</strong> {VERIFIED}</span><span class="pill">Standalone · print-ready · works without JavaScript</span></div></div></header>
+<body><header class="hero"><div class="shell"><button class="theme-toggle no-print" type="button" aria-pressed="false"><span aria-hidden="true">◐</span><span>Dark theme</span></button><div class="eyebrow">{esc(eyebrow)}</div><h1>{esc(h1)}</h1><p class="lede">{lede}</p><div class="hero-meta"><span class="pill">Standalone · print-ready · works without JavaScript</span></div></div></header>
 <main class="shell">{content}
 <section aria-labelledby="sources"><h2 id="sources">Sources &amp; method</h2><div class="sources">{sources}</div></section>
 <section aria-labelledby="related"><h2 id="related">Related sheets</h2><div class="related" data-seo-related-links aria-label="Related Economics and Politics cheatsheets">{related_html}</div></section></main>
-<footer><div class="shell"><p><strong>Last verified: {VERIFIED}.</strong> Volatile figures are labeled with their data year.</p><p>One person + AI agents build and maintain this collection through public specs, QA gates, and git history. <a href="how-its-built.html">How this site is built</a> · <a href="https://github.com/DavidVeksler/CheatSheets">Source on GitHub</a></p></div></footer>
+<footer><p style="font-size:0.85em;text-align:center;margin:0.5em 0;">By <a href="https://davidveksler.com/?ref=cheatsheets">David Veksler</a></p><div class="shell"><p>Volatile figures are labeled with their data year.</p><p>One person + AI agents build and maintain this collection through public specs, QA gates, and git history. <a href="how-its-built.html">How this site is built</a> · <a href="https://github.com/DavidVeksler/CheatSheets">Source on GitHub</a></p></div></footer>
 <script>(()=>{{const root=document.documentElement;root.classList.add("js");const button=document.querySelector(".theme-toggle");const media=matchMedia("(prefers-color-scheme: dark)");let saved=null;try{{saved=localStorage.getItem("cheatsheets-theme")}}catch{{}}if(saved==="light"||saved==="dark")root.dataset.theme=saved;const render=()=>{{const dark=(root.dataset.theme|| (media.matches?"dark":"light"))==="dark";button.setAttribute("aria-pressed",String(dark));button.lastElementChild.textContent=dark?"Light theme":"Dark theme"}};button.addEventListener("click",()=>{{root.dataset.theme=(root.dataset.theme|| (media.matches?"dark":"light"))==="dark"?"light":"dark";try{{localStorage.setItem("cheatsheets-theme",root.dataset.theme)}}catch{{}}render()}});render()}})();</script></body></html>'''
 
 
@@ -642,7 +644,7 @@ def build_economic_systems() -> str:
             "Definition: productive assets are privately controlled and decentralized prices coordinate investment and exchange.",
             "Canonical reform: West Germany's June 1948 currency reform was paired with relaxation of price controls; the 1957 competition law constrained cartels.",
             "Mechanism: profit rewards serving willing buyers; loss and bankruptcy withdraw capital from failed uses.",
-            "Texts: Smith's <cite>Wealth of Nations</cite> (1776), Mises's <cite>Human Action</cite> (1949), and Hayek's price-system essays.",
+            "Texts: Smith's <cite>Wealth of Nations</cite> (1776), Mises's <cite><a href=\"https://freecapitalists.org/books/human-action/\" target=\"_blank\" rel=\"noopener\">Human Action</a></cite> (1949), and Hayek's price-system essays.",
             "Measured record: market reform coincided with a fast postwar recovery, but Marshall aid, reconstruction, and catch-up growth are real co-causes.",
             "Often confused with corporatism. Subsidies, licensing monopolies, and bailouts socialize risk while leaving titles private.",
         ]),
@@ -658,7 +660,7 @@ def build_economic_systems() -> str:
             "Definition: the state owns or commands major productive assets and substitutes administrative allocation for capital markets.",
             "Canonical case: the USSR launched its first Five-Year Plan in 1928 and forced agricultural collectivization from 1929.",
             "Policies: Gosplan physical targets, state foreign-trade monopoly, administered prices, and soft budget constraints for state enterprises.",
-            "Texts: Marx's <cite>Capital</cite> (1867) did not supply a detailed planning manual; Lenin and later Soviet institutions supplied the governing form.",
+            "Texts: Marx's <cite>Capital</cite> (1867) did not supply a detailed planning manual; Lenin and later Soviet institutions supplied the governing form. Mises's <cite><a href=\"https://freecapitalists.org/books/economic-calculation-in-the-socialist-commonwealth/\" target=\"_blank\" rel=\"noopener\">Economic Calculation in the Socialist Commonwealth</a></cite> (1920) and <cite><a href=\"https://freecapitalists.org/books/socialism-an-economic-and-sociological-analysis/\" target=\"_blank\" rel=\"noopener\">Socialism</a></cite> (1922) argued the planning failure was structural, not managerial.",
             "Measured record: heavy industry expanded, but consumer shortage, coercion, famine, and unreliable official valuations complicate headline growth.",
             "Often confused with any welfare state. A public pension does not determine who owns steel mills or allocates investment.",
         ]),
@@ -760,7 +762,7 @@ def build_economic_systems() -> str:
         theme_css=theme, content=content,
         image_alt="Ledger-style comparison matrix for mercantilism, capitalism, socialism, state capitalism, and corporatism",
         sources=sources,
-        related=[("Political Ideologies Compared", "political-ideologies-compared.html"), ("Capitalism", "capitalism.html"), ("Objectivism", "objectivism.html"), ("Currency Timeline", "currency-timeline.html")],
+        related=[("Political Ideologies Compared", "political-ideologies-compared.html"), ("Capitalism", "capitalism.html"), ("Objectivism", "objectivism.html"), ("Currency Timeline", "currency-timeline.html"), ("Selfish Reasons to Have More Kids", "selfish-reasons-to-have-more-kids.html")],
     )
 
 
@@ -1015,7 +1017,7 @@ explorer.hidden=false;host.classList.add('fingerprint-ready');render();
             ["Trade", "Open trade as exchange and peace; exceptions for genuine security", "Rules-based trade with labor/environment conditions", "Unilateral free trade; migration and capital generally open", "Tariff reduction, competitive exchange rate, and FDI openness", "Free trade in market wing; strategic protection in nationalist wing", "Open trade with bargaining standards and adjustment policy", "Managed trade protecting labor and democratic planning", "Tariffs, local content, and strategic supply chains"],
             ["Immigration", "Generally freer movement, subject to legal-order and fiscal debates", "Legal immigration plus humanitarian protection and integration", "Free movement or radically expanded legal migration", "Labor mobility favored, but not a defining plank", "Ranges from skills-based limits to restriction for cultural continuity", "Managed openness with labor standards and welfare eligibility rules", "Varies: solidarity and refuge versus labor-market planning", "Restriction and assimilation are core program elements"],
             ["Authority", "Consent, general law, individual rights, and separated powers", "Democratic legitimacy plus equal citizenship and expert administration", "Pre-political individual rights; state powers must be strictly justified", "Constitutional government plus technocratic, credibility-enhancing institutions", "Inherited institutions, nation, constitution, religion, and prudence", "Parliamentary democracy, unions, and social citizenship", "Democratic control of economy and state", "Sovereign nation, historic community, and elected executive"],
-            ["Canonical text", "Locke, <cite>Two Treatises</cite> (1689); Mill, <cite>On Liberty</cite> (1859)", "Rawls, <cite>A Theory of Justice</cite> (1971); New Deal legislation", "Nozick (1974); Rothbard, <cite>For a New Liberty</cite> (1973)", "Williamson's Washington Consensus list (1989/1990)", "Burke, <cite>Reflections</cite> (1790); Oakeshott (1956)", "Marshall, <cite>Citizenship and Social Class</cite> (1950)", "Mill, <cite>Chapters on Socialism</cite> (1879); modern workplace-democracy programs", "Recent national-conservative statements; no single canonical text"],
+            ["Canonical text", "Locke, <cite>Two Treatises</cite> (1689); Mill, <cite>On Liberty</cite> (1859)", "Rawls, <cite>A Theory of Justice</cite> (1971); New Deal legislation", "Nozick (1974); Rothbard, <cite><a href=\"https://freecapitalists.org/books/for-a-new-liberty-the-libertarian-manifesto/\" target=\"_blank\" rel=\"noopener\">For a New Liberty</a></cite> (1973)", "Williamson's Washington Consensus list (1989/1990)", "Burke, <cite>Reflections</cite> (1790); Oakeshott (1956)", "Marshall, <cite>Citizenship and Social Class</cite> (1950)", "Mill, <cite>Chapters on Socialism</cite> (1879); modern workplace-democracy programs", "Recent national-conservative statements; no single canonical text"],
             ["Flagship policy", "Equal legal status, free entry, religious toleration", "Social Security, civil-rights enforcement, Medicare, environmental rules", "Occupational-licensing repeal, drug decriminalization, surveillance limits", "Fiscal discipline, trade liberalization, privatization, property security", "School choice, defense spending, family tax policy", "Universal health coverage, sector bargaining, paid leave", "Worker cooperatives, codetermination, public utilities or funds", "Industrial strategy, border restriction, procurement preference"],
             ["Party example (Aug 2026)", "Germany's FDP and classical-liberal factions elsewhere", "U.S. Democratic Party mainstream", "U.S. Libertarian Party; Europe's smaller liberal-libertarian currents", "No stable mass party self-label; technocratic reform factions", "U.S. Republican and UK Conservative traditions, both internally divided", "Nordic and European center-left parties", "Some democratic-socialist parties and factions; programs differ on ownership", "National-conservative and populist-right factions in the U.S. and Europe"],
             ["Most confused with", "Libertarianism or conservatism", "Leftism or socialism", "Conservatism", "Classical liberalism or any disliked market policy", "Libertarianism or nationalism", "Democratic socialism", "Social democracy or state socialism", "Traditional conservatism or fascism"],
@@ -1049,7 +1051,7 @@ explorer.hidden=false;host.classList.add('fingerprint-ready');render();
         ("Liberal is not a universal left label", "In U.S. speech it usually means center-left. In Europe and Latin America it often signals constitutional and market liberalism. Translate before arguing."),
         ("Libertarian is not conservative", "They overlap on some markets. Drug law, surveillance, immigration, war, speech, and sexual autonomy expose the split."),
         ("Neoliberal does not mean new liberal", "The 1938 renewal project, Williamson's ten reform areas, and today's catch-all epithet are three different usages."),
-        ("Classical liberal is not conservative", "Classical liberalism judges inherited institutions by liberty and general law; conservatism grants inheritance and social continuity independent weight."),
+        ("Classical liberal is not conservative", "Classical liberalism judges inherited institutions by liberty and general law; conservatism grants inheritance and social continuity independent weight. Mises's <cite><a href=\"https://freecapitalists.org/books/liberalism-in-the-classical-tradition/\" target=\"_blank\" rel=\"noopener\">Liberalism</a></cite> and Bastiat's <cite><a href=\"https://freecapitalists.org/books/the-law/\" target=\"_blank\" rel=\"noopener\">The Law</a></cite> state the classical case directly."),
         ("Social democracy is not democratic socialism", "The practical dividing question is ownership: redistribute income from mostly private production, or democratize productive ownership itself?"),
         ("Fascist economics was not laissez-faire", "Private titles survived, but independent unions, entry, investment, trade, and production were subordinated to the state. See the corporatism column in the systems sheet."),
         ("One left-right axis loses information", "Economic control, civil liberty, national identity, institutional trust, and foreign policy do not move as one bundle. Two-axis charts help, but every chosen axis also hides dimensions."),
@@ -1480,6 +1482,20 @@ document.documentElement.classList.add("js");render();setSelected(selected);
 
 
 def main() -> int:
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--out-dir", type=Path, default=ROOT,
+                        help="write pages here instead of the repo root")
+    parser.add_argument("--check", action="store_true",
+                        help="build to a temp dir and exit 1 if any committed page differs")
+    args = parser.parse_args()
+    out_dir = Path(tempfile.mkdtemp()) if args.check else args.out_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import add_hub_breadcrumbs as crumbs
+    catalog = {s["file"]: s for s in json.loads((ROOT / "catalog.json").read_text(encoding="utf-8"))["sheets"]}
+    hubs = json.loads((ROOT / "category-hubs.json").read_text(encoding="utf-8"))["hubs"]
     print("Loading current primary-source tables...")
     states = load_states()
     countries = load_countries()
@@ -1499,9 +1515,20 @@ def main() -> int:
             "<!-- Generated by scripts/build_economics_batch.py; "
             f"primary-source data retrieved {VERIFIED}. -->\n"
         )
-        path = ROOT / filename
+        sheet = catalog[filename]
+        block = crumbs.build_block(sheet, hubs[sheet["category"]], sheet["category"])
+        source = crumbs.place(source, block)
+        path = out_dir / filename
         path.write_text(marker + source, encoding="utf-8", newline="\n")
         print(f"wrote {path.name}: {len(source):,} bytes")
+    if args.check:
+        drift = [name for name in pages
+                 if (out_dir / name).read_text(encoding="utf-8")
+                 != (ROOT / name).read_text(encoding="utf-8")]
+        for name in drift:
+            print(f"DRIFT {name}: committed page differs from generator output "
+                  f"(hand edit not mirrored into the generator, or source data changed)")
+        return 1 if drift else 0
     return 0
 
 
