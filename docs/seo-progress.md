@@ -4,6 +4,16 @@ Append-only KPI log for cheatsheets.davidveksler.com, newest block on top. Each 
 
 <!-- KPI blocks are appended below this line, newest first -->
 
+## 2026-09-24: Facet crawl trap closed (not a measurement pulse)
+
+Deployed 04:27 UTC: `conf/nginx/facet-trap.conf` (302 for filter/sort/view URLs with our own
+Referer and no `cs_js` cookie), `rel="nofollow"` on facet links, robots.txt `Disallow` for
+`shape|fresh|sort|interactive|view`. Before: 664k of 701k weekly requests were facet URLs
+(~497k with our Referer, ~117k with none; GoogleOther ~21k). Expect origin requests, log size and
+the "direct" bucket in `scripts/referrer_report.py` to drop sharply from this date; do not read it
+as lost human traffic. No-Referer facet scrapers are not covered by the 302; re-check their volume
+in the next pulse.
+
 ## 2026-09-23: Referral-channel baseline (origin logs + 16 months of GSC)
 
 Sources: `scripts/referrer_report.py` over the nginx logs (2026-09-06 → 09-24, 19 days, the full
