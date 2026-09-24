@@ -7,8 +7,13 @@ Append-only KPI log for cheatsheets.davidveksler.com, newest block on top. Each 
 ## 2026-09-23: Referral-channel baseline (origin logs + 16 months of GSC)
 
 Sources: `scripts/referrer_report.py` over the nginx logs (2026-09-06 → 09-24, 19 days, the full
-window logrotate keeps) and GSC by date since 2025-05-26. Cloudflare's free plan has no referrers
-and the sheets run no GA4, so **nothing keeps referrer history past ~3 weeks**.
+window logrotate keeps), GSC by date since 2025-05-26, and GA4 `properties/543339529` (readable with
+the GSC service account). Cloudflare's free plan has no referrers, and **GA4 only recorded
+2026-06-25 → 07-03 (9 days, 1,540 sessions), then went silent**, so nothing keeps referrer history
+past ~3 weeks.
+
+GA4's 9 days: direct 909, Google 253, Reddit 168 (data-center-myths launch), DDG 79, Bing 72,
+Yahoo 23, ChatGPT 4, Gemini 3. Top landings: /history.php 230, data-center-myths 162, / 145, ai-frontier 140.
 
 | Channel (19 days, human-filtered) | Landings | Share |
 |---|---|---|
