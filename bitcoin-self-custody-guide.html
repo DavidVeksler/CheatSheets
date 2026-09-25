@@ -1,1962 +1,797 @@
 <!DOCTYPE html>
 <html lang="en">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Bitcoin Self-Custody: Security Guide From Plebes to Whales
-  </title>
-  <meta content="A Bitcoin self-custody guide that scales from everyday holders to whales: securing against loss and theft, recoverability, tools, and the threat landscape." name="description"/>
-  <meta content="bitcoin security, self custody, crypto security, hardware wallet, multisig, bitcoin inheritance, opsec, physical security, seed backup, bitcoin guide, crypto tools, privacy services, bitcoin threats" name="keywords"/>
-  <link href="https://cheatsheets.davidveksler.com/bitcoin-self-custody-guide.html" rel="canonical"/>
-  <!-- Favicon -->
-  <link href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'&gt;&lt;text x='0' y='14' font-size='14'&gt;🛡️&lt;/text&gt;&lt;/svg&gt;" rel="icon"/>
-  <!-- Open Graph -->
-  <meta content="Bitcoin Self-Custody: Security Guide From Plebes to Whales" property="og:title"/>
-  <meta content="A Bitcoin self-custody guide that scales from everyday holders to whales: securing against loss and theft, recoverability, tools, and the threat landscape." property="og:description"/>
-  <meta content="website" property="og:type"/>
-  <meta content="https://cheatsheets.davidveksler.com/bitcoin-self-custody-guide.html" property="og:url"/>
-  <!-- Twitter Card -->
-  <meta content="summary_large_image" name="twitter:card"/>
-  <meta content="@heroiclife" name="twitter:creator"/>
-  <meta content="Bitcoin Self-Custody Fortress: A Scalable Security Guide" name="twitter:title"/>
-  <meta content="A Bitcoin self-custody guide that scales from everyday holders to whales: securing against loss and theft, recoverability, tools, and the threat landscape." name="twitter:description">
-   <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" rel="stylesheet"/>
-   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous" rel="stylesheet"/>
-   <style>
-    :root {
-            --primary-color: #f7931a; /* Bitcoin Orange */
-            --secondary-color: #1a1a1a;
-            --danger-color: #dc3545; 
-            --warning-color: #ffc107;
-            --success-color: #28a745;
-            --info-color: #17a2b8; 
-            --light-blue-bg: #e7f6f8; 
-            --light-blue-border: #b6dde2;
-            --dark-bg: #0a0a0a; 
-            --card-bg: #141414; 
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
-            --border-color: #333;
-            --highlight-color: var(--primary-color);
-            --expert-highlight-bg: rgba(23, 162, 184, 0.07); 
-            --info-color-rgb: 23, 162, 184; 
-        }
-        
-        body { background-color: var(--dark-bg); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; }
-        .page-header { background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%); border-bottom: 3px solid var(--primary-color); padding: 3rem 0; margin-bottom: 2rem; text-align: center; }
-        .page-header h1 { font-size: 2.8rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem; }
-        .page-header .sub-title { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 1rem; font-style: italic; }
-        .lead { font-size: 1.25rem; color: var(--text-secondary); max-width: 800px; margin: 0 auto 1rem auto; }
-        .last-updated { color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem; }
-        
-        .scaling-banner { background-color: var(--card-bg); border: 1px solid var(--border-color); border-left: 5px solid var(--info-color); padding: 1.5rem; margin-bottom: 2.5rem; border-radius: 8px; }
-        .scaling-banner h4 { color: var(--info-color); margin-bottom: 0.5rem; }
-        .scaling-banner p { color: var(--text-secondary); margin-bottom: 0; }
-
-        .threat-level { display: inline-block; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-left: 0.5rem; border: 1px solid transparent; text-transform: uppercase; letter-spacing: 0.5px; }
-        .threat-critical { background-color: var(--danger-color); color: var(--text-primary); border-color: #ff4d4d;}
-        .threat-high { background-color: #d65d3e; color: var(--text-primary); border-color: #e07a5f;}
-        .threat-medium { background-color: var(--warning-color); color: #000; border-color: #ffd040;}
-        .threat-low { background-color: var(--info-color); color: var(--text-primary); border-color: #39bfd7;}
-        
-        .section-container { margin-bottom: 3.5rem; }
-        .section-title { font-size: 2.2rem; color: var(--primary-color); margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border-color); display: flex; align-items: center; }
-        .section-title i { margin-right: 0.75rem; font-size: 2rem; }
-        
-        .security-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.75rem; margin-bottom: 1.5rem; transition: all 0.3s ease; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .security-card:hover { border-color: var(--primary-color); box-shadow: 0 8px 30px rgba(247, 147, 26, 0.15); transform: translateY(-3px); }
-        .security-card h5 { color: var(--text-primary); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; font-size: 1.2rem; font-weight: 600; }
-        .security-card h5 > span:first-child i { margin-right: 0.5rem; color: var(--primary-color); }
-        
-        .security-term, .expert-term { color: var(--highlight-color); font-weight: 600; background-color: rgba(247, 147, 26, 0.1); padding: 0.1em 0.3em; border-radius: 3px; }
-        
-        .rule-box { background-color: rgba(247, 147, 26, 0.05); border-left: 4px solid var(--primary-color); padding: 1rem; margin: 1.5rem 0; border-radius: 4px; }
-        .rule-box.critical { background-color: rgba(220, 53, 69, 0.05); border-left-color: var(--danger-color); }
-        .rule-box.critical strong { color: var(--danger-color); }
-        .rule-box.expert-insight { background-color: var(--expert-highlight-bg); border-left-color: var(--info-color); }
-        .rule-box.expert-insight strong { color: var(--info-color); }
-        .rule-box.pleb-friendly { background-color: rgba(var(--info-color-rgb), 0.08); border-left-color: var(--info-color); color: var(--text-secondary); }
-        .rule-box.pleb-friendly strong { color: var(--info-color); }
-
-        .summary { color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.95rem; }
-        .details-toggle { background-color: var(--primary-color); color: #000; border: none; padding: 0.6rem 1.5rem; border-radius: 4px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; }
-        .details-toggle i { margin-right: 0.5rem; }
-        .details-toggle:hover { background-color: #f7a31a; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(247, 147, 26, 0.3); }
-        
-        .collapse-content { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); }
-        .collapse-content ul, .collapse-content ol { padding-left: 1.2rem; }
-        .collapse-content li { margin-bottom: 0.6rem; color: var(--text-secondary); }
-        .collapse-content li strong { color: var(--text-primary); }
-        .collapse-content h6 { color: var(--primary-color); margin-top: 1rem; margin-bottom: 0.5rem; font-weight: 600; }
-        .collapse-content a, .tier-advice a, .resource-list a { color: var(--info-color); text-decoration: none; }
-        .collapse-content a:hover, .tier-advice a:hover, .resource-list a:hover { text-decoration: underline; color: #29cae4; }
-        
-        .protection-matrix { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 2rem; margin: 2rem 0 3rem 0; }
-        .matrix-header { text-align: center; margin-bottom: 1.5rem; }
-        .matrix-header h3 { color: var(--primary-color); }
-        .threat-indicator { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 0.5rem; vertical-align: middle; }
-        
-        .code-block { background-color: #000000; border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; margin: 1rem 0; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; overflow-x: auto; font-size: 0.85em; color: #d0d0d0; }
-        
-        .warning-banner { background-color: rgba(255, 193, 7, 0.1); border: 1px solid var(--warning-color); border-left-width: 5px; border-radius: 8px; padding: 1.5rem; margin: 0 auto 3rem auto; text-align: left; }
-        .warning-banner h4 { color: var(--warning-color); margin-bottom: 0.75rem; display: flex; align-items: center; }
-        .warning-banner h4 i { font-size: 1.5rem; margin-right: 0.75rem; }
-        .warning-banner p { margin-bottom: 0; color: var(--text-secondary); }
-        
-        footer { background-color: var(--card-bg); border-top: 1px solid var(--border-color); padding: 2.5rem 0; margin-top: 4rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem; }
-        footer a { color: var(--primary-color); text-decoration: none; }
-        footer a:hover { text-decoration: underline; }
-        
-        #checklist .security-card ul { list-style-type: none; padding-left: 0; }
-        #checklist .security-card li { margin-bottom: 0.75rem; }
-        #checklist .security-card input[type="checkbox"] { margin-right: 0.75rem; transform: scale(1.2); accent-color: var(--primary-color); }
-        #checklist .security-card label { color: var(--text-secondary); cursor: pointer; }
-        #checklist .security-card input[type="checkbox"]:checked + label { text-decoration: line-through; color: var(--success-color); }
-        #checklist .security-card h6 { color: var(--primary-color); margin-top: 1.5rem; margin-bottom: 1rem; font-weight: bold; }
-
-        .tier-advice { padding: 1rem; margin-top: 1.5rem; border-radius: 6px; }
-        .tier-advice h6 { margin-top: 0; font-weight: bold; }
-        .pleb-advice { background-color: #2a2a2e; border: 1px solid #444; color: var(--text-secondary); }
-        .pleb-advice h6 { color: var(--info-color); }
-        .pleb-advice strong { color: var(--text-primary); }
-        .whale-advice h6 { color: var(--primary-color); }
-
-        .resource-list ul { list-style-type: none; padding-left: 0; }
-        .resource-list li { margin-bottom: 0.5rem; }
-        .resource-list li i { margin-right: 0.5rem; color: var(--primary-color); }
-
-        @media print {
-            body { background-color: white; color: black; font-size: 10pt; }
-            :root { --primary-color: #D2691E; --card-bg: #f9f9f9; --border-color: #ccc; --text-primary: #000000; --text-secondary: #333333; }
-            .page-header { background: none; border-bottom: 2px solid black; padding: 1rem 0; margin-bottom: 1.5rem; }
-            .page-header h1 { color: black; font-size: 2rem; } .page-header .sub-title { display: none; }
-            .lead, .last-updated { color: #333; font-size: 1rem; }
-            .scaling-banner, .warning-banner { background-color: #fff3cd !important; border-color: #ffeeba !important; color: #664d03 !important; border-left-width: 3px; }
-            .scaling-banner h4, .warning-banner h4 { color: #664d03 !important; } .scaling-banner p, .warning-banner p { color: #664d03 !important; }
-            .warning-banner i, .scaling-banner i { display: none; }
-            .section-title { color: black; font-size: 1.5rem; border-bottom-color: #999; } .section-title i { display: none; }
-            .security-card { border: 1px solid #999; box-shadow: none; padding: 1rem; margin-bottom: 1rem; background-color: #f9f9f9; }
-            .security-card h5 { color: black; font-size: 1.2rem; }
-            .security-card h5 .threat-level { border: 1px solid black; color: black !important; background-color: white !important; padding: 0.1rem 0.4rem; font-size: 0.7rem; }
-            .details-toggle { display: none !important; } .collapse { display: block !important; }
-            .collapse-content { border-top: 1px solid #ccc; padding-top: 1rem; margin-top: 1rem; }
-            .collapse-content a, .tier-advice a, .resource-list a { color: #555; text-decoration: none; }
-            .collapse-content a::after, .tier-advice a::after, .resource-list a::after { content: " (" attr(href) ")"; font-size: 0.8em; }
-
-
-            .tier-advice, .pleb-advice { background-color: #f0f0f0; border: 1px solid #ddd; color: #333; }
-            .pleb-advice h6, .whale-advice h6 { color: #000; }
-
-            .threat-indicator { border: 1px solid black; }
-            .rule-box { border-left-color: black; background-color: #eee; } .rule-box.critical { border-left-color: black; }
-            .code-block { background-color: #f0f0f0; color: black; border: 1px solid #ccc; }
-            #checklist .security-card input[type="checkbox"]:checked + label::before { content: "[X] "; }
-            #checklist .security-card input[type="checkbox"]:not(:checked) + label::before { content: "[ ] "; }
-            #checklist .security-card input[type="checkbox"] { display: none; }
-            footer { background: none; border-top: 1px solid #ccc; color: #555; padding: 1rem 0;} footer a { color: #D2691E; }
-            .col-md-3, .col-md-6, .col-lg-6, .col-lg-12 { flex: 0 0 100%; max-width: 100%; }
-            .row > * { padding-right: 0; padding-left: 0; } .container { max-width: none !important; padding: 0 !important; margin: 0 !important; }
-        }
-   </style>
-  </meta>
-  <meta content="images/bitcoin-self-custody-guide.png" property="og:image"/>
-  <meta content="images/bitcoin-self-custody-guide.png" name="twitter:image"/>
- <meta property="og:image:alt" content="Bitcoin Self-Custody Fortress: A Security Guide From Plebes to Whales">
- <script type="application/ld+json">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitcoin Self-Custody: Security Guide From Plebes to Whales</title>
+<meta name="description" content="Bitcoin self-custody scaled from everyday holders to whales: threat model, wallet setups compared, seed and multisig backups, duress planning, inheritance, and a tiered checklist.">
+<meta name="keywords" content="bitcoin security, self custody, hardware wallet, multisig, seed phrase backup, BIP39 passphrase, output descriptor, bitcoin inheritance, wrench attack, duress wallet, opsec, collaborative custody, timelock recovery">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/bitcoin-self-custody-guide.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23f7931a'/%3E%3Cpath d='M10 14v-3a6 6 0 0 1 12 0v3' fill='none' stroke='%23fff' stroke-width='2.6'/%3E%3Crect x='7' y='14' width='18' height='13' rx='2.5' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:title" content="Bitcoin Self-Custody: Security Guide From Plebes to Whales">
+<meta property="og:description" content="Threat model, wallet setups compared, seed and multisig backups, duress planning, inheritance, and a tiered checklist, scaled from everyday holders to whales.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/bitcoin-self-custody-guide.html">
+<meta property="og:image" content="images/bitcoin-self-custody-guide.png">
+<meta property="og:image:alt" content="Bitcoin self-custody security guide, scaled from everyday holders to whales">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bitcoin Self-Custody: Security Guide From Plebes to Whales">
+<meta name="twitter:description" content="Threat model, wallet setups compared, seed and multisig backups, duress planning, inheritance, and a tiered checklist, scaled from everyday holders to whales.">
+<meta name="twitter:image" content="images/bitcoin-self-custody-guide.png">
+<meta name="twitter:creator" content="@heroiclife">
+<script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "TechArticle",
   "headline": "Bitcoin Self-Custody: Security Guide From Plebes to Whales",
-  "description": "A Bitcoin self-custody guide that scales from everyday holders to whales: securing against loss and theft, recoverability, tools, and the threat landscape.",
-  "author": {
-    "@type": "Person",
-    "name": "David Veksler (AI Generated)"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "David Veksler Cheatsheets"
-  },
+  "description": "Bitcoin self-custody scaled from everyday holders to whales: threat model, wallet setups compared, seed and multisig backups, duress planning, inheritance, and a tiered checklist.",
+  "author": {"@type": "Person", "@id": "https://davidveksler.com/#person", "name": "David Veksler", "url": "https://davidveksler.com/"},
+  "creditText": "Produced by a governed multi-agent Claude Code pipeline; author of record David Veksler",
+  "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
   "datePublished": "2025-05-24",
-  "keywords": "bitcoin security, self custody, crypto security, hardware wallet, multisig, bitcoin inheritance, opsec, physical security, seed backup, bitcoin guide, crypto tools, privacy services, bitcoin threats"
+  "keywords": "bitcoin security, self custody, hardware wallet, multisig, seed phrase backup, BIP39 passphrase, output descriptor, bitcoin inheritance, wrench attack, duress wallet, opsec, collaborative custody, timelock recovery"
 }
 </script>
+<style>
+@layer reset, tokens, base, layout, components, print;
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  body, h1, h2, h3, h4, p, ul, ol, figure, table { margin: 0; }
+  ul, ol { padding-left: 1.2rem; }
+  img, svg { display: block; max-width: 100%; }
+  input, button { font: inherit; }
+}
+
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --bg: light-dark(#f7f5f0, #0f0e0c);
+    --surface: light-dark(#ffffff, #181612);
+    --surface-2: light-dark(#f0ece3, #211e19);
+    --ink: light-dark(#1c1a16, #ede9e1);
+    --muted: light-dark(#57534b, #a8a196);
+    --line: light-dark(#e0dace, #2e2a24);
+    --accent: light-dark(#a84a00, #f7931a);
+    --accent-soft: light-dark(#fdf0e0, #2a1d0c);
+    --accent-ink: light-dark(#ffffff, #1a1206);
+    --crit: light-dark(#b42318, #ff8578);
+    --crit-soft: light-dark(#fdecea, #2d1411);
+    --high: light-dark(#b54708, #ffa35c);
+    --high-soft: light-dark(#fff1e6, #2b1a0d);
+    --med: light-dark(#8a6100, #f5c451);
+    --med-soft: light-dark(#fdf6dc, #29230d);
+    --low: light-dark(#1d5fa8, #7db4f0);
+    --low-soft: light-dark(#e8f1fb, #111d2b);
+    --ok: light-dark(#1f7a3d, #6fd494);
+    --ok-soft: light-dark(#e7f5ec, #0f2417);
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --radius: 10px;
+    --wrap: 1180px;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+}
+
+@layer base {
+  html { scroll-padding-top: 5.5rem; -webkit-text-size-adjust: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 16px/1.6 var(--sans); }
+  h1, h2, h3, h4 { line-height: 1.2; text-wrap: balance; }
+  p, li, td { text-wrap: pretty; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+  code, kbd { font-family: var(--mono); font-size: .88em; background: var(--surface-2); padding: .08em .35em; border-radius: 4px; }
+  strong { font-weight: 650; }
+  .skip { position: absolute; left: -999px; top: 0; background: var(--accent); color: var(--accent-ink); padding: .5rem 1rem; z-index: 50; }
+  .skip:focus { left: 1rem; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+
+@layer layout {
+  .wrap { max-width: var(--wrap); margin-inline: auto; padding-inline: 16px; }
+  header.hero { border-bottom: 1px solid var(--line); background: linear-gradient(180deg, var(--accent-soft), var(--bg) 85%); }
+  .hero .wrap { padding-block: 2.5rem 2rem; }
+  .eyebrow { font: 600 .78rem/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .hero h1 { font-size: clamp(1.9rem, 4.5vw, 3rem); margin: .6rem 0 .8rem; letter-spacing: -.02em; }
+  .hero .dek { font-size: 1.12rem; color: var(--muted); max-width: 70ch; }
+  .hero-row { display: flex; gap: .75rem; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  main { padding-block: 1.5rem 3rem; }
+  section.block { margin-top: 3rem; }
+  section.block > h2 { font-size: clamp(1.4rem, 3vw, 1.85rem); padding-bottom: .5rem; border-bottom: 2px solid var(--line); display: flex; gap: .6rem; align-items: baseline; letter-spacing: -.01em; }
+  section.block > h2 .num { font: 600 .85rem/1 var(--mono); color: var(--accent); }
+  section.block > .intro { color: var(--muted); max-width: 78ch; margin: .8rem 0 1.2rem; }
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+  .grid.two { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+}
+
+@layer components {
+  /* Tier bar */
+  .tierbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 92%, transparent); border-bottom: 1px solid var(--line); }
+  .tierbar .wrap { display: flex; gap: .5rem 1rem; align-items: center; flex-wrap: wrap; padding-block: .6rem; }
+  .tierbar .label { font: 600 .78rem/1.2 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .tiers { display: flex; flex-wrap: wrap; gap: .35rem; border: 0; padding: 0; margin: 0; }
+  .tiers input { position: absolute; opacity: 0; pointer-events: none; }
+  .tiers label { cursor: pointer; padding: .35rem .8rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: .92rem; font-weight: 550; display: inline-flex; gap: .4rem; align-items: center; }
+  .tiers input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .tiers input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .tierbar nav { margin-left: auto; display: flex; gap: .15rem .8rem; flex-wrap: wrap; font-size: .85rem; }
+  .tierbar nav a { color: var(--muted); text-decoration: none; }
+  .tierbar nav a:hover { color: var(--accent); text-decoration: underline; }
+  .theme-btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: .35rem .75rem; cursor: pointer; font-size: .85rem; }
+
+  /* Tier badges */
+  .t { display: inline-block; font: 650 .7rem/1 var(--mono); letter-spacing: .04em; text-transform: uppercase; padding: .28rem .5rem; border-radius: 5px; border: 1px solid currentColor; white-space: nowrap; vertical-align: middle; }
+  .t1 { color: var(--ok); background: var(--ok-soft); }
+  .t2 { color: var(--low); background: var(--low-soft); }
+  .t3 { color: var(--accent); background: var(--accent-soft); }
+
+  /* Tier filtering: CSS only, JS just remembers the choice */
+  body:has(#tier-1:checked) [data-tier="2"], body:has(#tier-1:checked) [data-tier="3"],
+  body:has(#tier-2:checked) [data-tier="3"] { display: none; }
+  body:has(#tier-1:checked) .tm col.c1, body:has(#tier-2:checked) .tm col.c2, body:has(#tier-3:checked) .tm col.c3 { background: var(--accent-soft); }
+  .filter-note { display: none; font-size: .85rem; color: var(--muted); margin-top: .4rem; }
+  body:has(#tier-1:checked) .filter-note, body:has(#tier-2:checked) .filter-note { display: block; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.1rem 1.2rem; }
+  .card h3 { font-size: 1.08rem; margin-bottom: .5rem; display: flex; justify-content: space-between; gap: .5rem; align-items: flex-start; }
+  .card p + p, .card p + ul, .card ul + p { margin-top: .5rem; }
+  .card li { margin-bottom: .3rem; }
+  .card .kicker { font: 600 .72rem/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: .9rem 0 .4rem; }
+  .card.rule { border-left: 4px solid var(--accent); }
+  .rules { counter-reset: r; list-style: none; padding: 0; display: grid; gap: .6rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); }
+  .rules li { counter-increment: r; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: .8rem 1rem .8rem 3.1rem; position: relative; }
+  .rules li::before { content: counter(r, decimal-leading-zero); position: absolute; left: .9rem; top: .8rem; font: 700 .95rem/1.4 var(--mono); color: var(--accent); }
+
+  .alert { border: 1px solid var(--crit); background: var(--crit-soft); border-left-width: 5px; border-radius: var(--radius); padding: 1rem 1.2rem; margin-top: 1.5rem; }
+  .alert strong:first-child { color: var(--crit); }
+  .note { border-left: 4px solid var(--low); background: var(--low-soft); padding: .8rem 1rem; border-radius: 0 var(--radius) var(--radius) 0; margin-top: 1rem; }
+  .note.warn { border-color: var(--crit); background: var(--crit-soft); }
+  .note.tip { border-color: var(--ok); background: var(--ok-soft); }
+
+  /* Tables */
+  .tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { text-align: left; vertical-align: top; padding: .6rem .75rem; border-bottom: 1px solid var(--line); }
+  thead th { font: 650 .74rem/1.3 var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); background: var(--surface-2); position: sticky; top: 0; }
+  tbody tr:last-child > * { border-bottom: 0; }
+  tbody th { font-weight: 650; min-width: 11rem; }
+  td.mono, .mono { font-family: var(--mono); font-size: .86em; }
+  .tbl table { min-width: 720px; }
+  .tbl.narrow table { min-width: 520px; }
+  caption { caption-side: bottom; text-align: left; padding: .6rem .75rem; font-size: .82rem; color: var(--muted); border-top: 1px solid var(--line); }
+
+  .lv { display: inline-block; font: 650 .7rem/1 var(--mono); text-transform: uppercase; padding: .25rem .45rem; border-radius: 4px; white-space: nowrap; }
+  .lv.c { color: var(--crit); background: var(--crit-soft); }
+  .lv.h { color: var(--high); background: var(--high-soft); }
+  .lv.m { color: var(--med); background: var(--med-soft); }
+  .lv.l { color: var(--low); background: var(--low-soft); }
+
+  /* Fact strip */
+  .facts { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); margin-top: 1rem; }
+  .fact { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: .75rem .9rem; }
+  .fact b { display: block; font: 700 1.25rem/1.2 var(--mono); color: var(--accent); }
+  .fact span { font-size: .86rem; color: var(--muted); }
+
+  /* Mistakes */
+  .mistakes { list-style: none; padding: 0; display: grid; gap: .6rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); }
+  .mistakes li { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: .8rem 1rem; }
+  .mistakes b { display: block; color: var(--crit); margin-bottom: .2rem; }
+  .mistakes b::before { content: "\2715  "; }
+
+  /* Details */
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  details + details { margin-top: .5rem; }
+  summary { cursor: pointer; padding: .8rem 1rem; font-weight: 650; list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font: 700 1.1rem/1 var(--mono); color: var(--accent); }
+  details[open] > summary::after { content: "\2212"; }
+  details > .body { padding: 0 1rem 1rem; }
+  .links { list-style: none; padding: 0; columns: 2 16rem; column-gap: 1.5rem; }
+  .links li { break-inside: avoid; margin-bottom: .45rem; }
+  .links small { color: var(--muted); }
+
+  /* Checklist */
+  .check { list-style: none; padding: 0; }
+  .check li { display: flex; gap: .6rem; align-items: flex-start; padding: .45rem 0; border-bottom: 1px dashed var(--line); }
+  .check li:last-child { border-bottom: 0; }
+  .check input { width: 1.15rem; height: 1.15rem; margin-top: .2rem; accent-color: var(--accent); flex: none; }
+  .check label { cursor: pointer; flex: 1; }
+  .check input:checked + label { color: var(--muted); text-decoration: line-through; }
+  .check .t { margin-left: .35rem; }
+  .progress { font: 600 .85rem/1 var(--mono); color: var(--muted); }
+  .progress output { color: var(--accent); }
+  .reset-btn { border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 6px; padding: .3rem .7rem; cursor: pointer; font-size: .82rem; }
+
+  footer.site { border-top: 1px solid var(--line); background: var(--surface); padding: 2rem 0; font-size: .9rem; color: var(--muted); text-align: center; }
+  footer.site .related-cheatsheets a { display: inline-block; margin: .15rem .5rem; }
+  footer.site p { margin-top: .6rem; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+    .tiers label, .theme-btn { transition: background-color .15s, border-color .15s, color .15s; }
+  }
+  @media (max-width: 720px) {
+    .tierbar nav { display: none; }
+    .rules li { padding-left: 2.8rem; }
+  }
+}
+
+@layer print {
+  @media print {
+    :root { color-scheme: light; }
+    body { background: #fff; font-size: 10pt; }
+    .tierbar, .theme-btn, .reset-btn, .skip { display: none !important; }
+    [data-tier] { display: revert !important; }
+    details > .body { display: block; }
+    details:not([open]) > .body { display: block; }
+    .card, .tbl, details, .rules li, .mistakes li { break-inside: avoid; }
+    a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .8em; color: #555; }
+    .check input:checked + label::before { content: "[x] "; }
+    .check input:not(:checked) + label::before { content: "[ ] "; }
+    .check input { display: none; }
+  }
+}
+</style>
 </head>
- <body>
-  <header class="page-header">
-   <div class="container">
-    <h1>
-     <i class="bi bi-shield-check">
-     </i>
-     Bitcoin Self-Custody Fortress: A Security Guide From Plebes to Whales
-    </h1>
-    <p class="sub-title">
-     Tailored Protection for All Levels of Bitcoin Holders
-    </p>
-    <p class="lead">
-     A comprehensive, expert-informed guide to Bitcoin self-custody, offering scalable security measures whether you're just starting or managing significant wealth. Learn to protect your assets against loss, theft, and ensure long-term recoverability.
-    </p>
-   </div>
-  </header>
-  <main class="container">
-   <div class="scaling-banner">
-    <h4>
-     <i class="bi bi-arrows-angle-expand">
-     </i>
-     Scaling Your Security: One Size Doesn't Fit All
-    </h4>
-    <p>
-     This guide provides recommendations for various levels of Bitcoin holdings. "
-     <strong>
-      Everyday Holder / Plebe
-     </strong>
-     " suggestions focus on essential, cost-effective security for smaller amounts. "
-     <strong>
-      Significant Holdings / Whale
-     </strong>
-     " advice details advanced measures for substantial wealth, where targeted threats are more likely. Assess your holdings and risk profile to choose the appropriate layers.
-    </p>
-   </div>
-   <div class="warning-banner">
-    <h4>
-     <i class="bi bi-exclamation-triangle-fill">
-     </i>
-     Fundamental Truth
-    </h4>
-    <p>
-     Regardless of holding size, your Bitcoin is worthless if you lose access or fall victim to theft. Prioritize
-     <strong>
-      understanding your setup, robust backups, and practicing recovery
-     </strong>
-     .
-    </p>
-   </div>
-   <section class="protection-matrix">
-    <div class="matrix-header">
-     <h3>
-      General Threat Landscape &amp; Priorities
-     </h3>
-     <p class="text-secondary">
-      While specific threat actors vary, core vulnerabilities often remain similar. Adapt your focus based on your holdings.
-     </p>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-row">
+      <span class="eyebrow">Bitcoin &middot; Self-custody security</span>
+      <button class="theme-btn" type="button" id="themeBtn" aria-label="Toggle color theme">Theme: auto</button>
     </div>
-    <div class="row text-center">
-     <div class="col-md-3 col-6 mb-3">
-      <div class="threat-indicator" style="background-color: var(--danger-color);">
-      </div>
-      <strong>
-       Critical for ALL:
-      </strong>
-      Accidental Loss / Seed Mismanagement / Bad Backups
-     </div>
-     <div class="col-md-3 col-6 mb-3">
-      <div class="threat-indicator" style="background-color: #d65d3e;">
-      </div>
-      <strong>
-       High for ALL:
-      </strong>
-      Malware / Phishing / Social Engineering
-     </div>
-     <div class="col-md-3 col-6 mb-3">
-      <div class="threat-indicator" style="background-color: var(--warning-color);">
-      </div>
-      <strong>
-       Medium (escalates with holdings):
-      </strong>
-      Device Theft / Sim Swaps / Basic Remote Hacks
-     </div>
-     <div class="col-md-3 col-6 mb-3">
-      <div class="threat-indicator" style="background-color: var(--info-color);">
-      </div>
-      <strong>
-       Low (escalates to CRITICAL for Whales):
-      </strong>
-      Targeted Physical Coercion / Advanced Persistent Threats / State Actors
-     </div>
-    </div>
-   </section>
-   <section class="section-container" data-section-id="threats" id="threat-landscape-detailed">
-    <h2 class="section-title">
-     <i class="bi bi-binoculars-fill">
-     </i>
-     Understanding the Threat Landscape
-    </h2>
-    <div class="row">
-     <div class="col-lg-6">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-bug-fill">
-         </i>
-         Online &amp; Digital Exploits
-        </span>
-        <span class="threat-level threat-high">
-         HIGH FOR ALL
-        </span>
-       </h5>
-       <p class="summary">
-        Your internet-connected devices are constant targets. Malware, phishing, and insecure platforms can lead to direct theft of keys or credentials.
-       </p>
-       <button aria-controls="threat-online" aria-expanded="false" class="btn details-toggle" data-bs-target="#threat-online" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="threat-online">
-        <ul>
-         <li>
-          <strong>
-           Malware/Viruses:
-          </strong>
-          Keyloggers, clipboard hijackers, ransomware that encrypts your data, or trojans that steal wallet files or trick you into signing malicious transactions.
-         </li>
-         <li>
-          <strong>
-           Phishing &amp; Social Engineering:
-          </strong>
-          Deceptive emails, websites, or messages tricking you into revealing seed phrases, private keys, passwords, or sending Bitcoin to scammers. Fake support staff are common.
-         </li>
-         <li>
-          <strong>
-           Exchange Hacks/Failures:
-          </strong>
-          Leaving Bitcoin on an exchange exposes you to their security breaches, insolvency, or regulatory shutdowns.
-          <span class="security-term">
-           "Not your keys, not your coins."
-          </span>
-         </li>
-         <li>
-          <strong>
-           SIM Swaps:
-          </strong>
-          Attackers gain control of your phone number to intercept 2FA codes or reset passwords for exchange accounts or email.
-         </li>
-         <li>
-          <strong>
-           Software Vulnerabilities:
-          </strong>
-          Bugs in wallet software, operating systems, or browsers that can be exploited.
-         </li>
-        </ul>
-        <p>
-         <strong>
-          Mitigation:
-         </strong>
-         Hardware wallets, strong unique passwords, 2FA (authenticator app), vigilance against suspicious links/requests, keeping software updated cautiously, minimizing use of custodial services for large amounts.
-        </p>
-       </div>
-      </div>
-     </div>
-     <div class="col-lg-6">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-person-bounding-box">
-         </i>
-         Physical Attacks &amp; Coercion
-        </span>
-        <span class="threat-level threat-medium">
-         MEDIUM (CRITICAL for Whales)
-        </span>
-       </h5>
-       <p class="summary">
-        Direct physical threats aim to force you to surrender your Bitcoin. Risk increases significantly if your holdings are known.
-       </p>
-       <button aria-controls="threat-physical" aria-expanded="false" class="btn details-toggle" data-bs-target="#threat-physical" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="threat-physical">
-        <ul>
-         <li>
-          <strong>
-           "$5 Wrench Attack":
-          </strong>
-          Being physically threatened or tortured until you give up your keys/seeds/PINs.
-         </li>
-         <li>
-          <strong>
-           Home Invasion/Robbery:
-          </strong>
-          Attackers break into your home specifically targeting your Bitcoin assets, often due to information leakage about your holdings.
-         </li>
-         <li>
-          <strong>
-           Targeted Kidnapping/Extortion:
-          </strong>
-          High net worth individuals may be targeted for ransom payable in Bitcoin.
-         </li>
-         <li>
-          <strong>
-           Device Theft:
-          </strong>
-          Loss or theft of a phone, computer, or even a hardware wallet (if PIN is weak or seed is stored with it).
-         </li>
-         <li>
-          <strong>
-           Insider Threats:
-          </strong>
-          Betrayal by someone with knowledge of or access to your security setup (e.g., family, friends, employees).
-         </li>
-        </ul>
-        <p>
-         <strong>
-          Mitigation:
-         </strong>
-         Strong OPSEC (silence about holdings), physical home security, geographically distributed multisig (no single point of access), duress planning, decoy wallets. For HNW, professional security consultation is advised.
-        </p>
-       </div>
-      </div>
-     </div>
-     <div class="col-lg-6">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-person-hearts">
-         </i>
-         User Error &amp; Self-Inflicted Loss
-        </span>
-        <span class="threat-level threat-critical">
-         CRITICAL FOR ALL
-        </span>
-       </h5>
-       <p class="summary">
-        Many Bitcoin losses are self-inflicted due to mistakes, misunderstanding, or poor planning. This is often the biggest threat.
-       </p>
-       <button aria-controls="threat-user-error" aria-expanded="false" class="btn details-toggle" data-bs-target="#threat-user-error" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="threat-user-error">
-        <ul>
-         <li>
-          <strong>
-           Lost Seed Phrase:
-          </strong>
-          Misplacing, accidentally destroying, or having illegible seed phrase backups. This is permanent loss.
-         </li>
-         <li>
-          <strong>
-           Incorrect Backups:
-          </strong>
-          Writing down seed words incorrectly, in the wrong order, or missing words. Not testing backups.
-         </li>
-         <li>
-          <strong>
-           Forgotten Passphrases:
-          </strong>
-          Forgetting the BIP39 passphrase ("25th word") used with a seed phrase.
-         </li>
-         <li>
-          <strong>
-           Sending to Wrong Address:
-          </strong>
-          Typos or copy-paste errors in recipient addresses. Bitcoin transactions are irreversible. Confirm addresses carefully.
-         </li>
-         <li>
-          <strong>
-           Misunderstanding Technology:
-          </strong>
-          Not comprehending how wallets, transactions, or multisig setups work, leading to critical errors.
-         </li>
-         <li>
-          <strong>
-           Improper Inheritance Planning:
-          </strong>
-          Heirs unable to access funds due to lack of knowledge or clear instructions.
-         </li>
-         <li>
-          <strong>
-           Damage to Backup Medium:
-          </strong>
-          Paper backups destroyed by fire/water, metal backups corroded if low quality or poorly stored.
-         </li>
-        </ul>
-        <p>
-         <strong>
-          Mitigation:
-         </strong>
-         Meticulous seed backup on durable materials (metal), multiple backups in different locations, testing recovery procedures, double-checking transaction details, continuous learning, clear inheritance plan.
-        </p>
-       </div>
-      </div>
-     </div>
-     <div class="col-lg-6">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-bank">
-         </i>
-         Custodian &amp; Counterparty Risk
-        </span>
-        <span class="threat-level threat-medium">
-         MEDIUM (HIGH if large % on exchange)
-        </span>
-       </h5>
-       <p class="summary">
-        Trusting a third party with your Bitcoin means accepting their security model and operational risks.
-       </p>
-       <button aria-controls="threat-custodian" aria-expanded="false" class="btn details-toggle" data-bs-target="#threat-custodian" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="threat-custodian">
-        <ul>
-         <li>
-          <strong>
-           Exchange Insolvency/Collapse:
-          </strong>
-          Exchanges can go bankrupt (e.g., Mt. Gox, FTX), and your funds held by them can be lost or tied up for years.
-         </li>
-         <li>
-          <strong>
-           Hacking of Custodian:
-          </strong>
-          Even large custodians can be hacked, leading to loss of customer funds.
-         </li>
-         <li>
-          <strong>
-           Regulatory Action:
-          </strong>
-          Governments can freeze exchange assets or force disclosures.
-         </li>
-         <li>
-          <strong>
-           Exit Scams/Fraud:
-          </strong>
-          Unscrupulous custodians or services disappearing with user funds.
-         </li>
-         <li>
-          <strong>
-           Terms of Service Changes:
-          </strong>
-          Custodians can change rules, freeze accounts, or limit withdrawals based on their policies.
-         </li>
-        </ul>
-        <p>
-         <strong>
-          Mitigation:
-         </strong>
-         Minimize funds left on exchanges or with any single custodian. Prioritize self-custody, especially for long-term holdings. If using custodians, choose reputable, regulated entities and understand their insurance/security policies. For HNW, collaborative custody can be a structured way to use a professional co-signer while retaining control. The <a href="crypto-custody-index.html">custody responsibility matrix</a> shows what remains yours across self-custody, platform, and third-party models.
-        </p>
-       </div>
-      </div>
-     </div>
-     <div class="col-lg-12">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-flag-fill">
-         </i>
-         Nation-State Level &amp; Systemic Risks
-        </span>
-        <span class="threat-level threat-low">
-         LOW (Escalates for Whales / Specific Jurisdictions)
-        </span>
-       </h5>
-       <p class="summary">
-        These are broader risks related to governmental actions or fundamental protocol issues, typically more concerning for very large holders or those in unstable jurisdictions.
-       </p>
-       <button aria-controls="threat-nation-state" aria-expanded="false" class="btn details-toggle" data-bs-target="#threat-nation-state" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="threat-nation-state">
-        <ul>
-         <li>
-          <strong>
-           Asset Seizure/Forfeiture:
-          </strong>
-          Governments attempting to confiscate Bitcoin through legal or extra-legal means.
-         </li>
-         <li>
-          <strong>
-           Restrictive Regulations:
-          </strong>
-          Laws making it difficult to use, trade, or self-custody Bitcoin. Outright bans in some jurisdictions.
-         </li>
-         <li>
-          <strong>
-           Capital Controls:
-          </strong>
-          Restrictions on moving Bitcoin across borders.
-         </li>
-         <li>
-          <strong>
-           Increased Surveillance:
-          </strong>
-          Government attempts to de-anonymize users and track transactions, potentially leading to targeted actions.
-         </li>
-         <li>
-          <strong>
-           Protocol-Level Attack (Highly Unlikely but Theoretical):
-          </strong>
-          A 51% attack on the Bitcoin network or discovery of a fundamental cryptographic flaw. This is generally considered a very low probability for Bitcoin due to its decentralization and hash power.
-         </li>
-         <li>
-          <strong>
-           Quantum Computing Threat (Future Concern):
-          </strong>
-          Theoretical future risk where quantum computers could break current cryptographic algorithms. Bitcoin developers are aware and researching quantum-resistant solutions.
-         </li>
-        </ul>
-        <p>
-         <strong>
-          Mitigation:
-         </strong>
-         Geographic diversification of assets and potentially residency (for HNW), strong privacy practices (OPSEC, CoinJoin), staying informed about regulatory developments, supporting Bitcoin development and decentralization. The core Bitcoin protocol is designed to be highly resistant to most systemic attacks.
-        </p>
-       </div>
-      </div>
-     </div>
-    </div>
-   </section>
-   <section class="section-container" data-section-id="opsec" id="opsec">
-    <h2 class="section-title">
-     <i class="bi bi-eye-slash-fill">
-     </i>
-     Operational Security (OPSEC) &amp; Privacy
-    </h2>
-    <div class="row">
-     <div class="col-lg-6">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-mic-mute-fill">
-         </i>
-         The Shield of Silence
-        </span>
-        <span class="threat-level threat-critical">
-         CRITICAL FOR ALL
-        </span>
-       </h5>
-       <p class="summary">
-        Do not publicly discuss your Bitcoin holdings, especially specific amounts. Bragging or unnecessary disclosure makes you a target for
-        <span class="security-term">
-         scammers, hackers, and physical threats
-        </span>
-        .
-       </p>
-       <button aria-controls="opsec-silence" aria-expanded="false" class="btn details-toggle" data-bs-target="#opsec-silence" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="opsec-silence">
-        <div class="tier-advice pleb-advice">
-         <h6>
-          <i class="bi bi-person-fill">
-          </i>
-          Everyday Holder / Plebe:
-         </h6>
-         <ul>
-          <li>
-           Avoid posting about crypto buys/sells on public social media.
-          </li>
-          <li>
-           Don't share wallet screenshots or transaction details online.
-          </li>
-          <li>
-           Be cautious discussing crypto with strangers or casual acquaintances.
-          </li>
-         </ul>
-        </div>
-        <div class="tier-advice whale-advice mt-3">
-         <h6>
-          <i class="bi bi-gem">
-          </i>
-          Significant Holdings / Whale:
-         </h6>
-         <p>
-          All the above, plus:
-         </p>
-         <ul>
-          <li>
-           Implement strict policies about discussing crypto, even with close family/friends if they are not part of your security plan.
-          </li>
-          <li>
-           Use pseudonyms for all online crypto activity. Maintain separate "crypto" and "normie" digital identities (e.g., encrypted email like
-           <a href="https://proton.me/mail" target="_blank">
-            ProtonMail
-           </a>
-           or
-           <a href="https://tutanota.com/" target="_blank">
-            Tutanota
-           </a>
-           ; social profiles).
-          </li>
-          <li>
-           Never reveal your total holdings or security setup details to anyone not essential to your plan.
-          </li>
-          <li>
-           Use E2E encrypted communication (e.g.,
-           <a href="https://signal.org/" target="_blank">
-            Signal
-           </a>
-           ) for any sensitive discussions.
-          </li>
-          <li>
-           Practice UTXO hygiene (coin control, avoid address reuse) to obscure total wealth on-chain. Software like
-           <a href="https://sparrowwallet.com/" target="_blank">
-            Sparrow Wallet
-           </a>
-           can help.
-          </li>
-         </ul>
-        </div>
-       </div>
-      </div>
-     </div>
-     <div class="col-lg-6">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-shield-slash-fill">
-         </i>
-         Minimizing Your Digital &amp; Physical Footprint
-        </span>
-        <span class="threat-level threat-high">
-         HIGH (Scales with Holdings)
-        </span>
-       </h5>
-       <p class="summary">
-        Reduce links between your real-world identity, locations, and Bitcoin activities. Each link is a potential
-        <span class="security-term">
-         vulnerability point
-        </span>
-        .
-       </p>
-       <button aria-controls="opsec-footprint" aria-expanded="false" class="btn details-toggle" data-bs-target="#opsec-footprint" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="opsec-footprint">
-        <div class="tier-advice pleb-advice">
-         <h6>
-          <i class="bi bi-person-fill">
-          </i>
-          Everyday Holder / Plebe:
-         </h6>
-         <ul>
-          <li>
-           Use strong, unique passwords for all crypto-related accounts and a reputable password manager (e.g.,
-           <a href="https://bitwarden.com/" target="_blank">
-            Bitwarden
-           </a>
-           (Open Source),
-           <a href="https://1password.com/" target="_blank">
-            1Password
-           </a>
-           ).
-          </li>
-          <li>
-           Enable 2-Factor Authentication (2FA - authenticator app preferred over SMS) on exchanges.
-          </li>
-          <li>
-           Be wary of public Wi-Fi for crypto transactions. Use a VPN (e.g.,
-           <a href="https://protonvpn.com/" target="_blank">
-            ProtonVPN
-           </a>
-           ,
-           <a href="https://mullvad.net/" target="_blank">
-            Mullvad
-           </a>
-           ) if you must.
-          </li>
-          <li>
-           When ordering hardware wallets, consider if home delivery is safe or if an alternative (office, P.O. Box) is better.
-          </li>
-         </ul>
-        </div>
-        <div class="tier-advice whale-advice mt-3">
-         <h6>
-          <i class="bi bi-gem">
-          </i>
-          Significant Holdings / Whale:
-         </h6>
-         <p>
-          All the above, plus:
-         </p>
-         <ul>
-          <li>
-           Utilize P.O. Boxes or secure mail forwarding services (e.g.,
-           <a href="https://www.travelingmailbox.com/" target="_blank">
-            Traveling Mailbox
-           </a>
-           ,
-           <a href="https://physicaladdress.com/" target="_blank">
-            PhysicalAddress.com
-           </a>
-           ) for all crypto-related mail and hardware deliveries.
-          </li>
-          <li>
-           Actively remove Personal Identifiable Information (PII) from data broker sites (e.g.,
-           <a href="https://joindeleteme.com/" target="_blank">
-            DeleteMe
-           </a>
-           ,
-           <a href="https://optery.com/" target="_blank">
-            Optery
-           </a>
-           ).
-          </li>
-          <li>
-           Consider dedicated, hardened devices (e.g., a specific laptop only for crypto) with minimal software.
-          </li>
-          <li>
-           Use legal structures (LLCs, trusts) to obscure ownership of assets where appropriate and legal.
-          </li>
-          <li>
-           Avoid ostentatious displays of wealth that could mark you.
-          </li>
-          <li>
-           Consider pseudonymous phone numbers/SIMs for sensitive registrations.
-          </li>
-         </ul>
-        </div>
-       </div>
-      </div>
-     </div>
-    </div>
-   </section>
-   <section class="section-container" data-section-id="physical" id="physical">
-    <h2 class="section-title">
-     <i class="bi bi-shield-fill-check">
-     </i>
-     Physical Security: Protecting Your Keys &amp; Yourself
-    </h2>
-    <div class="row">
-     <div class="col-lg-6">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-safe">
-         </i>
-         Securing Seed Phrases &amp; Devices
-        </span>
-        <span class="threat-level threat-high">
-         HIGH FOR ALL
-        </span>
-       </h5>
-       <p class="summary">
-        Your seed phrases and hardware wallets are prime targets. Protect them from theft, damage, and unauthorized access.
-        <span class="security-term">
-         Geographic separation of backups is key.
-        </span>
-       </p>
-       <button aria-controls="physical-seeds" aria-expanded="false" class="btn details-toggle" data-bs-target="#physical-seeds" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="physical-seeds">
-        <div class="tier-advice pleb-advice">
-         <h6>
-          <i class="bi bi-person-fill">
-          </i>
-          Everyday Holder / Plebe:
-         </h6>
-         <ul>
-          <li>
-           Store hardware wallets out of sight when not in use.
-          </li>
-          <li>
-           Keep your primary metal seed backup (see
-           <a class="details-link" href="#tools-services">
-            Tools section
-           </a>
-           for examples) in a secure, fire-resistant location at home (e.g., quality home safe).
-          </li>
-          <li>
-           Have at least one additional backup of your seed phrase stored off-site (e.g., with a trusted family member, very secure bank SDB - weigh risks).
-          </li>
-          <li>
-           Ensure backups are protected from casual discovery and environmental damage (water, fire).
-          </li>
-         </ul>
-        </div>
-        <div class="tier-advice whale-advice mt-3">
-         <h6>
-          <i class="bi bi-gem">
-          </i>
-          Significant Holdings / Whale:
-         </h6>
-         <p>
-          All the above, plus:
-         </p>
-         <ul>
-          <li>
-           Utilize high-security safes (e.g., TL-15, TL-30 rated from brands like Liberty, Fort Knox, etc.) bolted down.
-          </li>
-          <li>
-           Distribute key materials (seeds, hardware devices for multisig) across multiple highly secure, geographically diverse locations (different cities/states/countries).
-          </li>
-          <li>
-           Employ tamper-evident bags/seals for stored devices or seed backups.
-          </li>
-          <li>
-           Consider decoy safes or stashes with minimal value to mislead attackers.
-          </li>
-          <li>
-           If using bank SDBs, understand the risks (limited access, potential seizure, not insured for this purpose) and use them as only one part of a distributed strategy.
-          </li>
-         </ul>
-        </div>
-       </div>
-      </div>
-     </div>
-     <div class="col-lg-6">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-house-heart-fill">
-         </i>
-         Home &amp; Personal Security
-        </span>
-        <span class="threat-level threat-medium">
-         MEDIUM (Escalates for Whales)
-        </span>
-       </h5>
-       <p class="summary">
-        Basic home security is prudent for everyone. For those with significant holdings, a
-        <span class="security-term">
-         "Home Fortress" protocol and duress planning
-        </span>
-        become vital.
-       </p>
-       <button aria-controls="physical-home-defense" aria-expanded="false" class="btn details-toggle" data-bs-target="#physical-home-defense" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="physical-home-defense">
-        <div class="tier-advice pleb-advice">
-         <h6>
-          <i class="bi bi-person-fill">
-          </i>
-          Everyday Holder / Plebe:
-         </h6>
-         <ul>
-          <li>
-           Ensure good quality locks on doors and windows.
-          </li>
-          <li>
-           Consider a basic monitored alarm system (e.g.,
-           <a href="https://simplisafe.com/" target="_blank">
-            SimpliSafe
-           </a>
-           ,
-           <a href="https://goabode.com/" target="_blank">
-            Abode
-           </a>
-           ) and/or security cameras (e.g.,
-           <a href="https://reolink.com/" target="_blank">
-            Reolink
-           </a>
-           , Wyze) if you have noticeable assets.
-          </li>
-          <li>
-           Be aware of your surroundings. Avoid making yourself an obvious target.
-          </li>
-         </ul>
-        </div>
-        <div class="tier-advice whale-advice mt-3">
-         <h6>
-          <i class="bi bi-gem">
-          </i>
-          Significant Holdings / Whale:
-         </h6>
-         <p>
-          All the above, plus "Home Fortress Protocol":
-         </p>
-         <ul>
-          <li>
-           Reinforced doors/frames, security film on windows, advanced locks.
-          </li>
-          <li>
-           Comprehensive, professionally monitored alarm (e.g., ADT, local firms) with cellular backup, multiple sensor types.
-          </li>
-          <li>
-           Extensive camera coverage (PoE systems like
-           <a href="https://ui.com/camera-security" target="_blank">
-            Ubiquiti Protect
-           </a>
-           or commercial NVRs), cloud backup.
-          </li>
-          <li>
-           Consider a safe room or reinforced area.
-          </li>
-          <li>
-           <strong>
-            Duress Plan:
-           </strong>
-           Have a decoy wallet with a plausible amount to surrender. Use duress PINs/passphrases on hardware if available. Formulate a believable story about time-locked/dispersed funds (this should ideally be true for multisig setups). Prioritize life over Bitcoin. Comply with attackers to de-escalate.
-          </li>
-          <li>
-           <a href="https://cheatsheets.davidveksler.com/martial-arts-cheatsheet.html">
-            Personal defense training
-           </a>
-           focusing on situational awareness and de-escalation.
-          </li>
-         </ul>
-        </div>
-       </div>
-      </div>
-     </div>
-    </div>
-   </section>
-   <section class="section-container" data-section-id="technical" id="technical">
-    <h2 class="section-title">
-     <i class="bi bi-diagram-3-fill">
-     </i>
-     Technical Security: Wallets &amp; Backups
-    </h2>
-    <div class="row">
-     <div class="col-lg-6">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-shield-lock">
-         </i>
-         Choosing Your Wallet Setup
-        </span>
-        <span class="threat-level threat-critical">
-         CRITICAL FOR ALL
-        </span>
-       </h5>
-       <p class="summary">
-        The right wallet setup depends on your technical skills, the amount you're securing, and your risk tolerance.
-        <span class="expert-term">
-         Hardware wallets are strongly recommended over software/mobile wallets for most users.
-        </span>
-       </p>
-       <button aria-controls="tech-wallet-choice" aria-expanded="false" class="btn details-toggle" data-bs-target="#tech-wallet-choice" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="tech-wallet-choice">
-        <div class="rule-box critical">
-         <strong>2026 Security Alert – Coldcard Firmware Vulnerability:</strong> A firmware vulnerability affecting Coldcard wallets with seeds generated between March 2021 and July 31, 2026 was exploited in July 2026 (~1,816 BTC stolen). Updating firmware does NOT repair a seed already created on an affected version. If your seed was generated in that window (firmware 4.0.1&ndash;4.1.9), update to the patched firmware and then move funds to a brand-new seed generated on it.
-        </div>
-        <div class="tier-advice pleb-advice">
-         <h6>
-          <i class="bi bi-person-fill">
-          </i>
-          Everyday Holder / Plebe: Single Signature
-         </h6>
-         <ul>
-          <li>
-           <strong>
-            Recommendation:
-           </strong>
-           A reputable single-signature hardware wallet. Purchase directly from the manufacturer. (See
-           <a class="details-link" href="#tools-services">
-            Tools section
-           </a>
-           for examples like Coldcard, Trezor, etc.).
-          </li>
-          <li>
-           This keeps your private keys offline. Focus on understanding its backup/recovery.
-          </li>
-          <li>
-           Avoid keeping significant amounts on exchange hot wallets or software wallets on your primary phone/computer.
-          </li>
-         </ul>
-        </div>
-        <div class="tier-advice whale-advice mt-3">
-         <h6>
-          <i class="bi bi-gem">
-          </i>
-          Significant Holdings / Whale: Multi-Signature (Multisig)
-         </h6>
-         <p>
-          Single-signature wallets become a single point of failure for large sums. Multisig is essential.
-         </p>
-         <ul>
-          <li>
-           <strong>
-            Recommendation:
-           </strong>
-           2-of-3 or 3-of-5 multisig setup using diverse hardware wallets.
-          </li>
-          <li>
-           Requires multiple keys to authorize a transaction. Keys/seeds must be geographically diverse.
-          </li>
-          <li>
-           Use robust multisig coordinator software (e.g.,
-           <a href="https://sparrowwallet.com/" target="_blank">
-            Sparrow Wallet
-           </a>
-           ,
-           <a href="https://specter.solutions/" target="_blank">
-            Specter Desktop
-           </a>
-           ,
-           <a href="https://nunchuk.io/" target="_blank">
-            Nunchuk
-           </a>
-           ).
-          </li>
-          <li>
-           <strong>
-            Collaborative Custody:
-           </strong>
-           For very large sums, consider services (e.g.,
-           <a href="https://unchained.com/" target="_blank">
-            Unchained Capital
-           </a>
-           ,
-           <a href="https://casa.io/" target="_blank">
-            Casa
-           </a>
-           ,
-           <a href="https://www.swanbitcoin.com/vault/" target="_blank">
-            Swan Vault
-           </a>
-           ) as one co-signer.
-          </li>
-         </ul>
-        </div>
-       </div>
-      </div>
-     </div>
-     <div class="col-lg-6">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-safe2">
-         </i>
-         Seed Phrase &amp; Passphrase Management
-        </span>
-        <span class="threat-level threat-critical">
-         CRITICAL FOR ALL
-        </span>
-       </h5>
-       <p class="summary">
-        Your 12/24-word seed phrase IS your Bitcoin. Secure it meticulously.
-        <span class="expert-term">
-         Metal backups are essential for durability
-        </span>
-        . BIP39 passphrases ("25th word") add security but also risk if forgotten.
-       </p>
-       <button aria-controls="tech-seed-backup" aria-expanded="false" class="btn details-toggle" data-bs-target="#tech-seed-backup" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="tech-seed-backup">
-        <div class="rule-box critical">
-         <strong>
-          For All Users:
-         </strong>
-         Never store your seed phrase digitally. Avoid typing it into any internet-connected device if possible.
-        </div>
-        <h6>
-         Seed Backup Essentials:
-        </h6>
-        <ul>
-         <li>
-          <strong>
-           Metal Backups:
-          </strong>
-          Stamp or engrave your seed phrase onto robust metal plates. (See
-          <a class="details-link" href="#tools-services">
-           Tools section
-          </a>
-          for examples like CryptoSteel, Blockplate). Paper is NOT for long-term primary backup.
-         </li>
-         <li>
-          <strong>
-           Multiple Copies &amp; Off-site Storage:
-          </strong>
-          At least two metal copies, one securely off-site.
-         </li>
-        </ul>
-        <h6>
-         BIP39 Passphrase (Optional "25th Word"):
-        </h6>
-        <ul>
-         <li>
-          Adds security if physical seed is compromised, but GONE FOREVER if passphrase is forgotten.
-         </li>
-         <li>
-          <strong>
-           Plebes:
-          </strong>
-          Generally NOT recommended due to risk of forgetting.
-         </li>
-         <li>
-          <strong>
-           Whales:
-          </strong>
-          Can be part of a multi-layered strategy if managed with extreme discipline (passphrase also on metal, stored separately).
-         </li>
-        </ul>
-       </div>
-      </div>
-     </div>
-    </div>
-   </section>
-   <section class="section-container" data-section-id="tools" id="tools-services">
-    <h2 class="section-title">
-     <i class="bi bi-tools">
-     </i>
-     Recommended Tools, Services &amp; Resources
-    </h2>
-    <div class="security-card">
-     <p class="summary">
-      This is not an exhaustive list, and inclusion does not equal endorsement.
-      <strong>
-       Always Do Your Own Research (DYOR)
-      </strong>
-      before trusting any product or service with your Bitcoin or personal information.
-     </p>
-     <p>
-      For a comprehensive overview of Bitcoin wallets, see the
-      <a href="https://cheatsheets.davidveksler.com/bitcoin-wallet.html" target="_blank">
-       Bitcoin Wallet Cheatsheet
-      </a>
-      .
-     </p>
-     <p>
-      If access is already at risk, see the scenario-specific
-      <a href="https://walletrecovery.info/seed-phrase-recovery/" target="_blank">seed phrase recovery guide</a>
-      or
-      <a href="https://walletrecovery.info/hacked-wallet-rescue/" target="_blank">hacked-wallet rescue guide</a>.
-     </p>
-     <div class="row resource-list">
-      <div class="col-md-6">
-       <h6>
-        <i class="bi bi-key-fill">
-        </i>
-        Hardware Wallets (Single &amp; Multisig)
-       </h6>
-       <ul>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://coldcard.com/" target="_blank">
-          Coldcard
-         </a>
-         (Bitcoin-only, airgapped focus)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://blockstream.com/jade/" target="_blank">
-          Blockstream Jade
-         </a>
-         (Bitcoin-only, good value)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://trezor.io/" target="_blank">
-          Trezor
-         </a>
-         (Established, supports multiple coins)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://www.ledger.com/" target="_blank">
-          Ledger
-         </a>
-         (Popular, supports multiple coins - research recent events)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://foundationdevices.com/" target="_blank">
-          Passport by Foundation
-         </a>
-         (Bitcoin-only, airgapped)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://seedsigner.com/" target="_blank">
-          SeedSigner
-         </a>
-         (DIY airgapped signing device)
-        </li>
-       </ul>
-       <h6>
-        <i class="bi bi-journal-album">
-        </i>
-        Metal Seed Storage
-       </h6>
-       <ul>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://cryptosteel.com/" target="_blank">
-          CryptoSteel
-         </a>
-         (Capsule &amp; Cassette)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://blockplate.com/" target="_blank">
-          Blockplate
-         </a>
-         (Stainless steel plates)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://seedplate.com/" target="_blank">
-          Seedplate
-         </a>
-         (Punch-hole or engraved plates)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="http://coldbit.com/" target="_blank">
-          Coldbit Steel
-         </a>
-         (Various steel backup solutions)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://stampseed.com/" target="_blank">
-          StampSeed
-         </a>
-         (DIY stamping kits)
-        </li>
-       </ul>
-       <h6>
-        <i class="bi bi-diagram-3">
-        </i>
-        Multisig Coordinator Software
-       </h6>
-       <ul>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://sparrowwallet.com/" target="_blank">
-          Sparrow Wallet
-         </a>
-         (Desktop, feature-rich)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://specter.solutions/" target="_blank">
-          Specter Desktop
-         </a>
-         (Desktop, hardware wallet focused)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://bluewallet.io/" target="_blank">
-          BlueWallet
-         </a>
-         (Mobile, good for smaller multisig)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://nunchuk.io/" target="_blank">
-          Nunchuk
-         </a>
-         (Mobile &amp; Desktop, collaborative focus)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://electrum.org/" target="_blank">
-          Electrum
-         </a>
-         (Desktop, versatile, advanced users)
-        </li>
-       </ul>
-      </div>
-      <div class="col-md-6">
-       <h6>
-        <i class="bi bi-building-shield">
-        </i>
-        Collaborative Custody &amp; Inheritance Services
-       </h6>
-       <ul>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://unchained.com/" target="_blank">
-          Unchained Capital
-         </a>
-         (Multisig vaults, inheritance)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://casa.io/" target="_blank">
-          Casa
-         </a>
-         (Multisig key management, inheritance)
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://www.swanbitcoin.com/vault/" target="_blank">
-          Swan Vault by Swan Bitcoin
-         </a>
-         (Guided multisig setup)
-        </li>
-       </ul>
-       <h6>
-        <i class="bi bi-incognito">
-        </i>
-        Privacy Tools
-       </h6>
-       <ul>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         Password Managers:
-         <a href="https://bitwarden.com/" target="_blank">
-          Bitwarden
-         </a>
-         ,
-         <a href="https://1password.com/" target="_blank">
-          1Password
-         </a>
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         VPN Services:
-         <a href="https://protonvpn.com/" target="_blank">
-          ProtonVPN
-         </a>
-         ,
-         <a href="https://mullvad.net/" target="_blank">
-          Mullvad
-         </a>
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         Encrypted Email:
-         <a href="https://proton.me/mail" target="_blank">
-          ProtonMail
-         </a>
-         ,
-         <a href="https://tutanota.com/" target="_blank">
-          Tutanota
-         </a>
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         Data Broker Removal:
-         <a href="https://joindeleteme.com/" target="_blank">
-          DeleteMe
-         </a>
-         ,
-         <a href="https://optery.com/" target="_blank">
-          Optery
-         </a>
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         Secure Mail Forwarding:
-         <a href="https://www.travelingmailbox.com/" target="_blank">
-          Traveling Mailbox
-         </a>
-        </li>
-       </ul>
-       <h6>
-        <i class="bi bi-book-half">
-        </i>
-        Educational Resources
-       </h6>
-       <ul>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://bitcoin.org/en/secure-your-wallet" target="_blank">
-          Bitcoin.org - Secure Your Wallet
-         </a>
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         <a href="https://jamesonlopp.com/bitcoin-information/" target="_blank">
-          Jameson Lopp's Bitcoin Resources
-         </a>
-        </li>
-        <li>
-         <i class="bi bi-shield-check">
-         </i>
-         Search for local Bitcoin meetups for community support.
-        </li>
-       </ul>
-      </div>
-     </div>
-    </div>
-   </section>
-   <section class="section-container" data-section-id="inheritance" id="inheritance">
-    <h2 class="section-title">
-     <i class="bi bi-people-fill">
-     </i>
-     Inheritance &amp; Succession Planning
-    </h2>
-    <div class="row">
-     <div class="col-lg-12">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-journal-richtext">
-         </i>
-         Ensuring Your Bitcoin Passes On
-        </span>
-        <span class="threat-level threat-critical">
-         CRITICAL (Complexity Scales)
-        </span>
-       </h5>
-       <p class="summary">
-        Without a plan, your Bitcoin could be lost forever upon your death or incapacitation.
-        <span class="expert-term">
-         Heir unfamiliarity is a major risk factor.
-        </span>
-       </p>
-       <button aria-controls="inheritance-plan" aria-expanded="false" class="btn details-toggle" data-bs-target="#inheritance-plan" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="inheritance-plan">
-        <div class="tier-advice pleb-advice">
-         <h6>
-          <i class="bi bi-person-fill">
-          </i>
-          Everyday Holder / Plebe:
-         </h6>
-         <ul>
-          <li>
-           Write a simple, clear letter of instruction. Include location of seed backup(s), hardware wallet, and basic access instructions or who to contact for trusted help.
-          </li>
-          <li>
-           Store this letter securely with your will. Inform your executor or a trusted heir of its existence and location.
-          </li>
-         </ul>
-        </div>
-        <div class="tier-advice whale-advice mt-3">
-         <h6>
-          <i class="bi bi-gem">
-          </i>
-          Significant Holdings / Whale: Comprehensive Protocol
-         </h6>
-         <p>
-          All the above, plus a multi-layered strategy:
-         </p>
-         <ol>
-          <li>
-           <strong>
-            Legal Framework:
-           </strong>
-           Work with a crypto-aware estate attorney.
-          </li>
-          <li>
-           <strong>
-            Detailed Technical Instructions:
-           </strong>
-           Create "idiot-proof" documentation and potentially video walkthroughs.
-          </li>
-          <li>
-           <strong>
-            Guided Recovery / "Coach":
-           </strong>
-           Designate a trusted, crypto-literate individual, recovery service, or collaborative custody partner (some listed in
-           <a class="details-link" href="#tools-services">
-            Tools section
-           </a>
-           ) to assist heirs.
-          </li>
-         </ol>
-        </div>
-       </div>
-      </div>
-     </div>
-    </div>
-   </section>
-   <section class="section-container" data-section-id="maintenance" id="maintenance">
-    <h2 class="section-title">
-     <i class="bi bi-arrow-repeat">
-     </i>
-     Continuous Verification, Drills &amp; Adaptation
-    </h2>
-    <div class="row">
-     <div class="col-lg-12">
-      <div class="security-card">
-       <h5>
-        <span>
-         <i class="bi bi-calendar3-event-fill">
-         </i>
-         Security is a Process, Not a Destination
-        </span>
-        <span class="threat-level threat-medium">
-         MEDIUM FOR ALL
-        </span>
-       </h5>
-       <p class="summary">
-        Regularly test your setup, from signing transactions to full backup recovery.
-        <span class="expert-term">
-         Stay informed and adapt your strategy
-        </span>
-        to new threats, software updates, and changes in your life.
-       </p>
-       <button aria-controls="maintenance-drills" aria-expanded="false" class="btn details-toggle" data-bs-target="#maintenance-drills" data-bs-toggle="collapse" type="button">
-        <i class="bi bi-chevron-down">
-        </i>
-        Details
-       </button>
-       <div class="collapse collapse-content" id="maintenance-drills">
-        <div class="rule-box expert-insight">
-         <strong>
-          Universal Best Practice:
-         </strong>
-         Before committing any significant funds to a new wallet or backup method, send a small, trivial amount of Bitcoin through the *entire* lifecycle: setup, deposit, securing the seed, signing a test transaction, and then *fully recovering the wallet from your seed backup* on a separate or wiped device. This catches most user errors early.
-        </div>
-        <h6>
-         Key Maintenance Activities:
-        </h6>
-        <ul>
-         <li>
-          <strong>
-           Scheduled Drills &amp; Full Recovery Tests:
-          </strong>
-          Annually for Plebes, more frequently for Whales.
-         </li>
-         <li>
-          <strong>
-           Stay Updated:
-          </strong>
-          Follow reputable Bitcoin security news. Update software/firmware *cautiously*.
-         </li>
-         <li>
-          <strong>
-           Adapt to Change:
-          </strong>
-          Re-evaluate security after life events or changes in holdings/risk.
-         </li>
-        </ul>
-       </div>
-      </div>
-     </div>
-    </div>
-   </section>
-   <section class="section-container" data-section-id="checklist" id="checklist">
-    <h2 class="section-title">
-     <i class="bi bi-check2-square">
-     </i>
-     Scalable Self-Custody Checklist
-    </h2>
-    <div class="security-card">
-     <h5>
-      <i class="bi bi-list-task">
-      </i>
-      Key Actions (Tailor to Your Holdings &amp; Risk)
-     </h5>
-     <p class="text-secondary">
-      Review and implement applicable steps.
-      <i class="bi bi-person-fill">
-      </i>
-      = Core for Everyone.
-      <i class="bi bi-gem">
-      </i>
-      = Enhanced/Essential for Significant Holdings.
-     </p>
-     <div class="row">
-      <div class="col-md-6">
-       <h6>
-        Foundational Security (OPSEC &amp; Physical)
-       </h6>
-       <ul>
-        <li>
-         <input id="chk-s-opsec-silence" type="checkbox"/>
-         <label for="chk-s-opsec-silence">
-          <i class="bi bi-person-fill">
-          </i>
-          Practice "Shield of Silence" regarding holdings.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-secure-accounts" type="checkbox"/>
-         <label for="chk-s-secure-accounts">
-          <i class="bi bi-person-fill">
-          </i>
-          Secure online accounts (strong unique passwords, 2FA).
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-safe-hw-delivery" type="checkbox"/>
-         <label for="chk-s-safe-hw-delivery">
-          <i class="bi bi-person-fill">
-          </i>
-          Ensure safe delivery of hardware wallets.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-basic-home-sec" type="checkbox"/>
-         <label for="chk-s-basic-home-sec">
-          <i class="bi bi-person-fill">
-          </i>
-          Implement basic home physical security for backups.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-whale-opsec" type="checkbox"/>
-         <label for="chk-s-whale-opsec">
-          <i class="bi bi-gem">
-          </i>
-          Advanced OPSEC: pseudonyms, PII scrubbing, separate digital identities.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-whale-home-fortress" type="checkbox"/>
-         <label for="chk-s-whale-home-fortress">
-          <i class="bi bi-gem">
-          </i>
-          Develop "Home Fortress" &amp; duress protocols.
-         </label>
-        </li>
-       </ul>
-       <h6>
-        Wallet &amp; Backup Architecture
-       </h6>
-       <ul>
-        <li>
-         <input id="chk-s-hw-wallet" type="checkbox"/>
-         <label for="chk-s-hw-wallet">
-          <i class="bi bi-person-fill">
-          </i>
-          Use a reputable hardware wallet (single-sig for smaller amounts).
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-metal-backup" type="checkbox"/>
-         <label for="chk-s-metal-backup">
-          <i class="bi bi-person-fill">
-          </i>
-          Create metal seed backups (minimum 2 copies).
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-offsite-backup" type="checkbox"/>
-         <label for="chk-s-offsite-backup">
-          <i class="bi bi-person-fill">
-          </i>
-          Store at least one seed backup securely off-site.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-test-full-workflow" type="checkbox"/>
-         <label for="chk-s-test-full-workflow">
-          <i class="bi bi-person-fill">
-          </i>
-          Test entire wallet setup &amp; recovery with small amount first.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-bip39-careful" type="checkbox"/>
-         <label for="chk-s-bip39-careful">
-          <i class="bi bi-person-fill">
-          </i>
-          Understand BIP39 passphrase risks thoroughly if considering use.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-whale-multisig" type="checkbox"/>
-         <label for="chk-s-whale-multisig">
-          <i class="bi bi-gem">
-          </i>
-          Implement multisig (e.g., 2-of-3, 3-of-5) with diverse hardware.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-whale-geo-distro" type="checkbox"/>
-         <label for="chk-s-whale-geo-distro">
-          <i class="bi bi-gem">
-          </i>
-          Geographically distribute all multisig key material.
-         </label>
-        </li>
-       </ul>
-      </div>
-      <div class="col-md-6">
-       <h6>
-        Inheritance &amp; Long-Term Planning
-       </h6>
-       <ul>
-        <li>
-         <input id="chk-s-simple-heir-letter" type="checkbox"/>
-         <label for="chk-s-simple-heir-letter">
-          <i class="bi bi-person-fill">
-          </i>
-          Create a basic letter of instruction for heirs.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-inform-executor" type="checkbox"/>
-         <label for="chk-s-inform-executor">
-          <i class="bi bi-person-fill">
-          </i>
-          Inform executor/trusted heir of instruction letter's existence/location.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-whale-estate-plan" type="checkbox"/>
-         <label for="chk-s-whale-estate-plan">
-          <i class="bi bi-gem">
-          </i>
-          Engage crypto-aware estate attorney for will/trust.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-whale-heir-coach" type="checkbox"/>
-         <label for="chk-s-whale-heir-coach">
-          <i class="bi bi-gem">
-          </i>
-          Arrange for a "coach" or detailed guided recovery for heirs.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-whale-detailed-heir-docs" type="checkbox"/>
-         <label for="chk-s-whale-detailed-heir-docs">
-          <i class="bi bi-gem">
-          </i>
-          Prepare comprehensive technical documentation for heirs.
-         </label>
-        </li>
-       </ul>
-       <h6>
-        Ongoing Maintenance &amp; Vigilance
-       </h6>
-       <ul>
-        <li>
-         <input id="chk-s-annual-recovery-drill" type="checkbox"/>
-         <label for="chk-s-annual-recovery-drill">
-          <i class="bi bi-person-fill">
-          </i>
-          Conduct annual full backup recovery drill.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-stay-informed" type="checkbox"/>
-         <label for="chk-s-stay-informed">
-          <i class="bi bi-person-fill">
-          </i>
-          Stay informed on security best practices &amp; new threats.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-cautious-updates" type="checkbox"/>
-         <label for="chk-s-cautious-updates">
-          <i class="bi bi-person-fill">
-          </i>
-          Update software/firmware cautiously after verification.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-whale-regular-drills" type="checkbox"/>
-         <label for="chk-s-whale-regular-drills">
-          <i class="bi bi-gem">
-          </i>
-          Conduct regular (e.g., quarterly) signing drills &amp; device health checks.
-         </label>
-        </li>
-        <li>
-         <input id="chk-s-whale-threat-reval" type="checkbox"/>
-         <label for="chk-s-whale-threat-reval">
-          <i class="bi bi-gem">
-          </i>
-          Re-evaluate threat model and update protocols after significant life/holding changes.
-         </label>
-        </li>
-       </ul>
-      </div>
-     </div>
-    </div>
-   </section>
-  </main>
-  
-  <script crossorigin="anonymous" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" defer>
-  </script>
-  <script>
-   const currentYear = document.getElementById('currentYear');
-   if (currentYear) currentYear.textContent = new Date().getFullYear();
-        document.querySelectorAll('#checklist input[type="checkbox"]').forEach(checkbox => {
-            const id = checkbox.id;
-            if (!id) { console.warn('Checkbox without ID in checklist:', checkbox); return; }
-            if (localStorage.getItem(`btc-security-${id}`) === 'true') { checkbox.checked = true; }
-            checkbox.addEventListener('change', function() { localStorage.setItem(`btc-security-${id}`, this.checked); });
-        });
-        document.querySelectorAll('.details-toggle').forEach(button => {
-            button.addEventListener('click', function() {
-                const icon = this.querySelector('i');
-                setTimeout(() => {
-                    const isExpanded = this.getAttribute('aria-expanded') === 'true';
-                    if (isExpanded) { icon.classList.replace('bi-chevron-down', 'bi-chevron-up'); } 
-                    else { icon.classList.replace('bi-chevron-up', 'bi-chevron-down'); }
-                }, 10);
-            });
-            const targetId = button.getAttribute('data-bs-target');
-            if (targetId) {
-                const targetElement = document.querySelector(targetId);
-                if (targetElement && targetElement.classList.contains('show')) {
-                    const icon = button.querySelector('i');
-                    icon.classList.replace('bi-chevron-down', 'bi-chevron-up');
-                    button.setAttribute('aria-expanded', 'true');
-                }
-            }
-        });
-  </script>
-   <footer class="container text-center pb-3">
-  <div class="mb-3">
-    <a class="mx-2" href="bitcoin-whitepaper.html" target="_blank" title="Bitcoin Whitepaper">
-      <i class="bi bi-coin"></i>
-      Bitcoin Whitepaper
-    </a>
-    <a class="mx-2" href="bitcoin-wallet.html" target="_blank" title="Bitcoin Wallet">
-      <i class="bi bi-coin"></i>
-      Bitcoin Wallet
-    </a>
+    <h1>Bitcoin Self-Custody: Security Guide From Plebes to Whales</h1>
+    <p class="dek">Self-inflicted loss is the one threat every holder faces, whatever the balance. This sheet sizes every defense to what you hold: pick a tier below and the page hides advice you do not need yet. Protect against loss first, theft second, and make sure someone can inherit it.</p>
   </div>
-  <p class="mb-2">
-    © 2026 <a href="https://davidveksler.com/?ref=cheatsheets">David Veksler</a> · Compiled &amp; expanded based on cryptocurrency security experts and hardware wallet documentation.
-  </p>
-  <p class="mb-2"><small>Hardware wallet products, custody services, privacy tools, and security best practices reviewed against 2026 primary sources.</small></p>
-  <div>
-    <a class="mx-2 link-secondary" href="https://www.linkedin.com/in/davidveksler/" target="_blank" title="David Veksler on LinkedIn">
-      <i class="bi bi-linkedin"></i>
-      LinkedIn
-    </a>
-    <a class="mx-2 link-secondary" href="https://cheatsheets.davidveksler.com/" title="Browse All Cheatsheets">
-      <i class="bi bi-collection"></i>
-      All Cheatsheets
-    </a>
+</header>
+
+<div class="tierbar" role="region" aria-label="Holding tier filter and section navigation">
+  <div class="wrap">
+    <span class="label" id="tierLabel">Your tier</span>
+    <fieldset class="tiers" aria-labelledby="tierLabel">
+      <legend class="vh">Filter advice by holding tier</legend>
+      <input type="radio" name="tier" id="tier-all" value="all" checked><label for="tier-all">Show all</label>
+      <input type="radio" name="tier" id="tier-1" value="1"><label for="tier-1">Everyday</label>
+      <input type="radio" name="tier" id="tier-2" value="2"><label for="tier-2">Serious</label>
+      <input type="radio" name="tier" id="tier-3" value="3"><label for="tier-3">Whale</label>
+    </fieldset>
+    <nav aria-label="Sections">
+      <a href="#quick">Rules</a><a href="#threat-landscape-detailed">Threats</a><a href="#technical">Setups</a><a href="#seeds">Backups</a><a href="#physical">Physical</a><a href="#inheritance">Inheritance</a><a href="#mistakes">Mistakes</a><a href="#checklist">Checklist</a>
+    </nav>
+  </div>
+</div>
+
+<main id="main" class="wrap">
+
+  <section class="block" id="tiers" aria-labelledby="tiers-h">
+    <h2 id="tiers-h"><span class="num">00</span> Which tier are you?</h2>
+    <p class="intro">Tiers are set by consequence, not by a bitcoin amount. The same 1 BTC is "Everyday" for one person and "Whale" for another. When in doubt, pick the higher tier: the extra setup costs a weekend and a few hundred dollars.</p>
+    <div class="grid">
+      <div class="card"><h3>Everyday <span class="t t1">Tier 1</span></h3><p>Losing it would hurt but would not change your life. Nobody outside your household knows you hold bitcoin.</p><p class="kicker">Core setup</p><p>One hardware wallet, single-sig, two metal backups in two places, a letter for your heirs.</p></div>
+      <div class="card"><h3>Serious <span class="t t2">Tier 2</span></h3><p>A meaningful share of your net worth, or an amount a burglar or a relative would find tempting.</p><p class="kicker">Core setup</p><p>Tier 1 plus either a BIP39 passphrase held apart from the seed, or a 2-of-3 multisig across two vendors, with a recovery drill every year.</p></div>
+      <div class="card"><h3>Whale <span class="t t3">Tier 3</span></h3><p>Life-changing money, or you are publicly known to hold bitcoin (employer, podcast, conference talks, company treasury).</p><p class="kicker">Core setup</p><p>Geographically distributed multisig (self-run or collaborative), no single person or place that can move funds, duress plan, estate attorney, quarterly signing drills.</p></div>
+    </div>
+  </section>
+
+  <div class="alert" role="note" id="coldcard-2026">
+    <strong>2026 security alert, Coldcard firmware vulnerability:</strong> A firmware vulnerability affecting Coldcard wallets with seeds generated between March 2021 and July 31, 2026 was exploited in July 2026 (~1,816 BTC stolen). Updating firmware does NOT repair a seed already created on an affected version. If your seed was generated in that window (firmware 4.0.1&ndash;4.1.9), update to the patched firmware and then move funds to a brand-new seed generated on it.
   </div>
 
-<div class="related-cheatsheets mb-3" data-seo-related-links aria-label="Related Bitcoin &amp; Finance cheatsheets">
-  <strong>Related Bitcoin &amp; Finance:</strong><br>
-    <a class="mx-2" href="the-cliff-map.html" target="_blank" rel="noopener" title="Open The Cliff Map: IRMAA, ACA, and Income Thresholds"><i class="bi bi-journal-text" aria-hidden="true"></i> The Cliff Map: IRMAA, ACA, and Income Thresholds</a>
-    <a class="mx-2" href="bitcoin-exchanges-cards.html" target="_blank" rel="noopener" title="Open Bitcoin Exchanges &amp; Crypto Cards: On-Ramps &amp; Spending Guide"><i class="bi bi-journal-text" aria-hidden="true"></i> Bitcoin Exchanges &amp; Crypto Cards: On-Ramps &amp; Spending Guide</a>
-    <a class="mx-2" href="wallet-recovery-forensics.html" target="_blank" rel="noopener" title="Open Wallet Recovery Forensics"><i class="bi bi-journal-text" aria-hidden="true"></i> Wallet Recovery Forensics</a>
-    <a class="mx-2" href="bitcoin-key-derivation-bips.html" title="How 12 recovery words become a Bitcoin address"><i class="bi bi-diagram-3" aria-hidden="true"></i> How 12 Words Become an Address</a>
-</div>
+  <section class="block" id="quick" aria-labelledby="quick-h">
+    <h2 id="quick-h"><span class="num">01</span> Quick reference: the rules that prevent most losses</h2>
+    <ol class="rules">
+      <li><strong>Your seed is the wallet.</strong> The device is a replaceable signing tool. Anyone who reads the 12 or 24 words owns the coins; anyone who loses every copy loses the coins.</li>
+      <li><strong>Never digitize the seed.</strong> No photo, cloud note, password manager, email draft, or "validation" website. Words go on paper, then metal, and nowhere else.</li>
+      <li><strong>Test recovery before you fund.</strong> Wipe the device (or use a second one), restore from your backup, confirm the same first receive address appears. Then deposit.</li>
+      <li><strong>Two backups, two buildings.</strong> One fire, flood, or burglary should never touch every copy.</li>
+      <li><strong>Verify every address on the device screen.</strong> Your computer and phone can be lying to you. The hardware wallet's screen is the only display you trust.</li>
+      <li><strong>No one legitimate ever asks for your seed.</strong> Not support, not an exchange, not a "recovery service", not a wallet update prompt. Any request is an attack.</li>
+      <li><strong>Buy hardware from the manufacturer.</strong> Never use a device that arrives with words already printed or a PIN already set.</li>
+      <li><strong>Exchanges are for trading, not storage.</strong> Withdraw anything you do not plan to sell soon.</li>
+      <li><strong>Silence is a security control.</strong> What you do not disclose cannot be used to target you.</li>
+      <li><strong>Write down how an heir gets in.</strong> A perfectly secured wallet no one can inherit is a loss that has not happened yet.</li>
+    </ol>
+
+    <h3 style="margin:2rem 0 .7rem;font-size:1.15rem">Setup by tier at a glance</h3>
+    <div class="tbl">
+      <table class="tm">
+        <colgroup><col><col class="c1"><col class="c2"><col class="c3"></colgroup>
+        <thead><tr><th scope="col">Control</th><th scope="col">Everyday</th><th scope="col">Serious</th><th scope="col">Whale</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Signing</th><td>1 hardware wallet, single-sig</td><td>Single-sig + passphrase, or 2-of-3 multisig</td><td>2-of-3 or 3-of-5 multisig, 2+ vendors, or collaborative custody</td></tr>
+          <tr><th scope="row">Seed backups</th><td>2 copies (metal preferred), 2 buildings</td><td>2+ metal copies, passphrase stored apart</td><td>One metal seed per key, each in a different location or region</td></tr>
+          <tr><th scope="row">Wallet config</th><td>Note the wallet type and script (e.g. "native SegWit, bc1q")</td><td>If multisig: output descriptor with every backup</td><td>Descriptor with every key site, plus a coordinator copy</td></tr>
+          <tr><th scope="row">Account security</th><td>Password manager, authenticator app, no SMS 2FA</td><td>FIDO2 security keys on email and exchanges, carrier port-out PIN</td><td>Separate crypto identity, dedicated signing laptop, PII removal</td></tr>
+          <tr><th scope="row">Physical</th><td>Backups out of sight, fire-resistant storage</td><td>Bolted safe, tamper-evident bags</td><td>Distributed sites, decoy/duress wallet, alarm, professional advice</td></tr>
+          <tr><th scope="row">Inheritance</th><td>Letter of instruction, executor knows where it is</td><td>Letter + walkthrough, named technical helper</td><td>Estate attorney, trust or LLC where fitting, timelock or collaborative recovery path</td></tr>
+          <tr><th scope="row">Drills</th><td>Full restore at setup; review yearly</td><td>Full restore yearly</td><td>Signing drill quarterly, full restore yearly, rotate after staff or life changes</td></tr>
+          <tr><th scope="row">Setup cost</th><td>One device + metal plate</td><td>2 to 3 devices, 2 to 3 plates, safe</td><td>3 to 5 devices, sites, legal fees, optional service subscription</td></tr>
+        </tbody>
+        <caption>The column for your selected tier is highlighted.</caption>
+      </table>
+    </div>
+  </section>
+
+  <section class="block" id="threat-landscape-detailed" aria-labelledby="threats-h">
+    <h2 id="threats-h"><span class="num">02</span> Threat model</h2>
+    <p class="intro">Risk ratings escalate with the amount held and, above all, with how many people know you hold it. Loss by your own hand is the top risk at every tier.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th scope="col">Threat</th><th scope="col">How it happens</th><th scope="col">Everyday</th><th scope="col">Whale</th><th scope="col">Primary defense</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Self-inflicted loss</th><td>Lost or illegible seed, words out of order, forgotten passphrase, lost multisig config, backup burned or flooded</td><td><span class="lv c">Critical</span></td><td><span class="lv c">Critical</span></td><td>Metal backups in 2+ places, recovery drill, descriptor backup</td></tr>
+          <tr><th scope="row">Phishing &amp; fake support</th><td>Lookalike wallet apps and sites, "support" DMs, fake firmware update pages that ask for the seed</td><td><span class="lv h">High</span></td><td><span class="lv h">High</span></td><td>Seed never typed into a computer or phone; bookmarks for official sites only</td></tr>
+          <tr><th scope="row">Malware &amp; clipboard hijack</th><td>Clipper malware swaps a copied address for the attacker's; keyloggers take exchange logins</td><td><span class="lv h">High</span></td><td><span class="lv h">High</span></td><td>Confirm the full address on the hardware screen before signing</td></tr>
+          <tr><th scope="row">Address poisoning</th><td>Attacker sends dust from an address matching the first and last characters of one you used, hoping you copy it from history</td><td><span class="lv m">Medium</span></td><td><span class="lv h">High</span></td><td>Never copy addresses from transaction history; use saved, verified contacts</td></tr>
+          <tr><th scope="row">Custodian failure</th><td>Mt. Gox (2014, about 850,000 BTC), FTX (bankrupt Nov 2022), frozen withdrawals, hacks</td><td><span class="lv h">High</span> if on exchange</td><td><span class="lv h">High</span> if on exchange</td><td>Withdraw to self-custody; keep only a trading float on platforms</td></tr>
+          <tr><th scope="row">SIM swap &amp; account takeover</th><td>Carrier moves your number to the attacker, who resets email and exchange passwords</td><td><span class="lv m">Medium</span></td><td><span class="lv h">High</span></td><td>FIDO2 keys, no SMS recovery, carrier port-out PIN or number lock</td></tr>
+          <tr><th scope="row">Supply chain</th><td>Tampered or counterfeit devices; the 2020 Ledger customer database leak (about 272,000 home addresses) was followed by fake replacement devices mailed to customers</td><td><span class="lv m">Medium</span></td><td><span class="lv h">High</span></td><td>Buy direct, check tamper evidence, generate the seed on the device yourself</td></tr>
+          <tr><th scope="row">Blind signing</th><td>Signers approve what a compromised interface shows them. Bybit lost about $1.5B in ETH (Feb 2025) when multisig signers approved a transaction the web UI misrepresented</td><td><span class="lv l">Low</span></td><td><span class="lv c">Critical</span></td><td>Read amount, address, and change on each device screen; second coordinator on a separate machine</td></tr>
+          <tr><th scope="row">Burglary &amp; device theft</th><td>Thief takes the safe; seed card stored in the device box</td><td><span class="lv m">Medium</span></td><td><span class="lv h">High</span></td><td>PIN on device, seed stored away from device, no single site holds a quorum</td></tr>
+          <tr><th scope="row">Wrench attack &amp; kidnapping</th><td>Coercion in person. Jameson Lopp's public list of physical bitcoin attacks grows every year; Ledger co-founder David Balland was kidnapped in France in January 2025</td><td><span class="lv l">Low</span></td><td><span class="lv c">Critical</span></td><td>Silence, geographic multisig, duress wallet, timelocks you cannot bypass</td></tr>
+          <tr><th scope="row">Insider &amp; family</th><td>Someone who knows where the backups are, or holds enough keys</td><td><span class="lv m">Medium</span></td><td><span class="lv h">High</span></td><td>No one person holds a signing quorum; tamper-evident seals</td></tr>
+          <tr><th scope="row">Heirs locked out</th><td>Death or incapacity with no instructions, or instructions no one can follow</td><td><span class="lv c">Critical</span></td><td><span class="lv c">Critical</span></td><td>Letter of instruction, tested by a non-technical reader</td></tr>
+          <tr><th scope="row">Seizure &amp; regulation</th><td>Account freezes, capital controls, forced disclosure in some jurisdictions</td><td><span class="lv l">Low</span></td><td><span class="lv m">Medium</span></td><td>Self-custody, legal counsel, keys in more than one jurisdiction</td></tr>
+          <tr><th scope="row">Quantum (future)</th><td>A large quantum computer could derive keys from exposed public keys (reused addresses, old P2PK outputs)</td><td><span class="lv l">Low</span></td><td><span class="lv l">Low</span> today</td><td>Avoid address reuse; follow the <a href="post-quantum-custody-migration.html">post-quantum custody migration</a> work</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid two" style="margin-top:1rem">
+      <div class="card"><h3>What protocol-level attacks mean for you</h3><p>A 51% attack can reorder recent transactions; it cannot spend coins from your keys. Treat deep confirmations (6+ blocks) as settlement for large incoming payments. Breaking secp256k1 or SHA-256 with classical computers is not a practical threat.</p></div>
+      <div class="card"><h3>Custodian and counterparty risk</h3><p>Every custodian adds its insolvency, hack, and policy risk to yours. If you use one, prefer segregated, audited custody, read the withdrawal terms, and keep it below the amount you can afford to have frozen for years. The <a href="crypto-custody-index.html">custody responsibility matrix</a> shows what stays your job in each model, and <a href="institutional-crypto-custody.html">institutional custody</a> covers the qualified-custodian side.</p></div>
+    </div>
+  </section>
+
+  <section class="block" id="technical" aria-labelledby="setups-h">
+    <h2 id="setups-h"><span class="num">03</span> Wallet setups compared</h2>
+    <p class="intro">Every setup trades theft resistance against loss resistance. Adding keys removes single points of theft but adds things you must back up. Choose the simplest setup that removes the threats in your tier.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th scope="col">Setup</th><th scope="col">Single point of failure</th><th scope="col">To recover you need</th><th scope="col">Complexity</th><th scope="col">Fits</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Exchange account</th><td>The company, your login, its jurisdiction</td><td>The company's cooperation</td><td>None</td><td>Trading float only</td></tr>
+          <tr><th scope="row">Phone or desktop hot wallet</th><td>The device's malware exposure; the one seed</td><td>12 or 24 words</td><td>Low</td><td>Spending money</td></tr>
+          <tr><th scope="row">Hardware wallet, single-sig</th><td>The one seed backup</td><td>12 or 24 words (plus script type)</td><td>Low</td><td><span class="t t1">Tier 1</span></td></tr>
+          <tr><th scope="row">Single-sig + BIP39 passphrase</th><td>Forgetting the passphrase; no error on a typo</td><td>Words + exact passphrase</td><td>Medium</td><td><span class="t t2">Tier 2</span></td></tr>
+          <tr><th scope="row">SLIP-39 Shamir backup (Trezor)</th><td>One signing device at spend time</td><td>M of N shares (e.g. 2 of 3)</td><td>Medium</td><td><span class="t t2">Tier 2</span> backup distribution</td></tr>
+          <tr><th scope="row">2-of-3 self-run multisig</th><td>The wallet config, if not backed up</td><td>2 seeds + output descriptor (or all 3 xpubs)</td><td>High</td><td><span class="t t2">Tier 2</span> <span class="t t3">Tier 3</span></td></tr>
+          <tr><th scope="row">Collaborative multisig</th><td>Provider cannot spend alone; you still hold a quorum</td><td>Your keys + config (provider keeps a copy)</td><td>Medium</td><td><span class="t t3">Tier 3</span></td></tr>
+          <tr><th scope="row">Timelocked recovery path (miniscript)</th><td>Coins must be refreshed before the timelock matures</td><td>Primary key now, or recovery key after the delay</td><td>High</td><td><span class="t t3">Tier 3</span> inheritance</td></tr>
+        </tbody>
+        <caption>Collaborative custody examples: Unchained (2-of-3, Unchained holds one key), Casa (2-of-3 or 3-of-5, Casa holds one key). Timelocked wallets: Liana by Wizardsardine. Relative timelocks top out at 65,535 blocks, about 455 days.</caption>
+      </table>
+    </div>
+
+    <div class="grid" style="margin-top:1rem">
+      <div class="card" data-tier="1">
+        <h3>Everyday: single-sig hardware wallet <span class="t t1">Tier 1</span></h3>
+        <ul>
+          <li>Buy direct from the maker (see <a href="#tools-services">tools</a>). Generate the seed on the device, never import one.</li>
+          <li>Choose native SegWit (<code>bc1q…</code>) or Taproot (<code>bc1p…</code>) addresses; write the choice on the backup.</li>
+          <li>Set a PIN of 6+ digits. Most devices wipe after a set number of wrong entries, which is why the seed backup matters more than the device.</li>
+          <li>Use a Bitcoin-only companion app (Sparrow, the vendor's app) on a clean machine; connect through your own node when you can.</li>
+        </ul>
+      </div>
+      <div class="card" data-tier="2">
+        <h3>Serious: passphrase or first multisig <span class="t t2">Tier 2</span></h3>
+        <ul>
+          <li><strong>Passphrase route:</strong> seed words in one place, passphrase in another. A thief with only the words sees an empty or decoy wallet.</li>
+          <li><strong>Multisig route:</strong> 2-of-3 with devices from 2 or 3 vendors, coordinated in <a href="https://sparrowwallet.com/" target="_blank" rel="noopener">Sparrow</a>, <a href="https://nunchuk.io/" target="_blank" rel="noopener">Nunchuk</a>, or <a href="https://specter.solutions/" target="_blank" rel="noopener">Specter</a>.</li>
+          <li>Losing any one key is survivable; losing the descriptor with one key missing is not.</li>
+        </ul>
+      </div>
+      <div class="card" data-tier="3">
+        <h3>Whale: distributed multisig <span class="t t3">Tier 3</span></h3>
+        <ul>
+          <li>Single-sig is a single point of coercion and loss at this size. Use 2-of-3 or 3-of-5 across vendors and sites.</li>
+          <li>No location, and no person, should hold enough keys to sign. That also makes "I cannot move it today" true under duress.</li>
+          <li>Collaborative custody (<a href="https://unchained.com/" target="_blank" rel="noopener">Unchained</a>, <a href="https://casa.io/" target="_blank" rel="noopener">Casa</a>, <a href="https://www.swanbitcoin.com/vault/" target="_blank" rel="noopener">Swan Vault</a>) adds a professional co-signer, key-replacement support, and inheritance help without handing over control.</li>
+          <li>Airgapped signing (PSBT by QR or microSD) on a laptop used for nothing else.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="seeds" aria-labelledby="seeds-h">
+    <h2 id="seeds-h"><span class="num">04</span> Seed, passphrase &amp; backup management</h2>
+    <p class="intro">Your 12 or 24 words <em>are</em> your bitcoin. The facts below explain why backups fail and which failures are silent. For what each word turns into, see <a href="bitcoin-key-derivation-bips.html">how 12 words become an address</a>.</p>
+    <div class="facts">
+      <div class="fact"><b>2,048</b><span>words in the BIP39 English list; the first 4 letters identify each word</span></div>
+      <div class="fact"><b>128 bits</b><span>entropy in 12 words (24 words: 256 bits); 12 is already beyond brute force</span></div>
+      <div class="fact"><b>Last word</b><span>carries a checksum, so random words usually fail validation; 1 in 16 random 12-word lists pass</span></div>
+      <div class="fact"><b>No error</b><span>on a wrong passphrase: every passphrase opens a valid, empty wallet</span></div>
+    </div>
+
+    <div class="note warn"><strong>For all tiers:</strong> never store the seed digitally, and never type it into an internet-connected device. The only legitimate place to enter it is a hardware wallet during recovery.</div>
+
+    <div class="grid two" style="margin-top:1rem">
+      <div class="card" id="tech-seed-backup">
+        <h3>Writing the backup</h3>
+        <ul>
+          <li>Number every word (1 to 24). Order errors are the most common unrecoverable mistake.</li>
+          <li>Record the metadata that recovery needs: wallet type, script (<code>bc1q</code>/<code>bc1p</code>), and for multisig the descriptor. The seed alone does not say where the coins are.</li>
+          <li>Paper first, then transfer to metal. Check each word against the device's display twice.</li>
+          <li>Stamp or etch rather than rely on loose letter tiles, which can scatter if the holder is crushed or opened.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>BIP39 passphrase ("25th word")</h3>
+        <ul>
+          <li>Case, spaces, and punctuation all matter. <code>Correct horse</code> and <code>correct horse</code> are different wallets.</li>
+          <li data-tier="1"><strong>Everyday:</strong> usually skip it. Forgetting it is permanent, and a solid PIN plus separated backups covers your risk.</li>
+          <li data-tier="2"><strong>Serious:</strong> worthwhile if the passphrase is on metal, stored in a different place from the words, and in your inheritance letter's instructions.</li>
+          <li data-tier="3"><strong>Whale:</strong> one layer among several; a small-balance wallet with no passphrase doubles as a duress decoy.</li>
+        </ul>
+      </div>
+      <div class="card" data-tier="2">
+        <h3>Multisig backup: the descriptor <span class="t t2">Tier 2+</span></h3>
+        <p>A multisig address is built from <em>all</em> cosigners' public keys. With 2 of 3 seeds but no record of the third public key, you cannot rebuild the address and the coins are stuck.</p>
+        <ul>
+          <li>Export the output descriptor (or wallet config file) from your coordinator.</li>
+          <li>Store a copy with every seed backup. It reveals balances but cannot spend, so it can live alongside a seed.</li>
+          <li>Standard multisig path: <code>m/48'/0'/0'/2'</code> (P2WSH).</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Derivation paths to note on the backup</h3>
+        <div class="tbl narrow" style="margin-top:.4rem"><table style="min-width:0">
+          <thead><tr><th>Script</th><th>Path</th><th>Address</th></tr></thead>
+          <tbody>
+            <tr><td>Legacy</td><td class="mono">m/44'/0'/0'</td><td class="mono">1…</td></tr>
+            <tr><td>Nested SegWit</td><td class="mono">m/49'/0'/0'</td><td class="mono">3…</td></tr>
+            <tr><td>Native SegWit</td><td class="mono">m/84'/0'/0'</td><td class="mono">bc1q…</td></tr>
+            <tr><td>Taproot</td><td class="mono">m/86'/0'/0'</td><td class="mono">bc1p…</td></tr>
+          </tbody>
+        </table></div>
+        <p style="margin-top:.5rem;font-size:.9rem;color:var(--muted)">Wallets scan 20 unused addresses by default (the gap limit). A restored wallet that shows zero is often on the wrong path, not empty.</p>
+      </div>
+    </div>
+
+    <h3 style="margin:2rem 0 .7rem;font-size:1.15rem">Backup media</h3>
+    <div class="tbl">
+      <table>
+        <thead><tr><th scope="col">Medium</th><th scope="col">Survives</th><th scope="col">Fails to</th><th scope="col">Verdict</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Paper</th><td>Short-term, dry storage</td><td>Fire (ignites around 230&deg;C), water, fading ink</td><td>Setup and transfer only</td></tr>
+          <tr><th scope="row">Aluminum tiles</th><td>Water, corrosion in dry storage</td><td>House fires (aluminum melts at 660&deg;C; fires can exceed that)</td><td>Avoid for primary backups</td></tr>
+          <tr><th scope="row">Brass</th><td>Water, moderate heat</td><td>Hot, long fires (melts near 900&deg;C)</td><td>Acceptable</td></tr>
+          <tr><th scope="row">Stainless steel (304/316), stamped or etched</th><td>Fire (melts around 1,400&deg;C), water, corrosion, crushing</td><td>Deliberate destruction, theft</td><td>Recommended</td></tr>
+          <tr><th scope="row">Titanium, stamped</th><td>Fire (melts around 1,670&deg;C), corrosion</td><td>Theft</td><td>Recommended; costs more</td></tr>
+        </tbody>
+        <caption>Jameson Lopp's <a href="https://jlopp.github.io/metal-bitcoin-storage-reviews/" target="_blank" rel="noopener">metal storage stress tests</a> rate specific products under heat, crushing, and corrosion.</caption>
+      </table>
+    </div>
+
+    <h3 style="margin:2rem 0 .7rem;font-size:1.15rem">Where to keep copies</h3>
+    <div class="tbl">
+      <table>
+        <thead><tr><th scope="col">Location</th><th scope="col">Strength</th><th scope="col">Weakness</th><th scope="col">Use for</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Home safe (bolted)</th><td>Instant access, you control it</td><td>Burglary, fire, coercion at home</td><td>Primary copy, or one multisig key</td></tr>
+          <tr><th scope="row">Bank safe deposit box</th><td>Physical security, fire protection</td><td>Bank hours, no FDIC insurance on contents, can be sealed at death or frozen</td><td>One copy or one key, never a quorum</td></tr>
+          <tr><th scope="row">Trusted family or friend</th><td>Geographic separation, helps heirs</td><td>Their home security, their discretion, relationship changes</td><td>Sealed, tamper-evident copy, or one key</td></tr>
+          <tr><th scope="row">Estate attorney</th><td>Continuity at death</td><td>Staff turnover; you must trust the firm</td><td>Instructions or a sealed key, not a full single-sig seed</td></tr>
+          <tr><th scope="row">Second property or other region</th><td>Survives a local disaster</td><td>Harder to check</td><td><span class="t t3">Tier 3</span> key sites</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="block" id="transactions" aria-labelledby="tx-h">
+    <h2 id="tx-h"><span class="num">05</span> Sending and receiving safely</h2>
+    <div class="grid">
+      <div class="card"><h3>Before every send</h3><ul><li>Compare the full address on the device screen with the recipient's, from a second channel (call, in person) for large amounts.</li><li>Check amount, fee, and change address on the device; change should return to your own wallet.</li><li>Send a small test first when the address is new; bitcoin transactions cannot be reversed.</li></ul></div>
+      <div class="card"><h3>Receiving</h3><ul><li>Generate the receive address on the hardware wallet and confirm it on its screen before sharing.</li><li>Use a fresh address each time. Reuse links your payments and exposes the public key.</li><li>Label incoming coins by source (exchange, salary, private sale) in your wallet software.</li></ul></div>
+      <div class="card" data-tier="2"><h3>Privacy &amp; coin control <span class="t t2">Tier 2+</span></h3><ul><li>Use coin control (Sparrow, Electrum) to choose which coins you spend so you do not merge identified and unlinked coins.</li><li>Consolidate small coins when fees are low; each input raises future fees.</li><li>Run your own node or connect through a trusted Electrum server so a third party does not learn your addresses.</li></ul></div>
+    </div>
+  </section>
+
+  <section class="block" id="opsec" aria-labelledby="opsec-h">
+    <h2 id="opsec-h"><span class="num">06</span> Operational security &amp; privacy</h2>
+    <p class="intro">Every link between your identity, your address, and your holdings is a way for someone to find and target you. Remove them in order of cost.</p>
+    <div class="grid">
+      <div class="card" id="opsec-silence" data-tier="1">
+        <h3>The shield of silence <span class="t t1">All tiers</span></h3>
+        <ul>
+          <li>No posts about buys, sells, balances, or wallet screenshots.</li>
+          <li>Do not discuss holdings with strangers or casual acquaintances.</li>
+          <li>Unbox hardware wallets off camera; the box and device are signals.</li>
+        </ul>
+      </div>
+      <div class="card" id="opsec-footprint" data-tier="1">
+        <h3>Accounts &amp; devices <span class="t t1">All tiers</span></h3>
+        <ul>
+          <li>Unique passwords in a manager (<a href="https://bitwarden.com/" target="_blank" rel="noopener">Bitwarden</a>, <a href="https://1password.com/" target="_blank" rel="noopener">1Password</a>).</li>
+          <li>Authenticator app or security key instead of SMS 2FA on exchanges and email.</li>
+          <li>On public Wi-Fi, use a VPN (<a href="https://mullvad.net/" target="_blank" rel="noopener">Mullvad</a>, <a href="https://protonvpn.com/" target="_blank" rel="noopener">ProtonVPN</a>) or wait.</li>
+          <li>Think about where hardware wallets are shipped; an office or P.O. box avoids tying "bitcoin buyer" to your home.</li>
+        </ul>
+      </div>
+      <div class="card" data-tier="2">
+        <h3>Harden identity <span class="t t2">Tier 2+</span></h3>
+        <ul>
+          <li>FIDO2 security keys (two, one as spare) on email, password manager, and exchanges.</li>
+          <li>Ask your carrier for a port-out PIN or number lock; remove the phone number as a recovery method where you can.</li>
+          <li>Separate email for crypto accounts (<a href="https://proton.me/mail" target="_blank" rel="noopener">Proton Mail</a>, <a href="https://tuta.com/" target="_blank" rel="noopener">Tuta</a>).</li>
+          <li>End-to-end encrypted messaging (<a href="https://signal.org/" target="_blank" rel="noopener">Signal</a>) for anything about your setup.</li>
+        </ul>
+      </div>
+      <div class="card" data-tier="3">
+        <h3>Whale footprint reduction <span class="t t3">Tier 3</span></h3>
+        <ul>
+          <li>Pseudonyms for all crypto activity; separate "crypto" and everyday identities.</li>
+          <li>Remove PII from data brokers (<a href="https://joindeleteme.com/" target="_blank" rel="noopener">DeleteMe</a>, <a href="https://optery.com/" target="_blank" rel="noopener">Optery</a>).</li>
+          <li>Mail forwarding for crypto deliveries (<a href="https://www.travelingmailbox.com/" target="_blank" rel="noopener">Traveling Mailbox</a>, <a href="https://physicaladdress.com/" target="_blank" rel="noopener">PhysicalAddress.com</a>).</li>
+          <li>A dedicated, minimal laptop used only for signing and coordination.</li>
+          <li>Legal structures (LLC, trust) that keep your name off asset records where lawful.</li>
+          <li>A policy for family and staff on what is never discussed, including with people outside the security plan.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="physical" aria-labelledby="phys-h">
+    <h2 id="phys-h"><span class="num">07</span> Physical security &amp; duress</h2>
+    <div class="grid">
+      <div class="card" id="physical-seeds" data-tier="1">
+        <h3>Keys and devices <span class="t t1">All tiers</span></h3>
+        <ul>
+          <li>Store the device and the seed in different places. A device alone is protected by its PIN; a seed alone is the whole wallet.</li>
+          <li>Keep the home copy in a fire-resistant box or safe, out of sight.</li>
+          <li>Keep one copy off-site: a trusted relative's home or a safe deposit box.</li>
+        </ul>
+      </div>
+      <div class="card" data-tier="2">
+        <h3>Safes, seals, ratings <span class="t t2">Tier 2+</span></h3>
+        <ul>
+          <li><strong>UL 72 Class 350:</strong> interior stays below 350&deg;F in a fire test; fine for metal and paper. <strong>Class 125</strong> protects electronics and media.</li>
+          <li><strong>TL-15 / TL-30:</strong> resists 15 or 30 minutes of attack with common tools. Bolt it to the floor.</li>
+          <li>Tamper-evident bags with recorded serial numbers show whether a backup was opened.</li>
+        </ul>
+      </div>
+      <div class="card" id="physical-home-defense" data-tier="3">
+        <h3>Home fortress <span class="t t3">Tier 3</span></h3>
+        <ul>
+          <li>Reinforced doors and frames, window film, professionally monitored alarm with cellular backup.</li>
+          <li>Cameras with off-site recording (PoE systems such as <a href="https://ui.com/camera-security" target="_blank" rel="noopener">UniFi Protect</a>).</li>
+          <li>A safe room or reinforced area; a professional security assessment of home and travel habits.</li>
+          <li><a href="martial-arts-cheatsheet.html">Personal defense training</a> focused on awareness and de-escalation.</li>
+        </ul>
+      </div>
+      <div class="card rule" data-tier="3">
+        <h3>Duress plan <span class="t t3">Tier 3</span></h3>
+        <ul>
+          <li><strong>Life before bitcoin.</strong> Comply and de-escalate.</li>
+          <li><strong>Decoy wallet</strong> with a plausible balance you can surrender.</li>
+          <li><strong>Device features:</strong> Coldcard Trick PINs (duress wallet, wipe, brick); passphrase-hidden wallets on Trezor and others.</li>
+          <li><strong>Make "I can't" true:</strong> with keys in other cities, or a timelock, you cannot move the main stash on demand, and a credible attacker learns that fast.</li>
+          <li>Study real cases: <a href="https://github.com/jlopp/physical-bitcoin-attacks" target="_blank" rel="noopener">Lopp's list of physical bitcoin attacks</a>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="inheritance" aria-labelledby="inh-h">
+    <h2 id="inh-h"><span class="num">08</span> Inheritance &amp; succession</h2>
+    <p class="intro">Without a plan, your bitcoin is lost at your death or incapacity. The plan has to work for someone who is grieving and not technical.</p>
+    <div class="grid">
+      <div class="card" id="inheritance-plan">
+        <h3>Letter of instruction <span class="t t1">All tiers</span></h3>
+        <ul>
+          <li>What exists: wallet types, rough amounts, which exchanges.</li>
+          <li>Where things are: devices, backups, descriptor, passphrase location.</li>
+          <li>How to recover, step by step, and who to call for trusted help.</li>
+          <li>A list of scams: nobody legitimate will ask them to type the seed online.</li>
+          <li>Tell your executor that the letter exists and where it is.</li>
+        </ul>
+        <p class="note warn" style="margin-top:.6rem"><strong>Never put the seed in a will.</strong> In the US, a probated will becomes a public court record.</p>
+      </div>
+      <div class="card" data-tier="2">
+        <h3>Make it followable <span class="t t2">Tier 2+</span></h3>
+        <ul>
+          <li>Have a non-technical person read the letter and walk through a recovery on a test wallet.</li>
+          <li>Record a video walkthrough stored with the letter.</li>
+          <li>Name a crypto-literate helper ("coach") who holds no keys, so help does not create a new theft path.</li>
+        </ul>
+      </div>
+      <div class="card" data-tier="3">
+        <h3>Comprehensive protocol <span class="t t3">Tier 3</span></h3>
+        <ol>
+          <li><strong>Legal:</strong> crypto-aware estate attorney; trust or entity where it fits.</li>
+          <li><strong>Technical:</strong> multisig where heirs plus a professional co-signer reach quorum after your death, or a timelocked recovery path (Liana, miniscript) that heirs' keys unlock after a delay you keep resetting.</li>
+          <li><strong>Guided recovery:</strong> collaborative custody providers (Unchained, Casa) offer inheritance protocols that verify the death and assist heirs.</li>
+          <li><strong>Review</strong> after marriage, divorce, births, or moving.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="maintenance" aria-labelledby="maint-h">
+    <h2 id="maint-h"><span class="num">09</span> Drills, updates &amp; adaptation</h2>
+    <div class="note tip" id="maintenance-drills"><strong>Universal practice:</strong> before trusting any new wallet or backup method with real money, run a small amount through the whole lifecycle: set up, back up, receive, sign a send, then fully restore from the backup on a wiped or second device and confirm the balance. This catches most user errors while they are still cheap.</div>
+    <div class="tbl narrow" style="margin-top:1rem">
+      <table>
+        <thead><tr><th scope="col">Activity</th><th scope="col">Everyday</th><th scope="col">Serious</th><th scope="col">Whale</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Full restore from backup</th><td>At setup</td><td>Yearly</td><td>Yearly, per key</td></tr>
+          <tr><th scope="row">Signing drill</th><td>When you spend</td><td>Twice a year</td><td>Quarterly, every key</td></tr>
+          <tr><th scope="row">Backup site check</th><td>Yearly</td><td>Yearly</td><td>Twice a year, seals checked</td></tr>
+          <tr><th scope="row">Firmware updates</th><td>After security releases, from the official app</td><td>Wait a week unless urgent; verify signatures</td><td>Test on one key first; stagger vendors</td></tr>
+          <tr><th scope="row">Threat review</th><td>After life changes</td><td>Yearly</td><td>Yearly and after any disclosure or staff change</td></tr>
+          <tr><th scope="row">Timelock refresh</th><td>n/a</td><td>n/a</td><td>Before the recovery path matures</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="block" id="mistakes" aria-labelledby="mis-h">
+    <h2 id="mis-h"><span class="num">10</span> Common mistakes</h2>
+    <ul class="mistakes">
+      <li><b>Photo or cloud copy of the seed</b>Phone backups sync to the cloud. One leaked photo and one breached account empties the wallet.</li>
+      <li><b>Seed stored with the device</b>A burglar who takes the box takes everything. Keep them apart.</li>
+      <li><b>One backup, or all backups in one building</b>A single fire becomes a total loss.</li>
+      <li><b>Never testing recovery</b>A miswritten word is discovered at the worst possible time.</li>
+      <li><b>Multisig without the descriptor</b>Two seeds are not enough without every cosigner's public key.</li>
+      <li><b>Passphrase next to the seed, or nowhere</b>Next to it adds nothing; nowhere means permanent loss.</li>
+      <li><b>Pre-seeded or marketplace hardware</b>A device that arrives with words already printed belongs to someone else.</li>
+      <li><b>Typing the seed to "fix" or "validate" a wallet</b>This is the most common way seeds are stolen.</li>
+      <li><b>Copying addresses from history</b>Exactly what address poisoning is designed to exploit.</li>
+      <li><b>SMS as 2FA or recovery</b>SIM swaps turn a phone number into a password reset.</li>
+      <li><b>Seed in the will</b>Probate makes it public.</li>
+      <li><b>All multisig keys from one vendor</b>One firmware bug then hits every key; mix vendors.</li>
+      <li><b>Leaving coins on an exchange for convenience</b>Convenience ends when withdrawals are frozen.</li>
+      <li><b>Bragging, merch, or unboxing videos</b>Each one tells the world where to aim.</li>
+      <li><b>Letting a timelock mature unattended</b>The recovery key becomes spendable early; refresh on schedule.</li>
+    </ul>
+  </section>
+
+  <section class="block" id="tools-services" aria-labelledby="tools-h">
+    <h2 id="tools-h"><span class="num">11</span> Tools, services &amp; resources</h2>
+    <p class="intro">Inclusion is not endorsement. Check recent security disclosures before buying. For a full wallet comparison see the <a href="bitcoin-wallet.html">Bitcoin wallet cheatsheet</a>; if access is already at risk, see the <a href="https://walletrecovery.info/seed-phrase-recovery/" target="_blank" rel="noopener">seed phrase recovery guide</a>, the <a href="https://walletrecovery.info/hacked-wallet-rescue/" target="_blank" rel="noopener">hacked-wallet rescue guide</a>, or <a href="wallet-recovery-forensics.html">wallet recovery forensics</a>.</p>
+    <details name="tools" open>
+      <summary>Hardware wallets and signing devices</summary>
+      <div class="body"><ul class="links">
+        <li><a href="https://coldcard.com/" target="_blank" rel="noopener">Coldcard</a> <small>Bitcoin-only, airgapped, Trick PINs; see the 2026 alert above</small></li>
+        <li><a href="https://blockstream.com/jade/" target="_blank" rel="noopener">Blockstream Jade</a> <small>Bitcoin-only, QR airgap, low cost</small></li>
+        <li><a href="https://trezor.io/" target="_blank" rel="noopener">Trezor</a> <small>open source, SLIP-39 Shamir backups, multi-coin</small></li>
+        <li><a href="https://www.ledger.com/" target="_blank" rel="noopener">Ledger</a> <small>multi-coin; its opt-in Ledger Recover service (2023) showed firmware can export seed shares</small></li>
+        <li><a href="https://foundation.xyz/" target="_blank" rel="noopener">Foundation Passport</a> <small>Bitcoin-only, airgapped</small></li>
+        <li><a href="https://bitbox.swiss/" target="_blank" rel="noopener">BitBox02</a> <small>Bitcoin-only edition available, simple setup</small></li>
+        <li><a href="https://keyst.one/" target="_blank" rel="noopener">Keystone</a> <small>QR airgapped, large screen</small></li>
+        <li><a href="https://seedsigner.com/" target="_blank" rel="noopener">SeedSigner</a> <small>DIY stateless signer, stores nothing</small></li>
+      </ul></div>
+    </details>
+    <details name="tools">
+      <summary>Metal seed storage</summary>
+      <div class="body"><ul class="links">
+        <li><a href="https://cryptosteel.com/" target="_blank" rel="noopener">Cryptosteel</a> <small>capsule and cassette</small></li>
+        <li><a href="https://blockplate.com/" target="_blank" rel="noopener">Blockplate</a> <small>stainless plates, punch marks</small></li>
+        <li><a href="https://seedplate.com/" target="_blank" rel="noopener">Seedplate</a> <small>punched or engraved plates</small></li>
+        <li><a href="https://coldbit.com/" target="_blank" rel="noopener">Coldbit</a> <small>steel backup options</small></li>
+        <li><a href="https://stampseed.com/" target="_blank" rel="noopener">StampSeed</a> <small>DIY stamping kits</small></li>
+        <li><a href="https://jlopp.github.io/metal-bitcoin-storage-reviews/" target="_blank" rel="noopener">Lopp's metal storage reviews</a> <small>independent stress tests</small></li>
+      </ul></div>
+    </details>
+    <details name="tools">
+      <summary>Wallet and multisig coordinator software</summary>
+      <div class="body"><ul class="links">
+        <li><a href="https://sparrowwallet.com/" target="_blank" rel="noopener">Sparrow Wallet</a> <small>desktop, coin control, multisig</small></li>
+        <li><a href="https://specter.solutions/" target="_blank" rel="noopener">Specter Desktop</a> <small>hardware-wallet multisig</small></li>
+        <li><a href="https://nunchuk.io/" target="_blank" rel="noopener">Nunchuk</a> <small>mobile and desktop, collaborative multisig</small></li>
+        <li><a href="https://lianawallet.com/" target="_blank" rel="noopener">Liana</a> <small>timelocked recovery paths (miniscript)</small></li>
+        <li><a href="https://bluewallet.io/" target="_blank" rel="noopener">BlueWallet</a> <small>mobile, small multisig vaults</small></li>
+        <li><a href="https://electrum.org/" target="_blank" rel="noopener">Electrum</a> <small>desktop, advanced users</small></li>
+      </ul></div>
+    </details>
+    <details name="tools">
+      <summary>Collaborative custody and inheritance services</summary>
+      <div class="body"><ul class="links">
+        <li><a href="https://unchained.com/" target="_blank" rel="noopener">Unchained</a> <small>2-of-3 vaults, inheritance protocol</small></li>
+        <li><a href="https://casa.io/" target="_blank" rel="noopener">Casa</a> <small>2-of-3 and 3-of-5 key management, inheritance</small></li>
+        <li><a href="https://www.swanbitcoin.com/vault/" target="_blank" rel="noopener">Swan Vault</a> <small>guided multisig setup</small></li>
+      </ul></div>
+    </details>
+    <details name="tools">
+      <summary>Privacy and account security</summary>
+      <div class="body"><ul class="links">
+        <li>Password managers: <a href="https://bitwarden.com/" target="_blank" rel="noopener">Bitwarden</a>, <a href="https://1password.com/" target="_blank" rel="noopener">1Password</a></li>
+        <li>VPN: <a href="https://mullvad.net/" target="_blank" rel="noopener">Mullvad</a>, <a href="https://protonvpn.com/" target="_blank" rel="noopener">ProtonVPN</a></li>
+        <li>Encrypted email: <a href="https://proton.me/mail" target="_blank" rel="noopener">Proton Mail</a>, <a href="https://tuta.com/" target="_blank" rel="noopener">Tuta</a></li>
+        <li>Data broker removal: <a href="https://joindeleteme.com/" target="_blank" rel="noopener">DeleteMe</a>, <a href="https://optery.com/" target="_blank" rel="noopener">Optery</a></li>
+        <li>Mail forwarding: <a href="https://www.travelingmailbox.com/" target="_blank" rel="noopener">Traveling Mailbox</a></li>
+        <li>Home security: <a href="https://simplisafe.com/" target="_blank" rel="noopener">SimpliSafe</a>, <a href="https://goabode.com/" target="_blank" rel="noopener">Abode</a>, <a href="https://reolink.com/" target="_blank" rel="noopener">Reolink</a></li>
+      </ul></div>
+    </details>
+    <details name="tools">
+      <summary>Learning</summary>
+      <div class="body"><ul class="links">
+        <li><a href="https://bitcoin.org/en/secure-your-wallet" target="_blank" rel="noopener">Bitcoin.org: Secure your wallet</a></li>
+        <li><a href="https://www.lopp.net/bitcoin-information.html" target="_blank" rel="noopener">Jameson Lopp's Bitcoin resources</a></li>
+        <li><a href="https://github.com/jlopp/physical-bitcoin-attacks" target="_blank" rel="noopener">Physical bitcoin attack list</a></li>
+        <li><a href="crypto-custody-index.html">Crypto custody hub</a> <small>MPC, institutional, post-quantum, recovery</small></li>
+        <li>Local Bitcoin meetups, for hands-on help from people you can meet</li>
+      </ul></div>
+    </details>
+  </section>
+
+  <section class="block" id="checklist" aria-labelledby="chk-h">
+    <h2 id="chk-h"><span class="num">12</span> Self-custody checklist</h2>
+    <p class="intro">Progress is saved in this browser only. The tier filter at the top hides items above your tier.</p>
+    <p class="filter-note">Some items are hidden by your tier filter. Choose "Show all" to see them.</p>
+    <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem"><span class="progress">Done: <output id="chkCount">0</output> of <span id="chkTotal">0</span></span><button class="reset-btn" type="button" id="chkReset">Clear checklist</button></div>
+    <div class="grid two">
+      <div class="card">
+        <h3>OPSEC &amp; physical</h3>
+        <ul class="check">
+          <li><input type="checkbox" id="chk-s-opsec-silence"><label for="chk-s-opsec-silence">Never disclose holdings publicly or to casual contacts.</label></li>
+          <li><input type="checkbox" id="chk-s-secure-accounts"><label for="chk-s-secure-accounts">Unique passwords in a manager; no SMS 2FA on exchanges or email.</label></li>
+          <li><input type="checkbox" id="chk-s-safe-hw-delivery"><label for="chk-s-safe-hw-delivery">Hardware bought direct and delivered somewhere safe.</label></li>
+          <li><input type="checkbox" id="chk-s-basic-home-sec"><label for="chk-s-basic-home-sec">Home backup in fire-resistant storage, out of sight, away from the device.</label></li>
+          <li data-tier="2"><input type="checkbox" id="chk-s-fido-keys"><label for="chk-s-fido-keys">FIDO2 keys on email and exchanges; carrier port-out PIN set.<span class="t t2">T2</span></label></li>
+          <li data-tier="3"><input type="checkbox" id="chk-s-whale-opsec"><label for="chk-s-whale-opsec">Pseudonyms, PII removal, separate crypto identity.<span class="t t3">T3</span></label></li>
+          <li data-tier="3"><input type="checkbox" id="chk-s-whale-home-fortress"><label for="chk-s-whale-home-fortress">Home security upgrade and a written duress plan with decoy wallet.<span class="t t3">T3</span></label></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Wallet &amp; backups</h3>
+        <ul class="check">
+          <li><input type="checkbox" id="chk-s-hw-wallet"><label for="chk-s-hw-wallet">Hardware wallet with seed generated on the device.</label></li>
+          <li><input type="checkbox" id="chk-s-metal-backup"><label for="chk-s-metal-backup">Two backups of the seed, at least one on steel or titanium.</label></li>
+          <li><input type="checkbox" id="chk-s-offsite-backup"><label for="chk-s-offsite-backup">One backup off-site, in a different building.</label></li>
+          <li><input type="checkbox" id="chk-s-test-full-workflow"><label for="chk-s-test-full-workflow">Full restore tested with a small amount before funding.</label></li>
+          <li><input type="checkbox" id="chk-s-bip39-careful"><label for="chk-s-bip39-careful">Passphrase decision made; if used, stored apart from the seed.</label></li>
+          <li data-tier="2"><input type="checkbox" id="chk-s-descriptor"><label for="chk-s-descriptor">Multisig descriptor stored with every seed backup.<span class="t t2">T2</span></label></li>
+          <li data-tier="3"><input type="checkbox" id="chk-s-whale-multisig"><label for="chk-s-whale-multisig">Multisig (2-of-3 or 3-of-5) across two or more vendors.<span class="t t3">T3</span></label></li>
+          <li data-tier="3"><input type="checkbox" id="chk-s-whale-geo-distro"><label for="chk-s-whale-geo-distro">No single site or person holds a signing quorum.<span class="t t3">T3</span></label></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Inheritance</h3>
+        <ul class="check">
+          <li><input type="checkbox" id="chk-s-simple-heir-letter"><label for="chk-s-simple-heir-letter">Letter of instruction written (no seed in the will).</label></li>
+          <li><input type="checkbox" id="chk-s-inform-executor"><label for="chk-s-inform-executor">Executor or heir knows the letter exists and where it is.</label></li>
+          <li data-tier="3"><input type="checkbox" id="chk-s-whale-estate-plan"><label for="chk-s-whale-estate-plan">Crypto-aware estate attorney engaged.<span class="t t3">T3</span></label></li>
+          <li data-tier="2"><input type="checkbox" id="chk-s-whale-heir-coach"><label for="chk-s-whale-heir-coach">Named technical helper who holds no keys.<span class="t t2">T2</span></label></li>
+          <li data-tier="2"><input type="checkbox" id="chk-s-whale-detailed-heir-docs"><label for="chk-s-whale-detailed-heir-docs">Instructions tested by a non-technical reader.<span class="t t2">T2</span></label></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Maintenance</h3>
+        <ul class="check">
+          <li><input type="checkbox" id="chk-s-annual-recovery-drill"><label for="chk-s-annual-recovery-drill">Recovery drill on the calendar.</label></li>
+          <li><input type="checkbox" id="chk-s-stay-informed"><label for="chk-s-stay-informed">Following security notices for every device and wallet you use.</label></li>
+          <li><input type="checkbox" id="chk-s-cautious-updates"><label for="chk-s-cautious-updates">Firmware updated from official sources only, after verification.</label></li>
+          <li data-tier="3"><input type="checkbox" id="chk-s-whale-regular-drills"><label for="chk-s-whale-regular-drills">Quarterly signing drill on every key.<span class="t t3">T3</span></label></li>
+          <li data-tier="3"><input type="checkbox" id="chk-s-whale-threat-reval"><label for="chk-s-whale-threat-reval">Threat model reviewed after life, holding, or staff changes.<span class="t t3">T3</span></label></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <p class="author-byline" style="max-width:70ch;margin:3rem auto 0;font-size:0.92em;text-align:center;color:var(--muted)">David Veksler is a Principal AI Engineer in Denver. He leads agentic AI engineering at Antech, a Mars company, and builds AI platforms for regulated financial firms. This page was produced by a governed, multi-agent Claude Code pipeline with a git audit trail. <a href="how-its-built.html">How it's built</a> <a href="https://davidveksler.com/work/?ref=cheatsheets">Case studies</a></p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="related-cheatsheets" data-seo-related-links aria-label="Related Bitcoin &amp; Finance cheatsheets">
+      <strong>Related:</strong><br>
+      <a href="bitcoin-key-derivation-bips.html" title="How 12 recovery words become a Bitcoin address">How 12 Words Become an Address</a>
+      <a href="bitcoin-wallet.html" title="Bitcoin wallet cheatsheet">Bitcoin Wallets</a>
+      <a href="wallet-recovery-forensics.html" title="Open Wallet Recovery Forensics">Wallet Recovery Forensics</a>
+      <a href="crypto-custody-index.html" title="Crypto custody hub">Crypto Custody Hub</a>
+      <a href="institutional-crypto-custody.html" title="Institutional crypto custody">Institutional Crypto Custody</a>
+      <a href="mpc-wallet-architecture.html" title="MPC wallet architecture">MPC Wallet Architecture</a>
+      <a href="post-quantum-custody-migration.html" title="Post-quantum custody migration">Post-Quantum Custody Migration</a>
+      <a href="bitcoin-exchanges-cards.html" title="Open Bitcoin Exchanges &amp; Crypto Cards: On-Ramps &amp; Spending Guide">Bitcoin Exchanges &amp; Crypto Cards</a>
+      <a href="bitcoin-whitepaper.html" title="Bitcoin Whitepaper">Bitcoin Whitepaper</a>
+      <a href="the-cliff-map.html" title="Open The Cliff Map: IRMAA, ACA, and Income Thresholds">The Cliff Map</a>
+    </div>
+    <p>&copy; 2026 <a href="https://davidveksler.com/?ref=cheatsheets">David Veksler</a> &middot; Based on hardware wallet documentation, BIP39/BIP32 specifications, and public incident reports. <a href="https://www.linkedin.com/in/davidveksler/" target="_blank" rel="noopener">LinkedIn</a> &middot; <a href="https://cheatsheets.davidveksler.com/">All cheatsheets</a></p>
 
 <nav class="cs-breadcrumb" data-site-breadcrumb aria-label="Breadcrumb" style="margin:1.25rem auto 0;max-width:72ch;text-align:center;font-size:.88em;line-height:1.6;">
   <a href="./">Cheat sheets</a> <span aria-hidden="true">&rsaquo;</span> <a href="bitcoin-finance">Bitcoin &amp; Finance cheat sheets</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Bitcoin Self-Custody: Security Guide From Plebes to Whales</span>
@@ -1968,6 +803,54 @@
   <span aria-hidden="true">·</span>
   <a href="https://github.com/DavidVeksler/CheatSheets" target="_blank" rel="noopener noreferrer" title="View the public CheatSheets source repository on GitHub">Source on GitHub</a>
 </p>
+  </div>
 </footer>
+
+<script>
+(function () {
+  var store = null;
+  try { var k = '__t'; localStorage.setItem(k, k); localStorage.removeItem(k); store = localStorage; } catch (e) { store = null; }
+  function get(k) { try { return store ? store.getItem(k) : null; } catch (e) { return null; } }
+  function set(k, v) { try { if (store) store.setItem(k, v); } catch (e) {} }
+  function del(k) { try { if (store) store.removeItem(k); } catch (e) {} }
+
+  // Theme: auto -> light -> dark
+  var root = document.documentElement, btn = document.getElementById('themeBtn');
+  var modes = ['auto', 'light', 'dark'];
+  function applyTheme(m) {
+    if (m === 'auto') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', m);
+    btn.textContent = 'Theme: ' + m;
+  }
+  var theme = get('btc-custody-theme') || 'auto';
+  applyTheme(modes.indexOf(theme) < 0 ? 'auto' : theme);
+  btn.addEventListener('click', function () {
+    var cur = root.getAttribute('data-theme') || 'auto';
+    var next = modes[(modes.indexOf(cur) + 1) % modes.length];
+    applyTheme(next); set('btc-custody-theme', next);
+  });
+
+  // Tier filter: CSS does the hiding; remember the choice
+  var saved = get('btc-custody-tier');
+  if (saved) { var r = document.querySelector('input[name="tier"][value="' + saved + '"]'); if (r) r.checked = true; }
+  document.querySelectorAll('input[name="tier"]').forEach(function (r) {
+    r.addEventListener('change', function () { set('btc-custody-tier', r.value); });
+  });
+
+  // Checklist: keys match the previous version of this page
+  var boxes = document.querySelectorAll('#checklist input[type="checkbox"]');
+  var count = document.getElementById('chkCount');
+  document.getElementById('chkTotal').textContent = boxes.length;
+  function tally() { var n = 0; boxes.forEach(function (b) { if (b.checked) n++; }); count.textContent = n; }
+  boxes.forEach(function (b) {
+    if (get('btc-security-' + b.id) === 'true') b.checked = true;
+    b.addEventListener('change', function () { set('btc-security-' + b.id, b.checked); tally(); });
+  });
+  tally();
+  document.getElementById('chkReset').addEventListener('click', function () {
+    boxes.forEach(function (b) { b.checked = false; del('btc-security-' + b.id); });
+    tally();
+  });
+})();
+</script>
 </body>
 </html>
