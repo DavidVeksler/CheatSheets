@@ -75,6 +75,7 @@ return [
 
     // Bitcoin & Finance
     'bitcoin-exchanges-cards.html' => 'Bitcoin & Finance',
+    'bitcoin-key-derivation-bips.html' => 'Bitcoin & Finance',
     'bitcoin-self-custody-guide.html' => 'Bitcoin & Finance',
     'bitcoin-wallet.html' => 'Bitcoin & Finance',
     'bitcoin-whitepaper.html' => 'Bitcoin & Finance',

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How 12 Words Become a Bitcoin Address, Step by Step</title>
+<meta name="description" content="Follow one real example from 12 recovery words to a Bitcoin address: seed, master key, derivation path, public key, and address, with which parts to keep secret.">
+<meta name="keywords" content="Bitcoin recovery words, seed phrase, how Bitcoin addresses are made, derivation path, BIP39, BIP32, BIP84, HD wallet explained">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/bitcoin-key-derivation-bips.html">
+<meta property="og:title" content="How 12 Words Become a Bitcoin Address">
+<meta property="og:description" content="One real example, six steps: recovery words to seed to master key to derivation path to public key to address.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/bitcoin-key-derivation-bips.html">
+<meta property="og:image" content="images/bitcoin-key-derivation-bips.png">
+<meta property="og:image:alt" content="Six steps from 12 recovery words to a Bitcoin address">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How 12 Words Become a Bitcoin Address">
+<meta name="twitter:description" content="One real example, six steps: recovery words to seed to master key to derivation path to public key to address.">
+<meta name="twitter:image" content="images/bitcoin-key-derivation-bips.png">
+<meta name="twitter:creator" content="@heroiclife">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"How 12 Words Become a Bitcoin Address, Step by Step","description":"A beginner walkthrough of one real example from BIP39 recovery words through the seed, BIP32 master key, BIP84 derivation path, and public key to a Bitcoin address.","author":{"@type":"Person","@id":"https://davidveksler.com/#person","name":"David Veksler","url":"https://davidveksler.com/"},"creditText":"Produced by a governed multi-agent Claude Code pipeline; author of record David Veksler","publisher":{"@type":"Organization","name":"David Veksler Cheatsheets"},"datePublished":"2026-09-24","proficiencyLevel":"Beginner","keywords":"Bitcoin, recovery words, seed phrase, derivation path, BIP39, BIP32, BIP84"}</script>
+<style>
+@layer reset,tokens,base,layout,components,print;
+@layer reset{*{box-sizing:border-box}body,h1,h2,h3,p,ol,ul,figure{margin:0}ol,ul{padding:0}table{border-collapse:collapse}}
+@layer tokens{:root{color-scheme:light dark;
+--bg:light-dark(#f6f8fa,#0b1420);--panel:light-dark(#ffffff,#111e2d);--panel2:light-dark(#eef3f7,#16273a);
+--ink:light-dark(#15222e,#e8f0f5);--muted:light-dark(#4b5d6b,#a4b6c3);--line:light-dark(#cfdbe4,#27405a);
+--secret:light-dark(#a3223b,#ff8095);--secret-bg:light-dark(#fbeef0,#2b1720);
+--share:light-dark(#1d6a3c,#7fe0a0);--share-bg:light-dark(#eaf6ee,#13291d);
+--accent:light-dark(#0b5c84,#5ec8f2);
+--mono:ui-monospace,SFMono-Regular,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",sans-serif}}
+@layer base{body{font:400 1.0625rem/1.6 var(--sans);color:var(--ink);background:var(--bg);text-wrap:pretty}
+h1,h2,h3{line-height:1.15;text-wrap:balance}h1{font-size:clamp(2.1rem,6vw,3.4rem);letter-spacing:-.03em}h2{font-size:clamp(1.45rem,3.2vw,1.9rem);letter-spacing:-.015em}h3{font-size:1.05rem}
+p+p{margin-top:.7rem}a{color:var(--accent);text-underline-offset:.18em}code,.mono{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}.small{font-size:.88rem;color:var(--muted)}
+.skip{position:absolute;left:-9999px}.skip:focus{left:1rem;top:1rem;background:var(--panel);padding:.6rem;z-index:5}}
+@layer layout{.wrap{width:min(760px,calc(100% - 2rem));margin-inline:auto}
+header.top{padding:2.5rem 0 1.5rem}.site-nav{display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;font-size:.88rem;margin-bottom:2rem}.site-nav a{color:var(--muted)}
+.lede{font-size:1.2rem;margin-top:1rem;color:var(--muted)}.lede strong{color:var(--ink)}
+section{padding:2.2rem 0}section+section{border-top:1px solid var(--line)}
+footer{padding:2rem 0 3rem;border-top:1px solid var(--line);color:var(--muted);font-size:.92rem}footer p+p{margin-top:.6rem}}
+@layer components{
+.example{margin-top:1.4rem;padding:.8rem 1rem;border-left:4px solid var(--secret);background:var(--secret-bg);font-size:.95rem}
+.recipe{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:.4rem;margin-top:1.6rem;counter-reset:r}
+.recipe li{counter-increment:r;border:1px solid var(--line);background:var(--panel);padding:.55rem .6rem;border-radius:.4rem;font-size:.9rem;font-weight:600;position:relative}
+.recipe li::before{content:counter(r);display:block;font:700 .72rem var(--mono);color:var(--muted)}
+.recipe a{color:inherit;text-decoration:none}.recipe a:hover{text-decoration:underline}
+.recipe .s{border-top:3px solid var(--secret)}.recipe .p{border-top:3px solid var(--share)}
+.legend{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;margin-top:.7rem;font-size:.85rem;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:.9rem;height:3px;vertical-align:middle;margin-right:.35rem}
+.legend .s::before{background:var(--secret)}.legend .p::before{background:var(--share)}
+.step-head{display:flex;align-items:baseline;gap:.8rem;flex-wrap:wrap;margin-bottom:.9rem}
+.num{font:700 .8rem var(--mono);color:var(--muted);letter-spacing:.08em}
+.badge{font-size:.78rem;font-weight:700;padding:.15rem .55rem;border-radius:1rem;white-space:nowrap}
+.badge.s{color:var(--secret);background:var(--secret-bg)}.badge.p{color:var(--share);background:var(--share-bg)}
+.q{font-size:1.1rem;font-weight:600;margin-bottom:.6rem}
+.io{margin-top:1.1rem;border:1px solid var(--line);border-radius:.5rem;background:var(--panel);overflow:hidden}
+.io div{display:grid;grid-template-columns:7.5rem 1fr;gap:.8rem;padding:.65rem .9rem}.io div+div{border-top:1px solid var(--line)}
+.io dt{font-size:.82rem;font-weight:700;color:var(--muted)}.io dd{margin:0;font-family:var(--mono);font-size:.88rem;overflow-wrap:anywhere}
+.io .out dd{font-weight:700}
+.words{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:.4rem;margin-top:1rem;counter-reset:w}
+.words li{counter-increment:w;background:var(--panel);border:1px solid var(--line);border-radius:.4rem;padding:.4rem .55rem;font-family:var(--mono);font-size:.9rem}
+.words li::before{content:counter(w) ". ";color:var(--muted)}.words small{display:block;color:var(--muted);font-size:.75rem}
+.path{font:700 clamp(1.3rem,4.5vw,1.8rem) var(--mono);margin:1rem 0 .4rem;letter-spacing:.02em}
+table{width:100%;margin-top:.8rem;font-size:.95rem;background:var(--panel);border:1px solid var(--line)}
+th,td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:.82rem;color:var(--muted);background:var(--panel2)}
+td code{white-space:nowrap}.addr{overflow-wrap:anywhere}tr.here td{background:var(--share-bg)}
+.why{margin-top:1rem;padding-left:1rem;border-left:3px solid var(--line);color:var(--muted)}.why strong{color:var(--ink)}
+.tech{margin-top:.9rem;font-size:.85rem;color:var(--muted)}
+.arrow{text-align:center;color:var(--muted);font-size:1.3rem;margin:-.2rem 0}
+.takeaways{list-style:none;display:grid;gap:.7rem;margin-top:1rem}.takeaways li{background:var(--panel);border:1px solid var(--line);border-radius:.5rem;padding:.8rem 1rem}
+.links{margin:1rem 0 0 1.2rem;display:grid;gap:.4rem}
+}
+@layer print{@media print{.site-nav,.skip{display:none}body{background:#fff;color:#000}section{break-inside:avoid-page}}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap">
+<nav class="site-nav" aria-label="Site"><a href="./">All cheatsheets</a><a href="bitcoin-self-custody-guide.html">Bitcoin self-custody</a><a href="wallet-recovery-forensics.html">Wallet recovery</a></nav>
+<h1>How 12 words become a Bitcoin address</h1>
+<p class="lede">Your recovery words are not a password to an account somewhere. <strong>They are a number, and every key and address in your wallet is calculated from that number by a fixed recipe.</strong> This page follows one example through that recipe, one step at a time.</p>
+<ol class="recipe" aria-label="The six steps">
+<li class="s"><a href="#words">Words</a></li>
+<li class="s"><a href="#seed">Seed</a></li>
+<li class="s"><a href="#master">Master key</a></li>
+<li class="s"><a href="#path">Your key</a></li>
+<li class="p"><a href="#public">Public key</a></li>
+<li class="p"><a href="#address">Address</a></li>
+</ol>
+<p class="legend"><span class="s">Keep secret: anyone with this can spend</span><span class="p">Safe to share</span></p>
+<p class="example"><strong>Example only.</strong> This page uses a famous public test phrase that anyone can look up, so every value below is real but worthless. Never type your own words into any website, including this kind of page.</p>
+</div></header>
+
+<main id="main" class="wrap">
+
+<section id="words" aria-labelledby="h-words">
+<div class="step-head"><span class="num">STEP 1</span><h2 id="h-words">The words are a number</h2><span class="badge s">Keep secret</span></div>
+<p class="q">What is actually written on your backup?</p>
+<p>The wallet uses a fixed list of 2,048 English words. Each word is really its position on that list, a number from 0 to 2047. Twelve of those numbers written together make one very large random number. That number is your wallet.</p>
+<ol class="words" aria-label="The example's 12 words and their list positions">{{WORDS}}</ol>
+<p class="tech">The small number under each word is its position on the list, counting from 0.</p>
+<div class="why"><p><strong>Why all "abandon"?</strong> "Abandon" is word 0 on the list, so this phrase is what you get when the random number is all zeros. A real wallet's words look random, like <em>turtle orbit guilt</em>. The last word is partly a checksum: 4 of its bits are calculated from the other words, so a wallet can usually tell you've made a typo.</p></div>
+<p class="tech">Technical name: BIP39 mnemonic. 12 words × 11 bits = 132 bits: 128 random bits plus a 4-bit checksum. A 24-word phrase holds 256 random bits.</p>
+</section>
+
+<div class="arrow" aria-hidden="true">↓</div>
+
+<section id="seed" aria-labelledby="h-seed">
+<div class="step-head"><span class="num">STEP 2</span><h2 id="h-seed">The words are scrambled into a seed</h2><span class="badge s">Keep secret</span></div>
+<p class="q">What does the wallet do with the words?</p>
+<p>The wallet feeds the words through a one-way scrambler 2,048 times in a row. What comes out is the <strong>seed</strong>: 64 bytes that look like noise. "One-way" means you can go from words to seed in a fraction of a second, but nobody can go from the seed back to the words.</p>
+<dl class="io"><div><dt>In</dt><dd>abandon abandon … about</dd></div><div class="out"><dt>Out: seed</dt><dd>{{SEED}}</dd></div></dl>
+<div class="why"><p><strong>The optional passphrase goes in here.</strong> Some wallets let you add an extra passphrase (sometimes called a "25th word"). It gets mixed into this scramble, so the same 12 words with a different passphrase make a completely different seed, and so a completely different wallet with different addresses. There is no "wrong passphrase" error: every passphrase opens <em>a</em> wallet.</p></div>
+<p class="tech">Technical name: BIP39 seed. PBKDF2-HMAC-SHA512, 2,048 iterations, salt "mnemonic" + passphrase. The example uses no passphrase.</p>
+</section>
+
+<div class="arrow" aria-hidden="true">↓</div>
+
+<section id="master" aria-labelledby="h-master">
+<div class="step-head"><span class="num">STEP 3</span><h2 id="h-master">The seed becomes a master key</h2><span class="badge s">Keep secret</span></div>
+<p class="q">How does a seed turn into a key?</p>
+<p>The seed is hashed once more and the result is cut in half. The first half is the <strong>master private key</strong>. The second half, the <strong>chain code</strong>, is extra randomness the wallet needs in the next step to make child keys. Together they are the top of your wallet: every other key comes from here.</p>
+<dl class="io"><div><dt>In</dt><dd>the seed from step 2</dd></div><div class="out"><dt>Master private key</dt><dd>{{MASTER_PRIV}}</dd></div><div><dt>Chain code</dt><dd>{{MASTER_CC}}</dd></div></dl>
+<p class="tech">Technical name: BIP32 master key. HMAC-SHA512 of the seed with the key "Bitcoin seed"; left 32 bytes are the key, right 32 bytes are the chain code.</p>
+</section>
+
+<div class="arrow" aria-hidden="true">↓</div>
+
+<section id="path" aria-labelledby="h-path">
+<div class="step-head"><span class="num">STEP 4</span><h2 id="h-path">A path picks one key out of billions</h2><span class="badge s">Keep secret</span></div>
+<p class="q">How does one master key become many keys?</p>
+<p>Any key can make child keys, numbered 0, 1, 2 and so on, and each child can make its own children. Wallets agree on a route through that family tree, written as a <strong>derivation path</strong>. Read it left to right like a street address: each number means "take this child".</p>
+<p class="path" aria-label="m slash 84 hardened, slash 0 hardened, slash 0 hardened, slash 0, slash 0">m / 84' / 0' / 0' / 0 / 0</p>
+<table>
+<thead><tr><th scope="col">Part</th><th scope="col">Means</th><th scope="col">In this example</th></tr></thead>
+<tbody>
+<tr><td><code>m</code></td><td>Start at the master key</td><td>The key from step 3</td></tr>
+<tr><td><code>84'</code></td><td>Which address style</td><td>84 = modern "native SegWit" addresses starting <code>bc1q</code></td></tr>
+<tr><td><code>0'</code></td><td>Which coin</td><td>0 = Bitcoin (1 = test network)</td></tr>
+<tr><td><code>0'</code></td><td>Which account</td><td>0 = your first account</td></tr>
+<tr><td><code>0</code></td><td>Receiving or change</td><td>0 = addresses you give out (1 = change the wallet sends back to itself)</td></tr>
+<tr><td><code>0</code></td><td>Which address</td><td>0 = the first one</td></tr>
+</tbody>
+</table>
+<dl class="io"><div><dt>In</dt><dd>master key + path m/84'/0'/0'/0/0</dd></div><div class="out"><dt>Out: private key</dt><dd>{{PRIV}}</dd></div></dl>
+<div class="why"><p><strong>This private key is what actually spends the coins</strong> sent to the address we're about to build. You never have to back it up, because the wallet can recompute it from your words at any time.</p></div>
+<p class="tech">Technical names: BIP32 child derivation; path layout from BIP44, purpose 84 from BIP84. The apostrophe marks a "hardened" step, an extra-isolated child that can only be computed with the private key.</p>
+</section>
+
+<div class="arrow" aria-hidden="true">↓</div>
+
+<section id="public" aria-labelledby="h-public">
+<div class="step-head"><span class="num">STEP 5</span><h2 id="h-public">The private key makes a public key</h2><span class="badge p">Safe to share</span></div>
+<p class="q">What part can other people see?</p>
+<p>A bit of elliptic-curve math turns the private key into a <strong>public key</strong>. Like the scramble in step 2, it's one-way: anyone can check a signature against the public key, but nobody can work backwards from it to the private key.</p>
+<dl class="io"><div><dt>In</dt><dd>the private key from step 4</dd></div><div class="out"><dt>Out: public key</dt><dd>{{PUB}}</dd></div></dl>
+<p class="tech">Technical name: secp256k1 compressed public key (33 bytes). This is where the chain of secrets ends: everything from here down can be shown to others.</p>
+</section>
+
+<div class="arrow" aria-hidden="true">↓</div>
+
+<section id="address" aria-labelledby="h-address">
+<div class="step-head"><span class="num">STEP 6</span><h2 id="h-address">The public key becomes an address</h2><span class="badge p">Safe to share</span></div>
+<p class="q">Where does the address you paste into an exchange come from?</p>
+<p>The public key is hashed down to a short 20-byte fingerprint. That fingerprint is then written out in a typo-resistant format that starts with <code>bc1q</code> and ends in a built-in checksum. The result is the address you share to get paid.</p>
+<dl class="io"><div><dt>In</dt><dd>the public key from step 5</dd></div><div><dt>Fingerprint</dt><dd>{{HASH160}}</dd></div><div class="out"><dt>Out: address</dt><dd>{{ADDRESS}}</dd></div></dl>
+<p class="tech">Technical names: HASH160 (SHA-256 then RIPEMD-160), native SegWit (P2WPKH) output, Bech32 encoding (BIP173). This exact address is the published BIP84 test vector for these words.</p>
+</section>
+
+<section id="more" aria-labelledby="h-more">
+<h2 id="h-more">Change the last number, get the next address</h2>
+<p style="margin-top:.7rem">Your wallet doesn't store addresses. When you ask for a new one, it walks the same path and adds 1 to the final number. The same 12 words always produce the same list, in the same order, on any wallet that follows the same path.</p>
+<table>
+<thead><tr><th scope="col">Path</th><th scope="col">Address</th></tr></thead>
+<tbody>{{ADDR_ROWS}}</tbody>
+</table>
+<p class="tech">Highlighted row: the address built in steps 1 to 6. The last row is on the change branch (fourth number = 1).</p>
+</section>
+
+<section id="takeaways" aria-labelledby="h-take">
+<h2 id="h-take">What this means for you</h2>
+<ul class="takeaways">
+<li><strong>The words are the wallet.</strong> Everything above is calculated, not stored. Lose the device and keep the words, and you lose nothing. Lose the words and the device, and nobody can rebuild it.</li>
+<li><strong>Anyone who sees your words can make every key.</strong> Steps 1 to 4 are secret. That's why the words never go into a website, a photo, or a cloud note.</li>
+<li><strong>A passphrase makes a different wallet.</strong> Same words plus a different (or forgotten) passphrase gives a different seed in step 2, so different addresses, often an empty-looking wallet.</li>
+<li><strong>A different path shows different addresses.</strong> If a wallet restores your words but uses path 44 or 86 instead of 84, it computes different addresses and may show a zero balance even though your coins are safe. Changing the path setting fixes it.</li>
+<li><strong>Addresses are safe to share, but not private.</strong> An address can only receive. Anyone can see its history on the public blockchain, which is why wallets hand you a fresh one each time.</li>
+</ul>
+</section>
+
+<section id="deeper" aria-labelledby="h-deeper">
+<h2 id="h-deeper">Go deeper</h2>
+<ul class="links">
+<li><a href="bitcoin-self-custody-guide.html">Bitcoin self-custody guide</a>: how to store the words and choose a passphrase</li>
+<li><a href="wallet-recovery-forensics.html">Wallet recovery forensics</a>: what to do when a restored wallet shows the wrong balance</li>
+<li><a href="bitcoin-wallet.html">Bitcoin wallets compared</a>: hardware and software wallets</li>
+<li>The specs: <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP39</a> (words and seed), <a href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki">BIP32</a> (key tree), <a href="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki">BIP44</a> (path layout), <a href="https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki">BIP84</a> (bc1q addresses and this example's test vector)</li>
+</ul>
+</section>
+
+<p class="author-byline" style="max-width:70ch;margin:1.5rem auto;font-size:0.92em;text-align:center;">David Veksler is a Principal AI Engineer in Denver. He leads agentic AI engineering at Antech, a Mars company, and builds AI platforms for regulated financial firms. This page was produced by a governed, multi-agent Claude Code pipeline with a git audit trail. <a href="how-its-built.html">How it's built</a> <a href="https://davidveksler.com/work/?ref=cheatsheets">Case studies</a></p>
+</main>
+
+<footer><div class="wrap">
+<p>By <a href="https://davidveksler.com/?ref=cheatsheets">David Veksler</a>. Every value on this page is computed from the public BIP84 test phrase with no passphrase and checked against the published BIP39 and BIP84 test vectors. Never send funds to these addresses.</p>
+<nav class="cs-breadcrumb" data-site-breadcrumb aria-label="Breadcrumb" style="margin:1.25rem auto 0;max-width:72ch;text-align:center;font-size:.88em;line-height:1.6;">
+  <a href="./">Cheat sheets</a> <span aria-hidden="true">&rsaquo;</span> <a href="bitcoin-finance">Bitcoin &amp; Finance cheat sheets</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">How 12 Words Become a Bitcoin Address, Step by Step</span>
+</nav>
+<script type="application/ld+json" data-site-breadcrumb-ld>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Cheat sheets","item":"https://cheatsheets.davidveksler.com/"},{"@type":"ListItem","position":2,"name":"Bitcoin & Finance","item":"https://cheatsheets.davidveksler.com/bitcoin-finance"},{"@type":"ListItem","position":3,"name":"How 12 Words Become a Bitcoin Address, Step by Step"}]}</script>
+<p class="cheatsheets-build-note small" data-site-build-note style="margin:1rem auto 0;max-width:72ch;text-align:center;">
+  One person + AI agents build and maintain this collection through public specs, QA gates, and git history.
+  <a href="how-its-built.html" title="See how this cheatsheet collection is built">How this site is built</a>
+  <span aria-hidden="true">·</span>
+  <a href="https://github.com/DavidVeksler/CheatSheets" target="_blank" rel="noopener noreferrer" title="View the public CheatSheets source repository on GitHub">Source on GitHub</a>
+</p>
+</div></footer>
+</body>
+</html>
