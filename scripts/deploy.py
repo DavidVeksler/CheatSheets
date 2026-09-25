@@ -227,6 +227,12 @@ def changed_files(base: str, exts: tuple[str, ...]) -> list[str]:
     return [f for f in files if f.lower().endswith(exts)]
 
 
+def changed_sheets(base: str) -> list[str]:
+    """Changed published pages. Sheets are root-level only (matches --all);
+    HTML under scripts/ etc. is build input and is not served."""
+    return [f for f in changed_files(base, (".html",)) if "/" not in f]
+
+
 # --------------------------------------------------------------------------- #
 # Validation
 # --------------------------------------------------------------------------- #
@@ -239,9 +245,7 @@ def validate(args, base: str) -> None:
         php_files = sorted(f for f in os.listdir(ROOT) if f.endswith(".php"))
         scope = "all files"
     else:
-        # Published sheets are root-level only (matches --all); HTML under
-        # scripts/ etc. is build input, not a page.
-        html = [f for f in changed_files(base, (".html",)) if "/" not in f]
+        html = changed_sheets(base)
         json_files = changed_files(base, (".json",))
         php_files = changed_files(base, (".php",))
         scope = "changed files"
@@ -435,7 +439,7 @@ def show_changeset(base: str) -> list[str]:
     step("Changeset going live")
     stat = git("diff", "--stat", base, "HEAD", check=False)
     print(stat if stat else c(DIM, "  (no diff vs production/main)"))
-    return changed_files(base, (".html",))
+    return changed_sheets(base)
 
 
 def confirm(args) -> None:
