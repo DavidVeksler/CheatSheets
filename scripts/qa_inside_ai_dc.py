@@ -33,7 +33,7 @@ class Quiet(SimpleHTTPRequestHandler):
 
 
 OVERLAP_JS = """() => {
-  const sel = '.nameplate,.drawing-title,.controls button:not([hidden]),.flow-tags span:not([hidden]),.worked.active,.css2d .callout:not([data-pin-only=true]),.css2d .pin,#zoom-in:not([hidden]),.overlay,.topbar,.crumbs,.lineup-tag,.dimension-label,.css2d .correction button,.scale';
+  const sel = '.nameplate,.drawing-title,.controls button:not([hidden]),.flow-tags span:not([hidden]),.worked.active,.css2d .callout:not([data-pin-only=true]),.css2d .pin,#zoom-in:not([hidden]),.overlay,.topbar,.crumbs,.lineup-tag,.dimension-label,.css2d .correction button,.fail-tag,.scale';
   const els = [...document.querySelectorAll(sel)].filter(e => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.display !== 'none' && cs.visibility !== 'hidden' && r.bottom > 0 && r.top < innerHeight; });
   const name = e => (e.className || e.id || e.tagName).toString().slice(0, 18) + ':' + (e.textContent || '').trim().slice(0, 22);
   const out = [];

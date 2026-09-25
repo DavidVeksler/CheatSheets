@@ -39,12 +39,14 @@ Each stop has four numbered callouts anchored to these parts, a nameplate, dimen
 | `hbm` stack and GPU bandwidth | eight HBM stacks per Blackwell GPU; up to 8 TB/s per GPU | vendor-stated | [NVIDIA Blackwell Ultra technical article](https://developer.nvidia.com/blog/?p=104887). GB200 capacity differs; do not transfer Blackwell Ultra capacity into GB200. |
 | `manifold` calculated flow | about 146 L/min for 102 kW liquid at assumed 10 K delta | derived | `102 kJ/s ÷ (4.186 kJ/kg/K × 10 K) × 60 s/min`, water density approximated 1 kg/L. The 10 K is an illustration, not a vendor setting. |
 
-No rack price or campus capex is shown until a primary source supplies a defensible figure. The worked example therefore ends at the GPU count and labels the capex row `not published` rather than inventing a dollar amount.
+No rack price or campus capex is shown: no primary source supplies a defensible figure, so the nameplate has no capex row and the worked example ends at the GPU count (three steps). Re-add both only with a primary source.
 
 ## Measurement and QA
 
 Layout QA: `python scripts/qa_inside_ai_dc.py [out_dir]` screenshots every stop plus explode, line-up, and fail at 1280x800 and 375x812, and fails on any desktop overlay overlap, page error, or page wider than the viewport. Posters and social image: `python scripts/render_powers_of_ten_posters.py`.
 
 Measured 2026-09-24 (headless Chromium, SwiftShader, desktop): 11 to 74 draw calls per state (line-up 51), at most 4,740 triangles, callout layout solve at most 2.2 ms. Posters 22 to 37 KB WebP each. Frame rate on a real mid-range Android is not yet measured.
+
+Fail shows the blast radius per stop: the failure unit is red, only its dependents grey out (for example one tray and its 4 GPUs at the rack; the served rows at the hall), and the loss tag sits on the unit.
 
 Known gap: at 375 px, collapsed callouts sit over the drawing and can cover another pin; the QA script reports these without failing.
