@@ -176,6 +176,7 @@ return [
     'why-is-grass-green.html' => 'Engineering & Science',
     'ai-accelerator-comparison.html' => 'Engineering & Science',
     'ai-datacenter-infrastructure.html' => 'Engineering & Science',
+    'inside-ai-data-center.html' => 'Engineering & Science',
     'ai-infrastructure-numbers.html' => 'Engineering & Science',
     'automotive-innovation-timeline.html' => 'Engineering & Science',
     'boom-supersonic.html' => 'Engineering & Science',

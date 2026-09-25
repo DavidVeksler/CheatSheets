@@ -239,7 +239,9 @@ def validate(args, base: str) -> None:
         php_files = sorted(f for f in os.listdir(ROOT) if f.endswith(".php"))
         scope = "all files"
     else:
-        html = changed_files(base, (".html",))
+        # Published sheets are root-level only (matches --all); HTML under
+        # scripts/ etc. is build input, not a page.
+        html = [f for f in changed_files(base, (".html",)) if "/" not in f]
         json_files = changed_files(base, (".json",))
         php_files = changed_files(base, (".php",))
         scope = "changed files"
