@@ -17,7 +17,7 @@ Search Console, 2026-06-24 to 2026-09-21: filtered `inside` queries for `ai-data
 7. GPU package: two compute dies, eight HBM stacks, interposer, power delivery.
 8. HBM: stacked DRAM dies, TSVs, base die, package edge; transistor-scale coda.
 
-Each stop has four numbered callouts anchored to these parts, a nameplate, dimension and scale, flow tags, a failure state, and a child outline leading to the next stop. The correction tags follow the eight placements in the specification. The generation line-up rows are HGX H100, GB200 NVL72, GB300 NVL72, and Vera Rubin NVL72. GB200 is the fully populated reference row; omit a field on other rows where a primary source does not publish it.
+Each stop has four numbered callouts anchored to these parts, a nameplate, flow tags, a failure state, and a child outline leading to the next stop. Campus, hall, and row dimensions are example extents; the rack height uses the ORv3 proxy. The tray and smaller views are not to scale. The correction tags follow the eight placements in the specification. The generation line-up rows are four DGX H100 servers, GB200 NVL72, GB300 NVL72, and Vera Rubin NVL72. GB200 is the fully populated reference row; omit a field on other rows where a primary source does not publish it.
 
 ### Geometry and numerical manifest
 
@@ -25,12 +25,12 @@ Each stop has four numbered callouts anchored to these parts, a nameplate, dimen
 |---|---:|---|---|
 | `campus` envelope / facility power | 1,000 MW and a representative 1 km envelope | illustrative | Scenario, not a real campus. PUE 1.2 is an explicit scenario assumption. |
 | `hall` and `row` envelopes | 100 m hall, 10 m row, eight compute racks per row | illustrative | Representative drawing, not an operator plan. |
-| `rack` system | 72 GPUs, 36 Grace CPUs, 18 1RU compute trays, nine 1RU switch trays | vendor-stated | [NVIDIA hardware guide](https://docs.nvidia.com/dgx/dgxgb200-user-guide/hardware.html) |
+| `rack` system | 72 GPUs, 36 Grace CPUs, 18 1RU compute trays, nine 1RU switch trays, eight power shelves, two management TOR switches | vendor-stated | [NVIDIA hardware guide](https://docs.nvidia.com/dgx/dgxgb200-user-guide/hardware.html) |
 | `rack` power | approximately 120 kW | vendor-stated | [NVIDIA hardware guide](https://docs.nvidia.com/dgx/dgxgb200-user-guide/hardware.html) |
 | `rack` mass and cooling split | approximately 2,900 lb, 85% liquid / 15% air | vendor-stated | [NVIDIA partition guide](https://docs.nvidia.com/multi-node-nvlink-systems/partition-guide-v1-2.pdf) |
 | `rack` outer drawing envelope | 0.706 m wide, 2.054 m high, 1.219 m deep | illustrative proxy | [OCP ORv3 base rack](https://www.opencompute.org/documents/google-implementation-orv3-spec-1-pdf). GB200-specific outer dimensions not implied. |
 | `tray` contents | two superchips, four Blackwell GPUs, two Grace CPUs, four 400 Gb/s ConnectX-7 NICs | vendor-stated | [NVIDIA SuperPOD components](https://docs.nvidia.com/dgx-superpod/reference-architecture-scalable-infrastructure-gb200/latest/dgx-superpod-components.html) |
-| `rack` tray order | power shelves, 10 compute trays, 9 switch trays, 8 compute trays, power shelves | illustrative | Commonly published NVL72 layout; NVIDIA's hardware guide gives counts only. Drawn at schematic pitch. |
+| `rack` tray order | four power shelves, 10 compute trays, 9 switch trays, 8 compute trays, four power shelves | illustrative | NVIDIA's hardware guide gives counts, not this exact vertical order. Drawn at schematic pitch. |
 | `rack` HBM | 13.4 TB HBM3E per rack, 372 GB per superchip (186 GB per GPU) | vendor-stated | [NVIDIA GB200 NVL72](https://www.nvidia.com/en-us/data-center/gb200-nvl72/), accessed 2026-09-24. Line-up row corrected from 180 GB. |
 | `person` scale referent | 1.75 m, drawn at the 2.054 m ORv3 proxy scale | illustrative | Standard adult height referent. |
 | `superchip` contents | two Blackwell GPUs, one Grace CPU, 900 GB/s NVLink-C2C | vendor-stated | [NVIDIA tuning guide](https://docs.nvidia.com/multi-node-nvlink-systems/multi-node-tuning-guide/overview.html) |
@@ -45,8 +45,10 @@ No rack price or campus capex is shown: no primary source supplies a defensible 
 
 Layout QA: `python scripts/qa_inside_ai_dc.py [out_dir]` screenshots every stop plus explode, line-up, and fail at 1280x800 and 375x812, and fails on any desktop overlay overlap, page error, or page wider than the viewport. Posters and social image: `python scripts/render_powers_of_ten_posters.py`.
 
-Measured 2026-09-24 (headless Chromium, SwiftShader, desktop): 11 to 74 draw calls per state (line-up 51), at most 4,740 triangles, callout layout solve at most 2.2 ms. Posters 22 to 37 KB WebP each. Frame rate on a real mid-range Android is not yet measured.
+Measured 2026-09-25 (headless Chromium, SwiftShader, desktop): 44 to 98 draw calls per state (rack 98, line-up 69), at most 3,900 triangles. These are diagnostic frame samples, not a device frame-rate claim. Frame rate on a real mid-range Android is not yet measured.
+
+Visual model: rack panels use generated vent, port, and PSU textures; hall cabinets, rack rails, rear manifolds, tray cold plates, board packages, and HBM layers have distinct geometry. Their appearance follows NVIDIA's [rack hardware guide](https://docs.nvidia.com/dgx/dgxgb200-user-guide/hardware.html) and [SuperPOD component guide](https://docs.nvidia.com/dgx-superpod/reference-architecture-scalable-infrastructure-gb200/latest/dgx-superpod-components.html), but dimensions, exact placement, and colors remain schematic. The poster renderer waits for each zoom transition to finish before capture and skips loading the fallback images it is replacing, and retries transient Windows write locks; older posters could show the previous stop.
 
 Fail shows the blast radius per stop: the failure unit is red, only its dependents grey out (for example one tray and its 4 GPUs at the rack; the served rows at the hall), and the loss tag sits on the unit.
 
-Known gap: at 375 px, collapsed callouts sit over the drawing and can cover another pin; the QA script reports these without failing.
+At 375 px, part callouts collapse to tappable numbered pins. Expanded text opens in place. The QA script reports intentional pin/button overlap without failing; red correction and failure tags can still cross a pin in some states.
