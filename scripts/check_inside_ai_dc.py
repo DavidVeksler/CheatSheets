@@ -87,12 +87,8 @@ for stop in range(8):
               f"stop {stop}: collapsed callout exceeds eight words")
         check(expanded is not None and words(expanded.get_text(" ", strip=True)) <= 45,
               f"stop {stop}: expanded callout exceeds 45 words")
-    caption = section.select_one(".fallback-info p")
-    check(caption is not None and words(caption.get_text(" ", strip=True)) <= 20,
-          f"stop {stop}: caption exceeds 20 words")
-    for ext in ("png", "webp"):
-        check((ROOT / "images" / "inside-ai-data-center" / f"stop-{stop}.{ext}").is_file(),
-              f"stop {stop}: {ext} poster missing")
+    check(section.select_one(".fallback-plate") is None,
+          f"stop {stop}: static drawing fallback remains")
 
 corrections = soup.select("#common-mistakes .correction")
 check(len(corrections) == 8, "eight correction tags required")

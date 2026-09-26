@@ -148,15 +148,15 @@ All six are anchors.
 3. `× 72 = ~430k GPUs`: the GPU count ticks on the campus nameplate.
 4. `× rack capex = ~$20B IT capex`: the capex row fills.
 
-Step buttons (Prev / Next) sit on the drawing, and the reduced-motion path jumps straight to each end state. The same four equation lines exist in the DOM as a short `<ol>` (static fallback, SEO, screen readers): equations only, no connecting prose. Use verified inputs and units at every step. The anchors above are shapes, not values; the final numbers come from verified inputs.
+Step buttons (Prev / Next) sit on the drawing, and the reduced-motion path jumps straight to each end state. The same four equation lines exist in the DOM as a short `<ol>` (SEO and screen readers): equations only, no connecting prose. Use verified inputs and units at every step. The anchors above are shapes, not values; the final numbers come from verified inputs.
 
 **Optional campus calculator:** two inputs (campus MW, PUE) and a reference-build selector, rendered as input fields **on the campus nameplate itself**. Changing them re-runs the build-up instantly (rack instance count, GPU count, capex, coolant flow). It shares code with the nameplates. **Cut it if the JS budget is tight;** the worked example is mandatory, the calculator is not.
 
 **Generations comparison: the line-up.** At stop 3, a "Line-up" toggle slides the reference rack sideways and places four rack silhouettes side by side at true relative scale on the same floor grid: HGX H100 (four air-cooled 8-GPU servers in a rack), GB200 NVL72, GB300 NVL72, and the next announced rack-scale system (Vera Rubin class; mark "announced" vs "shipping" per verified status at build time). Each rack wears its own nameplate: GPUs per NVLink domain, rack kW, cooling method, HBM per GPU, rack mass, first volume shipments. The NVLink domain is drawn as an outlined volume inside each rack, so the jump from an 8-GPU box to a 72-GPU rack is visible as geometry, and the cooling method shows as air arrows vs liquid manifolds. This is not a 3D bar chart: every mark is the physical object.
 
-The same data is a real `<table>` in the DOM (anti-goal check: the AGENTS.md comparison table), rendered visually only in the no-WebGL/print path; with WebGL active it is visually hidden but kept in the accessibility tree and linked from the Line-up toggle as "View as table". Exemplar row at final depth: **HGX H100 | 8 | ~40 kW per rack (4 × ~10 kW servers) | air | 80 GB HBM3 | anchor, verify | 2023.** The one-sentence takeaway ("8 to 72 GPUs per domain; air to liquid") is the line-up's title block caption.
+The same data is a real `<table>` in the DOM (anti-goal check: the AGENTS.md comparison table), visually hidden in the 3D view but kept in the accessibility tree and linked from the Line-up toggle as "View as table". Exemplar row at final depth: **HGX H100 | 8 | ~40 kW per rack (4 × ~10 kW servers) | air | 80 GB HBM3 | anchor, verify | 2023.** The one-sentence takeaway ("8 to 72 GPUs per domain; air to liquid") is the line-up's title block caption.
 
-**Common Mistakes: correction tags.** Eight tags, each pinned in the frame that disproves it. A tag shows the misconception struck through, with the correction on flip (hover, focus, or tap), ≤35 words. A small counter in the title block ("2 corrections at this stop") makes them findable. The DOM also holds them as one `<ul id="common-mistakes">` in source order (required section), which the no-WebGL path renders as a list.
+**Common Mistakes: correction tags.** Eight tags, each pinned in the frame that disproves it. A tag shows the misconception struck through, with the correction on flip (hover, focus, or tap), ≤35 words. A small counter in the title block ("2 corrections at this stop") makes them findable. The DOM also holds them as one `<ul id="common-mistakes">` in source order (required section), which remains available in the document for assistive technology.
 
 | # | Misconception | Pinned at | What the frame shows |
 |---|---|---|---|
@@ -287,17 +287,14 @@ Every stop has a "Fail" toggle. On: the stop's failure unit is hatched, dependen
 
 ### Load strategy
 
-- The LCP element is the static H1 plus the level-0 poster image, not the canvas.
+- The 3D canvas is the primary visual; JavaScript and WebGL are required.
 - Dynamically import three.js when the scene container nears the viewport or on first rail interaction.
 - Render on demand: re-render only on camera, state, callout expand, or resize change, plus the flow animation loop when active and visible. No perpetual `requestAnimationFrame` on an idle scene.
 - Cap `devicePixelRatio` at 2 on desktop and 1.5 on coarse-pointer devices.
 
-### Fallbacks
+### Runtime requirement
 
-These are required, not nice-to-have.
-- **No JS or no WebGL:** each stop shows its committed static poster (§8) with **numbered pins only** (numbers are keys, not information), followed by that stop's callouts as a compact numbered `<ol>`, its nameplate as a 5-row `<table>`, its Fail line, and any correction tags. This is the only view where the words appear as a list, and it is still made of short items, not paragraphs. The worked example, line-up table, and Common Mistakes list render. Controls are hidden.
-- **WebGL context loss:** swap to the fallback view and show a one-line notice.
-- **All content lives in the DOM as text.** The canvas draws geometry only; every word the reader sees in the scene is a DOM element (CSS2D), so SEO, answer engines, and screen readers get all of it.
+JavaScript and WebGL are required. The page shows a concise requirement message if the 3D scene cannot start or loses its context. There are no static drawings for the eight stops.
 
 ### Accessibility
 
@@ -317,12 +314,9 @@ These are required, not nice-to-have.
 - All callout text ≥14 px rendered.
 - Test stops 3 and 4 exploded, the line-up, and the worked example build-up at 375 px specifically.
 
-**Poster images:**
-- A dev-time script `scripts/render_powers_of_ten_posters.py` drives headless Chromium (Playwright) through the eight stops. It writes `images/inside-ai-data-center/stop-0.png` … `stop-7.png` at 1200 px wide, WebP plus PNG fallback, **with CSS2D callout labels hidden and numbered pins shown**, so no text is baked into images.
-- The same script renders the social preview `images/inside-ai-data-center.png` at exactly 1200×630: stop 3 exploded with all three flow overlays on and their tags visible, plus the title. (The social image is the one place overlay text is rasterised; it is a preview, not content.)
-- Commit outputs; the page never needs the script at runtime.
+**Social preview:** `scripts/render_inside_ai_dc_social.py` captures `images/inside-ai-data-center.png` at 1200×630 from the live 3D rack scene. It is a sharing preview, not page content.
 
-**Print:** the no-WebGL fallback view (poster + numbered list + nameplate table per stop), worked example and all tables expanded, sticky UI removed.
+**Print:** The interactive scene requires a browser with JavaScript and WebGL; no static print plate is provided.
 
 **Budgets (planning targets; measured values go in the production notes; repo CWV gates are binding):**
 
@@ -336,7 +330,6 @@ These are required, not nice-to-have.
 | CSS2D elements live at once | ≤40 (callouts + tags + nameplate) |
 | Frame rate during a transition | 60 fps on a mid-range 2023 Android; profile on a real device or throttled Chrome DevTools |
 | Callout layout solve per state | ≤4 ms on the same profile |
-| Posters (each) | ≤120 KB WebP; lazy-load all but stop 0 |
 
 ## 9. Research and geometry provenance
 
@@ -353,7 +346,7 @@ Illustrative items (all of levels 0-1, cable routing, internal tray layout where
 - the reference-build choice and the date it was made;
 - measured payload, fps, and callout layout solve time;
 - import-map integrity browser support;
-- the poster render command.
+- the social preview render command.
 
 | Claims needing verification | Source direction |
 |---|---|
@@ -385,12 +378,12 @@ Illustrative items (all of levels 0-1, cable routing, internal tray layout where
    - Capture desktop and 375 px screenshots.
 5. **Add all three flow overlays with their tags and continuity across stop boundaries**, then the palette, nameplates and breadcrumb chain, callouts, multiplicity brackets, Fail, Explode, Inspect, and Line-up.
 6. **Write the words into the DOM:** title block lines, callouts, correction tags, Quick Reference chips, worked example equations, line-up table. Then the worked-example build-up in the campus scene. Optionally the calculator.
-7. **Render posters and the social image; wire the no-JS, no-WebGL, and context-loss fallbacks.**
+7. **Render the social image; show a requirement message when WebGL fails.**
 8. **QA** (checks below).
    - Integrate `category-map.php`, catalog, and footer cross-links per `SEO_PROMPT.txt`.
    - Add reciprocal links from `ai-datacenter-infrastructure.html` and `ai-infrastructure-numbers.html` (one natural sentence each).
    - Open the three.js version-consolidation issue.
-9. **Commit implementation, posters, script, and production notes.** Delete this spec when the page meets acceptance. Deploy only with David's go-ahead.
+9. **Commit implementation, social preview, script, and production notes.** Delete this spec when the page meets acceptance. Deploy only with David's go-ahead.
 
 **Machine gates (scripts, not review prompts):**
 - `scripts/check_inside_ai_dc.py` (or a Node twin) asserts:
@@ -409,7 +402,7 @@ Illustrative items (all of levels 0-1, cable routing, internal tray layout where
 - Desktop and 375 px at every stop, dark and light themes, 200% zoom.
 - No crossing leader lines, no callout covering its own anchor, no dangling callout for an off-screen part, in every state (assembled, exploded, line-up, Fail, inspect at ±45°).
 - Keyboard-only traversal: rail, callouts in order with focus framing, toggles, breadcrumb chips, worked-example steps.
-- Reduced motion; no JS; WebGL disabled (Chrome flag); forced context loss; short viewport; print preview.
+- Reduced motion; WebGL disabled (Chrome flag); forced context loss; short viewport.
 - No flow line or flow tag terminating mid-level, no z-fighting on exploded parts, no giant empty scroll regions.
 
 **Comprehension checks (editorial review prompts; do not claim user-testing results):**
@@ -420,7 +413,7 @@ Illustrative items (all of levels 0-1, cable routing, internal tray layout where
 **Showcase acceptance:**
 - The flow-overlay zoom, with its tags, is the most polished artifact on the page.
 - A reader can get every fact on the page from the scene without scrolling to a text block, because there isn't one.
-- The page works fully as a static document via the fallback view.
+- The page requires JavaScript and WebGL for its interactive drawings.
 - The 3D demonstrably carries the containment and scale argument that a flat diagram would not.
 
 **Failure modes that reject the build:**

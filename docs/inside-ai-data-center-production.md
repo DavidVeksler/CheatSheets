@@ -43,11 +43,11 @@ No rack price or campus capex is shown: no primary source supplies a defensible 
 
 ## Measurement and QA
 
-Layout QA: `python scripts/qa_inside_ai_dc.py [out_dir]` screenshots every stop plus explode, line-up, and fail at 1280x800 and 375x812, and fails on any desktop overlay overlap, page error, or page wider than the viewport. Posters and social image: `python scripts/render_powers_of_ten_posters.py`.
+Layout QA: `python scripts/qa_inside_ai_dc.py [out_dir]` screenshots every stop plus explode, line-up, and fail at 1280x800 and 375x812, and fails on any desktop overlay overlap, page error, or page wider than the viewport. Social preview: `python scripts/render_inside_ai_dc_social.py`.
 
 Measured 2026-09-25 (headless Chromium, SwiftShader, desktop): 44 to 98 draw calls per state (rack 98, line-up 69), at most 3,900 triangles. These are diagnostic frame samples, not a device frame-rate claim. Frame rate on a real mid-range Android is not yet measured.
 
-Visual model: rack panels use generated vent, port, and PSU textures; hall cabinets, rack rails, rear manifolds, tray cold plates, board packages, and HBM layers have distinct geometry. Their appearance follows NVIDIA's [rack hardware guide](https://docs.nvidia.com/dgx/dgxgb200-user-guide/hardware.html) and [SuperPOD component guide](https://docs.nvidia.com/dgx-superpod/reference-architecture-scalable-infrastructure-gb200/latest/dgx-superpod-components.html), but dimensions, exact placement, and colors remain schematic. The poster renderer waits for each zoom transition to finish before capture and skips loading the fallback images it is replacing, and retries transient Windows write locks; older posters could show the previous stop.
+Visual model: rack panels use generated vent, port, and PSU textures; hall cabinets, rack rails, rear manifolds, tray cold plates, board packages, and HBM layers have distinct geometry. Their appearance follows NVIDIA's [rack hardware guide](https://docs.nvidia.com/dgx/dgxgb200-user-guide/hardware.html) and [SuperPOD component guide](https://docs.nvidia.com/dgx-superpod/reference-architecture-scalable-infrastructure-gb200/latest/dgx-superpod-components.html), but dimensions, exact placement, and colors remain schematic.
 
 Fail shows the blast radius per stop: the failure unit is red, only its dependents grey out (for example one tray and its 4 GPUs at the rack; the served rows at the hall), and the loss tag sits on the unit.
 
