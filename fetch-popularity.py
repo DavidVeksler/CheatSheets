@@ -31,7 +31,8 @@ The decay means a page visited 1,000 times today will score ~630 after 15 days,
 Note: referrer-host breakdowns (clientRefererHost) are NOT fetched here —
 Cloudflare gates that GraphQL field behind Pro plan or higher, and this zone
 is on the Free plan, so the field is permanently inaccessible regardless of
-token scopes.
+token scopes. Referrers come from the origin nginx logs instead:
+scripts/referrer_accumulate.py (server cron) keeps them long-term in .referrers.json.
 """
 import json
 import os

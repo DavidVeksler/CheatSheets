@@ -66,6 +66,10 @@ ssh johngalt@198.211.102.9 'sudo install -o root -g root -m 644 /tmp/<name>.conf
 
 Verify after reload: `curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/radio` → 200; `curl -o /dev/null -w "%{http_code} %{redirect_url}\n" "https://cheatsheets.davidveksler.com/?cat=Radio"` → 301 to `/radio`.
 
+## Server cron (not deployed by `git push`)
+
+`johngalt`'s crontab: `cheatsheets-pull.sh` at 04:00 (ff-only pull of `origin/main`, a second deploy path) and `scripts/referrer_accumulate.py` at 04:20 (long-term referrer store, line and details in [`../docs/index-explorer.md`](../docs/index-explorer.md) > *Referrer history*). Log: `.git/referrers.log`.
+
 ## Manual fallback and hand verification
 
 If the wrapper can't run: `git push production main` (post-receive + purge still fire), then check by hand:

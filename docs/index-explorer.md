@@ -71,6 +71,20 @@ Every step's `file` must be a catalogued sheet (the build and `--check` fail wit
 
 `fetch-popularity.py` writes `popularity.json` `dailyHistory`: a 30-day rolling `{"<file>": {"<ISO date>": views}}` buffer, computed by `accumulate_daily_history()` (tested in `scripts/test_fetch_popularity.py`, no Cloudflare credentials needed). The drawer and `?sheet=` detail block show a 30-point sparkline only once a sheet has 7+ days of history, never a placeholder.
 
+## Referrer history
+
+Cloudflare Free has no referrers and logrotate keeps ~3 weeks of nginx logs, so `scripts/referrer_accumulate.py` runs nightly **on the server** (cron below) and folds every complete day still in the logs into `.referrers.json` in the docroot (gitignored; `^~ /.` 404s it over HTTP). Same human filter and channel rules as `scripts/referrer_report.py` (it imports `read_hits()`/`classify()`). Per day: landings per channel, top 50 sources and top 30 landing paths per channel; no IPs, no referrer paths, private-network hosts collapsed. A day is written once, so missed nights backfill on the next run; retention ~5 years (~40 KB/month). Tests: `python3 -m unittest scripts.test_referrer_accumulate`.
+
+`popularity.php` > *Where readers come from* renders it: last-N vs prior-N channel mix (N = 30 days once the store holds 60), weekly referred-landing bars by channel (direct excluded), top sources with a `new` flag (first seen in 14 days), landing pages per channel. Search counts in the logs run above GSC clicks; take search volume from GSC.
+
+Cron (johngalt, after `cheatsheets-pull.sh` at 04:00; server clock is UTC):
+
+```
+20 4 * * * cd /var/www/cheatsheets.davidveksler.com/htdocs && /usr/bin/python3 scripts/referrer_accumulate.py >> .git/referrers.log 2>&1
+```
+
+The store lives only on the server. Losing it loses history older than the logs; recover the last ~3 weeks by re-running the script.
+
 ## Standing design rules
 
 - The index has no CDN dependency (no Bootstrap, no icon font); the "don't rewrite Bootstrap sheets" rule does not apply to it.

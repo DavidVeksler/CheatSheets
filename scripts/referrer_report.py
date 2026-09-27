@@ -7,6 +7,9 @@ access logs are the only referrer source. logrotate keeps ~3 weeks (weekly, rota
 Runs ON the server (stdlib only); pipe it over ssh:
     ssh johngalt@198.211.102.9 'python3 - --md' < scripts/referrer_report.py
 
+Daily aggregates are kept long-term by scripts/referrer_accumulate.py (server cron), which
+reuses read_hits()/classify() below; popularity.php renders them.
+
 Human filter (browser UAs lie, so it is heuristic): GET 200/304 on a sheet (.html), the
 homepage, or a hub slug with no facet query string; drop self-declared bots, the
 rel-audit crawler, and any IP with >40 page hits in a day; count one hit per IP/page/hour.
@@ -70,12 +73,20 @@ def is_page(path):
     return p.endswith(".html") or p == "/" or bool(re.fullmatch(r"/[a-z0-9-]+", p))
 
 
-def main():
+def read_hits(log_dir=LOG_DIR, files=FILES, keep_day=None):
+    """Parse the access logs into deduped human page hits.
+
+    Returns (hits, per_ip_day, first_seen): hits are (ip, datetime, path, referer) with one
+    hit per IP/page/hour; per_ip_day counts page hits per (ip, date) for the scraper cap;
+    first_seen is the earliest timestamp of any parsed line (tells callers whether the
+    oldest day in the window is complete). keep_day(date) -> False skips a day cheaply.
+    """
     hits, seen, per_ip_day = [], set(), collections.Counter()
-    for f in FILES:
+    day_cache, first_seen = {}, None
+    for f in files:
         opener = gzip.open if f.endswith(".gz") else open
         try:
-            fh = opener(LOG_DIR + f, "rt", errors="replace")
+            fh = opener(log_dir + f, "rt", errors="replace")
         except FileNotFoundError:
             continue
         with fh:
@@ -84,6 +95,14 @@ def main():
                 if not m:
                     continue
                 ip, ts, _, meth, path, st, ref, ua = m.groups()
+                if ts[:11] not in day_cache:
+                    day_cache[ts[:11]] = datetime.strptime(ts[:11], "%d/%b/%Y").date()
+                day = day_cache[ts[:11]]
+                if first_seen is None or day <= first_seen.date():
+                    dt0 = datetime.strptime(ts.split()[0], "%d/%b/%Y:%H:%M:%S")
+                    first_seen = dt0 if first_seen is None else min(first_seen, dt0)
+                if keep_day is not None and not keep_day(day):
+                    continue
                 if meth != "GET" or st not in ("200", "304") or not is_page(path):
                     continue
                 if BOT.search(ua) or not re.search(r"Mozilla|Opera", ua):
@@ -95,21 +114,33 @@ def main():
                 seen.add(key)
                 per_ip_day[(ip, dt.date())] += 1
                 hits.append((ip, dt, path, ref))
+    return hits, per_ip_day, first_seen
 
-    total, weekly = collections.Counter(), collections.defaultdict(collections.Counter)
-    hosts, landing, days = collections.Counter(), collections.defaultdict(collections.Counter), set()
+
+def classify(hits, per_ip_day):
+    """Yield (datetime, channel, source, landing_path) for hits under the per-IP daily cap.
+
+    source is "utm:<utm_source>" when the landing URL carries one, else the referrer host
+    ("" for no referrer)."""
     for ip, dt, path, ref in hits:
         if per_ip_day[(ip, dt.date())] > MAX_PAGES_PER_IP_DAY:
             continue
         utm = (urllib.parse.parse_qs(urllib.parse.urlsplit(path).query).get("utm_source") or [""])[0]
         host = (urllib.parse.urlsplit(ref).hostname or "") if ref not in ("-", "") else ""
-        ch = channel(host, utm)
+        yield dt, channel(host, utm), ("utm:" + utm if utm else host), path.split("?")[0]
+
+
+def main():
+    hits, per_ip_day, _ = read_hits()
+    total, weekly = collections.Counter(), collections.defaultdict(collections.Counter)
+    hosts, landing, days = collections.Counter(), collections.defaultdict(collections.Counter), set()
+    for dt, ch, source, page in classify(hits, per_ip_day):
         days.add(dt.date())
         total[ch] += 1
         weekly[dt.strftime("%G-W%V")][ch] += 1
         if ch != "Internal":
-            landing[ch][path.split("?")[0]] += 1
-            hosts[(ch, "utm:" + utm if utm else host)] += 1
+            landing[ch][page] += 1
+            hosts[(ch, source)] += 1
 
     out = {"window": [str(min(days)), str(max(days)), len(days)] if days else None,
            "total": total.most_common(),
