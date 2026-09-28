@@ -642,7 +642,7 @@ npm test
 npm run check</code></pre></div>
               <div><h4>Deploy</h4><p><code>scripts/deploy-cloudflare.ps1</code> calls the guarded shell path: gates → build → start → crawl → add <code>404.html</code> and a <code>_redirects</code> porting the nginx rules → preview → parity → promote → version-matched live check. <code>deploy-server.*</code> is the legacy droplet path. <strong>Explicit approval required.</strong></p></div>
               <div><h4>News pipeline</h4><p>Twice-daily ingest appends pending items to a 6,034-record JSONL corpus and does not regenerate the public module. Review or a separately governed high-bar auto-approval path controls publication.</p></div>
-              <div><h4>Sharp edges</h4><ul><li><code>db/schema.ts</code> is literally <code>export {}</code>; D1 and R2 bindings are null.</li><li>Never hand-edit the 5,433-line generated <code>news-data.ts</code>.</li><li>A promoted version reached one edge 6 to 8 minutes late on 2026-09-28; the live check now polls up to 15 minutes and fails closed on a stale homepage.</li></ul></div>
+              <div><h4>Sharp edges</h4><ul><li><code>db/schema.ts</code> is literally <code>export {}</code>; D1 and R2 bindings are null.</li><li>Never hand-edit the 5,433-line generated <code>news-data.ts</code>.</li><li>The first Workers live checks failed on every page over the 64 KB pipe buffer: <code>echo "$BODY" | grep -q</code> under <code>pipefail</code> exits 141 (SIGPIPE). It was first misread as slow edge propagation; a here-string fixed it.</li></ul></div>
             </div>
           </details>
         </div>
@@ -657,7 +657,7 @@ npm run check</code></pre></div>
         </div>
         <div class="infra-grid">
           <article class="infra astro"><h3>Preview, parity, promote</h3><p>Every site builds locally, uploads a Worker version with a preview URL, diffs it against production, and promotes only on confirmation. Rollback is <code>wrangler rollback</code>; removing the route hands traffic back to the old origin.</p></article>
-          <article class="infra next"><h3>Snapshot first</h3><p>WhoPaysForAI runs and crawls its built server into flat HTML before upload, then matches the public homepage to the promoted version. A version can take minutes to reach every edge, so the check polls.</p></article>
+          <article class="infra next"><h3>Snapshot first</h3><p>WhoPaysForAI runs and crawls its built server into flat HTML before upload, then matches the public homepage to the promoted version by body hash, so a stale copy fails closed.</p></article>
           <article class="infra eleventy"><h3>Server config became files</h3><p>nginx redirects, <code>try_files</code> rules, security headers, and CORS became <code>_redirects</code> and <code>_headers</code> in the build output. Anything nginx added silently had to be restated.</p></article>
           <article class="infra raw"><h3>Small Workers for the dynamic 10%</h3><p>Forms and beacons are separate Workers with D1 storage and server-side Turnstile checks, deployed before the HTML that calls them. None of these sites uses Pages, Vercel, or Netlify.</p></article>
           <article class="infra wp"><h3>One gate never automates</h3><p>Every repo uses <code>AGENTS.md</code> as its only agent-instruction file. Builds and drafts automate; production deployment requires explicit human authorization.</p></article>
@@ -681,7 +681,7 @@ npm run check</code></pre></div>
           <article class="mistake"><strong>7. Deploy the site before its form Worker</strong>A static origin cannot answer the route by accident. Deploy and verify the Worker first, then publish HTML that points at it.</article>
           <article class="mistake"><strong>8. Equate static with no moving parts</strong>The motion moved from every HTTP request to builds, scheduled watchers, ingest, review, cache, and deploy verification. Operate those explicitly.</article>
           <article class="mistake"><strong>9. Change hosts without an inventory of implicit behavior</strong>Moving off nginx dropped X-Frame-Options, nosniff, and Referrer-Policy on three sites, and CFW’s JSON CORS header, until each was restated in <code>_headers</code>. Workers answers trailing-slash fixes with 307 and <code>_redirects</code> defaults to 302. Diff a preview against production before cutover.</article>
-          <article class="mistake"><strong>10. Check the live site once</strong>A promoted version or a cached HTML copy can lag at some edges for minutes. Poll for a distinctive string or a version match with a timeout, and purge the host’s cache when the zone caches HTML.</article>
+          <article class="mistake"><strong>10. Blame the platform before testing the checker</strong>The fleet’s post-deploy checks failed repeatedly on 2026-09-28 and were read as edge lag, prompting longer timeouts and a cache purge. The cause was the check itself: a pipe into <code>grep -q</code> under <code>pipefail</code> fails on any page over 64 KB. Prove a verifier passes on a known-good page first.</article>
         </div>
       </div>
     </section>
