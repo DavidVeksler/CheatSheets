@@ -1,118 +1,64 @@
 # Deployment runbook: cheatsheets.davidveksler.com
 
-> **Moving to Cloudflare Workers** (branch `cloudflare-workers`, spec [`../docs/specs/cloudflare-migration.md`](../docs/specs/cloudflare-migration.md)). Until cutover the droplet path below is the live one. The Workers path is described in *Cloudflare Workers* at the end, with the cutover checklist.
+Served by Cloudflare Workers since the 2026-09-28 cutover (soak ends 2026-10-05): Worker `cheatsheets-davidveksler-com`, route `cheatsheets.davidveksler.com/*` over the existing proxied DNS record. Governing procedure: `~/Projects/cf-static-kit/docs/runbook.md`. Site design and decisions: [`../docs/specs/cloudflare-migration.md`](../docs/specs/cloudflare-migration.md).
 
-
-No build step: the repo files are the site, so pushing to the `production` remote is the deploy. Always go through the guarded script:
+Always go through the guarded script, only with David's go-ahead:
 
 ```bash
-git push origin main     # GitHub first: live never gets a commit origin lacks
-./deploy.sh              # ./deploy.ps1 on PowerShell; both wrap scripts/deploy.py (stdlib only, no venv)
+git push origin main                    # GitHub first
+bash scripts/deploy-cloudflare.sh       # scripts/deploy-cloudflare.ps1 [-Yes] on PowerShell (wraps the .sh via Git Bash)
 ```
 
-## Remotes
-
-| Remote | URL |
-|---|---|
-| `origin` | `https://github.com/DavidVeksler/CheatSheets.git` |
-| `production` | `johngalt@direct.vellum.capital:/var/www/cheatsheets.davidveksler.com/htdocs` (checked-out repo; a push updates the live docroot in place) |
-
-Deploy branch: `main`. Invariant: `production == origin == local main`.
+Registered as `cheatsheets` in `~/Projects/deploy-sites.json` (`scripts/deploy-cloudflare.ps1 -Yes`).
 
 ## Pipeline (aborts at the first failure)
 
-1. **Preflight:** on `main`; clean tree; `main` in sync with `origin/main`; `git fetch production` so the diff is accurate.
-2. **Validate** (files changed vs `production/main`; `--all` for everything):
-   - SEO gate `scripts/seo_check.py` on changed `.html` (title ≤ 60, description 150-200, canonical, valid JSON-LD).
-   - Every local `href`/`src` in changed pages resolves to a committed file (catches a forgotten `git add` image).
-   - Changed `.json` parses; `php -l` on changed `.php` (skipped if `php` is not on PATH).
-   - Always, repo-wide: `scripts/build_catalog.py --check` fails if `catalog.json` is stale vs any catalogued `.html`, `category-map.php`, `paths.json`, `catalog-overrides.json`, or a `paths.json` step names a missing file. Fix: `python3 scripts/build_catalog.py`.
-   - Always: `scripts/check_hubs.py` (`category-hubs.json`), `scripts/add_hub_breadcrumbs.py --check` (every sheet's hub breadcrumb), and `scripts/check_cluster_hub.py` (crypto custody hub parity and anchors).
-3. **Preview:** `git diff --stat production/main..HEAD`.
-4. **Confirm** `[y/N]` (skip with `--yes`).
-5. **Push + verify:** `git push production main`, then curl homepage (200), each changed page (200 + `cache-control: max-age=1800`), and a known-bad URL (404). Non-zero exit if a live check fails (the push already landed; investigate the server).
+1. **Preflight:** clean tree; `cf-static-kit` present (parity checker); `npm ci` if wrangler is missing.
+2. **Build + gates:** `python3 scripts/build_site.py` (needs `php` 8.1+ and git). Gates: `build_catalog.py --check`, `check_hubs.py`, `add_hub_breadcrumbs.py --check`, `check_cluster_hub.py`. Then copies the public files from `git ls-files` into `dist/` (internal dirs and files excluded, mirroring the old nginx `internal-paths.conf`) and prerenders `index.php`, `popularity.php`, `sitemap.php` with PHP CLI into `dist/_x/`. After adding a hub: `--write-worker-first`.
+3. **Preview:** uploads a version (not public) and runs the parity check against production (smoke; `--full-parity` for the full set).
+4. **Confirm** `[y/N]` (skip with `--yes` / `-Yes`).
+5. **Promote:** `wrangler versions deploy <version>@100%`, `wrangler triggers deploy`, then purges this host's edge cache (`cf-static-kit/scripts/purge_host.py`; a failed purge only warns).
+6. **Verify live:** fetches `/` and greps for a distinctive string. On failure after promotion: `npx wrangler rollback`.
 
-Cloudflare purge runs server-side in the `post-receive` hook via `purge-cache.py`, so the deploy box needs no Cloudflare token.
+Flags: `--yes`, `--preview-only`, `--full-parity`, `--skip-parity`.
 
-## Flags
+The build runs only the four gates above. The SEO gate (`scripts/seo_check.py`), link/asset integrity, JSON parse and `php -l` live in `scripts/deploy.py --check` (`./deploy.sh --check`, see *Legacy droplet deploy*).
 
-```
---yes          skip confirm            --dry-run   preflight + validate, no push
---check        preflight + validate only (what pre-push runs)
---all          validate every file, not just changed
---force        allow non-main branch / skip origin-sync check
---skip-seo | --skip-links | --skip-verify    escape hatches, use sparingly
-```
-
-## Hooks (once per clone: `git config core.hooksPath .githooks`)
-
-- **pre-push:** pushes to `production` run `scripts/deploy.py --check` and are blocked on failure; `origin` pushes are untouched. `deploy.py` sets `CHEATSHEETS_DEPLOY=1` on its own push so validation doesn't run twice.
-- **pre-commit:** regenerates and stages `catalog.json` when a commit touches a catalogued `.html`, `category-map.php`, `paths.json`, or `catalog-overrides.json`. Needs `beautifulsoup4` (`requirements.txt`, see `activate-venv.sh`) importable by the `python`/`python3` on PATH.
-- `.gitattributes` pins `*.sh`, `.githooks/*`, `scripts/*.py` to LF. On `bad interpreter`: `rm .githooks/pre-push && git checkout -- .githooks/pre-push`.
-
-## nginx drop-ins (not deployed by `git push`)
-
-`conf/nginx/*.conf` are copied by hand into the vhost include dir; the server has no other backup of them.
-
-The target dir is owned by `www-data`, so `johngalt` can't `scp` into it directly; stage in `/tmp` and `sudo install`:
-
-```bash
-scp conf/nginx/<name>.conf johngalt@198.211.102.9:/tmp/
-ssh johngalt@198.211.102.9 'sudo install -o root -g root -m 644 /tmp/<name>.conf /var/www/cheatsheets.davidveksler.com/conf/nginx/ && rm /tmp/<name>.conf && sudo nginx -t && sudo systemctl reload nginx'
-```
-
-- `category-hubs.conf`: `/<slug>` → `index.php?hub=<slug>`, `/<slug>/` 301 → `/<slug>`. Must be live before a deploy that ships slug links, or every breadcrumb 404s.
-- `redirects.conf`: permanent redirects for retired URLs.
-- `internal-paths.conf`: 404 for repo internals the checkout puts in the docroot (`docs/`, `marketing/`, `TODO/`, `scripts/`, `deploy/`, `conf/`, `lib/`, non-archive `newsletter/` files, root dotfiles, every `.md`/`.py`/`.ps1`, `AGENTS.md`). Two provenance files linked from sheets are exempt by exact match; add another exemption there before linking a sheet to any internal file. Verify: `python3 scripts/check_internal_paths.py`.
-- `facet-trap.conf`: 302 to the clean path for explorer filter/sort/view URLs requested with our own Referer and no `cs_js` cookie (scraper traversal of the combinatorial facet links). Needs the `index.php` that sets `cs_js` live first, or JS users reloading a filtered view lose their filters. Verify: `curl -s -o /dev/null -w "%{http_code}\n" -H "Referer: https://cheatsheets.davidveksler.com/" "https://cheatsheets.davidveksler.com/?shape=reference"` → 302; same URL without the Referer → 200.
-- `php-routing.conf`, `cache-control.conf`, `ssl.conf` exist on the server only.
-
-Verify after reload: `curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/radio` → 200; `curl -o /dev/null -w "%{http_code} %{redirect_url}\n" "https://cheatsheets.davidveksler.com/?cat=Radio"` → 301 to `/radio`.
-
-## Server cron (not deployed by `git push`)
-
-None. `johngalt`'s crontab held `cheatsheets-pull.sh` at 04:00 (ff-only pull of `origin/main`, a second deploy path) and a referrer-log accumulator at 04:20; both were removed at the Workers cutover (2026-09-28), and the referrer feature was dropped.
-
-## Manual fallback and hand verification
-
-If the wrapper can't run: `git push production main` (post-receive + purge still fire), then check by hand:
-
-```bash
-curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/                  # 200
-curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.davidveksler.com/no-such-page-xyz  # 404
-curl -sI https://cheatsheets.davidveksler.com/<page>.html | grep -i cache-control            # public, max-age=1800
-curl -s https://cheatsheets.davidveksler.com/<page>.html | grep -o "<title>[^<]*</title>"   # new version live
-```
-
-Caching: `.html` 30-min TTL; images/CSS/JS 7-day `immutable`. Editing an `images/*.png` in place can serve stale for a week, so rename it or bump a query string.
-
-## Cloudflare Workers (preview; cutover pending)
-
-Governing procedure: `~/Projects/cf-static-kit/docs/runbook.md`. Design and decisions: [`../docs/specs/cloudflare-migration.md`](../docs/specs/cloudflare-migration.md).
+## Pieces
 
 | Piece | Where |
 |---|---|
-| Site Worker `cheatsheets-davidveksler-com` | `wrangler.jsonc`, `workers/site/index.js`; assets from `dist/` |
-| Build (gates + prerender) | `python3 scripts/build_site.py` (needs `php` 8.1+ and git); `--write-worker-first` after adding a hub |
-| Deploy | `scripts/deploy-cloudflare.sh` / `.ps1` (preview + full parity + `parity_body_recheck.py` + `compare_explorer.py` before cutover) |
-| Forms Worker `cheatsheets-davidveksler-com-forms` (subscribe/confirm, D1) | `workers/forms/`; `scripts/deploy-forms-cloudflare.sh`; tests `npm run test:forms` |
+| Site Worker `cheatsheets-davidveksler-com` | `wrangler.jsonc`, `workers/site/index.js` (hub URLs, `?cat=`/`?hub=` redirects, prerendered Explorer states, `history.php` 301 to GitHub, newsletter endpoints forwarded to the forms Worker); assets from `dist/` |
+| Forms Worker `cheatsheets-davidveksler-com-forms` (subscribe/confirm, D1) | `workers/forms/`; deploy `scripts/deploy-forms-cloudflare.sh`; tests `npm run test:forms`. Reached through the `FORMS` service binding, no route of its own |
 | D1 `cheatsheets-davidveksler-com-forms` (0907d9a3-a6de-4458-9cdf-ba19eee2eca0) | subscriber addresses: count, never print. `scripts/newsletter_d1.py`, `scripts/import_subscribers.py` |
-| Retired-URL redirects | `deploy/cloudflare/redirects.txt` (was `conf/nginx/redirects.conf`) |
-| Headers, 404 | `deploy/cloudflare/_headers`, `deploy/cloudflare/404.html` |
+| Retired-URL redirects (also renamed hub slugs) | `deploy/cloudflare/redirects.txt` (was `conf/nginx/redirects.conf`) |
+| Headers, 404 | `deploy/cloudflare/_headers`, `deploy/cloudflare/404.html`; headers on Worker-built responses are set in `workers/site/index.js` |
 | Parity probes / allow rules | `deploy/parity-paths.txt`, `deploy/parity-allow.txt` |
-| Daily popularity publish | `.github/workflows/popularity-cloudflare.yml` → `scripts/popularity-publish-cloudflare.sh` (manual, dry run, until cutover) |
+| Daily popularity publish | `.github/workflows/popularity-cloudflare.yml` (02:30 UTC) → `scripts/popularity-publish-cloudflare.sh` |
 
-Deploys are atomic: no cache purge. Rollback after cutover: `npx wrangler rollback`; back to the droplet: comment out `routes`, `npx wrangler triggers deploy`.
+Caching: `.html` `max-age=1800` (`_headers`); Explorer and hubs `max-age=300`, popularity/sitemap `3600` (set in the Worker).
 
-### Cutover checklist (David's go-ahead)
+## Daily popularity publish (pre-authorized)
 
-1. Merge the PR into `main`; `git pull` the main checkout.
-2. `python3 scripts/import_subscribers.py --apply` (sign-ups since the last import), then `python3 scripts/newsletter_secrets_to_worker.py --check`.
-3. `bash scripts/deploy-forms-cloudflare.sh` (contract suite + preview health).
-4. `python ~/Projects/cf-static-kit/scripts/enable_routes.py`, commit, then `bash scripts/deploy-cloudflare.sh --full-parity` (one route, `cheatsheets.davidveksler.com/*`; the forms Worker is reached through the service binding, no route of its own).
-5. Right after the route is live: `import_subscribers.py --apply` once more; `curl https://cheatsheets.davidveksler.com/subscribe.php?health=1`; one real sign-up by David (email arrives, confirm link works, `SELECT COUNT(*) FROM confirmed` goes up).
-6. Mint the GitHub secret `CLOUDFLARE_WORKERS_TOKEN` (Workers Scripts Edit, this account only). In one commit: uncomment `schedule` in `popularity-cloudflare.yml` and delete `update-popularity.yml`. Same session: remove both droplet crons (`crontab -l` saved to the cutover log first).
-7. Routines: `cheatsheets-weekly-freshness` footer (live only after `scripts/deploy-cloudflare.sh`); `.claude/skills/cheatsheets-newsletter-monthly` (sync reads D1; archive deploy via `scripts/deploy-cloudflare.sh`).
-8. `~/Projects/deploy-sites.json` `cheatsheets` → `scripts/deploy-cloudflare.ps1 -Yes`; add the site to `cf-static-kit/sites.json`; log the cutover (date, version ids) here.
+The GitHub Action refreshes `popularity.json` + `catalog.json`, commits and pushes them, then builds and deploys the Worker with the Workers-only secret `CLOUDFLARE_WORKERS_TOKEN`. It publishes only when everything between the live Worker's commit and `HEAD` is those two files or unserved paths (`docs/`, `marketing/`, `TODO/`, root `*.md`, ...). Any other change is reported as DRIFT and waits for `scripts/deploy-cloudflare.sh`. A manual run defaults to a dry run.
 
-Decommission after the 7-day soak: runbook §7, plus the list in the spec §6.
+## Hooks (once per clone: `git config core.hooksPath .githooks`)
+
+- **pre-commit:** regenerates and stages `catalog.json` when a commit touches a catalogued `.html`, `category-map.php`, `paths.json`, or `catalog-overrides.json`. Needs `beautifulsoup4` (`requirements.txt`, see `activate-venv.sh`) importable by the `python`/`python3` on PATH.
+- **pre-push:** runs `scripts/deploy.py --check` only on pushes to the droplet `production` remote; `origin` pushes are untouched.
+- `.gitattributes` pins `*.sh`, `.githooks/*`, `scripts/*.py` to LF. On `bad interpreter`: `rm .githooks/pre-push && git checkout -- .githooks/pre-push`.
+
+## Rollback
+
+- Bad deploy: `npx wrangler rollback`.
+- Back to the droplet (soak only): comment out `routes` in `wrangler.jsonc`, `npx wrangler triggers deploy --config wrangler.jsonc`. The droplet copy is no longer updated and its crons are gone (spec §6).
+
+## Cutover log
+
+- 2026-09-28: route live (`0ec7fc1`); popularity schedule enabled and `update-popularity.yml` deleted (`047ad9d`); droplet crons `cheatsheets-pull.sh` (04:00) and the referrer accumulator (04:20) removed; referrer feature deleted (`2c5e781`), live as version `246de019` (per `~/Projects/server-mirror/docs/cloudflare-migration.md`, which also lists David's one real newsletter sign-up test as pending).
+
+Decommission after the soak: runbook §7, plus the list in the spec §6.
+
+## Legacy droplet deploy
+
+`./deploy.sh` / `./deploy.ps1` wrap `scripts/deploy.py`, a guarded `git push production main` to `johngalt@direct.vellum.capital:/var/www/cheatsheets.davidveksler.com/htdocs` (post-receive hook + `purge-cache.py`; nginx drop-ins in `conf/nginx/`). Still present until the droplet copy is decommissioned after the soak (ends 2026-10-05); it no longer changes the live site. `./deploy.sh --check` still runs the full validation set (SEO gate, links, JSON, `php -l`, catalog, hubs, breadcrumbs) without pushing; it diffs against the droplet's `production/main`.

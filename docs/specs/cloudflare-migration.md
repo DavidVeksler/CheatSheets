@@ -1,6 +1,6 @@
 # Spec: cheatsheets.davidveksler.com from the droplet to Cloudflare Workers
 
-Status: **implemented to a passing preview, 2026-09-28** (branch `cloudflare-workers`; cutover is David's gate, checklist in `deploy/DEPLOY.md`). Wave 4 (the last site) of `~/Projects/server-mirror/docs/cloudflare-migration.md`. Procedure: `~/Projects/cf-static-kit/docs/runbook.md` (governing; this spec only adds what is specific to this site). Decisions cited as **D-n** are David's, 2026-09-27 (plan §5 and §7).
+Status: **cut over 2026-09-28** (PR #16, route live in `0ec7fc1`; soak ends 2026-10-05, then decommission per §6). Operative deploy doc: `deploy/DEPLOY.md`. Sections below record the pre-cutover state and plan. Wave 4 (the last site) of `~/Projects/server-mirror/docs/cloudflare-migration.md`. Procedure: `~/Projects/cf-static-kit/docs/runbook.md` (governing; this spec only adds what is specific to this site). Decisions cited as **D-n** are David's, 2026-09-27 (plan §5 and §7).
 
 Scope: build, preview and parity until PASS on branch `cloudflare-workers`. Cutover (routes), cron removal and decommission stay David's gate.
 
@@ -194,7 +194,7 @@ Behaviour change to note: today any commit on `origin/main` goes live by 04:00 v
 
 ## 6. Cutover (David's go-ahead) and rollback
 
-Cutover checklist in the PR and `deploy/DEPLOY.md`:
+Cutover checklist (from the PR; executed 2026-09-28, log in `deploy/DEPLOY.md`):
 
 1. Merge the PR. Re-run `python scripts/import_subscribers.py --apply` (catches sign-ups since the first import).
 2. `python scripts/newsletter_secrets_to_worker.py --check` (secret names present on the forms Worker).
