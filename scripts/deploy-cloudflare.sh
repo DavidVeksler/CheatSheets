@@ -190,13 +190,13 @@ wr triggers deploy
 
 # ---- 7. live verification -----------------------------------------------------
 step "Verify live: $PROD_URL$VERIFY_PATH"
-# A new route or version can take minutes to reach every edge (seen up to ~4 min).
+# A new route or version can take several minutes to reach every edge (seen 6-8 min, 2026-09-28).
 same_as_preview() {
   [ -f "$CF_KIT/scripts/cf_parity.py" ] || return 0   # without the kit, the grep + deployments check below still gate
   "$PY" "$CF_KIT/scripts/cf_parity.py" --mode full --no-sitemap --variant-sample 0 --headers "" \
     --prod "$PROD_URL" --candidate "$PREVIEW_URL" --path "$VERIFY_PATH" >/dev/null 2>&1
 }
-for i in $(seq 1 72); do
+for i in $(seq 1 180); do
   BODY="$(curl -fsS -A "$UA" "$PROD_URL$VERIFY_PATH" 2>/dev/null || true)"
   if echo "$BODY" | grep -qF -- "$VERIFY_GREP" && same_as_preview; then
     ok "live page contains \"$VERIFY_GREP\" and matches version $VERSION_ID"
@@ -207,4 +207,4 @@ for i in $(seq 1 72); do
   fi
   sleep 5
 done
-die "live page did not match the new version within 6 minutes"
+die "live page did not match the new version within 15 minutes"

@@ -146,7 +146,7 @@ want="$(git show HEAD:popularity.json | sha256sum | cut -d' ' -f1)"
 # challenge is not a failed publish: fall back to the deployment record. Every curl here
 # tolerates errors, because a non-200 inside $(...) under `set -e -o pipefail` would
 # otherwise abort the script (exit 22) instead of retrying.
-for _ in $(seq 1 24); do
+for _ in $(seq 1 180); do
   hdr="$(curl -sS -o /dev/null -D - -A "$UA" "$PUBLIC_URL/popularity.json?v=$SHA" 2>/dev/null || true)"
   if echo "$hdr" | grep -qi '^cf-mitigated: challenge'; then
     wr deployments status --json | grep -q "$version" || die "deployments status does not show $version"
@@ -161,4 +161,4 @@ for _ in $(seq 1 24); do
   fi
   sleep 5
 done
-die "live popularity.json did not match $SHA within 2 minutes; roll back with: npx wrangler rollback"
+die "live popularity.json did not match $SHA within 15 minutes; roll back with: npx wrangler rollback"
