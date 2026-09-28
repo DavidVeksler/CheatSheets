@@ -49,7 +49,7 @@ W="$PWD/node_modules/.bin/wrangler"
 if "$PY" - <<'PYEOF'
 import json, re, sys
 s = open("wrangler.jsonc", encoding="utf-8").read()
-s = re.sub(r'("(?:\.|[^"\])*")|//[^\n]*|/\*.*?\*/', lambda m: m.group(1) or "", s, flags=re.S)
+s = re.sub(r'("(?:\\.|[^"\\])*")|//[^\n]*|/\*.*?\*/', lambda m: m.group(1) or "", s, flags=re.S)
 c = json.loads(re.sub(r",(\s*[}\]])", r"\1", s))
 sys.exit(0 if (c.get("routes") or c.get("route")) else 1)
 PYEOF
