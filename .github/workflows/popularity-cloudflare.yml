@@ -2,16 +2,15 @@
 # Pre-authorized auto-publish (David, 2026-09-27). Logic and guard:
 # scripts/popularity-publish-cloudflare.sh; spec: docs/specs/cloudflare-migration.md §2.5.
 #
-# NOT WIRED YET (built 2026-09-28, before cutover): manual trigger only, dry run by
-# default, and the script itself refuses to publish while wrangler.jsonc has no routes.
-# At cutover, in ONE commit: uncomment `schedule` below and delete
-# .github/workflows/update-popularity.yml (this job replaces it); in the same session
-# remove the droplet crons (cheatsheets-pull.sh, referrer_accumulate.py).
+# Live since the 2026-09-28 cutover: runs nightly and publishes to the routed Worker.
+# It replaced update-popularity.yml (deleted in the same commit) and the droplet crons
+# cheatsheets-pull.sh / referrer_accumulate.py (removed the same session). A manual run
+# defaults to a dry run; pass dry_run=false to publish.
 #
 # Secrets:
 #   CLOUDFLARE_API_TOKEN      existing: Zone Analytics Read (fetch-popularity.py)
-#   CLOUDFLARE_WORKERS_TOKEN  new, minted by David at cutover: Workers Scripts Edit on
-#                             the "David Veksler's Websites" account only
+#   CLOUDFLARE_WORKERS_TOKEN  Cloudflare token 2b68fae6... ("CheatSheets GitHub Actions:
+#                             popularity deploy"), Workers Scripts Edit on this account only
 name: popularity-cloudflare
 
 on:
@@ -21,9 +20,9 @@ on:
         description: "Dry run: refresh, gate and build only (no commit, push or publish)"
         type: boolean
         default: true
-  # CUTOVER: uncomment (02:30 UTC, update-popularity.yml's slot) and delete update-popularity.yml.
-  # schedule:
-  #   - cron: "30 2 * * *"
+  # 02:30 UTC, update-popularity.yml's old slot.
+  schedule:
+    - cron: "30 2 * * *"
 
 concurrency:
   group: popularity-cloudflare
