@@ -68,7 +68,8 @@ check "confirm missing token 400"           400 "$(code "$B/confirm")"
 check "confirm missing token page"          1 "$(body "$B/confirm" | grep -c 'This confirmation link is missing its token.')"
 check "legacy /subscribe.php still answered" 200 "$(code "$B/subscribe.php?health=1")"
 check "legacy /confirm.php still answered"   400 "$(code "$B/confirm.php")"
-check "tampered signature 400"              400 "$(code "${LINK%?}A")"
+TAMPER=A; [ "${LINK: -1}" != A ] || TAMPER=B   # a changed last char, never the same one
+check "tampered signature 400"              400 "$(code "${LINK%?}$TAMPER")"
 # Tokens minted by the PHP code (the droplet's subscribe.php) must verify here.
 MINT='require "lib/newsletter.php"; $t = newsletter_mint_token($argv[1], $argv[2]); echo "p=", rawurlencode($t["p"]), "&s=", rawurlencode($t["s"]);'
 PHPQ="$(php -r "$MINT" phpuser@example.org "$SECRET" 2>/dev/null)"

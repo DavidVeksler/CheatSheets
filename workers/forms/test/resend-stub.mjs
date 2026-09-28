@@ -21,7 +21,7 @@ http.createServer((req, res) => {
       return res.end(JSON.stringify({ message: "stub failure" }));
     }
     sends++;
-    const link = /https?:\/\/[^\s"]*confirm\.php\?p=[^\s"&]+&(?:amp;)?s=[^\s"]+/.exec(String(msg.text || ""));
+    const link = /https?:\/\/[^\s"]*confirm(?:\.php)?\?p=[^\s"&]+&(?:amp;)?s=[^\s"]+/.exec(String(msg.text || ""));
     if (link) lastLink = link[0];
     subjects.push(msg.subject || "");
     if (out) fs.writeFileSync(out, JSON.stringify({ sends, link: lastLink, subjects }));
