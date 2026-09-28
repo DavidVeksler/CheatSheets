@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cloudflare Workers Static Assets: 12-Site Migration Runbook</title>
-  <meta name="description" content="How 12 static sites moved off nginx onto Cloudflare Workers static assets: wrangler config, _redirects and _headers limits, preview-parity-promote deploys, forms Workers with D1, rollback.">
+  <meta name="description" content="Understand Workers, Wrangler, R2, D1 and KV, then host a static site on Cloudflare: configuration, redirects, headers, preview deployments, forms and rollback from a 12-site migration.">
   <meta name="keywords" content="cloudflare workers static assets, host static site on cloudflare workers, cloudflare pages vs workers, migrate nginx to cloudflare workers, _redirects limit, wrangler versions upload, run_worker_first, worker route vs custom domain">
   <link rel="canonical" href="https://cheatsheets.davidveksler.com/cloudflare-workers-static-hosting.html">
   <meta property="og:title" content="Cloudflare Workers Static Assets: 12-Site Migration Runbook">
@@ -28,7 +28,7 @@
     "creditText": "Produced by a governed multi-agent Claude Code pipeline; author of record David Veksler",
     "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
     "datePublished": "2026-09-28",
-    "proficiencyLevel": "Expert",
+    "proficiencyLevel": "Beginner to advanced",
     "keywords": "Cloudflare Workers, static assets, wrangler, _redirects, _headers, html_handling, run_worker_first, nginx migration, D1, Turnstile, R2"
   }
   </script>
@@ -291,7 +291,7 @@
     <button class="theme-toggle" type="button" id="themeToggle" aria-label="Toggle color theme">theme: auto</button>
     <p class="kicker">Operator reference &middot; the nginx exit</p>
     <h1>Hosting static sites on Cloudflare Workers</h1>
-    <p class="lede">Twelve production sites left a self-hosted nginx server for Cloudflare Workers static assets on 2026-09-27 and 28, from a single-page portfolio to a 27,900-file archive with about 4,300 legacy redirects. This is everything after <code>dist/</code> exists: how a request actually flows, every config key, what nginx did that you must port by hand, the guarded deploy, rollback, forms without a server, and every incident with its fix. This page is served by the setup it describes.</p>
+    <p class="lede">Cloudflare can host your website's files and run backend code without a server for you to maintain. Start here with what Workers, Wrangler, R2 and D1 do, then follow the configuration and migration runbook. The examples come from twelve production sites moved from nginx on 2026-09-27 and 28, from a single-page portfolio to a 27,900-file archive with about 4,300 legacy redirects. This page is served by the setup it describes.</p>
     <ul class="meta">
       <li><b>wrangler</b> 4.143.0 (2026-09-28)</li>
       <li><b>compatibility_date</b> 2026-09-27/28</li>
@@ -304,6 +304,7 @@
 <nav class="toc" aria-label="Sections">
   <div class="wrap">
     <ol>
+      <li><a href="#basics"><span>start</span> the basics</a></li>
       <li><a href="#quick"><span>00</span> quick ref</a></li>
       <li><a href="#flow"><span>01</span> request flow</a></li>
       <li><a href="#config"><span>02</span> wrangler.jsonc</a></li>
@@ -322,6 +323,69 @@
 
 <main id="main">
 <div class="wrap">
+
+<section class="block" id="basics" aria-labelledby="basics-h">
+  <p class="sec-no">Start here / The mental model</p>
+  <h2 id="basics-h">What are we hosting, and which Cloudflare service does what?</h2>
+  <p class="intro">A <strong>static site</strong> sends files that already exist: HTML pages, CSS, browser JavaScript and images. It can still have interactive menus, search and calculators in the browser. A <strong>dynamic backend</strong> runs code when a request arrives, for example to validate a contact form or look up a customer's records. You can host the static part first and add a backend only where it is needed.</p>
+  <div class="grid-3" aria-label="From your project to a visitor">
+    <div class="panel">
+      <h3>1. Your computer or CI</h3>
+      <p>Write the site and prepare its publish folder, locally or in <strong>CI</strong> (continuous integration, an automated build runner). Here, <code>dist/</code> means the finished files to upload. A plain HTML site can use an existing folder; Astro or Eleventy generates one with a build command.</p>
+    </div>
+    <div class="panel">
+      <h3>2. Wrangler uploads it</h3>
+      <p>Your deployment tool reads <code>wrangler.jsonc</code>, uploads the site's assets and any Worker script, and configures their connections. Your computer does not need to stay on after deployment.</p>
+    </div>
+    <div class="panel">
+      <h3>3. Cloudflare serves visitors</h3>
+      <p>A browser requests <code>/about.html</code>; Cloudflare serves the uploaded file. A request to <code>/api/contact</code> can run a Worker script that validates the submission and saves a row in D1.</p>
+    </div>
+  </div>
+  <p class="note">The upload and delivery model uses <a href="https://developers.cloudflare.com/workers/static-assets/">Workers static assets</a>. Product descriptions below follow Cloudflare's documentation as of Sep 2026.</p>
+
+  <h3>Workers vs R2 vs D1: code, files and records</h3>
+  <p class="intro">These services do different jobs and can work together. A brochure site needs only static assets. A site with contact forms adds Worker code and perhaps D1. A site with large downloads or user uploads can add R2.</p>
+  <div class="tbl mid">
+    <table>
+      <caption>Choose by what you need to run or store</caption>
+      <thead><tr><th>Tool or service</th><th>What it does</th><th>Concrete use</th><th>Boundary / when to skip it</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><a href="https://developers.cloudflare.com/workers/">Workers</a></th><td>Runs backend code on Cloudflare's managed platform. <strong>Serverless</strong> means Cloudflare manages the servers; you supply the code.</td><td>Validate <code>POST /api/contact</code>, query a database, or generate an HTML response.</td><td>A Worker script is not a persistent disk or a SQL database. Skip custom code when uploaded files and declarative rules suffice.</td></tr>
+        <tr><th scope="row"><a href="https://developers.cloudflare.com/workers/static-assets/">Workers static assets</a></th><td>Stores and serves the website files uploaded with a Worker deployment.</td><td><code>dist/index.html</code>, <code>site.css</code> and <code>logo.svg</code>.</td><td>No script is required for an assets-only site. Files change through deployment; use separate storage for runtime uploads.</td></tr>
+        <tr><th scope="row"><a href="https://developers.cloudflare.com/r2/">R2</a></th><td><strong>Object storage:</strong> files stored in buckets under keys, similar to Amazon S3.</td><td>A PDF at <code>reports/2026-09.pdf</code>, videos, backups or user attachments.</td><td>R2 stores bytes; it does not execute your backend or provide relational SQL queries. Ordinary site assets can stay in the deployment.</td></tr>
+        <tr><th scope="row"><a href="https://developers.cloudflare.com/d1/">D1</a></th><td>A managed <strong>SQL database</strong> with SQLite semantics: tables, rows, indexes and queries.</td><td>An <code>inquiries</code> table with email, message and creation time; query submissions by date.</td><td>Use it for structured records. Put large attachments in R2 and their object keys in D1. A read-only static site may need no database.</td></tr>
+        <tr><th scope="row"><a href="https://developers.cloudflare.com/kv/">Workers KV</a></th><td>A distributed <strong>key-value store:</strong> retrieve a value by its key.</td><td><code>site:banner</code> &rarr; <code>Maintenance Sunday</code>; cached API results or read-heavy configuration.</td><td><a href="https://developers.cloudflare.com/kv/concepts/how-kv-works/">Updates are eventually consistent</a>: other locations can see an older value. Avoid it for balances or decisions requiring immediate agreement.</td></tr>
+        <tr><th scope="row"><a href="https://developers.cloudflare.com/workers/wrangler/">Wrangler</a></th><td>The command-line tool on your computer or CI that develops, configures and deploys these resources.</td><td><code>npx wrangler dev</code> starts a development server; Wrangler can also upload versions and stream logs.</td><td>It is a tool you run, rather than a hosting or storage service. Visitors reach Cloudflare, not Wrangler on your laptop.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <h3>What does Wrangler actually do?</h3>
+      <p><code>wrangler.jsonc</code> is its project configuration: the deployment name, asset folder, optional script and connected resources. JSONC allows comments. <code>npx</code> runs the Wrangler CLI through Node.js tooling.</p>
+      <ul>
+        <li><code>npx wrangler dev</code>: test locally before uploading.</li>
+        <li><code>npx wrangler versions upload</code>: upload a candidate version for the <a href="#deploy">preview-and-promote workflow</a>.</li>
+        <li><code>npx wrangler deploy</code>: upload and activate a deployment. This changes the live site; the runbook below uses a guarded script.</li>
+        <li><code>npx wrangler tail</code>: watch live Worker script logs while troubleshooting.</li>
+      </ul>
+      <p>Wrangler can bundle Worker code, but your site's build tool still prepares the HTML and other assets. <a href="https://developers.cloudflare.com/workers/wrangler/">Wrangler overview</a>.</p>
+    </div>
+    <div class="panel">
+      <h3>How does a Worker reach storage?</h3>
+      <p>A <strong>binding</strong> is a configured connection exposed to your script by name. For example, <code>env.DB</code> can refer to a D1 database, <code>env.UPLOADS</code> to an R2 bucket, and <code>env.ASSETS</code> to deployed site files. The name is chosen in configuration; it does not automatically create the database or bucket.</p>
+      <p>For a form with an attachment: the browser submits to a Worker, the Worker validates it, stores the file in R2, and saves the inquiry plus the file's key in D1. The browser never needs direct database access.</p>
+      <p><a href="https://developers.cloudflare.com/workers/runtime-apis/bindings/">Bindings connect code to resources</a>. <a href="#forms">The forms section</a> shows a backend in practice.</p>
+    </div>
+  </div>
+  <div class="callout">
+    <b>Where do Pages, DNS and the CDN fit?</b>
+    <p><strong>Pages</strong> is Cloudflare's separate website deployment product; compare it with Workers in the <a href="#quick">decision strip</a>. <strong>DNS</strong> connects a hostname such as <code>example.com</code> to its destination. A <strong>CDN</strong> caches and delivers content near visitors. Putting Cloudflare in front of nginx uses its proxy/CDN; uploading files to Workers static assets moves the hosting itself to Cloudflare.</p>
+  </div>
+  <p class="intro"><strong>Start with the smallest setup:</strong> static assets for pages; a Worker script for request-time behavior; D1 for queryable records; R2 for separately managed files. Now the limits, configuration keys and migration steps below have a place to fit.</p>
+</section>
 
 <!-- 00 -->
 <section class="block" id="quick" aria-labelledby="quick-h">
@@ -357,7 +421,7 @@
         <li><b>html_handling by canonical URL shape</b>Canonical <code>/a/</code> or <code>/a</code>: <code>auto-trailing-slash</code> (default). Always <code>/a/</code>: <code>force-trailing-slash</code>. Always <code>/a</code>: <code>drop-trailing-slash</code>. Canonical <code>/a.html</code>: <code>none</code>, plus a <code>/ /index.html 200</code>-style rewrite for <code>/</code>.</li>
         <li><b>_redirects vs zone rule vs Worker code</b>Host-level (www, alias domains): zone Single Redirect. Path-level under 2,000 static lines: <code>_redirects</code>. Over the caps, regex, or 410: Worker code, with <code>run_worker_first</code> globs for just those paths.</li>
         <li><b>Workers vs Pages (new static site)</b>Workers. Cloudflare's Pages docs say "Start new projects with Workers" (Aug 2026); <code>_redirects</code> and <code>_headers</code> work natively. Pages keeps two edges: custom domains on zones outside Cloudflare, and custom branch aliases ("coming soon" on Workers).</li>
-        <li><b>stay on the origin</b>Anything with a database, an admin login, local state, or server logs as input: WordPress, MediaWiki, a helpdesk, a log-reading dashboard. See <a href="#stays">07</a>.</li>
+        <li><b>stay on the origin</b>Existing applications that depend on PHP/MySQL, persistent local files or server logs do not move by uploading their files: WordPress, MediaWiki, a helpdesk, a log-reading dashboard. Porting their backend is a separate project; Workers can support dynamic apps with services such as D1 and R2. See <a href="#stays">07</a>.</li>
       </ul>
     </div>
   </div>
