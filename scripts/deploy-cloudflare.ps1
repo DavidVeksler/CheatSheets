@@ -5,7 +5,8 @@ param(
   [switch]$Yes,
   [switch]$PreviewOnly,
   [switch]$FullParity,
-  [switch]$SkipParity
+  [switch]$SkipParity,
+  [switch]$Redeploy
 )
 
 $ErrorActionPreference = "Stop"
@@ -27,6 +28,7 @@ if ($Yes) { $deployArgs += "--yes" }
 if ($PreviewOnly) { $deployArgs += "--preview-only" }
 if ($FullParity) { $deployArgs += "--full-parity" }
 if ($SkipParity) { $deployArgs += "--skip-parity" }
+if ($Redeploy) { $deployArgs += "--redeploy" }
 
 Push-Location (Split-Path $PSScriptRoot -Parent)
 try {

@@ -13,7 +13,7 @@
 # routes and run `npx wrangler triggers deploy` to hand traffic back to the
 # old origin.
 #
-# Usage: scripts/deploy-cloudflare.sh [--yes] [--preview-only] [--full-parity] [--skip-parity]
+# Usage: scripts/deploy-cloudflare.sh [--yes] [--preview-only] [--full-parity] [--skip-parity] [--redeploy]
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -34,13 +34,14 @@ CF_ENV="$HOME/Projects/.cloudflare.env"
 CF_KIT="${CF_KIT:-$HOME/Projects/cf-static-kit}"
 UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 
-ASSUME_YES=0; PREVIEW_ONLY=0; FORCE_FULL=0; SKIP_PARITY=0
+ASSUME_YES=0; PREVIEW_ONLY=0; FORCE_FULL=0; SKIP_PARITY=0; REDEPLOY=0
 for arg in "$@"; do
   case "$arg" in
     --yes|-y) ASSUME_YES=1 ;;
     --preview-only) PREVIEW_ONLY=1 ;;
     --full-parity) FORCE_FULL=1 ;;
     --skip-parity) SKIP_PARITY=1 ;;
+    --redeploy) REDEPLOY=1 ;;
     *) echo "unknown arg: $arg" >&2; exit 2 ;;
   esac
 done
@@ -92,6 +93,17 @@ if [ "$SKIP_PARITY" -eq 0 ]; then
   [ -f "$CF_KIT/scripts/cf_parity.py" ] || die "parity checker not found at $CF_KIT (set CF_KIT or clone cf-static-kit)"
 fi
 if routed; then ROUTED=1; ok "routes configured: deploy goes live"; else ROUTED=0; ok "no routes: preview only, nothing public changes"; fi
+# Nothing to do when this commit is already the live version: the build ships only
+# committed bytes, so the same SHA rebuilds the same site (build-time text such as
+# "updated 3 hours ago" aside). --redeploy forces a full run.
+if [ "$ROUTED" -eq 1 ] && [ "$PREVIEW_ONLY" -eq 0 ] && [ "$REDEPLOY" -eq 0 ]; then
+  ACTIVE="$(wr deployments status 2>/dev/null || true)"
+  if grep -q '(100%)' <<<"$ACTIVE" && grep -qE "Tag:[[:space:]]+$SHA([[:space:]]|$)" <<<"$ACTIVE" \
+     && grep -qF -- "$VERIFY_GREP" <<<"$(curl -fsS -A "$UA" "$PROD_URL$VERIFY_PATH" 2>/dev/null || true)"; then
+    step "Already live: $SITE $SHA is the active version at 100%. Nothing to deploy (--redeploy to force)."
+    exit 0
+  fi
+fi
 
 # ---- 2. build + gates -------------------------------------------------------
 if [ -n "$BUILD_CMD" ]; then

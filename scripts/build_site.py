@@ -33,6 +33,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -244,8 +245,9 @@ def main() -> int:
             ("sitemap.php", "/sitemap.xml", "", X / "sitemap.xml")]
     jobs += [("index.php", "/", f"view=paths&path={pid}", X / "path" / f"{pid}.html") for pid in path_ids]
     jobs += [("index.php", f"/{slug}", f"hub={slug}", X / "hub" / f"{slug}.html") for slug in sorted(slug_to_cat)]
-    for page, uri, query, out in jobs:
-        prerender(page, uri, query, out)
+    # Each job is its own PHP process writing its own file, so they run in parallel.
+    with ThreadPoolExecutor(max_workers=min(8, os.cpu_count() or 4)) as ex:
+        list(ex.map(lambda j: prerender(*j), jobs))
     print(f"  {len(jobs)} pages")
 
     # Sanity: the Explorer lists every catalogued sheet exactly once.
