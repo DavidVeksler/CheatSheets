@@ -187,6 +187,12 @@ step "Promote version and apply routes"
 PROMOTED=1
 wr versions deploy "$VERSION_ID@100%" --yes --message "deploy $SHA"
 wr triggers deploy
+# Purge this host's edge cache so the previous version can't keep being served
+# (seen for 6-15+ min on 2026-09-28). A failed purge is a warning, not a failed deploy.
+if [ -f "$CF_KIT/scripts/purge_host.py" ]; then
+  "$PY" "$CF_KIT/scripts/purge_host.py" "${PROD_URL#https://}" || printf '[1;33m  WARNING: cache purge failed[0m
+'
+fi
 
 # ---- 7. live verification -----------------------------------------------------
 step "Verify live: $PROD_URL$VERIFY_PATH"
