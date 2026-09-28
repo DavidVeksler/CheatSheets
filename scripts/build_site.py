@@ -157,7 +157,7 @@ def clamp_text(s: str, n: int) -> str:
 
 # ----------------------------------------------------------- worker globs --
 def worker_first(hub_slugs: list[str]) -> list[str]:
-    globs = ["/", "/*.php", "/_x/*", "/favicon.ico", *(("/" + p) for p in PROVENANCE)]
+    globs = ["/", "/*.php", "/_x/*", "/404.html", "/favicon.ico", *(("/" + p) for p in PROVENANCE)]
     for s in sorted(hub_slugs):
         globs += [f"/{s}", f"/{s}/"]
     if len(globs) > 100:

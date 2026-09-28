@@ -154,6 +154,14 @@ if [ "$SKIP_PARITY" -eq 0 ]; then
     --report ".wrangler/parity-$SHA.json" ${PARITY_ARGS[@]+"${PARITY_ARGS[@]}"} \
     || die "parity check failed; see .wrangler/parity-$SHA.json. Fix, or explain each diff in the allow file."
   PARITY="pass ($MODE)"
+  # The prerendered Explorer, hubs, lenses and popularity page differ byte for byte
+  # from PHP's per-request render (parity-allow.txt lets those bodies through);
+  # this compares what they say instead (spec §5). Only meaningful against the droplet.
+  if [ "$MODE" = full ] && [ "$ROUTED" -eq 0 ]; then
+    step "Explorer content equivalence against $PROD_URL"
+    "$PY" scripts/compare_explorer.py --prod "$PROD_URL" --candidate "$PREVIEW_URL"       || die "Explorer content differs from the droplet; see above"
+    PARITY="pass ($MODE + explorer)"
+  fi
 else
   printf '\033[1;33m  WARNING: parity check skipped\033[0m\n'
 fi
