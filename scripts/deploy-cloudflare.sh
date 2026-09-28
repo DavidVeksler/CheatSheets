@@ -204,7 +204,7 @@ same_as_preview() {
 }
 for i in $(seq 1 180); do
   BODY="$(curl -fsS -A "$UA" "$PROD_URL$VERIFY_PATH" 2>/dev/null || true)"
-  if echo "$BODY" | grep -qF -- "$VERIFY_GREP" && same_as_preview; then
+  if grep -qF -- "$VERIFY_GREP" <<<"$BODY" && same_as_preview; then
     ok "live page contains \"$VERIFY_GREP\" and matches version $VERSION_ID"
     wr deployments status 2>/dev/null | grep -q "$VERSION_ID" || die "deployments status does not show $VERSION_ID at 100%"
     ok "version $VERSION_ID is the active deployment"
