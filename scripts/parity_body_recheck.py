@@ -11,7 +11,7 @@ the stated effect, or the deploy fails (spec §5):
   cutover). cf_parity's normalizer misses the self-closing `<link ... />` form used
   by many sheets (kit bug, reported). Also three sheets link history.php, now GitHub.
 - /catalog.json: rebuilt on the branch; same sheets, only the build stamp, inputs
-  hash and the edited sheets' dates may differ.
+  hash, map layout floats and the edited sheets' dates may differ.
 - binary assets (/images/...): the zone's edge cache serves a stale copy (10-year
   max-age, only HTML was ever purged); the candidate must equal the droplet origin
   itself, fetched directly (pinned to the droplet IP).
@@ -82,6 +82,10 @@ def catalog_explained(prod: dict, cand: dict, changed: set[str]) -> bool:
         d.pop("generated", None)
         d.pop("inputs_hash", None)
         for s in d.get("sheets", []):
+            # The map layout (x, y) is a force simulation whose floats vary with the
+            # machine and Python that ran build_catalog.py; it moves every rebuild.
+            s.pop("x", None)
+            s.pop("y", None)
             if s.get("file") in changed:
                 s.pop("updated", None)
     return a == b

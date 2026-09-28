@@ -187,14 +187,20 @@ def parse(html: str) -> Doc:
     return d
 
 
-def normalize(d: Doc, side: str, changed: set[str]) -> dict:
+def normalize(d: Doc, side: str, changed: set[str], changed_dates: set[str] = frozenset()) -> dict:
     """Structured view of a page with the KNOWN differences normalized away."""
     def fix_href(h):
         return GH if h in ("history.php",) or h.startswith("history.php?") else h
 
     text = [AGO.sub("<ago>", ln) for ln in d.text()]
-    # 'Last change: <subject> <ago>' is the build's newest commit.
-    text = ["Last change: <commit>" if ln.startswith("Last change:") else ln for ln in text]
+    # 'Last change: <subject> <ago>' is the build's newest commit (the subject is its own line).
+    for i, ln in enumerate(text):
+        if ln.startswith("Last change:"):
+            text[i] = "Last change: <commit>"
+            if i + 1 < len(text) and ln == "Last change:":
+                text[i + 1] = "<commit>"
+    # Date lines of cards whose sheet was edited on the branch (both sides' strings).
+    text = ["<changed dates>" if " ".join(ln.split()) in changed_dates else ln for ln in text]
     text = [ln for ln in text if not re.fullmatch(r"<ago>", ln)]
     links = [(fix_href(h), AGO.sub("<ago>", t)) for h, t in d.links]
     # The "Last change" link text is the newest commit subject.
@@ -218,21 +224,14 @@ def normalize(d: Doc, side: str, changed: set[str]) -> dict:
             "links": links, "text": text}
 
 
-REFERRER_SECTION = re.compile(r"Where readers come from")
+# popularity.php renders "Where readers come from" only when the server-side referrer
+# store exists (droplet). It runs from its section label to the panels grid.
+REFERRER_SECTION = re.compile(
+    r'<p class="lbl sectlbl">(?:(?!</p>).)*Where readers come from</p>.*?(?=<div class="panels">)', re.S)
 
 
-def strip_referrers(model: dict) -> dict:
-    """popularity.php: drop the referrer section (droplet only) from text and links."""
-    t = model["text"]
-    start = next((i for i, ln in enumerate(t) if REFERRER_SECTION.search(ln)), None)
-    if start is not None:
-        # The section runs until the next section heading the Workers page also has.
-        end = next((i for i in range(start + 1, len(t)) if t[i] in HEADINGS_AFTER_REFERRERS), len(t))
-        model["text"] = t[:start] + t[end:]
-    return model
-
-
-HEADINGS_AFTER_REFERRERS: set[str] = set()
+def strip_referrers(html: str) -> str:
+    return REFERRER_SECTION.sub("", html, count=1)
 
 
 def diff_models(a: dict, b: dict) -> list[str]:
@@ -288,15 +287,15 @@ def main() -> int:
             print(f"FAIL {path}: status {ps} vs {cs}")
             failures += 1
             continue
-        mp, mc = normalize(parse(ph), "prod", changed), normalize(parse(ch), "cand", changed)
+        if path == "/popularity.php":
+            ph = strip_referrers(ph)
+        dp, dc = parse(ph), parse(ch)
+        changed_dates = {" ".join(c["dates"].split()) for c in dp.cards + dc.cards if c["file"] in changed}
+        mp, mc = normalize(dp, "prod", changed, changed_dates), normalize(dc, "cand", changed, changed_dates)
         if path in state_pages:
             # Head only: the Worker must reproduce index.php's title/robots/canonical/og.
             mp = {k: (v if k == "head" else []) for k, v in mp.items()}
             mc = {k: (v if k == "head" else []) for k, v in mc.items()}
-        if path == "/popularity.php":
-            HEADINGS_AFTER_REFERRERS.clear()
-            HEADINGS_AFTER_REFERRERS.update(set(mc["text"]))
-            mp = strip_referrers(mp)
         diffs = diff_models(mp, mc)
         if diffs:
             failures += 1
