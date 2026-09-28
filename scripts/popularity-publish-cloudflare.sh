@@ -11,7 +11,8 @@
 #   2. Commit and push popularity.json + catalog.json (only those may change).
 #   3. Publish ONLY IF everything changed between the commit the live Worker was built
 #      from (its "workers/tag" annotation, set by scripts/deploy-cloudflare.sh and by
-#      this script) and HEAD is popularity.json or catalog.json. An empty diff also
+#      this script) and HEAD is popularity.json, catalog.json, or a path that is neither
+#      served nor read by the build (docs/, marketing/, TODO/, root *.md: INERT). An empty diff also
 #      publishes: it rebuilds the date-dependent Explorer bits (deep cut of the day,
 #      NEW badges). Anything else is DRIFT: nothing is published, and the change waits
 #      for scripts/deploy-cloudflare.sh and David's approval.
@@ -41,6 +42,9 @@ PUBLIC_URL="https://cheatsheets.davidveksler.com"
 WRANGLER_CONFIG="wrangler.jsonc"
 CF_ENV="$HOME/Projects/.cloudflare.env"
 ALLOWED='^(popularity\.json|catalog\.json)$'
+# Paths that are neither served nor read by the build (scripts/build_site.py): routine
+# commits there (KPI log, Reddit drafts, specs) must not stall the daily publish.
+INERT='^(docs|marketing|TODO|\.claude|\.agents|\.github)/|^[^/]+\.md$'
 PY="$(command -v python3 || command -v python)"
 UA="cheatsheets-popularity-publish/1.0 (+https://cheatsheets.davidveksler.com/)"
 
@@ -121,7 +125,7 @@ live_tag="$(wr versions view "$live_version" --json 2>/dev/null \
 [ -n "$live_tag" ] || drift "live version $live_version has no commit tag (not deployed by a repo script)"
 git cat-file -e "$live_tag^{commit}" 2>/dev/null || drift "live version's commit $live_tag is not in this repo's history"
 git merge-base --is-ancestor "$live_tag" HEAD || drift "live version's commit $live_tag is not an ancestor of $BRANCH"
-others="$(git diff --name-only "$live_tag" HEAD | grep -Ev "$ALLOWED" || true)"
+others="$(git diff --name-only "$live_tag" HEAD | grep -Ev "$ALLOWED" | grep -Ev "$INERT" || true)"
 [ -z "$others" ] || drift "changed since the live commit $live_tag besides popularity: $(echo "$others" | head -20 | tr '\n' ' ')"
 log "guard: only popularity data changed since the live commit $live_tag"
 
