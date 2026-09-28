@@ -68,10 +68,13 @@ if [ -n "$dirty" ]; then
   [ -z "$unexpected" ] || die "refresh touched unexpected paths: $(echo "$unexpected" | tr '\n' ' ')"
   if [ -n "$DRY_RUN$REHEARSE" ]; then
     git --no-pager diff --stat
-    [ -z "$DRY_RUN" ] || { log "CS_DRY_RUN: building the refreshed tree to prove it, then discarding"; \
-      git stash -q && "$PY" scripts/build_site.py; rc=$?; git stash pop -q; git checkout -- popularity.json catalog.json; \
-      [ $rc -eq 0 ] || die "build"; log "CS_DRY_RUN: refreshed, gated and built; nothing committed or published"; exit 0; }
     git checkout -- popularity.json catalog.json
+    if [ -n "$DRY_RUN" ]; then
+      # The build ships committed bytes, so build HEAD to prove the toolchain works here.
+      "$PY" scripts/build_site.py || die "build"
+      log "CS_DRY_RUN: refreshed (discarded) and built HEAD; nothing committed or published"
+      exit 0
+    fi
     log "CS_REHEARSE: refresh discarded; rehearsing the publish of HEAD"
   else
     git -c user.name="github-actions[bot]" -c user.email="github-actions[bot]@users.noreply.github.com" \
