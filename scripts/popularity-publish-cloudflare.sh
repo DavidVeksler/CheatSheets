@@ -142,8 +142,18 @@ if [ -n "$REHEARSE" ]; then
   [ -n "$PUBLIC_URL" ] || { echo "$out"; die "no version preview URL in wrangler output"; }
 fi
 want="$(git show HEAD:popularity.json | sha256sum | cut -d' ' -f1)"
+# The zone's Bot Fight Mode can challenge GitHub's runners (403 + cf-mitigated). A
+# challenge is not a failed publish: fall back to the deployment record. Every curl here
+# tolerates errors, because a non-200 inside $(...) under `set -e -o pipefail` would
+# otherwise abort the script (exit 22) instead of retrying.
 for _ in $(seq 1 24); do
-  got="$(curl -fsS -A "$UA" "$PUBLIC_URL/popularity.json?v=$SHA" 2>/dev/null | sha256sum | cut -d' ' -f1)"
+  hdr="$(curl -sS -o /dev/null -D - -A "$UA" "$PUBLIC_URL/popularity.json?v=$SHA" 2>/dev/null || true)"
+  if echo "$hdr" | grep -qi '^cf-mitigated: challenge'; then
+    wr deployments status --json | grep -q "$version" || die "deployments status does not show $version"
+    log "live URL challenged from this runner; deployments status shows $version at 100%"
+    exit 0
+  fi
+  got="$( (curl -fsS -A "$UA" "$PUBLIC_URL/popularity.json?v=$SHA" 2>/dev/null || true) | sha256sum | cut -d' ' -f1)"
   if [ "$got" = "$want" ]; then
     wr deployments status --json | grep -q "$version" || die "deployments status does not show $version"
     log "verified $PUBLIC_URL/popularity.json is $SHA's; version $version at 100%"
