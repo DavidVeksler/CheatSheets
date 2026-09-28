@@ -10,15 +10,15 @@ Thin router. SEO working doc: [`../TODO/META-seo-planning.md`](../TODO/META-seo-
 ## Category hub pages
 
 - Indexable URLs at `/<slug>` (e.g. `/ai-safety`, `/radio`), all listed in `llms.txt` and `sitemap.php`. Server-rendered by `index.php` from [`../category-hubs.json`](../category-hubs.json) (title, description, H1, intro, start-here list) with `CollectionPage`/`ItemList` and `BreadcrumbList` JSON-LD.
-- nginx routes `/<slug>` → `index.php?hub=<slug>` via [`../conf/nginx/category-hubs.conf`](../conf/nginx/category-hubs.conf). `?cat=<Category>`, `?category=`, and `/<slug>/` 301 to the slug.
+- The site Worker (`workers/site/index.js`) serves `/<slug>` from the hub page `scripts/build_site.py` prerenders from `index.php`. `?cat=<Category>`, `?category=`, and `/<slug>/` 301 to the slug. Locally: `scripts/dev_router.php`.
 - Every sheet links back to its hub from a footer breadcrumb (`scripts/add_hub_breadcrumbs.py`, gated at deploy); these are the hubs' only inbound links.
 - Hub titles target the "<topic> cheat sheet" query family seen in Search Console, not the category name.
 - All other Explorer query params (`q`, `sort`, `shape`, `view`, `sheet`, `path`, `fresh`, `interactive`) are client state and `noindex`.
-- **Add or rename a category:** add sheets to `category-map.php`; add the hub entry (slug, title ≤ 60, description 150-200, h1, intro, start_here) to `category-hubs.json`; rebuild the catalog; run `python3 scripts/add_hub_breadcrumbs.py`; on a slug rename add `location = /old-slug { return 301 /new-slug; }` to `conf/nginx/redirects.conf` and ship it per [`../deploy/DEPLOY.md`](../deploy/DEPLOY.md). A new slug needs no nginx change. On Cloudflare Workers: the rename goes in `deploy/cloudflare/redirects.txt`, and a new or renamed slug needs `python3 scripts/build_site.py --write-worker-first` (the build fails until it is done).
+- **Add or rename a category:** add sheets to `category-map.php`; add the hub entry (slug, title ≤ 60, description 150-200, h1, intro, start_here) to `category-hubs.json`; rebuild the catalog; run `python3 scripts/add_hub_breadcrumbs.py`; run `python3 scripts/build_site.py --write-worker-first` for a new or renamed slug (the build fails until it is done); on a slug rename add `/old-slug /new-slug 301` to `deploy/cloudflare/redirects.txt`. Ship per [`../deploy/DEPLOY.md`](../deploy/DEPLOY.md).
 
 ## Social preview image (OG)
 
-`images/cheatsheets-og-portfolio.png` is a headless-Chromium screenshot of the Explorer's Map lens (`index.php?view=map&og=1`). Manual, not in any hook or CI (Chromium is too slow; a commented-out step sits in `.github/workflows/update-popularity.yml`). Re-run after a batch of new sheets or a big cross-linking pass, then commit the PNG by path. Not deploy-gated.
+`images/cheatsheets-og-portfolio.png` is a headless-Chromium screenshot of the Explorer's Map lens (`index.php?view=map&og=1`). Manual, not in any hook or CI (Chromium is too slow). Re-run after a batch of new sheets or a big cross-linking pass, then commit the PNG by path. Not deploy-gated.
 
 ```bash
 .venv/bin/python scripts/render_og_map.py           # render + optipng, prints byte size

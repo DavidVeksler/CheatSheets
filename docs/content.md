@@ -7,7 +7,7 @@ Thin router. Binding rules: [`../AGENTS.md`](../AGENTS.md) (quality protocol, in
 - Sheets: standalone `.html` in the repo root (lowercase, hyphens, e.g. `linux-server-hardening.html`).
 - Specs: one `TODO/<topic>.md` per planned sheet, deleted after it ships.
 - Preview image: `images/<filename>.png`, 1200x630.
-- `index.php` renders from `catalog.json`; `sitemap.php` auto-discovers root `.html`. No build step.
+- `index.php` renders from `catalog.json`; `sitemap.php` auto-discovers root `.html`. Sheets need no build step; the deploy prerenders the PHP pages (`scripts/build_site.py`).
 
 ## Create a sheet
 
@@ -32,4 +32,4 @@ Assert in a real browser: console clean (only a `favicon.ico` 404 allowed); any 
 
 ## Gates
 
-`./deploy.sh --check` runs everything the deploy runs (SEO gate, link/asset integrity, JSON, `php -l`, catalog freshness, hubs, breadcrumbs). Details and hook setup: [`../deploy/DEPLOY.md`](../deploy/DEPLOY.md). Deploy only with David's go-ahead.
+`./deploy.sh --check` runs the full validation set (SEO gate, link/asset integrity, JSON, `php -l`, catalog freshness, hubs, breadcrumbs) without deploying. The Cloudflare deploy (`scripts/deploy-cloudflare.sh`) runs the catalog, hub, breadcrumb and cluster-hub gates in its build. Details and hook setup: [`../deploy/DEPLOY.md`](../deploy/DEPLOY.md). Deploy only with David's go-ahead.

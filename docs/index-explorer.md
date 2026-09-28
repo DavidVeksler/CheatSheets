@@ -13,19 +13,19 @@ scripts/build_catalog.py   (BeautifulSoup parse, git dates, shape heuristics,
         ▼
 catalog.json                (committed, ~350 KB)
         ├─► index.php        server-renders Grid + facet rail + Pulse + category hub pages
-        │                    (/<slug>, copy from category-hubs.json; routed by
-        │                    conf/nginx/category-hubs.conf, locally scripts/dev_router.php);
+        │                    (/<slug>, copy from category-hubs.json; served by the site
+        │                    Worker from the prerender, locally scripts/dev_router.php);
         │                    inlines "catalog-lite" JSON; lazy-fetches catalog.json on first
         │                    palette/map/drawer open
         ├─► scripts/render_og_map.py   Map lens screenshot → images/cheatsheets-og-portfolio.png
-        └─► scripts/deploy.py --check  fails if catalog.json is stale (inputs_hash) or
-                                        paths.json names a file not in the catalog
+        └─► scripts/build_catalog.py --check (build gate)  fails if catalog.json is stale
+                                        (inputs_hash) or paths.json names a file not in the catalog
 
 popularity.json (fetch-popularity.py, nightly, Cloudflare Analytics)
         └─► Pulse strip (site sparkline, trending) + drawer per-sheet sparkline
 ```
 
-## On Cloudflare Workers (from cutover)
+## On Cloudflare Workers (since 2026-09-28)
 
 `index.php` is no longer run per request: `scripts/build_site.py` prerenders it with PHP CLI (default view, paths lens, each curated path, each hub) and the site Worker (`workers/site/index.js`) picks the document per URL, adds `noindex` for client-state params and the `?sheet=` head, and 301s `?cat=`/`?category=`/`?hub=`. Filters, sorts and the lens in a URL are applied by the page script on load. Time-relative bits (deep cut of the day, NEW badges) refresh with the daily popularity publish. There is no referrer history: it came from origin nginx logs and was dropped at cutover (D-2). Spec: [`specs/cloudflare-migration.md`](specs/cloudflare-migration.md).
 
@@ -39,7 +39,7 @@ python3 scripts/build_catalog.py --check        # freshness + paths.json gate, n
 python3 scripts/build_catalog.py --print-hues   # category hue table
 ```
 
-Rebuilt by `.githooks/pre-commit` (see [`../deploy/DEPLOY.md`](../deploy/DEPLOY.md)) and nightly by `.github/workflows/update-popularity.yml`, so `reviewed`/`updated` stay current without commits.
+Rebuilt by `.githooks/pre-commit` (see [`../deploy/DEPLOY.md`](../deploy/DEPLOY.md)) and nightly by `.github/workflows/popularity-cloudflare.yml`, so `reviewed`/`updated` stay current without commits.
 
 **Shapes:** `comparison` (2+ tables or a 9+-row table), `procedure` (8+ checkboxes), `calculator`, `tracker`, `commands`, `device`, `essay` (2,900+ words, under 2 tables), `timeline`, `visual`; no match falls back to `reference`. Keep the `reference` share ≤ 10% (the builder warns on stderr); tune thresholds in `compute_shapes()` first.
 

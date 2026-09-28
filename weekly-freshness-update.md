@@ -117,4 +117,4 @@ The Selector calls `update_refresh_status.py` only for non-`unverified` reports 
 
 - Prepend the §3 inputs and target path to the Worker prompt.
 - Commit: one logical commit by explicit path, never `.claude/` or unrelated files. `refresh-status.json` goes in the same commit as the content edits it summarizes.
-- Pushing to `origin` does not make changes live; deploy is David's gate (`./deploy.sh`).
+- Pushing to `origin` does not make changes live; deploy is David's gate (`scripts/deploy-cloudflare.sh`).

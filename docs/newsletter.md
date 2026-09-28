@@ -8,11 +8,11 @@ A monthly issue computed from git history + `popularity.json`, not written from 
 
 | Piece | State |
 |---|---|
-| Intake | `subscribe.php` → `.subscribers.jsonl` (gitignored intake queue + audit log), sends confirmation via Resend, optional owner notice to `CHEATSHEET_NOTIFY_EMAIL` |
-| Confirm | `confirm.php` → `.confirmed.jsonl` (sendable queue) |
+| Intake | `POST /subscribe.php` → forms Worker `cheatsheets-davidveksler-com-forms` (`workers/forms/`, via the site Worker's `FORMS` service binding) → D1 `subscribers` (intake queue + audit log), sends confirmation via Resend, optional owner notice to `CHEATSHEET_NOTIFY_EMAIL` |
+| Confirm | `GET /confirm.php` → forms Worker → D1 `confirmed` (sendable queue) |
 | List of record | Resend segment (hosted unsubscribe, suppression, `List-Unsubscribe`) |
-| Cloudflare (from cutover) | `workers/forms/` replaces both PHP files with the same contract: intake → D1 `subscribers`, confirmed → D1 `confirmed`, secrets as Worker secrets. `scripts/newsletter_sync.py` reads D1 by default. Spec: [`specs/cloudflare-migration.md`](specs/cloudflare-migration.md) §2.4 |
-| Server secrets | `.newsletter.env` next to the code (gitignored, `chmod 600`), loaded by `lib/env.php`; template `.newsletter.env.example`. Real env vars win. No php-fpm pool env: the site shares WordOps' `www` pool, so pool env would leak to other sites. |
+| Hosting | Cloudflare Workers since 2026-09-28; the forms Worker keeps the PHP contract of `subscribe.php`/`confirm.php`. Spec: [`specs/cloudflare-migration.md`](specs/cloudflare-migration.md) §2.4. Deploy: `scripts/deploy-forms-cloudflare.sh`. The PHP files and the droplet's `.subscribers.jsonl`/`.confirmed.jsonl` stay until decommission and no longer receive sign-ups |
+| Server secrets | Worker secrets `NEWSLETTER_TOKEN_SECRET`, `RESEND_SENDING_KEY`, `CHEATSHEET_NOTIFY_EMAIL` (`wrangler secret put`, copied from the droplet's `.newsletter.env` by `scripts/newsletter_secrets_to_worker.py`) |
 
 ## 2. Binding decisions
 
@@ -22,10 +22,10 @@ Server files are intake queue and audit log only; Resend holds the sendable list
 ### 2.2 Key split
 | Key | Lives | Scope | Used by |
 |---|---|---|---|
-| `RESEND_SENDING_KEY` | server `.newsletter.env` | Sending only, restricted to `updates.cheatsheets.davidveksler.com` | `subscribe.php` confirmation email |
+| `RESEND_SENDING_KEY` | forms Worker secret | Sending only, restricted to `updates.cheatsheets.davidveksler.com` | confirmation email (forms Worker) |
 | `RESEND_API_KEY` | `~/Projects/.resend.env` (Windows box) | Full access | Monthly routine: contact sync, draft broadcast |
 
-Contacts flow one way: server queue → SSH pull by the routine → Resend. Unsubscribes/bounces stay in Resend. Never put a full-access key on the web server.
+Contacts flow one way: D1 `confirmed` → read by the routine (`newsletter_sync.py`, D1 token) → Resend. Unsubscribes/bounces stay in Resend. Never put a full-access key on the web server.
 
 ### 2.3 Double opt-in, stateless HMAC
 ```
@@ -44,14 +44,14 @@ Autonomy tier: draft, permanently.
 ## 3. Architecture
 
 ```
-index.php / how-its-built.html form ─POST─▶ subscribe.php
-    ├─ validate + honeypot → .subscribers.jsonl
-    └─ Resend /emails → confirmation email ─click─▶ confirm.php → .confirmed.jsonl
+index.php / how-its-built.html form ─POST─▶ /subscribe.php (site Worker → forms Worker)
+    ├─ validate + honeypot → D1 subscribers
+    └─ Resend /emails → confirmation email ─click─▶ /confirm.php → D1 confirmed
 
 monthly, Windows box (routine):
   scripts/newsletter_digest.py    git log + popularity.json + catalog.json → newsletter/digest-YYYY-MM.json
   routine writes                  newsletter/YYYY-MM.html (archive) + newsletter/YYYY-MM.email.html
-  scripts/newsletter_sync.py      SSH pull .confirmed.jsonl → Resend contacts (add-only)
+  scripts/newsletter_sync.py      D1 confirmed → Resend contacts (add-only; --source droplet until decommission)
   scripts/newsletter_broadcast.py POST /broadcasts, draft (send:false; no --send flag)
                                   → newsletter/broadcast-YYYY-MM.json
 human gate: scripts/newsletter_send.py --issue YYYY-MM   (preflight, preview, [y/N], send, verify)
@@ -59,15 +59,15 @@ human gate: scripts/newsletter_send.py --issue YYYY-MM   (preflight, preview, [y
 
 | Path | Role |
 |---|---|
-| `lib/resend.php` | cURL client, `sendEmail()` only, no Composer |
-| `lib/newsletter.php` | token mint/verify, queue helpers |
-| `lib/env.php` | loads `.newsletter.env` |
+| `workers/forms/` | forms Worker: subscribe/confirm, token mint/verify, Resend client; schema `schema.sql`; tests `npm run test:forms` |
+| `scripts/newsletter_d1.py` | D1 access for `import_subscribers.py` and `newsletter_sync.py` (reports counts, never rows) |
+| `lib/*.php` | the PHP implementation, droplet only until decommission |
 | `scripts/newsletter_common.py` | `.resend.env` loader, stdlib `resend_request()`, `newsletter_dir()` |
 | `newsletter/digest-YYYY-MM.json` | committed audit trail of issue facts |
 | `newsletter/broadcast-YYYY-MM.json` | `{issue, broadcast_id, segment_id, subject, created, sent, sent_at?}`; record of whether an issue sent |
 | `.claude/skills/cheatsheets-newsletter-monthly/SKILL.md` | the routine |
 
-Archive pages live in `newsletter/`, never the root (root `.html` becomes a cheatsheet card). nginx (`conf/nginx/internal-paths.conf`) serves only `newsletter/YYYY-MM.html` from that folder; every other file there 404s.
+Archive pages live in `newsletter/`, never the root (root `.html` becomes a cheatsheet card). The build (`scripts/build_site.py`) publishes only `newsletter/YYYY-MM.html` from that folder; every other file there 404s.
 
 ## 4. Resend API
 
@@ -142,7 +142,7 @@ The archive page `newsletter/YYYY-MM.html` is a normal site page (site rules + S
 
 **Hard limits:** never send (no `/send`, `send: true`, or `scheduled_at`); never deploy; never delete/unsubscribe a contact; no item absent from the digest; max one issue and one draft broadcast per run; fail closed on empty digest, SEO failure, negative sync delta, or Resend non-2xx; ntfy only on failure or subscriber delta beyond ±20.
 
-**David then:** reviews the draft in Resend and runs `python scripts/newsletter_send.py --issue YYYY-MM`. The archive page ships via `./deploy.sh`.
+**David then:** reviews the draft in Resend and runs `python scripts/newsletter_send.py --issue YYYY-MM`. The archive page ships via `scripts/deploy-cloudflare.sh`.
 
 ## 9. Phasing
 

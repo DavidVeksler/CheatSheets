@@ -2,7 +2,7 @@
 
 [Browse the live collection](https://cheatsheets.davidveksler.com/) ·
 [See how the pipeline works](https://cheatsheets.davidveksler.com/how-its-built.html) ·
-[View the public change history](https://cheatsheets.davidveksler.com/history.php)
+[View the public change history](https://github.com/DavidVeksler/CheatSheets/commits/main/)
 
 One person plus AI agents build and maintain this collection of 160+ standalone,
 interactive reference pages. The interesting artifact is not one lucky generation: it is

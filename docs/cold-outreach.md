@@ -8,7 +8,7 @@ Binding spec for the `cheatsheets-cold-outreach` skill (`.claude/skills/cheatshe
 
 Earn links and mentions for a short list of **focus pages** (the pillars and their strongest spokes) by writing one-to-one emails to people who curate that topic: resource-page owners, newsletter editors, course and syllabus maintainers, club link lists, and authors whose page points at a stale or dead resource our page replaces.
 
-**Privacy boundary:** this repo is public on GitHub and its whole tree is served on the live site, so prospect names, addresses, drafts, and the log live only in the private repo `~/Projects/cheatsheets-outreach` (github.com/DavidVeksler/cheatsheets-outreach). `cold_outreach.py` reads it from there (override: `CHEATSHEETS_OUTREACH_DIR`) and refuses a ledger inside this repo. Only code, this runbook, and `pages.json` live here.
+**Privacy boundary:** this repo is public on GitHub, so prospect names, addresses, drafts, and the log live only in the private repo `~/Projects/cheatsheets-outreach` (github.com/DavidVeksler/cheatsheets-outreach). `cold_outreach.py` reads it from there (override: `CHEATSHEETS_OUTREACH_DIR`) and refuses a ledger inside this repo. Only code, this runbook, and `pages.json` live here.
 
 Every email pitches **exactly one page** from [`../marketing/cold-outreach/pages.json`](../marketing/cold-outreach/pages.json). No site-wide pitches, no "check out my collection".
 
