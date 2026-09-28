@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Pull confirmed newsletter signups from production and upsert them into Resend.
 
-See docs/newsletter.md §2.2, §3, §8. SSH-pulls .confirmed.jsonl (gitignored)
-from the production docroot — the web server never gets contact-write access,
+See docs/newsletter.md §2.2, §3, §8. Reads the confirmed list from the forms
+Worker's D1 database (default since the Cloudflare migration; `--source droplet`
+SSH-pulls .confirmed.jsonl from the old docroot until it is decommissioned) — the web server never gets contact-write access,
 contacts flow one way, server -> Resend, via this script. Only ever *adds*
 contacts: never deletes, unsubscribes, or overwrites one. Unsubscribes and
 bounces live entirely inside Resend and are never synced back here.
@@ -16,7 +17,8 @@ bad row can't sink the whole sync — but watch the first live run by hand
 against the Resend dashboard before trusting it unattended.
 
 Usage:
-    python scripts/newsletter_sync.py                                  # pull + sync
+    python scripts/newsletter_sync.py                                  # D1 + sync
+    python scripts/newsletter_sync.py --source droplet                 # old droplet .confirmed.jsonl
     python scripts/newsletter_sync.py --dry-run                        # pull + report only
     python scripts/newsletter_sync.py --local-file path/to/confirmed.jsonl  # skip SSH (testing)
     python scripts/newsletter_sync.py --segment-id seg_xxx              # override RESEND_SEGMENT_ID
@@ -53,6 +55,16 @@ def pull_confirmed_via_ssh() -> str:
             return ""
         raise RuntimeError(f"ssh pull failed: {result.stderr.strip()}")
     return result.stdout
+
+
+def pull_confirmed_from_d1() -> str:
+    """The D1 `confirmed` table as .confirmed.jsonl-shaped text (never printed)."""
+    import newsletter_d1  # noqa: E402  (same directory; needs node + wrangler)
+    try:
+        rows = newsletter_d1.execute("SELECT email, ts FROM confirmed ORDER BY id")
+    except newsletter_d1.D1Error as exc:
+        raise RuntimeError(str(exc))
+    return "\n".join(json.dumps({"email": r["email"], "ts": r["ts"]}) for r in rows)
 
 
 def parse_confirmed(text: str) -> List[str]:
@@ -105,7 +117,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--segment-id", default=None, help="Overrides RESEND_SEGMENT_ID.")
     parser.add_argument("--dry-run", action="store_true", help="Report what would be added; write nothing.")
-    parser.add_argument("--local-file", default=None, help="Use a local .confirmed.jsonl instead of SSH-pulling production.")
+    parser.add_argument("--local-file", default=None, help="Use a local .confirmed.jsonl instead of the live store.")
+    parser.add_argument("--source", choices=["d1", "droplet"], default="d1",
+                        help="Live store: the forms Worker's D1 (default) or the droplet's .confirmed.jsonl.")
     args = parser.parse_args()
 
     load_env_file()
@@ -120,7 +134,12 @@ def main() -> int:
         return 2
 
     try:
-        text = Path(args.local_file).read_text(encoding="utf-8") if args.local_file else pull_confirmed_via_ssh()
+        if args.local_file:
+            text = Path(args.local_file).read_text(encoding="utf-8")
+        elif args.source == "droplet":
+            text = pull_confirmed_via_ssh()
+        else:
+            text = pull_confirmed_from_d1()
         confirmed = parse_confirmed(text)
         print(f"Pulled {len(confirmed)} confirmed address(es).")
 

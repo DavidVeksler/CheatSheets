@@ -1,0 +1,83 @@
+{
+  // cheatsheets.davidveksler.com on Workers static assets. Generated from
+  // cf-static-kit/templates/site, then given a site Worker (workers/site/index.js)
+  // for what nginx + PHP did per request: hub URLs, ?cat=/?hub= redirects, the
+  // prerendered Explorer states, history.php -> GitHub, and the newsletter
+  // endpoints (forwarded to the forms Worker). Runbook:
+  // ~/Projects/cf-static-kit/docs/runbook.md; site spec: docs/specs/cloudflare-migration.md.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cheatsheets-davidveksler-com",
+  "main": "workers/site/index.js",
+  "compatibility_date": "2026-09-28",
+  // Pinned: the API token can see several accounts.
+  "account_id": "556c237bf8cb62edb8f7b401499bb7a9",
+  "assets": {
+    // Built by scripts/build_site.py (public repo files + prerendered PHP pages in _x/).
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Canonical sheet URLs end in .html; "none" keeps /page.html from 307ing to /page.
+    // "/" is served by the Worker (dist/ has no index.html, so /index.html stays a 404).
+    "html_handling": "none",
+    // dist/404.html (deploy/cloudflare/404.html) with status 404.
+    "not_found_handling": "404-page",
+    // The Worker runs only for these globs (at most 100; `*` spans slashes); every
+    // other request is served straight from assets. Generated from category-hubs.json:
+    // `python3 scripts/build_site.py --write-worker-first`; the build fails when stale.
+    // BEGIN run_worker_first
+    "run_worker_first": [
+      "/",
+      "/*.php",
+      "/_x/*",
+      "/favicon.ico",
+      "/docs/how-do-rainbows-work-production.md",
+      "/scripts/grass_green/build_spectra.py",
+      "/ai-safety",
+      "/ai-safety/",
+      "/bitcoin-finance",
+      "/bitcoin-finance/",
+      "/crypto-custody",
+      "/crypto-custody/",
+      "/economics-politics",
+      "/economics-politics/",
+      "/engineering-science",
+      "/engineering-science/",
+      "/firearms-military",
+      "/firearms-military/",
+      "/health-fitness",
+      "/health-fitness/",
+      "/home-lifestyle",
+      "/home-lifestyle/",
+      "/life-admin",
+      "/life-admin/",
+      "/martial-arts",
+      "/martial-arts/",
+      "/philosophy-religion",
+      "/philosophy-religion/",
+      "/radio",
+      "/radio/",
+      "/risk-preparedness",
+      "/risk-preparedness/",
+      "/security-privacy",
+      "/security-privacy/",
+      "/software-devops",
+      "/software-devops/"
+    ]
+    // END run_worker_first
+  },
+  // /subscribe.php and /confirm.php are handled by the forms Worker (workers/forms/),
+  // reached through this binding, so one route covers the whole host.
+  "services": [
+    { "binding": "FORMS", "service": "cheatsheets-davidveksler-com-forms" }
+  ],
+  "observability": { "enabled": true },
+  // Only reachable through routes. Preview URLs (noindex) are for the parity check.
+  "workers_dev": false,
+  "preview_urls": true,
+
+  // CUTOVER: uncomment, commit, run scripts/deploy-cloudflare.sh --full-parity.
+  // A route (not a custom domain) keeps the existing proxied DNS record, so removing
+  // the route hands traffic straight back to the old origin.
+  // "routes": [
+  //   { "pattern": "cheatsheets.davidveksler.com/*", "zone_name": "davidveksler.com" }
+  // ]
+}
