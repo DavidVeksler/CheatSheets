@@ -29,6 +29,7 @@ return [
 
     // Software & DevOps
     'aws-vs-azure.html' => 'Software & DevOps',
+    'cloudflare-workers-static-hosting.html' => 'Software & DevOps',
     'azure-devops.html' => 'Software & DevOps',
     'api-design-rest-graphql-grpc-webhooks.html' => 'Software & DevOps',
     'clean-architecture-dotnet.html' => 'Software & DevOps',

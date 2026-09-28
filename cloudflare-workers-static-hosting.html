@@ -1,0 +1,971 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cloudflare Workers Static Assets: 12-Site Migration Runbook</title>
+  <meta name="description" content="How 12 static sites moved off nginx onto Cloudflare Workers static assets: wrangler config, _redirects and _headers limits, preview-parity-promote deploys, forms Workers with D1, rollback.">
+  <meta name="keywords" content="cloudflare workers static assets, host static site on cloudflare workers, cloudflare pages vs workers, migrate nginx to cloudflare workers, _redirects limit, wrangler versions upload, run_worker_first, worker route vs custom domain">
+  <link rel="canonical" href="https://cheatsheets.davidveksler.com/cloudflare-workers-static-hosting.html">
+  <meta property="og:title" content="Cloudflare Workers Static Assets: 12-Site Migration Runbook">
+  <meta property="og:description" content="The nginx exit, traced hop by hop: config keys, redirect and header limits, a preview-parity-promote deploy, forms Workers, rollback, and a dated incident log from a real 12-site move.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cheatsheets.davidveksler.com/cloudflare-workers-static-hosting.html">
+  <meta property="og:image" content="images/cloudflare-workers-static-hosting.png">
+  <meta property="og:image:alt" content="Request trace diagram: a vellum.capital/whitepaper request passes DNS and a zone Single Redirect, the old Page Rule hop is crossed out, and an amber 302 stamp shows the result">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Cloudflare Workers Static Assets: 12-Site Migration Runbook">
+  <meta name="twitter:description" content="Leaving nginx for Cloudflare Workers static assets: every config key, the limits, the deploy gate, rollback, and the incidents.">
+  <meta name="twitter:image" content="images/cloudflare-workers-static-hosting.png">
+  <meta name="twitter:creator" content="@heroiclife">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Hosting static sites on Cloudflare Workers: the 12-site nginx exit (wrangler 4.143)",
+    "description": "Operator reference for serving static sites from Cloudflare Workers static assets: request flow, wrangler.jsonc keys, nginx-to-Workers conversion, a guarded preview-parity-promote deploy, cutover and rollback, forms Workers with D1 and Turnstile, and a dated incident log.",
+    "author": {"@type": "Person", "@id": "https://davidveksler.com/#person", "name": "David Veksler", "url": "https://davidveksler.com/"},
+    "creditText": "Produced by a governed multi-agent Claude Code pipeline; author of record David Veksler",
+    "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+    "datePublished": "2026-09-28",
+    "proficiencyLevel": "Expert",
+    "keywords": "Cloudflare Workers, static assets, wrangler, _redirects, _headers, html_handling, run_worker_first, nginx migration, D1, Turnstile, R2"
+  }
+  </script>
+  <style>
+    @layer reset, base, components, utilities;
+
+    @layer reset {
+      *, *::before, *::after { box-sizing: border-box; }
+      body { margin: 0; }
+      img, svg { display: block; max-width: 100%; }
+      table { border-collapse: collapse; }
+      button, input, select { font: inherit; color: inherit; }
+    }
+
+    @layer base {
+      :root {
+        color-scheme: dark light;
+        --ink: light-dark(#f3f5f7, #0f1419);
+        --panel: light-dark(#ffffff, #161d24);
+        --panel-2: light-dark(#e9edf1, #1b242d);
+        --hair: light-dark(#c3ccd5, #2a3440);
+        --text: light-dark(#17202a, #dce4eb);
+        --dim: light-dark(#4f5d6b, #8b9aa8);
+        --amber: light-dark(#8a4f00, #f2a33a);
+        --green: light-dark(#16673a, #5fd08a);
+        --red: light-dark(#a3262a, #ef6b6b);
+        --magenta: light-dark(#8a2a7a, #e07ad0);
+        --link: light-dark(#0a5a80, #7cc7ef);
+        --amber-wash: light-dark(#fbefdc, #2a2116);
+        --green-wash: light-dark(#e2f3e8, #14261c);
+        --red-wash: light-dark(#f8e3e3, #2b1719);
+        --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --mono: ui-monospace, "Cascadia Code", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+      }
+      :root[data-theme="light"] { color-scheme: light; }
+      :root[data-theme="dark"] { color-scheme: dark; }
+
+      body {
+        background:
+          repeating-linear-gradient(0deg, transparent 0 27px, color-mix(in srgb, var(--hair) 28%, transparent) 27px 28px),
+          var(--ink);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 1rem;
+        line-height: 1.58;
+      }
+      a { color: var(--link); text-underline-offset: .18em; }
+      a:hover { text-decoration-thickness: 2px; }
+      :focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+      h1, h2, h3, h4 { line-height: 1.2; text-wrap: balance; margin: 0 0 .6rem; }
+      p, li, td { text-wrap: pretty; }
+      h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
+      h3 { font-size: 1.08rem; }
+      code, pre, kbd, samp { font-family: var(--mono); font-size: .88em; }
+      :not(pre) > code { background: var(--panel-2); border: 1px solid var(--hair); border-radius: 3px; padding: 0 .3em; overflow-wrap: anywhere; }
+      pre { margin: 0; overflow-x: auto; }
+    }
+
+    @layer components {
+      .skip { position: absolute; left: -999px; top: 0; background: var(--amber); color: #111; padding: .5rem 1rem; z-index: 10; }
+      .skip:focus { left: 1rem; }
+      .wrap { width: min(1180px, 100% - 2rem); margin-inline: auto; }
+
+      /* masthead */
+      .mast { border-bottom: 1px solid var(--hair); padding: 2.2rem 0 1.6rem; }
+      .mast .kicker { font-family: var(--mono); font-size: .8rem; color: var(--amber); letter-spacing: .08em; text-transform: uppercase; margin: 0 0 .6rem; }
+      .mast h1 { font-size: clamp(1.9rem, 4.6vw, 3rem); letter-spacing: -.01em; max-width: 22ch; }
+      .mast .lede { max-width: 72ch; font-size: 1.06rem; color: var(--text); margin: .4rem 0 1rem; }
+      .mast .meta { font-family: var(--mono); font-size: .8rem; color: var(--dim); display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin: 0; padding: 0; list-style: none; }
+      .mast .meta b { color: var(--text); font-weight: 600; }
+      .theme-toggle { float: right; margin-left: 1rem; background: var(--panel); border: 1px solid var(--hair); border-radius: 4px; padding: .3rem .7rem; font-family: var(--mono); font-size: .78rem; cursor: pointer; color: var(--dim); }
+      .theme-toggle:hover { color: var(--text); border-color: var(--amber); }
+
+      .toc { position: sticky; top: 0; z-index: 5; background: var(--ink); border-bottom: 1px solid var(--hair); }
+      .toc li { flex: none; }
+      .toc ol { list-style: none; margin: 0; padding: .45rem 0; display: flex; gap: .2rem .9rem; overflow-x: auto; scrollbar-width: thin; white-space: nowrap; font-family: var(--mono); font-size: .78rem; }
+      .toc a { color: var(--dim); text-decoration: none; }
+      .toc a:hover, .toc a:focus-visible { color: var(--amber); }
+      .toc span { color: var(--amber); }
+
+      section.block { padding: 2.4rem 0 .6rem; border-bottom: 1px solid var(--hair); scroll-margin-top: 2.6rem; }
+      .sec-no { font-family: var(--mono); font-size: .78rem; color: var(--amber); letter-spacing: .08em; margin: 0 0 .3rem; }
+      .intro { max-width: 78ch; color: var(--text); }
+      .note { color: var(--dim); font-size: .88rem; max-width: 90ch; }
+
+      .panel { background: var(--panel); border: 1px solid var(--hair); border-radius: 6px; padding: 1rem 1.1rem; }
+      .grid-2 { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); align-items: start; }
+      .grid-3 { display: grid; gap: .9rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+
+      /* tables */
+      .tbl { overflow-x: auto; border: 1px solid var(--hair); border-radius: 6px; background: var(--panel); margin: .8rem 0 1rem; }
+      .tbl table { width: 100%; font-size: .9rem; }
+      .tbl caption { text-align: left; padding: .6rem .8rem; font-family: var(--mono); font-size: .78rem; color: var(--dim); caption-side: top; border-bottom: 1px solid var(--hair); }
+      .tbl th, .tbl td { padding: .55rem .75rem; border-bottom: 1px solid var(--hair); vertical-align: top; text-align: left; }
+      .tbl thead th { font-family: var(--mono); font-size: .74rem; letter-spacing: .05em; text-transform: uppercase; color: var(--dim); background: var(--panel-2); white-space: nowrap; }
+      .tbl tbody tr:last-child > * { border-bottom: 0; }
+      .tbl tbody th { font-weight: 600; white-space: nowrap; }
+      .tbl td.num, .tbl th.num { font-family: var(--mono); white-space: nowrap; }
+      .tbl .gotcha { color: var(--dim); }
+      .tbl.wide table { min-width: 900px; }
+      .tbl.mid table { min-width: 700px; }
+      .asof { font-family: var(--mono); font-size: .72rem; color: var(--dim); white-space: nowrap; }
+
+      /* stamps */
+      .stamp { display: inline-block; font-family: var(--mono); font-weight: 700; font-size: .78rem; padding: .05rem .4rem; border: 1.5px solid currentColor; border-radius: 3px; letter-spacing: .04em; line-height: 1.4; }
+      .s2 { color: var(--green); } .s3 { color: var(--amber); } .s4 { color: var(--red); } .s5 { color: var(--magenta); }
+
+      /* quick ref */
+      .decide { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+      .decide li { background: var(--panel); border: 1px solid var(--hair); border-left: 3px solid var(--amber); border-radius: 4px; padding: .6rem .8rem; font-size: .92rem; }
+      .decide b { font-family: var(--mono); font-size: .82rem; color: var(--amber); display: block; margin-bottom: .15rem; }
+
+      /* tracer (signature) */
+      .tracer { background: var(--panel); border: 1px solid var(--hair); border-radius: 8px; overflow: hidden; margin: 1.2rem 0; }
+      .tracer-head { display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: center; justify-content: space-between; padding: .8rem 1rem; border-bottom: 1px solid var(--hair); background: var(--panel-2); }
+      .tracer-head h3 { margin: 0; font-family: var(--mono); font-size: .86rem; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+      .tracer-head label { font-family: var(--mono); font-size: .8rem; color: var(--dim); display: flex; gap: .5rem; align-items: center; }
+      .tracer-head select { background: var(--panel); border: 1px solid var(--hair); border-radius: 4px; padding: .3rem .5rem; font-family: var(--mono); font-size: .82rem; max-width: 100%; }
+      .samples { display: flex; flex-wrap: wrap; gap: .35rem; padding: .8rem 1rem 0; margin: 0; list-style: none; }
+      .samples button { background: transparent; border: 1px solid var(--hair); border-radius: 999px; padding: .22rem .7rem; font-family: var(--mono); font-size: .76rem; color: var(--dim); cursor: pointer; }
+      .samples button:hover { color: var(--text); border-color: var(--dim); }
+      .samples button[aria-pressed="true"] { color: var(--ink); background: var(--amber); border-color: var(--amber); font-weight: 600; }
+      .tracer-body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0; }
+      .req-line { grid-column: 1 / -1; padding: .8rem 1rem; font-family: var(--mono); font-size: .92rem; border-bottom: 1px dashed var(--hair); overflow-wrap: anywhere; }
+      .req-line .verb { color: var(--amber); font-weight: 700; margin-right: .5rem; }
+      .hops { list-style: none; margin: 0; padding: .6rem 0 .8rem; counter-reset: hop; position: relative; }
+      .hop { display: grid; grid-template-columns: 2.6rem 1fr; gap: 0 .6rem; padding: .32rem 1rem .32rem .6rem; position: relative; transition: opacity .01s; }
+      .hop::before { counter-increment: hop; content: counter(hop, decimal-leading-zero); font-family: var(--mono); font-size: .74rem; color: var(--dim); text-align: right; padding-top: .15rem; grid-row: 1 / span 2; }
+      .hop::after { content: ""; position: absolute; left: 3.62rem; top: 0; bottom: 0; border-left: 1px solid var(--hair); }
+      .hop .name { font-family: var(--mono); font-size: .86rem; font-weight: 600; padding-left: .9rem; position: relative; }
+      .hop .name::before { content: ""; position: absolute; left: -.28rem; top: .45em; width: .55rem; height: .55rem; border-radius: 50%; background: var(--panel); border: 1.5px solid var(--hair); z-index: 1; }
+      .hop .act { font-size: .8rem; color: var(--dim); padding-left: .9rem; min-height: 1.1em; }
+      .hop[data-state="skip"] { opacity: .38; }
+      .hop[data-state="pass"] .name::before { background: var(--dim); border-color: var(--dim); }
+      .hop[data-state="hit"] { background: var(--amber-wash); }
+      .hop[data-state="hit"] .name { color: var(--amber); }
+      .hop[data-state="hit"] .name::before { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 30%, transparent); }
+      .hop[data-state="hit"] .act { color: var(--text); }
+      .hop[data-state="x"] .name { text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 2px; color: var(--red); }
+      .hop[data-state="x"] .name::before { background: var(--red); border-color: var(--red); }
+      .hop[data-state="x"] .act { color: var(--red); }
+      .verdict { border-left: 1px solid var(--hair); padding: 1rem; display: flex; flex-direction: column; gap: .7rem; }
+      .verdict .big { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+      .verdict .big .stamp { font-size: 1.35rem; padding: .15rem .6rem; border-width: 2.5px; transform: rotate(-3deg); }
+      .verdict .kv { font-family: var(--mono); font-size: .8rem; display: grid; grid-template-columns: max-content 1fr; gap: .25rem .7rem; margin: 0; }
+      .verdict .kv dt { color: var(--dim); }
+      .verdict .kv dd { margin: 0; overflow-wrap: anywhere; }
+      .verdict .why { font-size: .92rem; margin: 0; padding: .7rem .8rem; border: 1px dashed var(--hair); border-radius: 4px; }
+      .verdict .why b { color: var(--amber); font-family: var(--mono); font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; display: block; }
+      .tracer-foot { border-top: 1px solid var(--hair); padding: .55rem 1rem; font-family: var(--mono); font-size: .72rem; color: var(--dim); display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; }
+      .legend i { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; margin-right: .3rem; vertical-align: -1px; }
+      .tracer-static { margin-top: .8rem; }
+      .js .tracer-static { display: none; }
+      .js .tracer-static.open { display: block; }
+      .no-js-only { display: block; }
+      .js .no-js-only { display: none; }
+      .tracer-live { display: none; }
+      .js .tracer-live { display: block; }
+      .tracer-static .tbl table { min-width: 1000px; table-layout: fixed; }
+      .tracer-static col.c-req { width: 24%; } .tracer-static col.c-hops { width: 20%; } .tracer-static col.c-res { width: 16%; } .tracer-static col.c-why { width: 40%; }
+      .tracer-static tbody th { white-space: normal; font-weight: 400; }
+      .tracer-static th code, .tracer-static td code { overflow-wrap: anywhere; }
+      .tracer-static del { color: var(--red); text-decoration-thickness: 2px; }
+      .show-all { background: none; border: 0; color: var(--link); text-decoration: underline; cursor: pointer; font-family: var(--mono); font-size: .78rem; padding: 0; }
+
+      /* flow list */
+      .flow { counter-reset: f; list-style: none; padding: 0; margin: .8rem 0; display: grid; gap: .5rem; }
+      .flow > li { counter-increment: f; display: grid; grid-template-columns: 2.2rem 1fr; gap: .6rem; background: var(--panel); border: 1px solid var(--hair); border-radius: 4px; padding: .6rem .8rem; }
+      .flow > li::before { content: counter(f, decimal-leading-zero); font-family: var(--mono); color: var(--amber); font-weight: 700; }
+      .flow p { margin: .2rem 0 0; font-size: .9rem; }
+      .flow .gotcha { color: var(--dim); font-size: .86rem; }
+
+      /* code */
+      .code { position: relative; background: light-dark(#0f1419, #0b1015); color: #dce4eb; border: 1px solid var(--hair); border-radius: 6px; margin: .8rem 0 1rem; }
+      .code .fname { font-family: var(--mono); font-size: .74rem; color: #8b9aa8; padding: .45rem .8rem; border-bottom: 1px solid #2a3440; display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+      .code pre { padding: .8rem; font-size: .82rem; line-height: 1.5; }
+      .code .c { color: #8b9aa8; }
+      .code .k { color: #f2a33a; }
+      .code .s { color: #5fd08a; }
+      .copy { background: transparent; border: 1px solid #2a3440; color: #8b9aa8; font-family: var(--mono); font-size: .7rem; border-radius: 3px; padding: .1rem .5rem; cursor: pointer; }
+      .copy:hover { color: #f2a33a; border-color: #f2a33a; }
+
+      /* pipeline rail */
+      .rail { list-style: none; margin: 1.2rem 0 1rem; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) 4.4rem repeat(2, minmax(0, 1.15fr)); gap: 0; position: relative; }
+      .rail > li { position: relative; padding: 2.1rem .55rem .6rem; font-size: .84rem; }
+      .rail > li::before { content: ""; position: absolute; left: 0; right: 0; top: .85rem; border-top: 2px solid var(--amber); }
+      .rail > li .dot { position: absolute; top: .38rem; left: .55rem; width: 1rem; height: 1rem; border-radius: 50%; background: var(--ink); border: 2px solid var(--amber); }
+      .rail > li b { display: block; font-family: var(--mono); font-size: .78rem; color: var(--amber); margin-bottom: .2rem; }
+      .rail > li code { font-size: .74rem; }
+      .rail > li.gate { padding: 0; }
+      .rail > li.gate::before { border: 0; }
+      .rail > li.gate span { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 2px dashed var(--red); }
+      .rail > li.gate em { position: absolute; top: 1.5rem; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-style: normal; font-size: .68rem; font-weight: 700; line-height: 1.25; text-align: center; color: var(--red); background: var(--ink); padding: .3rem .15rem; width: 4.2rem; }
+
+      /* checklist */
+      .checks { list-style: none; margin: .6rem 0; padding: 0; display: grid; gap: .35rem; }
+      .checks li { display: grid; grid-template-columns: 1.4rem 1fr; gap: .4rem; font-size: .92rem; }
+      .checks input { margin-top: .3rem; accent-color: var(--amber); width: 1rem; height: 1rem; }
+
+      .callout { border: 1px solid var(--amber); background: var(--amber-wash); border-radius: 6px; padding: .8rem 1rem; margin: 1rem 0; }
+      .callout.red { border-color: var(--red); background: var(--red-wash); }
+      .callout.green { border-color: var(--green); background: var(--green-wash); }
+      .callout > b:first-child { font-family: var(--mono); font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; display: block; margin-bottom: .2rem; }
+      .callout p { margin: .2rem 0; }
+
+      .mistakes { list-style: none; padding: 0; margin: .8rem 0; display: grid; gap: .6rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+      .mistakes li { background: var(--panel); border: 1px solid var(--hair); border-top: 3px solid var(--red); border-radius: 4px; padding: .7rem .9rem; font-size: .9rem; }
+      .mistakes li > b { display: block; margin-bottom: .25rem; }
+      .mistakes .fix { color: var(--green); font-family: var(--mono); font-size: .8rem; }
+
+      details.more { background: var(--panel); border: 1px solid var(--hair); border-radius: 6px; margin: .6rem 0; }
+      details.more > summary { cursor: pointer; padding: .6rem .9rem; font-family: var(--mono); font-size: .84rem; color: var(--amber); }
+      details.more > div { padding: 0 .9rem .8rem; }
+
+      .sources { font-size: .9rem; padding-left: 1.2rem; }
+      .sources li { margin: .25rem 0; }
+      .related { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); margin: .8rem 0; }
+      .related a { display: block; border: 1px solid var(--hair); background: var(--panel); border-radius: 4px; padding: .7rem .8rem; text-decoration: none; color: var(--text); font-size: .9rem; }
+      .related a b { color: var(--link); display: block; font-family: var(--mono); font-size: .82rem; }
+      .related a:hover { border-color: var(--amber); }
+      .site-foot { padding: 1.5rem 0 1rem; color: var(--dim); font-size: .88rem; }
+    }
+
+    @layer utilities {
+      .mono { font-family: var(--mono); }
+      .dim { color: var(--dim); }
+      .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    }
+
+    @media (max-width: 860px) {
+      .tracer-body { grid-template-columns: 1fr; }
+      .verdict { border-left: 0; border-top: 1px solid var(--hair); }
+      .samples { display: none; }
+      .rail { grid-template-columns: 1fr; }
+      .rail > li { padding: .3rem .5rem .6rem 2.2rem; }
+      .rail > li::before { left: .85rem; right: auto; top: 0; bottom: 0; border-top: 0; border-left: 2px solid var(--amber); }
+      .rail > li .dot { left: .38rem; top: .4rem; }
+      .rail > li.gate { height: 2.2rem; }
+      .rail > li.gate span { left: 0; right: 0; top: 50%; bottom: auto; transform: none; border-left: 0; border-top: 2px dashed var(--red); }
+      .rail > li.gate em { top: 50%; left: 2.2rem; transform: translateY(-50%); }
+    }
+    @media (min-width: 861px) { .tracer-head label.sel-mobile { display: none; } }
+
+    @media (prefers-reduced-motion: no-preference) {
+      html { scroll-behavior: smooth; }
+      .hop { transition: opacity .25s ease, background-color .25s ease; }
+      .verdict .big .stamp { animation: thump .28s ease-out; }
+      @keyframes thump { from { transform: rotate(-3deg) scale(1.35); opacity: 0; } to { transform: rotate(-3deg) scale(1); opacity: 1; } }
+    }
+    @media print {
+      .toc, .theme-toggle, .samples, .tracer-head label, .copy { display: none !important; }
+      .js .tracer-static { display: block; }
+    }
+  </style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="mast">
+  <div class="wrap">
+    <button class="theme-toggle" type="button" id="themeToggle" aria-label="Toggle color theme">theme: auto</button>
+    <p class="kicker">Operator reference &middot; the nginx exit</p>
+    <h1>Hosting static sites on Cloudflare Workers</h1>
+    <p class="lede">Twelve production sites left a self-hosted nginx server for Cloudflare Workers static assets on 2026-09-27 and 28, from a single-page portfolio to a 27,900-file archive with about 4,300 legacy redirects. This is everything after <code>dist/</code> exists: how a request actually flows, every config key, what nginx did that you must port by hand, the guarded deploy, rollback, forms without a server, and every incident with its fix. This page is served by the setup it describes.</p>
+    <ul class="meta">
+      <li><b>wrangler</b> 4.143.0 (2026-09-28)</li>
+      <li><b>compatibility_date</b> 2026-09-27/28</li>
+      <li><b>sites</b> 12 hosts, 1 account</li>
+      <li><b>DNS changes at cutover</b> 0</li>
+      <li><b>building dist/?</b> <a href="wordpress-to-static.html">WordPress to static</a></li>
+    </ul>
+  </div>
+</header>
+<nav class="toc" aria-label="Sections">
+  <div class="wrap">
+    <ol>
+      <li><a href="#quick"><span>00</span> quick ref</a></li>
+      <li><a href="#flow"><span>01</span> request flow</a></li>
+      <li><a href="#config"><span>02</span> wrangler.jsonc</a></li>
+      <li><a href="#nginx"><span>03</span> porting nginx</a></li>
+      <li><a href="#deploy"><span>04</span> deploy</a></li>
+      <li><a href="#cutover"><span>05</span> cutover</a></li>
+      <li><a href="#forms"><span>06</span> forms</a></li>
+      <li><a href="#stays"><span>07</span> stays off</a></li>
+      <li><a href="#ops"><span>08</span> operating</a></li>
+      <li><a href="#incidents"><span>09</span> incidents</a></li>
+      <li><a href="#mistakes"><span>10</span> mistakes</a></li>
+      <li><a href="#sources"><span>11</span> sources</a></li>
+    </ol>
+  </div>
+</nav>
+
+<main id="main">
+<div class="wrap">
+
+<!-- 00 -->
+<section class="block" id="quick" aria-labelledby="quick-h">
+  <p class="sec-no">00 / Quick reference</p>
+  <h2 id="quick-h">Cloudflare Workers static assets: limits and decisions</h2>
+  <div class="grid-2">
+    <div class="tbl">
+      <table>
+        <caption>Limits card &middot; developers.cloudflare.com, as of Sep 2026</caption>
+        <thead><tr><th>Limit</th><th>Value</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Files per version</th><td class="num">20,000 Free<br>100,000 Paid</td><td class="gotcha">Paid figure needs wrangler &ge; 4.34.0. Every file in <code>dist/</code> counts; move bulk media to R2.</td></tr>
+          <tr><th scope="row">Max file size</th><td class="num">25 MiB</td><td class="gotcha">Both plans. Larger files go to R2.</td></tr>
+          <tr><th scope="row"><code>_redirects</code></th><td class="num">2,000 static<br>+ 100 dynamic</td><td class="gotcha">1,000 chars per rule. Default status 302.</td></tr>
+          <tr><th scope="row"><code>_headers</code></th><td class="num">100 rules</td><td class="gotcha">2,000 chars per line. Asset responses only.</td></tr>
+          <tr><th scope="row"><code>run_worker_first</code></th><td class="num">100 patterns</td><td class="gotcha">Must start <code>/</code> or <code>!/</code>; negations win; order is irrelevant.</td></tr>
+          <tr><th scope="row">Free requests</th><td class="num">100,000/day</td><td class="gotcha">Counts script invocations only. Asset-only requests are free and unlimited.</td></tr>
+          <tr><th scope="row">Workers Paid</th><td class="num">$5/mo min</td><td class="gotcha">10M requests/mo included, then $0.30/M. No egress fees.</td></tr>
+          <tr><th scope="row">Routes / custom domains</th><td class="num">1,000 / 100</td><td class="gotcha">Per zone.</td></tr>
+          <tr><th scope="row">Deployable versions</th><td class="num">last 100</td><td class="gotcha">Applies to <code>versions deploy</code> and <code>rollback</code>.</td></tr>
+          <tr><th scope="row">Version (preview) URLs</th><td class="num">noindex</td><td class="gotcha">Aliased URLs sent <code>X-Robots-Tag: noindex</code> (observed 2026-09-28). Alias + name &le; 63 chars.</td></tr>
+          <tr><th scope="row">Single Redirects</th><td class="num">10 Free</td><td class="gotcha">25 Pro, 50 Business. Regex needs Business.</td></tr>
+          <tr><th scope="row">D1 free</th><td class="num">5M reads/day<br>100k writes/day</td><td class="gotcha">5 GB total, 10 databases, 500 MB each. Resets 00:00 UTC.</td></tr>
+          <tr><th scope="row">R2 free</th><td class="num">10 GB-month</td><td class="gotcha">1M Class A, 10M Class B ops/mo. Egress free.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3>Decision strip</h3>
+      <ul class="decide">
+        <li><b>assets-only vs script Worker</b>Use assets-only (no <code>main</code>) when every rule fits in <code>_redirects</code> and <code>_headers</code>. Add a script when you need 410/403, more than 2,100 redirects, regex precedence, or server-rendered pages. 10 of the 12 fleet hosts are assets-only.</li>
+        <li><b>route vs custom domain</b>Use a route (<code>host/*</code> over the existing proxied record) to migrate: zero DNS change, and rollback is deleting the route. Use a custom domain for a new host with no record yet; it creates the DNS record and certificate but fails on a hostname that already has a CNAME.</li>
+        <li><b>html_handling by canonical URL shape</b>Canonical <code>/a/</code> or <code>/a</code>: <code>auto-trailing-slash</code> (default). Always <code>/a/</code>: <code>force-trailing-slash</code>. Always <code>/a</code>: <code>drop-trailing-slash</code>. Canonical <code>/a.html</code>: <code>none</code>, plus a <code>/ /index.html 200</code>-style rewrite for <code>/</code>.</li>
+        <li><b>_redirects vs zone rule vs Worker code</b>Host-level (www, alias domains): zone Single Redirect. Path-level under 2,000 static lines: <code>_redirects</code>. Over the caps, regex, or 410: Worker code, with <code>run_worker_first</code> globs for just those paths.</li>
+        <li><b>Workers vs Pages (new static site)</b>Workers. Cloudflare's Pages docs say "Start new projects with Workers" (Aug 2026); <code>_redirects</code> and <code>_headers</code> work natively. Pages keeps two edges: custom domains on zones outside Cloudflare, and custom branch aliases ("coming soon" on Workers).</li>
+        <li><b>stay on the origin</b>Anything with a database, an admin login, local state, or server logs as input: WordPress, MediaWiki, a helpdesk, a log-reading dashboard. See <a href="#stays">07</a>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 01 -->
+<section class="block" id="flow" aria-labelledby="flow-h">
+  <p class="sec-no">01 / How a request flows</p>
+  <h2 id="flow-h">How does a request reach a Workers static asset?</h2>
+  <p class="intro">Ten hops, in order. Most migration bugs are a rule sitting at the wrong hop: a Page Rule that is no longer consulted, a header rule that never sees a Worker-built response, a trailing-slash redirect answered by <code>html_handling</code> before your 301 line could run (because the line was never written).</p>
+  <ol class="flow">
+    <li><div><b>Proxied DNS record.</b><p>The existing orange-cloud A/CNAME stays exactly as it was. A route needs a proxied record on an active zone; the origin IP behind it stops mattering once the route exists.</p></div></li>
+    <li><div><b>Zone rules.</b><p>Single Redirects run in the first request phase (<code>http_request_dynamic_redirect</code>), then URL rewrites, config and origin rules, WAF custom rules, rate limiting, managed rules, Super Bot Fight Mode, Bulk Redirects, header transforms, Cache Rules. A matching Single Redirect answers before any Worker runs.</p><p class="gotcha">Bot Fight Mode can challenge your own CI runners and parity probes (403 with <code>cf-mitigated</code>).</p></div></li>
+    <li><div><b>Page Rules.</b><p>For requests served by a Worker route, a Forwarding URL Page Rule is <strong>ignored</strong> (Cloudflare's "Workers with Page Rules" table). Always Use HTTPS is still respected; Browser Cache TTL and Rocket Loader are ignored. A forwarding Page Rule on a host silently stops firing at cutover.</p></div></li>
+    <li><div><b>Route match.</b><p>Most specific pattern wins: <code>walletrecovery.info/api/*</code> beats <code>walletrecovery.info/*</code>. <code>*</code> is the only operator, paths are case-sensitive, and a route with no Worker punches a hole in a broader one.</p></div></li>
+    <li><div><b>Worker script, if the path is in <code>run_worker_first</code>.</b><p>Matching globs invoke your script (billed); everything else goes straight to assets (free). Without <code>run_worker_first</code>, the script runs only when no asset matched.</p><p class="gotcha">From compatibility date 2025-04-01, browser navigations (<code>Sec-Fetch-Mode: navigate</code>) that miss get <code>not_found_handling</code> instead of the script whenever it is set.</p></div></li>
+    <li><div><b><code>_redirects</code>.</b><p>Evaluated before asset matching, so a redirect fires even when a file exists at the source path. Static lines are checked, then dynamic (splats, placeholders). First match wins; 200 lines rewrite without chaining.</p></div></li>
+    <li><div><b>Asset lookup and <code>html_handling</code>.</b><p>Finds the file, and normalizes non-canonical forms with <strong>307</strong>. A path whose percent-encoding is non-canonical is also 307'd to the canonical encoding.</p></div></li>
+    <li><div><b><code>not_found_handling</code>.</b><p><code>404-page</code> serves the nearest <code>404.html</code> walking up the tree with status 404; <code>single-page-application</code> serves <code>/index.html</code> with 200; <code>none</code> (the default) hands off to the script if there is one, else a bare 404.</p></div></li>
+    <li><div><b><code>_headers</code>.</b><p>Attached to asset responses, including those fetched by your script through <code>env.ASSETS.fetch()</code>. <strong>Not</strong> applied to responses your script builds itself; set those headers in code.</p></div></li>
+    <li><div><b>Response, and what it can reach.</b><p>A script can call other Workers through service bindings (no extra request charge, and the target needs no route at all), D1, KV and R2. Assets are cached at the edge with tiered cache and default to <code>Cache-Control: public, max-age=0, must-revalidate</code> plus an <code>ETag</code>.</p></div></li>
+  </ol>
+
+  <div class="tracer" id="tracer" aria-labelledby="tracer-h">
+    <div class="tracer-head">
+      <h3 id="tracer-h">Request tracer &middot; 9 real requests, as curl saw them on 2026-09-28</h3>
+      <label class="sel-mobile tracer-live">sample
+        <select id="sampleSelect" aria-label="Choose a sample request"></select>
+      </label>
+    </div>
+    <div class="tracer-live">
+      <ul class="samples" id="sampleButtons" aria-label="Sample requests"></ul>
+      <div class="tracer-body">
+        <div class="req-line" id="reqLine" aria-live="polite"></div>
+        <ol class="hops" id="hops"></ol>
+        <div class="verdict" id="verdict" aria-live="polite"></div>
+      </div>
+      <div class="tracer-foot">
+        <span class="legend"><i style="background:var(--amber)"></i>acted</span>
+        <span class="legend"><i style="background:var(--dim)"></i>passed through</span>
+        <span class="legend"><i style="background:var(--red)"></i>would have acted, did not</span>
+        <span class="legend"><i style="background:var(--hair)"></i>not reached</span>
+        <button type="button" class="show-all" id="showAll" aria-expanded="false" aria-controls="tracerStatic">show all samples as a table</button>
+      </div>
+    </div>
+    <div class="tracer-static" id="tracerStatic">
+<div class="tbl wide"><table><caption>All samples (static trace; bold = decided, struck = bypassed)</caption><colgroup><col class="c-req"><col class="c-hops"><col class="c-res"><col class="c-why"></colgroup><thead><tr><th>Request</th><th>Hops passed</th><th>Result</th><th>Why</th></tr></thead><tbody>
+<tr><th scope="row"><code>GET https://www.vellum.capital/</code></th><td>DNS &rarr; <strong>Zone rules</strong></td><td><span class="stamp s3">301</span> <code>https://vellum.capital</code> <span class="dim">text/html</span></td><td><b>Zone Single Redirect: www host to apex, 301.</b> Alias hosts never reach a Worker: Single Redirects run in the first request phase, so the www record needs no route. The fleet&#x27;s rule builder appends the request path and keeps the query string.</td></tr>
+<tr><th scope="row"><code>GET https://vellum.capital/whitepaper</code></th><td>DNS &rarr; <strong>Zone rules</strong> &rarr; <del>Page Rules</del></td><td><span class="stamp s3">302</span> <code>https://vellum.capital/wp-content/uploads/sites/37/2021/03/Bitcoins-Rise-and-the-Coming-Crypto-Economy-John-Schroder-Vellum-Capital-March-2021.pdf</code> <span class="dim">text/html</span></td><td><b>Single Redirect, recreated on 2026-09-27 after the cutover lost it: 302 to the PDF.</b> Cloudflare ignores Forwarding URL Page Rules for requests a Worker route serves. The rule fired the day before cutover and stopped the minute the route went live. Convert every forwarding Page Rule to a Single Redirect before adding the route.</td></tr>
+<tr><th scope="row"><code>GET https://walletrecovery.info/api/contact.php?health=1</code></th><td>DNS &rarr; Zone rules &rarr; <strong>Route match</strong> &rarr; <strong>Worker script</strong></td><td><span class="stamp s2">200</span> <span class="dim">application/json</span></td><td><b>Forms Worker answers the health probe: D1 inquiry log writable.</b> A second route on the same host hands /api/* to a separate forms Worker. The legacy .php URL survives because the Worker&#x27;s own path table keeps it; the HTML never had to change.</td></tr>
+<tr><th scope="row"><code>GET https://walletrecovery.info/2018/01/08/how-to-recover-your-corrupt-or-deleted-bitcoin-core-wallet/</code></th><td>DNS &rarr; Zone rules &rarr; Route match &rarr; Worker script &rarr; <strong>_redirects</strong></td><td><span class="stamp s3">301</span> <code>/articles/how-to-recover-your-corrupt-or-deleted-bitcoin-core-wallet/</code></td><td><b>Static line generated from the nginx map: 301 to /articles/…/.</b> _redirects runs before the asset lookup, so a WordPress permalink with no file behind it still redirects. The Location is relative, and 301 is written on the line because the default is 302.</td></tr>
+<tr><th scope="row"><code>GET https://vellum.capital/feed/</code></th><td>DNS &rarr; Zone rules &rarr; Route match &rarr; Worker script &rarr; <strong>_redirects</strong> &rarr; <strong>Asset lookup + html_handling</strong> &rarr; <strong>_headers (asset responses only)</strong></td><td><span class="stamp s2">200</span> <span class="dim">application/xml</span></td><td><b>/feed/ /feed/index.xml 200 (a rewrite: URL unchanged).</b> nginx&#x27;s index index.xml has no config equivalent: html_handling only knows index.html. A 200 line in _redirects serves the file under the old URL.</td></tr>
+<tr><th scope="row"><code>GET https://whopaysforai.org/about</code></th><td>DNS &rarr; Zone rules &rarr; Route match &rarr; Worker script &rarr; <strong>_redirects</strong> &rarr; <strong>Asset lookup + html_handling</strong> &rarr; <strong>_headers (asset responses only)</strong></td><td><span class="stamp s2">200</span> <span class="dim">text/html</span></td><td><b>/about /about.html 200, one generated line per page.</b> Ports nginx try_files $uri.html. With html_handling none nothing is inferred, so the build emits one rewrite per page and fails if the count would pass 2,000. /about/ is a 404 here, exactly as on nginx.</td></tr>
+<tr><th scope="row"><code>GET https://cheatsheets.davidveksler.com/software-devops</code></th><td>DNS &rarr; Zone rules &rarr; Route match &rarr; <strong>Worker script</strong> &rarr; _redirects &rarr; <strong>Asset lookup + html_handling</strong></td><td><span class="stamp s2">200</span> <span class="dim">text/html</span></td><td><b>Path is in run_worker_first. Script fetches the prerendered /_x/hub/software-devops.html through env.ASSETS.</b> A PHP category page became a build-time prerender. The script runs only for the ~42 listed globs; every other path is an asset request that never invokes (or bills) the script. The Worker sets Cache-Control and the security headers itself.</td></tr>
+<tr><th scope="row"><code>GET https://walletrecovery.info/faq.html</code></th><td>DNS &rarr; Zone rules &rarr; Route match &rarr; Worker script &rarr; _redirects &rarr; <strong>Asset lookup + html_handling</strong></td><td><span class="stamp s3">307</span> <code>/faq/</code></td><td><b>auto-trailing-slash: /faq.html is not canonical. 307 to /faq/.</b> html_handling normalizes with 307 Temporary Redirect, never 301. Harmless for internal links; wrong for URLs with backlinks. Write legacy variants as explicit 301 lines in _redirects.</td></tr>
+<tr><th scope="row"><code>GET https://walletrecovery.info/nope-xyz/</code></th><td>DNS &rarr; Zone rules &rarr; Route match &rarr; Worker script &rarr; _redirects &rarr; Asset lookup + html_handling &rarr; <strong>not_found_handling</strong> &rarr; <strong>_headers (asset responses only)</strong></td><td><span class="stamp s4">404</span> <span class="dim">text/html</span></td><td><b>404-page: serves the nearest 404.html up the tree, status 404.</b> not_found_handling defaults to none, which returns a bare 404 with no HTML page. Set 404-page and ship a 404.html at the root.</td></tr>
+</tbody></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 -->
+<section class="block" id="config" aria-labelledby="config-h">
+  <p class="sec-no">02 / wrangler.jsonc, key by key</p>
+  <h2 id="config-h">Which wrangler.jsonc keys does a static site need?</h2>
+  <p class="intro">Values are what the fleet runs on 2026-09-28. The account id is pinned in each repo's <code>wrangler.jsonc</code>; ids never appear on this page.</p>
+  <div class="tbl wide">
+    <table>
+      <thead><tr><th>Key</th><th>Fleet value</th><th>Why</th><th>Gotcha</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><code>name</code></th><td><code>host-with-dashes</code></td><td>One Worker per host; the name appears in every version URL.</td><td class="gotcha">Alias + name must fit 63 chars, so long names shrink your alias budget.</td></tr>
+        <tr><th scope="row"><code>account_id</code></th><td>pinned</td><td>Deploy tokens that see several accounts otherwise make wrangler prompt or guess.</td><td class="gotcha">It is not a secret, but keep it off public pages and screenshots anyway.</td></tr>
+        <tr><th scope="row"><code>compatibility_date</code></th><td><code>2026-09-27</code> / <code>-28</code></td><td>Freezes runtime behavior at the migration date.</td><td class="gotcha">&ge; 2025-04-01 makes navigations prefer assets over the script when <code>not_found_handling</code> is set.</td></tr>
+        <tr><th scope="row"><code>main</code></th><td>absent, or <code>workers/site/index.js</code></td><td>Absent = assets-only Worker: no script, no request billing.</td><td class="gotcha">Adding <code>main</code> never intercepts a path that matches an asset; only <code>run_worker_first</code> does.</td></tr>
+        <tr><th scope="row"><code>assets.directory</code></th><td><code>./dist</code>, <code>./dist/static</code></td><td>The build output, uploaded by content hash: unchanged files are not re-sent.</td><td class="gotcha">A directory named <code>_redirects/</code> or <code>_headers/</code> inside it crashes wrangler with EISDIR. Exclude files with <code>.assetsignore</code> (gitignore syntax).</td></tr>
+        <tr><th scope="row"><code>assets.html_handling</code></th><td><code>auto-trailing-slash</code> (9 hosts), <code>none</code> (3)</td><td>Must match your canonical URLs, or every internal link costs a redirect.</td><td class="gotcha">Normalizing redirects are <strong>307</strong>, not 301. With <code>none</code>, <code>/</code> no longer finds <code>index.html</code>: add a rewrite or handle it in the script.</td></tr>
+        <tr><th scope="row"><code>assets.not_found_handling</code></th><td><code>404-page</code> (all 12)</td><td>Serves the nearest <code>404.html</code> with status 404, like nginx <code>error_page 404</code>.</td><td class="gotcha">Default <code>none</code> gives a bare 404 with no page. <code>single-page-application</code> turns every typo into a 200 soft-404.</td></tr>
+        <tr><th scope="row"><code>assets.binding</code></th><td><code>ASSETS</code> (script Workers only)</td><td>Lets the script read assets with <code>env.ASSETS.fetch()</code>.</td><td class="gotcha">Only the pathname matters; the hostname in the fetched URL is ignored.</td></tr>
+        <tr><th scope="row"><code>assets.run_worker_first</code></th><td>~42 globs (CheatSheets), 80-glob budget (freecapitalists.org)</td><td>Only these paths invoke (and bill) the script.</td><td class="gotcha">Hard cap 100 patterns. <code>true</code> sends every request through the script; on Free, over-quota script paths return 429 while <code>!/</code>-excluded paths still serve.</td></tr>
+        <tr><th scope="row"><code>workers_dev</code></th><td><code>false</code></td><td>No public <code>*.workers.dev</code> copy of production to be indexed or to bypass zone rules.</td><td class="gotcha">Defaults to true; inferred false only when <code>routes</code> is present, so set it before the first bootstrap deploy.</td></tr>
+        <tr><th scope="row"><code>preview_urls</code></th><td><code>true</code></td><td>Every <code>versions upload</code> gets a URL to run parity against.</td><td class="gotcha">If omitted it follows <code>workers_dev</code>, which is false here: set it explicitly.</td></tr>
+        <tr><th scope="row"><code>routes</code></th><td><code>{"pattern": "host/*", "zone_name": "zone"}</code></td><td>The cutover switch. Commented out until cutover day.</td><td class="gotcha"><code>zone_name</code> is the zone, not the host: <code>aisafety.davidveksler.com/*</code> uses zone <code>davidveksler.com</code>. Applied by <code>triggers deploy</code>, not <code>versions deploy</code>.</td></tr>
+        <tr><th scope="row"><code>observability</code></th><td><code>{"enabled": true}</code> on script Workers</td><td>Workers Logs for scripts and forms Workers.</td><td class="gotcha">Assets-only sites leave it unset: there is no script to log.</td></tr>
+        <tr><th scope="row"><code>services</code></th><td><code>{"binding": "FORMS", "service": "&hellip;-forms"}</code></td><td>The site script calls the forms Worker in-process; the forms Worker needs no route.</td><td class="gotcha">Each call counts toward the subrequest limit; max 32 Worker invocations per request.</td></tr>
+        <tr><th scope="row"><code>d1_databases</code></th><td><code>{"binding": "DB", &hellip;}</code> (forms Workers)</td><td>Inquiry log, event rows, rate-limit ledger.</td><td class="gotcha">Create the database and apply <code>schema.sql</code> with <code>--remote</code> before the first deploy.</td></tr>
+        <tr><th scope="row"><code>vars</code> vs secrets</th><td>mail domain and from-address in <code>vars</code></td><td><code>vars</code> are committed config; keys (<code>TURNSTILE_SECRET</code>, mail API key, HMAC secret, IP hash salt) are secrets.</td><td class="gotcha">After a <code>versions upload</code> leaves a newer undeployed version, <code>wrangler secret put</code> refuses; use <code>wrangler versions secret put</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="code"><div class="fname"><span>wrangler.jsonc &middot; assets-only site</span><button class="copy" type="button">copy</button></div><pre><code>{
+  <span class="k">"$schema"</span>: <span class="s">"node_modules/wrangler/config-schema.json"</span>,
+  <span class="k">"name"</span>: <span class="s">"coloradofirearmswatch-org"</span>,
+  <span class="k">"compatibility_date"</span>: <span class="s">"2026-09-27"</span>,
+  <span class="k">"account_id"</span>: <span class="s">"&lt;ACCOUNT_ID&gt;"</span>,   <span class="c">// pin it</span>
+  <span class="k">"assets"</span>: {
+    <span class="k">"directory"</span>: <span class="s">"./dist"</span>,
+    <span class="k">"html_handling"</span>: <span class="s">"auto-trailing-slash"</span>, <span class="c">// canonical /a/</span>
+    <span class="k">"not_found_handling"</span>: <span class="s">"404-page"</span>    <span class="c">// ship dist/404.html</span>
+  },
+  <span class="k">"workers_dev"</span>: false,   <span class="c">// no public *.workers.dev copy</span>
+  <span class="k">"preview_urls"</span>: true,   <span class="c">// parity target per upload</span>
+  <span class="c">// Uncomment on cutover day, commit, deploy --full-parity.</span>
+  <span class="k">"routes"</span>: [
+    { <span class="k">"pattern"</span>: <span class="s">"coloradofirearmswatch.org/*"</span>,
+      <span class="k">"zone_name"</span>: <span class="s">"coloradofirearmswatch.org"</span> }
+  ]
+}</code></pre></div>
+    <div class="code"><div class="fname"><span>wrangler.jsonc &middot; script Worker (CheatSheets)</span><button class="copy" type="button">copy</button></div><pre><code>{
+  <span class="k">"name"</span>: <span class="s">"cheatsheets-davidveksler-com"</span>,
+  <span class="k">"main"</span>: <span class="s">"workers/site/index.js"</span>,
+  <span class="k">"compatibility_date"</span>: <span class="s">"2026-09-28"</span>,
+  <span class="k">"account_id"</span>: <span class="s">"&lt;ACCOUNT_ID&gt;"</span>,
+  <span class="k">"assets"</span>: {
+    <span class="k">"directory"</span>: <span class="s">"./dist"</span>,
+    <span class="k">"binding"</span>: <span class="s">"ASSETS"</span>,
+    <span class="k">"html_handling"</span>: <span class="s">"none"</span>,        <span class="c">// canonical URLs end .html</span>
+    <span class="k">"not_found_handling"</span>: <span class="s">"404-page"</span>,
+    <span class="c">// generated by the build; 42 entries, cap is 100</span>
+    <span class="k">"run_worker_first"</span>: [
+      <span class="s">"/"</span>, <span class="s">"/*.php"</span>, <span class="s">"/_x/*"</span>, <span class="s">"/404.html"</span>,
+      <span class="s">"/popularity"</span>, <span class="s">"/sitemap.xml"</span>, <span class="s">"/subscribe"</span>,
+      <span class="s">"/confirm"</span>, <span class="s">"/software-devops"</span>, <span class="s">"/software-devops/"</span>
+      <span class="c">// ...one pair per category hub</span>
+    ]
+  },
+  <span class="k">"services"</span>: [   <span class="c">// forms Worker has no route of its own</span>
+    { <span class="k">"binding"</span>: <span class="s">"FORMS"</span>,
+      <span class="k">"service"</span>: <span class="s">"cheatsheets-davidveksler-com-forms"</span> }
+  ],
+  <span class="k">"observability"</span>: { <span class="k">"enabled"</span>: true },
+  <span class="k">"workers_dev"</span>: false,
+  <span class="k">"preview_urls"</span>: true,
+  <span class="k">"routes"</span>: [
+    { <span class="k">"pattern"</span>: <span class="s">"cheatsheets.davidveksler.com/*"</span>,
+      <span class="k">"zone_name"</span>: <span class="s">"davidveksler.com"</span> }  <span class="c">// the zone</span>
+  ]
+}</code></pre></div>
+  </div>
+  <div class="callout"><b>Vite plugin collision</b><p>The Cloudflare Vite plugin auto-loads any root <code>wrangler.jsonc</code> into the app build. whopaysforai.org, a vinext app deployed as a static snapshot, names its config <code>wrangler.static.jsonc</code> and runs every wrangler command with <code>--config wrangler.static.jsonc</code>.</p></div>
+</section>
+
+<!-- 03 -->
+<section class="block" id="nginx" aria-labelledby="nginx-h">
+  <p class="sec-no">03 / Porting nginx</p>
+  <h2 id="nginx-h">How do you migrate nginx rules to Cloudflare Workers?</h2>
+  <p class="intro">Everything nginx did implicitly has to be written down. The most dangerous losses are the silent ones: server-wide headers, slashless variants a regex used to catch, and status codes an assets-only Worker cannot send.</p>
+  <div class="tbl wide">
+    <table>
+      <thead><tr><th>nginx construct</th><th>What it did</th><th>Workers static-assets equivalent</th><th>Gotcha / cannot be ported</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><code>return 301</code> in a www/alias <code>server</code></th><td>Host redirect</td><td>Zone Single Redirect, target <code>concat("https://apex", http.request.uri.path)</code>, preserve query on</td><td class="gotcha"><code>_redirects</code> cannot match a hostname. Query preservation is off by default in Single Redirects.</td></tr>
+        <tr><th scope="row"><code>map $uri $redirect_uri</code></th><td>Exact-path redirect table</td><td>Generated static <code>_redirects</code> lines, one per entry, <code>301</code> written explicitly</td><td class="gotcha">Build must fail over 2,000 static lines, not truncate. Default status is 302.</td></tr>
+        <tr><th scope="row"><code>location = /x</code></th><td>Exact match</td><td>One static <code>_redirects</code> line, or a <code>run_worker_first</code> entry if it ran code</td><td class="gotcha">Exact means exact: <code>/x/</code> is a different line.</td></tr>
+        <tr><th scope="row"><code>location ^~ /old/</code></th><td>Longest-prefix match, stops regex search</td><td><code>/old/* /new/:splat 301</code></td><td class="gotcha">A splat is dynamic (100 cap). <code>_redirects</code> is first-match top-down, not longest-prefix: sort longer prefixes first.</td></tr>
+        <tr><th scope="row"><code>location ~ regex</code></th><td>Regex, first match in file order</td><td>Enumerate into static lines, or a script Worker that reproduces nginx precedence</td><td class="gotcha">No regex in <code>_redirects</code>. freecapitalists.org's ~4,300 rules run in its site Worker: exact, then longest prefix, then regex in file order, rendered from the same rule list as the old nginx conf.</td></tr>
+        <tr><th scope="row"><code>try_files $uri $uri.html</code></th><td>Serve <code>/a</code> from <code>a.html</code>, and <code>/a.html</code> too</td><td><code>auto-trailing-slash</code> serves <code>/a</code> from <code>a.html</code>; or <code>none</code> + <code>/a /a.html 200</code> per page</td><td class="gotcha">Under <code>auto-trailing-slash</code>, <code>/a.html</code> becomes a 307. Keep both 200s with <code>none</code> plus generated rewrites (whopaysforai.org).</td></tr>
+        <tr><th scope="row"><code>index index.xml</code></th><td>Feed served at <code>/feed/</code></td><td><code>/feed/ /feed/index.xml 200</code></td><td class="gotcha"><code>html_handling</code> only knows <code>index.html</code>. Also add <code>/feed /feed/ 301</code>.</td></tr>
+        <tr><th scope="row"><code>rewrite &hellip; last</code></th><td>Internal rewrite</td><td><code>_redirects</code> line with status 200</td><td class="gotcha">Relative targets only, first rule only, no chaining. No 404-status rewrites.</td></tr>
+        <tr><th scope="row"><code>add_header</code> / <code>more_set_headers</code> server-wide</th><td>X-Frame-Options, nosniff, Referrer-Policy on every response</td><td><code>/*</code> block in <code>_headers</code>, plus the same headers set in script code</td><td class="gotcha">Inherited from <code>nginx.conf</code>, so invisible in the site's vhost. Six fleet sites shipped without them.</td></tr>
+        <tr><th scope="row"><code>add_header Access-Control-Allow-Origin *</code></th><td>CORS on public JSON</td><td><code>/*.json</code> rule in <code>_headers</code></td><td class="gotcha">Only for asset responses; a script-served JSON needs it in code.</td></tr>
+        <tr><th scope="row"><code>expires</code> / <code>Cache-Control</code></th><td>Browser cache lifetime</td><td><code>_headers</code> rule, e.g. <code>/*.html</code> &rarr; <code>max-age=1800</code></td><td class="gotcha">Default is <code>max-age=0, must-revalidate</code> + ETag. Long max-age only on fingerprinted files.</td></tr>
+        <tr><th scope="row"><code>gzip</code> / <code>brotli</code></th><td>Compression</td><td>Automatic</td><td class="gotcha">Delete the config. Nothing to port.</td></tr>
+        <tr><th scope="row"><code>error_page 404 /404.html</code></th><td>Custom 404 page</td><td><code>not_found_handling: "404-page"</code> + <code>dist/404.html</code></td><td class="gotcha">Nearest <code>404.html</code> up the tree wins, so a section can have its own.</td></tr>
+        <tr><th scope="row"><code>return 410</code> / <code>deny all</code></th><td>Gone / Forbidden</td><td>Script Worker only</td><td class="gotcha">Assets-only cannot send 410 or 403; those paths become 404. Accept it or add a script.</td></tr>
+        <tr><th scope="row"><code>default_type</code> / <code>types {}</code></th><td>Content-Type for odd files</td><td><code>_headers</code> <code>Content-Type</code> rule per path</td><td class="gotcha">Extensionless files (<code>/LICENSE</code>, <code>/.well-known/traffic-advice</code>) need explicit types.</td></tr>
+        <tr><th scope="row">PHP includes, <code>fastcgi_pass</code></th><td>Server-rendered pages</td><td>Prerender at build; serve through <code>run_worker_first</code> if a path needs logic</td><td class="gotcha">The CheatSheets Explorer and hubs are prerendered <code>.php</code> output under <code>/_x/</code>.</td></tr>
+        <tr><th scope="row"><code>access_log</code></th><td>Per-request log with referrer</td><td>Cloudflare Analytics GraphQL for counts; D1 rows for form and beacon events</td><td class="gotcha">Per-request referrers are gone. CheatSheets deleted its referrer report.</td></tr>
+        <tr><th scope="row">Non-ASCII paths</th><td>nginx <code>$uri</code> is decoded</td><td>Percent-encode sources in generated lines</td><td class="gotcha">Workers match the encoded path. An emoji slug written raw never matches.</td></tr>
+        <tr><th scope="row">Slashless variants (<code>^/x/?$</code>)</th><td>One regex caught <code>/x</code> and <code>/x/</code></td><td>Two lines: <code>/x/ /y/ 301</code> and <code>/x /x/ 301</code> (or straight to <code>/y/</code>)</td><td class="gotcha">Unwritten, <code>/x</code> 404s (no asset) or gets a 307 (asset exists). Live: <code>walletrecovery.info/about-david</code> is a 404; only the slash form was mapped.</td></tr>
+        <tr><th scope="row">Digit-only regex (<code>^/[0-9]{4}/?$</code>)</th><td>Year/month archives</td><td>Enumerate: vellum emits every <code>/YYYY</code> and <code>/YYYY/MM</code> (2010 to 2030, with and without slash) as static lines</td><td class="gotcha"><code>:placeholders</code> cannot be constrained to digits. In <code>run_worker_first</code>, freecapitalists.org uses ten globs, <code>/0*</code> to <code>/9*</code>.</td></tr>
+        <tr><th scope="row">Splat ordering</th><td>n/a in nginx</td><td>Static lines first, splats last</td><td class="gotcha">Cloudflare: "static redirects should appear before dynamic". The fleet budgets every line after the first splat against the 100 dynamic cap.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Worked example: WalletRecovery's nginx map to <code>_redirects</code></h3>
+  <p class="note">Six real lines from <code>deploy/redirects.map</code> (53 active rules), plus the one non-ASCII source in the map. The converter parses each <code>source target;</code> line, percent-encodes the source with Python's <code>quote(source, safe="/-._~!$&amp;'()*+,;=:@%")</code>, writes <code>301</code>, and exits 1 above 2,000 lines.</p>
+  <div class="grid-2">
+    <div class="code"><div class="fname"><span>deploy/redirects.map (nginx)</span><button class="copy" type="button">copy</button></div><pre><code><span class="k">map</span> $uri $redirect_uri {
+    default "";
+    /about-david/                          /about/;
+    /blog/                                 /articles/;
+    /connect/                              /contact/;
+    /contact-us/                           /contact/;
+    /data-recovery-shipment-instructions/  /shipping/;
+    /frequently-asked-questions/           /faq/;
+    /2022/11/18/how-i-recover-stolen-nfts-from-crypto-scammers-🥷🏼/  /articles/how-i-recover-stolen-nfts-from-crypto-scammers/;
+}
+<span class="c"># server block: if ($redirect_uri) { return 301 $redirect_uri; }</span></code></pre></div>
+    <div class="code"><div class="fname"><span>dist/_redirects (generated)</span><button class="copy" type="button">copy</button></div><pre><code><span class="c"># hand-written rules first; first match wins</span>
+/tools/:tool/offline.html /tools/:tool/offline 200
+<span class="c"># generated from deploy/redirects.map</span>
+/about-david/ /about/ 301
+/blog/ /articles/ 301
+/connect/ /contact/ 301
+/contact-us/ /contact/ 301
+/data-recovery-shipment-instructions/ /shipping/ 301
+/frequently-asked-questions/ /faq/ 301
+/2022/11/18/how-i-recover-stolen-nfts-from-crypto-scammers-%F0%9F%A5%B7%F0%9F%8F%BC/ /articles/how-i-recover-stolen-nfts-from-crypto-scammers/ 301</code></pre></div>
+  </div>
+  <p class="note">Result, curl on 2026-09-28: the encoded emoji URL answers <span class="stamp s3">301</span> <code>/articles/how-i-recover-stolen-nfts-from-crypto-scammers/</code>. The hand-written first line exists because <code>auto-trailing-slash</code> would 307 the saved <code>offline.html</code> tool copies that nginx served with 200.</p>
+</section>
+
+<!-- 04 -->
+<section class="block" id="deploy" aria-labelledby="deploy-h">
+  <p class="sec-no">04 / The guarded deploy pipeline</p>
+  <h2 id="deploy-h">How do you deploy with wrangler versions upload and a preview URL?</h2>
+  <p class="intro">Upload a version without serving it, prove it matches production byte for byte, stop for a human, then promote. Every fleet repo runs a copy of one template, <code>scripts/deploy-cloudflare.sh</code> plus a PowerShell twin.</p>
+  <ol class="rail" aria-label="Deploy steps">
+    <li><span class="dot" aria-hidden="true"></span><b>01 preflight</b>Clean tree; Node &ge; 22; <code>npm ci</code> if wrangler missing; token from <code>CLOUDFLARE_API_TOKEN</code> (CI) or a local env file; parity script present; routed? parsed from <code>wrangler.jsonc</code>.</li>
+    <li><span class="dot" aria-hidden="true"></span><b>02 build + gates</b>Site build and its lint/SEO gates. Fails if the build modified any tracked file.</li>
+    <li><span class="dot" aria-hidden="true"></span><b>03 upload</b><code>wrangler versions upload --preview-alias c&lt;sha&gt; --tag &lt;sha&gt;</code>. A brand-new Worker is bootstrapped with <code>wrangler deploy</code> first (unrouted only).</li>
+    <li><span class="dot" aria-hidden="true"></span><b>04 parity</b><code>cf_parity.py</code>: preview vs production. Smoke by default; full when unrouted or <code>--full-parity</code>.</li>
+    <li><span class="dot" aria-hidden="true"></span><b>05 stop?</b>Unrouted or <code>--preview-only</code>: exit 0, "preview ready, production unchanged".</li>
+    <li class="gate"><span></span><em>06<br>human<br>confirm<br>[y/N]</em></li>
+    <li><span class="dot" aria-hidden="true"></span><b>07 promote</b><code>wrangler versions deploy &lt;id&gt;@100% --yes</code>, then <code>wrangler triggers deploy</code> (routes), then a host cache purge that only warns on failure.</li>
+    <li><span class="dot" aria-hidden="true"></span><b>08 live verify</b>Loop until: distinctive string present (here-string grep), prod body of the verify path hashes equal to the preview's, and <code>wrangler deployments status</code> output contains the version id.</li>
+  </ol>
+  <p class="note">Step 08 checks that the version id <em>appears</em> in <code>deployments status</code>; it does not parse the percentage. The loop has a fixed ceiling, but a correct verifier passes on the first iteration: a slow pass means a broken check, not "propagation" (see incident 2026-09-28, SIGPIPE).</p>
+
+  <div class="grid-2">
+    <div class="tbl">
+      <table>
+        <caption>Flags &middot; bash / PowerShell twin</caption>
+        <thead><tr><th>bash</th><th>PowerShell</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td class="num">--yes, -y</td><td class="num">-Yes</td><td>Skip the confirm prompt (the only way CI promotes).</td></tr>
+          <tr><td class="num">--preview-only</td><td class="num">-PreviewOnly</td><td>Stop after parity; production untouched. Also the automatic behavior before cutover.</td></tr>
+          <tr><td class="num">--full-parity</td><td class="num">-FullParity</td><td>Full mode: sitemaps, origin file list, variants, 11 headers. Mandatory for the cutover deploy.</td></tr>
+          <tr><td class="num">--skip-parity</td><td class="num">-SkipParity</td><td>No comparison. For a site whose production is known-broken; leaves a gap in the audit trail.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><b>Why the PowerShell twin shells out</b><p><code>deploy-cloudflare.ps1</code> maps its switches onto the bash flags and runs Git for Windows' <code>bash.exe</code> from Program Files, not whatever <code>bash</code> is on PATH: that can resolve to WSL, whose Node may be older than 22.</p></div>
+  </div>
+
+  <h3>Parity: what "matches production" means</h3>
+  <div class="grid-3">
+    <div class="panel"><b class="mono">Compared per path</b><p>Status; <code>Location</code> (origin-normalized); base Content-Type (charset stripped); SHA-256 of the normalized body; 11 headers: <code>cache-control</code>, <code>link</code>, <code>x-robots-tag</code>, <code>content-language</code>, <code>access-control-allow-origin</code>, <code>content-disposition</code>, <code>x-frame-options</code>, <code>x-content-type-options</code>, <code>referrer-policy</code>, <code>content-security-policy</code>, <code>strict-transport-security</code>.</p></div>
+    <div class="panel"><b class="mono">Probe sources</b><p>Both sitemaps (found via <code>robots.txt</code> <code>Sitemap:</code> lines plus <code>/sitemap.xml</code>, <code>/sitemap-index.xml</code>, <code>/sitemap_index.xml</code>, recursing indexes); the origin's live file list; <code>/</code>; <code>/robots.txt</code>; one random-string 404 probe.</p></div>
+    <div class="panel"><b class="mono">URL variants</b><p>In full mode, 40 random sitemap pages (<code>--variant-sample</code>) are also probed as slash, slashless, <code>.html</code> and <code>/index.html</code> forms. This is where 307-vs-301 and slashless 404s surface.</p></div>
+    <div class="panel"><b class="mono">Normalizers (every Cloudflare zone needs these)</b><p>Before hashing HTML: strip the challenge-detection script, <code>/cdn-cgi/</code> scripts, the Web Analytics beacon, Cloudflare Fonts <code>@font-face</code> blocks and Google Fonts links; collapse email obfuscation to <code>EMAIL</code>; undo Automatic HTTPS Rewrites; drop inter-tag whitespace (an injected tag leaves its newline behind), then collapse whitespace runs.</p></div>
+    <div class="panel"><b class="mono">Allow file</b><p>One line per explained difference: <code>&lt;path-regex&gt; &lt;field&gt;  # reason</code>, field is <code>status</code>, <code>location</code>, <code>content-type</code>, <code>body</code>, <code>header:&lt;name&gt;</code>, <code>missing</code> or <code>*</code>. A 5-rule kit default loads first; per-site files layer on top. Example: <code>^/whitepaper$ *  # zone rule answers this</code>.</p></div>
+    <div class="panel"><b class="mono">Exit codes and trust</b><p><code>0</code> no unexplained differences, <code>1</code> differences (JSON report path printed), <code>2</code> could not run. A run with more than max(5, 10%) challenged responses exits 2: "too many challenged responses to trust this run".</p></div>
+    <div class="panel"><b class="mono">Smoke vs full</b><p>Smoke (routine deploys): candidate sitemap paths, no URL variants, no origin file list. Full (first deploy, cutover, <code>--full-parity</code>): everything above. freecapitalists.org's cutover run passed on 33,577 paths.</p></div>
+    <div class="panel"><b class="mono">Baseline parity</b><p>When the old origin runs an older commit than the repo, parity against HEAD reports content drift as regressions. Check out the origin's commit in a <code>git worktree</code>, build it, upload with <code>--preview-alias l&lt;sha&gt;</code>, and run full parity against that preview first.</p></div>
+    <div class="panel"><b class="mono">What parity cannot see</b><p>Zone behavior in front of the route (Page Rules, Single Redirects) is identical for both sides until cutover, so parity passes while a Page Rule is about to die. Check forwarding rules by hand.</p></div>
+  </div>
+  <div class="callout red"><b>No Git-connected builds</b><p>Workers Builds can deploy on every push. The fleet deliberately does not connect it: pushing to GitHub is automatic, but making anything live is a human decision at step 06. The one exception is a scheduled data-only publish with its own guard (<a href="#ops">08</a>).</p></div>
+</section>
+
+<!-- 05 -->
+<section class="block" id="cutover" aria-labelledby="cutover-h">
+  <p class="sec-no">05 / Cutover, soak, rollback, decommission</p>
+  <h2 id="cutover-h">How do you cut over from nginx to Workers with zero DNS change?</h2>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Pre-cutover checklist</h3>
+      <ul class="checks">
+        <li><input type="checkbox" id="c1" aria-labelledby="c1l"><span id="c1l">Full parity passes against production, with every allow-file line explained.</span></li>
+        <li><input type="checkbox" id="c2" aria-labelledby="c2l"><span id="c2l">Security headers present: <code>_headers</code> <code>/*</code> block and in script responses.</span></li>
+        <li><input type="checkbox" id="c3" aria-labelledby="c3l"><span id="c3l"><code>dist/404.html</code> exists and <code>not_found_handling</code> is <code>404-page</code>.</span></li>
+        <li><input type="checkbox" id="c4" aria-labelledby="c4l"><span id="c4l">Every forwarding Page Rule on the host recreated as a Single Redirect, then the Page Rule deleted.</span></li>
+        <li><input type="checkbox" id="c5" aria-labelledby="c5l"><span id="c5l">Forms Worker deployed unrouted and tested on its version URL: health returns ok, one real submission arrives.</span></li>
+        <li><input type="checkbox" id="c6" aria-labelledby="c6l"><span id="c6l">Secrets set: bootstrap <code>wrangler deploy</code> first, then <code>secret put</code>; <code>versions secret put</code> once a newer version is upload-only.</span></li>
+        <li><input type="checkbox" id="c7" aria-labelledby="c7l"><span id="c7l"><code>.gitattributes</code> has <code>* text=auto eol=lf</code> so Windows and Linux builds ship identical bytes.</span></li>
+        <li><input type="checkbox" id="c8" aria-labelledby="c8l"><span id="c8l"><code>TZ=UTC</code> set in the build for generators that print dates.</span></li>
+        <li><input type="checkbox" id="c9" aria-labelledby="c9l"><span id="c9l">www and alias domains have zone Single Redirects (301, path kept, query preserved).</span></li>
+        <li><input type="checkbox" id="c10" aria-labelledby="c10l"><span id="c10l">Analytics replacement ready: Cloudflare Analytics query and D1 event rows.</span></li>
+        <li><input type="checkbox" id="c11" aria-labelledby="c11l"><span id="c11l">Zone HSTS checked as a header value, not a toggle (enabled with <code>max_age 0</code> sends no policy).</span></li>
+        <li><input type="checkbox" id="c12" aria-labelledby="c12l"><span id="c12l">Origin copy frozen: no further origin deploys after cutover, so rollback lands on a known state.</span></li>
+      </ul>
+    </div>
+    <div>
+      <div class="panel">
+        <h3>Cutover</h3>
+        <p>Uncomment <code>routes</code> in <code>wrangler.jsonc</code>, commit, run <code>scripts/deploy-cloudflare.sh --full-parity</code>. <code>triggers deploy</code> creates the route; the proxied DNS record is untouched. Traffic moves at the edge within the deploy.</p>
+        <div class="code"><div class="fname"><span>cutover</span><button class="copy" type="button">copy</button></div><pre><code>git commit -am "Cut over to Workers: enable route"
+scripts/deploy-cloudflare.sh --full-parity</code></pre></div>
+      </div>
+      <div class="panel" style="margin-top:1rem">
+        <h3>Soak: 7 days</h3>
+        <p>The origin keeps its copy, untouched. <code>soak_check.py</code> runs full parity with the origin as "production" by pinning the TCP connection to the origin's address while sending the public hostname in SNI and Host, since DNS now resolves to Cloudflare. It also checks that <code>/</code> no longer carries the origin's <code>Last-Modified</code> (proof the route is active), a random path 404s with HTML, aliases 301, and form health endpoints answer.</p>
+      </div>
+    </div>
+  </div>
+  <div class="tbl mid">
+    <table>
+      <caption>Rollback: two levers</caption>
+      <thead><tr><th>Lever</th><th>Command</th><th>Use when</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Previous version</th><td><code>npx wrangler rollback [version-id]</code></td><td>A deploy shipped bad content; the platform is fine.</td><td>New deployment of the prior (or named) version on all routes, immediately. Last 100 versions only; blocked if a bound R2/KV/queue was deleted.</td></tr>
+        <tr><th scope="row">Back to origin</th><td>Remove <code>routes</code>, then <code>npx wrangler triggers deploy</code></td><td>The Worker path itself is wrong: routing, a platform limit, an incident you cannot fix forward.</td><td>The proxied record serves the origin again at once. The origin serves its last origin deploy, which is stale if you kept publishing to Workers.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <details class="more" name="cutover-more">
+    <summary>Decommission, after the soak and an explicit go-ahead</summary>
+    <div>
+      <ol>
+        <li>Confirm the soak window closed with clean <code>soak_check</code> and <code>fleet_check</code> runs.</li>
+        <li>Snapshot the origin vhost config and any server-side files into git (commits are the backup).</li>
+        <li>Remove the vhost and its htdocs from the origin; reload nginx.</li>
+        <li>Delete or disable the old origin deploy script so nobody "deploys" to a server that no longer serves the site.</li>
+        <li>Remove origin-only DNS records that exposed the server for that host, if any.</li>
+        <li>Update the runbook and site list: the host's only rollback is now <code>wrangler rollback</code>.</li>
+      </ol>
+    </div>
+  </details>
+</section>
+
+<!-- 06 -->
+<section class="block" id="forms" aria-labelledby="forms-h">
+  <p class="sec-no">06 / Forms and beacons without a server</p>
+  <h2 id="forms-h">How do you replace a PHP contact form with a Worker, D1 and Turnstile?</h2>
+  <p class="intro">A contact form is the last reason most static sites keep PHP. The kit's contact-Worker template handles one POST in this order; each step is cheap and the expensive calls come last.</p>
+  <ol class="flow">
+    <li><div><b>Route and method.</b><p><code>GET ?health=1</code> returns JSON booleans for D1, Turnstile secret and mail config: 200 when all present, 503 otherwise. Any other non-POST: 405.</p></div></li>
+    <li><div><b>Config check, fail closed.</b><p>Missing <code>DB</code>, <code>TURNSTILE_SECRET</code> or mail config: 500 with the "not configured" message. A half-configured form never silently eats messages.</p></div></li>
+    <li><div><b>Honeypot.</b><p>A hidden field with any value returns the normal success response. No send, no log, no signal to the bot.</p></div></li>
+    <li><div><b>Rate limit (D1, fixed window).</b><p>Key: SHA-256 of <code>salt|cf-connecting-ip</code>, truncated to 12 bytes. One row per hit in <code>hits</code>; 2% of calls prune rows older than 24 h. <strong>Fails open</strong> on a D1 error: a database blip must not block real inquiries. WalletRecovery: 5 per 900 s. Exceeded: 429.</p></div></li>
+    <li><div><b>Field validation.</b><p>Required fields enforced (422); each field trimmed, length-capped and pattern-checked per the site config.</p></div></li>
+    <li><div><b>Turnstile siteverify.</b><p><code>POST https://challenges.cloudflare.com/turnstile/v0/siteverify</code> with <code>secret</code>, <code>response</code> and <code>remoteip</code> = <code>cf-connecting-ip</code>. Tokens are single-use and expire after 300 s.</p></div></li>
+    <li><div><b>Mail send.</b><p>Mailgun or Resend, chosen per site. A provider failure returns 502.</p></div></li>
+    <li><div><b>D1 log row, after the send.</b><p><code>INSERT INTO inquiries (ts, data)</code> with attribution fields only, so the count means "inquiries delivered". A logging failure is swallowed: the email already went out.</p></div></li>
+    <li><div><b>Response.</b><p><code>fetch()</code> callers (<code>X-Requested-With: fetch</code> or <code>Accept: application/json</code>) get JSON <code>{ok, error}</code>. Plain form posts get <strong>303</strong> to the success or failure page, so the form works with JavaScript off.</p></div></li>
+  </ol>
+  <p class="note">The template's test suite runs 13 assertions under <code>wrangler dev</code>: health, 405, unknown path 404, honeypot success, missing field 422, bad email 422, missing token 422, send reached (502 against a stub), no-JS 303, 429 after 5 posts, beacon 204, beacon health, event row stored. Beacons (<code>handleEvent</code>) always answer <strong>204</strong> whatever happens, with their own rate cap (default 120 per window).</p>
+
+  <div class="grid-2">
+    <div class="code"><div class="fname"><span>schema.sql &middot; kit template (no PII in logged rows)</span><button class="copy" type="button">copy</button></div><pre><code><span class="k">CREATE TABLE IF NOT EXISTS</span> inquiries (
+  id   INTEGER PRIMARY KEY,
+  ts   INTEGER NOT NULL,   <span class="c">-- unix seconds, UTC</span>
+  data TEXT    NOT NULL    <span class="c">-- JSON from SITE.logRow(): attribution only</span>
+);
+<span class="k">CREATE INDEX IF NOT EXISTS</span> inquiries_ts ON inquiries (ts);
+
+<span class="k">CREATE TABLE IF NOT EXISTS</span> events (
+  id   INTEGER PRIMARY KEY,
+  ts   INTEGER NOT NULL,
+  name TEXT    NOT NULL,
+  data TEXT    NOT NULL
+);
+<span class="k">CREATE INDEX IF NOT EXISTS</span> events_name_ts ON events (name, ts);
+
+<span class="k">CREATE TABLE IF NOT EXISTS</span> hits (       <span class="c">-- rate-limit ledger</span>
+  ts      INTEGER NOT NULL,
+  ip_hash TEXT    NOT NULL,          <span class="c">-- salted, truncated</span>
+  kind    TEXT    NOT NULL           <span class="c">-- 'contact' | 'event'</span>
+);
+<span class="k">CREATE INDEX IF NOT EXISTS</span> hits_lookup ON hits (ip_hash, kind, ts);</code></pre></div>
+    <div>
+      <div class="callout"><b>Deploy-order rule</b><p>A forms Worker on its own route (<code>host/api/*</code>) must be live before the HTML that posts to it, or submissions 404 in the gap. A forms Worker reached by service binding, answering both the old and new paths, removes the ordering constraint.</p></div>
+      <div class="callout red"><b>Forms Workers skip the gate</b><p>Forms Workers deploy with a plain <code>wrangler deploy</code>: live immediately, no preview, no parity, no promote step. Unrouted ones get an extra <code>versions upload --preview-alias preview</code> purely to probe. Test on the version URL, then deploy deliberately.</p></div>
+    </div>
+  </div>
+  <div class="tbl wide">
+    <table>
+      <caption>Variants in the fleet</caption>
+      <thead><tr><th>Worker</th><th>Reached by</th><th>Storage</th><th>Anti-abuse</th><th>Distinctive detail</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">WalletRecovery forms</th><td>Route <code>walletrecovery.info/api/*</code></td><td>D1 (template)</td><td>Honeypot, 5/900 s, Turnstile</td><td>Keeps legacy <code>/api/contact.php</code> and <code>/api/tool_event.php</code> paths. Beacon body capped at 200 bytes; <code>tool</code> and <code>state</code> must match <code>^[a-z0-9-]{1,40}$</code> or the row is dropped. Mailgun.</td></tr>
+        <tr><th scope="row">CheatSheets newsletter</th><td>Service binding <code>FORMS</code>, no route</td><td>D1: <code>subscribers</code>, <code>confirmed</code>, <code>hits</code></td><td>10/3600 s</td><td>Double opt-in. Token = base64url(email).timestamp + HMAC-SHA256; 7-day TTL; constant-time compare. Resend.</td></tr>
+        <tr><th scope="row">Vellum investor inquiry</th><td>Route on <code>/api/investor-inquiry</code></td><td>KV audit trail, key <code>inquiry:&lt;iso-ts&gt;:&lt;uuid&gt;</code></td><td>Honeypot, Host check, Origin check. No rate limit, no Turnstile.</td><td>Hand-built, not the template. Writes KV first, mails via <code>ctx.waitUntil()</code> so a mail outage cannot lose an inquiry. Host check blocks the version-URL bypass.</td></tr>
+        <tr><th scope="row">freecapitalists contact</th><td>Route <code>/api/contact*</code></td><td>n/a</td><td>Honeypot <code>website</code>, Turnstile</td><td>Turnstile was added after the honeypot alone let through link spam in Aug 2026. Field caps: name 200, email 200, message 5,000. JSON or a small HTML page by <code>Accept</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 07 -->
+<section class="block" id="stays" aria-labelledby="stays-h">
+  <p class="sec-no">07 / What stays off Workers</p>
+  <h2 id="stays-h">Which sites should stay on the origin server?</h2>
+  <div class="tbl wide">
+    <table>
+      <thead><tr><th>Workload</th><th>Why it stays</th><th>What moving would take</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">The fleet's WordPress blogs</th><td>PHP, MySQL, plugins, editors who log in daily.</td><td>A generator rebuild (see <a href="wordpress-to-static.html">WordPress to static</a>) plus a new editorial workflow.</td><td><span class="stamp s4">stay</span> until the site is rebuilt static</td></tr>
+        <tr><th scope="row">WordPress admin</th><td>Authenticated, stateful, writes to the database.</td><td>Nothing short of leaving WordPress.</td><td><span class="stamp s4">stay</span></td></tr>
+        <tr><th scope="row">MediaWiki wikis</th><td>PHP + database; edit history is the product.</td><td>A static export freezes the wiki; live editing is lost.</td><td><span class="stamp s4">stay</span>, or freeze to static if edits stopped</td></tr>
+        <tr><th scope="row">Discourse forums</th><td>Ruby app, Postgres, Redis, background jobs, email.</td><td>Not a Workers workload. The fleet runs them on a separate home server.</td><td><span class="stamp s4">stay</span></td></tr>
+        <tr><th scope="row">Helpdesk</th><td>Ticket database, inbound email, agent logins.</td><td>A SaaS helpdesk, not Workers.</td><td><span class="stamp s4">stay</span></td></tr>
+        <tr><th scope="row">A dashboard that reads server logs</th><td>Its input is the origin's own log files.</td><td>Rewrite on Analytics GraphQL and D1 events.</td><td><span class="stamp s3">stay</span> for now</td></tr>
+        <tr><th scope="row">Webhook receivers with local state</th><td>Git checkouts, queues, files on disk.</td><td>Durable Objects or Queues plus a rewrite; the fleet chose not to.</td><td><span class="stamp s3">stay</span>; point their publish step at the Worker deploy</td></tr>
+        <tr><th scope="row">Static snapshot of a JS app</th><td>Nothing: it is files.</td><td>A crawl to <code>dist/</code> plus generated rewrites (whopaysforai.org).</td><td><span class="stamp s2">move</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 08 -->
+<section class="block" id="ops" aria-labelledby="ops-h">
+  <p class="sec-no">08 / Operating the fleet</p>
+  <h2 id="ops-h">How do you monitor and publish many Workers static sites?</h2>
+  <div class="grid-3">
+    <div class="panel"><h3><code>fleet_check.py</code></h3><p>Per site from one <code>sites.json</code>: routes point at the expected Worker; host and aliases proxied; every <code>_redirects</code> line answers its exact status and target, and the target resolves; 200-rewrites answer 200; aliases 301/308 with path kept; listed paths 200 and gone paths 404; a random path 404s <em>with an HTML body</em>; the security trio on <code>/</code>; form health returns <code>{"ok": true}</code>. <code>--crawl</code> checks every same-origin <code>href</code>/<code>src</code>/<code>srcset</code>, plus declared hosts such as the R2 media domain.</p></div>
+    <div class="panel"><h3>Scheduled CI publish</h3><p>A nightly GitHub Action refreshes CheatSheets' popularity data and publishes it. It reads the live version's <code>--tag</code> (the commit), requires it to be an ancestor of HEAD, and publishes only if <code>git diff</code> since then touches data files or inert paths (docs, <code>*.md</code>, <code>.github/</code>). Anything else is reported as <strong>DRIFT</strong>, a warning, exit 0, nothing published. After publishing it compares the SHA-256 of the committed JSON with the live file.</p></div>
+    <div class="panel"><h3>Token scoping</h3><p>Separate tokens per job: a deploy token with Workers Scripts Edit on one account; a read-only analytics token; D1 access only where a script needs it. The CI job gets two tokens, never the local all-purpose one. Tokens live in env files outside the repo or in CI secrets.</p></div>
+    <div class="panel"><h3>Analytics after nginx logs</h3><p>Page popularity comes from the Cloudflare Analytics GraphQL API; form submissions and tool beacons are D1 rows. Lost: per-request referrer parsing from access logs. CheatSheets removed its referrer report rather than fake it.</p></div>
+    <div class="panel"><h3>R2 for bulk media</h3><p>Every file in <code>dist/</code> counts toward the per-version cap. freecapitalists.org moved ~7,600 of ~27,900 build files (images) plus its library to R2 behind a custom domain. R2 custom domains must be a zone in the same account; <code>r2.dev</code> is rate-limited and meant for development. Keep the old path layout and nothing needs a redirect.</p></div>
+    <div class="panel"><h3>Cache and purge</h3><p>With default headers (<code>max-age=0, must-revalidate</code> + ETag), a promoted version is served on the next request; Cloudflare's docs describe no purge step. Where <code>_headers</code> sets a longer max-age on unfingerprinted URLs (CheatSheets: <code>/*.html</code> 1800 s), browsers may keep the old copy that long, and no purge reaches browsers. The fleet purges the host after each promote as cheap insurance for Cloudflare-held copies; a failed purge only warns. A zone Browser Cache TTL overrides lower values you set.</p></div>
+    <div class="panel"><h3>Routes, not custom domains</h3><p>All 12 hosts use a route over the existing proxied record. Custom domains would require deleting the DNS record first, which removes the instant rollback. Alias hosts get one Single Redirect rule each, appended idempotently by script, never a Worker.</p></div>
+    <div class="panel"><h3>Tool versions</h3><p><code>npm ci</code> installs each repo's pinned wrangler; latest is 4.143.0 (2026-09-28). <code>wrangler triggers deploy</code> is still marked experimental. The versions commands need wrangler &ge; 3.73 without flags; <code>versions upload</code> cannot create a Worker, so the first deploy is always <code>wrangler deploy</code>.</p></div>
+  </div>
+</section>
+
+<!-- 09 -->
+<section class="block" id="incidents" aria-labelledby="incidents-h">
+  <p class="sec-no">09 / Incident log</p>
+  <h2 id="incidents-h">What broke during a 12-site Workers migration?</h2>
+  <p class="intro">Every row is from the migration's git history. The general rule is the part to keep.</p>
+  <div class="tbl wide">
+    <table>
+      <thead><tr><th>Date</th><th>Symptom</th><th>Root cause</th><th>Fix</th><th>General rule</th></tr></thead>
+      <tbody>
+        <tr><td class="num">2026-09-27</td><td><code>vellum.capital/whitepaper</code> redirect gone after cutover</td><td>A Forwarding URL Page Rule; Page Rules are ignored for requests a Worker route serves</td><td>Recreated as a zone Single Redirect</td><td>Inventory Page Rules per host before adding a route; convert every forwarding rule first.</td></tr>
+        <tr><td class="num">2026-09-27</td><td>Parity failed on identical pages</td><td>Cloudflare-injected markup: beacon script and its newline, Cloudflare Fonts, Google Fonts links, HTTPS rewrites of <code>http:host</code>, email obfuscation</td><td>Normalizers applied to HTML before hashing</td><td>Diff the bytes readers receive only after removing what the edge adds to both sides.</td></tr>
+        <tr><td class="num">2026-09-27/28</td><td>Four sites shipped different bytes from Windows builds</td><td>CRLF checkouts</td><td><code>.gitattributes</code>: <code>* text=auto eol=lf</code> in the scaffold</td><td>A build must be byte-identical on every OS that can deploy it.</td></tr>
+        <tr><td class="num">2026-09-27/28</td><td>Eleventy builds differed by machine</td><td>Dates rendered in the builder's local time zone (Denver)</td><td><code>TZ=UTC</code> in the build command</td><td>Pin time zone and locale in any build that prints dates.</td></tr>
+        <tr><td class="num">2026-09-27</td><td>Parity flagged <code>Strict-Transport-Security: max-age=0</code> on one zone</td><td>Zone HSTS setting enabled with <code>max_age 0</code>: no policy</td><td>Allow-listed with its reason; parity made it visible</td><td>Verify security settings by the header value, not the dashboard toggle.</td></tr>
+        <tr><td class="num">2026-09-28</td><td>Six sites missing X-Frame-Options, nosniff, Referrer-Policy</td><td>nginx added them server-wide; parity compared headers only after those sites moved</td><td>Restored in <code>_headers</code> and script code; <code>fleet_check</code> now requires them and an HTML 404</td><td>Port the server config, not just the vhost; gate on it.</td></tr>
+        <tr><td class="num">2026-09-28</td><td>Fleet check reported 175 bogus failing paths</td><td><code>&lt;image:loc&gt;</code> R2 URLs in the sitemap were read as apex page paths</td><td>Sitemap parsing restricted to page URLs</td><td>Parse sitemaps by element, not by URL-shaped strings.</td></tr>
+        <tr><td class="num">2026-09-28</td><td>Live verification failed on large pages; read as 6 to 15 min "edge lag"</td><td><code>echo "$BODY" | grep -q</code> under <code>pipefail</code>: grep exits early, echo dies of SIGPIPE (141) on any page over the 64 KB pipe buffer</td><td>Here-string: <code>grep -qF -- "$S" &lt;&lt;&lt;"$BODY"</code>. The longer timeouts and purge step added during the misdiagnosis landed 17 min before the real fix</td><td><strong>Prove the verifier on a known-good page before blaming the platform.</strong></td></tr>
+        <tr><td class="num">2026-09-28</td><td>Scheduled publish exited 22 after publishing correctly</td><td><code>curl -f</code> inside <code>$(&hellip;)</code> under <code>set -e</code>, plus Bot Fight Mode challenging the CI runner (403)</td><td>Tolerant fetch in the verify loop; fall back to <code>wrangler deployments status</code></td><td>Verification code needs the same error handling as deploy code, and CI egress IPs get challenged.</td></tr>
+        <tr><td class="num">2026-09-28</td><td>Forms deploy printed "preview only" after going live</td><td>The JSONC "is it routed?" regex had single backslashes in a raw string; Python raised; the fallback branch assumed unrouted</td><td>Regex fixed</td><td>A detection failure must stop the script, not pick a default branch.</td></tr>
+        <tr><td class="num">2026-09</td><td>wrangler crashed with EISDIR</td><td>A directory named <code>_redirects/</code> in the assets root</td><td>Staging writes a file, never a directory, at that name</td><td><code>_redirects</code> and <code>_headers</code> are reserved file names in <code>assets.directory</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="block" id="mistakes" aria-labelledby="mistakes-h">
+  <p class="sec-no">10 / Common mistakes</p>
+  <h2 id="mistakes-h">Common mistakes moving static sites to Workers</h2>
+  <ul class="mistakes">
+    <li><b>Leaving forwarding Page Rules on a routed host</b>They stop firing the moment the route exists, and parity cannot see it. <span class="fix">Fix: convert to Single Redirects before cutover.</span></li>
+    <li><b>Trusting <code>html_handling</code> for legacy URLs</b>It answers 307, and only for forms of files that exist. Slashless legacy URLs 404. <span class="fix">Fix: explicit 301 lines for every variant with backlinks.</span></li>
+    <li><b>Assuming <code>_headers</code> covers script responses</b>It applies to assets only. A <code>run_worker_first</code> page ships without security headers. <span class="fix">Fix: set them in code too.</span></li>
+    <li><b>Leaving <code>not_found_handling</code> at its default</b><code>none</code> returns a bare 404 with no page on an assets-only site. <span class="fix">Fix: <code>404-page</code> + <code>404.html</code>.</span></li>
+    <li><b>Deploying HTML before its form Worker</b>Submissions 404 until the forms route exists. <span class="fix">Fix: forms Worker first, or a service binding.</span></li>
+    <li><b>Setting secrets on an upload-only Worker</b><code>wrangler secret put</code> refuses when the latest version is not deployed. <span class="fix">Fix: <code>wrangler versions secret put</code>.</span></li>
+    <li><b>Connecting Git builds</b>Every push goes live and the human approval gate disappears. <span class="fix">Fix: local guarded deploys; CI only for guarded data-only publishes.</span></li>
+    <li><b>Publishing origin details</b>Origin IPs, SSH hosts, server paths, and account/zone/database ids in public docs let attackers bypass Cloudflare. <span class="fix">Fix: placeholders; describe the origin generically.</span></li>
+    <li><b>Believing a challenged parity run</b>When Bot Fight Mode challenges most probes, "no differences" means nothing. <span class="fix">Fix: treat more than max(5, 10%) challenged as exit 2.</span></li>
+    <li><b>Blaming propagation first</b>Version promotion is fast; a verifier that fails intermittently on big pages is more likely broken. <span class="fix">Fix: test the checker against a known-good page.</span></li>
+  </ul>
+</section>
+
+<!-- 11 -->
+<section class="block" id="sources" aria-labelledby="sources-h">
+  <p class="sec-no">11 / Sources</p>
+  <h2 id="sources-h">Sources</h2>
+  <p class="note">Cloudflare docs read 2026-09-28. Fleet repositories other than CheatSheets are private and cited as "fleet repository".</p>
+  <ul class="sources">
+    <li><a href="https://developers.cloudflare.com/workers/static-assets/">Workers static assets overview</a>: asset-only requests are free, default caching headers, <code>not_found_handling</code> modes.</li>
+    <li><a href="https://developers.cloudflare.com/workers/static-assets/routing/advanced/html-handling/">HTML handling</a>: the four modes and their 307 redirects.</li>
+    <li><a href="https://developers.cloudflare.com/workers/static-assets/redirects/">Redirects</a>: <code>_redirects</code> syntax, status codes, 200 rewrites, static-before-dynamic, limits.</li>
+    <li><a href="https://developers.cloudflare.com/workers/static-assets/headers/">Headers</a>: <code>_headers</code> syntax; not applied to Worker-generated responses.</li>
+    <li><a href="https://developers.cloudflare.com/workers/static-assets/binding/">Static assets binding and configuration</a>: <code>run_worker_first</code> patterns, <code>binding</code>, <code>.assetsignore</code>.</li>
+    <li><a href="https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/">Billing and limitations</a>: free asset requests, 429 on over-quota script paths.</li>
+    <li><a href="https://developers.cloudflare.com/workers/platform/limits/">Workers limits</a>: 20,000 / 100,000 files, 25 MiB, <code>_redirects</code> and <code>_headers</code> caps, routes per zone.</li>
+    <li><a href="https://developers.cloudflare.com/workers/platform/pricing/">Workers pricing</a>: $5 minimum, included requests, service binding billing.</li>
+    <li><a href="https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/">Versions and deployments</a>: <code>versions deploy</code> does not apply triggers.</li>
+    <li><a href="https://developers.cloudflare.com/workers/versions-and-deployments/version-urls/">Version URLs</a>: alias format, 63-char limit, <code>preview_urls</code> default.</li>
+    <li><a href="https://developers.cloudflare.com/workers/configuration/routing/routes/">Routes</a> and <a href="https://developers.cloudflare.com/workers/configuration/routing/custom-domains/">Custom Domains</a>: specificity, proxied-record requirement, CNAME conflict.</li>
+    <li><a href="https://developers.cloudflare.com/ruleset-engine/reference/phases-list/">Ruleset phases list</a>: request-phase order with Single Redirects first.</li>
+    <li><a href="https://developers.cloudflare.com/workers/configuration/workers-with-page-rules/">Workers with Page Rules</a>: Forwarding URL ignored for requests to a Worker.</li>
+    <li><a href="https://developers.cloudflare.com/rules/url-forwarding/single-redirects/">Single Redirects</a> and <a href="https://developers.cloudflare.com/rules/reference/page-rules-migration/">Page Rules migration</a>: per-plan rule counts; Page Rules still available, migration recommended.</li>
+    <li><a href="https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/">Service bindings</a>: private Workers reachable only by binding.</li>
+    <li><a href="https://developers.cloudflare.com/d1/platform/limits/">D1 limits</a> and <a href="https://developers.cloudflare.com/r2/pricing/">R2 pricing</a>; <a href="https://developers.cloudflare.com/r2/buckets/public-buckets/">R2 public buckets</a>: custom domain requirements.</li>
+    <li><a href="https://developers.cloudflare.com/turnstile/get-started/server-side-validation/">Turnstile server-side validation</a>: siteverify parameters, 300 s single-use tokens.</li>
+    <li><a href="https://developers.cloudflare.com/workers/wrangler/commands/workers/">Wrangler commands</a>: <code>versions upload</code>, <code>versions deploy</code>, <code>triggers deploy</code> (experimental), <code>rollback</code>, <code>versions secret put</code>.</li>
+    <li><a href="https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/">Migrate from Pages to Workers</a> and the <a href="https://developers.cloudflare.com/pages/">Pages overview</a> ("Start new projects with Workers").</li>
+    <li>This site's config and code, public: <a href="https://github.com/DavidVeksler/CheatSheets/blob/main/wrangler.jsonc"><code>wrangler.jsonc</code></a>, <a href="https://github.com/DavidVeksler/CheatSheets/tree/main/workers/site"><code>workers/site</code></a>, <a href="https://github.com/DavidVeksler/CheatSheets/tree/main/workers/forms"><code>workers/forms</code></a>, <a href="https://github.com/DavidVeksler/CheatSheets/blob/main/scripts/deploy-cloudflare.sh"><code>scripts/deploy-cloudflare.sh</code></a>, <a href="https://github.com/DavidVeksler/CheatSheets/blob/main/deploy/cloudflare/_headers"><code>deploy/cloudflare/_headers</code></a>.</li>
+    <li>Fleet repository (private): the static-migration kit's runbook, deploy template, <code>cf_parity.py</code>, <code>soak_check.py</code>, <code>fleet_check.py</code> and contact-Worker template; each site's <code>wrangler.jsonc</code>, <code>_redirects</code> generator and forms Worker.</li>
+  </ul>
+</section>
+
+<section class="block" id="related" aria-labelledby="related-h" data-seo-related-links>
+  <p class="sec-no">Related</p>
+  <h2 id="related-h">Related Software &amp; DevOps cheatsheets</h2>
+  <div class="related">
+    <a href="wordpress-to-static.html"><b>WordPress to static</b>Choosing and building the generator that produces <code>dist/</code>.</a>
+    <a href="linux-server-hardening.html"><b>Linux server hardening</b>The origin that remains for the dynamic sites.</a>
+    <a href="modern-devops-pipelines.html"><b>Modern DevOps pipelines</b>CI/CD context for gated deploys.</a>
+    <a href="observability-logs-metrics-traces-slos.html"><b>Observability</b>Logs, metrics and SLOs once access logs are gone.</a>
+    <a href="api-design-rest-graphql-grpc-webhooks.html"><b>API design</b>REST, webhooks and form endpoints.</a>
+    <a href="aws-vs-azure.html"><b>AWS vs Azure</b>The hyperscaler alternatives for hosting.</a>
+    <a href="how-its-built.html"><b>How it's built</b>The pipeline that writes and ships this collection.</a>
+  </div>
+</section>
+
+</div>
+</main>
+
+<div class="wrap site-foot">
+<p class="author-byline" style="max-width:70ch;margin:2rem auto 1rem;text-align:center;font-size:0.92em;">
+  David Veksler is a Principal AI Engineer in Denver. He leads agentic AI engineering at Antech, a Mars company, and builds AI platforms for regulated financial firms. This page was produced by a governed, multi-agent Claude Code pipeline with a git audit trail. <a href="how-its-built.html">How it's built</a> <a href="https://davidveksler.com/work/regulated-lender-ai-platform/?ref=cheatsheets">The regulated-lender case study</a>
+</p>
+<footer style="text-align:center;font-size:0.85em;margin-top:1rem;">
+  <p style="margin:0;">AI-generated reference by <a href="https://davidveksler.com/?ref=cheatsheets">David Veksler</a> &middot; Part of <a href="https://cheatsheets.davidveksler.com/">David Veksler's Cheatsheets</a>.</p>
+<nav class="cs-breadcrumb" data-site-breadcrumb aria-label="Breadcrumb" style="margin:1.25rem auto 0;max-width:72ch;text-align:center;font-size:.88em;line-height:1.6;">
+  <a href="./">Cheat sheets</a> <span aria-hidden="true">&rsaquo;</span> <a href="software-devops">Software &amp; DevOps cheat sheets</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Cloudflare Workers Static Assets: 12-Site Migration Runbook</span>
+</nav>
+<script type="application/ld+json" data-site-breadcrumb-ld>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Cheat sheets","item":"https://cheatsheets.davidveksler.com/"},{"@type":"ListItem","position":2,"name":"Software & DevOps","item":"https://cheatsheets.davidveksler.com/software-devops"},{"@type":"ListItem","position":3,"name":"Cloudflare Workers Static Assets: 12-Site Migration Runbook"}]}</script>
+</footer>
+</div>
+
+<script type="application/json" id="tracerData">{"skip": "Not reached.", "hops": [{"id": "dns", "name": "DNS: proxied record", "def": "Orange-cloud A/CNAME sends the request to Cloudflare. Unchanged at cutover."}, {"id": "zone", "name": "Zone rules: Single Redirects, WAF, bots", "def": "No zone rule matched; request continues."}, {"id": "pagerule", "name": "Page Rules: Forwarding URL", "def": "Not consulted for requests served by a Worker route."}, {"id": "route", "name": "Route match: most specific wins", "def": "host/* matched the site Worker."}, {"id": "worker", "name": "Worker script: run_worker_first", "def": "Assets-only Worker, or path not in run_worker_first."}, {"id": "redirects", "name": "_redirects: static, then dynamic", "def": "No rule matched."}, {"id": "assets", "name": "Asset lookup + html_handling", "def": "Looked for a file at this path."}, {"id": "notfound", "name": "not_found_handling", "def": "Only reached when no asset matched."}, {"id": "headers", "name": "_headers (asset responses only)", "def": "Matching rules attach headers."}, {"id": "response", "name": "Response", "def": ""}], "samples": [{"id": "alias", "at": "zone", "label": "www alias", "method": "GET", "url": "https://www.vellum.capital/", "states": "phsssssssh", "act": {"zone": "Zone Single Redirect: www host to apex, 301."}, "status": 301, "location": "https://vellum.capital", "ctype": "text/html", "why": "Alias hosts never reach a Worker: Single Redirects run in the first request phase, so the www record needs no route. The fleet's rule builder appends the request path and keeps the query string."}, {"id": "whitepaper", "at": "zone", "label": "/whitepaper", "method": "GET", "url": "https://vellum.capital/whitepaper", "states": "phxssssssh", "act": {"zone": "Single Redirect, recreated on 2026-09-27 after the cutover lost it: 302 to the PDF.", "pagerule": "The original Forwarding URL Page Rule. Ignored once the host had a Worker route."}, "status": 302, "location": "https://vellum.capital/wp-content/uploads/sites/37/2021/03/Bitcoins-Rise-and-the-Coming-Crypto-Economy-John-Schroder-Vellum-Capital-March-2021.pdf", "ctype": "text/html", "why": "Cloudflare ignores Forwarding URL Page Rules for requests a Worker route serves. The rule fired the day before cutover and stopped the minute the route went live. Convert every forwarding Page Rule to a Single Redirect before adding the route."}, {"id": "forms", "at": "worker", "label": "/api/contact.php", "method": "GET", "url": "https://walletrecovery.info/api/contact.php?health=1", "states": "ppshhssssh", "act": {"route": "walletrecovery.info/api/* is more specific than walletrecovery.info/*, so the forms Worker wins.", "worker": "Forms Worker answers the health probe: D1 inquiry log writable.", "headers": "Not applied: the Worker built this response."}, "status": 200, "location": "", "ctype": "application/json", "body": "{\"ok\":true,\"inquiry_log\":\"writable\"}", "why": "A second route on the same host hands /api/* to a separate forms Worker. The legacy .php URL survives because the Worker's own path table keeps it; the HTML never had to change."}, {"id": "legacy", "at": "redirects", "label": "legacy permalink", "method": "GET", "url": "https://walletrecovery.info/2018/01/08/how-to-recover-your-corrupt-or-deleted-bitcoin-core-wallet/", "states": "ppspphsssh", "act": {"redirects": "Static line generated from the nginx map: 301 to /articles/…/"}, "status": 301, "location": "/articles/how-to-recover-your-corrupt-or-deleted-bitcoin-core-wallet/", "ctype": "", "why": "_redirects runs before the asset lookup, so a WordPress permalink with no file behind it still redirects. The Location is relative, and 301 is written on the line because the default is 302."}, {"id": "feed", "at": "redirects", "label": "/feed/", "method": "GET", "url": "https://vellum.capital/feed/", "states": "ppspphhshh", "act": {"redirects": "/feed/ /feed/index.xml 200 (a rewrite: URL unchanged).", "assets": "Serves /feed/index.xml.", "headers": "/* block adds X-Frame-Options, nosniff, Referrer-Policy."}, "status": 200, "location": "", "ctype": "application/xml", "why": "nginx's index index.xml has no config equivalent: html_handling only knows index.html. A 200 line in _redirects serves the file under the old URL."}, {"id": "about", "at": "redirects", "label": "/about (no .html)", "method": "GET", "url": "https://whopaysforai.org/about", "states": "ppspphhshh", "act": {"redirects": "/about /about.html 200, one generated line per page.", "assets": "html_handling: none. Exact file /about.html served.", "headers": "/* block adds the security trio."}, "status": 200, "location": "", "ctype": "text/html", "why": "Ports nginx try_files $uri.html. With html_handling none nothing is inferred, so the build emits one rewrite per page and fails if the count would pass 2,000. /about/ is a 404 here, exactly as on nginx."}, {"id": "hub", "at": "worker", "label": "run_worker_first hub", "method": "GET", "url": "https://cheatsheets.davidveksler.com/software-devops", "states": "ppsphphssh", "act": {"redirects": "Also applies to env.ASSETS.fetch(); no rule matches /_x/hub/.", "worker": "Path is in run_worker_first. Script fetches the prerendered /_x/hub/software-devops.html through env.ASSETS.", "assets": "Asset read through the binding; html_handling none, exact path.", "headers": "Worker sets its own headers: Cache-Control and the security trio."}, "status": 200, "location": "", "ctype": "text/html", "cache": "public, max-age=300", "why": "A PHP category page became a build-time prerender. The script runs only for the ~42 listed globs; every other path is an asset request that never invokes (or bills) the script. The Worker sets Cache-Control and the security headers itself."}, {"id": "307", "at": "assets", "label": "page.html → 307", "method": "GET", "url": "https://walletrecovery.info/faq.html", "states": "ppsppphssh", "act": {"assets": "auto-trailing-slash: /faq.html is not canonical. 307 to /faq/."}, "status": 307, "location": "/faq/", "ctype": "", "why": "html_handling normalizes with 307 Temporary Redirect, never 301. Harmless for internal links; wrong for URLs with backlinks. Write legacy variants as explicit 301 lines in _redirects."}, {"id": "404", "at": "notfound", "label": "missing path", "method": "GET", "url": "https://walletrecovery.info/nope-xyz/", "states": "ppspppphhh", "act": {"assets": "No file, no index.html under the folder.", "notfound": "404-page: serves the nearest 404.html up the tree, status 404.", "headers": "/* block still applies."}, "status": 404, "location": "", "ctype": "text/html", "why": "not_found_handling defaults to none, which returns a bare 404 with no HTML page. Set 404-page and ship a 404.html at the root."}]}</script>
+<script>
+(() => {
+  const root = document.documentElement;
+  root.classList.add('js');
+
+  // theme toggle: auto -> dark -> light
+  const btn = document.getElementById('themeToggle');
+  const store = { get() { try { return localStorage.getItem('cwsh-theme'); } catch { return null; } },
+                  set(v) { try { v ? localStorage.setItem('cwsh-theme', v) : localStorage.removeItem('cwsh-theme'); } catch {} } };
+  const apply = (v) => { if (v) root.dataset.theme = v; else delete root.dataset.theme; btn.textContent = 'theme: ' + (v || 'auto'); };
+  apply(store.get());
+  btn.addEventListener('click', () => {
+    const cur = root.dataset.theme || '';
+    const next = cur === '' ? 'dark' : cur === 'dark' ? 'light' : '';
+    apply(next); store.set(next);
+  });
+
+  // copy buttons
+  document.querySelectorAll('.copy').forEach(b => b.addEventListener('click', async () => {
+    const text = b.closest('.code').querySelector('pre').innerText;
+    try { await navigator.clipboard.writeText(text); b.textContent = 'copied'; }
+    catch { b.textContent = 'select + ctrl-c'; }
+    setTimeout(() => { b.textContent = 'copy'; }, 1600);
+  }));
+
+  // tracer
+  const data = JSON.parse(document.getElementById('tracerData').textContent);
+  const hopsEl = document.getElementById('hops');
+  const btnsEl = document.getElementById('sampleButtons');
+  const sel = document.getElementById('sampleSelect');
+  const req = document.getElementById('reqLine');
+  const ver = document.getElementById('verdict');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const cls = n => 's' + String(n)[0];
+
+  const hopNodes = data.hops.map(h => {
+    const li = document.createElement('li');
+    li.className = 'hop';
+    li.innerHTML = '<span class="name">' + esc(h.name) + '</span><span class="act"></span>';
+    hopsEl.appendChild(li);
+    return li;
+  });
+
+  const STATE = { h: 'hit', p: 'pass', s: 'skip', x: 'x' };
+  function show(i, focus) {
+    const s = data.samples[i];
+    [...btnsEl.children].forEach((li, j) => li.firstChild.setAttribute('aria-pressed', String(j === i)));
+    sel.value = String(i);
+    req.innerHTML = '<span class="verb">' + s.method + '</span>' + esc(s.url);
+    data.hops.forEach((h, k) => {
+      const st = STATE[s.states[k]];
+      const node = hopNodes[k];
+      node.dataset.state = st;
+      let act = s.act[h.id];
+      if (h.id === 'response') act = s.status + (s.location ? ' → ' + s.location : '') + (s.ctype ? ' · ' + s.ctype : '');
+      else if (act === undefined) act = st === 'skip' ? data.skip : h.def;
+      node.querySelector('.act').textContent = act;
+    });
+    let kv = '';
+    if (s.location) kv += '<dt>Location</dt><dd>' + esc(s.location) + '</dd>';
+    if (s.ctype) kv += '<dt>Content-Type</dt><dd>' + esc(s.ctype) + '</dd>';
+    if (s.cache) kv += '<dt>Cache-Control</dt><dd>' + esc(s.cache) + '</dd>';
+    if (s.body) kv += '<dt>Body</dt><dd>' + esc(s.body) + '</dd>';
+    const decided = (data.hops.find(h => h.id === s.at) || {name: ''}).name.split(':')[0];
+    ver.innerHTML = '<div class="big"><span class="stamp ' + cls(s.status) + '">' + s.status + '</span><span class="mono dim">decided at: ' + esc(decided) + '</span></div>'
+      + (kv ? '<dl class="kv">' + kv + '</dl>' : '')
+      + '<p class="why"><b>why</b>' + esc(s.why) + '</p>';
+    if (focus) req.focus?.();
+  }
+
+  data.samples.forEach((s, i) => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = s.label;
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => show(i));
+    li.appendChild(b);
+    btnsEl.appendChild(li);
+    const o = document.createElement('option');
+    o.value = String(i); o.textContent = s.label + ' (' + s.status + ')';
+    sel.appendChild(o);
+  });
+  sel.addEventListener('change', () => show(+sel.value));
+  const start = Math.max(0, data.samples.findIndex(s => s.id === 'whitepaper'));
+  show(start);
+
+  const showAll = document.getElementById('showAll');
+  const staticEl = document.getElementById('tracerStatic');
+  showAll.addEventListener('click', () => {
+    const open = staticEl.classList.toggle('open');
+    showAll.setAttribute('aria-expanded', String(open));
+    showAll.textContent = open ? 'hide the table' : 'show all samples as a table';
+  });
+})();
+</script>
+</body>
+</html>
