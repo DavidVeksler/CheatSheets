@@ -68,7 +68,7 @@ function respond(bool $ok, string $msg, int $code = 200): void {
        // Success here means "we sent you a link", so the glyph is an envelope, not a tick.
        . '<div class="mb-3">' . ($ok ? chrome_icon('envelope', 'ico-mail') : chrome_icon('warning', 'ico-warn')) . '</div>'
        . '<p class="lead mb-4">' . $safe . '</p>'
-       . '<a class="btn btn-primary" href="index.php">' . chrome_icon('arrow-left') . 'Back to the cheatsheets</a>'
+       . '<a class="btn btn-primary" href="./">' . chrome_icon('arrow-left') . 'Back to the cheatsheets</a>'
        . '</main></body></html>';
     exit;
 }
@@ -142,7 +142,7 @@ $record = json_encode(
 
 // ------------------------------------------------------------- Confirmation ----
 $token = newsletter_mint_token($email, $secret);
-$confirmUrl = site_base_url() . '/confirm.php?p=' . rawurlencode($token['p']) . '&s=' . rawurlencode($token['s']);
+$confirmUrl = site_base_url() . '/confirm?p=' . rawurlencode($token['p']) . '&s=' . rawurlencode($token['s']);
 $message = build_confirmation_email($confirmUrl);
 
 $sendResult = resend_send_email($SENDING_KEY, [

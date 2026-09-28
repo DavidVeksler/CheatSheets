@@ -362,7 +362,7 @@ chrome_open(
     "Popularity · Cheatsheets",
     '30-day trending view counts for every cheatsheet, pulled nightly from Cloudflare Analytics.',
     '📊',
-    $baseUrl . 'popularity.php',
+    $baseUrl . 'popularity',
     'popularity'
 );
 ?>

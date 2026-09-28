@@ -16,6 +16,9 @@ the stated effect, or the deploy fails (spec §5):
   max-age, only HTML was ever purged); the candidate must equal the droplet origin
   itself, fetched directly (pinned to the droplet IP).
 - /history.php URLs: 301 to exactly the GitHub page for the same view.
+- the .php URL retirement (2026-09-28, scripts/url_rename.py): production's old .php
+  links (sheets, robots.txt, llms-full.txt) are mapped to the new URLs before
+  comparing, each retired URL must 301 to its clean one, and the clean pages answer 200.
 
     python3 scripts/parity_body_recheck.py .wrangler/parity-<sha>.json [--base origin/main]
 """
@@ -33,6 +36,7 @@ from pathlib import Path
 KIT = os.environ.get("CF_KIT", os.path.join(os.path.expanduser("~"), "Projects", "cf-static-kit"))
 sys.path.insert(0, os.path.join(KIT, "scripts"))
 import cf_parity as P  # noqa: E402
+from url_rename import CLEAN_PAGES, REDIRECTS, rename_links  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 DROPLET_IP = os.environ.get("CS_DROPLET_IP", "198.211.102.9")
@@ -67,7 +71,7 @@ def changed_sheets(base: str) -> set[str]:
 def html_explained(prod: dict, cand: dict) -> bool:
     pt = prod["body"].decode("utf-8", "replace")
     ct = cand["body"].decode("utf-8", "replace")
-    pt = CF_FONTS.sub("", pt).replace(*HISTORY_HREF)
+    pt = rename_links(CF_FONTS.sub("", pt).replace(*HISTORY_HREF))
     ct = GOOGLE_FONTS.sub("", ct)
     pt = GOOGLE_FONTS.sub("", pt)  # preconnect links the zone leaves in place
     return P.norm_body(pt.encode(), "text/html") == P.norm_body(ct.encode(), "text/html")
@@ -110,6 +114,8 @@ def main() -> int:
             good = catalog_explained(prod, cand, changed)
         elif ctype == "text/html":
             good = html_explained(prod, cand)
+        elif ctype == "text/plain" and path in ("/robots.txt", "/llms-full.txt"):
+            good = rename_links(prod["body"].decode("utf-8", "replace")).encode() == cand["body"]
         else:
             origin = origin_fetch(path)
             good = bool(origin) and hashlib.sha256(origin).digest() == hashlib.sha256(cand["body"]).digest()
@@ -121,6 +127,19 @@ def main() -> int:
         c = P.fetch(rep["candidate"] + path)
         if c["status"] != 301 or c["headers"].get("location") != target:
             bad.append((path, f"expected 301 {target}, got {c['status']} {c['headers'].get('location')}"))
+        else:
+            ok += 1
+    for old, new in REDIRECTS.items():
+        c = P.fetch(rep["candidate"] + old + "?p=x")
+        loc = c["headers"].get("location", "")
+        if c["status"] != 301 or loc != rep["candidate"] + new + "?p=x":
+            bad.append((old, f"expected 301 {new}?p=x, got {c['status']} {loc}"))
+        else:
+            ok += 1
+    for path in CLEAN_PAGES:
+        c = P.fetch(rep["candidate"] + path)
+        if c["status"] != 200:
+            bad.append((path, f"expected 200, got {c['status']}"))
         else:
             ok += 1
     for path, why in bad:

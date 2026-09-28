@@ -1,8 +1,9 @@
 // Site Worker for cheatsheets.davidveksler.com on Workers static assets.
 //
 // Runs only for the run_worker_first globs in wrangler.jsonc: "/", "/*.php",
-// "/_x/*", the category hub slugs (with and without a trailing slash),
-// "/favicon.ico" and the two provenance files. Everything else is a static asset.
+// "/_x/*", the clean page URLs (/popularity, /sitemap.xml, /subscribe, /confirm),
+// the category hub slugs (with and without a trailing slash), "/favicon.ico" and
+// the two provenance files. Everything else is a static asset.
 //
 // It does per request what nginx + PHP did (spec: docs/specs/cloudflare-migration.md):
 //   - the Explorer (index.php) and hubs are prerendered by scripts/build_site.py into
@@ -10,8 +11,11 @@
 //     noindex exactly where index.php did;
 //   - ?cat= / ?category= / ?hub= 301 to the hub slug (index.php's redirects);
 //   - /history.php 301s to the GitHub history (D-2: the git browser is retired);
-//   - /subscribe.php and /confirm.php go to the forms Worker (service binding FORMS);
-//   - /popularity.php and /sitemap.php serve their prerendered output.
+//   - /subscribe and /confirm go to the forms Worker (service binding FORMS);
+//   - /popularity and /sitemap.xml serve their prerendered output.
+// The public URLs dropped .php on 2026-09-28. The old spellings 301 to the new ones
+// (LEGACY), except /subscribe.php, which still goes to the forms Worker so a POST
+// from a page cached before the rename keeps working.
 // Responses built here don't get dist/_headers, so the security headers and the
 // droplet's Cache-Control values are set in code.
 
@@ -33,6 +37,8 @@ const SHEET_FILES = new Set(routes.sheetFiles);
 const PATHS = new Set(routes.paths);
 const PROVENANCE = new Set(routes.provenance.map((p) => "/" + p));
 // WordOps location = /favicon.ico falls back to nginx's empty_gif (43 bytes).
+// Retired .php URLs -> their clean path, query kept (/index.php is handled in explorer()).
+const LEGACY = { "/popularity.php": "/popularity", "/sitemap.php": "/sitemap.xml", "/confirm.php": "/confirm" };
 const EMPTY_GIF = Uint8Array.from(atob("R0lGODlhAQABAIABAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAICTAEAOw=="), (c) => c.charCodeAt(0));
 
 function withHeaders(resp, extra = {}) {
@@ -108,6 +114,7 @@ function rewriteHead(resp, { noindex, sheet }) {
 
 async function explorer(request, env, url) {
   const p = url.searchParams;
+  const legacy = url.pathname === "/index.php";
   // Every other spelling of a hub 301s to its slug (index.php, "Hub URLs").
   const hub = q(p, "hub");
   if (hub !== "") {
@@ -117,8 +124,10 @@ async function explorer(request, env, url) {
   }
   const cat = q(p, "cat");
   if (cat !== "" && CATEGORIES[cat]) return hubRedirect(url, CATEGORIES[cat], ["cat", "category"]);
-  const legacy = q(p, "category");
-  if (legacy !== "" && CATEGORIES[legacy]) return hubRedirect(url, CATEGORIES[legacy], ["cat", "category"]);
+  const category = q(p, "category");
+  if (category !== "" && CATEGORIES[category]) return hubRedirect(url, CATEGORIES[category], ["cat", "category"]);
+  // /index.php: after the hub redirects above (one hop, as before), 301 to "/".
+  if (legacy) return redirect(`${url.origin}/${url.search}`);
 
   // Lens documents the prerender carries separately; everything else is the grid,
   // whose JS applies the filter/sort/lens state from the URL.
@@ -159,10 +168,13 @@ export default {
     const path = url.pathname;
 
     if (path === "/" || path === "/index.php") return explorer(request, env, url);
-    if (path === "/subscribe.php" || path === "/confirm.php") return withHeaders(await env.FORMS.fetch(request));
+    if (path === "/subscribe" || path === "/subscribe.php" || path === "/confirm") {
+      return withHeaders(await env.FORMS.fetch(request));
+    }
+    if (LEGACY[path]) return redirect(`${url.origin}${LEGACY[path]}${url.search}`);
     if (path === "/history.php") return history(url);
-    if (path === "/popularity.php") return asset(env, request, "/_x/popularity.html", { "cache-control": "public, max-age=3600" });
-    if (path === "/sitemap.php") {
+    if (path === "/popularity") return asset(env, request, "/_x/popularity.html", { "cache-control": "public, max-age=3600" });
+    if (path === "/sitemap.xml") {
       return asset(env, request, "/_x/sitemap.xml", { "cache-control": "public, max-age=3600", "content-type": "text/xml; charset=utf-8" });
     }
     if (path === "/favicon.ico") {

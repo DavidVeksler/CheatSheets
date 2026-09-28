@@ -47,7 +47,7 @@ touches a cheatsheet.
 - `catalog.json` — generated data layer behind the Explorer (see `scripts/build_catalog.py`)
 - `paths.json` — hand-curated trails for the Paths lens
 - `category-map.php` — filename-to-category source of truth
-- `sitemap.php` and `llms.txt` — search and AI discovery surfaces
+- `sitemap.php` (served as `/sitemap.xml`) and `llms.txt` — search and AI discovery surfaces
 - `TODO/` — queued page specs plus durable SEO and audit workflows
 - `how-its-built.html` — the public engineering case study for this pipeline
 

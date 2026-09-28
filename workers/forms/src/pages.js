@@ -32,7 +32,7 @@ const HEAD = (title) =>
   "<style>.ico{width:56px;height:56px;display:inline-block}.ico-ok{color:#198754}.ico-warn{color:#dc3545}.ico-mail{color:#0d6efd}.btn .ico{width:1em;height:1em;vertical-align:-.15em;margin-right:.35em}</style></head>" +
   '<body class="d-flex min-vh-100 align-items-center justify-content-center bg-light text-center">';
 
-const BACK = `<a class="btn btn-primary" href="index.php">${ICON.arrowLeft()}Back to the cheatsheets</a>`;
+const BACK = `<a class="btn btn-primary" href="/">${ICON.arrowLeft()}Back to the cheatsheets</a>`;
 
 // subscribe.php respond(): the no-JS page.
 export function subscribePage(ok, msg) {

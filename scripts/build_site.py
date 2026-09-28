@@ -46,6 +46,10 @@ HOST = "cheatsheets.davidveksler.com"
 # as text/plain. The site Worker sets the content type.
 PROVENANCE = ["docs/how-do-rainbows-work-production.md", "scripts/grass_green/build_spectra.py"]
 
+# Page URLs the site Worker answers (workers/site/index.js): prerendered popularity and
+# sitemap, and the newsletter endpoints forwarded to the forms Worker.
+CLEAN_URLS = ["/popularity", "/sitemap.xml", "/subscribe", "/confirm"]
+
 # Files nginx never served, by name or rule. Anything here 404s on Workers.
 INTERNAL_DIRS = {"docs", "marketing", "TODO", "scripts", "deploy", "conf", "lib", "workers", "state"}
 INTERNAL_ROOT_NAMES = {"AGENTS.md", "SEO_PROMPT.txt", "requirements.txt", "check-category-map.php",
@@ -157,7 +161,9 @@ def clamp_text(s: str, n: int) -> str:
 
 # ----------------------------------------------------------- worker globs --
 def worker_first(hub_slugs: list[str]) -> list[str]:
-    globs = ["/", "/*.php", "/_x/*", "/404.html", "/favicon.ico", *(("/" + p) for p in PROVENANCE)]
+    # CLEAN_URLS: the public page URLs (no .php since 2026-09-28); "/*.php" keeps the
+    # retired spellings on the Worker so they 301 (and /subscribe.php still posts).
+    globs = ["/", "/*.php", "/_x/*", "/404.html", "/favicon.ico", *CLEAN_URLS, *(("/" + p) for p in PROVENANCE)]
     for s in sorted(hub_slugs):
         globs += [f"/{s}", f"/{s}/"]
     if len(globs) > 100:
@@ -234,8 +240,8 @@ def main() -> int:
     path_ids = [p["id"] for p in paths if isinstance(p, dict) and p.get("id") and p.get("steps")]
     jobs = [("index.php", "/", "", X / "index.html"),
             ("index.php", "/", "view=paths", X / "paths.html"),
-            ("popularity.php", "/popularity.php", "", X / "popularity.html"),
-            ("sitemap.php", "/sitemap.php", "", X / "sitemap.xml")]
+            ("popularity.php", "/popularity", "", X / "popularity.html"),
+            ("sitemap.php", "/sitemap.xml", "", X / "sitemap.xml")]
     jobs += [("index.php", "/", f"view=paths&path={pid}", X / "path" / f"{pid}.html") for pid in path_ids]
     jobs += [("index.php", f"/{slug}", f"hub={slug}", X / "hub" / f"{slug}.html") for slug in sorted(slug_to_cat)]
     for page, uri, query, out in jobs:

@@ -38,6 +38,8 @@ The build runs only the four gates above. The SEO gate (`scripts/seo_check.py`),
 
 Caching: `.html` `max-age=1800` (`_headers`); Explorer and hubs `max-age=300`, popularity/sitemap `3600` (set in the Worker).
 
+Public URLs carry no `.php` (since 2026-09-28): `/`, `/popularity`, `/sitemap.xml`, `/subscribe`, `/confirm`. The PHP files stay as build-time templates. `/index.php`, `/popularity.php`, `/sitemap.php` and `/confirm.php` 301 to the clean URL (query kept); `/subscribe.php` is still forwarded to the forms Worker so a cached form keeps posting. Mapping: `LEGACY` in `workers/site/index.js`; the parity gates translate production's old links with `scripts/url_rename.py`.
+
 ## Daily popularity publish (pre-authorized)
 
 The GitHub Action refreshes `popularity.json` + `catalog.json`, commits and pushes them, then builds and deploys the Worker with the Workers-only secret `CLOUDFLARE_WORKERS_TOKEN`. It publishes only when everything between the live Worker's commit and `HEAD` is those two files or unserved paths (`docs/`, `marketing/`, `TODO/`, root `*.md`, ...). Any other change is reported as DRIFT and waits for `scripts/deploy-cloudflare.sh`. A manual run defaults to a dry run.

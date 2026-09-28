@@ -36,7 +36,7 @@ function render(bool $ok, string $heading, string $body): void
        . '<div class="mb-3">' . ($ok ? chrome_icon('check-circle', 'ico-ok') : chrome_icon('warning', 'ico-warn')) . '</div>'
        . '<h1 class="h4 mb-2">' . $h . '</h1>'
        . '<p class="lead mb-4">' . $b . '</p>'
-       . '<a class="btn btn-primary" href="index.php">' . chrome_icon('arrow-left') . 'Back to the cheatsheets</a>'
+       . '<a class="btn btn-primary" href="./">' . chrome_icon('arrow-left') . 'Back to the cheatsheets</a>'
        . '</main></body></html>';
     exit;
 }

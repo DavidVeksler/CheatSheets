@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 #
 # deploy-forms-cloudflare.sh: guarded deploy of the newsletter forms Worker
-# (workers/forms/, cheatsheets-davidveksler-com-forms), which replaces subscribe.php
-# and confirm.php. It has no route of its own: the site Worker reaches it through
+# (workers/forms/, cheatsheets-davidveksler-com-forms), which replaced subscribe.php
+# and confirm.php and now answers /subscribe and /confirm (the .php spellings too). It has no route of its own: the site Worker reaches it through
 # the FORMS service binding, so it is public exactly when the site Worker is routed.
 # Spec: docs/specs/cloudflare-migration.md §2.4. Kit: ~/Projects/cf-static-kit/docs/runbook.md §4.
 #
 # Flow: preflight (clean tree, token) -> local contract suite (npm run test:forms;
 #   no email leaves the machine) -> site not routed yet: deploy, upload a `preview`
 #   version and probe its health. Site routed (cut over): confirm, deploy, probe
-#   https://cheatsheets.davidveksler.com/subscribe.php?health=1.
+#   https://cheatsheets.davidveksler.com/subscribe.php?health=1 (the spelling every
+#   site Worker version forwards, so the probe holds whichever deploys first).
 # Never submits a signup: the end-to-end test is one real sign-up by David.
 #
 # Usage: scripts/deploy-forms-cloudflare.sh [--yes] [--skip-tests]
@@ -72,13 +73,13 @@ if [ "$ROUTED" -eq 0 ]; then
   "$W" deploy
   "$W" versions upload --preview-alias preview --message "deploy $(git rev-parse --short HEAD)"
   sleep 5
-  probe "preview health" "$PREVIEW/subscribe.php?health=1" "$HEALTHY"
+  probe "preview health" "$PREVIEW/subscribe?health=1" "$HEALTHY"
   step "Preview ready, production unchanged: $PREVIEW"
   exit 0
 fi
 
 if [ "$YES" -ne 1 ]; then
-  read -r -p "Deploy the forms Worker behind $PROD/subscribe.php and /confirm.php? [y/N] " reply
+  read -r -p "Deploy the forms Worker behind $PROD/subscribe and /confirm? [y/N] " reply
   [[ "$reply" =~ ^[Yy]([Ee][Ss])?$ ]] || { echo "Cancelled."; exit 0; }
 fi
 step "Deploy"

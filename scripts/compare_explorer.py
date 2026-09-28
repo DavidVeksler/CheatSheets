@@ -37,6 +37,8 @@ import urllib.request
 from html.parser import HTMLParser
 from pathlib import Path
 
+from url_rename import rename_links
+
 ROOT = Path(__file__).resolve().parent.parent
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 GH = "https://github.com/DavidVeksler/CheatSheets/commits/main/"
@@ -48,6 +50,9 @@ KNOWN = [
     "catalog version (catalog.json 'generated') differs: the branch rebuilt the catalog",
     "sheets edited on the branch (--base..HEAD) have a newer 'updated' date",
     "popularity.php: 'Where readers come from' (referrer history) is dropped (D-2)",
+    ".php URLs retired (scripts/url_rename.py): production's index/popularity/sitemap/subscribe .php links "
+    "map to /, /<hub>, popularity, sitemap.xml, subscribe; /popularity.php and /sitemap.php are fetched as "
+    "/popularity and /sitemap.xml on the candidate",
     "Cloudflare zone script injections (challenge platform, beacon) exist only on the droplet side",
 ]
 BLOCK = {"p", "div", "li", "tr", "td", "th", "h1", "h2", "h3", "h4", "section", "article", "header", "footer",
@@ -281,7 +286,9 @@ def main() -> int:
     failures, checked = 0, 0
     print(f"compare_explorer: {prod} vs {cand}; sheets changed since {a.base}: {sorted(changed) or 'none'}")
     for path in pages + state_pages + ["/popularity.php"]:
-        (ps, ph), (cs, ch) = fetch(prod + path), fetch(cand + path)
+        cpath = "/popularity" if path == "/popularity.php" else path
+        (ps, ph), (cs, ch) = fetch(prod + path), fetch(cand + cpath)
+        ph = rename_links(ph)
         checked += 1
         if ps != 200 or cs != 200:
             print(f"FAIL {path}: status {ps} vs {cs}")
@@ -309,7 +316,7 @@ def main() -> int:
     # Sitemap: same URL set (lastmod now comes from git, spec §2.1).
     locs = {}
     for side, base in (("prod", prod), ("cand", cand)):
-        _, body = fetch(base + "/sitemap.php")
+        _, body = fetch(base + ("/sitemap.php" if side == "prod" else "/sitemap.xml"))
         locs[side] = dict(re.findall(r"<loc>([^<]+)</loc>\s*<lastmod>([^<]+)</lastmod>", body))
     checked += 1
     if set(locs["prod"]) != set(locs["cand"]):

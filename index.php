@@ -730,7 +730,7 @@ try{var t=localStorage.getItem('cs-explorer:v1:theme');if(t==='light'||t==='dark
 <meta name="author" content="David Veksler">
 <?php if ($noindex): ?><meta name="robots" content="noindex, follow">
 <?php endif; ?><link rel="canonical" href="<?php echo h($canonical); ?>">
-<link rel="sitemap" type="application/xml" href="<?php echo h($baseUrl); ?>sitemap.php">
+<link rel="sitemap" type="application/xml" href="<?php echo h($baseUrl); ?>sitemap.xml">
 <link rel="alternate" type="text/plain" title="Cheatsheets LLM summary" href="https://cheatsheets.davidveksler.com/llms.txt">
 <link rel="alternate" type="application/json" title="Cheatsheets machine-readable catalog" href="https://cheatsheets.davidveksler.com/catalog.json">
 
@@ -1267,7 +1267,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
     <nav class="topnav" aria-label="Site">
       <a class="hidesm" href="how-its-built.html"><?php echo chrome_icon('hammer'); ?>How it's built</a>
       <a class="hidesm" href="https://github.com/DavidVeksler/CheatSheets/commits/main/" rel="noopener"><?php echo chrome_icon('history'); ?>Change history</a>
-      <a class="hidesm" href="popularity.php"><?php echo chrome_icon('chart'); ?>Popularity</a>
+      <a class="hidesm" href="popularity"><?php echo chrome_icon('chart'); ?>Popularity</a>
       <button class="tbtn" id="openPalette" type="button" aria-haspopup="dialog">
         <?php echo chrome_icon('search'); ?>
         Search <kbd>⌘K</kbd>
@@ -1331,7 +1331,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
     <span><?php echo chrome_icon('check-circle'); ?>Reviewed this week: <b class="num"><?php echo (int)$reviewedThisWeek; ?></b></span>
     <?php endif; ?>
     <?php if ($sparkPoints !== ''): ?>
-    <a class="spark" href="popularity.php" title="Site views, last 24 days">
+    <a class="spark" href="popularity" title="Site views, last 24 days">
       <svg width="118" height="26" viewBox="0 0 118 26" aria-label="Site views over the last 24 days" role="img"><polyline points="<?php echo h($sparkPoints); ?>" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
       <span class="num"><?php echo number_format($sparkLast); ?> views/day</span>
     </a>
@@ -1544,7 +1544,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
       <h2><?php echo chrome_icon('envelope'); ?>Get new references and build notes</h2>
       <p>Occasional email when a new reference ships or the pipeline changes. No spam, no tracking, unsubscribe anytime.</p>
     </div>
-    <form action="subscribe.php" method="post" class="email-signup">
+    <form action="subscribe" method="post" class="email-signup">
       <label class="sr" for="emailSignupField">Email address</label>
       <div class="hp" aria-hidden="true">
         <label for="website-hp">Leave this field empty</label>
@@ -1562,7 +1562,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
     <span>Cheatsheets © <?php echo date('Y'); ?> David Veksler.</span>
     <a href="how-its-built.html"><?php echo chrome_icon('hammer'); ?>How it's built</a>
     <a href="https://github.com/DavidVeksler/CheatSheets/commits/main/" rel="noopener"><?php echo chrome_icon('history'); ?>Change history</a>
-    <a href="popularity.php"><?php echo chrome_icon('chart'); ?>Popularity</a>
+    <a href="popularity"><?php echo chrome_icon('chart'); ?>Popularity</a>
     <a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener"><?php echo chrome_icon('git'); ?>GitHub</a>
     <a href="catalog.json"><?php echo chrome_icon('braces'); ?>catalog.json</a>
     <span class="fcta"><a href="https://www.linkedin.com/in/davidveksler/" rel="noopener" data-ga-linkedin="footer"><?php echo chrome_icon('people'); ?>Working on something similar? Compare notes on LinkedIn.</a></span>

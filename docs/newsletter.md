@@ -8,8 +8,8 @@ A monthly issue computed from git history + `popularity.json`, not written from 
 
 | Piece | State |
 |---|---|
-| Intake | `POST /subscribe.php` → forms Worker `cheatsheets-davidveksler-com-forms` (`workers/forms/`, via the site Worker's `FORMS` service binding) → D1 `subscribers` (intake queue + audit log), sends confirmation via Resend, optional owner notice to `CHEATSHEET_NOTIFY_EMAIL` |
-| Confirm | `GET /confirm.php` → forms Worker → D1 `confirmed` (sendable queue) |
+| Intake | `POST /subscribe` (`/subscribe.php` still accepted) → forms Worker `cheatsheets-davidveksler-com-forms` (`workers/forms/`, via the site Worker's `FORMS` service binding) → D1 `subscribers` (intake queue + audit log), sends confirmation via Resend, optional owner notice to `CHEATSHEET_NOTIFY_EMAIL` |
+| Confirm | `GET /confirm` (`/confirm.php` 301s here, so links sent before 2026-09-28 work) → forms Worker → D1 `confirmed` (sendable queue) |
 | List of record | Resend segment (hosted unsubscribe, suppression, `List-Unsubscribe`) |
 | Hosting | Cloudflare Workers since 2026-09-28; the forms Worker keeps the PHP contract of `subscribe.php`/`confirm.php`. Spec: [`specs/cloudflare-migration.md`](specs/cloudflare-migration.md) §2.4. Deploy: `scripts/deploy-forms-cloudflare.sh`. The PHP files and the droplet's `.subscribers.jsonl`/`.confirmed.jsonl` stay until decommission and no longer receive sign-ups |
 | Server secrets | Worker secrets `NEWSLETTER_TOKEN_SECRET`, `RESEND_SENDING_KEY`, `CHEATSHEET_NOTIFY_EMAIL` (`wrangler secret put`, copied from the droplet's `.newsletter.env` by `scripts/newsletter_secrets_to_worker.py`) |
@@ -31,7 +31,7 @@ Contacts flow one way: D1 `confirmed` → read by the routine (`newsletter_sync.
 ```
 payload = base64url(email) . "." . issued_unix_ts
 sig     = base64url( hmac_sha256(payload, NEWSLETTER_TOKEN_SECRET) )
-link    = https://cheatsheets.davidveksler.com/confirm.php?p=<payload>&s=<sig>
+link    = https://cheatsheets.davidveksler.com/confirm?p=<payload>&s=<sig>
 ```
 Secret: 32+ random bytes, server only. Verify with `hash_equals()`; reject if older than 7 days. Re-confirming is a no-op that shows success. Rotating the secret invalidates unclicked links.
 
@@ -44,9 +44,9 @@ Autonomy tier: draft, permanently.
 ## 3. Architecture
 
 ```
-index.php / how-its-built.html form ─POST─▶ /subscribe.php (site Worker → forms Worker)
+index.php / how-its-built.html form ─POST─▶ /subscribe (site Worker → forms Worker)
     ├─ validate + honeypot → D1 subscribers
-    └─ Resend /emails → confirmation email ─click─▶ /confirm.php → D1 confirmed
+    └─ Resend /emails → confirmation email ─click─▶ /confirm → D1 confirmed
 
 monthly, Windows box (routine):
   scripts/newsletter_digest.py    git log + popularity.json + catalog.json → newsletter/digest-YYYY-MM.json

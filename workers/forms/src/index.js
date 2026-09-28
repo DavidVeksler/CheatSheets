@@ -1,16 +1,19 @@
 /**
  * Newsletter forms Worker for cheatsheets.davidveksler.com: replaces subscribe.php
  * and confirm.php (double opt-in, docs/newsletter.md §2.3). The site Worker hands
- * it /subscribe.php and /confirm.php through a service binding.
+ * it /subscribe, /subscribe.php and /confirm through a service binding (the public
+ * URLs dropped .php on 2026-09-28; the site Worker 301s /confirm.php to /confirm).
  *
  * Shape from cf-static-kit/templates/contact-worker (D1 log, per-IP rate limit that
  * fails open, ?health=1, JSON for fetch() callers vs a page for plain posts); the
  * contract (fields, token format, messages, status codes, pages, email text) is
  * the PHP one, so the signup forms and every confirm link already sent keep working.
  *
- *   POST /subscribe.php      email (+ honeypot "website") -> intake row, confirmation email
- *   GET  /subscribe.php?health=1                          -> 200/503 JSON, booleans only
- *   GET  /confirm.php?p=&s=  HMAC token, 7-day TTL        -> confirmed row, page
+ *   POST /subscribe          email (+ honeypot "website") -> intake row, confirmation email
+ *   GET  /subscribe?health=1                              -> 200/503 JSON, booleans only
+ *   GET  /confirm?p=&s=      HMAC token, 7-day TTL        -> confirmed row, page
+ * The .php spellings are still answered, so deploy order against the site Worker
+ * does not matter and a form cached before the rename still posts.
  *
  * Secrets (wrangler secret put, never in files): NEWSLETTER_TOKEN_SECRET,
  * RESEND_SENDING_KEY, CHEATSHEET_NOTIFY_EMAIL (optional), IP_HASH_SALT (optional).
@@ -191,7 +194,7 @@ async function subscribe(req, env, ctx) {
 
   const token = await mintToken(email, env.NEWSLETTER_TOKEN_SECRET);
   const host = (url.host || "cheatsheets.davidveksler.com").replace(/[^a-z0-9.\-:]/gi, "");
-  const confirmUrl = `${url.protocol}//${host}/confirm.php?p=${encodeURIComponent(token.p)}&s=${encodeURIComponent(token.s)}`;
+  const confirmUrl = `${url.protocol}//${host}/confirm?p=${encodeURIComponent(token.p)}&s=${encodeURIComponent(token.s)}`;
   const mail = confirmationEmail(confirmUrl);
   const from = env.NEWSLETTER_FROM_ADDRESS || DEFAULT_FROM;
   const sent = await resendSend(env, { from, to: email, subject: "Confirm your subscription", html: mail.html, text: mail.text, reply_to: env.NEWSLETTER_REPLY_TO });
@@ -234,8 +237,8 @@ async function confirm(req, env) {
 export default {
   async fetch(req, env, ctx) {
     const path = new URL(req.url).pathname;
-    if (path === "/subscribe.php") return subscribe(req, env, ctx);
-    if (path === "/confirm.php") return confirm(req, env);
+    if (path === "/subscribe" || path === "/subscribe.php") return subscribe(req, env, ctx);
+    if (path === "/confirm" || path === "/confirm.php") return confirm(req, env);
     return new Response("Not found", { status: 404 });
   },
 };

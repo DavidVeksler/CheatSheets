@@ -9,9 +9,18 @@
  * path (/ai-safety) is handed to index.php with ?hub=<slug>, and the
  * trailing-slash spelling 301s to the bare slug. Everything else 404s like
  * nginx's `try_files $uri $uri/ =404` would. scripts/_devserver.py uses this.
+ * The clean page URLs the site Worker answers (/popularity, /sitemap.xml,
+ * /subscribe, /confirm) run their PHP page here, as the build prerenders them.
  */
 $root = dirname(__DIR__);
 $path = (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+$pages = ['/popularity' => 'popularity.php', '/sitemap.xml' => 'sitemap.php',
+          '/subscribe' => 'subscribe.php', '/confirm' => 'confirm.php'];
+if (isset($pages[$path])) {
+    $_SERVER['SCRIPT_NAME'] = '/' . $pages[$path];
+    require $root . '/' . $pages[$path];
+    return true;
+}
 if ($path === '/' || $path === '') {
     $_SERVER['SCRIPT_NAME'] = '/index.php';
     require $root . '/index.php';
