@@ -1,0 +1,25 @@
+# cf_parity.py allow rules: <path-regex> <field>  # reason
+# Each line is a reviewed, intended difference between the droplet (nginx + PHP) and the
+# Worker. Spec: docs/specs/cloudflare-migration.md sections 3-5. Rules whose reason names
+# parity_body_recheck.py or compare_explorer.py are re-verified strictly by those scripts
+# in the same deploy run, so they are not blanket exemptions.
+
+# --- Prerendered PHP pages (content verified by scripts/compare_explorer.py) ---
+^/(index\.php)?$ body  # Explorer prerendered at build time, not per request (D-2): compare_explorer.py
+^/(index\.php)?\? body  # Explorer state URLs: prerendered grid + client-side facets, head via the Worker (D-2): compare_explorer.py
+^/[a-z0-9][a-z0-9-]*(\?.*)?$ body  # category hubs prerendered (a 200 here is always a hub; sheets without .html 301): compare_explorer.py
+^/popularity\.php$ body  # prerendered; referrer history section dropped (D-2): compare_explorer.py
+^/sitemap\.php$ body  # prerendered; lastmod from git history instead of checkout mtimes: compare_explorer.py checks the URL set
+
+# --- Bodies proven by scripts/parity_body_recheck.py ---
+\.html$ body  # zone Cloudflare Fonts rewrite (droplet side only) and history.php links now on GitHub: parity_body_recheck.py
+^/catalog\.json$ body  # rebuilt on the branch (build stamp, inputs hash, edited sheets' dates): parity_body_recheck.py
+^/images/ body  # zone edge cache serves a stale copy (10-year max-age, never purged); candidate must equal the droplet origin: parity_body_recheck.py
+
+# --- history.php retired (D-2) ---
+^/history\.php(\?.*)?$ status  # 200 git browser -> 301 to the same view on GitHub (exact targets asserted by parity_body_recheck.py)
+^/history\.php(\?.*)?$ location  # see above
+
+# --- Things an assets-only Worker cannot or should not reproduce ---
+(^|/)(README\.md|[^/]+\.sh)$ status  # WordOps 403 (deny) becomes 404: Workers static assets cannot send 403; both mean not public
+^/category-map\.php$ missing  # PHP data include that executed to an empty 200; never linked; PHP is gone, now 404

@@ -60,18 +60,17 @@ function rel_time(int $ts): string {
 }
 
 /**
- * Read-only git, same shape as history.php's helper: every argument goes
- * through escapeshellarg(), safe.directory neutralises "dubious ownership"
- * when the web user differs from the repo owner.
+ * Read-only git: safe.directory neutralises "dubious ownership" when the web
+ * user differs from the repo owner.
  */
 function cs_git(array $args): array {
     global $ROOT;
-    $cmd = 'git -C ' . escapeshellarg($ROOT)
-         . ' -c safe.directory=' . escapeshellarg($ROOT)
-         . ' --no-pager';
-    foreach ($args as $a) $cmd .= ' ' . escapeshellarg($a);
+    // Argument array, no shell: nothing to escape, and it behaves the same under
+    // Windows PHP (local prerender builds, scripts/build_site.py), where
+    // escapeshellarg() would blank out the % in --format strings.
+    $cmd = array_merge(['git', '-C', $ROOT, '-c', 'safe.directory=' . $ROOT, '--no-pager'], array_map('strval', $args));
     $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
-    $proc = @proc_open($cmd . ' 2>/dev/null', $descriptors, $pipes);
+    $proc = @proc_open($cmd, $descriptors, $pipes);
     if (!is_resource($proc)) return ['out' => '', 'code' => 127];
     $out = stream_get_contents($pipes[1]); fclose($pipes[1]);
     if (isset($pipes[2])) { stream_get_contents($pipes[2]); fclose($pipes[2]); }
@@ -1267,7 +1266,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
     <a class="brand" href="./"><?php echo chrome_icon('layers'); ?>Cheatsheets<span class="sr"> home</span></a>
     <nav class="topnav" aria-label="Site">
       <a class="hidesm" href="how-its-built.html"><?php echo chrome_icon('hammer'); ?>How it's built</a>
-      <a class="hidesm" href="history.php"><?php echo chrome_icon('history'); ?>Change history</a>
+      <a class="hidesm" href="https://github.com/DavidVeksler/CheatSheets/commits/main/" rel="noopener"><?php echo chrome_icon('history'); ?>Change history</a>
       <a class="hidesm" href="popularity.php"><?php echo chrome_icon('chart'); ?>Popularity</a>
       <button class="tbtn" id="openPalette" type="button" aria-haspopup="dialog">
         <?php echo chrome_icon('search'); ?>
@@ -1326,7 +1325,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
       <b class="num"><?php echo (int)($stats['sections'] ?? 0); ?></b> sections indexed <span class="sep">·</span>
       <b class="num"><?php echo (int)($stats['edges'] ?? 0); ?></b> cross-links</span>
     <?php if ($lastCommitSubject !== '' && $lastCommitTime): ?>
-    <span><?php echo chrome_icon('history'); ?>Last change: <a class="plain" href="history.php"><b><?php echo h(clamp_text($lastCommitSubject, 62)); ?></b></a> <span class="num"><?php echo h(rel_time($lastCommitTime)); ?></span></span>
+    <span><?php echo chrome_icon('history'); ?>Last change: <a class="plain" href="https://github.com/DavidVeksler/CheatSheets/commits/main/" rel="noopener"><b><?php echo h(clamp_text($lastCommitSubject, 62)); ?></b></a> <span class="num" id="lastAgo" data-ts="<?php echo (int)$lastCommitTime; ?>"><?php echo h(rel_time($lastCommitTime)); ?></span></span>
     <?php endif; ?>
     <?php if ($reviewedThisWeek > 0): ?>
     <span><?php echo chrome_icon('check-circle'); ?>Reviewed this week: <b class="num"><?php echo (int)$reviewedThisWeek; ?></b></span>
@@ -1562,7 +1561,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
   <div class="wrap frow">
     <span>Cheatsheets © <?php echo date('Y'); ?> David Veksler.</span>
     <a href="how-its-built.html"><?php echo chrome_icon('hammer'); ?>How it's built</a>
-    <a href="history.php"><?php echo chrome_icon('history'); ?>Change history</a>
+    <a href="https://github.com/DavidVeksler/CheatSheets/commits/main/" rel="noopener"><?php echo chrome_icon('history'); ?>Change history</a>
     <a href="popularity.php"><?php echo chrome_icon('chart'); ?>Popularity</a>
     <a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener"><?php echo chrome_icon('git'); ?>GitHub</a>
     <a href="catalog.json"><?php echo chrome_icon('braces'); ?>catalog.json</a>
@@ -1617,10 +1616,6 @@ html.js body[data-view="map"] #mapwrap{display:block}
 (function(){
 'use strict';
 var NS='cs-explorer:v1:';
-// Marks a JS-capable browser for conf/nginx/facet-trap.conf: a filter URL
-// requested from our own page without this cookie is a scraper walking the
-// facet links (JS intercepts those clicks), and gets a 302 to the clean page.
-try{document.cookie='cs_js=1; path=/; SameSite=Lax; Secure';}catch(e){}
 // Bridge to the map/paths block below: it registers setView, showOnMap and the
 // two redraw hooks, and reads the lite catalog and helpers back out of here.
 var CS=window.CS={setView:function(){},showOnMap:function(){},onFilter:null,onTheme:null};
@@ -1721,6 +1716,7 @@ var state={cat:SERVER_CAT||'',q:'',shape:[],fresh:[],interactive:false,sort:''};
   state.fresh=(p.get('fresh')||'').split(',').filter(Boolean);
   state.interactive=p.get('interactive')==='1';
   state.sort=p.get('sort')||'';
+  if(state.cat&&L.cats.indexOf(state.cat)<0)state.cat=SERVER_CAT||'';
 })();
 var TODAY=Math.floor(Date.now()/86400000);
 
@@ -1754,7 +1750,7 @@ var SORTS={'new':function(a,b){return L.cr[b]-L.cr[a];},
  'reviewed':function(a,b){return L.rv[b]-L.rv[a];},
  'title':function(a,b){return TITLE[a].localeCompare(TITLE[b],undefined,{sensitivity:'base'});}};
 
-function apply(reorder){
+function apply(reorder,noSync){
   var n=0;
   cards.forEach(function(c,k){
     var i=byFile[cardFile[k]];
@@ -1772,7 +1768,7 @@ function apply(reorder){
   var dc=el('deepcut');
   if(dc)dc.hidden=!!(state.q||state.shape.length||state.fresh.length||state.interactive);
   if(CS.onFilter)CS.onFilter();
-  syncURL();
+  if(!noSync)syncURL();
   paintFacets();
   document.title=state.cat?state.cat+' Cheatsheets | David Veksler':SITE_TITLE;
   return n;
@@ -2209,6 +2205,20 @@ CS.syncURL=syncURL;
 paintVisited();
 renderChips();
 paintFacets();
+// The page is prerendered once per deploy (Cloudflare Workers static assets), so a
+// shared filter or sort URL arrives as the full grid: apply its state in place,
+// without rewriting the URL (utm_* and ?sheet= stay put).
+if(state.q||state.shape.length||state.fresh.length||state.interactive||state.sort){
+  var hq0=el('heroq');if(hq0&&state.q)hq0.value=state.q;
+  apply(!!state.sort,true);
+}
+// "Last change … ago" was computed at build time; recompute it for today.
+(function(){
+  var la=el('lastAgo'),ts=la&&parseInt(la.dataset.ts,10);if(!ts)return;
+  var d=Math.max(0,Math.floor(Date.now()/1000)-ts),U=[[31536000,'year'],[2592000,'month'],[604800,'week'],[86400,'day'],[3600,'hour'],[60,'minute']];
+  for(var k=0;k<U.length;k++){if(d>=U[k][0]){var n=Math.floor(d/U[k][0]);la.textContent=n+' '+U[k][1]+(n===1?'':'s')+' ago';return;}}
+  la.textContent='just now';
+})();
 (function(){
   var sp=new URLSearchParams(location.search).get('sheet');
   if(sp&&byFile[sp]!==undefined)openDrawer(sp,'url',true);
@@ -2248,7 +2258,12 @@ function setView(v,src,quiet){
   if(v==='paths'){
     // The trails are only rendered in their own lens, so reach them by
     // navigating when this document does not carry them.
-    if(!el('paths')){location.href='?view=paths';return;}
+    if(!el('paths')){
+      // Never navigate to the URL already shown: that would loop.
+      var pu=new URL('./?view=paths',location.href);
+      if(pu.href!==location.href){location.href=pu.href;return;}
+      body.dataset.view='grid';return;
+    }
     paintPaths();
   }
   if(was!==v&&!quiet)window.scrollTo(0,0);
@@ -2639,7 +2654,9 @@ document.addEventListener('click',function(e){
 });
 
 /* ------------------------------------------------------------- start up --- */
-setView(body.dataset.view||'grid','init',true);
+// The lens comes from the URL too: the prerendered index serves every ?view= state.
+var urlView=new URLSearchParams(location.search).get('view');
+setView((urlView&&VIEWS[urlView]&&urlView!==body.dataset.view?urlView:body.dataset.view)||'grid','init',true);
 paintPaths();
 (function(){
   var open=document.querySelector('.trail.open');

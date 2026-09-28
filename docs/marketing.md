@@ -14,7 +14,7 @@ Thin router. SEO working doc: [`../TODO/META-seo-planning.md`](../TODO/META-seo-
 - Every sheet links back to its hub from a footer breadcrumb (`scripts/add_hub_breadcrumbs.py`, gated at deploy); these are the hubs' only inbound links.
 - Hub titles target the "<topic> cheat sheet" query family seen in Search Console, not the category name.
 - All other Explorer query params (`q`, `sort`, `shape`, `view`, `sheet`, `path`, `fresh`, `interactive`) are client state and `noindex`.
-- **Add or rename a category:** add sheets to `category-map.php`; add the hub entry (slug, title ≤ 60, description 150-200, h1, intro, start_here) to `category-hubs.json`; rebuild the catalog; run `python3 scripts/add_hub_breadcrumbs.py`; on a slug rename add `location = /old-slug { return 301 /new-slug; }` to `conf/nginx/redirects.conf` and ship it per [`../deploy/DEPLOY.md`](../deploy/DEPLOY.md). A new slug needs no nginx change.
+- **Add or rename a category:** add sheets to `category-map.php`; add the hub entry (slug, title ≤ 60, description 150-200, h1, intro, start_here) to `category-hubs.json`; rebuild the catalog; run `python3 scripts/add_hub_breadcrumbs.py`; on a slug rename add `location = /old-slug { return 301 /new-slug; }` to `conf/nginx/redirects.conf` and ship it per [`../deploy/DEPLOY.md`](../deploy/DEPLOY.md). A new slug needs no nginx change. On Cloudflare Workers: the rename goes in `deploy/cloudflare/redirects.txt`, and a new or renamed slug needs `python3 scripts/build_site.py --write-worker-first` (the build fails until it is done).
 
 ## Social preview image (OG)
 

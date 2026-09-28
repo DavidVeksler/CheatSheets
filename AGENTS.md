@@ -10,6 +10,7 @@ Standalone, interactive HTML cheatsheets (tech, finance, philosophy, AI safety, 
 | Add / edit / publish a sheet, local QA, gates | [`docs/content.md`](docs/content.md) |
 | SEO, category hubs, OG image, measurement, promotion | [`docs/marketing.md`](docs/marketing.md) |
 | Deploy (`./deploy.sh`), nginx drop-ins, live verification | [`deploy/DEPLOY.md`](deploy/DEPLOY.md) |
+| Cloudflare Workers migration (spec, in progress) | [`docs/specs/cloudflare-migration.md`](docs/specs/cloudflare-migration.md) |
 | `index.php` Explorer, `catalog.json`, `paths.json`, popularity history | [`docs/index-explorer.md`](docs/index-explorer.md) |
 | Weekly fact-drift refresh routine (`refresh-status.json`) | [`weekly-freshness-update.md`](weekly-freshness-update.md) |
 | Reddit draft routine | [`docs/reddit-daily-drafts.md`](docs/reddit-daily-drafts.md) |

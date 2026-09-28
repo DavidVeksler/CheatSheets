@@ -262,7 +262,7 @@ try{var t=localStorage.getItem('cs-explorer:v1:theme');if(t==='light'||t==='dark
     <a class="brand" href="./"><?php echo chrome_icon('layers'); ?>Cheatsheets<span class="sr"> home</span></a>
     <nav class="topnav" aria-label="Site">
       <a class="hidesm" href="how-its-built.html"><?php echo chrome_icon('hammer'); ?>How it's built</a>
-      <a class="hidesm<?php echo $active === 'history' ? ' cur' : ''; ?>" href="history.php"><?php echo chrome_icon('history'); ?>Change history</a>
+      <a class="hidesm<?php echo $active === 'history' ? ' cur' : ''; ?>" href="https://github.com/DavidVeksler/CheatSheets/commits/main/" rel="noopener"><?php echo chrome_icon('history'); ?>Change history</a>
       <a class="hidesm<?php echo $active === 'popularity' ? ' cur' : ''; ?>" href="popularity.php"><?php echo chrome_icon('chart'); ?>Popularity</a>
       <button class="tbtn" id="themeToggle" type="button" aria-label="Toggle dark mode" title="Toggle theme">
         <?php echo chrome_theme_icon(); ?>
@@ -284,7 +284,7 @@ function chrome_close(): void
     <span>Cheatsheets © <?php echo date('Y'); ?> David Veksler.</span>
     <a href="./"><?php echo chrome_icon('grid'); ?>All cheatsheets</a>
     <a href="how-its-built.html"><?php echo chrome_icon('hammer'); ?>How it's built</a>
-    <a href="history.php"><?php echo chrome_icon('history'); ?>Change history</a>
+    <a href="https://github.com/DavidVeksler/CheatSheets/commits/main/" rel="noopener"><?php echo chrome_icon('history'); ?>Change history</a>
     <a href="popularity.php"><?php echo chrome_icon('chart'); ?>Popularity</a>
     <a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener"><?php echo chrome_icon('git'); ?>GitHub</a>
   </div>

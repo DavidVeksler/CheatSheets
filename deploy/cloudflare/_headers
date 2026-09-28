@@ -1,0 +1,27 @@
+# Cloudflare Workers static-assets response headers, copied to dist/_headers by
+# scripts/build_site.py. Ported from the droplet's nginx (spec §2.6). These do NOT
+# apply to responses the site Worker builds itself (workers/site/index.js adds
+# the same security headers there).
+
+# WordOps server-wide security headers (nginx.conf more_set_headers).
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# conf/nginx/cache-control.conf: sheets and newsletter archive pages, 30 minutes.
+/*.html
+  Cache-Control: public, max-age=1800
+
+# WordOps sent CORS * on .json: the public datasets (catalog.json is advertised as
+# the machine-readable catalog) stay fetchable cross-origin.
+/*.json
+  Access-Control-Allow-Origin: *
+
+# WordOps common/locations-wo.conf answers this for Chrome's private prefetch proxy.
+/.well-known/traffic-advice
+  Content-Type: application/trafficadvice+json; charset=utf-8
+
+# nginx default type for the extensionless licence file.
+/LICENSE
+  Content-Type: application/octet-stream

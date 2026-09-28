@@ -22,6 +22,34 @@ $excludedItems = [
 
 $cheatsheetDir = '.';
 
+// lastmod = the last commit that touched the file, from one `git log` for all of
+// them. The site is prerendered from a fresh checkout (scripts/build_site.py,
+// Cloudflare Workers), where file mtimes are just the checkout time. Falls back
+// to filemtime() outside a git work tree.
+date_default_timezone_set('UTC');
+$gitTimes = [];
+$gitOut = null;
+$gitProc = @proc_open(['git', '-C', __DIR__, '-c', 'safe.directory=' . __DIR__, '--no-pager', 'log',
+    '--format=@%ct', '--name-only', '--', '*.html', 'index.php'], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $gitPipes);
+if (is_resource($gitProc)) {
+    $gitOut = stream_get_contents($gitPipes[1]); fclose($gitPipes[1]);
+    stream_get_contents($gitPipes[2]); fclose($gitPipes[2]);
+    if (proc_close($gitProc) !== 0) $gitOut = null;
+}
+if (is_string($gitOut)) {
+    $ts = 0;
+    foreach (explode("\n", $gitOut) as $line) {
+        $line = trim($line);
+        if ($line === '') continue;
+        if ($line[0] === '@') { $ts = (int)substr($line, 1); continue; }
+        if (!isset($gitTimes[$line])) $gitTimes[$line] = $ts;   // log is newest first
+    }
+}
+function sitemap_lastmod(string $file): int {
+    global $gitTimes;
+    return $gitTimes[$file] ?? (int)@filemtime(__DIR__ . '/' . $file);
+}
+
 // Base URL calculation - same as index.php
 $scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'];
@@ -42,7 +70,7 @@ try {
             }
             
             // Get file modification time for lastmod
-            $lastmod = filemtime($filePath);
+            $lastmod = sitemap_lastmod($file);
             $htmlFiles[] = [
                 'url' => $baseUrl . $file,
                 'lastmod' => date('c', $lastmod), // ISO 8601 format
@@ -99,7 +127,7 @@ $htmlFiles = array_merge($htmlFiles, $categoryUrls);
 // Add the main index page
 array_unshift($htmlFiles, [
     'url' => $baseUrl,
-    'lastmod' => date('c', filemtime(__DIR__ . '/index.php')),
+    'lastmod' => date('c', sitemap_lastmod('index.php')),
     'priority' => '1.0' // Highest priority for main page
 ]);
 

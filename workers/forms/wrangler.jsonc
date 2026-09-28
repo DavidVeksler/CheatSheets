@@ -1,0 +1,25 @@
+{
+  // Newsletter forms Worker for cheatsheets.davidveksler.com: replaces subscribe.php
+  // and confirm.php. Shape from cf-static-kit/templates/contact-worker; contract from
+  // the PHP (docs/newsletter.md §2.3). Spec: docs/specs/cloudflare-migration.md §2.4.
+  // Reached through the site Worker's FORMS service binding, so it needs no route of
+  // its own. Deploy from the repo root: bash scripts/deploy-forms-cloudflare.sh
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "cheatsheets-davidveksler-com-forms",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-28",
+  "account_id": "556c237bf8cb62edb8f7b401499bb7a9",
+  "workers_dev": false,
+  "preview_urls": true,
+  "observability": { "enabled": true },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "cheatsheets-davidveksler-com-forms", "database_id": "0907d9a3-a6de-4458-9cdf-ba19eee2eca0" }
+  ],
+  "vars": {
+    // subscribe.php defaults; the sending key is restricted to this domain.
+    "NEWSLETTER_FROM_ADDRESS": "Cheatsheets <hello@updates.cheatsheets.davidveksler.com>"
+  }
+  // Secrets (wrangler secret put <NAME>, never in this file; values come from the
+  // droplet's .newsletter.env via scripts/newsletter_secrets_to_worker.py):
+  //   NEWSLETTER_TOKEN_SECRET, RESEND_SENDING_KEY, CHEATSHEET_NOTIFY_EMAIL
+}
