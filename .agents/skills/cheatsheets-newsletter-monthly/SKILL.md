@@ -59,7 +59,7 @@ instead of improvising a workaround.
 - **Never send.** No call to `newsletter_send.py`, no `POST /broadcasts/{id}/send`, no
   `send: true` on the create call. `newsletter_broadcast.py` has no `--send` flag —
   if you find yourself wanting one, stop, that means you're about to violate this rule.
-- Never deploy the archive page — that stays on the normal `./deploy.sh` gate, run by David.
+- Never deploy the archive page — that stays on the normal deploy gate (`scripts/deploy-cloudflare.sh` since the 2026-09-28 Cloudflare move), run by David.
 - Never delete, unsubscribe, or overwrite a Resend contact. `newsletter_sync.py` only adds.
 - Never invent an item not present in the digest JSON.
 - Max one issue per run, max one draft broadcast per run.
