@@ -1,5 +1,8 @@
 # Deployment runbook: cheatsheets.davidveksler.com
 
+> **Moving to Cloudflare Workers** (branch `cloudflare-workers`, spec [`../docs/specs/cloudflare-migration.md`](../docs/specs/cloudflare-migration.md)). Until cutover the droplet path below is the live one. The Workers path is described in *Cloudflare Workers* at the end, with the cutover checklist.
+
+
 No build step: the repo files are the site, so pushing to the `production` remote is the deploy. Always go through the guarded script:
 
 ```bash
@@ -82,3 +85,34 @@ curl -s https://cheatsheets.davidveksler.com/<page>.html | grep -o "<title>[^<]*
 ```
 
 Caching: `.html` 30-min TTL; images/CSS/JS 7-day `immutable`. Editing an `images/*.png` in place can serve stale for a week, so rename it or bump a query string.
+
+## Cloudflare Workers (preview; cutover pending)
+
+Governing procedure: `~/Projects/cf-static-kit/docs/runbook.md`. Design and decisions: [`../docs/specs/cloudflare-migration.md`](../docs/specs/cloudflare-migration.md).
+
+| Piece | Where |
+|---|---|
+| Site Worker `cheatsheets-davidveksler-com` | `wrangler.jsonc`, `workers/site/index.js`; assets from `dist/` |
+| Build (gates + prerender) | `python3 scripts/build_site.py` (needs `php` 8.1+ and git); `--write-worker-first` after adding a hub |
+| Deploy | `scripts/deploy-cloudflare.sh` / `.ps1` (preview + full parity + `parity_body_recheck.py` + `compare_explorer.py` before cutover) |
+| Forms Worker `cheatsheets-davidveksler-com-forms` (subscribe/confirm, D1) | `workers/forms/`; `scripts/deploy-forms-cloudflare.sh`; tests `npm run test:forms` |
+| D1 `cheatsheets-davidveksler-com-forms` (0907d9a3-a6de-4458-9cdf-ba19eee2eca0) | subscriber addresses: count, never print. `scripts/newsletter_d1.py`, `scripts/import_subscribers.py` |
+| Retired-URL redirects | `deploy/cloudflare/redirects.txt` (was `conf/nginx/redirects.conf`) |
+| Headers, 404 | `deploy/cloudflare/_headers`, `deploy/cloudflare/404.html` |
+| Parity probes / allow rules | `deploy/parity-paths.txt`, `deploy/parity-allow.txt` |
+| Daily popularity publish | `.github/workflows/popularity-cloudflare.yml` → `scripts/popularity-publish-cloudflare.sh` (manual, dry run, until cutover) |
+
+Deploys are atomic: no cache purge. Rollback after cutover: `npx wrangler rollback`; back to the droplet: comment out `routes`, `npx wrangler triggers deploy`.
+
+### Cutover checklist (David's go-ahead)
+
+1. Merge the PR into `main`; `git pull` the main checkout.
+2. `python3 scripts/import_subscribers.py --apply` (sign-ups since the last import), then `python3 scripts/newsletter_secrets_to_worker.py --check`.
+3. `bash scripts/deploy-forms-cloudflare.sh` (contract suite + preview health).
+4. `python ~/Projects/cf-static-kit/scripts/enable_routes.py`, commit, then `bash scripts/deploy-cloudflare.sh --full-parity` (one route, `cheatsheets.davidveksler.com/*`; the forms Worker is reached through the service binding, no route of its own).
+5. Right after the route is live: `import_subscribers.py --apply` once more; `curl https://cheatsheets.davidveksler.com/subscribe.php?health=1`; one real sign-up by David (email arrives, confirm link works, `SELECT COUNT(*) FROM confirmed` goes up).
+6. Mint the GitHub secret `CLOUDFLARE_WORKERS_TOKEN` (Workers Scripts Edit, this account only). In one commit: uncomment `schedule` in `popularity-cloudflare.yml` and delete `update-popularity.yml`. Same session: remove both droplet crons (`crontab -l` saved to the cutover log first).
+7. Routines: `cheatsheets-weekly-freshness` footer (live only after `scripts/deploy-cloudflare.sh`); `.claude/skills/cheatsheets-newsletter-monthly` (sync reads D1; archive deploy via `scripts/deploy-cloudflare.sh`).
+8. `~/Projects/deploy-sites.json` `cheatsheets` → `scripts/deploy-cloudflare.ps1 -Yes`; add the site to `cf-static-kit/sites.json`; log the cutover (date, version ids) here.
+
+Decommission after the 7-day soak: runbook §7, plus the list in the spec §6.

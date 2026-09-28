@@ -25,6 +25,10 @@ popularity.json (fetch-popularity.py, nightly, Cloudflare Analytics)
         └─► Pulse strip (site sparkline, trending) + drawer per-sheet sparkline
 ```
 
+## On Cloudflare Workers (from cutover)
+
+`index.php` is no longer run per request: `scripts/build_site.py` prerenders it with PHP CLI (default view, paths lens, each curated path, each hub) and the site Worker (`workers/site/index.js`) picks the document per URL, adds `noindex` for client-state params and the `?sheet=` head, and 301s `?cat=`/`?category=`/`?hub=`. Filters, sorts and the lens in a URL are applied by the page script on load. Time-relative bits (deep cut of the day, NEW badges) refresh with the daily popularity publish. The referrer history below needs origin logs and ends at cutover (D-2). Spec: [`specs/cloudflare-migration.md`](specs/cloudflare-migration.md).
+
 ## The catalog builder
 
 `catalog.json` holds per sheet: title, description, keywords, image, category (`category-map.php`), section headings with anchor ids, outbound links to other sheets (graph edges), multi-valued `shape`, word/table/section counts, git `created`/`updated`, `reviewed` (from `refresh-status.json`), map `x`/`y`. Collection level: category counts, light/dark hue pairs, edge list, `stats`.

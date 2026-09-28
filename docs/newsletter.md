@@ -11,6 +11,7 @@ A monthly issue computed from git history + `popularity.json`, not written from 
 | Intake | `subscribe.php` → `.subscribers.jsonl` (gitignored intake queue + audit log), sends confirmation via Resend, optional owner notice to `CHEATSHEET_NOTIFY_EMAIL` |
 | Confirm | `confirm.php` → `.confirmed.jsonl` (sendable queue) |
 | List of record | Resend segment (hosted unsubscribe, suppression, `List-Unsubscribe`) |
+| Cloudflare (from cutover) | `workers/forms/` replaces both PHP files with the same contract: intake → D1 `subscribers`, confirmed → D1 `confirmed`, secrets as Worker secrets. `scripts/newsletter_sync.py` reads D1 by default. Spec: [`specs/cloudflare-migration.md`](specs/cloudflare-migration.md) §2.4 |
 | Server secrets | `.newsletter.env` next to the code (gitignored, `chmod 600`), loaded by `lib/env.php`; template `.newsletter.env.example`. Real env vars win. No php-fpm pool env: the site shares WordOps' `www` pool, so pool env would leak to other sites. |
 
 ## 2. Binding decisions
