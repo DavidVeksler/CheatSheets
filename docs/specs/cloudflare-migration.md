@@ -1,6 +1,6 @@
 # Spec: cheatsheets.davidveksler.com from the droplet to Cloudflare Workers
 
-Status: **draft for implementation, 2026-09-28.** Wave 4 (the last site) of `~/Projects/server-mirror/docs/cloudflare-migration.md`. Procedure: `~/Projects/cf-static-kit/docs/runbook.md` (governing; this spec only adds what is specific to this site). Decisions cited as **D-n** are David's, 2026-09-27 (plan §5 and §7).
+Status: **implemented to a passing preview, 2026-09-28** (branch `cloudflare-workers`; cutover is David's gate, checklist in `deploy/DEPLOY.md`). Wave 4 (the last site) of `~/Projects/server-mirror/docs/cloudflare-migration.md`. Procedure: `~/Projects/cf-static-kit/docs/runbook.md` (governing; this spec only adds what is specific to this site). Decisions cited as **D-n** are David's, 2026-09-27 (plan §5 and §7).
 
 Scope: build, preview and parity until PASS on branch `cloudflare-workers`. Cutover (routes), cron removal and decommission stay David's gate.
 
@@ -67,7 +67,7 @@ One site Worker `cheatsheets-davidveksler-com` (static assets + a small script) 
 1. **Gates** (the always-run subset of `deploy.py --check`): `build_catalog.py --check`, `check_hubs.py`, `add_hub_breadcrumbs.py --check`, `check_cluster_hub.py`.
 2. **Copy public files** from `git ls-files` (never the working tree's untracked files) through one allowlist function that mirrors nginx: root `*.html`, root data/asset files (`.json .js .glb .txt LICENSE`), `images/`, `newsletter/YYYY-MM.html`, the two provenance files. Everything nginx 404s or 403s is left out, so it 404s on Workers. `*.php` sources are never copied.
 3. **Prerender with PHP CLI** (`scripts/prerender.php`, same `index.php`/`popularity.php`/`sitemap.php`, `HTTP_HOST=cheatsheets.davidveksler.com`, `HTTPS=on`, `TZ=UTC`) into `dist/_x/`: Explorer default view, paths lens, one page per curated path (11), one page per hub (15), popularity, sitemap. PHP stays the template engine, so the prerendered HTML is the droplet's HTML for the same state, and local dev (`serve.py`, `render_og_map.py`) keeps working.
-4. **Generate** `dist/_redirects` (per root sheet: `/<name> → /<name>.html 301` and `/<name>/ → /<name> 301`, reproducing the hub rule's two hops; the two retired-URL redirects), copy `deploy/cloudflare/_headers` and `deploy/cloudflare/404.html` (noindex).
+4. **Generate** `dist/_redirects` (retired URLs from `deploy/cloudflare/redirects.txt`, then per root sheet `/<name> → /<name>.html 301` and `/<name>/ → /<name> 301`, reproducing the hub rule's two hops), copy `deploy/cloudflare/_headers`, `404.html` (noindex) and `.well-known/traffic-advice`.
 5. **Write** `build/site-routes.json` (gitignored) for the site Worker: hub slug ↔ category, sheet titles for `?sheet=`, curated path ids. Fail if `wrangler.jsonc` `run_worker_first` does not list every hub (`--write-worker-first` rewrites the block).
 
 Reproducibility: `TZ=UTC`, LF checkout (`* text=auto eol=lf`), `dist/` cleared first. `sitemap.php` lastmod comes from `git log -1` per file instead of mtime (a CI checkout has meaningless mtimes). The Explorer's time-relative bits (deep cut of the day, NEW badges, "Last change … ago", "Reviewed this week") are frozen at build time; the daily popularity publish (§2.5) rebuilds every day, and "Last change … ago" is re-computed client-side from a timestamp so it never goes stale between builds.
@@ -144,10 +144,11 @@ Behaviour change to note: today any commit on `origin/main` goes live by 04:00 v
 | Droplet | Workers |
 | --- | --- |
 | WordOps security headers on every response | `_headers` `/*`; the site Worker adds them to its own responses. |
-| `.html` `public, max-age=1800` | `_headers` `/*.html` if Workers accepts an infix splat; otherwise the Workers default (ETag revalidation) with an allow rule. The 30-min TTL existed to shield PHP/nginx; nothing to shield now. |
+| `.html` `public, max-age=1800` | `_headers` `/*.html` (verified: Workers accepts the infix splat; parity shows no header difference). |
 | CORS `*` on `.json` | `_headers` `/*.json` (public datasets; catalog.json is advertised as machine-readable). |
 | `.glb` `model/gltf-binary` | Workers MIME table; verified by parity. |
 | `/favicon.ico` → 1x1 GIF | Site Worker returns the same 43-byte GIF. |
+| `LICENSE` `application/octet-stream`, `/.well-known/traffic-advice` (WordOps) | `_headers` content types; static file for the latter. |
 | `bad_bot` 429 | Dropped (plan §4, as davidveksler.com); zone WAF/Bot rules still apply. |
 | Cloudflare purge after deploy | Not needed: Workers deploys are atomic. `purge-cache.py` retires at decommission. |
 
