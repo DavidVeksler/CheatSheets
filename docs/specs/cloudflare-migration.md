@@ -157,7 +157,7 @@ Behaviour change to note: today any commit on `origin/main` goes live by 04:00 v
 | Dropped | Why |
 | --- | --- |
 | `history.php` git browser | D-2: link to GitHub, 301 old URLs. |
-| Referrer history (`.referrers.json`, 04:20 cron, "Where readers come from") | D-2. Also forced: no nginx access logs exist once Workers serves the site. The prerender has no store, so `popularity.php` renders without that section. The scripts stay in the repo until David confirms deletion (they are the peer session's recent work, `890af8e`). |
+| Referrer history (`.referrers.json`, 04:20 cron, "Where readers come from") | D-2. Also forced: no nginx access logs exist once Workers serves the site. The prerender has no store, so `popularity.php` renders without that section. The scripts stay in the repo until David confirms deletion (they are the peer session's recent work, `890af8e`). **Done 2026-09-28:** David confirmed; the scripts, the `popularity.php` section, the `build_site.py` guard and the docs were removed. |
 | Facet trap (`facet-trap.conf`, `cs_js` cookie) | D-2: filtering is client-side over a static page. |
 | Server-rendered filtered grids and the `?sheet=` detail block for no-JS readers | D-2. Every state URL still returns the full grid, noindex, and JS applies the state. |
 | `?og=1` render mode in production | Only `scripts/render_og_map.py` uses it, locally via PHP. `/?og=1` serves the Explorer, noindex. |
@@ -206,7 +206,7 @@ Cutover checklist in the PR and `deploy/DEPLOY.md`:
 
 Rollback: comment out `routes`, `npx wrangler triggers deploy`: the droplet answers again immediately (its crons must be back if removed: keep `crontab -l` output in the cutover log). Subscriptions taken on Workers during a rollback window live in D1 only; `import_subscribers.py` is one-way, so note the window and replay by hand if needed.
 
-Decommission after the 7-day soak (runbook §7): vhost, htdocs (including `.newsletter.env`, `.jsonl` stores), post-receive hook, `production` remote, `deploy.sh/.ps1/deploy.py`, `purge-cache.py`, `conf/nginx/`, `lib/env.php`, `subscribe.php`, `confirm.php`, `history.php`, referrer scripts (if David agrees), rename `deploy-cloudflare.*` to `deploy.*`, docs.
+Decommission after the 7-day soak (runbook §7): vhost, htdocs (including `.newsletter.env`, `.jsonl` stores), post-receive hook, `production` remote, `deploy.sh/.ps1/deploy.py`, `purge-cache.py`, `conf/nginx/`, `lib/env.php`, `subscribe.php`, `confirm.php`, `history.php`, referrer scripts (if David agrees; done 2026-09-28), rename `deploy-cloudflare.*` to `deploy.*`, docs.
 
 ## 7. Risks
 

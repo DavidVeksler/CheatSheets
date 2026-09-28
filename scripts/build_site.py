@@ -211,10 +211,6 @@ def main() -> int:
     for tool in ("git", "php"):
         if not shutil.which(tool):
             die(f"{tool} not found on PATH")
-    # popularity.php renders a referrer section from this server-only store if it
-    # exists; the Workers build must not (spec §3), and the file is never in git.
-    if (ROOT / ".referrers.json").exists():
-        die(".referrers.json is present in the build tree; move it out (it is server-only data)")
 
     if not a.skip_gates:
         print("==> gates", flush=True)

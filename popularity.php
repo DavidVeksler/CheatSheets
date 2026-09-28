@@ -355,114 +355,6 @@ $historyDates = array_keys($totalViewsHistory);
 $historySpanLabel = $historyDays > 0
     ? (date('M j', strtotime($historyDates[0])) . ' – ' . date('M j', strtotime($historyDates[$historyDays - 1])))
     : '';
-/* ---------- Referrers: long-term daily aggregates from the origin nginx logs ---------- */
-// .referrers.json is written nightly on the server by scripts/referrer_accumulate.py
-// (Cloudflare Free exposes no referrers; the logs rotate out after ~3 weeks, the store
-// keeps every day). Gitignored and 404'd over HTTP; absent locally unless copied down.
-$refStore = [];
-$refFile = __DIR__ . '/.referrers.json';
-if (is_readable($refFile)) {
-    $decoded = json_decode((string) @file_get_contents($refFile), true);
-    if (is_array($decoded) && is_array($decoded['days'] ?? null)) $refStore = $decoded['days'];
-}
-ksort($refStore);
-$refDates = array_keys($refStore);
-$refDayCount = count($refDates);
-// Chart channels in fixed palette order; everything else referred folds into "Other".
-$refChartChannels = ['Search engine' => 'c1', 'AI assistant' => 'c2', 'Reddit' => 'c3', 'Social' => 'c4', 'Other referrals' => 'c5'];
-function ref_chart_channel(string $ch): ?string {
-    if ($ch === 'Internal' || $ch === 'Direct / no referrer') return null;
-    return in_array($ch, ['Search engine', 'AI assistant', 'Reddit', 'Social'], true) ? $ch : 'Other referrals';
-}
-function ref_page_label(string $path, array $metaCache): string {
-    if ($path === '/') return 'Home (Explorer)';
-    $file = ltrim($path, '/');
-    if (isset($metaCache[$file])) return $metaCache[$file]['title'];
-    return str_ends_with($file, '.html') ? filename_to_title($file) : '/' . $file . ' hub';
-}
-$refReady = $refDayCount > 0;
-if ($refReady) {
-    $refLast = $refDates[$refDayCount - 1];
-    $refWin = min(30, max(1, intdiv($refDayCount, 2)));  // compare equal windows while history is short
-    $refCurStart  = date('Y-m-d', strtotime("$refLast -" . ($refWin - 1) . ' days'));
-    $refPrevStart = date('Y-m-d', strtotime("$refCurStart -$refWin days"));
-    $refHasPrev = $refDates[0] <= $refPrevStart;
-
-    $chCur = $chPrev = $chAll = [];
-    $srcAgg = [];   // "channel\thost" => [cur, prev, all, first]
-    $landCur = [];  // channel => path => n (current window)
-    $weeks = [];    // ISO week => ['days' => n, 'start' => date, channel => n]
-    foreach ($refStore as $d => $rec) {
-        $inCur = $d >= $refCurStart;
-        $inPrev = !$inCur && $d >= $refPrevStart;
-        $wk = date('o-\WW', strtotime($d));
-        $weeks[$wk]['days'] = ($weeks[$wk]['days'] ?? 0) + 1;
-        $weeks[$wk]['start'] = $weeks[$wk]['start'] ?? $d;
-        foreach (($rec['channels'] ?? []) as $ch => $n) {
-            if ($ch === 'Internal') continue;
-            $chAll[$ch] = ($chAll[$ch] ?? 0) + $n;
-            if ($inCur)  $chCur[$ch]  = ($chCur[$ch] ?? 0) + $n;
-            if ($inPrev) $chPrev[$ch] = ($chPrev[$ch] ?? 0) + $n;
-            if (($cc = ref_chart_channel($ch)) !== null) $weeks[$wk][$cc] = ($weeks[$wk][$cc] ?? 0) + $n;
-        }
-        foreach (($rec['sources'] ?? []) as $ch => $hosts) {
-            foreach ($hosts as $host => $n) {
-                $k = $ch . "\t" . $host;
-                $srcAgg[$k] ??= [0, 0, 0, $d];
-                $srcAgg[$k][2] += $n;
-                if ($inCur)  $srcAgg[$k][0] += $n;
-                if ($inPrev) $srcAgg[$k][1] += $n;
-            }
-        }
-        if ($inCur) {
-            foreach (($rec['landing'] ?? []) as $ch => $pages) {
-                foreach ($pages as $p => $n) $landCur[$ch][$p] = ($landCur[$ch][$p] ?? 0) + $n;
-            }
-        }
-    }
-    arsort($chCur);
-    $refCurTotal  = array_sum($chCur);
-    $refPrevTotal = array_sum($chPrev);
-    $refReferredCur  = $refCurTotal - ($chCur['Direct / no referrer'] ?? 0);
-    $refReferredPrev = $refPrevTotal - ($chPrev['Direct / no referrer'] ?? 0);
-    $refMaxCh = $chCur ? max($chCur) : 1;
-    $refPct = fn(int $cur, int $prev): ?int => $prev > 0 ? (int) round(($cur - $prev) / $prev * 100) : null;
-
-    // Top sources for the current window; "new" = first seen in the last 14 days, once the store is older than that.
-    $refNewCutoff = date('Y-m-d', strtotime("$refLast -13 days"));
-    $refCanFlagNew = $refDates[0] < $refNewCutoff;
-    $refSources = [];
-    foreach ($srcAgg as $k => [$cur, $prev, $all, $first]) {
-        if ($cur === 0) continue;
-        [$ch, $host] = explode("\t", $k, 2);
-        $refSources[] = compact('ch', 'host', 'cur', 'prev', 'all', 'first') + ['isNew' => $refCanFlagNew && $first >= $refNewCutoff];
-    }
-    usort($refSources, fn($a, $b) => [$b['cur'], $b['all']] <=> [$a['cur'], $a['all']]);
-    $refSources = array_slice($refSources, 0, 20);
-
-    // Landing pages per referred channel (current window), channels by volume.
-    $refLanding = [];
-    foreach ($chCur as $ch => $n) {
-        if (empty($landCur[$ch])) continue;
-        arsort($landCur[$ch]);
-        $refLanding[$ch] = array_slice($landCur[$ch], 0, 8, true);
-    }
-    // Referred channels first in the picker; direct is the least actionable.
-    if (isset($refLanding['Direct / no referrer'])) {
-        $direct = $refLanding['Direct / no referrer'];
-        unset($refLanding['Direct / no referrer']);
-        $refLanding['Direct / no referrer'] = $direct;
-    }
-
-    // Weekly stacked bars of referred landings (last 26 weeks), direct excluded.
-    ksort($weeks);
-    $weeks = array_slice($weeks, -26, null, true);
-    $refWeekMax = 1;
-    foreach ($weeks as $w) {
-        $t = 0; foreach ($refChartChannels as $cc => $_) $t += $w[$cc] ?? 0;
-        $refWeekMax = max($refWeekMax, $t);
-    }
-}
 
 $baseUrl = 'https://cheatsheets.davidveksler.com/';
 require __DIR__ . '/lib/chrome.php';
@@ -559,34 +451,6 @@ chrome_open(
 .zero-list{display:flex;flex-wrap:wrap;gap:6px 10px}
 .zero-list a{font-size:13px}
 
-/* Referrers: channel hues are the dataviz reference categorical slots 1-5, in fixed order */
-.c1{--c:light-dark(#2a78d6,#3987e5)}.c2{--c:light-dark(#eb6834,#d95926)}.c3{--c:light-dark(#1baf7a,#199e70)}
-.c4{--c:light-dark(#eda100,#c98500)}.c5{--c:light-dark(#e87ba4,#d55181)}
-.ref-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin-bottom:10px}
-.ref-legend span{display:inline-flex;align-items:center;gap:5px}
-.ref-legend i{width:10px;height:10px;border-radius:2px;background:var(--c)}
-.ref-chart{display:flex;align-items:stretch;gap:4px;height:150px;padding-bottom:18px;border-bottom:1px solid var(--rule)}
-.ref-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;position:relative}
-.ref-col:hover .ref-stack{filter:brightness(1.08)}
-.ref-col.partial .ref-stack{opacity:.7}
-.ref-col.partial .ref-x{font-style:italic}
-.ref-stack{display:flex;flex-direction:column-reverse;gap:2px;min-height:0;border-radius:4px 4px 0 0;overflow:hidden}
-.ref-stack i{display:block;background:var(--c);min-height:2px}
-.ref-x{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden}
-.ref-col:nth-child(even) .ref-x{visibility:hidden}
-.src-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:baseline;padding:5px 0}
-.src-row+.src-row{border-top:1px dashed var(--rule)}
-.src-host{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:var(--ink)}
-.src-ch{font-size:11px;color:var(--muted);white-space:nowrap}
-.src-row .mini-value{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap;text-align:right}
-.src-new{font-size:10px;font-weight:650;text-transform:uppercase;letter-spacing:.05em;color:var(--success);border:1px solid currentColor;border-radius:3px;padding:0 3px;margin-left:4px}
-.ref-sel{width:100%;margin-bottom:6px;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
-.ref-land-h{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:10px 0 2px}
-.ref-land[hidden]{display:none}
-.ref-stackcol{display:flex;flex-direction:column;gap:14px;min-width:0}
-.ref-stackcol .mini-panel{height:auto}
-@media (max-width:575px){ .src-ch{display:none} .ref-col:nth-child(4n+3) .ref-x{visibility:hidden} }
-
 @media (prefers-reduced-motion: no-preference){
   .rank-bar-fill,.mini-bar i,.dist-fill{transition:width .8s cubic-bezier(.16,1,.3,1)}
   .mini-panel,.rank-toolbar,.list-card{animation:fadeInUp .45s ease both}
@@ -642,93 +506,6 @@ chrome_open(
   <svg viewBox="0 0 <?php echo $sparkWidth; ?> <?php echo $sparkHeight; ?>" preserveAspectRatio="none" style="width:100%;height:60px;display:block" role="img" aria-label="Daily site-wide view count over the last <?php echo $historyDays; ?> days">
     <polyline points="<?php echo h($sparkPoints); ?>" fill="none" stroke="var(--accent)" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
   </svg>
-</div>
-<?php endif; ?>
-
-<?php if ($refReady): ?>
-<p class="lbl sectlbl"><?php echo chrome_icon('link'); ?>Where readers come from</p>
-<div class="note" style="margin-bottom:14px">
-  <?php echo chrome_icon('info'); ?>Human page landings from the origin nginx logs (bots, scrapers, and IPs with over 40 pages a day filtered out; one hit per reader, page, and hour), stored daily since <strong><?php echo h(date('M j, Y', strtotime($refDates[0]))); ?></strong> (<?php echo number_format($refDayCount); ?> day<?php echo $refDayCount === 1 ? '' : 's'; ?>, through <?php echo h(date('M j', strtotime($refLast))); ?>).
-  Search counts here run above Search Console clicks; take search volume from GSC. "Direct" also covers bookmarks, apps that strip the referrer, and bots with browser-like user agents.
-  Comparisons are the last <?php echo $refWin; ?> days against the <?php echo $refWin; ?> before<?php echo $refHasPrev ? '' : ' (partial: history is still shorter than two windows)'; ?>.
-</div>
-<?php $refDelta = $refPct($refReferredCur, $refReferredPrev); ?>
-<div class="stats" style="margin-bottom:14px">
-  <div class="stat"><div class="n"><?php echo number_format($refCurTotal); ?></div><div class="l"><?php echo chrome_icon('eye'); ?>External landings (<?php echo $refWin; ?>d)</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($refReferredCur); ?><?php if ($refDelta !== null): ?> <span class="mv-pct <?php echo $refDelta >= 0 ? 'up' : 'down'; ?>" style="font-size:.6em"><?php echo ($refDelta > 0 ? '+' : '') . $refDelta; ?>&thinsp;%</span><?php endif; ?></div><div class="l"><?php echo chrome_icon('link'); ?>Referred landings (<?php echo $refWin; ?>d)</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($chCur['Search engine'] ?? 0); ?></div><div class="l"><?php echo chrome_icon('search'); ?>From search (<?php echo $refWin; ?>d)</div></div>
-  <div class="stat"><div class="n"><?php echo number_format($chCur['AI assistant'] ?? 0); ?></div><div class="l"><?php echo chrome_icon('sparkles'); ?>From AI assistants (<?php echo $refWin; ?>d)</div></div>
-</div>
-
-<div class="mini-panel" style="margin-bottom:14px">
-  <h2><?php echo chrome_icon('bars'); ?>Referred landings per week <span class="age">(direct / no-referrer excluded; lighter bars with italic dates are partial weeks)</span></h2>
-  <div class="ref-legend">
-    <?php foreach ($refChartChannels as $cc => $cls): ?><span><i class="<?php echo $cls; ?>"></i><?php echo h($cc); ?></span><?php endforeach; ?>
-  </div>
-  <div class="ref-chart" role="img" aria-label="Weekly referred landings by channel, <?php echo count($weeks); ?> weeks">
-    <?php foreach ($weeks as $wk => $w):
-      $t = 0; foreach ($refChartChannels as $cc => $_) $t += $w[$cc] ?? 0;
-      $tip = date('M j', strtotime($w['start'])) . ' week' . ($w['days'] < 7 ? ' (partial, ' . $w['days'] . 'd)' : '') . ': ' . number_format($t) . ' referred';
-      foreach ($refChartChannels as $cc => $_) if (!empty($w[$cc])) $tip .= "\n" . $cc . ': ' . number_format($w[$cc]);
-    ?>
-    <div class="ref-col<?php echo $w['days'] < 7 ? ' partial' : ''; ?>" title="<?php echo h($tip); ?>">
-      <div class="ref-stack" style="height:<?php echo round($t / $refWeekMax * 100, 2); ?>%">
-        <?php foreach ($refChartChannels as $cc => $cls): if (empty($w[$cc])) continue; ?>
-          <i class="<?php echo $cls; ?>" style="flex-grow:<?php echo (int) $w[$cc]; ?>"></i>
-        <?php endforeach; ?>
-      </div>
-      <span class="ref-x"><?php echo h(date('M j', strtotime($w['start']))); ?></span>
-    </div>
-    <?php endforeach; ?>
-  </div>
-</div>
-
-<div class="panels-2">
-  <div class="ref-stackcol">
-  <div class="mini-panel">
-    <h2><?php echo chrome_icon('pie'); ?>Channel mix <span class="age">(last <?php echo $refWin; ?>d, change vs. prior <?php echo $refWin; ?>d)</span></h2>
-    <?php foreach ($chCur as $ch => $n): $p = $refPct($n, $chPrev[$ch] ?? 0); ?>
-    <div class="mini-row">
-      <span class="mini-label"><?php echo h($ch); ?></span>
-      <span class="mini-value"><?php echo number_format($n); ?> · <?php echo $refCurTotal ? round($n / $refCurTotal * 100, 1) : 0; ?>&thinsp;%<?php if ($refHasPrev && $p !== null): ?> · <span class="mv-pct <?php echo $p >= 0 ? 'up' : 'down'; ?>"><?php echo ($p > 0 ? '+' : '') . $p; ?>&thinsp;%</span><?php endif; ?></span>
-      <div class="mini-bar"><i style="width:<?php echo round($n / $refMaxCh * 100, 1); ?>%"></i></div>
-    </div>
-    <?php endforeach; ?>
-  </div>
-
-  <div class="mini-panel">
-    <h2><?php echo chrome_icon('signpost'); ?>Landing pages by channel <span class="age">(last <?php echo $refWin; ?>d)</span></h2>
-    <select id="refLandSel" class="ref-sel" aria-label="Channel" hidden>
-      <?php foreach ($refLanding as $ch => $_): ?><option><?php echo h($ch); ?></option><?php endforeach; ?>
-    </select>
-    <?php foreach ($refLanding as $ch => $pages): $mx = max($pages); ?>
-    <div class="ref-land" data-ch="<?php echo h($ch); ?>">
-      <h3 class="ref-land-h"><?php echo h($ch); ?></h3>
-      <?php foreach ($pages as $p => $n): ?>
-      <div class="mini-row">
-        <a class="mini-label" href="<?php echo h($p === '/' ? './' : ltrim($p, '/')); ?>" target="_blank" title="<?php echo h($p); ?>"><?php echo h(ref_page_label($p, $metaCache)); ?></a>
-        <span class="mini-value"><?php echo number_format($n); ?></span>
-        <div class="mini-bar"><i style="width:<?php echo round($n / $mx * 100, 1); ?>%"></i></div>
-      </div>
-      <?php endforeach; ?>
-    </div>
-    <?php endforeach; ?>
-  </div>
-  </div>
-
-  <div class="mini-panel">
-    <h2><?php echo chrome_icon('external'); ?>Top sources <span class="age">(last <?php echo $refWin; ?>d · all-time)</span></h2>
-    <?php if (empty($refSources)): ?>
-      <p class="mini-empty">No referred landings in this window.</p>
-    <?php else: foreach ($refSources as $s): ?>
-      <div class="src-row">
-        <span class="src-host" title="<?php echo h($s['ch'] . ' · first seen ' . $s['first']); ?>"><?php echo h($s['host']); ?><?php if ($s['isNew']): ?> <span class="src-new">new</span><?php endif; ?></span>
-        <span class="src-ch"><?php echo h($s['ch']); ?></span>
-        <span class="mini-value"><?php echo number_format($s['cur']); ?> · <?php echo number_format($s['all']); ?></span>
-      </div>
-    <?php endforeach; endif; ?>
-  </div>
-
 </div>
 <?php endif; ?>
 
@@ -915,18 +692,6 @@ chrome_open(
       applySort();
     });
   });
-
-  var refSel = document.getElementById('refLandSel');
-  if (refSel) {
-    var lands = Array.prototype.slice.call(document.querySelectorAll('.ref-land'));
-    var showLand = function(){
-      lands.forEach(function(l){ l.hidden = l.dataset.ch !== refSel.value; });
-    };
-    refSel.hidden = false;
-    document.querySelectorAll('.ref-land-h').forEach(function(el){ el.hidden = true; });
-    refSel.addEventListener('change', showLand);
-    showLand();
-  }
 
   if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
     document.querySelectorAll('.rank-bar-fill, .mini-bar i, .dist-fill').forEach(function(el){

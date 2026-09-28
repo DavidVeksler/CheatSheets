@@ -71,7 +71,7 @@ Verify after reload: `curl -o /dev/null -w "%{http_code}\n" https://cheatsheets.
 
 ## Server cron (not deployed by `git push`)
 
-`johngalt`'s crontab: `cheatsheets-pull.sh` at 04:00 (ff-only pull of `origin/main`, a second deploy path) and `scripts/referrer_accumulate.py` at 04:20 (long-term referrer store, line and details in [`../docs/index-explorer.md`](../docs/index-explorer.md) > *Referrer history*). Log: `.git/referrers.log`.
+None. `johngalt`'s crontab held `cheatsheets-pull.sh` at 04:00 (ff-only pull of `origin/main`, a second deploy path) and a referrer-log accumulator at 04:20; both were removed at the Workers cutover (2026-09-28), and the referrer feature was dropped.
 
 ## Manual fallback and hand verification
 

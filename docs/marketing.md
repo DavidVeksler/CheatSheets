@@ -29,7 +29,7 @@ Thin router. SEO working doc: [`../TODO/META-seo-planning.md`](../TODO/META-seo-
 
 - Search Console: `search-console` MCP (`list_sites`, `query_search_analytics`). Refresh striking-distance data before trusting numbers older than a few weeks.
 - Traffic: `cloudflare-stats` skill for `cheatsheets.davidveksler.com`.
-- Referral channels (search / AI assistants / Reddit / social): long-term trends on `/popularity.php` > *Where readers come from* (daily store, see [`index-explorer.md`](index-explorer.md) > *Referrer history*); ad-hoc window report: `ssh johngalt@198.211.102.9 'python3 - --md' < scripts/referrer_report.py`. Origin logs keep ~3 weeks; Cloudflare free has no referrers; GA4 has data only for 2026-06-25 → 07-03. Google counts in the logs run ~4x GSC clicks, so take search volume from GSC.
+- Referral channels: no source. Cloudflare Free has no referrers, the site has no origin logs since the Workers move (2026-09-28), and GA4 has data only for 2026-06-25 → 07-03. Take search volume from GSC.
 - Explorer usage (GA4 `properties/543339529`, tag injected by Cloudflare, not in the HTML): `index.php` fires `explorer_search {chars, results}`, `explorer_drawer {file, from}`, `explorer_view {view}`, `explorer_surprise {file}`, `explorer_theme {theme}`, `explorer_path_start {id}`, `explorer_path_step {id, step}`. Explorer KPIs: `explorer_search` events per session, and category hub impressions in Search Console.
 - Log results in [`seo-progress.md`](seo-progress.md).
 
