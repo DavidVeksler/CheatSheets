@@ -158,6 +158,8 @@ if [ "$SKIP_PARITY" -eq 0 ]; then
   # from PHP's per-request render (parity-allow.txt lets those bodies through);
   # this compares what they say instead (spec §5). Only meaningful against the droplet.
   if [ "$MODE" = full ] && [ "$ROUTED" -eq 0 ]; then
+    step "Strict re-check of allowed differences"
+    "$PY" scripts/parity_body_recheck.py ".wrangler/parity-$SHA.json"       || die "an allowed parity difference is not explained; see above"
     step "Explorer content equivalence against $PROD_URL"
     "$PY" scripts/compare_explorer.py --prod "$PROD_URL" --candidate "$PREVIEW_URL"       || die "Explorer content differs from the droplet; see above"
     PARITY="pass ($MODE + explorer)"

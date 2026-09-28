@@ -33,7 +33,7 @@ const SHEET_FILES = new Set(routes.sheetFiles);
 const PATHS = new Set(routes.paths);
 const PROVENANCE = new Set(routes.provenance.map((p) => "/" + p));
 // WordOps location = /favicon.ico falls back to nginx's empty_gif (43 bytes).
-const EMPTY_GIF = Uint8Array.from(atob("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"), (c) => c.charCodeAt(0));
+const EMPTY_GIF = Uint8Array.from(atob("R0lGODlhAQABAIABAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAICTAEAOw=="), (c) => c.charCodeAt(0));
 
 function withHeaders(resp, extra = {}) {
   const r = new Response(resp.body, resp);

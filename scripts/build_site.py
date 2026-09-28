@@ -273,6 +273,8 @@ def main() -> int:
     (DIST / "_redirects").write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     shutil.copyfile(SRC / "_headers", DIST / "_headers")
     shutil.copyfile(SRC / "404.html", DIST / "404.html")
+    (DIST / ".well-known").mkdir(exist_ok=True)
+    shutil.copyfile(SRC / ".well-known" / "traffic-advice", DIST / ".well-known" / "traffic-advice")
 
     by_file = {s["file"]: s for s in sheets}
     routes = {
