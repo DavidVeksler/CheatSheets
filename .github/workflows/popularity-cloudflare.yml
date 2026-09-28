@@ -1,0 +1,66 @@
+# Daily popularity refresh, published to the cheatsheets-davidveksler-com Worker.
+# Pre-authorized auto-publish (David, 2026-09-27). Logic and guard:
+# scripts/popularity-publish-cloudflare.sh; spec: docs/specs/cloudflare-migration.md §2.5.
+#
+# NOT WIRED YET (built 2026-09-28, before cutover): manual trigger only, dry run by
+# default, and the script itself refuses to publish while wrangler.jsonc has no routes.
+# At cutover, in ONE commit: uncomment `schedule` below and delete
+# .github/workflows/update-popularity.yml (this job replaces it); in the same session
+# remove the droplet crons (cheatsheets-pull.sh, referrer_accumulate.py).
+#
+# Secrets:
+#   CLOUDFLARE_API_TOKEN      existing: Zone Analytics Read (fetch-popularity.py)
+#   CLOUDFLARE_WORKERS_TOKEN  new, minted by David at cutover: Workers Scripts Edit on
+#                             the "David Veksler's Websites" account only
+name: popularity-cloudflare
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: refresh, gate and build only (no commit, push or publish)"
+        type: boolean
+        default: true
+  # CUTOVER: uncomment (02:30 UTC, update-popularity.yml's slot) and delete update-popularity.yml.
+  # schedule:
+  #   - cron: "30 2 * * *"
+
+concurrency:
+  group: popularity-cloudflare
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # commits popularity.json + catalog.json to main
+
+jobs:
+  refresh-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          # build_catalog.py dates every sheet from git history, and the publish
+          # guard diffs against the live Worker's commit.
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 -m pip install --upgrade pip beautifulsoup4
+      # The build prerenders index.php/popularity.php/sitemap.php with PHP CLI.
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Refresh and publish
+        run: bash scripts/popularity-publish-cloudflare.sh
+        env:
+          CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: 3d96473d69977c5c828b3079d9b9869c
+          CLOUDFLARE_WORKERS_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_TOKEN }}
+          CS_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || '' }}
