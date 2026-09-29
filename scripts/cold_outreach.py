@@ -41,9 +41,11 @@ SITE = "https://cheatsheets.davidveksler.com/"
 UA = "Mozilla/5.0 (compatible; cheatsheets-outreach-check/1.0; +https://cheatsheets.davidveksler.com/)"
 
 THRESHOLD = 0.5            # draft only when confidence is strictly greater
-MAX_FIRST_TOUCHES = 6      # per run
+MAX_FIRST_TOUCHES = 3      # per run (nightly cadence)
 MAX_FOLLOWUPS = 6          # per run
 UNSENT_BACKLOG_CAP = 12    # drafted-but-unsent first touches that stop new drafting
+MAX_NEW_PROSPECTS = 5      # researched per run
+READY_BUFFER = 3           # research when fewer than slots + this many prospects are ready
 FOLLOWUP_AFTER_DAYS = 7
 CLOSE_AFTER_DAYS = 14      # after the follow-up was sent
 EVIDENCE_MAX_AGE_DAYS = 30
@@ -342,6 +344,9 @@ def plan(data: dict, *, with_scores: bool = True) -> dict:
         else:
             ready.append(entry)
 
+    halted = bounce_storm or spam_flag or len(unsent) >= UNSENT_BACKLOG_CAP
+    research = 0 if halted or len(ready) >= slots + READY_BUFFER else MAX_NEW_PROSPECTS
+
     due_followups, to_close = [], []
     for p in ps:
         o = p.get("outreach", {})
@@ -361,6 +366,7 @@ def plan(data: dict, *, with_scores: bool = True) -> dict:
         "threshold": THRESHOLD,
         "first_touch_slots": slots,
         "followup_slots": 0 if spam_flag else MAX_FOLLOWUPS,
+        "research_slots": research,
         "bounce_storm": bounce_storm, "recent_bounces": bounces_recent,
         "spam_complaint": spam_flag,
         "unsent_drafts": unsent,

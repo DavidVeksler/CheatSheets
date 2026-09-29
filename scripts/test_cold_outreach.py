@@ -160,6 +160,15 @@ class RenderTests(unittest.TestCase):
                             outreach={"drafted": TODAY}) for i in range(co.MAX_FIRST_TOUCHES)]
         self.assertEqual(co.plan({"prospects": drafted}, with_scores=False)["first_touch_slots"], 0)
 
+    def test_research_slots_follow_queue_and_backlog(self):
+        self.assertEqual(co.plan({"prospects": []}, with_scores=False)["research_slots"], co.MAX_NEW_PROSPECTS)
+        queued = [prospect(id=f"co-02{i:02d}", email=f"b{i}@y{i}.example", state="queued")
+                  for i in range(co.MAX_FIRST_TOUCHES + co.READY_BUFFER)]
+        self.assertEqual(co.plan({"prospects": queued}, with_scores=False)["research_slots"], 0)
+        unsent = [prospect(id=f"co-03{i:02d}", email=f"c{i}@z{i}.example", state="drafted",
+                           outreach={"drafted": "2026-01-01"}) for i in range(co.UNSENT_BACKLOG_CAP)]
+        self.assertEqual(co.plan({"prospects": unsent}, with_scores=False)["research_slots"], 0)
+
     def test_gate_blocks_low_confidence(self):
         p = prospect(evidence={"kind": "unpublished_generic", "checked": TODAY})
         self.assertTrue(any("confidence" in e for e in self._gate(self.BODY, p=p)))
