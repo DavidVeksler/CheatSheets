@@ -537,7 +537,19 @@ def main() -> None:
     p.add_argument("--skip-seo", action="store_true")
     p.add_argument("--skip-links", action="store_true")
     p.add_argument("--skip-verify", action="store_true")
+    p.add_argument("--legacy", action="store_true",
+                   help="allow the retired droplet push (the live site is a Cloudflare Worker)")
     args = p.parse_args()
+
+    # Retired: since 2026-09-28 the live site is the Cloudflare Worker
+    # `cheatsheets-davidveksler-com`; a push to `production` only updates the
+    # unused droplet rollback copy. Validation-only runs (--check, --dry-run) stay.
+    if not (args.check or args.dry_run or args.legacy):
+        print(c(YELLOW, "scripts/deploy.py is retired for deploys: it pushes to the DO droplet, "
+                        "which no longer serves this site."))
+        print(c(YELLOW, "Deploy the live site (Cloudflare Worker) with:  scripts/deploy-cloudflare.ps1  (or .sh)"))
+        print(c(YELLOW, "To update the droplet rollback copy anyway, pass --legacy."))
+        sys.exit(1)
 
     # --force is the "just ship it" escape hatch. It already overrides the git
     # guards (branch/origin-sync/fast-forward); make it bypass the local

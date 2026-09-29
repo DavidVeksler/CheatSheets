@@ -40,6 +40,7 @@ Key data files: `category-map.php` (sheet → category), `category-hubs.json` (h
 ## Change management
 
 Commit per logical batch, including WIP (quality gates deployment, not commits). Deploy only via `scripts/deploy-cloudflare.sh` / `.ps1` and only with David's go-ahead; see [`deploy/DEPLOY.md`](deploy/DEPLOY.md). The daily popularity publish (GitHub Action) is the one pre-authorized auto-deploy.
+The legacy droplet path is guarded: `scripts/deploy.py` (and the `deploy.sh`/`deploy.ps1` wrappers) exit 1 with a pointer to `deploy-cloudflare.*` unless passed `--legacy` (`--check`/`--dry-run` still work), and the pre-push hook blocks a raw `git push production` unless `CHEATSHEETS_LEGACY_PUSH=1`.
 
 ## Tech baseline
 

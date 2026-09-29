@@ -23,6 +23,17 @@ esac
 # deploy.py sets this when it issues its own push — don't double-validate.
 [ "${CHEATSHEETS_DEPLOY:-}" = "1" ] && exit 0
 
+# Retired: the live site is the Cloudflare Worker (since 2026-09-28); a push to
+# 'production' only updates the unused droplet rollback copy. Block a raw push
+# and point at the real deploy. `scripts/deploy.py --legacy` (which sets
+# CHEATSHEETS_DEPLOY above) or CHEATSHEETS_LEGACY_PUSH=1 opts in.
+if [ "${CHEATSHEETS_LEGACY_PUSH:-}" != "1" ]; then
+  echo "pre-push: push to 'production' blocked: it targets the DO droplet, which no longer serves this site." >&2
+  echo "pre-push: deploy the live site (Cloudflare Worker) with scripts/deploy-cloudflare.ps1 (or .sh)." >&2
+  echo "pre-push: to update the droplet rollback copy anyway, set CHEATSHEETS_LEGACY_PUSH=1." >&2
+  exit 1
+fi
+
 root="$(cd "$(dirname "$0")/.." && pwd)"
 if   command -v python  >/dev/null 2>&1; then py=python
 elif command -v python3 >/dev/null 2>&1; then py=python3
