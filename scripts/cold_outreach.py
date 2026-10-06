@@ -43,6 +43,7 @@ UA = "Mozilla/5.0 (compatible; cheatsheets-outreach-check/1.0; +https://cheatshe
 THRESHOLD = 0.5            # draft only when confidence is strictly greater
 MAX_FIRST_TOUCHES = 3      # per run (nightly cadence)
 MAX_FOLLOWUPS = 6          # per run
+FOLLOWUPS_ENABLED = False  # David, 2026-10-06: no follow-ups on cold outreach; only new first touches
 UNSENT_BACKLOG_CAP = 12    # drafted-but-unsent first touches that stop new drafting
 MAX_NEW_PROSPECTS = 5      # researched per run
 READY_BUFFER = 3           # research when fewer than slots + this many prospects are ready
@@ -353,7 +354,7 @@ def plan(data: dict, *, with_scores: bool = True) -> dict:
         if o.get("replied") or o.get("outcome") in {"bounced", "declined", "live", "spam-complaint"}:
             continue
         sent = d(o.get("sent"))
-        if sent and not o.get("followup_drafted") and (t - sent).days >= FOLLOWUP_AFTER_DAYS:
+        if FOLLOWUPS_ENABLED and sent and not o.get("followup_drafted") and (t - sent).days >= FOLLOWUP_AFTER_DAYS:
             due_followups.append({"id": p["id"], "email": p.get("email"), "page": p.get("page"),
                                   "thread_id": o.get("thread_id"), "rfc_message_id": o.get("rfc_message_id"),
                                   "sent": o.get("sent")})
@@ -365,7 +366,7 @@ def plan(data: dict, *, with_scores: bool = True) -> dict:
         "date": t.isoformat(),
         "threshold": THRESHOLD,
         "first_touch_slots": slots,
-        "followup_slots": 0 if spam_flag else MAX_FOLLOWUPS,
+        "followup_slots": 0 if spam_flag or not FOLLOWUPS_ENABLED else MAX_FOLLOWUPS,
         "research_slots": research,
         "bounce_storm": bounce_storm, "recent_bounces": bounces_recent,
         "spam_complaint": spam_flag,
