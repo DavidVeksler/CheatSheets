@@ -175,6 +175,7 @@ return [
     // Engineering & Science
     'how-do-rainbows-work.html' => 'Engineering & Science',
     'why-is-grass-green.html' => 'Engineering & Science',
+    'black-hole-flight-simulator.html' => 'Engineering & Science',
     'ai-accelerator-comparison.html' => 'Engineering & Science',
     'ai-datacenter-infrastructure.html' => 'Engineering & Science',
     'inside-ai-data-center.html' => 'Engineering & Science',

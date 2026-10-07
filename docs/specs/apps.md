@@ -1,6 +1,6 @@
 # Spec: hosting built apps (multi-file projects) on the cheatsheets site
 
-Status: proposed 2026-10-06. First app: `m87-descent` (today a separate Worker at `m87.davidveksler.com`).
+Status: implemented 2026-10-06. First app: `black-hole-flight-simulator` (source repo `m87-descent`, previously its own Worker at `m87.davidveksler.com`).
 
 ## Problem
 
@@ -37,29 +37,24 @@ The built copy is committed (vendored). The deploy pipeline and the daily popula
 
 ## The sync script: `scripts/sync_app.py <slug>`
 
-The only supported way to update an app. It runs from CheatSheets and reads `apps/<slug>/app.json` to find the source repo:
+The only supported way to update an app (`--skip-qa`, `--no-commit` available). It reads `apps/<slug>/app.json`:
 
 ```json
 {
-  "slug": "m87-descent",
+  "slug": "black-hole-flight-simulator",
   "repo": "~/Projects/m87-descent",
   "github": "https://github.com/DavidVeksler/m87-descent",
-  "commit": "<source sha the copy was built from>",
-  "built": "2026-10-06",
-  "drop": ["robots.txt", "sitemap.xml", "llms.txt"]
+  "commit": "<source sha, written by the script>",
+  "built": "<date, written by the script>",
+  "qa": ["check", "qa:build"],
+  "drop": [],
+  "runtime": ["blackbody.json", "audio/*.mp3", "audio/manifest.json"]
 }
 ```
 
-Steps (fail closed at every step):
+Fail closed, in order: source tree clean; no uncommitted changes to `<slug>.html` / `apps/<slug>/` here; each `qa` npm script in the source repo with `APP_BASE=/apps/<slug>/`; built page has the cheatsheets canonical and the base; replace `apps/<slug>/` (keeping `app.json`, skipping `drop`), write `dist/index.html` to `<slug>.html`, record commit and date; `check_apps.py`; commit `App sync: <slug> @ <sha>`. It never deploys.
 
-1. Source repo tree is clean. Note its HEAD sha.
-2. In the source repo, run `npm run check` with the base set (`APP_BASE=/apps/<slug>/`).
-3. Clear `apps/<slug>/` except `app.json`, then copy `dist/` into it, leaving out the `drop` files (the site has its own robots, sitemap and llms). Move `dist/index.html` to `<slug>.html` at the root.
-4. Update `commit` and `built` in `app.json`.
-5. Run `scripts/check_apps.py`, then `build_catalog.py`.
-6. Commit as `App sync: <slug> @ <short sha>`.
-
-It doesn't deploy. Deploying is still `scripts/deploy-cloudflare.sh` with David's go-ahead.
+The source repo must take its base from `APP_BASE` (Vite `base`) and build every runtime URL from `import.meta.env.BASE_URL`, never a root-absolute literal. Its QA must run under the base: Vite preview only serves the base path, so a stray `/foo.json` fails QA.
 
 ## Gate: `scripts/check_apps.py`
 
@@ -69,6 +64,9 @@ Add to `build_site.py` gates and to `deploy.py --check`. For every `apps/<slug>/
 - Every `src`/`href` in the entry page that points at `/apps/...` points inside `/apps/<slug>/` and to a file tracked in git.
 - No root-absolute URL outside `/apps/<slug>/` other than the site's own pages. This catches a forgotten `fetch('/foo.json')` in the source.
 - Nothing in `apps/<slug>/` is unreferenced except `app.json`. Built JS can fetch runtime files (audio, a lookup table), so the gate also accepts anything listed in a `runtime` array in `app.json`.
+- `app.json` records a 40-hex source commit.
+
+Other gates: `add_hub_breadcrumbs.py` skips app entry pages (the source page carries its own BreadcrumbList and hub link, and a sync would overwrite an injected block). `build_site.py` never publishes `apps/*/app.json`.
 
 ## Rules for an app's entry page (exceptions to the sheet invariants)
 
@@ -83,28 +81,9 @@ Add to `build_site.py` gates and to `deploy.py --check`. For every `apps/<slug>/
 
 Headers: add `/apps/*/assets/*` → `Cache-Control: public, max-age=31536000, immutable` to `deploy/cloudflare/_headers` (Vite puts a content hash in those filenames). Unhashed runtime files (audio, LUT) get the default.
 
-## m87-descent migration
+## First app: black-hole-flight-simulator (done 2026-10-06)
 
-In the **m87-descent repo**:
+- m87-descent repo: `vite.config.ts` base from `APP_BASE`; LUT and audio fetches use `BASE_URL`; QA URL includes the base; head retargeted to `https://cheatsheets.davidveksler.com/black-hole-flight-simulator.html` (title, OG/Twitter, WebApplication + BreadcrumbList + FAQPage JSON-LD); keyword H1; sourced numbers and an FAQ in the About dialog; own Cloudflare deploy scripts now refuse; `verify-live.mjs` checks the CheatSheets URL.
+- CheatSheets: `category-map.php` (Engineering & Science), `images/black-hole-flight-simulator.png`, links from `stellar-lifecycle.html`, the engineering-science hub intro, llms.txt / llms-full.txt.
 
-1. `vite.config.ts` with `base: process.env.APP_BASE ?? '/'`. Replace the two root-absolute fetches with `import.meta.env.BASE_URL`: `src/main.ts:48` (`/blackbody.json`) and `src/audio/soundscape.ts:46` (`/audio/<name>.mp3`).
-2. `index.html` head: canonical and JSON-LD URL become `https://cheatsheets.davidveksler.com/m87-descent.html`. Add OG/Twitter tags, `og:image` = `images/m87-descent.png`, and `creditText` per the AGENTS.md template.
-3. `scripts/qa-server.ts`: when `APP_BASE` is set, set `QA_URL` to the base path (Vite preview serves under `base`).
-4. Retire its own Cloudflare deploy: `docs/deployment.md` points to `sync_app.py`, and `scripts/deploy-cloudflare.*` is removed or made to refuse. Drop `public/robots.txt`, `public/sitemap.xml` and `public/llms.txt`, or leave them to the `drop` list.
-
-In **CheatSheets**:
-
-5. `scripts/sync_app.py`, `scripts/check_apps.py`, `apps/m87-descent/app.json`, and the `_headers` rule.
-6. `category-map.php`: `'m87-descent.html' => 'Engineering & Science'`.
-7. `images/m87-descent.png`: a 1200x630 crop of a reviewed golden view (`m87-descent/tests/golden/`).
-8. Contextual links: `stellar-lifecycle.html` black hole section ("Fly into one"), plus llms.txt / llms-full.txt entries.
-9. `catalog-overrides.json` shape `["visual", "calculator"]` if the heuristics misfire (likely, since the page has few tables or words).
-
-**Subdomain retirement** (deployment-gated; do after the CheatSheets deploy is live):
-
-10. `m87.davidveksler.com/*` → 301 to `https://cheatsheets.davidveksler.com/m87-descent.html` as a zone Single Redirect rule (the house pattern for aliases). Then delete the `m87-descent` Worker and its custom-domain DNS record. It launched on 2026-10-06, so it has almost no link equity to lose.
-11. Remove it from `deploy-sites.json` and `cf-static-kit/sites.json` if listed. Note it in `docs/seo-progress.md` of both repos.
-
-## Open questions
-
-- Slug/URL: `m87-descent.html` (matches the repo) vs a search-led name like `black-hole-flight-simulator.html`. The title already carries the keywords, and renaming later costs a redirect.
+**Subdomain retirement, pending David's go-ahead:** `m87.davidveksler.com/*` → 301 to the CheatSheets URL (zone Single Redirect rule), then delete Worker `m87-descent` and its custom domain. Until then the subdomain serves the last build, canonical to itself.
