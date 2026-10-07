@@ -303,6 +303,15 @@ def validate(args, base: str) -> None:
     else:
         ok(res.stdout.strip() or "sheet breadcrumbs are current")
 
+    # Built multi-file apps (docs/specs/apps.md): entry page, vendored assets, manifest.
+    apps_check = os.path.join(ROOT, "scripts", "check_apps.py")
+    res = subprocess.run([sys.executable, apps_check], cwd=ROOT, capture_output=True, text=True)
+    if res.returncode != 0:
+        detail = [ln.strip() for ln in res.stdout.splitlines() if ln.startswith("  ")]
+        failures.extend(f"apps: {ln}" for ln in detail or [res.stdout.strip() + res.stderr.strip()])
+    else:
+        ok(res.stdout.strip())
+
     if not (html or json_files or php_files):
         if failures:
             for f in failures:

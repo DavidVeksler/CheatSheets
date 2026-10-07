@@ -109,6 +109,8 @@ def is_public(path: str) -> bool:
         return True
     if len(parts) > 1 and parts[0] in INTERNAL_DIRS | {"newsletter"}:
         return False
+    if len(parts) == 3 and parts[0] == "apps" and parts[2] == "app.json":  # build manifest (docs/specs/apps.md)
+        return False
     if len(parts) == 1 and path in INTERNAL_ROOT_NAMES:
         return False
     if INTERNAL_EXT.search(path) or WORDOPS_DENY_NAME.search(path):
@@ -122,6 +124,7 @@ GATES = [
     ["scripts/check_hubs.py"],
     ["scripts/add_hub_breadcrumbs.py", "--check"],
     ["scripts/check_cluster_hub.py"],
+    ["scripts/check_apps.py"],
 ]
 
 
