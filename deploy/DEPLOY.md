@@ -19,6 +19,7 @@ Registered as `cheatsheets` in `~/Projects/deploy-sites.json` (`scripts/deploy-c
 4. **Confirm** `[y/N]` (skip with `--yes` / `-Yes`).
 5. **Promote:** `wrangler versions deploy <version>@100%`, `wrangler triggers deploy`, then purges this host's edge cache (`cf-static-kit/scripts/purge_host.py`; a failed purge only warns).
 6. **Verify live:** fetches `/` and greps for a distinctive string. On failure after promotion: `npx wrangler rollback`.
+   The loop also byte-compares prod `/` with the preview after stripping Cloudflare zone injections (`CF_NOISE` in `cf-static-kit/scripts/cf_parity.py`). The whole deploy is about 30 s of work; if it sits in this step for many minutes, a new edge injection (Zaraz, 2026-10-06) is not in that list. Diff prod against the preview with the kit's normalizer, add the pattern, and check `wrangler deployments status` before deciding to roll back: the version is usually already live.
 
 Flags: `--yes`, `--preview-only`, `--full-parity`, `--skip-parity`, `--redeploy` (PowerShell: `-Yes`, `-PreviewOnly`, `-FullParity`, `-SkipParity`, `-Redeploy`).
 

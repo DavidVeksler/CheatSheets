@@ -11,7 +11,7 @@ Standalone, interactive HTML cheatsheets (tech, finance, philosophy, AI safety, 
 | SEO, category hubs, OG image, measurement, promotion | [`docs/marketing.md`](docs/marketing.md) |
 | Deploy (Cloudflare Workers, `scripts/deploy-cloudflare.sh`), forms Worker, rollback, live verification | [`deploy/DEPLOY.md`](deploy/DEPLOY.md) |
 | Cloudflare Workers migration (spec; cut over 2026-09-28) | [`docs/specs/cloudflare-migration.md`](docs/specs/cloudflare-migration.md) |
-| Built multi-file apps (e.g. m87-descent): `<slug>.html` + `apps/<slug>/`, sync and gate | [`docs/specs/apps.md`](docs/specs/apps.md) |
+| Fold a built multi-file project into the site, or update one (`<slug>.html` + `apps/<slug>/`, `sync_app.py`) | [`docs/apps.md`](docs/apps.md) (runbook); design: [`docs/specs/apps.md`](docs/specs/apps.md) |
 | `index.php` Explorer, `catalog.json`, `paths.json`, popularity history | [`docs/index-explorer.md`](docs/index-explorer.md) |
 | Weekly fact-drift refresh routine (`refresh-status.json`) | [`weekly-freshness-update.md`](weekly-freshness-update.md) |
 | Reddit draft routine | [`docs/reddit-daily-drafts.md`](docs/reddit-daily-drafts.md) |

@@ -1,5 +1,7 @@
 # Spec: hosting built apps (multi-file projects) on the cheatsheets site
 
+Procedure: [`../apps.md`](../apps.md) (the runbook wins on steps; this file holds the design and rationale).
+
 Status: implemented 2026-10-06. First app: `black-hole-flight-simulator` (source repo `m87-descent`, previously its own Worker at `m87.davidveksler.com`).
 
 ## Problem

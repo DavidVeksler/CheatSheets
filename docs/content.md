@@ -5,7 +5,7 @@ Thin router. Binding rules: [`../AGENTS.md`](../AGENTS.md) (quality protocol, in
 ## Where content lives
 
 - Sheets: standalone `.html` in the repo root (lowercase, hyphens, e.g. `linux-server-hardening.html`).
-- Built apps (multi-file, own repo, e.g. `black-hole-flight-simulator.html` from `m87-descent`): entry page at the root, assets in `apps/<slug>/`. Never hand-edit either; update with `python scripts/sync_app.py <slug>`. See [`specs/apps.md`](specs/apps.md).
+- Built apps (multi-file, own repo, e.g. `black-hole-flight-simulator.html` from `m87-descent`): entry page at the root, assets in `apps/<slug>/`. Never hand-edit either; update with `python scripts/sync_app.py <slug>`. Runbook: [`apps.md`](apps.md).
 - Specs: one `TODO/<topic>.md` per planned sheet, deleted after it ships.
 - Preview image: `images/<filename>.png`, 1200x630.
 - `index.php` renders from `catalog.json`; `sitemap.php` auto-discovers root `.html`. Sheets need no build step; the deploy prerenders the PHP pages (`scripts/build_site.py`).
