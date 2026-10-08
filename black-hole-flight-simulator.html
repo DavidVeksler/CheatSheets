@@ -37,7 +37,7 @@
   </style>
   <script>
     (function(){
-      var panels=[["hud-root","dim-hud","telemetry"],["beat-card","dim-beat","story caption"],["home-view","dim-home","home view"],["sandbox-panel","dim-sandbox","sandbox controls"]];
+      var panels=[["hud-root","dim-hud","telemetry"],["beat-card","dim-beat","story caption"],["home-view","dim-home","home view"],["home-chip","dim-home","signal-loss notice"],["sandbox-panel","dim-sandbox","sandbox controls"]];
       function sync(){var b=document.body;b.classList.toggle("has-dismissed",panels.some(function(p){return b.classList.contains(p[1])}))}
       function init(){
         var b=document.body;
@@ -52,7 +52,9 @@
         var h=document.getElementById("info-toggle");h.parentNode.insertBefore(r,h);
         // A closed story caption comes back with the next chapter beat.
         var t=document.getElementById("beat-title");
-        if(t)new MutationObserver(function(){b.classList.remove("dim-beat");sync()}).observe(t,{childList:true,characterData:true,subtree:true});
+        // The app rewrites the title every tick, so compare text instead of reacting to every mutation.
+        var last=t&&t.textContent;
+        if(t)new MutationObserver(function(){if(t.textContent!==last){last=t.textContent;b.classList.remove("dim-beat");sync()}}).observe(t,{childList:true,characterData:true,subtree:true});
       }
       if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
     })();
