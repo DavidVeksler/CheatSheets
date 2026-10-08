@@ -23,6 +23,40 @@
   <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebApplication", "@id": "https://cheatsheets.davidveksler.com/black-hole-flight-simulator.html#app", "name": "Black Hole Flight Simulator", "alternateName": "M87 Descent", "url": "https://cheatsheets.davidveksler.com/black-hole-flight-simulator.html", "description": "Free black hole flight simulator in your browser: fall into a black hole with M87's 6.5 billion solar masses and watch gravitational lensing, time dilation and tidal forces live.", "applicationCategory": "EducationalApplication", "applicationSubCategory": "Physics simulation", "operatingSystem": "Any (web browser)", "browserRequirements": "Requires WebGL2", "inLanguage": "en", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "image": "https://cheatsheets.davidveksler.com/images/black-hole-flight-simulator.png", "screenshot": "https://cheatsheets.davidveksler.com/images/black-hole-flight-simulator.png", "author": {"@type": "Person", "@id": "https://davidveksler.com/#person", "name": "David Veksler", "url": "https://davidveksler.com/"}, "creditText": "Produced by a governed multi-agent Claude Code pipeline; author of record David Veksler", "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"}, "datePublished": "2026-10-06", "keywords": "black hole simulator, black hole flight simulator, M87*, event horizon, Schwarzschild black hole, gravitational lensing, time dilation, tidal forces, general relativity", "about": [{"@type": "Thing", "name": "Black hole", "sameAs": "https://en.wikipedia.org/wiki/Black_hole"}, {"@type": "Thing", "name": "Messier 87", "sameAs": "https://en.wikipedia.org/wiki/Messier_87"}, {"@type": "Thing", "name": "Schwarzschild metric", "sameAs": "https://en.wikipedia.org/wiki/Schwarzschild_metric"}], "citation": ["https://arxiv.org/abs/1906.11243", "https://arxiv.org/abs/gr-qc/0411060", "https://arxiv.org/abs/2010.08735"]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Cheatsheets", "item": "https://cheatsheets.davidveksler.com/"}, {"@type": "ListItem", "position": 2, "name": "Engineering & Science", "item": "https://cheatsheets.davidveksler.com/engineering-science"}, {"@type": "ListItem", "position": 3, "name": "Black Hole Flight Simulator", "item": "https://cheatsheets.davidveksler.com/black-hole-flight-simulator.html"}]}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Would you feel anything crossing the event horizon of M87*?", "acceptedAnswer": {"@type": "Answer", "text": "No. Free fall feels weightless, and a black hole this massive barely stretches you at the horizon: the tidal difference across a 2 m body is about 5 × 10⁻¹¹ g. Smaller black holes are the ones that spaghettify you before you reach the horizon."}}, {"@type": "Question", "name": "How long does the fall take after crossing the horizon?", "acceptedAnswer": {"@type": "Answer", "text": "About 11.9 hours of ship time from horizon to singularity for a ship that fell from rest far away, two-thirds of the horizon's light-crossing time. No path inside lasts longer than about 27.9 hours (πGM/c³)."}}, {"@type": "Question", "name": "Why does home never see the ship cross?", "acceptedAnswer": {"@type": "Answer", "text": "Light leaving the ship near the horizon is delayed and redshifted without limit. A distant observer sees the ship slow, dim and redden toward the horizon and never sees it cross, while the ship crosses in finite proper time."}}, {"@type": "Question", "name": "Is this what M87* really looks like?", "acceptedAnswer": {"@type": "Answer", "text": "No. The simulator uses a non-spinning Schwarzschild black hole with M87*'s mass. The thin bright disk and blue-white jets are artistic choices inspired by M87; the real hole spins and is surrounded by a hot, thick flow that the Event Horizon Telescope imaged as a ring 42 microarcseconds across."}}, {"@type": "Question", "name": "What physics does the simulator compute?", "acceptedAnswer": {"@type": "Answer", "text": "Ship motion along Schwarzschild geodesics in Painlevé-Gullstrand (river) coordinates, light paths ray traced through the curved spacetime on the GPU, aberration, gravitational and Doppler frequency shifts, the ship and distant clocks, and tidal gradients. It runs in WebGL2."}}]}]}</script>
   <script type="module" crossorigin src="/apps/black-hole-flight-simulator/assets/index-CS4NwnAe.js"></script>
   <link rel="stylesheet" crossorigin href="/apps/black-hole-flight-simulator/assets/index-BvUrr_B2.css">
+  <style>
+    /* Dismissible HUD panels (mobile usability). The app re-sets each panel's [hidden] every tick, so dismissal is a body class. */
+    .panel-close{position:absolute;top:4px;right:4px;z-index:5;width:28px;height:28px;padding:0;display:grid;place-items:center;font:18px/1 "IBM Plex Mono",monospace;color:#c0d5dc;border-radius:50%}
+    #hud-root .panel-label{padding-right:30px}
+    .beat-card,.home-view,.home-chip{padding-right:36px}
+    .home-chip{position:absolute}
+    #panels-restore{display:none;padding:6px 10px;font:9px "IBM Plex Mono",monospace;letter-spacing:.06em;color:var(--teal,#8dd9cf);margin-left:auto;margin-right:10px}
+    body.has-dismissed.flying:not(.at-end) #panels-restore{display:block}
+    body.dim-hud .telemetry,body.dim-beat .beat-card,body.dim-home .home-view,body.dim-home .home-chip,body.dim-sandbox .sandbox-panel{display:none!important}
+    body.dim-home.with-home .beat-card{left:5%}
+    @media (width<=700px){.panel-close{width:34px;height:34px;top:2px;right:2px}body.dim-home.with-home .beat-card{left:16px}}
+  </style>
+  <script>
+    (function(){
+      var panels=[["hud-root","dim-hud","telemetry"],["beat-card","dim-beat","story caption"],["home-view","dim-home","home view"],["sandbox-panel","dim-sandbox","sandbox controls"]];
+      function sync(){var b=document.body;b.classList.toggle("has-dismissed",panels.some(function(p){return b.classList.contains(p[1])}))}
+      function init(){
+        var b=document.body;
+        panels.forEach(function(p){
+          var el=document.getElementById(p[0]);if(!el)return;
+          var x=document.createElement("button");x.type="button";x.className="panel-close";x.textContent="\u00d7";x.setAttribute("aria-label","Close "+p[2]);
+          x.addEventListener("click",function(e){e.stopPropagation();b.classList.add(p[1]);sync()});
+          el.appendChild(x);
+        });
+        var r=document.createElement("button");r.type="button";r.id="panels-restore";r.textContent="SHOW PANELS";
+        r.addEventListener("click",function(){panels.forEach(function(p){b.classList.remove(p[1])});sync()});
+        var h=document.getElementById("info-toggle");h.parentNode.insertBefore(r,h);
+        // A closed story caption comes back with the next chapter beat.
+        var t=document.getElementById("beat-title");
+        if(t)new MutationObserver(function(){b.classList.remove("dim-beat");sync()}).observe(t,{childList:true,characterData:true,subtree:true});
+      }
+      if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+    })();
+  </script>
 </head>
 <body>
   <noscript><p class="noscript">Black Hole Flight Simulator needs JavaScript and WebGL2. It flies a ship into a non-spinning black hole with M87*'s mass of 6.5 billion suns, ray tracing gravitational lensing and showing time dilation and tidal forces live. Browse the <a href="https://cheatsheets.davidveksler.com/">cheatsheets</a> meanwhile.</p></noscript>
