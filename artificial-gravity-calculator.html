@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Artificial Gravity Calculator: Spin Rate, RPM and Comfort</title>
+<meta name="description" content="Calculate spin rate, rim speed, gravity gradient and Coriolis for any rotating habitat, check it against comfort limits, and compare the Stanford torus, O'Neill cylinder and Concordia.">
+<meta name="keywords" content="artificial gravity calculator, spin gravity, rotating space station rpm, O'Neill cylinder, Stanford torus, Coriolis effect space station, space settlement rotation rate, Kalpana One">
+<link rel="canonical" href="https://cheatsheets.davidveksler.com/artificial-gravity-calculator.html">
+
+<meta property="og:title" content="Artificial Gravity Calculator: Spin Rate, RPM and Comfort">
+<meta property="og:description" content="Calculate spin rate, rim speed, gravity gradient and Coriolis for any rotating habitat, check it against comfort limits, and compare the Stanford torus, O'Neill cylinder and Concordia.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cheatsheets.davidveksler.com/artificial-gravity-calculator.html">
+<meta property="og:image" content="images/artificial-gravity-calculator.png">
+<meta property="og:image:alt" content="Log-log spin chart of radius against rpm with iso-gravity lines, comfort bands and the Stanford torus, O'Neill cylinders, Kalpana One and Concordia marked">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Artificial Gravity Calculator: Spin Rate, RPM and Comfort">
+<meta name="twitter:description" content="Calculate spin rate, rim speed, gravity gradient and Coriolis for any rotating habitat, check it against comfort limits, and compare the Stanford torus, O'Neill cylinder and Concordia.">
+<meta name="twitter:image" content="images/artificial-gravity-calculator.png">
+<meta name="twitter:creator" content="@heroiclife">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Artificial Gravity Calculator: Spin Rate, RPM and Comfort",
+  "description": "A spin-gravity calculator and reference: spin rate, rim speed, gravity gradient and Coriolis for any rotating habitat, published comfort limits, and a sourced comparison of the Stanford torus, O'Neill cylinder, Island One, Kalpana One and the Concordia design study.",
+  "author": {"@type": "Person", "@id": "https://davidveksler.com/#person", "name": "David Veksler", "url": "https://davidveksler.com/"},
+  "creditText": "Produced by a governed multi-agent Claude Code pipeline; author of record David Veksler",
+  "publisher": {"@type": "Organization", "name": "David Veksler Cheatsheets"},
+  "datePublished": "2026-10-14",
+  "keywords": "artificial gravity calculator, spin gravity, rotating space station, O'Neill cylinder, Stanford torus, Coriolis, Kalpana One, Concordia"
+}
+</script>
+
+<style>
+@layer base, components, print;
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+    --paper: light-dark(#F4F1E8, #10151D);
+    --surface: light-dark(#FBF9F3, #18202B);
+    --ink: light-dark(#1B2330, #E6E2D6);
+    --muted: light-dark(#4F5A68, #A3ABB5);
+    --rule: light-dark(#C9C3B4, #2E3846);
+    --rule-soft: light-dark(#DDD8CA, #232C39);
+    --accent: light-dark(#B04A18, #F08A55);
+    --accent-fill: light-dark(#C8551F, #E8743A);
+    --blue: light-dark(#2F6DA3, #7DB8EE);
+    --blue-fill: light-dark(#2F6DA3, #5CA0DB);
+    --b1: light-dark(#3E8E5A, #5FB67C);
+    --b2: light-dark(#B8891F, #D9AB45);
+    --b3: light-dark(#C8551F, #E8743A);
+    --b4: light-dark(#B23A3A, #E06A6A);
+    --serif: Georgia, 'Times New Roman', serif;
+    --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --mono: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 400 1rem/1.55 var(--sans); text-wrap: pretty;
+  }
+  h1, h2, h3 { font-family: var(--serif); text-wrap: balance; line-height: 1.2; margin: 0; }
+  p { margin: 0 0 .8rem; }
+  a { color: var(--blue); text-underline-offset: .15em; }
+  a:hover { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--accent-fill); outline-offset: 2px; border-radius: 2px; }
+  code, .num, td.n, th.n, output { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  code { font-size: .9em; }
+  img { max-width: 100%; height: auto; display: block; }
+  .skip { position: absolute; left: -999px; top: 0; background: var(--ink); color: var(--paper); padding: .5rem .8rem; z-index: 10; }
+  .skip:focus { left: .5rem; top: .5rem; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+
+@layer components {
+  .wrap { width: min(1120px, 100% - 2rem); margin-inline: auto; }
+
+  /* masthead: report cover */
+  .mast { border-bottom: 3px double var(--ink); padding: 1.6rem 0 1.2rem; }
+  .eyebrow { font: 600 .72rem/1.5 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .7rem; }
+  .eyebrow b { color: var(--accent); font-weight: 700; }
+  h1 { font-size: clamp(1.9rem, 5.4vw, 3.2rem); font-weight: 700; letter-spacing: -.01em; max-width: 22ch; }
+  .lede { font-size: 1.08rem; max-width: 66ch; margin-top: .9rem; color: var(--ink); }
+  .stamp { display: grid; gap: .3rem; margin-top: 1.1rem; max-width: 74ch; border: 1px solid var(--rule); border-left: 4px solid var(--blue); background: var(--surface); padding: .7rem .9rem; font-size: .92rem; }
+  .stamp strong { font-family: var(--serif); }
+
+  .toc { margin: 0; padding: .6rem 0; border-bottom: 1px solid var(--rule); position: relative; }
+  .toc ul { list-style: none; display: flex; gap: .4rem 1rem; margin: 0; padding: 0; overflow-x: auto; scrollbar-width: thin; }
+  .toc a { white-space: nowrap; font: 600 .8rem var(--mono); text-decoration: none; color: var(--ink); padding: .35rem .15rem; display: inline-block; border-bottom: 2px solid transparent; }
+  .toc a:hover { border-bottom-color: var(--accent-fill); color: var(--ink); }
+  @media (min-width: 900px) { .toc ul { flex-wrap: wrap; overflow: visible; } }
+
+  /* plates: numbered report sections */
+  .plate { padding: 2rem 0 1.4rem; border-bottom: 1px solid var(--rule); scroll-margin-top: .5rem; }
+  .plate > h2, .sec-head h2 { font-size: clamp(1.4rem, 3.4vw, 1.9rem); margin-bottom: .35rem; }
+  .sec-no { font: 700 .75rem var(--mono); color: var(--accent); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .35rem; }
+  .sub { color: var(--muted); max-width: 70ch; margin-bottom: 1rem; }
+  h3 { font-size: 1.12rem; margin: 1.5rem 0 .5rem; }
+
+  /* design value tag: styled once, used on every Concordia number */
+  .dv { display: inline-block; font: 600 .62rem/1.5 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--blue); border: 1px solid currentColor; border-radius: 3px; padding: 0 .3em; margin-inline: .25em; vertical-align: .12em; white-space: nowrap; background: transparent; }
+  .src { font: .74rem var(--mono); color: var(--muted); }
+  .derived { font: .68rem var(--mono); color: var(--muted); border-bottom: 1px dotted var(--muted); cursor: help; }
+
+  /* tables: ledger */
+  .tw { overflow-x: auto; border: 1px solid var(--rule); background: var(--surface); margin: .6rem 0 1rem; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  caption { text-align: left; font: 600 .78rem var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: .55rem .7rem .3rem; }
+  th, td { padding: .5rem .7rem; text-align: left; vertical-align: top; border-top: 1px solid var(--rule-soft); }
+  thead th { border-top: 0; border-bottom: 2px solid var(--ink); font: 700 .72rem var(--mono); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); white-space: nowrap; }
+  tbody th { font-weight: 600; }
+  td.n, th.n { text-align: right; white-space: nowrap; }
+  tr.cc th, tr.cc td { background: color-mix(in srgb, var(--blue) 7%, transparent); }
+  tr.cc > :first-child { box-shadow: inset 3px 0 0 var(--blue); padding-left: .85rem; }
+  .tw table.wide { min-width: 1020px; }
+  .tw table.mid { min-width: 560px; }
+  .note { font-size: .84rem; color: var(--muted); max-width: 90ch; }
+  .bd { display: inline-block; min-width: 1.5em; text-align: center; font: 700 .72rem var(--mono); color: #fff; border-radius: 3px; padding: .05em .35em; }
+  .bd1 { background: #2F7A4A; } .bd2 { background: #8C6710; } .bd3 { background: #B0481A; } .bd4 { background: #A23030; }
+
+  /* quick reference */
+  .qr th { width: 17%; }
+  .qr td:first-of-type { font-family: var(--mono); }
+  .scrollhint { display: none; font-size: .78rem; color: var(--muted); margin: .2rem 0 0; }
+  @media (max-width: 700px) {
+    .scrollhint { display: block; }
+    .qr.mid { min-width: 0; }
+    .qr thead { display: none; }
+    .qr tr { display: block; padding: .55rem .7rem; border-top: 1px solid var(--rule-soft); }
+    .qr tr:first-child { border-top: 0; }
+    .qr th, .qr td { display: block; border: 0; padding: .1rem 0; width: auto; text-align: left; }
+    .qr td:nth-of-type(2)::before { content: 'Concordia: '; color: var(--blue); font: 700 .7rem var(--mono); text-transform: uppercase; letter-spacing: .04em; }
+  }
+  .callout { border: 1px solid var(--rule); border-left: 4px solid var(--accent-fill); background: var(--surface); padding: .7rem .9rem; margin: .8rem 0; font-size: .93rem; max-width: 90ch; }
+  .callout.blue { border-left-color: var(--blue); }
+
+  /* calculator */
+  .chips { display: flex; flex-wrap: nowrap; gap: .4rem; overflow-x: auto; padding: .15rem 0 .5rem; scrollbar-width: thin; }
+  @media (min-width: 900px) { .chips { flex-wrap: wrap; overflow: visible; } }
+  .chip { font: 600 .78rem var(--mono); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; padding: .4rem .8rem; cursor: pointer; white-space: nowrap; min-height: 2.5rem; }
+  .chip:hover { border-color: var(--accent-fill); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .chip.cz[aria-pressed="false"] { border-color: var(--blue); color: var(--blue); }
+  .chip.cz[aria-pressed="true"] { background: var(--blue-fill); border-color: var(--blue-fill); color: light-dark(#fff, #0C1219); }
+
+  .calc { display: grid; gap: 1.1rem; margin-top: .4rem; }
+  @media (min-width: 1000px) { .calc { grid-template-columns: minmax(330px, 400px) 1fr; align-items: start; } }
+  .panel { background: var(--surface); border: 1px solid var(--rule); padding: .9rem; }
+  .panel h3 { margin: 0 0 .6rem; font: 700 .74rem var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .fields { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem .8rem; }
+  .field { display: grid; gap: .2rem; }
+  .field.full { grid-column: 1 / -1; }
+  label, .lab { font: 600 .78rem var(--sans); color: var(--ink); }
+  input[type="text"], select { font: 500 1.05rem var(--mono); font-variant-numeric: tabular-nums; width: 100%; min-height: 2.75rem; padding: .4rem .6rem; color: var(--ink); background: var(--paper); border: 1px solid var(--muted); border-radius: 3px; }
+  input[aria-invalid="true"] { border-color: var(--b4); box-shadow: 0 0 0 2px color-mix(in srgb, var(--b4) 35%, transparent); }
+  .seg { display: inline-flex; border: 1px solid var(--muted); border-radius: 3px; overflow: hidden; }
+  .seg label { cursor: pointer; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg span { display: block; padding: .5rem .7rem; font: 600 .78rem var(--sans); min-height: 2.5rem; display: flex; align-items: center; }
+  .seg input:checked + span { background: var(--ink); color: var(--paper); }
+  .seg input:focus-visible + span { outline: 3px solid var(--accent-fill); outline-offset: -3px; }
+  .err { color: var(--b4); font-size: .8rem; min-height: 1.1em; grid-column: 1 / -1; margin: 0; }
+
+  .outs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: .8rem; border: 1px solid var(--rule); }
+  .out { padding: .55rem .65rem; border-top: 1px solid var(--rule-soft); border-left: 1px solid var(--rule-soft); margin-top: -1px; margin-left: -1px; min-width: 0; }
+  .out.full { grid-column: 1 / -1; }
+  .out dt { font: 600 .68rem var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .out dd { margin: .1rem 0 0; font: 700 1.25rem/1.25 var(--mono); font-variant-numeric: tabular-nums; }
+  .out dd small { display: block; font: 400 .72rem/1.35 var(--mono); color: var(--muted); }
+  .out dd.txt { font: 600 .9rem/1.4 var(--sans); }
+  .out.band1 { box-shadow: inset 4px 0 0 var(--b1); } .out.band2 { box-shadow: inset 4px 0 0 var(--b2); }
+  .out.band3 { box-shadow: inset 4px 0 0 var(--b3); } .out.band4 { box-shadow: inset 4px 0 0 var(--b4); }
+  .out.hl dd { color: var(--accent); }
+  @media (min-width: 1000px) { .outs { grid-template-columns: 1fr 1fr 1fr; } }
+  @media (min-width: 1000px) { .calc .outs { grid-template-columns: 1fr 1fr; } }
+
+  .chartcard { background: var(--surface); border: 1px solid var(--rule); padding: .7rem .7rem .4rem; min-width: 0; margin: 0; }
+  .chartcard figcaption { font-size: .82rem; color: var(--muted); padding: .3rem .2rem .2rem; }
+  #spinChart { width: 100%; }
+  #spinChart svg { display: block; width: 100%; height: auto; font-family: var(--sans); }
+  .chartkey { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .78rem; padding: .2rem .2rem .4rem; color: var(--muted); }
+  .chartkey i { display: inline-block; width: .8em; height: .8em; border-radius: 2px; margin-right: .3em; vertical-align: -.08em; }
+  .printsum { display: none; }
+
+  /* field guide */
+  .cards { display: grid; gap: .9rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+  .card { background: var(--surface); border: 1px solid var(--rule); padding: .9rem; display: grid; grid-template-columns: 1fr 52px; gap: .2rem .8rem; align-content: start; break-inside: avoid; }
+  .card h3 { margin: 0; font-size: 1.05rem; grid-column: 1; }
+  .card .glyph { grid-column: 2; grid-row: 1 / span 2; width: 52px; height: 52px; color: var(--muted); }
+  .glyph .rotor { fill: none; stroke: currentColor; stroke-width: 1.6; }
+  .glyph .ax { fill: currentColor; }
+  .glyph .mk { fill: var(--accent-fill); stroke: var(--surface); stroke-width: 1.2; }
+  .card .big { grid-column: 1; font: 700 1.7rem/1.1 var(--mono); color: var(--accent); font-variant-numeric: tabular-nums; }
+  .card p { grid-column: 1 / -1; font-size: .9rem; margin: .35rem 0 0; }
+  .card .why { color: var(--muted); font-size: .85rem; }
+  .card .see { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin-top: .5rem; font-size: .85rem; }
+  .card .see a { font-weight: 600; }
+
+  .cols2 { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+  ol.mist { padding-left: 1.2rem; margin: .5rem 0; display: grid; gap: .7rem; max-width: 95ch; }
+  ol.mist li::marker { font: 700 .8rem var(--mono); color: var(--accent); }
+  ol.mist b { font-family: var(--serif); }
+  ul.plain { padding-left: 1.1rem; margin: .4rem 0 .8rem; display: grid; gap: .5rem; max-width: 95ch; }
+
+  /* explore block */
+  .explore { display: grid; gap: 1rem; background: var(--surface); border: 1px solid var(--rule); border-top: 4px solid var(--blue); }
+  @media (min-width: 800px) { .explore { grid-template-columns: 1.1fr 1fr; } }
+  .explore figure { margin: 0; }
+  .explore figure img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+  .explore figcaption { font-size: .75rem; color: var(--muted); padding: .35rem .6rem; }
+  .explore .body { padding: 1rem 1.1rem; display: grid; gap: .8rem; align-content: center; }
+  .explore h2 { font-size: 1.5rem; }
+  .btns { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .btn { display: inline-flex; align-items: center; min-height: 2.75rem; padding: .5rem 1rem; font: 700 .88rem var(--sans); text-decoration: none; border: 2px solid var(--blue-fill); color: var(--blue); border-radius: 3px; }
+  .btn.pri { background: var(--blue-fill); color: light-dark(#fff, #0C1219); }
+  .btn:hover { border-color: var(--accent-fill); color: var(--accent); }
+  .btn.pri:hover { background: var(--accent); border-color: var(--accent); color: light-dark(#fff, #0C1219); }
+  .figure-inline { margin: .8rem 0 1rem; max-width: 640px; border: 1px solid var(--rule); background: var(--surface); }
+  .figure-inline figcaption { font-size: .78rem; color: var(--muted); padding: .35rem .6rem; }
+
+  .related { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); margin: .8rem 0; }
+  .related a { display: block; border: 1px solid var(--rule); background: var(--surface); padding: .7rem .8rem; text-decoration: none; color: var(--ink); font-size: .9rem; }
+  .related a b { color: var(--blue); display: block; font: 700 .85rem var(--sans); margin-bottom: .15rem; }
+  .related a:hover { border-color: var(--accent-fill); }
+  .srcs { columns: 2 380px; column-gap: 2rem; font-size: .84rem; padding-left: 1.1rem; }
+  .srcs li { break-inside: avoid; margin-bottom: .35rem; }
+
+  footer { padding: 1.5rem 0 2.5rem; font-size: .86rem; color: var(--muted); text-align: center; }
+  .author-byline { max-width: 70ch; margin: 1.5rem auto; text-align: center; font-size: .92em; }
+  .print-only { display: none; }
+}
+
+@layer print {
+  @media print {
+    :root { color-scheme: light; --paper: #fff; --surface: #fff; --ink: #111; --muted: #444; --rule: #999; --rule-soft: #ccc; --accent: #8a360f; --blue: #1f5a8c; }
+    body { font-size: 10pt; background: #fff; }
+    .toc, .chips, .skip, .explore figure, .btns, .fields, .seg, .err, footer .cheatsheets-build-note, .author-byline, .figure-inline { display: none !important; }
+    .printsum { display: block; font: 600 10pt var(--mono); border: 1px solid #000; padding: .4rem .6rem; margin: .4rem 0; }
+    .plate { padding: .8rem 0; break-inside: auto; }
+    .tw { overflow: visible; border-color: #999; }
+    .tw table.wide, .tw table.mid { min-width: 0; font-size: 8pt; }
+    thead th { white-space: normal; }
+    td.n, th.n { white-space: normal; }
+    th, td { padding: .25rem .3rem; }
+    #spinForm, .scrollhint { display: none !important; }
+    tr, .card, .out { break-inside: avoid; }
+    .calc { display: block; }
+    .outs { grid-template-columns: repeat(3, 1fr); }
+    a { color: inherit; text-decoration: none; }
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    .explore { border: 1px solid #999; }
+    .print-only { display: block; }
+  }
+}
+
+@layer components {
+  td.m, th.m { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: .84rem; }
+  .d { font: 600 .62rem var(--mono); color: var(--muted); margin-left: .1em; cursor: help; vertical-align: super; line-height: 0; }
+  #spinChart .ch-bg { fill: var(--paper); }
+  #spinChart .ch-band1 { fill: var(--b1); opacity: .2; } #spinChart .ch-band2 { fill: var(--b2); opacity: .22; }
+  #spinChart .ch-band3 { fill: var(--b3); opacity: .2; } #spinChart .ch-band4 { fill: var(--b4); opacity: .2; }
+  #spinChart .ch-hatch { stroke: var(--muted); stroke-width: 1; opacity: .35; }
+  #spinChart .ch-bandlab { fill: var(--ink); font: 600 10.5px var(--mono); opacity: .85; }
+  #spinChart .ch-grid { stroke: var(--rule); stroke-width: 1; opacity: .8; }
+  #spinChart .ch-frame { stroke: var(--ink); stroke-width: 1.2; }
+  #spinChart .ch-tick { fill: var(--muted); font: 11px var(--mono); }
+  #spinChart .ch-axt { fill: var(--muted); font: 600 11.5px var(--sans); }
+  #spinChart .ch-iso { stroke: var(--ink); stroke-width: 1.1; opacity: .55; stroke-dasharray: 5 4; fill: none; }
+  #spinChart .ch-iso1 { stroke: var(--accent-fill); stroke-width: 2.6; opacity: 1; stroke-dasharray: none; }
+  #spinChart .ch-isolab { fill: var(--muted); font: 600 11px var(--mono); }
+  #spinChart .ch-isolab1 { fill: var(--accent); font-weight: 700; font-size: 12px; }
+  #spinChart .ch-sp { stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 7 4; }
+  #spinChart .ch-splab { fill: var(--ink); font: 600 10.5px var(--mono); }
+  #spinChart .ch-dot { fill: var(--blue-fill); stroke: var(--paper); stroke-width: 1.5; }
+  #spinChart .ch-ref { fill: var(--paper); stroke: var(--muted); stroke-width: 2; }
+  #spinChart .ch-ring { fill: none; stroke: var(--blue); stroke-width: 2.4; }
+  #spinChart .ch-lead { stroke: var(--muted); stroke-width: 1; }
+  #spinChart .ch-lab { fill: var(--ink); font: 600 12px var(--sans); paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; }
+  #spinChart .ch-lab-cz { fill: var(--blue); font-size: 13.5px; font-weight: 700; }
+  #spinChart .ch-live { fill: var(--accent-fill); stroke: var(--paper); stroke-width: 2.5; }
+  #spinChart .ch-cross { stroke: var(--accent-fill); stroke-width: 1.2; stroke-dasharray: 3 3; }
+  #spinChart .ch-livelab { fill: var(--accent); font: 700 12px var(--mono); paint-order: stroke; stroke: var(--paper); stroke-width: 3.5px; stroke-linejoin: round; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="rotor" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="24" cy="24" r="1.8" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<header class="mast">
+  <div class="wrap">
+    <p class="eyebrow"><b>Cheat sheet</b> · Engineering &amp; Science · Spin gravity</p>
+    <h1>Artificial gravity: how fast to spin, and how big to build</h1>
+    <p class="lede">Spin a ring and the floor pushes back on your feet. That push is weight. The radius and the spin rate set how much of it you get, and how well people tolerate the spin. Enter a radius and either a spin rate or a target gravity to get rim speed, head-to-foot gradient, walking Coriolis and the published comfort band, then compare five historical designs with Concordia.</p>
+    <div class="stamp">
+      <span><strong>Concordia</strong> is a design study set in 2045, not a real or planned project: a fully modelled 1 g settlement you can explore in a browser, built to show what the physics on this page looks like at city scale. It is the worked example in each section, and its numbers carry a <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span> tag. Everything else stands on the sources listed at the bottom.</span>
+      <span class="src">Model: rigid rotor, uniform spin, no air drag on falling objects. g₀ = 9.80665 m/s² throughout.</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <div class="wrap"><ul>
+    <li><a href="#quick-reference">Quick reference</a></li>
+    <li><a href="#calculator">Calculator</a></li>
+    <li><a href="#weight">Spin makes weight</a></li>
+    <li><a href="#height">Gravity vs height</a></li>
+    <li><a href="#coriolis">Coriolis</a></li>
+    <li><a href="#tolerance">Comfort limits</a></li>
+    <li><a href="#designs">Designs compared</a></li>
+    <li><a href="#field-guide">Field guide</a></li>
+    <li><a href="#engineering">Engineering</a></li>
+    <li><a href="#mistakes">Common mistakes</a></li>
+    <li><a href="#explore">Explore Concordia</a></li>
+    <li><a href="#sources">Sources</a></li>
+  </ul></div>
+</nav>
+
+<main id="main" class="wrap">
+
+<!-- 1. QUICK REFERENCE -->
+<section class="plate" id="quick-reference" aria-labelledby="qr-h">
+  <p class="sec-no">§ 1 · Quick reference</p>
+  <h2 id="qr-h">The formulas, with one worked value each</h2>
+  <div class="tw"><table class="qr mid">
+    <caption>ω in rad/s, r and R in m, v in m/s, rpm = rotations per minute</caption>
+    <thead><tr><th scope="col">Quantity</th><th scope="col">Formula</th><th scope="col">Concordia <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span></th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Gravity at radius r</th><td>g = ω²r = v²/r</td><td class="m">0.0626² × 2,500 = 9.80 m/s² = 1.00 g</td></tr>
+      <tr><th scope="row">Spin rate</th><td>rpm = 60ω / 2π</td><td class="m">0.0626 rad/s = 0.598 rpm</td></tr>
+      <tr><th scope="row">Rim speed</th><td>v = ωr</td><td class="m">156.6 m/s (564 km/h)</td></tr>
+      <tr><th scope="row">Period</th><td>T = 2π / ω</td><td class="m">100.3 s per turn</td></tr>
+      <tr><th scope="row">Radius for a target g</th><td>r = g / ω²</td><td class="m">2,500 m at 0.0626 rad/s</td></tr>
+      <tr><th scope="row">Gravity at height h above the floor</th><td>g(h) = g₀ (1 − h/R)</td><td class="m">0.82 g at the 450 m sky</td></tr>
+      <tr><th scope="row">Head-to-foot gradient</th><td>Δg / g = height / R</td><td class="m">1.8 / 2,500 = 0.072 %</td></tr>
+      <tr><th scope="row">Coriolis on a walker</th><td>a = 2ωv, as a share of local weight 2v/(ωr)</td><td class="m">1.4 m/s: 0.0179 g (1.8 % of weight)</td></tr>
+      <tr><th scope="row">Weight of a rider moving along the rim</th><td>(ωR ± v)² / R, + spinward, − antispinward</td><td class="m">0.66 g at 100 km/h antispinward; 1.33 g at 90 km/h spinward (metro, 2,455 m)</td></tr>
+      <tr><th scope="row">Radius for 1 g at a given rpm</th><td class="m">1 rpm 894 m · 2 rpm 224 m · 3 rpm 99 m · 4 rpm 56 m · 6 rpm 25 m · 10 rpm 9 m</td><td class="m">0.598 rpm needs 2,500 m</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">The rule-of-thumb radii use g₀ = 9.80665 m/s². Globus and Hall's table (section 6) uses a slightly different g and gives 895.47 m at 1 rpm. The Coriolis ratio is twice the relative speed over the habitat's tangential speed (Hall's SpinCalc states the same ratio).</p>
+  <div class="callout blue"><strong>Concordia in one line:</strong> radius 2,500 m, ω 0.0626 rad/s, 0.598 rpm, period about 100.3 s, rim speed about 156.6 m/s, 1.0 g at the ground <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>. A browser-explorable design study, set in 2045: <a href="https://concordia.davidveksler.com/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=quick-reference" rel="noopener">concordia.davidveksler.com</a>.</div>
+</section>
+
+<!-- 2. CALCULATOR -->
+<section class="plate" id="calculator" aria-labelledby="calc-h">
+  <p class="sec-no">§ 2 · Spin calculator and spin chart</p>
+  <h2 id="calc-h">How fast must it spin for 1 g?</h2>
+  <p class="sub">Pick a preset or type your own. The orange marker on the chart follows your inputs; each dot is a design from section 7.</p>
+
+  <div class="chips" role="group" aria-label="Presets" id="chips"></div>
+
+  <div class="calc">
+    <div>
+      <form class="panel" id="spinForm" autocomplete="off" novalidate>
+        <h3>Inputs</h3>
+        <div class="fields">
+          <div class="field">
+            <label for="inR">Radius (m)</label>
+            <input id="inR" type="text" inputmode="decimal" value="500" aria-describedby="err">
+          </div>
+          <div class="field">
+            <label for="inV" id="inVlab">Target gravity (g)</label>
+            <input id="inV" type="text" inputmode="decimal" value="1" aria-describedby="err">
+          </div>
+          <div class="field full">
+            <span class="lab" id="modeLab">Second input is</span>
+            <div class="seg" role="radiogroup" aria-labelledby="modeLab">
+              <label><input type="radio" name="mode" value="rpm"><span>Spin rate (rpm)</span></label>
+              <label><input type="radio" name="mode" value="g" checked><span>Target gravity (g)</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="inH">Person height (m)</label>
+            <input id="inH" type="text" inputmode="decimal" value="1.8" aria-describedby="err">
+          </div>
+          <div class="field">
+            <label for="inW">Walking speed (m/s)</label>
+            <input id="inW" type="text" inputmode="decimal" value="1.4" aria-describedby="err">
+          </div>
+          <p class="err" id="err" role="alert"></p>
+        </div>
+      </form>
+      <dl class="outs" id="outs" aria-live="polite" aria-label="Results">
+        <div class="out hl"><dt>Spin rate</dt><dd id="oRpm">-</dd></div>
+        <div class="out"><dt>Angular speed ω</dt><dd id="oOmega">-</dd></div>
+        <div class="out"><dt>Period</dt><dd id="oPeriod">-</dd></div>
+        <div class="out"><dt>Rim speed</dt><dd id="oRim">-</dd></div>
+        <div class="out hl"><dt>Gravity at the rim</dt><dd id="oG">-</dd></div>
+        <div class="out"><dt>Head-to-foot gradient</dt><dd id="oGrad">-</dd></div>
+        <div class="out full"><dt>Walking Coriolis</dt><dd id="oCor">-</dd></div>
+        <div class="out full" id="oBandBox"><dt>Comfort band (Globus and Hall 2017)</dt><dd class="txt" id="oBand">-</dd></div>
+        <div class="out full"><dt>NASA SP-413 limit</dt><dd class="txt" id="oSp">-</dd></div>
+        <div class="out full"><dt>Radius for 1 g at this rpm</dt><dd id="oR1g">-</dd></div>
+      </dl>
+      <p class="printsum" id="printSum"></p>
+    </div>
+
+    <figure class="chartcard" id="spinChartCard">
+      <div id="spinChart"></div>
+      <div class="chartkey" aria-hidden="true">
+        <span><i style="background:var(--b1)"></i>Up to 2 rpm</span>
+        <span><i style="background:var(--b2)"></i>2 to 4</span>
+        <span><i style="background:var(--b3)"></i>4 to 6</span>
+        <span><i style="background:var(--b4)"></i>6 to 30 (training)</span>
+        <span><i style="background:repeating-linear-gradient(45deg,var(--muted) 0 1px,transparent 1px 4px)"></i>Above 30: no recommendation</span>
+        <span><i style="background:var(--blue-fill)"></i>Design</span>
+        <span><i style="background:var(--accent-fill)"></i>Your design</span>
+      </div>
+      <figcaption>Spin chart: radius (log) against spin rate (log). Diagonals are constant gravity, so every design near the 1 g line gets its weight from the same trade of radius against rpm. Stripes are the Globus and Hall bands; the dashed line is the SP-413 limit of 1 rpm. Concordia sits at the large, slow end, next to O'Neill's 1974 Model 4.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 3. HOW SPIN MAKES WEIGHT -->
+<section class="plate" id="weight" aria-labelledby="weight-h">
+  <p class="sec-no">§ 3 · How spin makes weight</p>
+  <h2 id="weight-h">What you feel is the floor</h2>
+  <p class="sub">Nothing pulls you toward the rim. Seen from outside, a free object keeps moving in a straight line while the rotating floor swings round and meets it.</p>
+  <ul class="plain">
+    <li><strong>The push is the weight.</strong> The floor must accelerate you around the circle, so it pushes you toward the axis with a = ω²r. Standing on Earth works the same way: the ground pushes up on you. Globus and Hall make this point to explain why spin can stand in for gravity.</li>
+    <li><strong>Worked example.</strong> Concordia's rotor has a floor radius of 2,500 m and turns at 0.0626 rad/s <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>. Then ω²r = 0.0626² × 2,500 = 9.80 m/s², or 0.999 g. Its period is 2π / 0.0626 = 100.3 s.</li>
+    <li><strong>Same 1 g, four sizes.</strong> Radius decides everything except the weight. A 10 m centrifuge at 1 g spins at 9.46 rpm and the head of a 1.8 m person weighs 18 % less than the feet. Concordia's gradient is 0.072 %.</li>
+  </ul>
+  <div class="tw"><table class="mid">
+    <caption>1 g at four radii (person 1.8 m, walking 1.4 m/s; computed with the calculator's spinDesign)</caption>
+    <thead><tr><th scope="col" class="n">Radius</th><th scope="col" class="n">Spin rate</th><th scope="col" class="n">Period</th><th scope="col" class="n">Rim speed</th><th scope="col" class="n">Head-to-foot gradient</th><th scope="col" class="n">Walking Coriolis</th></tr></thead>
+    <tbody>
+      <tr><th scope="row" class="n">10 m</th><td class="n">9.46 rpm</td><td class="n">6.34 s</td><td class="n">9.9 m/s</td><td class="n">18 %</td><td class="n">0.283 g (28 % of weight)</td></tr>
+      <tr><th scope="row" class="n">56 m</th><td class="n">4.00 rpm</td><td class="n">15.0 s</td><td class="n">23.4 m/s</td><td class="n">3.2 %</td><td class="n">0.120 g (12 %)</td></tr>
+      <tr><th scope="row" class="n">224 m</th><td class="n">2.00 rpm</td><td class="n">30.0 s</td><td class="n">46.9 m/s</td><td class="n">0.80 %</td><td class="n">0.060 g (6.0 %)</td></tr>
+      <tr class="cc"><th scope="row" class="n">2,500 m Concordia <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span></th><td class="n">0.598 rpm</td><td class="n">100.3 s</td><td class="n">156.6 m/s</td><td class="n">0.072 %</td><td class="n">0.0179 g (1.8 %)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Concordia's own page on the same physics: <a href="https://concordia.davidveksler.com/science/artificial-gravity/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=weight" rel="noopener">Artificial gravity</a>, with a dropped-coin demonstration.</p>
+</section>
+
+<!-- 4. GRAVITY VS HEIGHT -->
+<section class="plate" id="height" aria-labelledby="height-h">
+  <p class="sec-no">§ 4 · Gravity fades with height</p>
+  <h2 id="height-h">Why does weight fall as you climb?</h2>
+  <p class="sub">Gravity is ω²r, so it falls in a straight line from the floor to zero at the axis. Climb a tower and you move to a smaller circle that turns at the same rate, so you go slower and weigh less.</p>
+  <div class="tw"><table class="mid">
+    <caption>Gravity and air pressure at height h above the floor of a Concordia rotor <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span></caption>
+    <thead><tr><th scope="col">Height above ground</th><th scope="col" class="n">Radius</th><th scope="col" class="n">Gravity g₀(1 − h/R)</th><th scope="col" class="n">Air pressure vs ground</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Ground</th><td class="n">2,500 m</td><td class="n">1.00 g (0.999)</td><td class="n">100 %</td></tr>
+      <tr><th scope="row">250 m</th><td class="n">2,250 m</td><td class="n">0.90 g</td><td class="n">97 %</td></tr>
+      <tr><th scope="row">450 m, the artificial sky</th><td class="n">2,050 m</td><td class="n">0.82 g (0.819)</td><td class="n">95 %</td></tr>
+      <tr><th scope="row">1,000 m</th><td class="n">1,500 m</td><td class="n">0.60 g</td><td class="n">91 %</td></tr>
+      <tr><th scope="row">1,250 m</th><td class="n">1,250 m</td><td class="n">0.50 g</td><td class="n">90 %</td></tr>
+      <tr><th scope="row">2,000 m</th><td class="n">500 m</td><td class="n">0.20 g</td><td class="n">87 %</td></tr>
+      <tr><th scope="row">Axis</th><td class="n">0 m</td><td class="n">0 g</td><td class="n">86 % (87.6 kPa)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Air pressure: the atmosphere turns with the rotor, so pressure rises with radius. The column is an isothermal model, p = p₀ exp(−ω²(R² − r²) / (2 × 287 J/(kg K) × 293 K)), from 101,325 Pa at the ground. It is a derived estimate, not a Concordia specification.</p>
+  <figure class="figure-inline">
+    <img src="images/concordia-sky-800.webp" width="800" height="450" loading="lazy" alt="Looking up through the 450 metre artificial sky of a Concordia rotor: a lattice of towers and plates converging toward the axis, with the far side of the city visible overhead">
+    <figcaption>Looking up through the sky aperture, 450 m up, where weight is 0.82 g. Rendered in the <a href="https://concordia.davidveksler.com/explore/?mode=engineer&amp;overlay=gravity&amp;utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=height" rel="noopener">Concordia simulation</a>, which has a gravity overlay.</figcaption>
+  </figure>
+</section>
+
+<!-- 5. CORIOLIS -->
+<section class="plate" id="coriolis" aria-labelledby="cor-h">
+  <p class="sec-no">§ 5 · Coriolis, gradients and the inner ear</p>
+  <h2 id="cor-h">Why is the floor not just a floor?</h2>
+  <ul class="plain">
+    <li><strong>Walk spinward and you get heavier; walk antispinward and you get lighter.</strong> Walking with the spin adds to your speed in inertial space, and the floor must supply more inward force: weight is (ωr + v)²/r. The extra is the Coriolis term 2ωv. A walker at 1.4 m/s on Concordia's ground gains or loses 0.0179 g, 1.8 % of body weight <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>. The same walk at 2 rpm (224 m) changes weight by 0.060 g, 6.0 %.</li>
+    <li><strong>Any motion not parallel to the axis is deflected.</strong> Motion along the axis has no Coriolis term. Moving up or down (radially) deflects sideways: the SP-413 torus example is a 0.55 m jump from the mid-deck at 1 rpm, which lands about 5.3 cm to one side. Check: sideways shift = 2ω × (area under the height-time curve) = 2 × 0.1047 rad/s × (⅔ × 0.55 m × 0.69 s) = 5.3 cm.</li>
+    <li><strong>The inner ear is the problem, not the weight.</strong> Turning your head out of the plane of rotation stimulates the semicircular canals in a way the brain does not expect, which causes dizziness and nausea. Globus and Hall find that motion sickness in rotation is often tied to head movement, that effects decline with radius, and that they are much weaker in an otherwise weightless environment than in lab rotors on Earth.</li>
+    <li><strong>The effect shrinks as the habitat grows.</strong> At fixed gravity, the Coriolis share of weight is 2v/(ωr) = 2vω/g, so it is proportional to ω and falls as 1/√r. Quadruple the radius and the walking effect halves.</li>
+    <li><strong>The gradient matters for standing, not walking.</strong> Head-to-foot gradient is height/R: 18 % at 10 m, 3.2 % at 56 m, 0.80 % at 224 m, 0.072 % at Concordia <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>. SP-413 sets no gradient limit, so any threshold you quote here is a design judgment, not a NASA number.</li>
+  </ul>
+  <p class="note">Concordia's <a href="https://concordia.davidveksler.com/discover/train-weight/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=coriolis" rel="noopener">train-weight page</a> shows the same rule on its metro at 100 km/h: 0.66 g one way, 1.33 g the other.</p>
+</section>
+
+<!-- 6. TOLERANCE -->
+<section class="plate" id="tolerance" aria-labelledby="tol-h">
+  <p class="sec-no">§ 6 · Comfort limits</p>
+  <h2 id="tol-h">How much spin can people tolerate?</h2>
+  <p class="sub">Four sets of numbers, oldest first in each table. They disagree, and the disagreement is the point: the data come from short-radius rooms and small centrifuges.</p>
+
+  <h3>NASA SP-413 (1975 study, published 1977): the design criteria</h3>
+  <div class="tw"><table class="mid">
+    <caption>Space Settlements: A Design Study, chapters 3 and 4</caption>
+    <thead><tr><th scope="col">Criterion</th><th scope="col">Value</th><th scope="col">Where</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Gravity</th><td class="m">0.95 ± 0.05 g (text: between 0.9 g and 1 g, "an arbitrary 10 percent variation")</td><td>Ch. 3 text; Table 3-3. The web transcription of Table 3-3 prints "± 0.5", an evident typo.</td></tr>
+      <tr><th scope="row">Rotation limit</th><td class="m">1 rpm, upper limit for the principal living quarters</td><td>Ch. 3; Table 3-3 lists ≤ 1 rpm</td></tr>
+      <tr><th scope="row">Adaptation</th><td class="m">People can eventually adapt to rates below 3 rpm after prolonged exposure; frequent changes of rate may inhibit adaptation</td><td>Ch. 3</td></tr>
+      <tr><th scope="row">Coriolis example</th><td class="m">0.55 m jump from the mid-deck lands about 5.3 cm to one side</td><td>Ch. 3, figure 3-1</td></tr>
+      <tr><th scope="row">Gravity gradient</th><td class="m">No limit stated</td><td>Ch. 3 does not discuss it</td></tr>
+      <tr><th scope="row">Relaxed case</th><td class="m">0.85 ± 0.15 g at 1.9 rpm: torus major radius 209 m, shield 1.0 Mt</td><td>Ch. 4, "Lower Simulated Gravity and Higher Rotation Rates", Table 4-2(a)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Globus and Hall 2017: four recommendations</h3>
+  <div class="tw"><table class="mid">
+    <caption>"Space Settlement Population Rotation Tolerance", NSS Space Settlement Journal, June 2017</caption>
+    <thead><tr><th scope="col">Band</th><th scope="col">Up to</th><th scope="col">Residents</th><th scope="col">Visitors</th><th scope="col" class="n">Radius for 1 g</th></tr></thead>
+    <tbody>
+      <tr><th scope="row"><span class="bd bd1">1</span></th><td class="n">2 rpm</td><td>No problem</td><td>Little adaptation</td><td class="n">224 m</td></tr>
+      <tr><th scope="row"><span class="bd bd2">2</span></th><td class="n">4 rpm</td><td>No problem</td><td>Some training and/or a few hours to perhaps a day or so</td><td class="n">56 m</td></tr>
+      <tr><th scope="row"><span class="bd bd3">3</span></th><td class="n">6 rpm</td><td>Unlikely to be a problem</td><td>May need extensive training and/or multiple days; particularly susceptible people may have great difficulty</td><td class="n">25 m</td></tr>
+      <tr><th scope="row"><span class="bd bd4">4</span></th><td class="n">30 rpm</td><td>Adaptation achieved with specific training</td><td>The radius is so small it is hard to imagine anyone living there permanently or raising children</td><td class="n">1.0 m</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">The authors call these recommendations quite conservative, because the underlying data come from rotation radii of a few metres and negative effects decline as radius grows. Caveats they list: most studies had 10 or fewer subjects, only adults, a few weeks or less, and were mostly done on Earth. The radius column is derived with g₀ = 9.80665; the paper's own radius-for-1 g table follows.</p>
+  <div class="tw"><table class="mid">
+    <caption>Radius needed for 1 g (Globus and Hall 2017 table, metres)</caption>
+    <thead><tr><th scope="col" class="n">rpm</th><th scope="col" class="n">1</th><th scope="col" class="n">2</th><th scope="col" class="n">3</th><th scope="col" class="n">4</th><th scope="col" class="n">5</th><th scope="col" class="n">6</th><th scope="col" class="n">7</th><th scope="col" class="n">8</th><th scope="col" class="n">9</th><th scope="col" class="n">10</th></tr></thead>
+    <tbody><tr><th scope="row" class="n">radius (m)</th><td class="n">895.47</td><td class="n">223.87</td><td class="n">99.50</td><td class="n">55.97</td><td class="n">35.82</td><td class="n">24.87</td><td class="n">18.27</td><td class="n">13.99</td><td class="n">11.06</td><td class="n">8.95</td></tr></tbody>
+  </table></div>
+  <p class="note">The paper notes that beyond about 6 rpm each extra rpm saves very little radius (6 m between 6 and 7 rpm).</p>
+
+  <h3>Five historical comfort charts (as tabulated by Hall's SpinCalc)</h3>
+  <div class="tw"><table class="mid">
+    <caption>Design criteria in the literature; "not stated" is the source's own "?"</caption>
+    <thead><tr><th scope="col">Chart</th><th scope="col" class="n">Min radius (m)</th><th scope="col" class="n">Max spin (rpm)</th><th scope="col" class="n">Min rim speed (m/s)</th><th scope="col" class="n">Min gravity (g)</th><th scope="col" class="n">Max gravity (g)</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Hill and Schnitzer 1962</th><td class="n">not stated</td><td class="n">4</td><td class="n">6</td><td class="n">0.035</td><td class="n">1.0</td></tr>
+      <tr><th scope="row">Gilruth 1969</th><td class="n">12</td><td class="n">6 (optimum 2)</td><td class="n">not stated</td><td class="n">0.3</td><td class="n">0.9</td></tr>
+      <tr><th scope="row">Gordon and Gervais 1969</th><td class="n">12</td><td class="n">6</td><td class="n">7</td><td class="n">0.2</td><td class="n">1.0</td></tr>
+      <tr><th scope="row">Stone 1973</th><td class="n">4</td><td class="n">6</td><td class="n">10</td><td class="n">0.2</td><td class="n">1.0</td></tr>
+      <tr><th scope="row">Cramer 1985</th><td class="n">not stated</td><td class="n">3</td><td class="n">7</td><td class="n">0.1</td><td class="n">1.0</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">The rim-speed column is a minimum: a faster rim keeps the Coriolis-to-gravity ratio (2 × relative speed / rim speed) small. Nobody in this table goes above 6 rpm; SP-413's 1 rpm is stricter than all five.</p>
+
+  <h3>The experiments behind the numbers</h3>
+  <p class="scrollhint">Swipe the table sideways to see every column.</p>
+  <div class="tw"><table class="wide">
+    <caption>Rotation and artificial-gravity experiments</caption>
+    <thead><tr><th scope="col">Experiment</th><th scope="col">Setup</th><th scope="col">Finding</th><th scope="col">Source</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Pensacola Slow Rotation Room, 1969</th><td>Ten men aged 18 to 30; room 15 ft (4.57 m) diameter, 7 ft high; speed raised in 1-rpm steps to 10 rpm</td><td>Six of the ten reached 10 rpm, four could not; the authors recommend that rotation may safely commence at 2 rpm</td><td class="src">Reason and Graybiel 1969, NTRS 19700005540</td></tr>
+      <tr><th scope="row">Graybiel 1977, same room</th><td>Slow rotation room at 1.0, 3.0, 5.4 and 10 rpm</td><td>1.0 rpm: even highly susceptible subjects symptom-free or nearly so. 3.0 rpm: symptoms, no significant handicap. 5.4 rpm: only low-susceptibility subjects performed well. 10 rpm: pilots with no air-sickness history had not fully adapted in 12 days</td><td class="src">as quoted by Hall's SpinCalc</td></tr>
+      <tr><th scope="row">Lackner and DiZio 2003</th><td>Repeated identical movements in rotation</td><td>Sensory-motor adaptation to 10 rpm can come relatively easily and quickly when subjects repeat the same movement</td><td class="src">as quoted by Hall's SpinCalc</td></tr>
+      <tr><th scope="row">Gemini XI tether, 14 Sept 1966</th><td>Capsule tethered to an Agena by a 100 ft line, slowly rotated with thrusters</td><td>About 0.00015 g of artificial gravity. The rotation rate is not stated in the NASA page</td><td class="src">NASA Gemini XI mission page</td></tr>
+      <tr><th scope="row">NASA bed-rest centrifuge pilot, 2007</th><td>15 men, 21 days of 6° head-down bed rest; 8 got 1 h/day on a 3 m radius centrifuge (2.5 g at the feet, 1.0 g at the heart)</td><td>Beneficial effects on bone, muscle and cardiovascular function, no harmful effects on vestibular, immune or cognitive function; 153 of 160 sessions completed. A pilot, not conclusive</td><td class="src">Paloski and Young, NTRS 20070016631</td></tr>
+      <tr><th scope="row">JAXA mouse centrifuge on the ISS, 2017</th><td>12 male mice for 35 days, microgravity group vs an artificial 1 g group</td><td>Microgravity mice lost femur bone density and soleus and gastrocnemius weight; the 1 g mice matched the ground control</td><td class="src">Shiba and others 2017, Scientific Reports</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 7. DESIGNS COMPARED -->
+<section class="plate" id="designs" aria-labelledby="des-h">
+  <p class="sec-no">§ 7 · Rotating habitat designs compared</p>
+  <h2 id="des-h">Stanford torus, O'Neill cylinder, Island One, Kalpana One, Concordia</h2>
+  <p class="sub">Oldest first. <sup class="d">d</sup> means derived by this page from the sourced radius and spin rate (g₀ = 9.80665); "not stated" means the source gives no value. Click a design's chip in section 2 to load it into the calculator.</p>
+  <p class="scrollhint">Swipe the table sideways to see every column.</p>
+  <div class="tw"><table class="wide" id="designTable">
+    <caption>Six designs, one row each</caption>
+    <thead><tr><th scope="col">Design</th><th scope="col">Year, source</th><th scope="col">Shape and size</th><th scope="col">Radius (m)</th><th scope="col">Spin (rpm)</th><th scope="col">Rim g</th><th scope="col">Rim speed (m/s)</th><th scope="col">Population</th><th scope="col">Shielding</th><th scope="col">Band</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">O'Neill cylinder, Model 4</th><td>1974, <em>Physics Today</em>, Table 1</td><td>Cylinder pair, each 32 km long (the text says about 16 miles), 4 miles across</td><td class="m">3,200</td><td class="m">0.526<sup class="d">d</sup></td><td class="m">0.99<sup class="d">d</sup></td><td class="m">176<sup class="d">d</sup></td><td>0.2 to 20 million for the pair (the top figure is the ecological limit with conventional agriculture)</td><td>Atmosphere, soil and steel structure; 7.5 t/m² averaged surface density of the structure</td><td><span class="bd bd1">1</span></td></tr>
+      <tr><th scope="row">Stanford torus</th><td>1975, NASA SP-413, ch. 4 and 5</td><td>Torus: major radius 830 m, tube 130 m across (65 m minor radius), six spokes 15 m across. Design gravity 0.95 ± 0.05 g</td><td class="m">830 (895 outer<sup class="d">d</sup>)</td><td class="m">1</td><td class="m">0.93 to 1.00<sup class="d">d</sup></td><td class="m">87 to 94<sup class="d">d</sup></td><td>10,000</td><td>Passive slag shield separate from the habitat, rotated far below 1 rpm or not at all; 9.9 Mt at 4.5 t/m²</td><td><span class="bd bd1">1</span></td></tr>
+      <tr><th scope="row">Island One (Bernal sphere)</th><td>1976, <em>L5 News</em>, Sept 1976</td><td>Sphere, equator "nearly a mile in circumference"; Earth-normal gravity at the equator, falling to zero at the poles</td><td class="m">about 256<sup class="d">d</sup></td><td class="m">about 1.9</td><td class="m">1.03<sup class="d">d</sup></td><td class="m">51<sup class="d">d</sup></td><td>about 10,000</td><td>Non-rotating shell of industrial slag; mass not stated</td><td><span class="bd bd1">1</span></td></tr>
+      <tr><th scope="row">Island Three</th><td>O'Neill, as summarized by NSS</td><td>Counter-rotating pair, each about 20 miles long and 4 miles across</td><td class="m">about 3,220<sup class="d">d</sup></td><td class="m">not stated</td><td class="m">not stated</td><td class="m">not stated</td><td>several million</td><td>not stated</td><td>n/a</td></tr>
+      <tr><th scope="row">Kalpana One</th><td>2007 (revised), Globus and others</td><td>Cylinder: radius 250 m, length 325 m, spin capped at 2 rpm</td><td class="m">250</td><td class="m">at most 2 (1.89<sup class="d">d</sup> for 1 g)</td><td class="m">1.00<sup class="d">d</sup> at 1.89 rpm</td><td class="m">49.5<sup class="d">d</sup></td><td>3,000</td><td>Up to 10 t/m² of lunar or asteroid regolith inside the hull, about 7 Mt</td><td><span class="bd bd1">1</span></td></tr>
+      <tr class="cc"><th scope="row">Concordia <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span></th><td>Design study set in 2045</td><td>Four habitation rotors, each radius 2,500 m and length 2,500 m, plus a counter-rotating industrial rotor</td><td class="m">2,500</td><td class="m">0.598</td><td class="m">1.0</td><td class="m">156.6</td><td>about 1 to 1.2 million (all four rotors)</td><td>Stationary shield outside the rotating pressure vessels; thickness not fixed (worked example: 1 m at 1.6 t/m³, about 750 Mt)</td><td><span class="bd bd1">1</span></td></tr>
+      <tr class="cc"><th scope="row">Concordia industrial rotor <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span></th><td>same</td><td>Radius 2,300 m, length about 3,500 m; industry and agriculture, not housing</td><td class="m">2,300</td><td class="m">about 0.42</td><td class="m">about 0.45</td><td class="m">about 101</td><td>not residential</td><td>Open framework with pressurized modules</td><td><span class="bd bd1">1</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>O'Neill's four stages (1974, Table 1)</h3>
+  <div class="tw"><table class="mid">
+    <caption>The table in "The Colonization of Space": comfort pushes radius up as population grows</caption>
+    <thead><tr><th scope="col">Model</th><th scope="col" class="n">Length (km)</th><th scope="col" class="n">Radius (m)</th><th scope="col" class="n">Period (s)</th><th scope="col" class="n">Spin (rpm)</th><th scope="col">Population (double unit)</th><th scope="col" class="n">Earliest date</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">1</th><td class="n">1</td><td class="n">100</td><td class="n">21</td><td class="n">2.86<sup class="d">d</sup></td><td>10,000</td><td class="n">1988</td></tr>
+      <tr><th scope="row">2</th><td class="n">3.2</td><td class="n">320</td><td class="n">36</td><td class="n">1.67<sup class="d">d</sup></td><td>100,000 to 200,000</td><td class="n">1996</td></tr>
+      <tr><th scope="row">3</th><td class="n">10</td><td class="n">1,000</td><td class="n">63</td><td class="n">0.95<sup class="d">d</sup></td><td>0.2 to 2 million</td><td class="n">2002</td></tr>
+      <tr><th scope="row">4</th><td class="n">32</td><td class="n">3,200</td><td class="n">114</td><td class="n">0.53<sup class="d">d</sup></td><td>0.2 to 20 million</td><td class="n">2008</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Why the stages scale together: each stage is sized for about 1 g, so the period grows as √radius. Model 1's 21 s is as printed; exactly 1 g at 100 m needs 20.1 s. The dates are the paper's "earliest estimated" dates, now long past.</p>
+
+  <p class="note"><strong>Bernal 1929.</strong> J. D. Bernal's <em>The World, the Flesh and the Devil</em> describes a spherical shell "ten miles or so in diameter" for twenty or thirty thousand inhabitants (p. 23, as quoted in arXiv 1806.01322). It is generally described as a non-rotating globe; the spinning "Bernal sphere" is the 1976 Island One, which borrowed the name. This page did not check the book's text for the question of spin.</p>
+
+  <h3>What each design traded</h3>
+  <ul class="plain">
+    <li><strong>Stanford torus:</strong> SP-413's 1 rpm limit sets the 830 m wheel (1 g at 1 rpm needs about 894 m), and a separate 9.9 Mt passive shield surrounds it.</li>
+    <li><strong>Island One:</strong> gravity is Earth-normal at the equator and falls to zero at the poles, so only a band of the interior is near 1 g.</li>
+    <li><strong>Kalpana One:</strong> accepts 2 rpm (a Globus and Hall band 1 value) to get a 250 m hull for 3,000 people, and puts the regolith inside the hull, so the hull must be stronger.</li>
+    <li><strong>O'Neill's ladder:</strong> across the four stages the radius grows 32-fold and the spin falls from 2.86 to 0.53 rpm while population grows from 10,000 to as much as 20 million.</li>
+    <li><strong>Concordia <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>:</strong> 0.598 rpm is below every limit in section 6, so it buys a 0.072 % gradient and 1.8 % walking Coriolis, at the cost of rotors 5 km across. Concordia's glossary entry for its direct ancestor: <a href="https://concordia.davidveksler.com/glossary/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=designs#o-neill-cylinder" rel="noopener">the O'Neill cylinder</a>.</li>
+  </ul>
+</section>
+
+<!-- 8. FIELD GUIDE -->
+<section class="plate" id="field-guide" aria-labelledby="fg-h">
+  <p class="sec-no">§ 8 · Field guide: life inside a spinning world</p>
+  <h2 id="fg-h">Eleven things that are different when the floor is a wall</h2>
+  <p class="sub">Each card: the surprise, the number, why. Numbers are for Concordia's 2,500 m rotor <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span> unless a card says otherwise.</p>
+  <div class="cards">
+
+    <article class="card">
+      <h3>The ground curves up and over your head</h3>
+      <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Rotor cross-section with a marker at the floor"><use href="#rotor"/><circle class="mk" cx="24" cy="44.5" r="3"/></svg>
+      <div class="big">183°</div>
+      <p>Walk 8 km along the rim and you have turned 183°: your feet point where your head was. One lap is 2π × 2,500 m = 15.7 km, a 95 minute walk at 1.4 m/s.</p>
+      <p class="why">The street is a circle seen from inside, so it never feels like a slope.</p>
+      <div class="see"><a href="https://concordia.davidveksler.com/discover/ground-curves-up/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-ground-curves" rel="noopener">Why the ground curves up</a><a href="https://concordia.davidveksler.com/explore/?viewpoint=residential-street&amp;utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-ground-curves-sim" rel="noopener">See a street</a></div>
+    </article>
+
+    <article class="card">
+      <h3>A train can weigh 0.66 g one way and 1.33 g the other</h3>
+      <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Rotor cross-section with a marker at the floor"><use href="#rotor"/><circle class="mk" cx="24" cy="44.6" r="3"/></svg>
+      <div class="big">0.66 g · 1.33 g</div>
+      <p>On the metro's 2,455 m rail head, a rider at 100 km/h against the spin weighs (ωr − v)²/r = 0.658 g; at 90 km/h with the spin, 1.326 g. Standing still: 0.98 g.</p>
+      <p class="why">Riding with the spin adds to your speed in inertial space, so the seat must push harder.</p>
+      <div class="see"><a href="https://concordia.davidveksler.com/discover/train-weight/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-train-weight" rel="noopener">Train weight</a><a href="https://concordia.davidveksler.com/explore/?chapter=metro&amp;utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-train-weight-sim" rel="noopener">Ride the metro</a></div>
+    </article>
+
+    <article class="card">
+      <h3>A dropped coin lands behind you</h3>
+      <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Rotor cross-section with a marker at the floor"><use href="#rotor"/><circle class="mk" cx="24" cy="44" r="3"/></svg>
+      <div class="big">5.3 cm</div>
+      <p>Drop it 2 m: 0.64 s later it lands 5.3 cm antispinward of the point below. From 100 m the offset is 19.7 m after 4.7 s. The same 2 m drop lands 18 cm aside at 2 rpm (224 m) and 1.07 m aside in a 10 m centrifuge at 1 g.</p>
+      <p class="why">The coin keeps the tangential speed of the height it left, ω(R − h), which is slower than the floor's. Exact: t = √(R² − r₀²) / (ωr₀), lag = R (ωt − arccos(r₀/R)), with r₀ = R − h.</p>
+      <div class="see"><a href="https://concordia.davidveksler.com/science/artificial-gravity/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-dropped-coin" rel="noopener">Coin demo</a></div>
+    </article>
+
+    <article class="card">
+      <h3>Climb a tower and you get lighter</h3>
+      <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Rotor cross-section with a dashed circle at 82 percent of the radius and a marker on it"><use href="#rotor"/><circle class="rotor" cx="24" cy="24" r="17.2" stroke-dasharray="2 2" opacity=".5"/><circle class="mk" cx="24" cy="41.2" r="3"/></svg>
+      <div class="big">0.82 g</div>
+      <p>g = g₀(1 − h/R): 0.82 g at the 450 m artificial sky, 0.60 g at 1,000 m.</p>
+      <p class="why">You move to a smaller circle that turns at the same rate, so you go slower.</p>
+      <div class="see"><a href="https://concordia.davidveksler.com/explore/?viewpoint=artificial-sky-breakthrough&amp;utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-climb-sim" rel="noopener">See the sky from below</a></div>
+    </article>
+
+    <article class="card">
+      <h3>Above the sky the far side of the city hangs overhead</h3>
+      <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Rotor cross-section with a marker on the far side of the rotor"><use href="#rotor"/><circle class="rotor" cx="24" cy="24" r="17.2" stroke-dasharray="2 2" opacity=".5"/><circle class="mk" cx="24" cy="3.5" r="3"/></svg>
+      <div class="big">4,550 m</div>
+      <p>From the sky level (radius 2,050 m) the far ground is 2,050 + 2,500 = 4,550 m away: a second city with its floor facing you, upside down.</p>
+      <p class="why">Everything inside a rotor faces the axis, so the opposite side is a ceiling that is also someone's street.</p>
+      <div class="see"><a href="https://concordia.davidveksler.com/discover/above-the-sky/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-above-sky" rel="noopener">Above the sky</a></div>
+    </article>
+
+    <article class="card">
+      <h3>Gliding gets easier the higher you go</h3>
+      <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Rotor cross-section with a marker 80 percent of the way to the axis"><use href="#rotor"/><circle class="mk" cx="24" cy="28.2" r="3"/></svg>
+      <div class="big">2.0 kW → 250 W</div>
+      <p>In Concordia's glider model (a 120 kg hang glider, estimated design values, not a real aircraft), least-power flight with the spin takes about 2.0 kW at the ground and about 250 W at 2,000 m, where weight is 0.20 g.</p>
+      <p class="why">The wing carries a fifth of the load. At 14 m/s it feels 1.19 g with the spin and 0.83 g against it at the ground.</p>
+      <div class="see"><a href="https://concordia.davidveksler.com/science/gliding/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-gliding" rel="noopener">Fly a glider</a><a href="https://concordia.davidveksler.com/explore/?viewpoint=glider-over-city&amp;utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-gliding-sim" rel="noopener">Glider over the city</a></div>
+    </article>
+
+    <article class="card">
+      <h3>Near the axis you float</h3>
+      <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Rotor cross-section with a marker at the axis"><use href="#rotor"/><circle class="mk" cx="24" cy="24" r="3"/></svg>
+      <div class="big">0.028 g</div>
+      <p>Concordia's radial lifts climb about 2,380 m in 595 s (9.9 minutes), from 0.98 g at the 50 m deck to 0.028 g at the hub terminal, 70 m from the axis.</p>
+      <p class="why">Gravity is ω²r, so it reaches zero only at r = 0. The terminal still weighs 2.8 % of normal; the transfer to the stationary axis spins down first.</p>
+      <div class="see"><a href="https://concordia.davidveksler.com/explore/?chapter=ascender&amp;utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-axis-ascender" rel="noopener">Ride the ascender</a><a href="https://concordia.davidveksler.com/explore/?chapter=axisTransfer&amp;utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-axis-transfer" rel="noopener">Transfer to zero g</a></div>
+    </article>
+
+    <article class="card">
+      <h3>You cannot simply steer a spinning cylinder</h3>
+      <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Rotor cross-section with a marker at the axis"><use href="#rotor"/><circle class="mk" cx="24" cy="24" r="3"/></svg>
+      <div class="big">4.1 MN</div>
+      <p>If all four rotors turned the same way, turning the 21 km station 1° a day would take about 4.1 MN at each end of the hull. With counter-rotating pairs as designed it takes about 4.5 kN, roughly 1,000 times less.</p>
+      <p class="why">A body with net angular momentum resists being turned like a gyroscope; pairs cancel it.</p>
+      <div class="see"><a href="https://concordia.davidveksler.com/discover/why-not-spin/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-why-not-spin" rel="noopener">Why not spin one way</a><a href="https://concordia.davidveksler.com/explore/?mode=engineer&amp;overlay=momentum&amp;utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-why-not-spin-sim" rel="noopener">Momentum overlay</a></div>
+    </article>
+
+    <article class="card">
+      <h3>Throw a ball spinward and it presses toward the floor</h3>
+      <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Rotor cross-section with a marker at the floor"><use href="#rotor"/><circle class="mk" cx="24" cy="44" r="3"/></svg>
+      <div class="big">1.27 g · 0.76 g</div>
+      <p>At 20 m/s (45 mph) along the rim, a ball behaves as if its weight were 1.27 g thrown spinward and 0.76 g antispinward: (ωr ± v)²/r. At 4 rpm (56 m radius) the same antispinward throw weighs about 0.02 g, because its speed in inertial space is almost zero.</p>
+      <p class="why">Rule: spinward curves floorward, antispinward lifts off. Players who adapt to it have a home-field advantage.</p>
+    </article>
+
+    <article class="card">
+      <h3>Pouring looks normal, until the radius shrinks</h3>
+      <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Rotor cross-section with a marker at the floor"><use href="#rotor"/><circle class="mk" cx="24" cy="44" r="3"/></svg>
+      <div class="big">1.1 cm</div>
+      <p>A 20 cm pour is pushed aside by 0.17 cm at Concordia, 1.1 cm at 4 rpm (56 m) and 2.7 cm in a 10 m centrifuge at 1 g.</p>
+      <p class="why">The same fall geometry as the coin. It ignores splashing and air drag, so it is a lower bound on what a liquid does.</p>
+    </article>
+
+    <article class="card">
+      <h3>The air is thinner near the axis</h3>
+      <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Rotor cross-section with a marker at the axis"><use href="#rotor"/><circle class="rotor" cx="24" cy="24" r="17.2" stroke-dasharray="2 2" opacity=".5"/><circle class="mk" cx="24" cy="24" r="3"/></svg>
+      <div class="big">86 %</div>
+      <p>The air turns with the rotor, so pressure falls from the ground to the axis: about 95 % of ground pressure at the 450 m sky and about 86 % (87.6 kPa) at the axis, in an isothermal model at 293 K.</p>
+      <p class="why">Pressure follows p₀ exp(−ω²(R² − r²) / (2 R<sub>gas</sub> T)); the same centrifugal field that makes weight sorts the air.</p>
+      <div class="see"><a href="https://concordia.davidveksler.com/science/air-water-food/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=fg-air-pressure" rel="noopener">Air, water and food</a></div>
+    </article>
+
+  </div>
+</section>
+
+<!-- 9. ENGINEERING -->
+<section class="plate" id="engineering" aria-labelledby="eng-h">
+  <p class="sec-no">§ 9 · Engineering consequences of spin</p>
+  <h2 id="eng-h">What spin costs</h2>
+  <ul class="plain">
+    <li><strong>Comfort pushes radius up; hoop stress pushes back.</strong> A 2 rpm ceiling means at least 224 m; O'Neill notes that with increasing size a larger fraction of the total mass is in the supporting cables. Concordia's air alone loads its wall with P × r = 101,325 Pa × 2,500 m = 253 MN per axial metre, and the tension bands carry about 410 MN per axial metre in total <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>. <a href="https://concordia.davidveksler.com/science/structure/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=engineering-structure" rel="noopener">Concordia's structure page</a> has the load budget.</li>
+    <li><strong>The shield does not spin with the living space.</strong> SP-413's torus shield is rotated far below 1 rpm or not at all; Island One's slag shell does not rotate; Kalpana One's authors list "rotating hulls with minimal clearance to non-rotating shield mass" among the failure modes of the older designs and put the regolith inside the hull instead. Concordia keeps shielding on a stationary outer truss, hundreds of metres outside the pressure vessels <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>.</li>
+    <li><strong>No wheels.</strong> At these loads the rotor rides on non-contact magnetic bearings at both ends, with emergency mechanical catchers that never touch in normal operation; the stationary structure only aligns, damps and passes utilities <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>.</li>
+    <li><strong>Spin-up takes days to weeks.</strong> The first full-speed rotation is planned in small increments with dwells to find resonances <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>.</li>
+    <li><strong>Balance is a continuous job.</strong> People, vehicles and cargo move mass around the rim, so each rotor carries distributed trim mass (water and movable ballast) under continuous mass-properties tracking <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>.</li>
+    <li><strong>Rotors come in counter-rotating pairs.</strong> O'Neill coupled two cylinders into a system with zero axial angular momentum so its axis stays pointed at the Sun without thrusters. Each Concordia rotor stores about 1 × 10¹⁷ N m s; its pairs net to zero within 0.1 % <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>. <a href="https://concordia.davidveksler.com/science/counter-rotation/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=engineering-counter-rotation" rel="noopener">Counter-rotation on Concordia</a>.</li>
+  </ul>
+</section>
+
+<!-- 10. COMMON MISTAKES -->
+<section class="plate" id="mistakes" aria-labelledby="mis-h">
+  <p class="sec-no">§ 10 · Common mistakes</p>
+  <h2 id="mis-h">Ten things people get wrong about spin gravity</h2>
+  <ol class="mist">
+    <li><b>"Bernal's 1929 sphere spun."</b> It is generally described as a non-rotating globe ten miles or so across. The spinning "Bernal sphere" is Island One (1976). Bernal's original text was not checked for spin; see the note under the designs table.</li>
+    <li><b>"SP-413 set a gravity-gradient limit."</b> It did not. SP-413 sets 0.95 ± 0.05 g, a 1 rpm limit and an adaptation statement below 3 rpm, and does not discuss the gradient.</li>
+    <li><b>"Rpm alone sets gravity."</b> Radius matters as much: g = ω²r. Two rpm gives 1 g at 224 m but only 0.045 g at 10 m.</li>
+    <li><b>"A small centrifuge at 1 g feels like Earth."</b> A 10 m one needs 9.46 rpm, your head weighs 18 % less than your feet, and walking Coriolis is 28 % of body weight.</li>
+    <li><b>"The curved floor feels like a slope."</b> Underfoot it feels flat: "down" is always toward the axis. It only looks like a hill when the floor is not at constant radius.</li>
+    <li><b>"Coriolis only matters if you move up or down."</b> Any motion not parallel to the axis is deflected, including walking along the rim (heavier spinward, lighter antispinward). Motion along the axis is the one direction with no Coriolis term.</li>
+    <li><b>"One big cylinder can be pointed anywhere."</b> Net angular momentum makes it a gyroscope. Four same-way Concordia rotors would need about 4.1 MN at each end to turn 1° a day; pairs cut that about 1,000 times <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>.</li>
+    <li><b>"Gravity is the same at head and feet."</b> The difference is height/R: 18 % at 10 m, 3.2 % at 56 m, 0.072 % at 2,500 m.</li>
+    <li><b>"Spin gravity is free once spinning."</b> The spin energy was paid for once, but bearings, trim mass and balancing as people move are continuing costs (section 9).</li>
+    <li><b>"L5 is stable, so nothing needs stationkeeping."</b> The Earth-Moon L4 and L5 points are stable only in the idealized problem; the Sun's perturbation can empty the region (Slíz-Balogh and others simulate test particles near L5, arXiv 1910.07466). Concordia's design assumes a controlled trajectory with active stationkeeping <span class="dv" title="Concordia is a design study: this number is a design value, not a measurement">design value</span>.</li>
+  </ol>
+</section>
+
+<!-- 11. EXPLORE -->
+<section class="plate" id="explore" aria-labelledby="exp-h">
+  <p class="sec-no">§ 11 · Explore it</p>
+  <div class="explore">
+    <figure>
+      <img src="images/concordia-park-800.webp" width="800" height="450" loading="lazy" alt="A path through a lakeside park inside a Concordia rotor: trees and a lake ahead, and the curved ground of the far city arching overhead">
+      <figcaption>Rendered in the <a href="https://concordia.davidveksler.com/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=explore" rel="noopener">Concordia simulation</a>: the ground curves up.</figcaption>
+    </figure>
+    <div class="body">
+      <h2 id="exp-h">Check this page's numbers against a city</h2>
+      <p>Concordia is a design study set in 2045, built so you can stand at 1 g, ride the metro that weighs 0.66 g one way, and climb to the 0.82 g sky, all in your browser. This page only links to it; nothing here loads the simulation.</p>
+      <div class="btns">
+        <a class="btn pri" href="https://concordia.davidveksler.com/explore/?mode=story&amp;utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=explore-tour" rel="noopener">Take the guided tour</a>
+        <a class="btn" href="https://concordia.davidveksler.com/explore/?mode=explore&amp;utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=explore-free" rel="noopener">Explore freely</a>
+        <a class="btn" href="https://concordia.davidveksler.com/science/artificial-gravity/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=explore-science" rel="noopener">Read the science</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. RELATED + SOURCES -->
+<section class="plate" id="related" aria-labelledby="rel-h" data-seo-related-links>
+  <p class="sec-no">§ 12 · Related</p>
+  <h2 id="rel-h">Related Engineering &amp; Science cheat sheets</h2>
+  <div class="related">
+    <a href="space-habitats-life-support.html"><b>Space Habitats and Life Support</b>The other half of habitat design: air, water, heat and shielding.</a>
+    <a href="rockets-and-spaceflight.html"><b>Rockets and Spaceflight</b>Getting the mass up there.</a>
+    <a href="orbital-rockets-comparison.html"><b>Orbital Rockets Comparison</b>Payload and cost per launcher, side by side.</a>
+    <a href="black-hole-flight-simulator.html"><b>Black Hole Flight Simulator</b>Another physics simulator, on relativity instead of spin.</a>
+  </div>
+</section>
+
+<section class="plate" id="sources" aria-labelledby="src-h">
+  <p class="sec-no">Sources</p>
+  <h2 id="src-h">Sources checked</h2>
+  <ol class="srcs">
+    <li>NASA SP-413, <em>Space Settlements: A Design Study</em> (1975 study, 1977), chapters <a href="https://nss.org/settlement/nasa/75SummerStudy/Chapt3.html" rel="noopener">3</a>, <a href="https://nss.org/settlement/nasa/75SummerStudy/Chapt4.html" rel="noopener">4</a>, <a href="https://nss.org/settlement/nasa/75SummerStudy/Chapt5.html" rel="noopener">5</a>.</li>
+    <li>G. K. O'Neill, "The Colonization of Space", <em>Physics Today</em>, Sept 1974: <a href="https://aip.brightspotcdn.com/PTO.v27.i9.32_1.online.pdf" rel="noopener">PDF</a>.</li>
+    <li><a href="https://nss.org/o-neill-cylinder-space-settlement/" rel="noopener">NSS, O'Neill cylinder</a> (Island Three dimensions).</li>
+    <li><em>L5 News</em>, Sept 1976, <a href="https://www.nss.org/wp-content/uploads/2017/07/L5-News-1976-09.pdf" rel="noopener">PDF</a> (Island One); <a href="https://nss.org/bernal-sphere-space-settlement-detail/" rel="noopener">NSS Bernal sphere page</a>.</li>
+    <li>A. Globus and others, <a href="https://nss.org/wp-content/uploads/2017/07/Kalpana-One-2007.pdf" rel="noopener">The Kalpana One Orbital Space Settlement Revised</a> (2007).</li>
+    <li>A. Globus and T. Hall, <a href="https://nss.org/wp-content/uploads/NSS-JOURNAL-Space-Settlement-Population-Rotation-Tolerance.pdf" rel="noopener">Space Settlement Population Rotation Tolerance</a>, NSS Space Settlement Journal, June 2017.</li>
+    <li>T. Hall, <a href="https://www.artificial-gravity.com/sw/SpinCalc/" rel="noopener">SpinCalc</a> (five comfort charts, Graybiel 1977 and Lackner and DiZio 2003 quotations).</li>
+    <li>J. T. Reason and A. Graybiel, <a href="https://ntrs.nasa.gov/api/citations/19700005540/downloads/19700005540.pdf" rel="noopener">Progressive adaptation to Coriolis accelerations associated with 1-rpm increments in the velocity of the Slow Rotation Room</a>, 1969.</li>
+    <li><a href="https://www.nasa.gov/missions/gemini/gemini-xi/demanding-gemini-xi-mission-flies-on-top-of-the-world/" rel="noopener">NASA, Gemini XI mission</a> (tether).</li>
+    <li>W. H. Paloski and L. R. Young, <a href="https://ntrs.nasa.gov/citations/20070016631" rel="noopener">Artificial gravity as a multi-system countermeasure to bed rest deconditioning: pilot study overview</a>, 2007.</li>
+    <li>D. Shiba and others, <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5589811/" rel="noopener">Development of new experimental platform "MARS"</a>, <em>Scientific Reports</em>, 2017.</li>
+    <li><a href="https://arxiv.org/pdf/1806.01322" rel="noopener">arXiv 1806.01322</a> (quoting Bernal 1929, p. 23); J. Slíz-Balogh and others, <a href="https://arxiv.org/abs/1910.07466" rel="noopener">arXiv 1910.07466</a> (Earth-Moon L5 under solar perturbation).</li>
+    <li>Concordia design values: the science pages and fact sheet of <a href="https://concordia.davidveksler.com/?utm_source=cheatsheets&amp;utm_medium=referral&amp;utm_campaign=concordia_crosspromo&amp;utm_content=sources" rel="noopener">concordia.davidveksler.com</a> (a design study; the spin functions on this page are ported from its widget core).</li>
+  </ol>
+</section>
+
+</main>
+
+<p class="author-byline">David Veksler is a Principal AI Engineer in Denver. He leads agentic AI engineering at Antech, a Mars company, and builds AI platforms for regulated financial firms. This page was produced by a governed, multi-agent Claude Code pipeline with a git audit trail. <a href="how-its-built.html">How it's built</a> <a href="https://davidveksler.com/work/?ref=cheatsheets">Case studies</a></p>
+
+<footer>
+  <div class="wrap">
+    <p>By <a href="https://davidveksler.com/?ref=cheatsheets">David Veksler</a></p>
+<nav class="cs-breadcrumb" data-site-breadcrumb aria-label="Breadcrumb" style="margin:1.25rem auto 0;max-width:72ch;text-align:center;font-size:.88em;line-height:1.6;">
+  <a href="./">Cheat sheets</a> <span aria-hidden="true">&rsaquo;</span> <a href="engineering-science">Engineering &amp; Science cheat sheets</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Artificial Gravity Calculator: Spin Rate, RPM and Comfort</span>
+</nav>
+<script type="application/ld+json" data-site-breadcrumb-ld>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Cheat sheets","item":"https://cheatsheets.davidveksler.com/"},{"@type":"ListItem","position":2,"name":"Engineering & Science","item":"https://cheatsheets.davidveksler.com/engineering-science"},{"@type":"ListItem","position":3,"name":"Artificial Gravity Calculator: Spin Rate, RPM and Comfort"}]}</script>
+    <p class="cheatsheets-build-note small" data-site-build-note style="margin:1rem auto 0;max-width:72ch;text-align:center;">
+      One person + AI agents build and maintain this collection through public specs, QA gates, and git history.
+      <a href="how-its-built.html" title="See how this cheatsheet collection is built">How this site is built</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/DavidVeksler/CheatSheets" target="_blank" rel="noopener noreferrer" title="View the public CheatSheets source repository on GitHub">Source on GitHub</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+(() => {
+'use strict';
+
+/* ---- physics core: spinDesign, comfortBand, metroWeight and gravityAtHeight are ported from
+   Habitat site/js/widgets/core.mjs (names kept so the two stay diffable) ---- */
+const G0 = 9.80665; // m/s2
+const TAU = 2 * Math.PI;
+const rpmOf = (omega) => (60 * omega) / TAU;
+const omegaOfRpm = (rpm) => (rpm * TAU) / 60;
+
+function spinDesign(radiusM, gTarget, personM = 1.8, walkMs = 1.4) {
+  const omega = Math.sqrt((gTarget * G0) / radiusM);
+  const gradientG = (omega * omega * personM) / G0;
+  const coriolisMs2 = 2 * omega * walkMs;
+  return {
+    omega,
+    rpm: rpmOf(omega),
+    periodS: TAU / omega,
+    rimSpeedMs: omega * radiusM,
+    gradientG,
+    gradientPct: (gradientG / gTarget) * 100,
+    coriolisMs2,
+    coriolisG: coriolisMs2 / G0,
+    coriolisPctOfLocal: (coriolisMs2 / G0 / gTarget) * 100,
+  };
+}
+
+// Globus and Hall 2017, "Space Settlement Population Rotation Tolerance", NSS Space Settlement Journal, recommendations 1 to 4.
+function comfortBand(rpm) {
+  if (rpm <= 2) return { id: 1, upTo: 2, text: 'Up to 2 rpm: expected to be no problem for residents, with little adaptation for visitors.' };
+  if (rpm <= 4) return { id: 2, upTo: 4, text: '2 to 4 rpm: expected to be no problem for residents; visitors need some training or a few hours to a day.' };
+  if (rpm <= 6) return { id: 3, upTo: 6, text: '4 to 6 rpm: unlikely to trouble residents; visitors may need days, and susceptible people may struggle.' };
+  return { id: 4, upTo: 30, text: 'Above 6 rpm: adaptation has been achieved only with specific training, and few would want to live there permanently.' };
+}
+
+// Concordia design values (docs/site/facts.md sections 2 and 5): floor radius 2,500 m, omega 0.0626 rad/s, metro rail head 2,455 m.
+const CONCORDIA = { radiusM: 2500, omega: 0.0626, metroRadiusM: 2455 };
+function metroWeight(speedKmh, direction) {
+  const { omega, metroRadiusM: r } = CONCORDIA;
+  const v = speedKmh / 3.6;
+  const sign = direction === 'spinward' ? 1 : direction === 'antispinward' ? -1 : 0;
+  const a = (omega * r + sign * v) ** 2 / r;
+  const cor = sign === 0 ? 0 : 2 * omega * v;
+  return { speedMs: v, weightG: a / G0, weightMs2: a, coriolisMs2: cor, coriolisG: cor / G0 };
+}
+function gravityAtHeight(hM) { return (CONCORDIA.omega ** 2 * (CONCORDIA.radiusM - hM)) / G0; }
+
+/* ---- designs: every dot on the chart and every preset chip ---- */
+const DESIGNS = [
+  { id: 'c10',  chip: '10 m centrifuge', label: '10 m centrifuge, 1 g', r: 10,   mode: 'g',   v: 1,        ref: true, L: 30 },
+  { id: 'on1',  chip: "O'Neill M1",      label: "O'Neill M1",           r: 100,  mode: 'rpm', v: 60 / 21,  L: 56 },
+  { id: 'isl',  chip: 'Island One',      label: 'Island One, Kalpana One', r: 256, mode: 'rpm', v: 1.9,    L: 70 },
+  { id: 'kal',  chip: 'Kalpana One',     label: 'Kalpana One',          r: 250,  mode: 'g',   v: 1,        unlabelled: true },
+  { id: 'on2',  chip: "O'Neill M2",      label: "O'Neill M2",           r: 320,  mode: 'rpm', v: 60 / 36,  L: 52 },
+  { id: 'tor',  chip: 'Stanford torus',  label: 'Stanford torus',       r: 830,  mode: 'rpm', v: 1,        L: -36, side: 'l' },
+  { id: 'on3',  chip: "O'Neill M3",      label: "O'Neill M3",           r: 1000, mode: 'rpm', v: 60 / 63,  L: 54 },
+  { id: 'on4',  chip: "O'Neill M4",      label: "O'Neill M4",           r: 3200, mode: 'rpm', v: 60 / 114, L: -26, side: 'l' },
+  { id: 'con',  chip: 'Concordia',       label: 'Concordia',            r: 2500, mode: 'g',   v: 1,        cz: true, L: 24 },
+];
+const rpmOfDesign = (d) => (d.mode === 'rpm' ? d.v : spinDesign(d.r, d.v).rpm);
+
+/* ---- number formatting ---- */
+function f(x, sig = 3) {
+  if (!isFinite(x)) return '-';
+  if (x === 0) return '0';
+  const a = Math.abs(x);
+  if (a >= 1000) return Math.round(x).toLocaleString('en-US');
+  const s = Number(x.toPrecision(sig));
+  return a < 1e-6 ? x.toExponential(2) : String(s);
+}
+const $ = (id) => document.getElementById(id);
+
+/* ---- state ---- */
+const BOUNDS = { r: [1, 100000], rpm: [0.01, 60], g: [0.01, 3], h: [0.1, 3], w: [0, 10] };
+const state = { r: 500, mode: 'g', v: 1, h: 1.8, w: 1.4, preset: null };
+let valid = true;
+
+function parse(str) {
+  const s = String(str).replace(/[,\s]/g, '');
+  if (s === '' || !/^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(s)) return NaN;
+  return Number(s);
+}
+
+function compute(s) {
+  const g = s.mode === 'rpm' ? (omegaOfRpm(s.v) ** 2 * s.r) / G0 : s.v;
+  return { g, d: spinDesign(s.r, g, s.h, s.w) };
+}
+
+function sp413Text(rpm) {
+  if (rpm <= 1) return 'Within the 1 rpm limit for principal living quarters.';
+  if (rpm < 3) return 'Above the 1 rpm limit; adaptation is possible below 3 rpm after prolonged exposure.';
+  return 'Above the 1 rpm limit and the 3 rpm adaptation statement.';
+}
+
+function render() {
+  const { g, d } = compute(state);
+  const rpm = d.rpm;
+  $('oRpm').textContent = f(rpm) + ' rpm';
+  $('oOmega').textContent = f(d.omega) + ' rad/s';
+  $('oPeriod').innerHTML = f(d.periodS, 4) + ' s' + (d.periodS >= 120 ? '<small>' + f(d.periodS / 60) + ' min</small>' : '');
+  $('oRim').innerHTML = f(d.rimSpeedMs) + ' m/s<small>' + f(d.rimSpeedMs * 3.6) + ' km/h · ' + f(d.rimSpeedMs * 2.23694) + ' mph</small>';
+  $('oG').innerHTML = f(g) + ' g<small>' + f(g * G0) + ' m/s²</small>';
+  $('oGrad').innerHTML = f(d.gradientPct, 2) + ' %<small>' + f(d.gradientG, 2) + ' g from feet to head (' + f(state.h, 2) + ' m)</small>';
+  $('oCor').innerHTML = f(d.coriolisG) + ' g<small>' + f(d.coriolisMs2) + ' m/s² at ' + f(state.w, 2) + ' m/s · ' + f(d.coriolisPctOfLocal, 2) + ' % of local weight</small>';
+  const band = comfortBand(rpm);
+  $('oBand').textContent = 'Band ' + band.id + '. ' + band.text + (rpm > 30 ? ' Beyond 30 rpm there is no recommendation.' : '');
+  $('oBandBox').className = 'out full band' + band.id;
+  $('oSp').textContent = sp413Text(rpm);
+  const r1g = G0 / (d.omega * d.omega);
+  $('oR1g').innerHTML = f(r1g) + ' m<small>' + f(r1g * 3.28084) + ' ft, at ' + f(rpm) + ' rpm</small>';
+  $('printSum').textContent = 'Design: radius ' + f(state.r) + ' m, ' + f(rpm) + ' rpm (' + f(g) + ' g at the rim). Rim speed ' + f(d.rimSpeedMs) + ' m/s; head-to-foot gradient ' + f(d.gradientPct, 2) + ' % for ' + f(state.h, 2) + ' m; Coriolis ' + f(d.coriolisG) + ' g at ' + f(state.w, 2) + ' m/s; Globus and Hall band ' + band.id + '.';
+  drawChart();
+  save();
+}
+
+/* ---- inputs ---- */
+const el = { r: $('inR'), v: $('inV'), h: $('inH'), w: $('inW'), err: $('err') };
+function setInputs() {
+  el.r.value = f(state.r, 6); el.v.value = f(state.v, 4);
+  el.h.value = f(state.h, 3); el.w.value = f(state.w, 3);
+  $('inVlab').textContent = state.mode === 'rpm' ? 'Spin rate (rpm)' : 'Target gravity (g)';
+  document.querySelectorAll('input[name="mode"]').forEach((i) => { i.checked = i.value === state.mode; });
+  markChips();
+}
+function readInputs() {
+  const vals = { r: parse(el.r.value), v: parse(el.v.value), h: parse(el.h.value), w: parse(el.w.value) };
+  const vb = BOUNDS[state.mode];
+  const checks = [
+    ['r', 'Radius', BOUNDS.r, 'm'], ['v', state.mode === 'rpm' ? 'Spin rate' : 'Target gravity', vb, state.mode === 'rpm' ? 'rpm' : 'g'],
+    ['h', 'Person height', BOUNDS.h, 'm'], ['w', 'Walking speed', BOUNDS.w, 'm/s'],
+  ];
+  const msgs = [];
+  for (const [k, name, [lo, hi], unit] of checks) {
+    const ok = isFinite(vals[k]) && vals[k] >= lo && vals[k] <= hi;
+    el[k].setAttribute('aria-invalid', ok ? 'false' : 'true');
+    if (!ok) msgs.push(name + ' must be a number from ' + lo + ' to ' + hi + ' ' + unit + '.');
+  }
+  el.err.textContent = msgs.join(' ');
+  valid = msgs.length === 0;
+  if (valid) { state.r = vals.r; state.v = vals.v; state.h = vals.h; state.w = vals.w; }
+  return valid;
+}
+function onEdit() {
+  state.preset = null;
+  if (readInputs()) { markChips(); render(); }
+}
+['r', 'v', 'h', 'w'].forEach((k) => el[k].addEventListener('input', onEdit));
+document.querySelectorAll('input[name="mode"]').forEach((i) => i.addEventListener('change', () => {
+  if (!i.checked || i.value === state.mode) return;
+  const { g, d } = compute(state);
+  state.mode = i.value;
+  state.v = state.mode === 'rpm' ? d.rpm : g;
+  state.preset = null;
+  setInputs(); readInputs(); render();
+}));
+
+/* ---- presets ---- */
+const chips = $('chips');
+DESIGNS.forEach((d) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'chip' + (d.cz ? ' cz' : ''); b.textContent = d.chip; b.dataset.id = d.id;
+  b.setAttribute('aria-pressed', 'false');
+  b.addEventListener('click', () => {
+    state.r = d.r; state.mode = d.mode; state.v = d.v; state.preset = d.id;
+    setInputs(); readInputs(); render();
+  });
+  chips.appendChild(b);
+});
+function markChips() {
+  chips.querySelectorAll('.chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.id === state.preset)));
+}
+
+/* ---- remember the last design (feature-detected localStorage) ---- */
+const KEY = 'cs-artificial-gravity-design';
+function store() { try { const s = window.localStorage; s.setItem('__t', '1'); s.removeItem('__t'); return s; } catch (e) { return null; } }
+const LS = store();
+function save() { if (LS) { try { LS.setItem(KEY, JSON.stringify({ r: state.r, mode: state.mode, v: state.v, h: state.h, w: state.w })); } catch (e) { /* ignore */ } } }
+function restore() {
+  if (!LS) return;
+  try {
+    const s = JSON.parse(LS.getItem(KEY) || 'null');
+    if (!s || (s.mode !== 'rpm' && s.mode !== 'g')) return;
+    const ok = (x, [lo, hi]) => typeof x === 'number' && isFinite(x) && x >= lo && x <= hi;
+    if (ok(s.r, BOUNDS.r) && ok(s.v, BOUNDS[s.mode]) && ok(s.h, BOUNDS.h) && ok(s.w, BOUNDS.w)) Object.assign(state, { r: s.r, mode: s.mode, v: s.v, h: s.h, w: s.w });
+  } catch (e) { /* ignore */ }
+}
+
+/* ---- the spin chart: log-log radius (1 m to 10 km) against rpm (0.1 to 60) ---- */
+const RPM_LO = 0.1, RPM_HI = 60, R_LO = 1, R_HI = 10000;
+const NS = 'http://www.w3.org/2000/svg';
+function drawChartInto(host, W, H, opts = {}) {
+  const wide = W >= 640;
+  const m = { l: wide ? 54 : 40, r: wide ? 16 : 10, t: 12, b: wide ? 42 : 34 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const lg = Math.log10;
+  const X = (r) => m.l + (lg(r) - lg(R_LO)) / (lg(R_HI) - lg(R_LO)) * iw;
+  const Y = (rpm) => m.t + (lg(RPM_HI) - lg(rpm)) / (lg(RPM_HI) - lg(RPM_LO)) * ih;
+  const rpmAt = (g, r) => rpmOf(Math.sqrt((g * G0) / r));
+  const o = [];
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  o.push('<svg xmlns="' + NS + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-labelledby="chT chD" width="' + W + '" height="' + H + '">');
+  o.push('<title id="chT">Spin chart: radius against rpm</title><desc id="chD">Log-log chart of habitat radius from 1 m to 10 km against spin rate from 0.1 to 60 rpm. Diagonal lines are constant gravity. Horizontal stripes are the Globus and Hall comfort bands. Designs are marked as dots and the current calculator design as an orange marker.</desc>');
+  o.push('<defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" class="ch-hatch"/></pattern><clipPath id="plotClip"><rect x="' + m.l + '" y="' + m.t + '" width="' + iw + '" height="' + ih + '"/></clipPath></defs>');
+  o.push('<rect class="ch-bg" x="' + m.l + '" y="' + m.t + '" width="' + iw + '" height="' + ih + '"/>');
+  // bands
+  const bands = [[RPM_LO, 2, 1, '≤ 2'], [2, 4, 2, '2–4'], [4, 6, 3, '4–6'], [6, 30, 4, '6–30']];
+  bands.forEach(([lo, hi, id, lab]) => {
+    const y1 = Y(hi), y2 = Y(lo);
+    o.push('<rect class="ch-band' + id + '" x="' + m.l + '" y="' + y1 + '" width="' + iw + '" height="' + (y2 - y1) + '"/>');
+    const mid = (y1 + y2) / 2;
+    o.push('<text class="ch-bandlab" x="' + (m.l + 6) + '" y="' + (mid + 3.5) + '">' + lab + '</text>');
+  });
+  o.push('<rect x="' + m.l + '" y="' + Y(RPM_HI) + '" width="' + iw + '" height="' + (Y(30) - Y(RPM_HI)) + '" fill="url(#hatch)"/>');
+  o.push('<text class="ch-bandlab" x="' + (m.l + 6) + '" y="' + (Y(45) + 3.5) + '">&gt; 30</text>');
+  // grid + ticks
+  [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50].forEach((t) => {
+    o.push('<line class="ch-grid" x1="' + m.l + '" x2="' + (m.l + iw) + '" y1="' + Y(t) + '" y2="' + Y(t) + '"/>');
+    o.push('<text class="ch-tick" x="' + (m.l - 6) + '" y="' + (Y(t) + 3.5) + '" text-anchor="end">' + t + '</text>');
+  });
+  [[1, '1 m'], [10, '10 m'], [100, '100 m'], [1000, '1 km'], [10000, '10 km']].forEach(([t, lab]) => {
+    o.push('<line class="ch-grid" x1="' + X(t) + '" x2="' + X(t) + '" y1="' + m.t + '" y2="' + (m.t + ih) + '"/>');
+    o.push('<text class="ch-tick" x="' + Math.min(X(t), W - 22) + '" y="' + (m.t + ih + 16) + '" text-anchor="middle">' + lab + '</text>');
+  });
+  o.push('<text class="ch-axt" x="' + (m.l + iw / 2) + '" y="' + (H - 4) + '" text-anchor="middle">Radius (log scale)</text>');
+  o.push('<text class="ch-axt" transform="translate(11 ' + (m.t + ih / 2) + ') rotate(-90)" text-anchor="middle">Spin rate, rpm (log scale)</text>');
+  // SP-413 1 rpm
+  o.push('<line class="ch-sp" x1="' + m.l + '" x2="' + (m.l + iw) + '" y1="' + Y(1) + '" y2="' + Y(1) + '"/>');
+  o.push('<text class="ch-splab" x="' + (m.l + 40) + '" y="' + (Y(1) - 5) + '">' + (wide ? 'SP-413 limit, 1 rpm' : 'SP-413: 1 rpm') + '</text>');
+  // iso-g lines, labelled along the line
+  const ang = (Math.atan2(0.5 * ih / (lg(RPM_HI) - lg(RPM_LO)), iw / (lg(R_HI) - lg(R_LO))) * 180) / Math.PI;
+  [[0.1, '0.1 g'], [0.38, '0.38 g (Mars)'], [0.5, '0.5 g'], [1, '1 g']].forEach(([g, lab]) => {
+    const rEnd = Math.min(R_HI, (g * G0) / (omegaOfRpm(RPM_LO) ** 2));
+    const x1 = X(R_LO), y1 = Y(rpmAt(g, R_LO)), x2 = X(rEnd), y2 = Y(rpmAt(g, rEnd));
+    o.push('<line class="ch-iso' + (g === 1 ? ' ch-iso1' : '') + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>');
+    const rl = { 1: 28, 0.5: 4, 0.38: 40, 0.1: 28 }[g];
+    o.push('<text class="ch-isolab' + (g === 1 ? ' ch-isolab1' : '') + '" transform="translate(' + X(rl) + ' ' + Y(rpmAt(g, rl)) + ') rotate(' + ang.toFixed(1) + ')" dy="-5" text-anchor="middle">' + lab + '</text>');
+  });
+  o.push('<rect x="' + m.l + '" y="' + m.t + '" width="' + iw + '" height="' + ih + '" fill="none" class="ch-frame"/>');
+  // designs
+  const dr = wide ? 5 : 3.8;
+  const labelled = wide ? DESIGNS : DESIGNS.filter((d) => d.cz);
+  DESIGNS.forEach((d) => {
+    const rpm = rpmOfDesign(d), x = X(d.r), y = Y(rpm);
+    if (d.cz) o.push('<circle class="ch-ring" cx="' + x + '" cy="' + y + '" r="' + (dr + 4.5) + '"/>');
+    o.push('<circle class="' + (d.ref ? 'ch-ref' : 'ch-dot') + '" cx="' + x + '" cy="' + y + '" r="' + (d.cz ? dr + 1 : dr) + '"><title>' + esc(d.label) + ': ' + f(d.r) + ' m, ' + f(rpm) + ' rpm</title></circle>');
+  });
+  labelled.forEach((d) => {
+    if (d.unlabelled) return;
+    const rpm = rpmOfDesign(d), x = X(d.r), y = Y(rpm);
+    let len = Math.abs(d.L), up = d.L > 0 ? 1 : -1;
+    let sx = d.side === 'l' ? -1 : 1;
+    if (!wide) { len = 30; up = -1; sx = -1; }
+    const tw = d.label.length * (d.cz ? 7.8 : 6.7);
+    if (sx > 0 && x + len + 3 + tw > W - 4) sx = -1;
+    const rd = (dr + (d.cz ? 5 : 1)) * 0.7;
+    const ex = x + sx * len, ey = y - up * len;
+    o.push('<line class="ch-lead" x1="' + (x + sx * rd) + '" y1="' + (y - up * rd) + '" x2="' + ex + '" y2="' + ey + '"/>');
+    o.push('<text class="' + (d.cz ? 'ch-lab ch-lab-cz' : 'ch-lab') + '" x="' + (ex + sx * 3) + '" y="' + (ey + (up > 0 ? 0 : 11)) + '" text-anchor="' + (sx > 0 ? 'start' : 'end') + '">' + esc(d.label) + '</text>');
+  });
+  // live marker
+  const { d: cur } = compute(state);
+  if (!opts.noLive) {
+    const rr = Math.min(R_HI, Math.max(R_LO, state.r)), rp = Math.min(RPM_HI, Math.max(RPM_LO, cur.rpm));
+    const off = rr !== state.r || rp !== cur.rpm;
+    const lx = X(rr), ly = Y(rp);
+    o.push('<g clip-path="url(#plotClip)"><line class="ch-cross" x1="' + lx + '" x2="' + lx + '" y1="' + ly + '" y2="' + (m.t + ih) + '"/><line class="ch-cross" x1="' + m.l + '" x2="' + lx + '" y1="' + ly + '" y2="' + ly + '"/></g>');
+    o.push('<circle class="ch-live" cx="' + lx + '" cy="' + ly + '" r="' + (wide ? 7 : 6) + '"/>');
+    const txt = 'You: ' + f(state.r) + ' m, ' + f(cur.rpm) + ' rpm' + (off ? ' (off chart)' : '');
+    const right = lx > m.l + iw * 0.6;
+    o.push('<text class="ch-livelab" x="' + (right ? lx + 8 : lx - 8) + '" y="' + (ly + 24) + '" text-anchor="' + (right ? 'end' : 'start') + '">' + esc(txt) + '</text>');
+  }
+  o.push('</svg>');
+  host.innerHTML = o.join('');
+}
+const chartHost = $('spinChart');
+let raf = 0, lastW = 0;
+function drawChart() {
+  if (raf) return;
+  raf = requestAnimationFrame(() => {
+    raf = 0;
+    const W = Math.max(280, Math.floor(chartHost.clientWidth || 320));
+    lastW = W;
+    const H = W >= 640 ? Math.round(Math.min(560, W * 0.66)) : Math.round(Math.max(300, W * 1.0));
+    drawChartInto(chartHost, W, H);
+  });
+}
+if ('ResizeObserver' in window) {
+  new ResizeObserver(() => { if (Math.floor(chartHost.clientWidth) !== lastW) drawChart(); }).observe(chartHost);
+} else { window.addEventListener('resize', drawChart); }
+window.addEventListener('beforeprint', () => { raf = 0; drawChartInto(chartHost, 700, 420); });
+window.addEventListener('afterprint', () => { drawChart(); });
+
+// small API for QA and the og:image renderer (scripts/render_og_artificial_gravity.py)
+window.spinChart = { draw: drawChartInto, spinDesign, comfortBand, metroWeight, gravityAtHeight, compute, state, DESIGNS };
+
+restore();
+setInputs(); readInputs(); render();
+})();
+</script>
+
+</body>
+</html>

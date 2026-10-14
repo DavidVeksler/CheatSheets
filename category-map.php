@@ -180,6 +180,7 @@ return [
     'ai-datacenter-infrastructure.html' => 'Engineering & Science',
     'inside-ai-data-center.html' => 'Engineering & Science',
     'ai-infrastructure-numbers.html' => 'Engineering & Science',
+    'artificial-gravity-calculator.html' => 'Engineering & Science',
     'automotive-innovation-timeline.html' => 'Engineering & Science',
     'boom-supersonic.html' => 'Engineering & Science',
     'data-center-community-impact.html' => 'Engineering & Science',
