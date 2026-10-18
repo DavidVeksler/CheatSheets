@@ -196,7 +196,7 @@
     The Complete Azure DevOps Cheatsheet
    </h1>
    <p class="lead">
-    A brutally honest, battle-hardened guide to the entire Azure DevOps suite. From planning with Boards, coding with Repos, building and releasing with Pipelines, to testing, artifacts, and beyond. <strong>Note (June 2026):</strong> Microsoft's official direction is to migrate repos to GitHub for AI/Copilot features, while Azure Boards, Pipelines, and Test Plans remain supported for the long term.
+    A brutally honest, battle-hardened guide to the entire Azure DevOps suite. From planning with Boards, coding with Repos, building and releasing with Pipelines, to testing, artifacts, and beyond. <strong>Note (June 2026):</strong> Microsoft's stated direction is to move source control to GitHub for new AI and Copilot features, while Azure Boards, Pipelines, and Test Plans stay usable alongside GitHub repos and Microsoft continues to invest in Azure DevOps.
    </p>
   </header>
   <div class="container">
@@ -272,9 +272,9 @@
         <div class="collapse collapse-content" id="collapseBpPipelineSecurity">
          <h6>Hardening checklist:</h6>
          <ul>
-          <li><strong>Workload identity federation:</strong> replace secret-based Azure service connections with federated (OIDC) connections so there is no stored secret to leak or rotate.</li>
+          <li><strong>Workload identity federation:</strong> replace secret-based Azure service connections with federated (OIDC) connections so there is no stored secret to leak or rotate. New connections use the Microsoft Entra issuer; the Azure DevOps issuer (<code>vstoken.dev.azure.com</code>) is deprecated and retires July 1, 2027, so convert older connections before then.</li>
           <li><strong>Secrets in Key Vault only:</strong> reference them through a variable group linked to Key Vault; never store secrets in YAML or plaintext variables. Secret variables are masked in logs.</li>
-          <li><strong>Protect shared resources:</strong> put approvals and checks on service connections, agent pools, and variable groups, not just environments, so a rogue pipeline cannot borrow them.</li>
+          <li><strong>Protect shared resources:</strong> put approvals and checks on service connections, agent pools, and variable groups, not just environments, so a rogue pipeline cannot borrow them. Azure Pipelines now auto-disables service connections unused for 100 days (re-enable from the connection menu).</li>
           <li><strong>Scope the token:</strong> set the job authorization scope to <em>project</em> (not collection) and grant the build service the least access it needs.</li>
           <li><strong>Pin and scan:</strong> pin task and container image versions; run SAST/SCA (GHAzDO CodeQL, dependency scanning) as a required check.</li>
           <li><strong>Guard <code>pull_request</code> triggers:</strong> do not expose secrets to pipelines triggered by forks or untrusted contributors.</li>
@@ -302,7 +302,7 @@
         <div class="collapse collapse-content" id="collapseBpEnvironments">
          <h6>The checks you can stack on an environment:</h6>
          <ul>
-          <li><strong>Approvals:</strong> require named people or groups to sign off before the stage runs; approvers cannot be the person who queued the run.</li>
+          <li><strong>Approvals:</strong> require named people or groups to sign off before the stage runs; you can bar approvers from approving their own runs (a per-check setting).</li>
           <li><strong>Branch control:</strong> only allow deployment from an approved branch such as <code>main</code>.</li>
           <li><strong>Business hours:</strong> defer production deploys to a safe window.</li>
           <li><strong>Invoke REST API / Azure Function:</strong> call an external gate (change management, test results) and pass only on success.</li>
