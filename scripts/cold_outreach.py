@@ -2,8 +2,12 @@
 """Deterministic core of the page-focused cold outreach program (docs/cold-outreach.md).
 
 The runbook is the spec; this script enforces the parts a machine can check so the agent does not
-re-derive them: the email-confidence score (drafts only when > 0.5), dedupe, caps, kill switches,
-and the rendering + gating of a ready-to-send HTML email with a plain-text twin.
+re-derive them: the email-confidence score (drafts only when > 0.5), dedupe, per-run caps, and the
+rendering + gating of a ready-to-send HTML email with a plain-text twin.
+
+No holds (David, 2026-10-22; ~/Projects/claude-routines/docs/draft-routines.md): nothing here zeroes
+drafting. No kill switch, paused page, bounce-storm or spam-complaint stop, or unsent-backlog cap. A
+bounced address and a domain that complained are never contacted again (dedupe), and that is all.
 
     python scripts/cold_outreach.py plan                    # JSON: slots, due follow-ups, ready/blocked
     python scripts/cold_outreach.py add prospect.json       # append a prospect (validated, id assigned)
@@ -44,13 +48,12 @@ THRESHOLD = 0.5            # draft only when confidence is strictly greater
 MAX_FIRST_TOUCHES = 3      # per run (nightly cadence)
 MAX_FOLLOWUPS = 6          # per run
 FOLLOWUPS_ENABLED = False  # David, 2026-10-06: no follow-ups on cold outreach; only new first touches
-UNSENT_BACKLOG_CAP = 12    # drafted-but-unsent first touches that stop new drafting
-MAX_NEW_PROSPECTS = 5      # researched per run
+MAX_NEW_PROSPECTS = 5      # researched per run (a cap on adds; never a reason to end a run with zero drafts)
+MIN_NEW_DRAFTS = 1         # every run stages at least this many verified new drafts (docs/draft-routines.md)
 READY_BUFFER = 3           # research when fewer than slots + this many prospects are ready
 FOLLOWUP_AFTER_DAYS = 7
 CLOSE_AFTER_DAYS = 14      # after the follow-up was sent
 EVIDENCE_MAX_AGE_DAYS = 30
-BOUNCE_STORM = (3, 14)     # 3 bounces within 14 days
 DEDUPE_DAYS = 180
 CALIBRATION_MIN_SENDS = 4
 FIRST_TOUCH_WORDS = 150
@@ -301,22 +304,18 @@ def plan(data: dict, *, with_scores: bool = True) -> dict:
     pages = pages_by_file()
     t = today()
 
+    # Informational only: bounces and complaints never zero drafting. They feed dedupe (the address or
+    # domain is never contacted again) and calibration (a kind that bounces scores lower).
     bounces_recent = [p["id"] for p in ps if p.get("outreach", {}).get("outcome") == "bounced"
-                      and (d(p["outreach"].get("bounced")) or d(p["outreach"].get("sent")) or date.min) >= t - timedelta(days=BOUNCE_STORM[1])]
-    bounce_storm = len(bounces_recent) >= BOUNCE_STORM[0]
-    spam_flag = any(p.get("outreach", {}).get("outcome") == "spam-complaint" for p in ps)
-
-    paused = []
-    for f, pg in pages.items():
-        sent = [p for p in ps if p.get("page") == f and p.get("outreach", {}).get("sent")]
-        replied = [p for p in sent if p["outreach"].get("replied")]
-        if len(sent) >= pg.get("kill_after", 12) and not replied:
-            paused.append(f)
+                      and (d(p["outreach"].get("bounced")) or d(p["outreach"].get("sent")) or date.min) >= t - timedelta(days=14)]
+    bounced_addresses = {p["email"].lower() for p in ps
+                         if p.get("outreach", {}).get("outcome") == "bounced" and p.get("email")}
+    complained_keys = {dedupe_key(p["email"]) for p in ps
+                       if p.get("outreach", {}).get("outcome") == "spam-complaint" and p.get("email")}
 
     unsent = [p["id"] for p in ps if p.get("state") == "drafted" and not p.get("outreach", {}).get("sent")]
     drafted_today = sum(1 for p in ps if p.get("outreach", {}).get("drafted") == t.isoformat())
-    slots = 0 if (bounce_storm or spam_flag) else max(0, min(MAX_FIRST_TOUCHES - drafted_today,
-                                                             UNSENT_BACKLOG_CAP - len(unsent)))
+    slots = max(0, MAX_FIRST_TOUCHES - drafted_today)
 
     contacted = {}
     for p in ps:
@@ -331,8 +330,11 @@ def plan(data: dict, *, with_scores: bool = True) -> dict:
         why = []
         if p.get("page") not in pages:
             why.append("page not in pages.json")
-        elif p["page"] in paused:
-            why.append("page paused by kill switch")
+        email = (p.get("email") or "").lower()
+        if email in bounced_addresses:
+            why.append("address bounced before; never reused")
+        if email and dedupe_key(email) in complained_keys:
+            why.append("dedupe: this domain sent a spam complaint")
         for other, when in contacted.get(dedupe_key(p.get("email") or ""), []):
             if other != p["id"] and (t - when).days <= DEDUPE_DAYS:
                 why.append(f"dedupe: {other} contacted {when}")
@@ -345,8 +347,10 @@ def plan(data: dict, *, with_scores: bool = True) -> dict:
         else:
             ready.append(entry)
 
-    halted = bounce_storm or spam_flag or len(unsent) >= UNSENT_BACKLOG_CAP
-    research = 0 if halted or len(ready) >= slots + READY_BUFFER else MAX_NEW_PROSPECTS
+    # Research tops up the queue. When the queue is empty, the run must research until a new prospect
+    # scores draftable (MIN_NEW_DRAFTS); research_slots caps adds, it never ends a run with zero drafts.
+    research = MAX_NEW_PROSPECTS if len(ready) < max(slots, MIN_NEW_DRAFTS) + READY_BUFFER else 0
+    drafted_needed = max(0, MIN_NEW_DRAFTS - drafted_today)
 
     due_followups, to_close = [], []
     for p in ps:
@@ -366,12 +370,12 @@ def plan(data: dict, *, with_scores: bool = True) -> dict:
         "date": t.isoformat(),
         "threshold": THRESHOLD,
         "first_touch_slots": slots,
-        "followup_slots": 0 if spam_flag or not FOLLOWUPS_ENABLED else MAX_FOLLOWUPS,
+        "min_new_drafts": drafted_needed,
+        "research_until_draftable": drafted_needed > 0 and len(ready) < drafted_needed,
+        "followup_slots": MAX_FOLLOWUPS if FOLLOWUPS_ENABLED else 0,
         "research_slots": research,
-        "bounce_storm": bounce_storm, "recent_bounces": bounces_recent,
-        "spam_complaint": spam_flag,
+        "recent_bounces": bounces_recent,
         "unsent_drafts": unsent,
-        "paused_pages": paused,
         "ready_first_touch": ready,
         "blocked": blocked,
         "due_followups": due_followups[:MAX_FOLLOWUPS],
@@ -466,9 +470,10 @@ def gate(spec: dict, p: dict, data: dict, *, fetch=http_get, mx=mx_status, check
             errs.append(f"first touch needs state=queued (is {p.get('state')})")
         pl = plan(data, with_scores=False)
         if pl["first_touch_slots"] <= 0:
-            errs.append("no first-touch slots (bounce storm, spam complaint, or unsent backlog)")
-        if p["page"] in pl["paused_pages"]:
-            errs.append("page paused by kill switch")
+            errs.append(f"per-run maximum of {MAX_FIRST_TOUCHES} first touches already drafted today")
+        if (p.get("email") or "").lower() in {x["email"].lower() for x in data["prospects"]
+                                               if x.get("outreach", {}).get("outcome") == "bounced" and x.get("email")}:
+            errs.append("address bounced before; never reused")
         if not subject or len(subject) > 60:
             errs.append("subject missing or > 60 chars")
         if subject and (SPAM_TERMS.search(subject) or "!" in subject or subject.isupper()):
@@ -593,7 +598,7 @@ def add(path: Path) -> int:
 
 
 STATES = {"queued", "drafted", "sent", "closed", "skipped", "rejected"}
-OUTCOMES = {"bounced", "replied", "auto-reply", "declined", "live", "spam-complaint"}
+OUTCOMES = {"bounced", "replied", "auto-reply", "declined", "live", "spam-complaint"}  # spam-complaint: never contact that domain again
 
 
 def set_path(obj: dict, key: str, value) -> None:

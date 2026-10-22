@@ -160,18 +160,73 @@ class RenderTests(unittest.TestCase):
                             outreach={"drafted": TODAY}) for i in range(co.MAX_FIRST_TOUCHES)]
         self.assertEqual(co.plan({"prospects": drafted}, with_scores=False)["first_touch_slots"], 0)
 
-    def test_research_slots_follow_queue_and_backlog(self):
-        self.assertEqual(co.plan({"prospects": []}, with_scores=False)["research_slots"], co.MAX_NEW_PROSPECTS)
+    def test_research_slots_follow_queue(self):
+        empty = co.plan({"prospects": []}, with_scores=False)
+        self.assertEqual(empty["research_slots"], co.MAX_NEW_PROSPECTS)
+        self.assertEqual(empty["min_new_drafts"], co.MIN_NEW_DRAFTS)
+        self.assertTrue(empty["research_until_draftable"])
         queued = [prospect(id=f"co-02{i:02d}", email=f"b{i}@y{i}.example", state="queued")
                   for i in range(co.MAX_FIRST_TOUCHES + co.READY_BUFFER)]
-        self.assertEqual(co.plan({"prospects": queued}, with_scores=False)["research_slots"], 0)
-        unsent = [prospect(id=f"co-03{i:02d}", email=f"c{i}@z{i}.example", state="drafted",
-                           outreach={"drafted": "2026-01-01"}) for i in range(co.UNSENT_BACKLOG_CAP)]
-        self.assertEqual(co.plan({"prospects": unsent}, with_scores=False)["research_slots"], 0)
+        full = co.plan({"prospects": queued}, with_scores=False)
+        self.assertEqual(full["research_slots"], 0)
+        self.assertFalse(full["research_until_draftable"])
 
     def test_gate_blocks_low_confidence(self):
         p = prospect(evidence={"kind": "unpublished_generic", "checked": TODAY})
         self.assertTrue(any("confidence" in e for e in self._gate(self.BODY, p=p)))
+
+
+class NoHoldTests(unittest.TestCase):
+    """docs/draft-routines.md: nothing zeroes drafting except the per-run maximum."""
+
+    def test_unsent_backlog_does_not_zero_drafting(self):
+        unsent = [prospect(id=f"co-03{i:02d}", email=f"c{i}@z{i}.example", state="drafted",
+                           outreach={"drafted": "2026-01-01"}) for i in range(40)]
+        pl = co.plan({"prospects": unsent}, with_scores=False)
+        self.assertEqual(pl["first_touch_slots"], co.MAX_FIRST_TOUCHES)
+        self.assertEqual(pl["research_slots"], co.MAX_NEW_PROSPECTS)
+
+    def test_bounce_storm_does_not_zero_drafting(self):
+        bounced = [prospect(id=f"co-04{i:02d}", email=f"d{i}@w{i}.example", state="sent",
+                            outreach={"sent": TODAY, "outcome": "bounced", "bounced": TODAY}) for i in range(5)]
+        pl = co.plan({"prospects": bounced}, with_scores=False)
+        self.assertEqual(pl["first_touch_slots"], co.MAX_FIRST_TOUCHES)
+        self.assertGreater(pl["research_slots"], 0)
+        self.assertEqual(len(pl["recent_bounces"]), 5)
+
+    def test_spam_complaint_blocks_only_that_domain(self):
+        ps = [prospect(id="co-0501", email="ed@complainer.example", state="sent",
+                       outreach={"sent": "2026-01-01", "outcome": "spam-complaint"}),
+              prospect(id="co-0502", email="other@complainer.example", state="queued"),
+              prospect(id="co-0503", email="fine@elsewhere.example", state="queued")]
+        pl = co.plan({"prospects": ps}, with_scores=False)
+        self.assertEqual(pl["first_touch_slots"], co.MAX_FIRST_TOUCHES)
+        self.assertEqual([r["id"] for r in pl["ready_first_touch"]], ["co-0503"])
+        self.assertIn("spam complaint", pl["blocked"][0]["blocked_by"][0])
+
+    def test_pages_are_never_paused(self):
+        sent = [prospect(id=f"co-06{i:02d}", email=f"e{i}@v{i}.example", state="sent",
+                         outreach={"sent": "2026-01-01"}) for i in range(30)]
+        queued = prospect(id="co-0699", email="new@fresh.example", state="queued")
+        pl = co.plan({"prospects": sent + [queued]}, with_scores=False)
+        self.assertNotIn("paused_pages", pl)
+        self.assertEqual([r["id"] for r in pl["ready_first_touch"]], ["co-0699"])
+
+    def test_bounced_address_is_never_reused(self):
+        ps = [prospect(id="co-0701", email="gone@old.example", state="sent",
+                       outreach={"sent": "2025-01-01", "outcome": "bounced", "bounced": "2025-01-02"}),
+              prospect(id="co-0702", email="Gone@old.example", state="queued")]
+        pl = co.plan({"prospects": ps}, with_scores=False)
+        self.assertEqual(pl["ready_first_touch"], [])
+        self.assertTrue(any("bounced before" in b for b in pl["blocked"][0]["blocked_by"]))
+
+    def test_no_hold_fields_in_pages_json(self):
+        pages = co.load(co.PAGES)
+        for pg in pages["pages"]:
+            for key in ("kill_after", "paused", "hold", "kill_switch"):
+                self.assertNotIn(key, pg, pg["file"])
+        for key in ("kill_switch", "paused_pages", "hold"):
+            self.assertNotIn(key, pages)
 
 
 if __name__ == "__main__":
