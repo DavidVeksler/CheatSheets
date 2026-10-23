@@ -78,6 +78,18 @@ EOF
 step "Preflight: $SITE"
 [ -n "$PY" ] || die "python not found"
 [ -z "$(git status --porcelain)" ] || die "working tree is not clean; commit or stash first"
+# catalog.json is derived from the sheets; a commit that bypassed the pre-commit hook
+# leaves it stale and fails the build gate. Regenerate and commit it here (before SHA is
+# read, so the deployed commit includes it) instead of failing the deploy.
+if ! "$PY" scripts/build_catalog.py --check >/dev/null 2>&1; then
+  step "catalog.json is stale: regenerating and committing it"
+  "$PY" scripts/build_catalog.py || die "build_catalog.py failed"
+  git add catalog.json
+  [ "$(git status --porcelain | grep -vc ' catalog.json$')" -eq 0 ] \
+    || die "regenerating the catalog changed files other than catalog.json; review git status"
+  git commit -q -m "chore: regenerate catalog.json for deploy" -- catalog.json || die "could not commit catalog.json"
+  git push -q origin HEAD || printf '\033[1;33m  WARNING: push of the catalog commit failed; push it manually\033[0m\n'
+fi
 SHA="$(git rev-parse --short=7 HEAD)"
 ok "clean tree at $SHA"
 node -e 'process.exit(+process.versions.node.split(".")[0] >= 22 ? 0 : 1)' || die "Node 22+ required"
