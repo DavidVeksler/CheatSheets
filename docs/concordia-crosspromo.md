@@ -38,3 +38,22 @@ The page's `spinDesign`, `comfortBand`, `metroWeight` and `gravityAtHeight` are 
 ## Open follow-up (not part of this build, behind David's deploy gate)
 
 In the Habitat repo, add this page to the `related` list (or a "Reference" link) on `/science/artificial-gravity/` so the link goes both ways.
+
+## Original graphics (2026-10-24)
+
+The sheet embeds a masthead diagram, a live rotor section driven by its existing
+calculator results, six shared reference plates and eleven distinct field-guide
+illustrations. Reference plates come from the sibling Habitat repo's
+`scripts/site/build-editorial-graphics.py`; the published sheet has no runtime
+dependency on that repo. Figures explicitly identify conceptual drawing scales
+and the pressure model. The original formulas and historical tables remain.
+
+- Rebuild: `python scripts/build_gravity_illustrations.py` (`HABITAT_REPO` can
+  override the sibling checkout); `--check` verifies the embedded drawings.
+- Browser acceptance: start `python -m http.server 8765`, then run
+  `python scripts/check_gravity_illustrations.py`. It checks live presets, edits,
+  invalid-input preservation, SVG label bounds, duplicate IDs, page overflow and
+  serious/critical accessibility findings at 360 and 1440 pixels in both themes.
+  Screenshots and the report go to `.visual-qa/gravity-illustrations/`.
+- Scrolling illustrations and existing reference-table containers accept keyboard
+  focus on narrow screens. No animation or additional external asset is required.
