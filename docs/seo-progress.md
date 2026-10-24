@@ -4,6 +4,21 @@ Append-only KPI log for cheatsheets.davidveksler.com, newest block on top. Each 
 
 <!-- KPI blocks are appended below this line, newest first -->
 
+## 2026-10-24: Title round (not a measurement pulse)
+
+GSC 28 days (2026-09-24 to 10-21): 222 clicks / 26,358 impressions. Most zero-click, high-impression
+queries on humanoid-robots, meat-temperature-chart, er-triage and javascript-for-architects are long
+agent-style fan-out queries (`+usda fsis ...`, `+mdn ...`), not CTR opportunities; left alone. Title
+changes aimed at real human queries, so the next pulse reads the break:
+
+| Page | Query it targets (impr, pos) | Title before -> after |
+|---|---|---|
+| orbital-rockets-comparison | falcon heavy vs starship (240 @ 7.4), starship vs falcon 9 (210 @ 9.6), 0 clicks | Starship vs New Glenn vs Falcon Heavy Size Comparison (2026) -> Falcon Heavy vs Starship vs Falcon 9: Size Comparison |
+| ai-frontier | frontier ai companies (374 @ 4.3, 1.6% CTR) | 8 Frontier AI Labs Compared (2026): OpenAI vs Anthropic -> Frontier AI Companies Compared (2026): 8 Labs Ranked |
+| ashihara-karate | ashihara kaikan (124 @ 3.8, 0 clicks) | Ashihara Karate: Sabaki, Strikes and Kata Cheatsheet -> Ashihara Karate (Kaikan): Sabaki, Strikes and Kata |
+
+Pushed 2026-10-24, not deployed. Re-pull these three queries 28 days after deploy.
+
 ## 2026-09-24: Facet crawl trap closed (not a measurement pulse)
 
 Deployed 04:27 UTC: `conf/nginx/facet-trap.conf` (302 for filter/sort/view URLs with our own
