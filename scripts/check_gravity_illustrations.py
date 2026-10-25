@@ -22,7 +22,9 @@ with sync_playwright() as p:
             page=browser.new_page(viewport={'width':width,'height':900},color_scheme=theme,reduced_motion='reduce')
             errors=[]
             page.on('pageerror',lambda e:errors.append(str(e)))
-            page.goto(args.base+'/artificial-gravity-calculator.html',wait_until='networkidle')
+            # Production analytics can keep the network active after the sheet is ready.
+            page.goto(args.base+'/artificial-gravity-calculator.html',wait_until='domcontentloaded')
+            page.locator('#rotorDiagram').wait_for(state='visible')
             assert page.locator('.field-art').count()==11
             assert page.locator('.editorial-graphic').count()==6
             # The illustration must follow both presets and direct edits.
