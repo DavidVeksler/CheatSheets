@@ -4,6 +4,66 @@ Append-only KPI log for cheatsheets.davidveksler.com, newest block on top. Each 
 
 <!-- KPI blocks are appended below this line, newest first -->
 
+## 2026-10-25: Overnight SEO run (measurement pulse + optimization round)
+
+**GSC, 28 days (2026-09-25 to 10-22) vs prior 28 (08-28 to 09-24), page dimension:** 1,211 clicks /
+126,462 impr vs 1,040 / 189,218. Clicks **+16%**; impressions -33%, almost all from `ai-frontier.html`
+(66,001 -> 20,488: lost date-stamped fan-out queries like "openai google anthropic ... february 2026" and
+#title-* fragment impressions; its head query "frontier ai companies" held at pos ~5). Daily clicks
+run 30-45 through October, CTR ~1.0-1.5% (was 0.4-0.6% in August). **Correction:** the 2026-10-24 block's
+"222 clicks / 26,358 impressions" was a bad pull; the real 28-day figure is ~1,000-1,200 clicks.
+
+| Page (28d) | Clicks prev -> now | Impr prev -> now | Pos |
+|---|---|---|---|
+| starlink-satellite-anatomy | 53 -> **238** | 3,982 -> 6,863 | 9.4 -> 7.4 |
+| ai-frontier | 266 -> 193 | 66,001 -> 20,488 | 7.3 -> 7.7 |
+| baofeng-uv5r-quick-ref | 75 -> 64 | 1,594 -> 1,288 | 6.8 -> 6.0 |
+| orbital-rockets-comparison | 46 -> 50 | 7,485 -> 8,771 | 8.2 -> 7.9 |
+| lifestyle-calculator | 42 -> 49 | 1,441 -> 2,608 | 9.5 -> 7.6 |
+| red-vs-blue-state-economies | 3 -> 25 | 33 -> 710 | 8.4 -> 5.5 |
+| fastener-torque-tap-drill | 0 -> 10 | 101 -> 1,004 | 5.2 -> 7.1 |
+
+Starlink's jump tracks Starship Flight 14 (2026-09-28, first 26 V3 satellites); most of its clicks are
+anonymized or conversational ("show me picture", "expand on both"), i.e. AI Mode style.
+
+**Category hubs (30-day re-pull, due 10-17):** `/ai-safety` 90 impr, `/philosophy-religion` 53,
+`/home-lifestyle` 31, `/security-privacy` 29; 7 hubs have no impressions yet. Two hubs clear the >= 50
+bar, so **continue hub investment**. Old `?cat=` URLs still draw ~90 impr (301s working; Google catching up).
+"cheat sheet" family: `git cheat sheet` still pos 45-76 (off-page problem); "baofeng uv-5r cheat sheet" pos 1.8-3.
+
+**AI crawlers (Cloudflare, host-filtered, 2026-10-18 to 10-24):** 7,737 AI-agent requests vs 11,129/7d
+baseline (2026-08-06). ChatGPT-User 1,391 (was ~64% of baseline, ~7.1k), PerplexityBot 981,
+OAI-SearchBot 642, Claude-User 554, DuckAssist 495, ClaudeBot 441, GPTBot 409. The baseline's method
+may differ (UA regex over adaptive groups here); re-pull with the same script before reading this as a drop.
+
+**Live technical audit:** all 225 sitemap URLs 200, self-canonical, exactly one H1, valid JSON-LD, no
+noindex/X-Robots-Tag; `seo_check.py` 0 failures. `anduril-products.html` 301s to
+autonomous-defense-systems (deliberate since 2026-07-09; the planning doc's "stays a 404" rule was stale).
+
+**Changes (pushed, not deployed):**
+
+| Page | Target query family (90d impr @ pos) | Title before -> after |
+|---|---|---|
+| starlink-satellite-anatomy | starlink v3 satellite size/specs/weight/mass/dimensions (~1,500 @ 6-10) | Starlink Satellite Anatomy: V1-V3 Engineering Specs (2026) -> Starlink V3 Satellite Specs: Size, Mass & V1-V3 Anatomy |
+| judo | judo moves 216 @ 13.3, all judo throws 161 @ 9.3 | Judo Guide: Throws, Groundwork and Core Principles -> Judo Throws and Moves: Techniques, Groundwork, Principles |
+| brazilian-jiu-jitsu | bjj positions chart 136 @ 8.9, bjj cheat sheet 38 @ 1.3 | Brazilian Jiu-Jitsu: Positions, Guards & Submissions -> BJJ Cheat Sheet: Positions Chart, Guards & Submissions |
+| martial-arts-cheatsheet | martial arts moves 408 @ 11.3, moves list 73 @ 8 | Martial Arts Guide: Styles, Techniques, Moves & Comparison -> Martial Arts Guide: Moves List, Styles & Comparison Chart |
+| leadership | 15 commitments of conscious leadership 171 @ 18.2 | The 15 Commitments of Conscious Leadership -> ...: Summary & List |
+| objectivism | objectivism philosophy 107 @ 8.1 | Objectivism: The Philosophy of Ayn Rand (em dash) A Cheatsheet -> Objectivism: Ayn Rand's Philosophy, Ethics and Politics |
+| git-scm | git commands 731 @ 64, git cheat sheet 207 @ 70 | Git Cheatsheet: Commands & Workflows -> Git Cheat Sheet: Commands List and Workflows |
+| semiconductor-manufacturing | wafer processing/fabrication/manufacturing (~1,200 @ 40-50) | ...: Wafer to Chip Process Guide -> Semiconductor Manufacturing: Wafer Fabrication Process Flow |
+| automotive-innovation-timeline | automotive innovations 204 @ 20.6, "what automotive innovation defined the 1940s?" | ...: From Model T to Tesla -> Automotive Innovations by Decade: Model T to Tesla Timeline |
+| privacy-data-broker-opt-out | nuwber opt-out family ~400 @ 22-36, "data broker been verified opt out" 193 @ 22.8 | Privacy: Data Broker Opt-Out Guide -> Data Broker Opt-Out List: Nuwber, Spokeo, Whitepages & More |
+
+Content: Starlink V3 status corrected (first 26 flew 2026-09-28) plus a sourced "How big is a Starlink V3
+satellite?" answer; orbital-rockets gets a to-scale size chart, height/diameter table and two direct
+answers (title untouched, it changed 10-24) and 5 spec fixes; privacy page gets per-broker h3/h4 headings,
+a 21-row summary table and re-verified URLs (Radaris now a court-transfer notice; nuwber.com not resolving).
+`llms.txt` was missing 25 catalogued sheets (incl. Starlink) and `llms-full.txt` 21; both fixed and now gated.
+
+**Re-pull 28 days after deploy:** each row above by page x query; guard rail applies (position drop at
+flat impressions -> revert that page).
+
 ## 2026-10-24: Title round (not a measurement pulse)
 
 GSC 28 days (2026-09-24 to 10-21): 222 clicks / 26,358 impressions. Most zero-click, high-impression
