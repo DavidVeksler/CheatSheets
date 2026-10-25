@@ -125,6 +125,7 @@ GATES = [
     ["scripts/add_hub_breadcrumbs.py", "--check"],
     ["scripts/check_cluster_hub.py"],
     ["scripts/check_apps.py"],
+    ["scripts/check_llms.py"],
 ]
 
 
