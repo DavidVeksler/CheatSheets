@@ -4,6 +4,13 @@ Append-only KPI log for cheatsheets.davidveksler.com, newest block on top. Each 
 
 <!-- KPI blocks are appended below this line, newest first -->
 
+## 2026-10-25: Deployed title rounds 1 + 2 (not a measurement pulse)
+
+Deployed 41b6a58 at 12:33 UTC (Worker version 4f1ddd1f, parity smoke pass, live verify OK). Live-checked on
+the plain URLs: Starlink title, V3 status card, "How big is a Starlink V3 satellite?" and Flight 14 table
+cell; orbital-rockets `#size-chart` SVG and answers, round-1 title. **28-day clocks start today:** re-pull
+the 2026-10-24 and 2026-10-25 title tables by page x query on or after **2026-11-22**.
+
 ## 2026-10-25: Overnight SEO run (measurement pulse + optimization round)
 
 **GSC, 28 days (2026-09-25 to 10-22) vs prior 28 (08-28 to 09-24), page dimension:** 1,211 clicks /

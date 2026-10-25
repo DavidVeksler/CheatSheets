@@ -13,7 +13,7 @@ Registered as `cheatsheets` in `~/Projects/deploy-sites.json` (`scripts/deploy-c
 
 ## Pipeline (aborts at the first failure)
 
-1. **Preflight:** clean tree; `cf-static-kit` present (parity checker); `npm ci` if wrangler is missing. If HEAD is already the active version at 100% and the live page answers, it stops here: nothing to deploy (`--redeploy` / `-Redeploy` runs everything anyway, e.g. to refresh the Explorer's build-time "updated N hours ago" text).
+1. **Preflight:** clean tree; `cf-static-kit` present (parity checker; on a new machine `gh repo clone DavidVeksler/cf-static-kit ~/Projects/cf-static-kit`, or set `CF_KIT`); Python is the repo `.venv` when present; `npm ci` if wrangler is missing. If HEAD is already the active version at 100% and the live page answers, it stops here: nothing to deploy (`--redeploy` / `-Redeploy` runs everything anyway, e.g. to refresh the Explorer's build-time "updated N hours ago" text).
 2. **Build + gates:** `python3 scripts/build_site.py` (needs `php` 8.1+ and git). Gates: `build_catalog.py --check`, `check_hubs.py`, `add_hub_breadcrumbs.py --check`, `check_cluster_hub.py`. Then copies the public files from `git ls-files` into `dist/` (internal dirs and files excluded, mirroring the old nginx `internal-paths.conf`) and prerenders `index.php`, `popularity.php`, `sitemap.php` with PHP CLI into `dist/_x/`. After adding a hub: `--write-worker-first`.
 3. **Preview:** uploads a version (not public) and runs the parity check against production (smoke; `--full-parity` for the full set).
 4. **Confirm** `[y/N]` (skip with `--yes` / `-Yes`).

@@ -50,7 +50,10 @@ wr() { npx --no-install wrangler "$@" --config "$WRANGLER_CONFIG"; }
 step() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 ok() { printf '  \033[1;32mOK\033[0m   %s\n' "$*"; }
 die() { printf '\033[1;31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
-PY="$(command -v python3 || command -v python || true)"
+# The repo venv first: it has beautifulsoup4 for the catalog gate, and the Mac's
+# framework python3 can carry wrong-arch native packages.
+if [ -x .venv/bin/python ]; then PY="$PWD/.venv/bin/python"
+else PY="$(command -v python3 || command -v python || true)"; fi
 PROMOTED=0
 on_exit() {
   rc=$?

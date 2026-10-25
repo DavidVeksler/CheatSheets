@@ -62,8 +62,8 @@ Ranked by expected clicks per hour of work, from what the last three months of d
 | Page / area | Baseline from | Re-pull | Query family |
 |---|---|---|---|
 | Category hubs `/<slug>` + homepage | 2026-09-17 | 30-day bar met 2026-10-25 (ai-safety 90, philosophy-religion 53); re-pull 2026-11-16 and 12-16 | per-hub; "<topic> cheat sheet(s)" family; watch the 7 zero-impression hubs |
-| Title round 1 (orbital-rockets, ai-frontier, ashihara) | 2026-10-24 | 28 days after deploy | see `seo-progress.md` 2026-10-24 |
-| Title round 2 (10 pages incl. starlink, judo, BJJ, privacy) + orbital size chart | 2026-10-25 | 28 days after deploy | see `seo-progress.md` 2026-10-25 |
+| Title round 1 (orbital-rockets, ai-frontier, ashihara) | 2026-10-24 | 2026-11-22 | see `seo-progress.md` 2026-10-24 |
+| Title round 2 (10 pages incl. starlink, judo, BJJ, privacy) + orbital size chart | 2026-10-25 | 2026-11-22 | see `seo-progress.md` 2026-10-25 |
 | `postgresql.html` title revert (`a385796`) | 2026-08-12 | next pull | "postgres cheat sheet", "postgresql commands cheat sheet", "psql cheat sheet"; compare vs post-WP1 27.82 and pre-WP1 13.13 |
 | Dev spokes (azure-devops, dotnet, clean-architecture, databases) | 2026-07-21 | next pull | see dev-spoke plan |
 | `homelessness-externalized-costs.html` retitle | 2026-09-10 | next pull | expect old-title query history to reset; judge by advocacy goal |
@@ -73,7 +73,7 @@ Ranked by expected clicks per hour of work, from what the last three months of d
 
 | Item | Evidence | Action |
 |---|---|---|
-| Deploy rounds 1 + 2 | pushed 2026-10-24/25, not live | David's go-ahead, then `scripts/deploy-cloudflare.sh`; start the 28-day clocks |
+| Re-pull title rounds 1 + 2 | deployed 2026-10-25 (41b6a58) | on or after 2026-11-22, page x query per row in `seo-progress.md`; apply the guard rail |
 | Starlink V3 watch | #1 page; V3 mass/dimensions still undisclosed; Wikipedia infobox showed "v3: 46" on 10-23 vs 26 confirmed | re-check SpaceX/FCC for V3 mass and further Starship V3 launches; update table within days of news |
 | `boom-supersonic.html` | "boom overture" 595 @ 13.3, range 222 @ 7.6, speed 209 @ 8.6, 0-1 clicks | title already aligned; add a top-of-page answer block (range, speed, seats, first flight) |
 | `anapanasati-mindfulness-of-breathing.html` | "anapanasati" 1,421 @ 9.8, 6 clicks | head term; check SERP shape before touching the title |
