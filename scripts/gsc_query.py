@@ -40,7 +40,12 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
 SITE = "https://cheatsheets.davidveksler.com/"
-DEFAULT_KEY = r"C:\Users\veksl\.claude\mcp-servers\gsc-service-account.json"
+# First existing path wins: the Windows box, then the Mac (same service account).
+KEY_CANDIDATES = [
+    r"C:\Users\veksl\.claude\mcp-servers\gsc-service-account.json",
+    os.path.expanduser("~/.config/gsc-mcp/service-account.json"),
+]
+DEFAULT_KEY = next((k for k in KEY_CANDIDATES if os.path.exists(k)), KEY_CANDIDATES[0])
 SCOPE = "https://www.googleapis.com/auth/webmasters.readonly"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 
