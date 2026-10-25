@@ -106,9 +106,12 @@ def main() -> int:
         report.append(f"{key}: {n}")
     src, n = replace_json_strings(src, old_title, a.title)
     report.append(f"json-ld strings == old title: {n}")
-    crumb_old = '<span aria-current="page">%s</span>' % text_escape(old_title)
-    n = src.count(crumb_old)
-    src = src.replace(crumb_old, '<span aria-current="page">%s</span>' % text_escape(a.title))
+    # Escape exactly as scripts/add_hub_breadcrumbs.py does, or its --check gate fails.
+    crumb_new = '<span aria-current="page">%s</span>' % html.escape(a.title, quote=True)
+    n = 0
+    for crumb_old in {'<span aria-current="page">%s</span>' % e for e in (text_escape(old_title), html.escape(old_title, quote=True))}:
+        n += src.count(crumb_old)
+        src = src.replace(crumb_old, crumb_new)
     report.append(f"breadcrumb span: {n}")
 
     if a.desc:
