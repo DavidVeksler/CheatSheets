@@ -1,5 +1,7 @@
 # Living Particle Loom: visual design study
 
+**Superseded 2026-10-29** by [`living-particle-loom-warp-weft.md`](living-particle-loom-warp-weft.md). Kept for the record of the 2026-10-28 build.
+
 2026-10-28. Scope: visual design and interface behavior. Physics validation is deferred at David's request; the existing reference records and event explanations remain unvalidated in this pass.
 
 ## Direction
