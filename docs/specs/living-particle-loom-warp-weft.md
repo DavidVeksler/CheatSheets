@@ -140,7 +140,7 @@ Every visual property encodes a stated quantity or is constant by design. Ships 
 | Sockets on a thread | The charges the particle carries | Q, C, I, M; empty dashed M for neutrinos |
 | Knot type (line style) | Vertex type | Feynman notation |
 | Knot brightness | Coupling constant at the Z mass, one shared log scale | g_s ≈ 1.2, g ≈ 0.65, e ≈ 0.31, Yukawa y = √2 m / v (top ≈ 1, electron ≈ 3 × 10⁻⁶). Anchors; verify in Phase 1b |
-| Knot cadence | **Constant** for every allowed vertex type | Presence only; brightness carries strength |
+| Knot cadence | **Constant** for γ, g, Z and H knots | Presence only; brightness carries strength. W knots appear only at decays (about 0.16 per second); electron capture and neutrino absorption are lesson-only (David, 2026-10-29) |
 | Visitor thread length | Lifetime, log-scaled, with a lifetime ruler alongside | Visitors always end at a knot |
 | Fading sideways | Stable product leaving the loom | Never a decay |
 | Quark hue | Current color charge; antiquarks carry anticolor | Changes only at gluon knots; every harness sums to white |
@@ -161,7 +161,7 @@ Eight learner-paced chapters. Each is a scripted event queue run by the same wea
 | 2 | Forces are keys | A photon, gluon, Z and Higgs each try all three threads; ties and misses | Each force ties into one charge. Advanced: weak is strong at 91 GeV; heavy W and Z make it short-ranged |
 | 3 | Partners | A muon reaches a W knot and becomes a muon neutrino; the W lays e⁻ and ν̄ₑ | The W swaps a fermion for its partner and conserves charge |
 | 4 | Inside a proton | Harness opens; colors swap at gluon knots; gluons tie into gluons | Color stays neutral; gluons carry color. One line: three valence quarks summarize a proton that also holds a sea of gluons and quark pairs |
-| 5 | Neutron decay | d → u W⁻, W⁻ → e⁻ ν̄ₑ; the harness becomes a proton | Beta decay is one W knot |
+| 5 | Neutron decay | d → u W⁻, W⁻ → e⁻ ν̄ₑ; the harness becomes a proton; then the knot runs backwards as electron capture (e⁻ p → νₑ n), the only place the loom shows a W scatter | Beta decay is one W knot |
 | 6 | Generations | B⁻ → D⁰ → K⁻ → π⁻ cascade beside a long-lived muon, on the lifetime ruler | Three copies; heavier ones fall down the ladder; charm hadrons decay faster than b hadrons because b needs the small \|V_cb\| |
 | 7 | Mass and the Higgs | M sockets glow by coupling; top brightest; neutrino socket empty with "?"; H → γγ drawn as a top or W loop | The Higgs couples to mass; photons get there only through loops; neutrino mass is open |
 | 8 | The chart | Camera swings end-on; the loom becomes the 17-entry chart with sockets as annotations | The chart is a cross-section of everything above |
@@ -291,7 +291,7 @@ No graviton or gravity thread; no string-theory imagery; no "molasses" or "crowd
 
 ## Build phases and gates
 
-**Status 2026-10-29:** Phases 0, 1 and 1b done (`docs/prototypes/particle-loom/`, see its README; gate `node scripts/particle_loom_audit.cjs`: socket derivation, PDG and CKM sampling, 8 lesson scripts, 5 seeds × 10,000 events, 13 injected faults). Next: 1c. Open question in the README: W exchanges in the free loom at equal cadence.
+**Status 2026-10-29:** Phases 0, 1 and 1b done (`docs/prototypes/particle-loom/`, see its README; gate `node scripts/particle_loom_audit.cjs`: socket derivation, PDG and CKM sampling, 8 lesson scripts, 5 seeds × 10,000 events, 14 injected faults). W scatters are lesson-only (David, 2026-10-29). Phase 1c page built (`docs/prototypes/particle-loom/learning-test.html`, scoring sheet `learning-test-scoring.md`); next: David runs it with three testers.
 
 0. **Physics data.** Done: PDG 2026, `src` on every value.
 1. **Weaver, flat debug view, audit.** Done.
@@ -305,7 +305,7 @@ R. **Reference** from `sm-data`. Can run in parallel from now on; it does not de
 
 ## Acceptance tests
 
-1. **Encoding contract:** every visual property is in the contract; nothing varies decoratively; knot cadence is equal across vertex types.
+1. **Encoding contract:** every visual property is in the contract; nothing varies decoratively; knot cadence is equal across γ, g, Z and H knots, and free-loom W knots come only from decays.
 2. **Socket derivation:** the three rules reproduce the tree-level vertex list exactly (gate).
 3. **Learning test:** six questions before and after one session (Lessons 1 to 3 plus Lab), at least three testers. Target: at least two of three score ≥ 5/6 after, each gaining ≥ 3. Questions: (a) Does a photon interact with a neutrino, and why? (b) Which bosons tie into a gluon? (c) What can a muon become at a W knot? (d) Why does a photon tie into a W but not a Z? (e) Why does the Higgs not couple directly to photons, and how does H → γγ happen? (f) Name an unlabeled thread from its knots.
 4. **Labels-off test:** testers name electron vs neutrino and quark vs lepton from knots alone.
@@ -318,7 +318,7 @@ R. **Reference** from `sm-data`. Can run in parallel from now on; it does not de
 ## Decisions taken in rev. 2 (David can overrule)
 
 - Socket grammar as the core teaching device, with the three rules stated as a mnemonic for real couplings.
-- Knot strength shown by brightness on one log scale of couplings at the Z mass; cadence equal.
+- Knot strength shown by brightness on one log scale of couplings at the Z mass; cadence equal for γ, g, Z and H; W scatters lesson-only, so free-loom W knots are decays (David, 2026-10-29).
 - Present nearest the camera (reverses rev. 1's "time flows toward you").
 - Fixed resident cast plus decaying visitors; stable products leave sideways; the composed cast is named in one line.
 - Real W, Z, H drawn as threads.

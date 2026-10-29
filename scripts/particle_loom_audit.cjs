@@ -59,6 +59,7 @@ const faults = {
   "lesson claims a photon ties into a neutrino": { lessons: () => { const L = JSON.parse(lessonsSrc); L[1].steps.find(s => s.try === "γ" && s.on === "n1").expect = "tie"; return L; } },
   "decay channels ignore branching fractions": { code: c => c.replace("for (let i = 0; i < n; i++) c[ch.indexOf(weighted(ch.map(x => [x, x.br])))]++;", "for (let i = 0; i < n; i++) c[ch.indexOf(weighted(ch.map(x => [x, 1])))]++;") },
   "unstable visitors drift out instead of decaying": { code: c => c.replace('if (tau) { g.role = "visitor"; g.leaveAt = Infinity; }', 'if (tau) { g.role = "product"; g.leaveAt = t + 0.5; }') },
+  "W scatters back in the free loom": { code: c => c.replace("wScatters: false,", "wScatters: true,") },
   "H → γγ loop through a particle without a charge socket": { data: withData(SM => { SM.decays.H.channels.find(c => c.kind === "loop" && c.products[0] === "γ").via = "Z"; }) },
 };
 for (const [name, f] of Object.entries(faults)) {

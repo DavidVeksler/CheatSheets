@@ -14,21 +14,21 @@ Spec: [`docs/specs/living-particle-loom-warp-weft.md`](../../specs/living-partic
 ## Run it
 
 - View: serve the repo root (`python -m http.server 8765`) and open `/docs/prototypes/particle-loom/weaver-debug.html`. `#audit` runs every check on load (tab title becomes `AUDIT PASS` or `AUDIT FAIL`); `#lesson=N` opens a lesson.
-- Gate: `node scripts/particle_loom_audit.cjs [file] [events]`, about 2 s. It runs the socket derivation, PDG and CKM sampling, all 8 lesson scripts, the free loom on five seeds × 10,000 events, then 13 injected faults that must all be caught. When the engine moves into `living-particle-loom.html`, point the script at that file and add it to the deploy gates (the build's gate runner is Python, so wrap it).
+- Gate: `node scripts/particle_loom_audit.cjs [file] [events]`, about 2 s. It runs the socket derivation, PDG and CKM sampling, all 8 lesson scripts, the free loom on five seeds × 10,000 events, then 14 injected faults that must all be caught. When the engine moves into `living-particle-loom.html`, point the script at that file and add it to the deploy gates (the build's gate runner is Python, so wrap it).
 
 ## How the engine behaves (rev. 2)
 
 - **Cast:** residents stay for the whole visit (2 protons, 1 neutron, 2 electrons, one neutrino of each flavor). Visitors (μ±, τ±, π±, π⁰, K±, D⁰, B⁻, t t̄, W±, Z, H) only ever end by decaying. Stable decay products (e, ν, γ, gluon pairs from H → gg) drift out after a few seconds; nothing unstable ever leaves.
-- **Knots:** every key (γ, g, W, Z, H) fires at the same cadence, 0.6 per second; strength is shown by brightness on one log scale of couplings at the Z mass. A key only ties into a matching socket, so photons and Z bosons tie into W threads (W W γ, W W Z), Higgs knots tie into W, Z and H threads, and nothing ties into a photon thread.
+- **Knots:** γ, g, Z and H fire at the same cadence, 0.6 per second; strength is shown by brightness on one log scale of couplings at the Z mass. W knots in the free loom come only from decays (about 0.16 per second over five seeds). Electron capture and neutrino absorption are lesson-only (Lesson 5, script step `scatter`; David, 2026-10-29): at equal cadence they flipped residents between proton and neutron and made the weak force look ubiquitous. `wScatters: true` brings them back. A key only ties into a matching socket, so photons and Z bosons tie into W threads (W W γ, W W Z), Higgs knots tie into W, Z and H threads, and nothing ties into a photon thread.
 - **Real bosons are threads:** t → b W⁺ makes a W thread that then decays; W, Z and H visitors decay through their PDG channels; H → γγ and H → gg are loop events through a W or top.
 - **Scripts:** lesson mode turns off random knots, spawns and natural decays; only the scripted steps happen, and each passes the same audit.
 
 ## What the checks cover
 
 - **Socket derivation:** the three rules, applied to the sockets in `sm-data`, reproduce the vertex `instances` exactly (28 classes, none extra, none missing).
-- **Every event:** keys only tie into matching sockets; a shown miss really lacks the socket; lesson `expect` values match; W hops only between doublet partners; W, Z and H decays and the π⁰ → γγ annihilation form valid vertices; loops run through a particle that has both the Higgs socket and the product's socket; lane changes only at W knots; color changes only at gluon knots; every color group neutral; no lone quarks; top never in a hadron; charge, baryon number and the three lepton numbers conserved except when a product drifts out; residents and visitors never drift out.
+- **Every event:** keys only tie into matching sockets; a shown miss really lacks the socket; lesson `expect` values match; W hops only between doublet partners; W, Z and H decays and the π⁰ → γγ annihilation form valid vertices; loops run through a particle that has both the Higgs socket and the product's socket; lane changes only at W knots; no W scatter outside a script; color changes only at gluon knots; every color group neutral; no lone quarks; top never in a hadron; charge, baryon number and the three lepton numbers conserved except when a product drifts out; residents and visitors never drift out.
 - **Sampling:** 20,000 draws per decaying state match the PDG branching fractions, and quark flavor choices match \|V\|², within 4.5 σ.
-- **Faults caught:** knots ignoring sockets, Higgs knots on neutrinos, a neutrino given a charge socket, a vertex removed from the table, broken color neutrality, a lane change without a W, wrong W charge, lepton flavor violation, keys that always miss, a lesson claiming a photon ties into a neutrino, decays ignoring branching fractions, visitors drifting out, and an H → γγ loop through a particle without a charge socket.
+- **Faults caught:** knots ignoring sockets, Higgs knots on neutrinos, a neutrino given a charge socket, a vertex removed from the table, broken color neutrality, a lane change without a W, wrong W charge, lepton flavor violation, keys that always miss, a lesson claiming a photon ties into a neutrino, decays ignoring branching fractions, visitors drifting out, W scatters back in the free loom, and an H → γγ loop through a particle without a charge socket.
 
 ## Data provenance
 
@@ -40,5 +40,4 @@ Not yet in `sm-data`: discovery years (need primary sources before Phase R).
 
 ## Open questions for David
 
-- **W exchanges in the free loom.** With equal cadence, electron capture and neutrino absorption happen as often as photon exchange, so residents flip between proton and neutron and the W zig-zags dominate the flat view. The contract makes this honest (cadence is presence only), but it may teach "weak interactions are everywhere." Options: keep it; count decays toward the W cadence and add scatters only to make up the difference; or leave scatters out of the free loom and show them only in a lesson.
 - **Top lane.** A top lives 0.4 s on screen, so it rarely shows knots in the free loom. Lesson 7 covers it.

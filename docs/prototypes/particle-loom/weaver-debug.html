@@ -271,7 +271,11 @@
     {"at": 0.5, "say": "A free neutron: up, down, down. It lives about 15 minutes."},
     {"at": 3, "decay": "n1", "channel": 0, "as": ["x1", "x2"]},
     {"at": 3.2, "say": "One down quark becomes an up quark at a W knot. The neutron is now a proton."},
-    {"at": 6, "say": "The W⁻ lays an electron and an electron antineutrino. Charge, baryon number and lepton number all balance."}]},
+    {"at": 6, "say": "The W⁻ lays an electron and an electron antineutrino. Charge, baryon number and lepton number all balance."},
+    {"at": 8.5, "spawn": "e", "as": "e2"},
+    {"at": 8.7, "say": "Run backwards, the same knot is electron capture: an electron and a proton become an electron neutrino and a neutron."},
+    {"at": 9.5, "scatter": "e2", "into": "n1"},
+    {"at": 11, "say": "A free proton cannot do this, because the neutron is heavier. Proton-rich nuclei such as beryllium-7 decay only this way."}]},
   {"id": 6, "title": "Generations", "idea": "Three copies of one pattern; heavier copies fall down the ladder.", "steps": [
     {"at": 0.2, "spawn": "B-", "as": "b1"}, {"at": 0.2, "spawn": "mu", "as": "m1"},
     {"at": 0.5, "say": "A B⁻ meson (bottom and anti-up) and a muon."},
@@ -358,6 +362,9 @@ function createWeaver(SM, opt = {}) {
     drift: 3,             // mean seconds a stable product lingers before it drifts out of the loom
     wLag: 0.18,           // display gap between the two vertices of a decay
     cadence: 0.6,         // knots per second for every key: presence only, equal for all (encoding contract)
+    wScatters: false,     // electron capture / neutrino absorption in the free loom. Off (David, 2026-10-29): at equal
+                          // cadence they flip residents p <-> n and read as "weak interactions are everywhere".
+                          // Free-loom W knots come from decays; scatters are lesson-only (script step "scatter").
     visitors: 2,          // unstable visitors kept in the loom
     keep: 90,             // seconds of history kept for drawing
     residents: [["proton", 2], ["neutron", 1], ["e", 2], ["ne", 1], ["nm", 1], ["nt", 1]],
@@ -572,7 +579,7 @@ function createWeaver(SM, opt = {}) {
     } else if (key === "H") {
       const cands = lv.filter(m => ties("H", m.f));
       if (cands.length) { const A = pick(cands); emit({ t, kind: "exchange", boson: "H", legs: [legInfo(A)], coupling: yukawa(A.f) }); }
-    } else if (key === "W") wScatter(t, lv);
+    } else if (key === "W") { if (o.wScatters) wScatter(t, lv); }
     else {
       const cands = lv.filter(m => ties(key, m.f));
       if (cands.length >= 2) {
@@ -583,13 +590,16 @@ function createWeaver(SM, opt = {}) {
   }
 
   // Electron capture (e- p -> nu_e n) or neutrino absorption (nu_e n -> e- p): one W joins a lepton hop and a quark hop.
-  function wScatter(t, lv) {
+  // Free loom: random pair (only with o.wScatters). Script: the named lepton thread and hadron.
+  function wScatter(t, lv, Lpick, gPick) {
     const groups = [...W.groups.values()], opts = [];
-    const e = lv.filter(m => m.f === "e" && !m.anti), nu = lv.filter(m => m.f === "ne" && !m.anti);
-    const p = groups.filter(g => g.state === "proton" && !g.conj), n = groups.filter(g => g.state === "neutron" && !g.conj);
+    const e = Lpick ? [Lpick].filter(m => m.f === "e" && !m.anti) : lv.filter(m => m.f === "e" && !m.anti);
+    const nu = Lpick ? [Lpick].filter(m => m.f === "ne" && !m.anti) : lv.filter(m => m.f === "ne" && !m.anti);
+    const gs = gPick ? [gPick] : groups;
+    const p = gs.filter(g => g.state === "proton" && !g.conj), n = gs.filter(g => g.state === "neutron" && !g.conj);
     if (e.length && p.length) opts.push(["e", "ne", pick(e), pick(p), "u", "d"]);
     if (nu.length && n.length) opts.push(["ne", "e", pick(nu), pick(n), "d", "u"]);
-    if (!opts.length) return;
+    if (!opts.length) { if (Lpick) throw new Error("scatter step needs e + proton or nu_e + neutron"); return; }
     const [lf, lt, L, g, qf, qt] = pick(opts);
     const Q = pick(members(g).filter(m => m.f === qf));
     const legs = [legInfo(L), legInfo(Q)], lSlot = L.slot, qSlot = Q.slot;
@@ -621,6 +631,7 @@ function createWeaver(SM, opt = {}) {
         emit({ t, kind: "exchange", boson: s.knot, legs: [legInfo(A), legInfo(B)] });
       }
       if (s.gluon) gluonKnot(G(s.gluon), t, !!s.ggg);
+      if (s.scatter) wScatter(t, live(), members(G(s.scatter))[0], G(s.into));
       if (s.decay) {
         const made = decay(G(s.decay), t, { channel: s.channel, to: s.to });
         (s.as || []).forEach((name, i) => { if (made[i]) W.labels[name] = made[i].id; });
@@ -722,6 +733,7 @@ function auditRun(SM, { seed = 1, events = 10000, dt = 1 / 30, script = null, ta
         if (charge(prods) !== wq) err(ev, "W products do not carry the W charge");
       }
       if (ev.kind === "annihilate" && !wPair(tok(legs[0]), tok(legs[1]))) err(ev, `${legs.map(tok).join(" ")} cannot meet at a W vertex`);
+      if (ev.kind === "wexchange" && !script) err(ev, "W scatter in the free loom (lesson-only)");
       if (ev.kind === "wexchange" && ev.hops.reduce((s, h) => s + q3(h.to, h.anti) - q3(h.from, h.anti), 0) !== 0) err(ev, "W exchange does not conserve charge");
     }
     if (ev.kind === "em") {
