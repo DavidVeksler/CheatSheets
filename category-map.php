@@ -193,6 +193,7 @@ return [
     'geoengineering-approaches.html' => 'Engineering & Science',
     'human-evolution.html' => 'Engineering & Science',
     'humanoid-robots.html' => 'Engineering & Science',
+    'living-particle-loom.html' => 'Engineering & Science',
     'nuclear-power-reactor-types.html' => 'Engineering & Science',
     'orbital-rockets-comparison.html' => 'Engineering & Science',
     'quantum-physics-vs-quantum-bullshit.html' => 'Engineering & Science',
