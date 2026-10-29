@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Particle Loom: weaver debug view</title>
+<!-- Phase 1 prototype for docs/specs/living-particle-loom-warp-weft.md. Internal (docs/ is never deployed).
+     Three blocks, each portable to the real page: #sm-data (physics data), #weaver (engine + audit, no DOM), #debug-view. -->
+<style>
+@layer base, view;
+@layer base {
+  :root { color-scheme: dark; --bg:#07061A; --panel:#110d2b; --line:#2a2350; --ink:#e9e6ff; --dim:#9a93c9; --bad:#ff5b6b; --ok:#3ee08f; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:13px/1.45 ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  button, select, input { font:inherit; color:inherit; background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:4px 9px; }
+  button[aria-pressed="true"] { background:#2b2163; border-color:#6d5cff; }
+  :focus-visible { outline:2px solid #9d7bff; outline-offset:2px; }
+}
+@layer view {
+  header { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--line); }
+  header h1 { font-size:14px; margin:0 12px 0 0; font-weight:600; }
+  .grp { display:flex; gap:4px; align-items:center; }
+  .grp span { color:var(--dim); }
+  main { display:grid; grid-template-columns:minmax(0,1fr) 380px; min-height:calc(100vh - 50px); }
+  @media (max-width: 1000px) { main { grid-template-columns:1fr; } }
+  #stage { position:relative; overflow:hidden; border-right:1px solid var(--line); }
+  canvas { display:block; width:100%; }
+  aside { padding:12px 14px; overflow:auto; max-height:calc(100vh - 50px); }
+  aside h2 { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); margin:16px 0 6px; font-weight:600; }
+  table { border-collapse:collapse; width:100%; }
+  th, td { padding:2px 4px; text-align:center; border-bottom:1px solid #1d1840; }
+  th:first-child, td:first-child { text-align:left; }
+  td.no { color:#4a4475; }
+  td.bad { color:var(--bad); font-weight:700; }
+  td.miss { color:#d9b84a; }
+  #log { list-style:none; margin:0; padding:0; font-size:12px; }
+  #log li { padding:1px 0; border-bottom:1px solid #16123a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #log b { display:inline-block; min-width:34px; }
+  #audit-out { white-space:pre-wrap; background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px; font-size:12px; max-height:360px; overflow:auto; }
+  .pass { color:var(--ok); } .fail { color:var(--bad); }
+  .key { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12px; color:var(--dim); }
+  .key i { display:inline-block; width:18px; height:3px; vertical-align:middle; margin-right:4px; }
+  .note { color:var(--dim); font-size:12px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Weaver debug view</h1>
+  <div class="grp"><button id="pause" aria-pressed="false">Pause</button></div>
+  <div class="grp"><span>speed</span><select id="speed"><option>0.25</option><option>0.5</option><option selected>1</option><option>2</option><option>4</option></select></div>
+  <div class="grp"><span>seed</span><input id="seed" type="number" value="7" style="width:70px"><button id="reseed">Restart</button></div>
+  <div class="grp" role="group" aria-label="Isolate a force"><span>isolate</span>
+    <button data-iso="all" aria-pressed="true">all</button><button data-iso="g" aria-pressed="false">g</button><button data-iso="γ" aria-pressed="false">γ</button><button data-iso="W" aria-pressed="false">W</button><button data-iso="Z" aria-pressed="false">Z</button><button data-iso="H" aria-pressed="false">H</button>
+  </div>
+  <div class="grp"><button id="labels" aria-pressed="true">Labels</button></div>
+  <div class="grp"><button id="run-audit">Run audit (10,000 events)</button></div>
+</header>
+<main>
+  <section id="stage" aria-label="Flat lane view of the weaver"><canvas id="cv" aria-hidden="true"></canvas></section>
+  <aside>
+    <div class="key">
+      <span><i style="background:#FFE7A8"></i>γ wavy</span><span><i style="background:linear-gradient(90deg,#FF3B4E,#19E6E6)"></i>g curly</span>
+      <span><i style="background:#FF6A3D"></i>W zig-zag</span><span><i style="background:#9D7BFF"></i>Z zig-zag</span><span><i style="background:#F4F1FF"></i>H dashed</span>
+    </div>
+    <p class="note">Time runs left to right; the right edge is now. Lanes follow the chart: rows up-type, down-type, charged leptons, neutrinos; generations I to III within each row. Chevrons point with time for particles, against time for antiparticles. A thread that fades left the frame; a thread that stops at a knot decayed or annihilated.</p>
+    <h2>Observed signatures (knots per lane)</h2>
+    <table id="sig"></table>
+    <p class="note">Cells show knot counts since restart. Grey dash: forbidden by the vertex table. Red: a forbidden knot was observed.</p>
+    <h2>Audit</h2>
+    <div id="audit-out">Not run. Add #audit to the URL to run on load.</div>
+    <h2>Event log</h2>
+    <ul id="log"></ul>
+  </aside>
+</main>
+
+<script type="application/json" id="sm-data">
+{
+  "about": "Standard Model data for the Living Particle Loom. Every physical value carries src (a key into sources). Verified 2026-10-29 against PDG Review of Particle Physics 2026 (F. Takahashi et al., Int. J. Mod. Phys. A 41, 2630011). Branching fractions are PDG values; where a channel list is incomplete, 'coverage' and 'note' say what is not drawn.",
+  "sources": {
+    "pdg26-quarks": {"title": "PDG 2026 summary tables: quarks", "url": "https://pdg.lbl.gov/2026/tables/rpp2026-sum-quarks.pdf"},
+    "pdg26-leptons": {"title": "PDG 2026 summary tables: leptons", "url": "https://pdg.lbl.gov/2026/tables/rpp2026-sum-leptons.pdf"},
+    "pdg26-gauge": {"title": "PDG 2026 summary tables: gauge and Higgs bosons", "url": "https://pdg.lbl.gov/2026/tables/rpp2026-sum-gauge-higgs-bosons.pdf"},
+    "pdg26-mesons": {"title": "PDG 2026 summary tables: mesons", "url": "https://pdg.lbl.gov/2026/tables/rpp2026-sum-mesons.pdf"},
+    "pdg26-baryons": {"title": "PDG 2026 summary tables: baryons", "url": "https://pdg.lbl.gov/2026/tables/rpp2026-sum-baryons.pdf"},
+    "pdg26-ckm": {"title": "PDG 2026 review: CKM quark-mixing matrix (rev. March 2026), Eq. 12.27 fit", "url": "https://pdg.lbl.gov/2026/reviews/rpp2026-rev-ckm-matrix.pdf"},
+    "pdg26-const": {"title": "PDG 2026 review: physical constants", "url": "https://pdg.lbl.gov/2026/reviews/rpp2026-rev-phys-constants.pdf"},
+    "romao-silva": {"title": "Romao and Silva, A resource for signs and Feynman diagrams of the Standard Model, Int. J. Mod. Phys. A 27, 1230025 (2012)", "url": "https://arxiv.org/abs/1209.6213"},
+    "derived": {"title": "Derived on this page from the cited inputs; see note", "url": ""}
+  },
+  "v": {"value": 246.22, "unit": "GeV", "note": "(sqrt2 G_F)^-1/2 with G_F = 1.1663785e-5 GeV^-2", "src": "pdg26-const"},
+  "fermions": [
+    {"id": "u", "name": "Up", "sym": "u", "antiSym": "ū", "row": "up", "gen": 1, "q3": 2, "massive": true, "mass": {"value": 2.16, "unit": "MeV", "scheme": "MSbar, 2 GeV", "src": "pdg26-quarks", "unc": "±0.07"}},
+    {"id": "c", "name": "Charm", "sym": "c", "antiSym": "c̄", "row": "up", "gen": 2, "q3": 2, "massive": true, "mass": {"value": 1.2729, "unit": "GeV", "scheme": "MSbar, m_c(m_c)", "src": "pdg26-quarks", "unc": "±0.0045"}},
+    {"id": "t", "name": "Top", "sym": "t", "antiSym": "t̄", "row": "up", "gen": 3, "q3": 2, "massive": true, "mass": {"value": 172.6, "unit": "GeV", "scheme": "direct measurements", "src": "pdg26-quarks", "unc": "±0.27"}},
+    {"id": "d", "name": "Down", "sym": "d", "antiSym": "d̄", "row": "down", "gen": 1, "q3": -1, "massive": true, "mass": {"value": 4.7, "unit": "MeV", "scheme": "MSbar, 2 GeV", "src": "pdg26-quarks", "unc": "±0.07"}},
+    {"id": "s", "name": "Strange", "sym": "s", "antiSym": "s̄", "row": "down", "gen": 2, "q3": -1, "massive": true, "mass": {"value": 92.9, "unit": "MeV", "scheme": "MSbar, 2 GeV", "src": "pdg26-quarks", "unc": "±0.7"}},
+    {"id": "b", "name": "Bottom", "sym": "b", "antiSym": "b̄", "row": "down", "gen": 3, "q3": -1, "massive": true, "mass": {"value": 4.186, "unit": "GeV", "scheme": "MSbar, m_b(m_b)", "src": "pdg26-quarks", "unc": "±0.006"}},
+    {"id": "e", "name": "Electron", "sym": "e⁻", "antiSym": "e⁺", "row": "lepton", "gen": 1, "q3": -3, "massive": true, "mass": {"value": 0.51099895069, "unit": "MeV", "src": "pdg26-leptons", "unc": "±0.00000000016"}},
+    {"id": "mu", "name": "Muon", "sym": "μ⁻", "antiSym": "μ⁺", "row": "lepton", "gen": 2, "q3": -3, "massive": true, "mass": {"value": 105.6583755, "unit": "MeV", "src": "pdg26-leptons", "unc": "±0.0000023"}},
+    {"id": "tau", "name": "Tau", "sym": "τ⁻", "antiSym": "τ⁺", "row": "lepton", "gen": 3, "q3": -3, "massive": true, "mass": {"value": 1776.93, "unit": "MeV", "src": "pdg26-leptons", "unc": "±0.09"}},
+    {"id": "ne", "name": "Electron neutrino", "sym": "νₑ", "antiSym": "ν̄ₑ", "row": "neutrino", "gen": 1, "q3": 0, "massive": false, "mass": null, "massLimit": {"value": 0.45, "unit": "eV", "cl": "90%", "note": "tritium beta decay (KATRIN); applies to the electron-neutrino effective mass", "src": "pdg26-leptons"}},
+    {"id": "nm", "name": "Muon neutrino", "sym": "νμ", "antiSym": "ν̄μ", "row": "neutrino", "gen": 2, "q3": 0, "massive": false, "mass": null, "massLimit": {"value": 0.45, "unit": "eV", "cl": "90%", "note": "tritium beta decay (KATRIN); applies to the electron-neutrino effective mass", "src": "pdg26-leptons"}},
+    {"id": "nt", "name": "Tau neutrino", "sym": "ντ", "antiSym": "ν̄τ", "row": "neutrino", "gen": 3, "q3": 0, "massive": false, "mass": null, "massLimit": {"value": 0.45, "unit": "eV", "cl": "90%", "note": "tritium beta decay (KATRIN); applies to the electron-neutrino effective mass", "src": "pdg26-leptons"}}
+  ],
+  "bosons": [
+    {"id": "g", "name": "Gluon", "sym": "g", "spin": 1, "mass": {"value": 0, "unit": "GeV", "src": "pdg26-gauge", "note": "theoretical value"}},
+    {"id": "γ", "name": "Photon", "sym": "γ", "spin": 1, "mass": {"value": 0, "unit": "GeV", "src": "pdg26-gauge", "note": "theoretical value"}},
+    {"id": "W", "name": "W boson", "sym": "W±", "spin": 1, "mass": {"value": 80.3625, "unit": "GeV", "src": "pdg26-gauge", "unc": "±0.0077"}, "width": {"value": 2.14, "unit": "GeV", "unc": "±0.05", "src": "pdg26-gauge"}},
+    {"id": "Z", "name": "Z boson", "sym": "Z", "spin": 1, "mass": {"value": 91.1879, "unit": "GeV", "src": "pdg26-gauge", "unc": "±0.0020"}, "width": {"value": 2.4955, "unit": "GeV", "unc": "±0.0023", "src": "pdg26-gauge"}},
+    {"id": "H", "name": "Higgs boson", "sym": "H", "spin": 0, "mass": {"value": 125.13, "unit": "GeV", "src": "pdg26-gauge", "unc": "±0.11"}}
+  ],
+  "vertices": [
+    {"id": "ffA", "label": "f f γ", "boson": "γ", "requires": "charged", "style": "wavy", "changes": "nothing", "src": "romao-silva"},
+    {"id": "qqg", "label": "q q g", "boson": "g", "requires": "quark", "style": "curly", "changes": "color only", "src": "romao-silva"},
+    {"id": "ffW", "label": "f f′ W", "boson": "W", "requires": "doublet", "style": "zigzag", "changes": "flavor; charge by ±1", "src": "romao-silva"},
+    {"id": "ffZ", "label": "f f Z", "boson": "Z", "requires": "any", "style": "zigzag", "changes": "nothing", "src": "romao-silva"},
+    {"id": "ffH", "label": "f f H", "boson": "H", "requires": "massive", "style": "dashed", "changes": "nothing; coupling ∝ mass", "src": "romao-silva"},
+    {"id": "ggg", "label": "g g g", "boson": "g", "style": "curly", "src": "romao-silva"},
+    {"id": "gggg", "label": "g g g g", "boson": "g", "style": "curly", "src": "romao-silva"},
+    {"id": "WWA", "label": "W W γ", "boson": "W", "src": "romao-silva"},
+    {"id": "WWZ", "label": "W W Z", "boson": "W", "src": "romao-silva"},
+    {"id": "WWAA", "label": "W W γ γ", "boson": "W", "src": "romao-silva"},
+    {"id": "WWZZ", "label": "W W Z Z", "boson": "W", "src": "romao-silva"},
+    {"id": "WWZA", "label": "W W Z γ", "boson": "W", "src": "romao-silva"},
+    {"id": "WWWW", "label": "W W W W", "boson": "W", "src": "romao-silva"},
+    {"id": "HWW", "label": "H W W", "boson": "H", "src": "romao-silva"},
+    {"id": "HZZ", "label": "H Z Z", "boson": "H", "src": "romao-silva"},
+    {"id": "HHWW", "label": "H H W W", "boson": "H", "src": "romao-silva"},
+    {"id": "HHZZ", "label": "H H Z Z", "boson": "H", "src": "romao-silva"},
+    {"id": "HHH", "label": "H H H", "boson": "H", "src": "romao-silva"},
+    {"id": "HHHH", "label": "H H H H", "boson": "H", "src": "romao-silva"}
+  ],
+  "absentVertices": {
+    "list": ["γγγ", "γγZ", "γZZ", "ZZZ", "Hγγ", "Hgg", "HγZ"],
+    "note": "not in the complete tree-level rule set; Hγγ, Hgg and HγZ arise only through loops",
+    "src": "romao-silva"
+  },
+  "ckm": {
+    "ud": {"value": 0.97431, "src": "pdg26-ckm"},
+    "us": {"value": 0.22517, "src": "pdg26-ckm"},
+    "ub": {"value": 0.003763, "src": "pdg26-ckm"},
+    "cd": {"value": 0.22503, "src": "pdg26-ckm"},
+    "cs": {"value": 0.97345, "src": "pdg26-ckm"},
+    "cb": {"value": 0.04189, "src": "pdg26-ckm"},
+    "td": {"value": 0.00863, "src": "pdg26-ckm"},
+    "ts": {"value": 0.04117, "src": "pdg26-ckm"},
+    "tb": {"value": 0.999115, "src": "pdg26-ckm"}
+  },
+  "lifetimes_s": {
+    "mu": {"value": 2.1969811e-06, "src": "pdg26-leptons"},
+    "tau": {"value": 2.903e-13, "src": "pdg26-leptons"},
+    "neutron": {"value": 878.3, "src": "pdg26-baryons"},
+    "pi+": {"value": 2.6033e-08, "src": "pdg26-mesons"},
+    "pi0": {"value": 8.43e-17, "src": "pdg26-mesons"},
+    "K-": {"value": 1.238e-08, "src": "pdg26-mesons"},
+    "D0": {"value": 4.103e-13, "src": "pdg26-mesons"},
+    "B-": {"value": 1.637e-12, "src": "pdg26-mesons"},
+    "top": {"value": 4.64e-25, "note": "hbar / Gamma_t = 6.582e-25 GeV s / 1.42 GeV", "src": "derived", "inputs": ["pdg26-quarks", "pdg26-const"]}
+  },
+  "states": {
+    "proton": {"kind": "baryon", "comp": ["u", "u", "d"]},
+    "neutron": {"kind": "baryon", "comp": ["u", "d", "d"], "tau": "neutron"},
+    "pi-": {"kind": "meson", "comp": ["d", "u~"], "tau": "pi+"},
+    "pi0": {"kind": "meson", "comp": ["u", "u~"], "alias": [["d", "d~"]], "tau": "pi0"},
+    "K-": {"kind": "meson", "comp": ["s", "u~"], "tau": "K-"},
+    "D0": {"kind": "meson", "comp": ["c", "u~"], "tau": "D0"},
+    "B-": {"kind": "meson", "comp": ["b", "u~"], "tau": "B-"},
+    "mu": {"kind": "lepton", "tau": "mu"},
+    "tau": {"kind": "lepton", "tau": "tau"},
+    "string:t": {"kind": "string", "tau": "top", "note": "top decays before forming a hadron; its color stays connected to the t-bar"},
+    "string:b": {"kind": "string", "tau": "B-", "note": "color-connected b uses the B- lifetime"},
+    "string:c": {"kind": "string", "tau": "D0", "note": "color-connected c uses the D0 lifetime"},
+    "string:s": {"kind": "string", "tau": "K-", "note": "color-connected s uses the K- lifetime"}
+  },
+  "decays": {
+    "mu": {"channels": [{"kind": "hop", "from": "mu", "to": "nm", "W": ["e", "ne~"], "br": 100, "src": "pdg26-leptons"}]},
+    "tau": {"channels": [{"kind": "hop", "from": "tau", "to": "nt", "W": ["e", "ne~"], "br": 17.85, "src": "pdg26-leptons"}, {"kind": "hop", "from": "tau", "to": "nt", "W": ["mu", "nm~"], "br": 17.37, "src": "pdg26-leptons"}, {"kind": "hop", "from": "tau", "to": "nt", "W": ["d", "u~"], "br": 64.78, "note": "100% minus the two leptonic modes, drawn as d ū", "src": "derived"}]},
+    "neutron": {"channels": [{"kind": "hop", "from": "d", "to": "u", "W": ["e", "ne~"], "br": 100, "src": "pdg26-baryons"}]},
+    "pi-": {"channels": [{"kind": "annihilate", "W": ["mu", "nm~"], "br": 99.9877, "src": "pdg26-mesons"}, {"kind": "annihilate", "W": ["e", "ne~"], "br": 0.0123, "src": "pdg26-mesons"}]},
+    "pi0": {"channels": [{"kind": "em", "products": ["γ", "γ"], "br": 98.823, "src": "pdg26-mesons"}], "coverage": 98.823, "note": "Dalitz mode γ e⁺ e⁻ (1.174%) not drawn"},
+    "K-": {"coverage": 92.652, "note": "3-pion modes (5.583% and 1.760%) not drawn", "channels": [{"kind": "annihilate", "W": ["mu", "nm~"], "br": 63.56, "src": "pdg26-mesons"}, {"kind": "hop", "from": "s", "to": "u", "W": ["d", "u~"], "br": 20.67, "note": "π⁻ π⁰", "src": "pdg26-mesons"}, {"kind": "hop", "from": "s", "to": "u", "W": ["e", "ne~"], "br": 5.07, "note": "π⁰ e⁻ ν̄ₑ", "src": "pdg26-mesons"}, {"kind": "hop", "from": "s", "to": "u", "W": ["mu", "nm~"], "br": 3.352, "note": "π⁰ μ⁻ ν̄μ", "src": "pdg26-mesons"}]},
+    "D0": {"channels": [{"kind": "hop", "from": "c", "to": "ckm", "W": ["e~", "ne"], "br": 6.49, "src": "pdg26-mesons", "note": "inclusive e⁺ anything"}, {"kind": "hop", "from": "c", "to": "ckm", "W": ["mu~", "nm"], "br": 6.8, "src": "pdg26-mesons", "note": "inclusive μ⁺ anything"}, {"kind": "hop", "from": "c", "to": "ckm", "W": ["u", "d~"], "br": 86.71, "note": "100% minus the inclusive semileptonic modes, drawn as u d̄", "src": "derived"}]},
+    "B-": {"channels": [{"kind": "hop", "from": "b", "to": "ckm", "W": ["e", "ne~"], "br": 10.99, "src": "pdg26-mesons", "note": "inclusive ℓ ν X, per light lepton"}, {"kind": "hop", "from": "b", "to": "ckm", "W": ["mu", "nm~"], "br": 10.99, "src": "pdg26-mesons", "note": "inclusive ℓ ν X, per light lepton"}, {"kind": "hop", "from": "b", "to": "ckm", "W": ["d", "u~"], "br": 78.02, "note": "100% minus the light-lepton modes, drawn as d ū; τ modes (PDG lists exclusive modes only) are folded in here", "src": "derived"}]},
+    "string:t": {"channels": [{"kind": "hop", "from": "*", "to": "ckm", "W": ["e~", "ne"], "br": 10.71, "src": "pdg26-gauge"}, {"kind": "hop", "from": "*", "to": "ckm", "W": ["mu~", "nm"], "br": 10.63, "src": "pdg26-gauge"}, {"kind": "hop", "from": "*", "to": "ckm", "W": ["tau~", "nt"], "br": 11.38, "src": "pdg26-gauge"}, {"kind": "hop", "from": "*", "to": "ckm", "W": ["u", "d~"], "br": 33.705, "note": "half of W → hadrons (67.41%); u d̄ and c s̄ split evenly since |Vud|² ≈ |Vcs|²", "src": "pdg26-gauge"}, {"kind": "hop", "from": "*", "to": "ckm", "W": ["c", "s~"], "br": 33.705, "note": "half of W → hadrons (67.41%); u d̄ and c s̄ split evenly since |Vud|² ≈ |Vcs|²", "src": "pdg26-gauge"}], "note": "real W from t → W q; q chosen by |Vtq|² (PDG 2026: B(Wb)/B(Wq) = 0.957 ± 0.034)"},
+    "string:b": {"sameAs": "B-", "only": "hop"},
+    "string:c": {"sameAs": "D0", "only": "hop"},
+    "string:s": {"sameAs": "K-", "only": "hop"}
+  }
+}
+</script>
+
+<script id="weaver">
+"use strict";
+// Weaver: seeded event engine for the warp-and-weft loom. No DOM access, so the audit can run headless.
+// Physics lives in #sm-data; this file only applies the vertex rules to it.
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const parseTok = tok => tok.endsWith("~") ? { f: tok.slice(0, -1), anti: true } : { f: tok, anti: false };
+const conjTok = tok => tok.endsWith("~") ? tok.slice(0, -1) : tok + "~";
+const compKey = toks => toks.slice().sort().join(" ");
+const PARTNER_ROW = { up: "down", down: "up", lepton: "neutrino", neutrino: "lepton" };
+
+function smIndex(SM) {
+  const F = Object.fromEntries(SM.fermions.map(f => [f.id, f]));
+  const toMeV = m => m == null ? 0 : m.unit === "GeV" ? m.value * 1e3 : m.unit === "eV" ? m.value * 1e-6 : m.value;
+  for (const f of SM.fermions) {
+    f.quark = f.row === "up" || f.row === "down";
+    f.massMeV = toMeV(f.mass);
+    f.lepFlavor = f.quark ? null : ["e", "mu", "tau"][f.gen - 1];
+  }
+  const states = new Map();
+  for (const [name, s] of Object.entries(SM.states)) {
+    if (!s.comp) continue;
+    for (const comp of [s.comp, ...(s.alias || [])]) {
+      states.set(compKey(comp), { name, conj: false });
+      const ck = compKey(comp.map(conjTok));
+      if (!states.has(ck)) states.set(ck, { name, conj: true });
+    }
+  }
+  return { F, states };
+}
+
+function createWeaver(SM, opt = {}) {
+  const o = Object.assign({
+    seed: 1,
+    // Lifetime display mapping (spec: log-scaled, order preserved, ratios compressed).
+    logMin: -25, logMax: 3, meanMin: 0.4, meanMax: 30,
+    residence: 22,        // mean seconds an entity stays in frame before it fades out
+    wLag: 0.18,           // display gap between the two vertices of a W decay
+    target: 13,           // entities kept in frame
+    keep: 90,             // seconds of history kept for drawing
+    rates: { gluon: 0.7, ggg: 0.12, photon: 0.45, z: 0.3, higgs: 0.5, wScatter: 0.035 }, // knot cadence: presence only, not coupling strength
+    cast: [["proton", 5], ["neutron", 2], ["e", 4], ["ne", 1.5], ["ne~", 1], ["mu", 1.2], ["mu~", 1.2], ["e~", 0.4],
+           ["pi-", 0.9], ["pi-~", 0.9], ["pi0", 0.5], ["K-", 0.9], ["K-~", 0.5], ["D0", 0.6], ["B-", 0.6], ["tau", 0.6], ["tt", 0.35]]
+  }, opt);
+  const rnd = mulberry32(o.seed >>> 0);
+  const { F, states } = smIndex(SM);
+  const W = {
+    t: 0, threads: new Map(), groups: new Map(), events: [], onEvent: null, opts: o,
+    step, F, nEvents: 0
+  };
+  let tid = 0, gid = 0;
+  const slots = Object.fromEntries(SM.fermions.map(f => [f.id, new Set()]));
+
+  const pick = arr => arr[Math.floor(rnd() * arr.length)];
+  const weighted = pairs => {
+    const tot = pairs.reduce((s, p) => s + p[1], 0); let r = rnd() * tot;
+    for (const p of pairs) { if ((r -= p[1]) <= 0) return p[0]; }
+    return pairs[pairs.length - 1][0];
+  };
+  const expo = mean => -mean * Math.log(1 - rnd());
+  const displayMean = tau => {
+    const x = Math.min(1, Math.max(0, (Math.log10(tau) - o.logMin) / (o.logMax - o.logMin)));
+    return o.meanMin + (o.meanMax - o.meanMin) * x;
+  };
+  const q3 = (f, anti) => anti ? -F[f].q3 : F[f].q3;
+  const tokOf = th => th.f + (th.anti ? "~" : "");
+  const alive = () => [...W.threads.values()].filter(th => !th.end);
+
+  function takeSlot(f) { const s = slots[f]; let i = 0; while (s.has(i)) i++; s.add(i); return i; }
+  function freeSlot(f, i) { slots[f].delete(i); }
+
+  function newThread(tok, col, g, t) {
+    const { f, anti } = parseTok(tok);
+    const th = { id: ++tid, f, anti, col, gid: g.id, t0: t, segs: [], end: null };
+    th.slot = takeSlot(f);
+    th.segs.push({ t, f, col, slot: th.slot });
+    W.threads.set(th.id, th); g.members.push(th.id);
+    return th;
+  }
+  function setSeg(th, t, f, col) {
+    if (f !== th.f) { freeSlot(th.f, th.slot); th.slot = takeSlot(f); }
+    th.f = f; th.col = col;
+    th.segs.push({ t, f, col, slot: th.slot });
+  }
+  function endThread(th, t, kind) { th.end = { t, kind }; freeSlot(th.f, th.slot); }
+  function legInfo(th) { return { tid: th.id, f: th.f, anti: th.anti, slot: th.slot, col: th.col }; }
+
+  function emit(ev) {
+    ev.i = ++W.nEvents;
+    W.events.push(ev);
+    if (W.onEvent) W.onEvent(ev, W);
+  }
+
+  // Identify what a color group currently is, and schedule its decay.
+  function identify(g, t) {
+    const ms = g.members.map(id => W.threads.get(id));
+    if (g.kind === "lepton") {
+      const th = ms[0];
+      g.state = SM.states[th.f] ? th.f : null; g.conj = th.anti;
+    } else {
+      const hit = states.get(compKey(ms.map(tokOf)));
+      if (hit) { g.state = hit.name; g.conj = hit.conj; g.kind = SM.states[hit.name].kind; }
+      else {
+        const heavy = ms.reduce((a, b) => F[b.f].massMeV > F[a.f].massMeV ? b : a);
+        g.state = "string:" + heavy.f; g.conj = heavy.anti; g.kind = "string";
+        if (!SM.states[g.state]) g.state = null;
+      }
+    }
+    const s = g.state && SM.states[g.state];
+    const tau = s && s.tau ? SM.lifetimes_s[s.tau].value : null;
+    g.decayAt = tau ? t + expo(displayMean(tau)) : Infinity;
+  }
+
+  function newGroup(kind, toks, t, cols) {
+    const g = { id: ++gid, kind, members: [], t0: t, exitAt: t + expo(o.residence) };
+    W.groups.set(g.id, g);
+    const ths = toks.map((tok, i) => newThread(tok, cols ? cols[i] : null, g, t));
+    identify(g, t);
+    return { g, ths };
+  }
+  function shuffle3() { const a = [0, 1, 2]; for (let i = 2; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+  // Color-neutral colors for a q q-bar pair or a qqq baryon. An antiquark's col is its anticolor index.
+  function colorsFor(toks) {
+    const quarks = toks.map(parseTok).map(p => F[p.f].quark);
+    if (!quarks.some(Boolean)) return toks.map(() => null);
+    if (toks.length === 3) return shuffle3();
+    const c = Math.floor(rnd() * 3); return toks.map(() => c);
+  }
+
+  function spawn(t) {
+    const name = weighted(o.cast);
+    let toks, kind;
+    if (name === "tt") { toks = ["t", "t~"]; kind = "string"; }
+    else if (SM.states[name] && SM.states[name].comp) { toks = SM.states[name].comp.slice(); kind = SM.states[name].kind; }
+    else if (name.endsWith("~") && SM.states[name.slice(0, -1)]?.comp) { // antiparticle of a listed hadron, e.g. "pi-~" is pi+
+      const s = SM.states[name.slice(0, -1)]; toks = s.comp.map(conjTok); kind = s.kind;
+    }
+    else { toks = [name]; kind = "lepton"; }
+    const { g, ths } = newGroup(kind, toks, t, colorsFor(toks));
+    emit({ t, kind: "spawn", boson: null, gid: g.id, created: ths.map(legInfo), note: g.state || name });
+  }
+
+  // W* products: a lepton pair becomes two free leptons; a quark pair becomes one color-neutral group.
+  function makeProducts(toks, t) {
+    const ps = toks.map(parseTok);
+    if (F[ps[0].f].quark) {
+      const { ths } = newGroup("meson", toks, t, colorsFor(toks));
+      return ths;
+    }
+    return toks.map(tok => newGroup("lepton", [tok], t, null).ths[0]);
+  }
+
+  function hopTarget(from, to) {
+    if (to !== "ckm") return to;
+    const f = F[from];
+    const cands = SM.fermions.filter(x => x.row === PARTNER_ROW[f.row] && x.massMeV < f.massMeV);
+    return weighted(cands.map(x => [x.id, SM.ckm[f.row === "up" ? f.id + x.id : x.id + f.id].value ** 2]));
+  }
+
+  function channelsFor(stateName) {
+    let ch = SM.decays[stateName];
+    if (ch && ch.sameAs) ch = SM.decays[ch.sameAs].channels.filter(c => !ch.only || c.kind === ch.only);
+    else ch = ch && ch.channels;
+    return ch || [];
+  }
+
+  function decay(g, t) {
+    const chans = channelsFor(g.state);
+    if (!chans.length) { g.decayAt = Infinity; return; }
+    const ch = weighted(chans.map(c => [c, c.br]));
+    const ms = g.members.map(id => W.threads.get(id));
+    const conjP = toks => g.conj ? toks.map(conjTok) : toks;
+    if (ch.kind === "hop") {
+      const from = ch.from === "*" ? g.state.slice(7) : ch.from;
+      const th = ms.find(m => m.f === from && m.anti === g.conj);
+      const to = hopTarget(from, ch.to);
+      const before = legInfo(th);
+      const dq = q3(to, th.anti) - q3(from, th.anti);
+      setSeg(th, t, to, th.col);
+      const created = makeProducts(conjP(ch.W), t + o.wLag);
+      emit({ t, kind: "decay", boson: dq > 0 ? "W-" : "W+", gid: g.id, legs: [before],
+             hops: [{ tid: th.id, from, to, anti: th.anti, fromSlot: before.slot, toSlot: th.slot }],
+             created: created.map(legInfo), wLag: o.wLag, note: g.state + (g.conj ? " (conj)" : "") });
+      identify(g, t);
+    } else if (ch.kind === "annihilate" || ch.kind === "em") {
+      const legs = ms.map(legInfo);
+      ms.forEach(m => endThread(m, t, "annihilate"));
+      W.groups.delete(g.id);
+      if (ch.kind === "em") {
+        emit({ t, kind: "em", boson: "γ", gid: g.id, legs, photons: ch.products.length, note: g.state });
+      } else {
+        const created = makeProducts(conjP(ch.W), t + o.wLag);
+        const qsum = legs.reduce((s, l) => s + q3(l.f, l.anti), 0);
+        emit({ t, kind: "annihilate", boson: qsum > 0 ? "W+" : "W-", gid: g.id, legs, created: created.map(legInfo),
+               wLag: o.wLag, note: g.state + (g.conj ? " (conj)" : "") });
+      }
+    }
+  }
+
+  function exitGroup(g, t) {
+    const ms = g.members.map(id => W.threads.get(id)).filter(m => !m.end);
+    const legs = ms.map(legInfo);
+    ms.forEach(m => endThread(m, t, "exit"));
+    W.groups.delete(g.id);
+    emit({ t, kind: "exit", boson: null, gid: g.id, legs, note: g.state || "" });
+  }
+
+  // Exchanges: knots that leave flavor alone (except the W scatter, which moves both threads).
+  function exchanges(t, dt) {
+    const r = o.rates, live = alive();
+    for (const g of W.groups.values()) {
+      const qs = g.members.map(id => W.threads.get(id)).filter(m => !m.end && F[m.f].quark);
+      if (qs.length < 2 || g.kind === "lepton") continue;
+      if (rnd() < r.gluon * dt) {
+        if (qs.length === 3) {
+          const [A, B] = [qs.splice(Math.floor(rnd() * 3), 1)[0], pick(qs)];
+          const a = A.col, b = B.col;
+          const legs = [legInfo(A), legInfo(B)];
+          setSeg(A, t, A.f, b); setSeg(B, t, B.f, a);
+          emit({ t, kind: "gluon", boson: "g", gid: g.id, legs, gluon: { c: a, ac: b },
+                 colorChanges: [{ tid: A.id, from: a, to: b }, { tid: B.id, from: b, to: a }] });
+        } else {
+          const [q, qb] = qs[0].anti ? [qs[1], qs[0]] : [qs[0], qs[1]];
+          const c = q.col, c2 = (c + 1 + Math.floor(rnd() * 2)) % 3;
+          const legs = [legInfo(q), legInfo(qb)];
+          setSeg(q, t, q.f, c2); setSeg(qb, t, qb.f, c2);
+          emit({ t, kind: "gluon", boson: "g", gid: g.id, legs, gluon: { c, ac: c2 },
+                 colorChanges: [{ tid: q.id, from: c, to: c2 }, { tid: qb.id, from: c, to: c2 }] });
+        }
+      } else if (qs.length === 3 && rnd() < r.ggg * dt) {
+        const [m0, m1, m2] = qs, [c0, c1, c2] = qs.map(m => m.col);
+        const legs = qs.map(legInfo);
+        setSeg(m0, t, m0.f, c2); setSeg(m1, t, m1.f, c0); setSeg(m2, t, m2.f, c1);
+        emit({ t, kind: "ggg", boson: "g", gid: g.id, legs,
+               colorChanges: [{ tid: m0.id, from: c0, to: c2 }, { tid: m1.id, from: c1, to: c0 }, { tid: m2.id, from: c2, to: c1 }] });
+      }
+    }
+    const charged = live.filter(m => F[m.f].q3 !== 0);
+    if (charged.length >= 2 && rnd() < r.photon * dt * charged.length / 4) {
+      const A = pick(charged), B = pick(charged.filter(m => m !== A));
+      emit({ t, kind: "exchange", boson: "γ", legs: [legInfo(A), legInfo(B)] });
+    }
+    if (live.length >= 2 && rnd() < r.z * dt * live.length / 4) {
+      const A = pick(live), B = pick(live.filter(m => m !== A));
+      emit({ t, kind: "exchange", boson: "Z", legs: [legInfo(A), legInfo(B)] });
+    }
+    const massive = live.filter(m => F[m.f].massive);
+    if (massive.length && rnd() < r.higgs * dt * massive.length / 4) {
+      const A = pick(massive);
+      const y = Math.SQRT2 * F[A.f].massMeV / (SM.v.value * 1e3);
+      emit({ t, kind: "higgs", boson: "H", legs: [legInfo(A)], coupling: y });
+    }
+    if (rnd() < r.wScatter * dt) wScatter(t, live);
+  }
+
+  // Electron capture (e- p -> nu_e n) or its partner (nu_e n -> e- p): one W joins a lepton hop and a quark hop.
+  function wScatter(t, live) {
+    const groups = [...W.groups.values()];
+    const opts = [];
+    const e = live.filter(m => m.f === "e" && !m.anti), nu = live.filter(m => m.f === "ne" && !m.anti);
+    const p = groups.filter(g => g.state === "proton" && !g.conj), n = groups.filter(g => g.state === "neutron" && !g.conj);
+    if (e.length && p.length) opts.push(["e", "ne", pick(e), pick(p), "u", "d"]);
+    if (nu.length && n.length) opts.push(["ne", "e", pick(nu), pick(n), "d", "u"]);
+    if (!opts.length) return;
+    const [lf, lt, L, g, qf, qt] = pick(opts);
+    const Q = pick(g.members.map(id => W.threads.get(id)).filter(m => m.f === qf));
+    const legs = [legInfo(L), legInfo(Q)];
+    const lSlot = L.slot, qSlot = Q.slot;
+    setSeg(L, t, lt, null); setSeg(Q, t, qt, Q.col);
+    identify(g, t);
+    const lg = W.groups.get(L.gid); identify(lg, t);
+    emit({ t, kind: "wexchange", boson: "W", legs, note: lf === "e" ? "electron capture" : "neutrino absorption",
+           hops: [{ tid: L.id, from: lf, to: lt, anti: false, fromSlot: lSlot, toSlot: L.slot },
+                  { tid: Q.id, from: qf, to: qt, anti: false, fromSlot: qSlot, toSlot: Q.slot }] });
+  }
+
+  function step(dt) {
+    const t1 = W.t + dt;
+    for (;;) {
+      let next = null, when = t1, what = null;
+      for (const g of W.groups.values()) {
+        if (g.decayAt <= when) { next = g; when = g.decayAt; what = "decay"; }
+        if (g.exitAt <= when) { next = g; when = g.exitAt; what = "exit"; }
+      }
+      if (!next) break;
+      W.t = Math.max(W.t, when);
+      if (what === "decay") decay(next, W.t); else exitGroup(next, W.t);
+    }
+    W.t = t1;
+    exchanges(t1, dt);
+    if (W.groups.size < o.target && rnd() < dt * 2.2) spawn(t1);
+    // Prune drawing history.
+    const cut = t1 - o.keep;
+    for (const [id, th] of W.threads) if (th.end && th.end.t < cut) W.threads.delete(id);
+    while (W.events.length && W.events[0].t < cut) W.events.shift();
+  }
+
+  return W;
+}
+
+// Independent audit: re-derives every rule from #sm-data and checks each event the engine emits.
+function auditRun(SM, { seed = 1, events = 10000, dt = 1 / 30 } = {}) {
+  const W = createWeaver(SM, { seed, keep: 5 });
+  const { F } = smIndex(SM);
+  const vtx = Object.fromEntries(SM.vertices.filter(v => v.requires).map(v => [v.boson, v])); // fermion-boson vertices only
+  const errors = [], counts = {}, sig = {};
+  const lastF = new Map(), lastC = new Map();
+  const q3 = (f, anti) => anti ? -F[f].q3 : F[f].q3;
+  const sym = (f, anti) => anti ? F[f].antiSym : F[f].sym;
+  const err = (ev, msg) => { if (errors.length < 50) errors.push(`#${ev.i} t=${ev.t.toFixed(2)} ${ev.kind} ${ev.boson || ""}: ${msg}`); };
+  const totals = () => {
+    const T = { Q: 0, B: 0, e: 0, mu: 0, tau: 0 };
+    for (const th of W.threads.values()) {
+      if (th.end) continue;
+      const s = th.anti ? -1 : 1, f = F[th.f];
+      T.Q += q3(th.f, th.anti);
+      if (f.quark) T.B += s; else T[f.lepFlavor] += 3 * s;
+    }
+    return T;
+  };
+  const allows = (boson, f) => {
+    const req = vtx[boson] && vtx[boson].requires;
+    if (req === "charged") return F[f].q3 !== 0;
+    if (req === "quark") return F[f].quark;
+    if (req === "massive") return !!F[f].massive;
+    if (req === "any" || req === "doublet") return true;
+    return false;
+  };
+  const doubletPair = (a, b) => {
+    const A = parseTok(a), B = parseTok(b);
+    if (A.anti === B.anti) return false;
+    const fa = F[A.f], fb = F[B.f];
+    if (PARTNER_ROW[fa.row] !== fb.row) return false;
+    return fa.quark || fa.gen === fb.gen;
+  };
+  const validHop = h => {
+    const a = F[h.from], b = F[h.to];
+    return PARTNER_ROW[a.row] === b.row && (a.quark || a.gen === b.gen);
+  };
+  const note = (f, b) => { (sig[f] ||= {})[b] = (sig[f][b] || 0) + 1; };
+  let prev = null, n = 0;
+
+  W.onEvent = ev => {
+    n++;
+    const key = ev.kind + (ev.boson ? ":" + ev.boson : "");
+    counts[key] = (counts[key] || 0) + 1;
+    const b = ev.boson && ev.boson[0];
+    const legs = ev.legs || [];
+    const hopIds = new Set((ev.hops || []).map(h => h.tid));
+    const colIds = new Set((ev.colorChanges || []).map(c => c.tid));
+
+    if (["exchange", "gluon", "ggg", "higgs"].includes(ev.kind)) {
+      for (const l of legs) { if (!allows(b, l.f)) err(ev, `${sym(l.f, l.anti)} cannot take a ${ev.boson} knot`); note(l.f, b); }
+    }
+    if (ev.kind === "gluon" || ev.kind === "ggg") {
+      const g = new Set(legs.map(l => W.threads.get(l.tid).gid));
+      if (g.size !== 1) err(ev, "gluon knot joins threads from different color groups");
+    }
+    if (ev.kind === "higgs" && !(ev.coupling > 0)) err(ev, "Higgs knot without a positive coupling");
+    if (ev.kind === "decay" || ev.kind === "wexchange" || ev.kind === "annihilate") {
+      if (b !== "W") err(ev, "flavor-changing event without a W");
+      for (const h of ev.hops || []) { if (!validHop(h)) err(ev, `invalid W hop ${h.from} -> ${h.to}`); note(h.from, "W"); note(h.to, "W"); }
+      for (const l of legs) if (!hopIds.size) note(l.f, "W");
+      const prods = (ev.created || []).map(c => c.f + (c.anti ? "~" : ""));
+      prods.forEach(p => note(parseTok(p).f, "W"));
+      if (ev.kind !== "wexchange") {
+        if (prods.length !== 2 || !doubletPair(prods[0], prods[1])) err(ev, `W products ${prods.join(" ")} are not a doublet pair`);
+        const wq = ev.boson === "W+" ? 3 : -3;
+        if (prods.reduce((s, p) => s + q3(parseTok(p).f, parseTok(p).anti), 0) !== wq) err(ev, "W products do not carry the W charge");
+      }
+      if (ev.kind === "annihilate") {
+        const toks = legs.map(l => l.f + (l.anti ? "~" : ""));
+        if (!doubletPair(toks[0], toks[1])) err(ev, `annihilating pair ${toks.join(" ")} cannot meet at a W vertex`);
+      }
+      if (ev.kind === "wexchange") {
+        const dq = ev.hops.reduce((s, h) => s + q3(h.to, h.anti) - q3(h.from, h.anti), 0);
+        if (dq !== 0) err(ev, "W exchange does not conserve charge");
+      }
+    }
+    if (ev.kind === "em") {
+      const [x, y] = legs;
+      if (x.f !== y.f || x.anti === y.anti || F[x.f].q3 === 0) err(ev, "two-photon annihilation needs a charged particle and its own antiparticle");
+      legs.forEach(l => note(l.f, "γ"));
+    }
+
+    // Lane changes only at W knots; color changes only at gluon knots.
+    for (const th of W.threads.values()) {
+      if (lastF.has(th.id) && lastF.get(th.id) !== th.f && !hopIds.has(th.id)) err(ev, `thread ${th.id} changed lane without a W knot`);
+      if (lastC.has(th.id) && lastC.get(th.id) !== th.col && !colIds.has(th.id)) err(ev, `thread ${th.id} changed color without a gluon knot`);
+      lastF.set(th.id, th.f); lastC.set(th.id, th.col);
+    }
+    // Every color group stays neutral; top never sits in a hadron.
+    for (const g of W.groups.values()) {
+      const ms = g.members.map(id => W.threads.get(id)).filter(m => m && !m.end);
+      const qs = ms.filter(m => F[m.f].quark);
+      if (qs.length === 3) {
+        if (new Set(qs.map(m => m.col)).size !== 3 || new Set(qs.map(m => m.anti)).size !== 1) err(ev, `group ${g.id} (${g.state}) is not color neutral`);
+      } else if (qs.length === 2) {
+        if (qs[0].anti === qs[1].anti || qs[0].col !== qs[1].col) err(ev, `group ${g.id} (${g.state}) is not color neutral`);
+      } else if (qs.length === 1) err(ev, `group ${g.id} holds a lone quark`);
+      if ((g.kind === "baryon" || g.kind === "meson") && qs.some(m => m.f === "t")) err(ev, `top quark inside a hadron (group ${g.id})`);
+    }
+    // Conservation: only spawns and exits (entering or leaving the frame) may change the totals.
+    const T = totals();
+    if (prev && ev.kind !== "spawn" && ev.kind !== "exit") {
+      for (const k of Object.keys(T)) if (T[k] !== prev[k]) err(ev, `${k} not conserved (${prev[k]} -> ${T[k]})`);
+    }
+    prev = T;
+  };
+
+  let guard = 0;
+  while (n < events && guard++ < 5e6) W.step(dt);
+
+  // Signature report: forbidden-but-seen is an error; allowed-but-unseen is a warning.
+  const expected = f => ({ g: F[f].quark, "γ": F[f].q3 !== 0, W: true, Z: true, H: !!F[f].massive });
+  const warnings = [];
+  for (const f of SM.fermions) {
+    const exp = expected(f.id), seen = sig[f.id] || {};
+    for (const k of Object.keys(exp)) {
+      if (!exp[k] && seen[k]) errors.push(`signature: ${f.sym} showed ${seen[k]} forbidden ${k} knots`);
+      if (exp[k] && !seen[k]) warnings.push(`signature: ${f.sym} never showed a ${k} knot in this run`);
+    }
+  }
+  return { seed, events: n, simSeconds: +W.t.toFixed(1), errors, warnings, counts, sig, pass: errors.length === 0 };
+}
+
+if (typeof module !== "undefined") module.exports = { createWeaver, auditRun, smIndex };
+</script>
+
+<script id="debug-view">
+"use strict";
+const SM = JSON.parse(document.getElementById("sm-data").textContent);
+const COLOR = ["#FF3B4E", "#2EE88A", "#3D7BFF"], ANTICOLOR = ["#19E6E6", "#FF3DF0", "#FFD23D"];
+const BOSON = { "γ": "#FFE7A8", g: "#FF3B4E", W: "#FF6A3D", Z: "#9D7BFF", H: "#F4F1FF" };
+const ROWS = [["up", "Up-type quarks"], ["down", "Down-type quarks"], ["lepton", "Charged leptons"], ["neutrino", "Neutrinos"]];
+const ROW_GAP = 16, TOP = 26, LEFT = 120, PX_PER_S = 46, SLOT = 4;
+const laneH = id => (id === "u" || id === "d") ? 72 : 32; // u and d lanes carry every proton and neutron thread
+
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const lanes = {}; let y = TOP;
+for (const [row] of ROWS) {
+  SM.fermions.filter(f => f.row === row).sort((a, b) => a.gen - b.gen).forEach(f => { lanes[f.id] = y; y += laneH(f.id); });
+  y += ROW_GAP;
+}
+const H = y + 6;
+let W, paused = false, speed = 1, iso = "all", showLabels = true, sig = {}, logItems = [];
+const F = () => W.F;
+const sym = (f, anti) => anti ? F()[f].antiSym : F()[f].sym;
+
+function start(seed) {
+  W = createWeaver(SM, { seed });
+  sig = {}; logItems = [];
+  W.onEvent = ev => {
+    const b = ev.boson && ev.boson[0];
+    const add = f => { (sig[f] ||= {})[b] = (sig[f][b] || 0) + 1; };
+    if (b) { (ev.legs || []).forEach(l => add(l.f)); (ev.hops || []).forEach(h => add(h.to)); (ev.created || []).forEach(c => add(c.f)); }
+    if (ev.kind !== "spawn" && ev.kind !== "exit") {
+      const legs = (ev.legs || []).map(l => sym(l.f, l.anti)).join(" ");
+      const hops = (ev.hops || []).map(h => `${sym(h.from, h.anti)}→${sym(h.to, h.anti)}`).join(", ");
+      const prods = (ev.created || []).map(c => sym(c.f, c.anti)).join(" ");
+      logItems.unshift(`<b>${ev.boson || ""}</b>${ev.kind} ${hops || legs}${prods ? " ⇒ " + prods : ""}${ev.note ? " · " + ev.note : ""}`);
+      if (logItems.length > 40) logItems.pop();
+    }
+  };
+}
+
+function resize() {
+  const dpr = Math.min(2, devicePixelRatio || 1), w = cv.parentElement.clientWidth;
+  cv.width = w * dpr; cv.height = H * dpr; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+const X = t => cv.width / Math.min(2, devicePixelRatio || 1) - 16 - (W.t - t) * PX_PER_S;
+const laneY = (f, slot) => lanes[f] + 7 + (slot % Math.floor((laneH(f) - 10) / SLOT)) * SLOT;
+const threadColor = (f, anti, col) => {
+  const ff = F()[f];
+  if (ff.quark) return (anti ? ANTICOLOR : COLOR)[col];
+  return ff.row === "lepton" ? "#C9D6E8" : "rgba(127,163,184,.55)";
+};
+
+function wavy(x, y1, y2, color, amp = 3) {
+  ctx.strokeStyle = color; ctx.lineWidth = 1.4; ctx.beginPath();
+  const n = Math.max(6, Math.abs(y2 - y1) / 2);
+  for (let i = 0; i <= n; i++) { const u = i / n; ctx.lineTo(x + Math.sin(u * Math.PI * Math.max(2, Math.abs(y2 - y1) / 7)) * amp, y1 + (y2 - y1) * u); }
+  ctx.stroke();
+}
+function zigzag(x1, y1, x2, y2, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x1, y1);
+  const len = Math.hypot(x2 - x1, y2 - y1), n = Math.max(2, Math.round(len / 5)), nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
+  for (let i = 1; i < n; i++) { const u = i / n, s = i % 2 ? 3 : -3; ctx.lineTo(x1 + (x2 - x1) * u + nx * s, y1 + (y2 - y1) * u + ny * s); }
+  ctx.lineTo(x2, y2); ctx.stroke();
+}
+function curly(x, y1, y2, c1, c2) {
+  const g = ctx.createLinearGradient(x, y1, x, y2); g.addColorStop(0, c1); g.addColorStop(1, c2);
+  ctx.strokeStyle = g; ctx.lineWidth = 1.4; ctx.beginPath();
+  const n = Math.max(2, Math.round(Math.abs(y2 - y1) / 6));
+  for (let i = 0; i <= n * 16; i++) { const u = i / (n * 16), a = u * n * Math.PI * 2; ctx.lineTo(x + Math.sin(a) * 4, y1 + (y2 - y1) * u - Math.cos(a) * 2.2 * Math.sign(y2 - y1 || 1)); }
+  ctx.stroke();
+}
+
+function draw() {
+  const w = cv.width / Math.min(2, devicePixelRatio || 1);
+  ctx.fillStyle = "#07061A"; ctx.fillRect(0, 0, w, H);
+  // Lanes
+  ctx.font = "12px ui-monospace, Consolas, monospace"; ctx.textBaseline = "middle";
+  for (const [row, label] of ROWS) {
+    const fs = SM.fermions.filter(f => f.row === row).sort((a, b) => a.gen - b.gen);
+    ctx.fillStyle = "#6f68a3"; ctx.fillText(label.toUpperCase(), 8, lanes[fs[0].id] - 8);
+    fs.forEach(f => {
+      ctx.fillStyle = "rgba(255,255,255,.03)"; ctx.fillRect(LEFT - 6, lanes[f.id], w, laneH(f.id) - 3);
+      ctx.fillStyle = "#cfc9ff"; ctx.fillText(showLabels ? `${f.sym}  ${f.name}` : "?", 10, lanes[f.id] + laneH(f.id) / 2);
+    });
+  }
+  ctx.save(); ctx.beginPath(); ctx.rect(LEFT, 0, w - LEFT, H); ctx.clip();
+  // Color-group ties: faint verticals every second where all members are alive.
+  const tStart = W.t - (w - LEFT) / PX_PER_S;
+  const byGroup = new Map();
+  for (const th of W.threads.values()) { if (!byGroup.has(th.gid)) byGroup.set(th.gid, []); byGroup.get(th.gid).push(th); }
+  ctx.strokeStyle = "rgba(255,255,255,.10)"; ctx.lineWidth = 1;
+  for (const ths of byGroup.values()) {
+    if (ths.length < 2) continue;
+    for (let s = Math.ceil(tStart); s <= W.t; s += 1) {
+      const ys = ths.map(th => { const sg = segAt(th, s); return sg && (!th.end || th.end.t > s) ? laneY(sg.f, sg.slot) : null; });
+      if (ys.some(v => v == null)) continue;
+      ctx.beginPath(); ctx.moveTo(X(s), Math.min(...ys)); ctx.lineTo(X(s), Math.max(...ys)); ctx.stroke();
+    }
+  }
+  // Threads
+  for (const th of W.threads.values()) {
+    const tEnd = th.end ? th.end.t : W.t;
+    th.segs.forEach((sg, i) => {
+      const t1 = i + 1 < th.segs.length ? th.segs[i + 1].t : tEnd;
+      if (X(t1) < LEFT) return;
+      const yy = laneY(sg.f, sg.slot), x0 = Math.max(LEFT, X(sg.t)), x1 = X(t1);
+      const col = threadColor(sg.f, th.anti, sg.col);
+      if (th.end && th.end.kind === "exit" && i === th.segs.length - 1) {
+        const g = ctx.createLinearGradient(Math.max(x0, x1 - 40), 0, x1, 0); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)"); ctx.strokeStyle = g;
+      } else ctx.strokeStyle = col;
+      ctx.lineWidth = F()[sg.f].quark ? 2.2 : 1.8;
+      ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x1, yy); ctx.stroke();
+      // Chevrons: with time for particles, against time for antiparticles.
+      ctx.fillStyle = col;
+      for (let cx = Math.ceil((x0 + 20) / 70) * 70; cx < x1 - 10; cx += 70) {
+        const d = th.anti ? -1 : 1; ctx.beginPath(); ctx.moveTo(cx + 3 * d, yy); ctx.lineTo(cx - 3 * d, yy - 3); ctx.lineTo(cx - 3 * d, yy + 3); ctx.fill();
+      }
+      if (i > 0 && th.segs[i - 1].f !== sg.f) { // lane change at a W knot
+        const yp = laneY(th.segs[i - 1].f, th.segs[i - 1].slot);
+        ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(X(sg.t), yp); ctx.lineTo(X(sg.t), yy); ctx.stroke();
+      }
+    });
+  }
+  // Knots
+  for (const ev of W.events) {
+    const x = X(ev.t); if (x < LEFT - 20) continue;
+    const b = ev.boson && ev.boson[0];
+    if (iso !== "all" && b !== iso) continue;
+    const ly = (ev.legs || []).map(l => laneY(l.f, l.slot));
+    if (ev.kind === "exchange" && b === "γ") wavy(x, ly[0], ly[1], BOSON["γ"]);
+    else if (ev.kind === "exchange" && b === "Z") zigzag(x, ly[0], x, ly[1], BOSON.Z);
+    else if (ev.kind === "gluon") curly(x, ly[0], ly[1], COLOR[ev.gluon.c], ANTICOLOR[ev.gluon.ac]);
+    else if (ev.kind === "ggg") { const m = (Math.min(...ly) + Math.max(...ly)) / 2; ly.forEach(v => curly(x, m, v, "#FF3B4E", "#3D7BFF")); ctx.fillStyle = "#fff"; ctx.fillRect(x - 1.5, m - 1.5, 3, 3); }
+    else if (ev.kind === "higgs") {
+      const a = Math.min(1, Math.max(.15, (Math.log10(ev.coupling) + 6.5) / 6.5));
+      ctx.setLineDash([2, 2]); ctx.strokeStyle = `rgba(244,241,255,${a})`; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(x, ly[0]); ctx.lineTo(x, ly[0] - 9); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = `rgba(244,241,255,${a})`; ctx.beginPath(); ctx.arc(x, ly[0] - 10, 1.8, 0, 7); ctx.fill();
+    } else if (ev.kind === "wexchange") {
+      const ys = ev.hops.map(h => laneY(h.from, h.fromSlot)); zigzag(x, ys[0], x + 1, ys[1], BOSON.W);
+    } else if (ev.kind === "decay" || ev.kind === "annihilate") {
+      const y0 = ev.kind === "decay" ? laneY(ev.hops[0].from, ev.hops[0].fromSlot) : (ly[0] + ly[1]) / 2;
+      if (ev.kind === "annihilate") { ctx.strokeStyle = "#aaa"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, ly[0]); ctx.lineTo(x, ly[1]); ctx.stroke(); }
+      const x2 = X(ev.t + ev.wLag), cy = ev.created.map(c => laneY(c.f, c.slot)), y2 = cy.reduce((s, v) => s + v, 0) / cy.length;
+      zigzag(x, y0, x2, y2, BOSON.W);
+      ev.created.forEach((c, k) => { ctx.strokeStyle = threadColor(c.f, c.anti, c.col); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2 + 1, cy[k]); ctx.stroke(); });
+    } else if (ev.kind === "em") {
+      const m = (ly[0] + ly[1]) / 2; ctx.strokeStyle = "#aaa"; ctx.beginPath(); ctx.moveTo(x, ly[0]); ctx.lineTo(x, ly[1]); ctx.stroke();
+      wavy(x + 4, m, m - 22, BOSON["γ"]); wavy(x + 4, m, m + 22, BOSON["γ"]);
+    }
+  }
+  ctx.restore();
+  // The fell line: where weaving happens now.
+  ctx.strokeStyle = "rgba(157,123,255,.5)"; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(w - 16, 4); ctx.lineTo(w - 16, H - 4); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = "#9d7bff"; ctx.textAlign = "right"; ctx.fillText(`now · t=${W.t.toFixed(1)}s`, w - 20, 10); ctx.textAlign = "left";
+}
+function segAt(th, t) { let s = null; for (const sg of th.segs) { if (sg.t <= t) s = sg; else break; } return s; }
+
+function renderSide() {
+  const knots = ["g", "γ", "W", "Z", "H"];
+  const rows = SM.fermions.slice().sort((a, b) => ROWS.findIndex(r => r[0] === a.row) - ROWS.findIndex(r => r[0] === b.row) || a.gen - b.gen);
+  const allowed = (f, k) => ({ g: f.quark, "γ": f.q3 !== 0, W: true, Z: true, H: !!f.massive })[k];
+  document.getElementById("sig").innerHTML = `<tr><th>lane</th>${knots.map(k => `<th>${k}</th>`).join("")}</tr>` + rows.map(f => {
+    const s = sig[f.id] || {};
+    return `<tr><td>${showLabels ? f.sym + " " + f.name : "?"}</td>${knots.map(k => {
+      const ok = allowed(f, k), n = s[k] || 0;
+      return `<td class="${!ok ? (n ? "bad" : "no") : n ? "" : "miss"}">${!ok ? (n ? n : "–") : n}</td>`;
+    }).join("")}</tr>`;
+  }).join("");
+  document.getElementById("log").innerHTML = logItems.map(s => `<li>${s}</li>`).join("");
+}
+
+function runAudit() {
+  const out = document.getElementById("audit-out");
+  out.textContent = "Running…";
+  setTimeout(() => {
+    const t0 = performance.now();
+    const res = auditRun(SM, { seed: +document.getElementById("seed").value || 1, events: 10000 });
+    const ms = Math.round(performance.now() - t0);
+    out.innerHTML = `<span class="${res.pass ? "pass" : "fail"}">${res.pass ? "PASS" : "FAIL"}</span> · ${res.events} events · seed ${res.seed} · ${res.simSeconds}s simulated · ${ms} ms\n\n` +
+      `Errors (${res.errors.length}):\n${res.errors.join("\n") || "none"}\n\nWarnings (${res.warnings.length}):\n${res.warnings.join("\n") || "none"}\n\nEvent counts:\n` +
+      Object.entries(res.counts).sort((a, b) => b[1] - a[1]).map(([k, v]) => `  ${k.padEnd(16)} ${v}`).join("\n");
+    document.title = `AUDIT ${res.pass ? "PASS" : "FAIL"} · weaver debug`;
+    window.__audit = res;
+  }, 20);
+}
+
+document.getElementById("pause").onclick = e => { paused = !paused; e.target.setAttribute("aria-pressed", paused); e.target.textContent = paused ? "Resume" : "Pause"; };
+document.getElementById("speed").onchange = e => { speed = +e.target.value; };
+document.getElementById("reseed").onclick = () => start(+document.getElementById("seed").value || 1);
+document.getElementById("labels").onclick = e => { showLabels = !showLabels; e.target.setAttribute("aria-pressed", showLabels); };
+document.querySelectorAll("[data-iso]").forEach(btn => btn.onclick = () => {
+  iso = btn.dataset.iso; document.querySelectorAll("[data-iso]").forEach(b => b.setAttribute("aria-pressed", b === btn));
+});
+document.getElementById("run-audit").onclick = runAudit;
+addEventListener("resize", resize);
+
+start(7); resize();
+for (let i = 0; i < 30 * 20; i++) W.step(1 / 30); // pre-weave 20 s so the view opens full
+let last = performance.now(), sideT = 0;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (!paused && !document.hidden && !reduce.matches) W.step(dt * speed);
+  draw();
+  if ((sideT += dt) > 0.5) { sideT = 0; renderSide(); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+if (location.hash === "#audit") runAudit();
+</script>
+</body>
+</html>

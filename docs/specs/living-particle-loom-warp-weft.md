@@ -38,7 +38,9 @@ Every visual property either encodes a stated quantity or is constant by design.
 | Thread length before it ends in a W knot | Lifetime, **log-scaled** | Order preserved, ratios compressed; mapping printed on the lifetime ladder figure |
 | Quark thread hue | Current color charge (r, g, b; antiquarks cyan, magenta, yellow) | Changes at each gluon knot; every bundle sums to white |
 | Higgs knot brightness | Higgs coupling, log scale (∝ mass for fermions) | Neutrinos get no Higgs knot (see open questions) |
-| Cross-generation W knot frequency for quarks | Relative rate ∝ \|V_ij\|² (CKM) | b→u knots really are rare; inspector offers "show me one" |
+| Which decays happen, and how often | PDG branching fractions per state; when a quark decays, its target flavor is drawn ∝ \|V_ij\|² (CKM) | b→u knots really are rare; inspector offers "show me one". Channels not drawn are listed in `sm-data` as `coverage` |
+| A thread fading out | The particle left the frame (finite residence), not a decay | Decays and annihilations always end at a knot |
+| How often each knot type appears | **Constant** cadence per vertex type | Presence only; not coupling strength |
 | Arrow chevrons on a thread | Particle (with time) vs antiparticle (against time) | Feynman convention |
 | Thread thickness, knot size, flow speed, generation | **Constant** | Heavier generations are not bigger or slower |
 | Lepton thread finish | Constant chrome (charged) or glass (neutrino) | Colorless because leptons carry no color charge |
@@ -79,7 +81,7 @@ This list is the page's core data and its biggest accuracy risk. Rows are textbo
 | H H H, H H H H | Higgs self-coupling | Nothing | Bosons view; trilinear coupling not yet measured |
 | **Absent:** γγ, γZ, ZZZ, Hγγ, Hgg at tree level | | | Shown as "no knot" in the signature strip; H→γγ and gg→H happen through loops (top, W), drawn as a loop diagram in the Higgs card |
 
-Sources: PDG *Review of Particle Physics* (2024 edition plus 2025 web update): "Electroweak model and constraints on new physics," "Quantum chromodynamics," "Higgs boson physics," "CKM quark-mixing matrix," particle listings. Cross-check: Griffiths, *Introduction to Elementary Particles* (2nd ed.), ch. 2 and 9 to 10; Peskin and Schroeder, Feynman rules appendix.
+Sources: PDG *Review of Particle Physics* 2026 (F. Takahashi et al., Int. J. Mod. Phys. A 41, 2630011; supersedes the 2024 edition and 2025 update; numbers verified 2026-10-29 live in `sm-data`). The complete tree-level rule set used for this table is Romao and Silva, arXiv:1209.6213. PDG reviews: "Electroweak model and constraints on new physics," "Quantum chromodynamics," "Higgs boson physics," "CKM quark-mixing matrix," particle listings. Cross-check: Griffiths, *Introduction to Elementary Particles* (2nd ed.), ch. 2 and 9 to 10; Peskin and Schroeder, Feynman rules appendix.
 
 ## Scene, camera and navigation
 
@@ -178,6 +180,8 @@ The "Illustration · not to scale" chip, the five-point "Reading the loom" legen
 No graviton or gravity thread; no string-theory imagery; no "molasses" or "crowd at a party" Higgs analogy; no atoms, orbits or nuclei drawn as solar systems; no size or speed encoding of mass; no particles beyond the Standard Model except one-line open questions; no sound.
 
 ## Build phases and gates
+
+**Status 2026-10-29:** Phases 0 and 1 built in `docs/prototypes/particle-loom/` (see its README). Gate: `node scripts/particle_loom_audit.cjs` (five seeds × 10,000 events plus seven injected faults). Awaiting David's review of the debug view.
 
 0. **Physics data (gate).** Build `sm-data` from PDG with a `source` on every record. Verify every vertex row against two of the named sources. Nothing renders until this passes. If a value cannot be verified, omit it.
 1. **Weaver plus a flat debug view.** Seeded engine, 2D top-down lane view, and an `#audit` fragment that generates 10,000 events and asserts the rules (no photon knot on a neutrino, no gluon knot on a lepton, no lane change except at W knots, every bundle color-neutral, conservation laws hold, top never bundles). **David reviews the debug view before Phase 2**; this is where the concept proves itself or dies cheaply.
