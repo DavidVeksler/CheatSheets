@@ -71,5 +71,37 @@ for (const [name, f] of Object.entries(faults)) {
   console.log(`fault "${name}": ${fails.length ? "caught" : "MISSED"}`);
   ok = ok && fails.length > 0;
 }
+// 6. The Phase 1c learning-test page: same shared blocks, answer keys derived from sm-data, Lab replays audited.
+const ltFile = require("path").join(require("path").dirname(file), "learning-test.html");
+if (fs.existsSync(ltFile)) {
+  const lt = fs.readFileSync(ltFile, "utf8");
+  const ltBlock = id => lt.match(new RegExp(`<script[^>]*id="${id}">([\\s\\S]*?)</script>`))[1];
+  for (const id of ["sm-data", "lessons", "weaver"]) {
+    const same = ltBlock(id) === block(id);
+    if (!same) { console.log(`learning test: #${id} differs from ${file} (run sync_shared_blocks.py)`); ok = false; }
+  }
+  const items = ltBlock("items"), labCode = ltBlock("lab-check");
+  const ltCheck = (labSrc = labCode, itemsSrc = items, weaverSrc = code) => {
+    const lib = load(weaverSrc + "\n" + labSrc), ITEMS = JSON.parse(itemsSrc), fails = lib.labCheck(fresh(), ITEMS);
+    for (const id of [1, 2, 3]) { const r = lib.auditRun(fresh(), { script: JSON.parse(lessonsSrc).find(L => L.id === id).steps }); if (!r.pass) fails.push(...r.errors); }
+    for (const s of lib.labScripts(ITEMS)) { const r = lib.auditRun(fresh(), { script: s.steps }); if (!r.pass) fails.push(...r.errors.map(e => `${s.id}: ${e}`)); }
+    return fails;
+  };
+  const base1c = ltCheck();
+  console.log(`learning test: answer keys and ${JSON.parse(items).lab.length} Lab replays ${base1c.length ? "FAIL" : "PASS"}`);
+  base1c.slice(0, 10).forEach(f => console.log("  " + f));
+  ok = ok && !base1c.length;
+  const ltFaults = {
+    "test answer key says a photon ties into a neutrino": () => ltCheck(labCode, items.replace('"answer": ["no"]', '"answer": ["yes"]')),
+    "Lab key lists a gluon among Z partners": () => ltCheck(labCode, items.replace('"answer": ["W", "H"]', '"answer": ["W", "H", "g"]')),
+    "Lab replay claims a photon ties into a Z": () => ltCheck(labCode, items.replace('{"at": 2.9, "try": "γ", "on": "z", "expect": "miss"}', '{"at": 2.9, "try": "γ", "on": "z", "expect": "tie"}')),
+    "H γ γ listed as a vertex": () => load(code + "\n" + labCode).labCheck(withData(SM => SM.vertices.push({ id: "Haa", label: "H γ γ", instances: [] }))(), JSON.parse(items)),
+  };
+  for (const [name, f] of Object.entries(ltFaults)) {
+    let fails; try { fails = f(); } catch (e) { fails = [`crashed: ${e.message}`]; }
+    console.log(`learning-test fault "${name}": ${fails.length ? "caught" : "MISSED"}`);
+    ok = ok && fails.length > 0;
+  }
+}
 console.log(ok ? "PARTICLE LOOM AUDIT: PASS" : "PARTICLE LOOM AUDIT: FAIL");
 process.exit(ok ? 0 : 1);

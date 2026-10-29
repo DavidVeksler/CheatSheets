@@ -1,4 +1,4 @@
-# Particle Loom prototype: weaver debug view (Phases 0, 1 and 1b)
+# Particle Loom prototypes: weaver debug view (Phases 0 to 1b) and learning test (1c)
 
 Spec: [`docs/specs/living-particle-loom-warp-weft.md`](../../specs/living-particle-loom-warp-weft.md) (rev. 2). Everything under `docs/` is internal and never deployed.
 
@@ -11,10 +11,14 @@ Spec: [`docs/specs/living-particle-loom-warp-weft.md`](../../specs/living-partic
 | `#weaver` | Seeded event engine, `auditRun`, `socketDerivation`, `samplingCheck`. No DOM, so it runs headless. |
 | `#debug-view` | Flat canvas lane view (time left to right) with socket glyphs, tie and miss knots, coupling brightness, boson lanes, a lesson player (mode menu, Next step), signature table, event log, isolate-a-force, labels toggle, audit button. |
 
+## Learning test (Phase 1c)
+
+`learning-test.html` is the human gate before any 3D work. It is a flat SVG page with sockets on threads, Lessons 1 to 3, a "Bosons are threads too" card and five Lab items, wrapped in the six-question before/after test and the labels-off test. It draws with the same engine (`#sm-data`, `#lessons`, `#weaver` are copies; refresh with `python docs/prototypes/particle-loom/sync_shared_blocks.py`). `#items` holds the questions with hand-written keys; `#lab-check` re-derives every key from `sm-data`. Opens from disk, no server. Running sessions, rubric and pass criteria: [`learning-test-scoring.md`](learning-test-scoring.md).
+
 ## Run it
 
 - View: serve the repo root (`python -m http.server 8765`) and open `/docs/prototypes/particle-loom/weaver-debug.html`. `#audit` runs every check on load (tab title becomes `AUDIT PASS` or `AUDIT FAIL`); `#lesson=N` opens a lesson.
-- Gate: `node scripts/particle_loom_audit.cjs [file] [events]`, about 2 s. It runs the socket derivation, PDG and CKM sampling, all 8 lesson scripts, the free loom on five seeds × 10,000 events, then 14 injected faults that must all be caught. When the engine moves into `living-particle-loom.html`, point the script at that file and add it to the deploy gates (the build's gate runner is Python, so wrap it).
+- Gate: `node scripts/particle_loom_audit.cjs [file] [events]`, about 2 s. It runs the socket derivation, PDG and CKM sampling, all 8 lesson scripts, the free loom on five seeds × 10,000 events, then 14 injected faults that must all be caught. If `learning-test.html` sits beside the file, it also checks that page: shared blocks identical, answer keys derived from `sm-data`, Lessons 1 to 3 and every Lab replay through the event audit, and four more injected faults. When the engine moves into `living-particle-loom.html`, point the script at that file and add it to the deploy gates (the build's gate runner is Python, so wrap it).
 
 ## How the engine behaves (rev. 2)
 
