@@ -291,7 +291,7 @@ No graviton or gravity thread; no string-theory imagery; no "molasses" or "crowd
 
 ## Build phases and gates
 
-**Status 2026-10-29:** Phases 0 and 1 done (`docs/prototypes/particle-loom/`; gate `node scripts/particle_loom_audit.cjs`). Rev. 2 adds 1b and 1c and splits Phase 2 so the cheap, risky questions are answered first.
+**Status 2026-10-29:** Phases 0, 1 and 1b done (`docs/prototypes/particle-loom/`, see its README; gate `node scripts/particle_loom_audit.cjs`: socket derivation, PDG and CKM sampling, 8 lesson scripts, 5 seeds × 10,000 events, 13 injected faults). Next: 1c. Open question in the README: W exchanges in the free loom at equal cadence.
 
 0. **Physics data.** Done: PDG 2026, `src` on every value.
 1. **Weaver, flat debug view, audit.** Done.
