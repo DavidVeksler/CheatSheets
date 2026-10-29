@@ -25,3 +25,5 @@ Reviewed in the Codex in-app Chromium browser at its desktop viewport, 1280 × 9
 Checked the opening sculpture, family transition, lepton neighborhood, all 17 chart entries, particle search including “muon neutrino,” interaction emphasis, pause, both themes, and phone overflow. Browser error and warning logs were empty during those checks. SEO and JavaScript syntax checks also pass.
 
 The social preview is an actual capture of this design, encoded as lossless WebP. The existing scientific reference material remains available below the stage. Physics review and learner acceptance remain subsequent work. Deployment requires David's go-ahead.
+
+The full repository publishing check passes catalog freshness, hubs, breadcrumbs, app integrity, JSON parsing, and PHP syntax. Its rendered front-door SEO checks are blocked by the local PHP runtime lacking `mbstring` (`mb_strtolower` is undefined). It also flags the existing `how-its-built.html` link to `popularity` as an uncommitted target. These checks were not bypassed; no deployment was performed.
