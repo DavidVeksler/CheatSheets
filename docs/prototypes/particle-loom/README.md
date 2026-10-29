@@ -1,5 +1,7 @@
 # Particle Loom prototype: weaver debug view (Phases 0 and 1)
 
+**Spec rev. 2 (2026-10-29)** turns this engine into the backbone for a socket grammar, scripted Lessons and a predict-then-check Lab. Its Phase 1b table lists what changes here: fixed cast instead of random spawns and exits, equal knot cadence, real bosons as threads, sockets in `sm-data`, scripted event queues. `socket_check.py` is the enumeration showing the three socket rules reproduce the tree-level vertex list exactly; Phase 1b moves it into the audit gate.
+
 Spec: [`docs/specs/living-particle-loom-warp-weft.md`](../../specs/living-particle-loom-warp-weft.md). Everything under `docs/` is internal and never deployed.
 
 `weaver-debug.html` holds three blocks, each written to move into `living-particle-loom.html` unchanged:
