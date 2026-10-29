@@ -128,8 +128,8 @@ Typography: keep the current serif display and mono instrument labels. Glyphs an
 
 ## Technology
 
-- **Renderer:** vanilla WebGPU (WGSL) with a WebGL 2 (GLSL ES 3.0) fallback behind one small rendering interface; no library, single self-contained file as the repo requires. Instanced ribbon segments for threads and weft, HDR float16 target with dual-filter bloom on WebGPU, an 8-bit approximation on WebGL 2. Thin-film shader for the Higgs.
-- **No GPU or lost context:** the HTML stays fully usable. An SVG end-on chart with signature strips replaces the stage; every interaction except the 3D stream keeps working.
+- **Renderer:** vanilla WebGPU (WGSL) only, targeting current browser versions; no library, single self-contained file as the repo requires. Instanced ribbon segments for threads and weft, HDR `rgba16float` target with dual-filter bloom, thin-film shader for the Higgs. Use compute shaders where they simplify the work (ribbon geometry expansion, bloom), not for show.
+- **Fallbacks are deferred (David, 2026-10-29).** No WebGL 2 path, no SVG stage substitute, no device-loss recovery until David signs off on the design. Minimum until then: if `navigator.gpu` or an adapter is missing, the stage shows one line ("This view needs WebGPU") and the HTML navigation, inspector and reference stay usable. Do not structure the code around a future fallback.
 - **Labels and hit targets are HTML**, positioned from projected 3D each frame (`transform: translate3d`). Thread pills are real buttons.
 - **Platform features worth showcasing:** WebGPU, the View Transitions API (knot to card), the Popover API (knot cards, guess-the-thread), CSS anchor positioning (card callouts to pills), scroll-driven animations for the reference section (inside `prefers-reduced-motion: no-preference`), `details name=` accordions.
 - **Budgets:** 60 fps on an integrated GPU at 1080p; at most about 4,000 live segments (about 1,500 below 600 px wide); DPR capped at 2. Render loop stops off-screen (IntersectionObserver) and when the document is hidden. The canvas initializes after first paint so the HTML hero is the LCP. CLS 0. INP under 200 ms.
@@ -181,7 +181,7 @@ No graviton or gravity thread; no string-theory imagery; no "molasses" or "crowd
 
 0. **Physics data (gate).** Build `sm-data` from PDG with a `source` on every record. Verify every vertex row against two of the named sources. Nothing renders until this passes. If a value cannot be verified, omit it.
 1. **Weaver plus a flat debug view.** Seeded engine, 2D top-down lane view, and an `#audit` fragment that generates 10,000 events and asserts the rules (no photon knot on a neutrino, no gluon knot on a lepton, no lane change except at W knots, every bundle color-neutral, conservation laws hold, top never bundles). **David reviews the debug view before Phase 2**; this is where the concept proves itself or dies cheaply.
-2. **Renderer and camera states.** WebGPU plus WebGL 2 fallback, bloom, all camera states, reduced motion, context-loss fallback.
+2. **Renderer and camera states.** WebGPU renderer, bloom, all camera states, reduced motion. **David's design sign-off follows this phase**; fallbacks (WebGL 2, no-GPU SVG stage, device-loss recovery) become a separate phase only after it.
 3. **Interactions.** Signature strips, inspector cards, knot-to-Feynman-card morph, isolate-a-force, guess-the-thread, search, keyboard, URL state.
 4. **Reference, SEO, og.** Reference tables from `sm-data`, metadata, og capture, cross-links, `llms.txt`, catalog rebuild.
 
@@ -194,5 +194,5 @@ Optional machine gate (automation ladder rule 4): `scripts/check_particle_loom.p
 3. Audit fragment passes 10,000 events with zero violations.
 4. End-on chart view matches the conventional 17-entry layout cell for cell.
 5. Every number on the page traces to a `source` in `sm-data`.
-6. Performance budgets met; console clean; works with WebGPU, WebGL 2 only, and no GPU; 375 px renders without horizontal scroll; reduced motion honored; WCAG 2.2 AA.
+6. Performance budgets met; console clean in current Chrome, Edge, Firefox and Safari; 375 px renders without horizontal scroll; reduced motion honored; WCAG 2.2 AA for the HTML interface.
 7. The site gates pass (`scripts/seo_check.py`, catalog freshness, hubs). Deployment only with David's go-ahead.
