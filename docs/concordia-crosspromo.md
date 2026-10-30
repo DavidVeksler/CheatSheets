@@ -37,7 +37,7 @@ The page's `spinDesign`, `comfortBand`, `metroWeight` and `gravityAtHeight` are 
 
 ## Open follow-up (not part of this build, behind David's deploy gate)
 
-In the Habitat repo, add this page to the `related` list (or a "Reference" link) on `/science/artificial-gravity/` so the link goes both ways.
+Done 2026-10-30: `/science/artificial-gravity/` links to `#tolerance` and `/station/generations/` to `#designs` on this page. The same run added five Concordia deep links to `space-habitats-life-support.html` and six links back from Concordia to that sheet and this one (registry: `~/Projects/seo-crosslinking/crosslinks.tsv`, phase P6). Inbound links from Concordia carry `utm_source=concordia&utm_campaign=cheatsheets_crosslink`.
 
 ## Original graphics (2026-10-24)
 
