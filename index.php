@@ -1565,6 +1565,7 @@ html.js body[data-view="map"] #mapwrap{display:block}
     <a href="popularity"><?php echo chrome_icon('chart'); ?>Popularity</a>
     <a href="https://github.com/DavidVeksler/CheatSheets" rel="noopener"><?php echo chrome_icon('git'); ?>GitHub</a>
     <a href="catalog.json"><?php echo chrome_icon('braces'); ?>catalog.json</a>
+    <a href="prototypes/particle-loom/weaver-debug.html" title="Early prototype for a Particle Loom sheet. Feedback welcome.">Particle Loom prototype</a>
     <span class="fcta"><a href="https://www.linkedin.com/in/davidveksler/" rel="noopener" data-ga-linkedin="footer"><?php echo chrome_icon('people'); ?>Working on something similar? Compare notes on LinkedIn.</a></span>
   </div>
 </footer>
