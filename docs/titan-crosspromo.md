@@ -45,6 +45,9 @@ axe findings and runtime errors. Captures/report/print output stay local in
 `--render-og` generates `images/rocket-equation-calculator.png` (1200x630) directly
 from the working Long Passage calculator and chart with transient layout CSS.
 No external image, font, framework, live Titan asset or simulated audio is loaded.
+The ship illustration is inline SVG with shaded hulls, cylindrical tanks,
+radiator sheets and a plasma plume. Use SVG or an image API for illustrations;
+do not substitute ASCII or text-glyph drawings. Its responsive labels are HTML.
 
 On this Windows host, PHP initially had no loaded ini and lacked `mbstring`.
 Rendered-index checks passed after enabling the already-installed extension with
