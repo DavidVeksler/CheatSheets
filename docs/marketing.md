@@ -27,6 +27,8 @@ Thin router. SEO working doc: [`../TODO/META-seo-planning.md`](../TODO/META-seo-
 
 ## Measurement (pulled, not eyeballed)
 
+- Keyword concept comparisons: `python scripts/keyword_research.py <one-keyword-per-line.txt> --output <dated-report.json>` reads `~/Projects/.dataforseo.env` at runtime and queries DataForSEO Labs (paid API; US/English by default). It preserves the request, response, source update dates and cost, refuses to overwrite evidence, and fails on API errors. Volumes are estimates; Search Console impressions are site visibility, not market volume. Example shortlist and concept decision: [`research/2026-11-04-titan-concept.md`](research/2026-11-04-titan-concept.md).
+
 - Search Console: `search-console` MCP (`list_sites`, `query_search_analytics`). Refresh striking-distance data before trusting numbers older than a few weeks.
 - Traffic: `cloudflare-stats` skill for `cheatsheets.davidveksler.com`.
 - AI agents/crawlers: `scripts/ai_crawler_report.py` (7-day UA buckets). Discovery-file coverage is gated by `scripts/check_llms.py`.
