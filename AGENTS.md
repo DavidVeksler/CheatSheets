@@ -17,6 +17,7 @@ Standalone, interactive HTML cheatsheets (tech, finance, philosophy, AI safety, 
 | Reddit draft routine | [`docs/reddit-daily-drafts.md`](docs/reddit-daily-drafts.md) |
 | Cold email outreach for pillar/focus pages (HTML Gmail drafts, >50% address confidence) | [`docs/cold-outreach.md`](docs/cold-outreach.md); prospect data in private `~/Projects/cheatsheets-outreach` |
 | Concordia cross-promotion (artificial-gravity-calculator.html: honesty contract, UTM links, link checker, og render) | [`docs/concordia-crosspromo.md`](docs/concordia-crosspromo.md) |
+| Titan cross-promotion (rocket-equation-calculator.html: fictional presets, physics assumptions, numeric/browser QA, OG render) | [`docs/titan-crosspromo.md`](docs/titan-crosspromo.md) |
 | Newsletter (Resend, double opt-in, monthly draft routine) | [`docs/newsletter.md`](docs/newsletter.md) |
 | Economics comparison batch refresh | [`docs/economics-data-refresh.md`](docs/economics-data-refresh.md) |
 | SEO KPI log (append-only, newest on top) | [`docs/seo-progress.md`](docs/seo-progress.md) |

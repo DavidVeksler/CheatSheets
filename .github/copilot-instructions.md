@@ -53,6 +53,11 @@ root/
 
 ## Critical Workflows
 
+Titan cross-promotion: `rocket-equation-calculator.html` is governed by
+`docs/titan-crosspromo.md` (fictional presets, physics assumptions, numerical and
+browser acceptance, OG rendering). Concept research records that keyword volume
+is unverified. Preserve design/challenge labels and the deployment approval gate.
+
 ### Adding a New Cheatsheet
 1. Create `topic-name.html` in root (lowercase, hyphen-separated)
 2. Include ALL required metadata (see below)

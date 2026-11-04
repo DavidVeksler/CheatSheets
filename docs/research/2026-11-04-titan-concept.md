@@ -1,6 +1,8 @@
 # Titan cross-promotion: concept decision
 
-Research date: 2026-11-04. Status: concept refinement; no HTML or deployment yet.
+Research date: 2026-11-04. David authorized proceeding provisionally without
+keyword-volume data. Implemented locally as `rocket-equation-calculator.html`;
+operating contract: `../titan-crosspromo.md`. No deployment authorized.
 
 ## Recommendation
 
@@ -163,11 +165,11 @@ with organic difficulty. Null values mean unavailable, not zero. Inspect the dat
 latest month and age before calling it current. Query global/other markets only
 as a separately labelled comparison if needed.
 
-Choose the calculator versus energy-density angle using exact tool-query demand,
+For a future demand check, compare the calculator versus energy-density angle using exact tool-query demand,
 intent fit, competitive results and the opportunity to offer a distinctive tool.
 Do not select a broad phrase just because its volume is larger. Then promote this
-concept to a complete `TODO/` spec and build. The user explicitly requested concept
-refinement first; this research does not imply selection of a final keyword.
+concept if needed. The calculator was selected provisionally with David's approval;
+this research does not establish that its target keyword has measured demand.
 
 Success: organic entries on validated calculator queries, calculator use and
 qualified referrals into Titan. Establish Search Console baselines on publication;
