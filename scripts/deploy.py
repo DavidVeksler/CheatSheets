@@ -395,6 +395,12 @@ def hub_slugs() -> set[str]:
 
 
 def check_links(html_files: list[str]) -> list[str]:
+    # These extensionless/public URLs are generated pages, not missing files.
+    # Share the build contract; only accept a route with its actual PHP source.
+    if __package__:
+        from .build_site import PRERENDERED_ROUTES
+    else:
+        from build_site import PRERENDERED_ROUTES
     missing: list[str] = []
     slugs = hub_slugs()
     for rel in html_files:
@@ -426,6 +432,11 @@ def check_links(html_files: list[str]) -> list[str]:
                 resolved = os.path.normpath(os.path.join(page_dir, clean))
             # Keep resolution inside the repo.
             if os.path.commonpath([os.path.abspath(resolved), ROOT]) != ROOT:
+                continue
+            route = "/" + os.path.relpath(resolved, ROOT).replace(os.sep, "/")
+            rendered = PRERENDERED_ROUTES.get(route)
+            if (rendered and not clean.endswith("/")
+                    and os.path.isfile(os.path.join(ROOT, rendered[0]))):
                 continue
             if os.path.isdir(resolved) or clean.endswith("/"):
                 if not (os.path.exists(os.path.join(resolved, "index.html"))

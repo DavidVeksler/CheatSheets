@@ -49,7 +49,11 @@ PROVENANCE = ["docs/how-do-rainbows-work-production.md", "scripts/grass_green/bu
 
 # Page URLs the site Worker answers (workers/site/index.js): prerendered popularity and
 # sitemap, and the newsletter endpoints forwarded to the forms Worker.
-CLEAN_URLS = ["/popularity", "/sitemap.xml", "/subscribe", "/confirm"]
+PRERENDERED_ROUTES = {
+    "/popularity": ("popularity.php", "popularity.html"),
+    "/sitemap.xml": ("sitemap.php", "sitemap.xml"),
+}
+CLEAN_URLS = [*PRERENDERED_ROUTES, "/subscribe", "/confirm"]
 
 # Files nginx never served, by name or rule. Anything here 404s on Workers.
 INTERNAL_DIRS = {"docs", "marketing", "TODO", "scripts", "deploy", "conf", "lib", "workers", "state"}
@@ -244,9 +248,9 @@ def main() -> int:
     paths = json.loads((ROOT / "paths.json").read_text(encoding="utf-8")).get("paths", [])
     path_ids = [p["id"] for p in paths if isinstance(p, dict) and p.get("id") and p.get("steps")]
     jobs = [("index.php", "/", "", X / "index.html"),
-            ("index.php", "/", "view=paths", X / "paths.html"),
-            ("popularity.php", "/popularity", "", X / "popularity.html"),
-            ("sitemap.php", "/sitemap.xml", "", X / "sitemap.xml")]
+            ("index.php", "/", "view=paths", X / "paths.html")]
+    jobs += [(source, route, "", X / output)
+             for route, (source, output) in PRERENDERED_ROUTES.items()]
     jobs += [("index.php", "/", f"view=paths&path={pid}", X / "path" / f"{pid}.html") for pid in path_ids]
     jobs += [("index.php", f"/{slug}", f"hub={slug}", X / "hub" / f"{slug}.html") for slug in sorted(slug_to_cat)]
     # Each job is its own PHP process writing its own file, so they run in parallel.
