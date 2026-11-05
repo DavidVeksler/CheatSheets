@@ -56,4 +56,32 @@ and the pressure model. The original formulas and historical tables remain.
   serious/critical accessibility findings at 360 and 1440 pixels in both themes.
   Screenshots and the report go to `.visual-qa/gravity-illustrations/`.
 - Scrolling illustrations and existing reference-table containers accept keyboard
-  focus on narrow screens. No animation or additional external asset is required.
+  focus on narrow screens. No animation or remote runtime asset is required.
+
+## Diagram improvements (2026-11-04)
+
+The masthead and eleven field-guide diagrams were edited from their existing SVG
+references with the built-in image API. They retain the original subjects, labels
+and explanatory layouts. They are scientific diagrams, not newly imagined orbital
+environments. The original masthead and live-rotor rotation arrows opposed the
+rightward bottom velocity; both now show counterclockwise rotation. The force label
+in the masthead sits beside the orange inward arrow.
+
+Published assets are lossless WebP under `images/artificial-gravity/`. A transparent
+human symbol also replaces the stick figures in the native reference plates and
+live rotor. The numeric text, chart curves and calculator outputs stay native SVG.
+The four-radius plate's people stand on the midpoints of its existing floor curves.
+Prompts, input selectors, dimensions and provenance: `design/gravity-art/manifest.json`.
+Repeatable import/encoding procedure: `design/gravity-art/README.md` and
+`scripts/prepare_gravity_art.py`. Browser acceptance also checks image decoding,
+SVG symbol assets and the Titan deep link. Changes remain behind the deploy gate.
+
+The counter-rotation field-guide card links to Titan's
+`/system/spin-gravity/#why-the-drums-come-in-pairs`, with the standard
+`titan_crosspromo` UTMs and `utm_content=gravity-counter-rotation`. The paragraph
+identifies Long Passage as a fictional ship and uses its 56 m / 3 rpm / 0.56 g
+worked design. Owning sources: sibling `titan-2095/content/explainers/spin-gravity.md`,
+`assets/data/vehicles.json`, and the route/heading generators in `scripts/site/`.
+Source and heading were checked on 2026-11-04. A live Chromium visit returned HTTP
+200 and found the exact `why-the-drums-come-in-pairs` heading. The web-fetch tool
+could not access the destination, so browser verification supplied the live check.
