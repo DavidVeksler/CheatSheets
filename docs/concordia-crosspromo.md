@@ -74,7 +74,7 @@ The four-radius plate's people stand on the midpoints of its existing floor curv
 Prompts, input selectors, dimensions and provenance: `design/gravity-art/manifest.json`.
 Repeatable import/encoding procedure: `design/gravity-art/README.md` and
 `scripts/prepare_gravity_art.py`. Browser acceptance also checks image decoding,
-SVG symbol assets and the Titan deep link. Changes remain behind the deploy gate.
+SVG symbol assets and the Titan deep link. Future changes follow the same deploy gate.
 
 The counter-rotation field-guide card links to Titan's
 `/system/spin-gravity/#why-the-drums-come-in-pairs`, with the standard
@@ -85,3 +85,9 @@ worked design. Owning sources: sibling `titan-2095/content/explainers/spin-gravi
 Source and heading were checked on 2026-11-04. A live Chromium visit returned HTTP
 200 and found the exact `why-the-drums-come-in-pairs` heading. The web-fetch tool
 could not access the destination, so browser verification supplied the live check.
+
+Published with David's approval on 2026-11-04: content commit `62d9728`, Cloudflare
+version `06b83b00-5768-4211-a0ea-d593721b817e` at 100%. The guarded deploy passed
+345-path parity and live verification. Acceptance against the public calculator
+passed image decoding, calculator edits/presets/invalid input, the Titan link,
+and mobile/desktop layout and accessibility in both themes.
