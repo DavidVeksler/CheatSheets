@@ -394,7 +394,7 @@
   <div class="grid-2">
     <div class="tbl">
       <table>
-        <caption>Limits card &middot; developers.cloudflare.com, as of Sep 2026</caption>
+        <caption>Limits card &middot; developers.cloudflare.com, as of Nov 2026</caption>
         <thead><tr><th>Limit</th><th>Value</th><th>Note</th></tr></thead>
         <tbody>
           <tr><th scope="row">Files per version</th><td class="num">20,000 Free<br>100,000 Paid</td><td class="gotcha">Paid figure needs wrangler &ge; 4.34.0. Every file in <code>dist/</code> counts; move bulk media to R2.</td></tr>
@@ -406,8 +406,8 @@
           <tr><th scope="row">Workers Paid</th><td class="num">$5/mo min</td><td class="gotcha">10M requests/mo included, then $0.30/M. No egress fees.</td></tr>
           <tr><th scope="row">Routes / custom domains</th><td class="num">1,000 / 100</td><td class="gotcha">Per zone.</td></tr>
           <tr><th scope="row">Deployable versions</th><td class="num">last 100</td><td class="gotcha">Applies to <code>versions deploy</code> and <code>rollback</code>.</td></tr>
-          <tr><th scope="row">Version (preview) URLs</th><td class="num">noindex</td><td class="gotcha">Aliased URLs sent <code>X-Robots-Tag: noindex</code> (observed 2026-09-28). Alias + name &le; 63 chars.</td></tr>
-          <tr><th scope="row">Single Redirects</th><td class="num">10 Free</td><td class="gotcha">25 Pro, 50 Business. Regex needs Business.</td></tr>
+          <tr><th scope="row">Version (preview) URLs</th><td class="num">noindex</td><td class="gotcha">Aliased URLs sent <code>X-Robots-Tag: noindex</code> (observed 2026-09-28; the docs do not state it as of Nov 2026). Alias + name &le; 63 chars.</td></tr>
+          <tr><th scope="row">Single Redirects</th><td class="num">10 Free</td><td class="gotcha">25 Pro, 50 Business, 300 Enterprise. Regex needs Business.</td></tr>
           <tr><th scope="row">D1 free</th><td class="num">5M reads/day<br>100k writes/day</td><td class="gotcha">5 GB total, 10 databases, 500 MB each. Resets 00:00 UTC.</td></tr>
           <tr><th scope="row">R2 free</th><td class="num">10 GB-month</td><td class="gotcha">1M Class A, 10M Class B ops/mo. Egress free.</td></tr>
         </tbody>
@@ -827,7 +827,7 @@ scripts/deploy-cloudflare.sh --full-parity</code></pre></div>
     <div class="panel"><h3>R2 for bulk media</h3><p>Every file in <code>dist/</code> counts toward the per-version cap. freecapitalists.org moved ~7,600 of ~27,900 build files (images) plus its library to R2 behind a custom domain. R2 custom domains must be a zone in the same account; <code>r2.dev</code> is rate-limited and meant for development. Keep the old path layout and nothing needs a redirect.</p></div>
     <div class="panel"><h3>Cache and purge</h3><p>With default headers (<code>max-age=0, must-revalidate</code> + ETag), a promoted version is served on the next request; Cloudflare's docs describe no purge step. Where <code>_headers</code> sets a longer max-age on unfingerprinted URLs (CheatSheets: <code>/*.html</code> 1800 s), browsers may keep the old copy that long, and no purge reaches browsers. The fleet purges the host after each promote as cheap insurance for Cloudflare-held copies; a failed purge only warns. A zone Browser Cache TTL overrides lower values you set.</p></div>
     <div class="panel"><h3>Routes, not custom domains</h3><p>All 12 hosts use a route over the existing proxied record. Custom domains would require deleting the DNS record first, which removes the instant rollback. Alias hosts get one Single Redirect rule each, appended idempotently by script, never a Worker.</p></div>
-    <div class="panel"><h3>Tool versions</h3><p><code>npm ci</code> installs each repo's pinned wrangler; latest is 4.143.0 (2026-09-28). <code>wrangler triggers deploy</code> is still marked experimental. The versions commands need wrangler &ge; 3.73 without flags; <code>versions upload</code> cannot create a Worker, so the first deploy is always <code>wrangler deploy</code>.</p></div>
+    <div class="panel"><h3>Tool versions</h3><p><code>npm ci</code> installs each repo's pinned wrangler; latest is 4.158.0 (2026-11-05); the fleet pins 4.143.0 as of 2026-09-28. <code>wrangler triggers deploy</code> is still marked experimental. The versions commands need wrangler &ge; 3.73 without flags; <code>versions upload</code> cannot create a Worker, so the first deploy is always <code>wrangler deploy</code>.</p></div>
   </div>
 </section>
 
