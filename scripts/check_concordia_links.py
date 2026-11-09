@@ -9,7 +9,7 @@ the Habitat repo's generated `site/data/sim-index.json` (viewpoints, chapters, o
     python3 scripts/check_concordia_links.py page.html      # one sheet
     python3 scripts/check_concordia_links.py --live         # also HEAD every page path on the live site
 
-The Habitat repo is read from $HABITAT_REPO, default ~/Projects/Habitat. Exits 1 on any failure.
+The Habitat repo is read from $HABITAT_REPO, default ~/Projects/concordia-space-habitat. Exits 1 on any failure.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
-HABITAT = Path(os.environ.get("HABITAT_REPO", Path.home() / "Projects" / "Habitat"))
+HABITAT = Path(os.environ.get("HABITAT_REPO", Path.home() / "Projects" / "concordia-space-habitat"))
 HOST = "concordia.davidveksler.com"
 LINK_RE = re.compile(r'href="(https://' + re.escape(HOST) + r'[^"]*)"')
 UTM = {"utm_source": "cheatsheets", "utm_medium": "referral", "utm_campaign": "concordia_crosspromo"}

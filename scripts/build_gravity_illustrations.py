@@ -13,7 +13,7 @@ import runpy
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-HABITAT = Path(os.environ.get('HABITAT_REPO', ROOT.parent / 'Habitat'))
+HABITAT = Path(os.environ.get('HABITAT_REPO', ROOT.parent / 'concordia-space-habitat'))
 lib = runpy.run_path(str(HABITAT / 'scripts/site/build-editorial-graphics.py'))
 drawings = lib['DRAWINGS']
 for fn in ['text','lines','path','rect','circle','arrow','person','tree','building','train','ship','tag']:

@@ -107,7 +107,7 @@ with sync_playwright() as p:
     assert page.locator('#error').inner_text()
     assert page.evaluate('!!rocketCalculator.getResult()'), 'invalid shared link needs valid baseline'
     results = []
-    axe = ROOT.parent / 'Habitat/node_modules/axe-core/axe.min.js'
+    axe = ROOT.parent / 'concordia-space-habitat/node_modules/axe-core/axe.min.js'
     assert axe.is_file(), 'Install axe-core or supply the existing sibling dependency for accessibility QA'
     for width in [360, 375, 768, 1440]:
         for theme in ['light', 'dark']:

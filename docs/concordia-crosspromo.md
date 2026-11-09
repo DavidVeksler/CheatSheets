@@ -17,7 +17,7 @@
 
 | Fact | Rot | How |
 | --- | --- | --- |
-| Concordia deep links (`viewpoint`, `chapter`, `overlay` ids; `/discover/`, `/science/`, `/glossary/#slug`) | Months (site under active development) | `python3 scripts/check_concordia_links.py [--live]` (reads `~/Projects/Habitat/site/data/sim-index.json`; set `HABITAT_REPO` to override) |
+| Concordia deep links (`viewpoint`, `chapter`, `overlay` ids; `/discover/`, `/science/`, `/glossary/#slug`) | Months (site under active development) | `python3 scripts/check_concordia_links.py [--live]` (reads `~/Projects/concordia-space-habitat/site/data/sim-index.json`; set `HABITAT_REPO` to override) |
 | Concordia design values (radius 2,500 m, 0.0626 rad/s, sky 450 m, metro 2,455 m, air-pressure ratios) | Slow (canon change) | Diff `docs/site/facts.md` sections 2, 5, 15; re-run the page's acceptance values (below) |
 | Historical designs, comfort limits | Stable | Source links only |
 

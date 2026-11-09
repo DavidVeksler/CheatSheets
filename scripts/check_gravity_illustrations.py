@@ -56,7 +56,7 @@ with sync_playwright() as p:
             assert not clipped,clipped
             ids=page.evaluate('''() => {const ids=Array.from(document.querySelectorAll('[id]'),e=>e.id);return ids.filter((id,i)=>ids.indexOf(id)!==i);}''')
             assert not ids,ids
-            axe=ROOT.parent/'Habitat/node_modules/axe-core/axe.min.js'
+            axe=ROOT.parent/'concordia-space-habitat/node_modules/axe-core/axe.min.js'
             if axe.exists():
                 page.add_script_tag(path=str(axe))
                 violations=page.evaluate("async () => (await axe.run()).violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))")
