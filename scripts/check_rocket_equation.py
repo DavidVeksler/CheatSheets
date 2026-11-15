@@ -39,7 +39,7 @@ def check_inputs(page, label):
         assert sig_digits(value) <= 7, (label, field_id, value, 'more than 7 significant digits')
 
 
-RESULT_TEXT_JS = """() => ['#summary', '#primary', '.stats', '#chart-text', '#chart-conditions', '#whatif']
+RESULT_TEXT_JS = """() => ['#summary', '#primary', '#anchor-line', '#headline', '#details-stats', '#chart-text', '#chart-conditions', '#whatif']
     .map(s => document.querySelector(s).innerText)
     .concat([...document.querySelectorAll('#chart text')].map(t => t.textContent)).join('\\n')"""
 
@@ -138,6 +138,132 @@ def check_ui(page, label):
     check_caveats(page, label)
 
 
+# 4.7: sentence-level text is at least 0.875 rem (14 px); 0.8 rem is only for uppercase kickers and badges.
+SENTENCE_SELECTORS = ['.field label', '.select-row label', '.hint', '.note', '.small', 'small', 'figcaption',
+                      '.ship-figure figcaption span', '.stats dt', '.headline dt', '.wi-stats dt', '.mass-labels',
+                      '.anchor-line', '#comparison td', '#comparison caption', '.preset-description', '.card p',
+                      '.mistakes p', '.equations p', 'details p', '.sources li', '.related span', '.quick span',
+                      '.chart-intro p', '.legend', '.err', '.explore p', '.author-byline', '.chip > span:first-child']
+FONT_JS = """sels => sels.flatMap(s => [...document.querySelectorAll(s)]
+    .filter(e => e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden')
+    .map(e => [s, (e.id || e.textContent.trim().slice(0, 30)), parseFloat(getComputedStyle(e).fontSize)]))"""
+
+
+def check_type_floor(page, label):
+    """Measured in Vehicle mode and in Mission mode with jet power, so hints, chips and the anchor line all show."""
+    page.evaluate("document.querySelectorAll('details').forEach(d => d.open = true)")
+    covered = set()
+    for mode, constraint in [('vehicle', 'thrust'), ('mission', 'power')]:
+        page.locator('[data-preset="chemical"]').click()
+        page.select_option('#mode', mode)
+        page.select_option('#constraint', constraint)
+        sizes = page.evaluate(FONT_JS, SENTENCE_SELECTORS)
+        small = [s for s in sizes if s[2] < 14 - 0.01]
+        assert sizes and not small, (label, mode, 'sentence text under 14 px', small)
+        covered |= {s[0] for s in sizes}
+    missing = [s for s in SENTENCE_SELECTORS if s not in covered]
+    assert not missing, (label, 'type-floor selectors matched nothing visible', missing)
+    page.evaluate("document.querySelectorAll('details').forEach(d => d.open = false)")
+    page.locator('[data-preset="chemical"]').click()
+
+
+# 4.4: section order, TOC and kickers follow the same sequence.
+SECTION_ORDER = ['calculator', 'Quick reference', 'comparison', 'examples', 'titan', 'reference', 'mistakes', 'sources', 'related']
+TOC_ORDER = ['#calculator', '#comparison', '#examples', '#titan', '#reference', '#mistakes']
+# 4.2: delta-v anchors in km/s, each from a NASA source on the page (see docs/titan-crosspromo.md drift list).
+ANCHORS_KMS = [('trans-lunar injection', 3.1824168), ('trans-Mars injection', 3.662),
+               ('low orbit to geostationary', 4.253), ('Earth surface to orbit', 9)]
+HINTS = [('final', 'final-hint'), ('constraint', 'constraint-hint'), ('dv', 'dv-hint'), ('power', 'power-hint')]
+
+
+def check_structure(page):
+    order = page.evaluate("[...document.querySelectorAll('main > section')].map(s => s.id || s.getAttribute('aria-label'))")
+    assert order == SECTION_ORDER, ('section order', order)
+    toc = page.evaluate("[...document.querySelectorAll('nav.toc a')].map(a => [a.getAttribute('href'), a.textContent.slice(0, 2)])")
+    assert [t[0] for t in toc] == TOC_ORDER and [t[1] for t in toc] == ['01', '02', '03', '04', '05', '06'], ('toc', toc)
+    kickers = page.evaluate("""ids => ids.map(id => { const e = document.getElementById(id.slice(1));
+        return (e.querySelector('.kicker, .eyebrow, .tool-top h2') || {}).textContent.slice(0, 2); })""", TOC_ORDER)
+    assert kickers == ['01', '02', '03', '04', '05', '06'], ('kickers', kickers)
+    # Every in-page link resolves, and an arrow points the way its target lies.
+    links = page.evaluate("""() => [...document.querySelectorAll('a[href^="#"]')].map(a => {
+        const t = document.getElementById(a.getAttribute('href').slice(1));
+        return [a.getAttribute('href'), !!t, a.textContent.includes('↓') ? 'down' : a.textContent.includes('↑') ? 'up' : '',
+                t ? Math.sign(a.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING ? 1 : -1) : 0]; })""")
+    assert links and all(l[1] for l in links), ('unresolved in-page links', [l for l in links if not l[1]])
+    wrong = [l for l in links if (l[2] == 'down' and l[3] < 0) or (l[2] == 'up' and l[3] > 0)]
+    assert not wrong, ('arrow points away from its target', wrong)
+    # Buttons that load a case scroll up to the calculator.
+    assert page.evaluate("[...document.querySelectorAll('[data-load]')].every(b => b.textContent.includes('↑') && (b.compareDocumentPosition(document.getElementById('calculator')) & Node.DOCUMENT_POSITION_PRECEDING))")
+
+
+def visible(page, element_id):
+    return page.evaluate("id => { const e = document.getElementById(id); return !!e && e.getClientRects().length > 0; }", element_id)
+
+
+def check_hints(page, label):
+    """4.1: each hint is the input's aria-describedby target and shows exactly when its field does."""
+    for input_id, hint_id in HINTS:
+        described = (page.get_attribute('#' + input_id, 'aria-describedby') or '').split()
+        assert hint_id in described, (label, input_id, described)
+        assert visible(page, hint_id) == visible(page, input_id), (label, hint_id, 'visibility differs from its field')
+
+
+def check_calculator_phase4(page):
+    page.locator('[data-preset="chemical"]').click()
+    assert page.locator('#calc-form > p.small').filter(has_text='Post-burn mass =').count() == 0, 'redundant .small paragraph removed'
+    check_hints(page, 'vehicle/thrust')
+    assert visible(page, 'final-hint') and visible(page, 'constraint-hint') and not visible(page, 'dv-hint') and not visible(page, 'power-hint')
+    # 4.3: three headline stats; the third is whichever of jet power or thrust is derived.
+    ids = lambda sel: page.evaluate("s => [...document.querySelectorAll(s + ' dd')].map(d => d.id)", sel)
+    assert ids('#headline') == ['out-prop', 'out-burn', 'out-power'], ids('#headline')
+    assert len(ids('#details-stats')) == 7 and 'out-thrust' in ids('#details-stats')
+    assert page.evaluate("['prop','ratio','mass','ve','thrust','flow','burn','power','a0','af'].every(k => document.getElementById('out-' + k))")
+    assert visible(page, 'details-label') and page.inner_text('#details-label').strip().lower() == 'details'
+    big = page.evaluate("parseFloat(getComputedStyle(document.querySelector('#headline dd')).fontSize) > parseFloat(getComputedStyle(document.querySelector('#details-stats dd')).fontSize)")
+    assert big, 'headline stats are larger than the details'
+    # 4.2 Vehicle mode: the largest anchor at or below the computed delta-v (chemical 7.90 km/s -> GEO).
+    assert visible(page, 'anchor-line') and page.inner_text('#anchor-line') == 'Enough for low orbit to geostationary.'
+    page.locator('[data-preset="ascent"]').click()  # 3.00 km/s, below the smallest anchor
+    assert page.evaluate('rocketCalculator.getResult().dv') < ANCHORS_KMS[0][1] * 1000
+    assert not visible(page, 'anchor-line'), 'no anchor line below the smallest anchor'
+    page.locator('[data-preset="passage"]').click()  # 100 km/s
+    assert page.inner_text('#anchor-line') == 'Enough for Earth surface to orbit.'
+    page.locator('[data-preset="chemical"]').click()
+    page.select_option('#mode', 'mission')
+    page.select_option('#constraint', 'power')
+    check_hints(page, 'mission/power')
+    assert all(visible(page, h) for _, h in HINTS)
+    assert not visible(page, 'anchor-line'), 'anchor line is Vehicle mode only'
+    assert ids('#headline') == ['out-prop', 'out-burn', 'out-thrust'], ids('#headline')
+    assert 'out-power' in ids('#details-stats') and len(ids('#details-stats')) == 7
+    # 4.2 Mission mode: each chip writes its value through setField and re-solves.
+    chips = page.locator('#dv-anchors .chip')
+    assert chips.count() == len(ANCHORS_KMS)
+    for i, (name, kms) in enumerate(ANCHORS_KMS):
+        chip = chips.nth(i)
+        assert chip.get_attribute('data-name') == name and float(chip.get_attribute('data-dv')) == kms
+        text = chip.inner_text().lower()
+        assert re.search(r'\b(ideal|flown|with losses)\b', text), (name, 'basis must be visible text', text)
+        assert f'{kms:.3g}' in text, (name, 'chip shows its value', text)
+        chip.click()
+        near(page.evaluate('rocketCalculator.getResult().dv'), kms * 1000, 'anchor ' + name)
+        assert chip.get_attribute('aria-pressed') == 'true' and page.locator('#dv-anchors [aria-pressed=true]').count() == 1
+        check_inputs(page, 'anchor ' + name)
+    assert page.evaluate("[...document.querySelectorAll('#dv-anchors a')].every(a => /^#src-dv-/.test(a.getAttribute('href')) && document.querySelector(a.getAttribute('href')))")
+    assert page.locator('#sources li[id^="src-dv-"]').count() == len(ANCHORS_KMS)
+    page.select_option('#mode', 'vehicle')
+    assert not visible(page, 'dv-anchors') and not visible(page, 'dv-hint')
+    page.locator('[data-preset="chemical"]').click()
+    # 4.6: a thrust bar for every row with a numeric thrust, none for "Design dependent".
+    rows = page.evaluate("""() => [...document.querySelectorAll('#comparison tbody tr')].map(tr => {
+        const td = tr.querySelector('td:nth-child(3)'), bar = td.querySelector('.tbar');
+        return [tr.querySelector('th').textContent.trim(), /\\d/.test(td.textContent), !!bar, bar ? bar.getAttribute('aria-hidden') : null]; })""")
+    assert all(r[1] == r[2] for r in rows), ('thrust bars on numeric rows only', rows)
+    assert sum(r[2] for r in rows) == 9 and all(r[3] == 'true' for r in rows if r[2]), rows
+    # Engine bands still parse the table: seven groups, seven marks at desktop width.
+    assert page.locator('#chart-bands > g').count() == 7 and page.locator('#chart-bands .band-bar, #chart-bands .band-tick').count() == 7
+
+
 with sync_playwright() as p:
     browser = p.chromium.launch(args=['--mute-audio'])
     page = browser.new_page(viewport={'width': 1440, 'height': 1000})
@@ -158,6 +284,10 @@ with sync_playwright() as p:
     case_c = page.locator('#examples .card').nth(2)
     assert case_c.locator('.formula').inner_text().replace(' ', '') == 'mp=10,000×(1−e^(−100/200))'.replace(' ', '')
     assert case_c.locator('.answer').inner_text() == f'{10000 * (1 - math.exp(-100 / 200)):,.2f} t'
+    # Phase 4: structure, hints, delta-v anchors, headline stats, thrust bars, type floor.
+    check_structure(page)
+    check_calculator_phase4(page)
+    check_type_floor(page, 1440)
     cases = [
         ('chemical', 100000, 10000, 3432.3275, 1000000),
         ('ion', 1200, 1000, 29419.95, 0.1),
@@ -325,6 +455,10 @@ with sync_playwright() as p:
             assert not overlaps, (width, theme, overlaps)
             if width in (360, 375):
                 check_phone(view, width, theme)
+            if width == 375:
+                check_type_floor(view, (width, theme))
+                # 4.6: thrust bars survive the stacked table.
+                assert view.locator('#comparison .tbar').count() == 9 and view.evaluate("[...document.querySelectorAll('#comparison .tbar')].every(b => b.getBoundingClientRect().width > 100)")
             view.locator('[data-preset="passage"]').click()
             view.screenshot(path=str(OUT / f'{width}-{theme}.png'), full_page=True)
             results.append({'width': width, 'theme': theme, 'overflow': 'pass', 'chart_overflow': 'pass', 'axe_serious_critical': 0})
@@ -335,6 +469,14 @@ with sync_playwright() as p:
     view.wait_for_timeout(200)
     page_screens = view.evaluate('document.documentElement.scrollHeight / 812')
     assert page_screens <= PAGE_SCREENS_MAX, ('page length at 375x812', page_screens)
+    view.close()
+    # Both selects show their full option text at 320 px.
+    view = browser.new_page(viewport={'width': 320, 'height': 812})
+    view.goto(URL, wait_until='domcontentloaded')
+    assert view.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), '320 px overflow'
+    for select_id in ('mode', 'constraint'):
+        fit = view.evaluate(SELECT_FIT_JS.replace("getElementById('constraint')", f"getElementById('{select_id}')"))
+        assert fit['need'] <= fit['have'] + 0.5, (320, select_id, 'select truncates', fit)
     view.close()
     page.goto(URL, wait_until='domcontentloaded')
     page.emulate_media(media='print')
@@ -348,7 +490,9 @@ with sync_playwright() as p:
           body>.wrap{max-width:none;padding:0} header,.quick,.note,main>.section,.explore,footer{display:none!important}
           .tool{border:0;display:grid;grid-template-columns:390px minmax(0,1fr);height:630px;overflow:hidden}.tool-top{grid-column:1/-1;padding:12px 26px}.tool-top h2{font-size:23px}
           .controls{display:none}.tool-grid{display:block;height:100%}.outputs{height:100%;padding:14px 24px 0 26px;border:0;border-right:1px solid var(--line)}
-          .big-number{font-size:50px;margin:2px 0 12px}.stats{gap:7px 16px;margin:14px 0 0}.stats dd{font-size:15px}.stats dt{font-size:11px}.outputs>.small{display:none}
+          .big-number{font-size:50px;margin:2px 0 12px}.outputs>.small,.anchor-line,.ghost-label{display:none!important}
+          .headline{gap:6px 12px;margin:14px 0 0}.headline dt{font-size:11px}.headline dd{font-size:19px}.details-label{margin:12px 0 0;font-size:10px}
+          .details-label+.stats{gap:6px 16px;margin:6px 0 0}.stats div{padding-top:4px}.stats dd{font-size:14px}.stats dt{font-size:11px}
           .chart-wrap{padding:12px 22px 0;border-top:0}.chart-wrap h3{font-size:19px;margin:0}.chart-intro p{margin:2px 0 0;font-size:12px}
           .legend,.whatif,.whatif-range,.chart-wrap figcaption{display:none!important}.chart-body{display:block;margin-top:4px}
         ''')
@@ -362,7 +506,9 @@ with sync_playwright() as p:
 report = {'status': 'pass', 'numerical_cases': [c[0] for c in cases], 'checks':
           ['inverse mode', 'what-if scrub', 'what-if pointer/keyboard/range', 'what-if commit', 'chart fits container', 'band labels', 'unit preservation', 'fixed jet power', 'invalid input', 'zero delta-v', 'small delta-v',
            'clipboard fallback', 'URL round-trip', 'input significant digits', 'no exponent notation', 'caveat budget', 'no U+A730', 'invalid shared URL', 'print', 'no console errors', 'phone: stacked table fits', 'phone: touch targets >= 44 px',
-           'phone: result strip', 'phone: constraint select fits', 'phone: engine bands after restack', 'phone: page length'], 'layouts': results,
+           'phone: result strip', 'phone: constraint select fits', 'phone: engine bands after restack', 'phone: page length',
+           'section order', 'in-page links and arrows', 'field hints', 'delta-v anchors', 'enough-for line', 'headline stats',
+           'thrust bars', 'type floor 1440/375', '320 px selects'], 'layouts': results,
           'phone': {'screens_375x812': round(page_screens, 2), 'limit': PAGE_SCREENS_MAX, 'min_touch_px': min(touch_min)},
           'caveat_counts': {k: max(c[k] for _, c in caveat_counts) for k in CAVEAT_LIMITS}}
 (OUT / 'report.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
