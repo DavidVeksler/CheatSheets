@@ -164,7 +164,10 @@ both markers and all axis labels are visible at 320 px.
   (38 px), action buttons (40 px).
 - **Engine constraint** select takes a full row so its value is not truncated.
 - Quick-reference grid: one column below 420 px so formulas do not wrap mid-term.
-- Target page length at 375 px: ≤ 12 screens (currently 16).
+- Target page length at 375 px: ≤ 12 screens (16.6 before). Phase 3 as shipped
+  reached 15.4: the stacked table and 44 px targets add height, and the rest is
+  body text. Getting to 12 needs content cuts or collapsing, which is a Phase 4
+  decision; the check script gates at 16 so it cannot regress.
 
 ## Phase 4: comprehension and structure
 

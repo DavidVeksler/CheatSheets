@@ -69,6 +69,69 @@ def check_caveats(page, label):
         assert counts[key] <= limit, (label, key, counts[key], limit)
 
 
+TOUCH_JS = """() => [...document.querySelectorAll('a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"]), [role=slider]')]
+    .filter(e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e);
+        return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && r.bottom + scrollY > 0
+            && !(e.tagName === 'A' && e.closest('p, li, td, figcaption, caption')); })
+    .map(e => [e.tagName, e.id || e.textContent.trim().slice(0, 40), Math.round(e.getBoundingClientRect().height * 10) / 10])"""
+SELECT_FIT_JS = """() => { const s = document.getElementById('constraint'), cs = getComputedStyle(s), probe = document.createElement('span');
+    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font:' + cs.font + ';letter-spacing:' + cs.letterSpacing;
+    document.body.append(probe);
+    const widest = Math.max(...[...s.options].map(o => { probe.textContent = o.text; return probe.getBoundingClientRect().width; }));
+    probe.remove();
+    return {need: widest + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 24, have: s.getBoundingClientRect().width}; }"""
+PAGE_SCREENS_MAX = 16  # Phase 3 target is 12; 15.4 is the measured floor without hiding content or shrinking type.
+touch_min = []
+
+
+def strip_state(view):
+    view.wait_for_timeout(150)
+    return view.evaluate("""() => { const s = document.getElementById('result-strip'), r = s.getBoundingClientRect();
+        return {visible: !s.hidden && r.height > 0, bottom: r.bottom, vh: innerHeight}; }""")
+
+
+def check_phone(view, width, theme):
+    """Phase 3: phone layout at 360 and 375 px."""
+    label = (width, theme)
+    view.locator('[data-preset="chemical"]').click()
+    over = view.evaluate("() => ['#comparison', '#comparison .scroll-table', '#comparison table'].map(s => document.querySelector(s)).filter(e => e.scrollWidth > e.clientWidth).map(e => e.id || e.className || e.tagName)")
+    assert not over, (label, 'comparison overflow', over)
+    assert view.evaluate("document.querySelector('#comparison .scroll-table').getAttribute('tabindex')") is None, (label, 'stacked table is not a scroll region')
+    small = [t for t in view.evaluate(TOUCH_JS) if t[2] < 44]
+    assert not small, (label, 'touch targets under 44 px', small)
+    touch_min.append(min(t[2] for t in view.evaluate(TOUCH_JS)))
+    fit = view.evaluate(SELECT_FIT_JS)
+    assert fit['need'] <= fit['have'] + 0.5, (label, 'engine constraint select truncates', fit)
+    # Engine bands still parse the restacked table: five families, seven marks below 600 px.
+    assert view.locator('#chart-bands > g').count() == 5, (label, 'band groups')
+    assert view.locator('#chart-bands .band-bar, #chart-bands .band-tick').count() == 7, (label, 'band marks')
+    # Sticky strip: shown over the form, hidden once the results panel is in view, in sync with #primary.
+    # Phone-height viewport; at 1000 px the whole form and the top of the results fit on one screen.
+    view.set_viewport_size({'width': width, 'height': 812})
+    view.evaluate("scrollTo({top: document.getElementById('mode').getBoundingClientRect().top + scrollY, behavior: 'instant'})")
+    st = strip_state(view)
+    assert st['visible'] and abs(st['bottom'] - st['vh']) <= 1, (label, 'strip visible over the form', st)
+    view.locator('[data-preset="ion"]').click()
+    strip_txt = view.locator('#strip-value').text_content().replace(' ', '')
+    assert strip_txt == view.locator('#primary').text_content().replace(' ', ''), (label, strip_txt)
+    assert view.locator('#strip-prop').text_content() == view.locator('#spent-label').text_content()
+    assert 'ideal' not in view.locator('#result-strip').inner_text().lower()
+    # Action buttons can sit fully above the strip.
+    view.evaluate("scrollTo({top: document.getElementById('print').getBoundingClientRect().bottom + scrollY - innerHeight + 80, behavior: 'instant'})")
+    st = strip_state(view)
+    if st['visible']:
+        top = view.evaluate("document.getElementById('result-strip').getBoundingClientRect().top")
+        assert view.evaluate("document.getElementById('share').getBoundingClientRect().bottom") <= top, (label, 'strip covers the action buttons')
+    view.evaluate("scrollTo({top: document.getElementById('mode').getBoundingClientRect().top + scrollY, behavior: 'instant'})")
+    assert strip_state(view)['visible']
+    view.locator('#result-strip').click()
+    assert abs(view.evaluate("document.getElementById('results').getBoundingClientRect().top")) <= 20, (label, 'strip scrolls to results')
+    assert view.evaluate("document.activeElement.id") == 'results', (label, 'strip moves focus to results')
+    assert not strip_state(view)['visible'], (label, 'strip hidden with results in view')
+    view.evaluate("scrollTo({top: 0, behavior: 'instant'})")
+    view.set_viewport_size({'width': width, 'height': 1000})
+
+
 def check_ui(page, label):
     check_inputs(page, label)
     check_result_text(page, label)
@@ -260,10 +323,19 @@ with sync_playwright() as p:
             # Engine-class band labels never overlap each other.
             overlaps = view.evaluate("() => {const r=[...document.querySelectorAll('#chart-bands text')].map(t=>[t.textContent,t.getBoundingClientRect()]);const o=[];for(let i=0;i<r.length;i++)for(let j=i+1;j<r.length;j++){const a=r[i][1],b=r[j][1];if(a.left<b.right-1&&b.left<a.right-1&&a.top<b.bottom-1&&b.top<a.bottom-1)o.push([r[i][0],r[j][0]]);}return o;}")
             assert not overlaps, (width, theme, overlaps)
+            if width in (360, 375):
+                check_phone(view, width, theme)
             view.locator('[data-preset="passage"]').click()
             view.screenshot(path=str(OUT / f'{width}-{theme}.png'), full_page=True)
             results.append({'width': width, 'theme': theme, 'overflow': 'pass', 'chart_overflow': 'pass', 'axe_serious_critical': 0})
             view.close()
+    # Phase 3 page length at 375x812, in screens.
+    view = browser.new_page(viewport={'width': 375, 'height': 812})
+    view.goto(URL, wait_until='load')
+    view.wait_for_timeout(200)
+    page_screens = view.evaluate('document.documentElement.scrollHeight / 812')
+    assert page_screens <= PAGE_SCREENS_MAX, ('page length at 375x812', page_screens)
+    view.close()
     page.goto(URL, wait_until='domcontentloaded')
     page.emulate_media(media='print')
     page.pdf(path=str(OUT / 'print.pdf'), format='A4', print_background=True)
@@ -289,8 +361,11 @@ with sync_playwright() as p:
     browser.close()
 report = {'status': 'pass', 'numerical_cases': [c[0] for c in cases], 'checks':
           ['inverse mode', 'what-if scrub', 'what-if pointer/keyboard/range', 'what-if commit', 'chart fits container', 'band labels', 'unit preservation', 'fixed jet power', 'invalid input', 'zero delta-v', 'small delta-v',
-           'clipboard fallback', 'URL round-trip', 'input significant digits', 'no exponent notation', 'caveat budget', 'no U+A730', 'invalid shared URL', 'print', 'no console errors'], 'layouts': results,
+           'clipboard fallback', 'URL round-trip', 'input significant digits', 'no exponent notation', 'caveat budget', 'no U+A730', 'invalid shared URL', 'print', 'no console errors', 'phone: stacked table fits', 'phone: touch targets >= 44 px',
+           'phone: result strip', 'phone: constraint select fits', 'phone: engine bands after restack', 'phone: page length'], 'layouts': results,
+          'phone': {'screens_375x812': round(page_screens, 2), 'limit': PAGE_SCREENS_MAX, 'min_touch_px': min(touch_min)},
           'caveat_counts': {k: max(c[k] for _, c in caveat_counts) for k in CAVEAT_LIMITS}}
 (OUT / 'report.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
 print('Rocket equation: numerical, interaction, 8 layout/accessibility cases and print checks passed.')
+print('Phone (360/375, both themes): page %.2f screens at 375x812 (limit %d), smallest touch target %.1f px.' % (page_screens, PAGE_SCREENS_MAX, min(touch_min)))
 print('Caveat counts (max over presets/modes; limits fictional<=4, not a<=3, ideal<=8):', report['caveat_counts'])
