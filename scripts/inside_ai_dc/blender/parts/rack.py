@@ -123,9 +123,9 @@ def nvlink_spine(compute_slots, switch_slots):
     for ci, x in enumerate(T.NVL_X):
         w = 0.07
         yc = SPINE_Y + depth / 2
-        m.box((0.002, depth, h), (x - w / 2, yc, z0 + h / 2), 'sheet-dark')
-        m.box((0.002, depth, h), (x + w / 2, yc, z0 + h / 2), 'sheet-dark')
-        m.box((w, 0.003, h), (x, SPINE_Y + depth, z0 + h / 2), 'sheet-dark')
+        m.box((0.002, depth, h), (x - w / 2, yc, z0 + h / 2), 'aluminium')
+        m.box((0.002, depth, h), (x + w / 2, yc, z0 + h / 2), 'aluminium')
+        m.box((w, 0.003, h), (x, SPINE_Y + depth, z0 + h / 2), 'steel-painted')
         for i in compute_slots + switch_slots:
             m.box((w - 0.008, 0.012, 0.03), (x, SPINE_Y + 0.006, slot_z(i) + RU / 2), 'sheet-dark', bevel=0.0008)
         # bundles: each switch position fans out to compute positions above and below

@@ -174,6 +174,8 @@ def build():
     scn['metresPerUnit'] = 1.0
     scn['stop'] = 4
     scn['scaleBar'] = {'length': 0.1, 'part': 'tray', 'axis': 'x'}
+    scn['camera'] = [4.6, 7.4, 6.2]   # higher than the procedural view: the true-scale tray is 43 mm thick
+    scn['defaultStep'] = 2
     spec = dict(stop=4, required=REQUIRED, counts={'superchip': count('superchipsPerTray')},
                 bounds={'id-card': ('id1Card', 'xzy'), 'tray': ('trayEnvelope', 'x')},
                 budget={'uniqueTriangles': 80000, 'drawCalls': 150})

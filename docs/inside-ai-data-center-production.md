@@ -93,7 +93,7 @@ Loading path proof: a one-cube GLB exported by Blender 4.5.10 (`export_scene.glt
 
 ### Cards 1 and 2: pipeline and the rack and tray spike (2026-11-15)
 
-Build: `scripts/inside_ai_dc/build-models.sh [3|4|all]` (PowerShell twin `build-models.ps1`): Blender 4.5 composes and validates each stop (`blender/build.py`, `lib.validate`), exports a raw GLB to `build/inside_ai_dc/raw/`, `post.mjs` welds, instances (locally, under the same parent), quantizes and meshopt-compresses into `models/inside-ai-data-center/` and writes `manifest.json`, then `check_inside_ai_dc.py` runs. The page loads `s3-rack.glb` and `s4-tray.glb`; `?models=procedural` keeps the old builders.
+Build: `scripts/inside_ai_dc/build-models.sh [3|4|all]` (PowerShell twin `build-models.ps1`): Blender 4.5 composes and validates each stop (`blender/build.py`, `lib.validate`), exports a raw GLB to `build/inside_ai_dc/raw/`, `post.mjs` welds, instances (locally, under the same parent), quantizes and meshopt-compresses into `models/inside-ai-data-center/` and writes `manifest.json`, then `check_inside_ai_dc.py` runs. The procedural builders stay the default (commit 9e74447); `?models=glb` loads the Blender models for stops that have one. Measurement and QA pass `?models=glb` for the new path; `?models=procedural` is the same as no query.
 
 Measured with `scripts/inside_ai_dc/measure.py` (headless Chromium, SwiftShader software WebGL; mobile = 375 px, 4x CPU throttle, 150 ms RTT, 1.6 Mbit/s). Draw calls and triangles are `renderer.info` and include the shadow pass. Frame rates under SwiftShader are CPU-bound and only compare old against new; no real device was measured.
 
@@ -132,3 +132,21 @@ Deviations and limits recorded for this spike:
 - Palette materials are not theme-dependent; neither were the procedural materials.
 - The stop 4 camera sits higher (about 44 degrees) so the true-scale 43 mm tray stays legible at 375 px. Its stamp reads "Drawn to scale"; its scale bar is 10 cm. The intro sentence "Views are not to scale" is unchanged and is now only true for stops 0 to 2 and 5 to 7.
 - Superchip boards in the tray are a low-detail proxy (card 3 builds them). The rack's tray proxy shares the tray's front and rear geometry, but its interior is an empty pan with the runtime GPU blocks.
+
+### Spike fixes after review (2026-11-15)
+
+- Rack default view. The GLB rack opens at step 1 (one compute tray slid out on its rails) under a rear three-quarter camera over the cut side (`camera` and `defaultStep` scene extras), so the bus bar, the red and blue manifolds, the NVLink cartridges and the slid tray's rear connectors are visible without user action. Cartridge side plates are aluminium so the spines read against the dark frame. Callout 1 anchors on the compute tray's rear, callout 2 on a switch tray's cut-side face. The rack dimension sits on the rear cut-side edge, clear of the figure. The "ZOOM" highlight box now follows the tray when the step changes.
+- Person referent: palette `referent` is mid-grey `#646c76`, placed at the front of the cut side so it does not overlap the rack or the dimension labels. With the environment map (desktop) it renders lighter; at 375 px it renders as a dark slate figure.
+- Phones (`(pointer:coarse)`): no `RoomEnvironment` reflections; palette metalness x0.35 and roughness at least 0.45 so metals stay grey under the existing key, fill and hemisphere lights. On GLB stops the shadow map is 1024 instead of 2048, and model meshes cast but do not receive shadows (the floor still receives them). On all devices the repeated rack trays, the instanced GPU blocks and the rear spines do not cast; only the hero compute tray, frame and person do. The procedural path is unchanged. Measured cost order on the rack (4x throttle): shadow receiving and the shadow pass were the largest remaining costs after the environment map; casting from small instanced detail was not.
+
+| Mobile profile, after fixes | Stop 3 procedural | Stop 3 GLB | Stop 4 procedural | Stop 4 GLB |
+|---|---:|---:|---:|---:|
+| Orbit fps (measure.py) | 46.6 | 32.3 | 60.4 | 59.9 |
+| Orbit fps, five repeat runs (rack GLB) | | 30.7 to 33.0 | | |
+| Cold, stop change to model on screen | 146 ms | 2,085 ms | 187 ms | 1,627 ms |
+| Cached | 47 ms | 88 ms | 30 ms | 42 ms |
+| Draw calls / triangles incl. shadow | 354 / 10,168 | 53 / 36,222 | 180 / 4,700 | 103 / 17,362 |
+
+Desktop SwiftShader orbit (1280x800, environment map and full shadows on) is lower for the GLB stops than for the procedural ones (rack 9.7 vs 24.5, tray 14.9 vs 28.3); software rendering at that size is fill-bound, and spec section 9 sets the frame-rate budget on the mobile profile only. The host was under other load during these runs; repeat runs varied by several fps.
+
+QA overlaps that predate the model work (confirmed by running `scripts/qa_inside_ai_dc.py` on the page at e8acfaa): stop 3 line-up flow tags rendered inline and overlapped (fixed: the line-up rule now keeps `.flow-tags` a grid); stop 0 "ZOOM" button over the worked example is a QA false positive (the worked example is scrolled out of the inspector panel, clipped by its overflow); procedural stop 4 lifted state puts callouts 1 and 3 on top of each other (procedural builder anchors, not CSS; listed as known, gone on the GLB path).

@@ -60,7 +60,7 @@ PALETTE = {
     'pipe-secondary': ('#a9b4bd', 0.3, 0.9),
     'cable': ('#262a30', 0.7, 0.0),
     'section': ('#d9d2c3', 0.9, 0.0),
-    'referent': ('#9fb0bf', 0.75, 0.05),
+    'referent': ('#646c76', 0.85, 0.0),
     'flow-power': ('#F2A93B', 0.5, 0.0),
     'flow-cool': ('#3E9BE0', 0.5, 0.0),
     'flow-hot': ('#E0574A', 0.5, 0.0),

@@ -4,7 +4,8 @@
 Hides every overlay, pin, label and control, then screenshots the bare model at
 the requested stops, desktop 1280x800 and phone 375x812.
 
-Run: python scripts/inside_ai_dc/unlabelled.py OUT_DIR [--query ?models=procedural] [--stops 3,4]
+Run: python scripts/inside_ai_dc/unlabelled.py OUT_DIR [--query ?models=glb] [--stops 3,4]
+(no --query captures the procedural default; --query ?models=glb captures the Blender models)
 """
 
 from __future__ import annotations

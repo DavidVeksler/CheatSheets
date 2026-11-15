@@ -16,7 +16,9 @@ SLIDE = 0.45      # step 1: hero tray forward on its rails (m)
 SPINE_BACK = 0.25 # step 2: spines rearward (m)
 GPU_XS = (-0.197, -0.073, 0.073, 0.197)   # GPU package centres across the tray (tray stop layout)
 GPU_Y, GPU_Z = 0.085, 0.017
-SLOT_SIZE = [0.078, 0.012, 0.082]         # runtime GPU-and-plate block, glTF axes (x, up, depth)
+SLOT_SIZE = [0.078, 0.012, 0.082]
+PERSON_AT = (0.95, -1.45, 0)               # in front of the rack, beyond the slid tray
+CAMERA = [7.4, 5.0, -4.3]                 # rear three-quarter over the cut side: spines and the slid tray's rear in view         # runtime GPU-and-plate block, glTF axes (x, up, depth)
 
 REQUIRED = ['rack', 'compute-tray', 'switch-tray', 'manifold', 'return', 'busbar', 'nvlink-spine', 'domain',
             'person', 'rack-gpus']
@@ -49,8 +51,9 @@ def build():
             extras = {'shadow': kind == 'compute'}
             if kind == 'compute':
                 extras = dict(explode=gl((0, -SLIDE, 0)), explodeStep=1, next=True)
-            part(o, hero_id, 'illustrative', manifest='compute tray envelope',
-                 anchor=(0, T.FRONT - 0.012, T.TH / 2), **extras)
+            # pins: the slid compute tray at its exposed rear connectors, the switch tray on its cut-side face
+            anchor = (T.TW * 0.3, T.REAR - 0.05, T.TH) if kind == 'compute' else (T.TW / 2, 0.1, T.TH / 2)
+            part(o, hero_id, 'illustrative', manifest='compute tray envelope', anchor=anchor, **extras)
         elif not used[kind]:
             o = templates[kind]
             o.name = 'i.%s.%02d' % (kind, idx)
@@ -101,13 +104,16 @@ def build():
          box=[round(w, 4), round(z_hi - z_lo, 4), round(y_hi - y_lo, 4)])
 
     person = referents.person().finish('person', ao_dist=0.08)
-    person.location = (-R.RW / 2 - 0.42, -0.25, 0)
+    person.location = PERSON_AT
     part(person, 'person', 'illustrative', manifest='person', anchor=(0, 0, lib.dim('person') + 0.02))
 
     scn = bpy.context.scene
     scn['metresPerUnit'] = 1.0
     scn['stop'] = 3
     scn['scaleBar'] = {'length': 2.054, 'part': 'rack', 'axis': 'y'}
+    scn['camera'] = CAMERA
+    scn['defaultStep'] = 1
+    scn['dimensionEdge'] = [1, -1]            # rear edge on the cut side (glTF +x, -z)
 
     spec = dict(stop=3, required=REQUIRED,
                 counts={'compute-tray': count('computeTrays'), 'switch-tray': count('switchTrays'),
