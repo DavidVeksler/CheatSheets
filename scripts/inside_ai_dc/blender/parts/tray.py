@@ -92,35 +92,7 @@ def proxy(kind):
 
 # ============================================================================ hero (stop 4)
 
-def superchip(lod='proxy'):
-    """Simple superchip proxy (stop 5 builds the detailed board later): PCB, Grace package with memory, two GPU
-    packages, VRM rows. Local origin = board centre on its underside. Board 0.25 x 0.44 m, illustrative."""
-    m = Mesh()
-    bw, bd, bt = 0.25, 0.44, 0.0024
-    m.box((bw, bd, bt), (0, 0, bt / 2), 'pcb', bevel=0.0004)
-    # Grace CPU package with LPDDR5X alongside (illustrative placement)
-    m.box((0.045, 0.045, 0.0025), (0, -0.11, bt + 0.00125), 'substrate')
-    m.box((0.034, 0.034, 0.002), (0, -0.11, bt + 0.0035), 'steel-bare', bevel=0.0005)
-    for s in (-1, 1):
-        for k in range(4):
-            m.box((0.008, 0.014, 0.0012), (s * 0.034, -0.135 + k * 0.016, bt + 0.0006), 'dram')
-    # two GPU packages: substrate, stiffener ring, die area (low detail)
-    for x in (-0.062, 0.062):
-        m.box((0.07, 0.075, 0.0025), (x, 0.085, bt + 0.00125), 'substrate')
-        m.box((0.05, 0.055, 0.0015), (x, 0.085, bt + 0.0033), 'silicon')
-        for s in (-1, 1):
-            m.box((0.07, 0.004, 0.002), (x, 0.085 + s * 0.0355, bt + 0.0035), 'steel-bare')
-    # VRM rows: inductors either side of each package and along the CPU
-    for x in (-0.115, -0.009, 0.009, 0.115):
-        for k in range(5):
-            m.box((0.007, 0.007, 0.005), (x, 0.055 + k * 0.014, bt + 0.0025), 'sheet-dark')
-    for k in range(6):
-        m.box((0.007, 0.007, 0.005), (-0.05 + k * 0.02, -0.165, bt + 0.0025), 'sheet-dark')
-    m.box((0.05, 0.012, 0.008), (0.08, 0.2, bt + 0.004), 'sheet-dark')  # input power connector
-    return m
-
-
-PLATE_Z = 0.0024 + 0.0055   # board top + package height: plate underside
+PLATE_Z = 0.0024 + 0.0055   # superchip board top + package height (superchip.BT + gpu_package.TOP): plate underside
 PLATE_T = 0.009             # plate thickness (base + cover), illustrative
 
 

@@ -1,4 +1,4 @@
-"""Build the inside-ai-data-center stop models: blender -b -P build.py -- --stop 3|4|all
+"""Build the inside-ai-data-center stop models: blender -b -P build.py -- --stop 3|4|5|6|7|all
 
 For each stop: compose (stops/sN_*.py), validate (lib.validate, spec 6.4), save the .blend and a raw GLB under
 build/inside_ai_dc/, and write a sidecar meta JSON for post.mjs.
@@ -13,7 +13,8 @@ sys.path.insert(0, HERE)
 
 import lib  # noqa: E402
 
-STOPS = {3: ('stops.s3_rack', 's3-rack'), 4: ('stops.s4_tray', 's4-tray')}
+STOPS = {3: ('stops.s3_rack', 's3-rack'), 4: ('stops.s4_tray', 's4-tray'), 5: ('stops.s5_superchip', 's5-superchip'),
+         6: ('stops.s6_gpu', 's6-gpu'), 7: ('stops.s7_hbm', 's7-hbm')}
 
 
 def main():
@@ -36,6 +37,7 @@ def main():
         scene = bpy.context.scene
         extra = {'stop': n, 'file': file_id + '.glb', 'required': spec['required'],
                  'metresPerUnit': scene['metresPerUnit'],
+                 'exaggeration': scene['exaggeration'].to_dict() if 'exaggeration' in scene.keys() else {},
                  'parts': sorted(o.name for o in scene.objects if 'tier' in o.keys() and not o.name.startswith('i.')),
                  'tiers': {o.name: o['tier'] for o in scene.objects if 'tier' in o.keys() and not o.name.startswith('i.')},
                  'anchors': sorted(o.name[7:] for o in scene.objects if o.name.startswith('anchor:'))}

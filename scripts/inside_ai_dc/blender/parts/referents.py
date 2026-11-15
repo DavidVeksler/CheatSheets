@@ -1,4 +1,5 @@
-"""True-size scale referents (spec 3.6): a 1.75 m person and an ID-1 card. Neutral `referent` material."""
+"""True-size scale referents (spec 3.6): a 1.75 m person, an ID-1 card, a fingertip, a hair and a card-edge fragment.
+Neutral `referent` material."""
 import lib
 from lib import Mesh
 
@@ -33,4 +34,43 @@ def id_card():
     w, t, d = lib.dim('id1Card')
     m = Mesh()
     m.box((w, d, t), (0, 0, t / 2), 'referent', bevel=0.003)
+    return m
+
+
+def fingertip():
+    """Fingertip lying on its pad, pointing at -Y: a 16 mm wide rounded cylinder, 30 mm long. Width from
+    dims.fingertipWidth (illustrative adult index finger); no nail or print detail."""
+    r = lib.dim('fingertipWidth') / 2
+    m = Mesh()
+    length = 0.03 - r
+    m.cyl(r, length, (0, length / 2, r), 'referent', axis='Y', seg=20, caps=False)
+    tmp = bmesh.new()
+    bmesh.ops.create_uvsphere(tmp, u_segments=20, v_segments=12, radius=r)
+    bmesh.ops.transform(tmp, matrix=Matrix.Translation(Vector((0, 0, r))), verts=tmp.verts)
+    for f in tmp.faces:
+        f.material_index = m._slot('referent')
+        f.smooth = True
+    m._merge(tmp)
+    return m
+
+
+def hair(length, hs):
+    """Hair segment along Y with its cut end at y = 0 facing -Y, lying on z = 0. Diameter dims.hair; height x hs
+    (the stage's vertical exaggeration, so the section is drawn as an ellipse)."""
+    r = lib.dim('hair') / 2
+    m = Mesh()
+    faces = m.cyl(r, length, (0, length / 2, r), 'referent', axis='Y', seg=16)
+    verts = list({v for f in faces for v in f.verts})
+    bmesh.ops.scale(m.bm, vec=Vector((1, 1, hs)), verts=verts)
+    return m
+
+
+def card_edge(w, d, hs):
+    """Fragment of an ID-1 card (0.76 mm thick) lying flat, w x d, with section faces on its two cut edges (-Y, +X);
+    thickness x hs."""
+    t = lib.dim('id1Card')[1] * hs
+    m = Mesh()
+    m.box((w, d, t), (0, 0, t / 2), 'referent')
+    m.box((w, 0.00002, t), (0, -d / 2 - 0.00001, t / 2), 'section')
+    m.box((0.00002, d, t), (w / 2 + 0.00001, 0, t / 2), 'section')
     return m

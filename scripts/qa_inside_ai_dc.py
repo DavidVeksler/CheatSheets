@@ -8,7 +8,8 @@ and render metrics (draw calls, triangles, callout layout time).
 Run: python scripts/qa_inside_ai_dc.py [out_dir] [--query ?models=glb]   (default: a temp dir)
 Exits 1 if any desktop state has an overlap, the page logs an error, a model request fails, or a model stop
 exceeds its draw-call or triangle budget (docs/specs/inside-ai-data-center-blender-models.md section 9).
-Actions: 'explode*2' clicks Separate/Lift twice (the GLB stops have two steps); 'theme' toggles dark/light.
+Actions: 'explode*2' clicks Separate/Lift twice (the GLB stops have two steps); stop 6 'explode' is Slice package on
+the GLB path (the procedural page hides that button); 'theme' toggles dark/light.
 Phone overlaps are reported but not fatal: at 375 px labels share the drawing.
 """
 
@@ -54,7 +55,9 @@ OVERLAP_JS = """() => {
 }"""
 
 STATES = [(s, None) for s in range(8)] + [(3, "explode"), (3, "explode*2"), (3, "lineup"), (3, "fail"), (3, "theme"),
-                                          (4, "explode"), (4, "explode*2"), (4, "fail"), (4, "theme")]
+                                          (4, "explode"), (4, "explode*2"), (4, "fail"), (4, "theme"),
+                                          (5, "fail"), (5, "theme"), (6, "explode"), (6, "fail"), (6, "theme"),
+                                          (7, "fail"), (7, "theme")]
 if os.environ.get("QA_STATES"):
     STATES = [(int(x.split(":")[0]), x.split(":")[1] if ":" in x else None) for x in os.environ["QA_STATES"].split(",")]
 BUDGET = {"drawCalls": 150 * 2, "triangles": 350000 * 2}  # renderer.info counts the shadow pass as well

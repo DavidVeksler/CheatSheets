@@ -114,7 +114,12 @@ MODELS = ROOT / "models" / "inside-ai-data-center"
 MODEL_IDS = {
     3: {"rack", "domain", "return", "nvlink-spine", "person", "rack-gpus"},
     4: {"tray", "tray-supply", "tray-return", "power-contact"},
+    5: {"superchip", "power-delivery", "c2c-link-two", "superchip-cool", "id-card"},
+    6: {"substrate", "die-link", "gpu-power", "stiffener", "cold-plate-lifted", "section", "fingertip"},
+    7: {"base-die", "mold", "die-edge", "hair", "card-edge"},
 }
+# Scale wording on the GLB path (spec D4): every exaggeration constant is exported and printed on the stage label.
+EXAG_STOPS = {6: {"packageSliceHeight"}, 7: {"hbmHeight", "hbmVia"}}
 model_manifest = MODELS / "manifest.json"
 if model_manifest.is_file():
     import ast
@@ -150,6 +155,10 @@ if model_manifest.is_file():
             if limit in budget:
                 check(entry[key] <= budget[limit], f"{name}: {key} {entry[key]} > budget {budget[limit]}")
         check(all(t in ("vendor", "derived", "illustrative") for t in entry["tiers"].values()), f"{name}: bad tier")
+        for key in EXAG_STOPS.get(stop, ()):
+            check(entry.get("exaggeration", {}).get(key) == build_ref["exaggeration"][key]["value"],
+                  f"{name}: exaggeration {key} differs from reference_build.json")
+            check(f"e.{key}" in html, f"page stage label does not print {key}")
     if "totalBytes" in budget:
         check(total <= budget["totalBytes"], f"all GLBs {total} B > {budget['totalBytes']} B")
     check(f"MODEL_FILES={{" in html, "page has no model loader")

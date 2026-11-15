@@ -7,14 +7,15 @@ a relative comparison, not a device claim.
 
 Per stop: draw calls and triangles from window.__dcMetrics (renderer.info, shadow pass included), cold time from
 stop change to model on screen (fresh browser context, HTTP cache empty, model not prefetched), cached time
-(stop revisited from stop n+1, parsed model in memory; n -> n+1 would add the 680 ms zoom transition), and orbit frame rate (arrow-key rotation every animation frame for 3 s).
+(stop revisited from stop n+1, or from 5 for stop 7, parsed model in memory; n -> n+1 would add the 680 ms zoom transition), and orbit frame rate (arrow-key rotation every animation frame for 3 s).
 
-Run: python scripts/inside_ai_dc/measure.py [out.json]
+Run: python scripts/inside_ai_dc/measure.py [out.json]   (MEASURE_STOPS=3,4 limits the stops)
 """
 
 from __future__ import annotations
 
 import json
+import os
 import sys
 import threading
 from functools import partial
@@ -25,7 +26,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.stdout.reconfigure(encoding="utf-8")
-STOPS = (3, 4)
+STOPS = tuple(int(s) for s in os.environ.get('MEASURE_STOPS', '3,4,5,6,7').split(','))
 ORBIT_JS = """async () => {
   const c = document.querySelector('#canvas-wrap canvas'); let frames = 0; const t0 = performance.now();
   await new Promise(res => { function step() { c.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft', bubbles: true}));
@@ -66,7 +67,7 @@ def run(p, base, query, mobile):
         metrics = page.evaluate("({...window.__dcMetrics})")
         fps = page.evaluate(ORBIT_JS)
         page.evaluate("document.querySelector('#reset').click()")
-        other = stop + 1  # leave by the next stop and come back: n+1 -> n has no zoom transition
+        other = stop + 1 if stop < 7 else 5  # leave and come back without the zoom transition (only n -> n+1 has one)
         page.evaluate(SWITCH_JS, other)
         page.wait_for_timeout(500)
         cached = page.evaluate(SWITCH_JS, stop)

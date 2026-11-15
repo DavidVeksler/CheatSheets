@@ -8,7 +8,7 @@ import bpy
 
 import lib
 from lib import Mesh, gl, part, count
-from parts import referents, tray as T
+from parts import referents, superchip as SC, tray as T
 
 BOARD_X = (-0.135, 0.135)
 BOARD_Z = 0.005           # standoff height under the superchip boards
@@ -75,7 +75,7 @@ def build():
     blk['tier'] = 'illustrative'
 
     # superchips and their plate assemblies
-    sc = T.superchip()
+    sc = SC.proxy()   # the stop 5 board's low-detail export
     board = sc.finish('superchip-a')
     plate_ports = {}
     for i, x in enumerate(BOARD_X):

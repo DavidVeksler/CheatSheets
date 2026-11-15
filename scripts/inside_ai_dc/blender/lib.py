@@ -38,6 +38,11 @@ def dim(key):
     return REF['dims'][key]['value']
 
 
+def exag(key):
+    """Named exaggeration factor (spec D4), from reference_build.json."""
+    return REF['exaggeration'][key]['value']
+
+
 # Spec 5.2. sRGB hex, roughness, metalness. The page's runtime PALETTE swaps these by name; check_inside_ai_dc.py
 # asserts the two lists match.
 PALETTE = {
@@ -329,6 +334,16 @@ def part(obj, pid, tier, manifest=None, anchor=None, **extras):
         e.parent = obj
         e.location = anchor
     return obj
+
+
+def fail_anchor(obj, pid, location):
+    """Optional child empty 'fail:<id>': where the fault tag sits when the default pin position would cover other pins."""
+    e = bpy.data.objects.new('fail:' + pid, None)
+    e.empty_display_size = 0.01
+    obj.users_collection[0].objects.link(e)
+    e.parent = obj
+    e.location = location
+    return e
 
 
 def empty(name, location, parent=None):
