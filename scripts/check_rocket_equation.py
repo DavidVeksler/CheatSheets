@@ -6,6 +6,7 @@ Start a static server, then python scripts/check_rocket_equation.py --base URL.
 import argparse
 import json
 import math
+import re
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -23,6 +24,57 @@ def near(actual, expected, label):
     assert math.isclose(actual, expected, rel_tol=1e-10, abs_tol=1e-9), (label, actual, expected)
 
 
+def sig_digits(text):
+    digits = text.lstrip('-').replace('.', '').lstrip('0').rstrip('0')
+    return len(digits)
+
+
+def check_inputs(page, label):
+    """1.2: no visible number input shows more than 7 significant digits or an exponent."""
+    fields = page.evaluate("""() => [...document.querySelectorAll('#calc-form input[type=number]')]
+        .filter(e => e.offsetParent !== null).map(e => [e.id, e.value])""")
+    assert fields, (label, 'no visible inputs')
+    for field_id, value in fields:
+        assert not re.search('[eE]', value), (label, field_id, value, 'exponent in input')
+        assert sig_digits(value) <= 7, (label, field_id, value, 'more than 7 significant digits')
+
+
+RESULT_TEXT_JS = """() => ['#summary', '#primary', '.stats', '#chart-text', '#chart-conditions']
+    .map(s => document.querySelector(s).innerText)
+    .concat([...document.querySelectorAll('#chart text')].map(t => t.textContent)).join('\\n')"""
+
+
+def check_result_text(page, label):
+    """1.4: no E-notation exponent anywhere in the visible result text."""
+    text = page.evaluate(RESULT_TEXT_JS)
+    assert not re.search(r'\d[eE][+-]?\d', text), (label, text)
+
+
+CAVEAT_JS = """() => {
+    const parts = [document.querySelector('header'), ...document.querySelectorAll('main > *:not(#mistakes)'),
+                   document.querySelector('footer')];
+    const text = parts.map(e => e.innerText).join('\\n').toLowerCase();
+    const count = w => text.split(w).length - 1;
+    return {fictional: count('fictional'), not_a: count('not a '), ideal: count('ideal')};
+}"""
+CAVEAT_LIMITS = {'fictional': 4, 'not_a': 3, 'ideal': 8}
+caveat_counts = []
+
+
+def check_caveats(page, label):
+    """1.7: caveat budget on visible body text (Gotchas section excluded)."""
+    counts = page.evaluate(CAVEAT_JS)
+    caveat_counts.append((label, counts))
+    for key, limit in CAVEAT_LIMITS.items():
+        assert counts[key] <= limit, (label, key, counts[key], limit)
+
+
+def check_ui(page, label):
+    check_inputs(page, label)
+    check_result_text(page, label)
+    check_caveats(page, label)
+
+
 with sync_playwright() as p:
     browser = p.chromium.launch(args=['--mute-audio'])
     page = browser.new_page(viewport={'width': 1440, 'height': 1000})
@@ -30,6 +82,19 @@ with sync_playwright() as p:
     page.on('pageerror', lambda e: errors.append(str(e)))
     page.goto(URL, wait_until='domcontentloaded')
     assert page.evaluate('!!window.rocketCalculator')
+    # 1.5: no U+A730 anywhere in the source or the live document.
+    assert 'ꜰ' not in (ROOT / 'rocket-equation-calculator.html').read_text(encoding='utf-8')
+    assert 'ꜰ' not in page.evaluate('document.documentElement.outerHTML')
+    # 1.6: no visible Calculate button; Enter still submits the form.
+    assert page.locator('#calc-form button[type=submit]:visible').count() == 0
+    page.evaluate("window.__submits = 0; document.getElementById('calc-form').addEventListener('submit', () => window.__submits++)")
+    page.focus('#exhaust')
+    page.keyboard.press('Enter')
+    assert page.evaluate('window.__submits') == 1, 'Enter must still submit the form'
+    # 1.1: worked case C's formula produces its displayed answer.
+    case_c = page.locator('#examples .card').nth(2)
+    assert case_c.locator('.formula').inner_text().replace(' ', '') == 'mp=10,000×(1−e^(−100/200))'.replace(' ', '')
+    assert case_c.locator('.answer').inner_text() == f'{10000 * (1 - math.exp(-100 / 200)):,.2f} t'
     cases = [
         ('chemical', 100000, 10000, 3432.3275, 1000000),
         ('ion', 1200, 1000, 29419.95, 0.1),
@@ -39,6 +104,7 @@ with sync_playwright() as p:
     ]
     for name, wet, final, ve, thrust in cases:
         page.locator(f'[data-preset="{name}"]').click()
+        check_ui(page, name)
         r = page.evaluate('rocketCalculator.getResult()')
         for key, value in {'wet': wet, 'final': final, 've': ve, 'thrust': thrust,
                            'dv': ve * math.log(wet / final), 'prop': wet - final,
@@ -48,16 +114,24 @@ with sync_playwright() as p:
         page.select_option('#mode', 'mission')
         inverse = page.evaluate('rocketCalculator.getResult()')
         near(inverse['wet'], wet, name + ' inverse mass')
+        check_ui(page, name + ' mission mode')
+        page.select_option('#constraint', 'power')
+        check_ui(page, name + ' power constraint')
     page.locator('#reset').click()
     baseline = page.evaluate('rocketCalculator.getResult()')
     # Units preserve the physical configuration, including after loading presets.
     for selector, value in [('#mass-unit', '1'), ('#exhaust-unit', 'velocity'),
-                             ('#thrust-unit', '1000000'), ('#mass-unit', '1000')]:
+                             ('#thrust-unit', '1000'), ('#mass-unit', '1000')]:
         page.select_option(selector, value)
         r = page.evaluate('rocketCalculator.getResult()')
         near(r['dv'], baseline['dv'], selector)
         near(r['thrust'], baseline['thrust'], selector)
     page.locator('[data-preset="ion"]').click()
+    # 1.3: presets apply their natural units (ion: kg, Isp, N).
+    assert page.input_value('#mass-unit') == '1' and page.input_value('#thrust-unit') == '1'
+    assert float(page.input_value('#wet')) == 1200
+    page.select_option('#mass-unit', '1000')
+    assert math.isclose(float(page.input_value('#wet')), 1.2)
     page.select_option('#mass-unit', '1')
     assert float(page.input_value('#wet')) == 1200
     page.select_option('#mass-unit', '1000')
@@ -148,6 +222,8 @@ with sync_playwright() as p:
     browser.close()
 report = {'status': 'pass', 'numerical_cases': [c[0] for c in cases], 'checks':
           ['inverse mode', 'unit preservation', 'fixed jet power', 'invalid input', 'zero delta-v', 'small delta-v',
-           'clipboard fallback', 'URL round-trip', 'invalid shared URL', 'print', 'no console errors'], 'layouts': results}
+           'clipboard fallback', 'URL round-trip', 'input significant digits', 'no exponent notation', 'caveat budget', 'no U+A730', 'invalid shared URL', 'print', 'no console errors'], 'layouts': results,
+          'caveat_counts': {k: max(c[k] for _, c in caveat_counts) for k in CAVEAT_LIMITS}}
 (OUT / 'report.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
 print('Rocket equation: numerical, interaction, 8 layout/accessibility cases and print checks passed.')
+print('Caveat counts (max over presets/modes; limits fictional<=4, not a<=3, ideal<=8):', report['caveat_counts'])
