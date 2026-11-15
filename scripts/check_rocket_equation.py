@@ -39,7 +39,7 @@ def check_inputs(page, label):
         assert sig_digits(value) <= 7, (label, field_id, value, 'more than 7 significant digits')
 
 
-RESULT_TEXT_JS = """() => ['#summary', '#primary', '.stats', '#chart-text', '#chart-conditions']
+RESULT_TEXT_JS = """() => ['#summary', '#primary', '.stats', '#chart-text', '#chart-conditions', '#whatif']
     .map(s => document.querySelector(s).innerText)
     .concat([...document.querySelectorAll('#chart text')].map(t => t.textContent)).join('\\n')"""
 
@@ -117,6 +117,61 @@ with sync_playwright() as p:
         check_ui(page, name + ' mission mode')
         page.select_option('#constraint', 'power')
         check_ui(page, name + ' power constraint')
+    # 2.3: what-if scrub holds delta-v, post-burn mass and jet power fixed and never touches the form.
+    page.locator('[data-preset="chemical"]').click()
+    form_state = "() => [...document.querySelectorAll('#calc-form input, #calc-form select')].map(e => [e.id, e.value, e.dataset.exact || ''])"
+    before_form = page.evaluate(form_state)
+    base = page.evaluate('rocketCalculator.getResult()')
+    assert page.evaluate('rocketCalculator.getWhatIf().ve') == base['ve'], 'what-if starts at the current exhaust velocity'
+    assert page.locator('#massbar-ghost').is_hidden() and not page.locator('#wi-thrust-d').inner_text()
+    w = page.evaluate('rocketCalculator.setWhatIf(30000)')
+    share = 1 - math.exp(-base['dv'] / 30000)
+    near(w['fraction'], share, 'what-if propellant share')
+    near(w['wet'], base['final'] * math.exp(base['dv'] / 30000), 'what-if launch mass')
+    near(w['thrust'], 2 * base['power'] / 30000, 'what-if thrust')
+    near(w['burn'], w['prop'] * 30000 / w['thrust'], 'what-if engine time')
+    shown = float(page.locator('#wi-frac').inner_text().rstrip('%'))
+    assert shown == float(f'{share * 100:.4g}'), ('displayed what-if share', shown, share)
+    assert page.locator('#massbar-ghost').is_visible() and page.locator('#wi-thrust-d').inner_text().startswith('÷')
+    assert page.evaluate(form_state) == before_form, 'what-if must not change the form'
+    surface = page.locator('#whatif-surface')
+    surface.scroll_into_view_if_needed()
+    box = surface.bounding_box()
+    page.mouse.click(box['x'] + box['width'] * 0.8, box['y'] + box['height'] / 2)
+    assert page.evaluate('rocketCalculator.getWhatIf().ve') > 30000, 'tap on the chart moves the what-if'
+    page.mouse.move(box['x'] + box['width'] * 0.8, box['y'] + box['height'] / 2)
+    page.mouse.down()
+    page.mouse.move(box['x'] + box['width'] * 0.3, box['y'] + box['height'] / 2, steps=5)
+    page.mouse.up()
+    dragged = page.evaluate('rocketCalculator.getWhatIf().ve')
+    assert dragged < 30000, ('drag moves the what-if', dragged)
+    surface.focus()
+    page.keyboard.press('ArrowRight')
+    stepped = page.evaluate('rocketCalculator.getWhatIf().ve')
+    assert stepped > dragged, 'ArrowRight raises the what-if exhaust velocity'
+    page.keyboard.press('Shift+ArrowLeft')
+    assert page.evaluate('rocketCalculator.getWhatIf().ve') < stepped, 'Shift+ArrowLeft lowers it'
+    page.keyboard.press('End')
+    assert page.evaluate('rocketCalculator.getWhatIf().ve') == 1e6
+    assert surface.get_attribute('aria-valuenow') == '1000' and 'km/s' in surface.get_attribute('aria-valuetext')
+    page.keyboard.press('Home')
+    assert page.evaluate('rocketCalculator.getWhatIf().ve') == 1000
+    page.locator('#whatif-range').fill('300')
+    assert math.isclose(page.evaluate('rocketCalculator.getWhatIf().ve'), 10 ** 4.5), 'range input drives the what-if'
+    assert page.evaluate(form_state) == before_form, 'what-if controls must not change the form'
+    page.evaluate('rocketCalculator.setWhatIf(30000)')
+    page.locator('#whatif-use').click()
+    committed = page.evaluate('rocketCalculator.getResult()')
+    assert committed['ve'] == 30000, committed['ve']
+    assert page.input_value('#mode') == 'mission' and page.input_value('#constraint') == 'power'
+    assert page.input_value('#exhaust-unit') == 'isp', 'commit keeps the exhaust unit'
+    near(committed['dv'], base['dv'], 'commit keeps delta-v')
+    near(committed['power'], base['power'], 'commit keeps jet power')
+    near(committed['final'], base['final'], 'commit keeps post-burn mass')
+    near(committed['fraction'], share, 'committed propellant share')
+    check_ui(page, 'what-if commit')
+    assert page.evaluate('rocketCalculator.getWhatIf().ve') == 30000 and page.locator('#massbar-ghost').is_hidden()
+    assert not page.locator('#wi-frac-d').inner_text(), 'form change resets the what-if to current'
     page.locator('#reset').click()
     baseline = page.evaluate('rocketCalculator.getResult()')
     # Units preserve the physical configuration, including after loading presets.
@@ -191,16 +246,23 @@ with sync_playwright() as p:
             for preset in ['chemical', 'ion', 'passage', 'tug', 'ascent']:
                 view.locator(f'[data-preset="{preset}"]').click()
                 assert view.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), (width, theme, preset, 'overflow')
+                view.evaluate('rocketCalculator.setWhatIf(rocketCalculator.getResult().ve * 8)')
+                # 2.4: the chart fits its container; no horizontal scroll inside it.
+                chart_overflow = view.evaluate("() => ['.chart-wrap', '#chart-stage', '.chart-body'].map(s => document.querySelector(s)).filter(e => e.scrollWidth > e.clientWidth).map(e => e.className || e.id)")
+                assert not chart_overflow, (width, theme, preset, 'chart overflow', chart_overflow)
             view.add_script_tag(path=str(axe))
             violations = view.evaluate("async () => (await axe.run()).violations.filter(v=>['critical','serious'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))")
             assert not violations, (width, theme, violations)
             duplicate_ids = view.evaluate("() => {const a=[...document.querySelectorAll('[id]')].map(x=>x.id);return a.filter((id,i)=>a.indexOf(id)!==i)}")
             assert not duplicate_ids, duplicate_ids
-            clipped = view.evaluate("() => [...document.querySelectorAll('#chart text')].filter(t=>{const a=t.getBoundingClientRect(),b=document.querySelector('#chart').getBoundingClientRect();return a.left<b.left-1||a.right>b.right+1}).map(t=>t.textContent)")
+            clipped = view.evaluate("() => [...document.querySelectorAll('#chart text')].filter(t=>{const a=t.getBoundingClientRect(),b=document.querySelector('#chart').getBoundingClientRect();return a.left<b.left-1||a.right>b.right+1||a.top<b.top-1||a.bottom>b.bottom+1}).map(t=>t.textContent)")
             assert not clipped, clipped
+            # Engine-class band labels never overlap each other.
+            overlaps = view.evaluate("() => {const r=[...document.querySelectorAll('#chart-bands text')].map(t=>[t.textContent,t.getBoundingClientRect()]);const o=[];for(let i=0;i<r.length;i++)for(let j=i+1;j<r.length;j++){const a=r[i][1],b=r[j][1];if(a.left<b.right-1&&b.left<a.right-1&&a.top<b.bottom-1&&b.top<a.bottom-1)o.push([r[i][0],r[j][0]]);}return o;}")
+            assert not overlaps, (width, theme, overlaps)
             view.locator('[data-preset="passage"]').click()
             view.screenshot(path=str(OUT / f'{width}-{theme}.png'), full_page=True)
-            results.append({'width': width, 'theme': theme, 'overflow': 'pass', 'axe_serious_critical': 0})
+            results.append({'width': width, 'theme': theme, 'overflow': 'pass', 'chart_overflow': 'pass', 'axe_serious_critical': 0})
             view.close()
     page.goto(URL, wait_until='domcontentloaded')
     page.emulate_media(media='print')
@@ -209,19 +271,24 @@ with sync_playwright() as p:
         page.emulate_media(media='screen', color_scheme='dark')
         page.set_viewport_size({'width': 1200, 'height': 630})
         page.locator('[data-preset="passage"]').click()
+        # Outputs left, two-panel chart right; the what-if sits at the DFD design point to show the scrub.
         page.add_style_tag(content='''
           body>.wrap{max-width:none;padding:0} header,.quick,.note,main>.section,.explore,footer{display:none!important}
-          .tool{border:0}.controls{display:none}.tool-grid{display:block}.tool-top{padding:12px 26px}.tool-top h2{font-size:23px}
-          .outputs{padding:10px 26px;border:0}.big-number{font-size:48px;margin:0}.stats{grid-template-columns:repeat(5,1fr);gap:6px 15px;margin:10px 0}.stats dd{font-size:14px}.stats dt{font-size:11px}.outputs>.small{display:none}.massbar{height:8px}.mass-labels{margin-top:6px}
-          .chart-wrap{padding:10px 26px}.chart-wrap h3{font-size:18px}.chart-wrap p{margin:0;font-size:11px}.chart-wrap svg{height:245px}.chart-wrap figcaption{font-size:11px}.chart-intro{align-items:center}.legend{font-size:11px}
+          .tool{border:0;display:grid;grid-template-columns:390px minmax(0,1fr);height:630px;overflow:hidden}.tool-top{grid-column:1/-1;padding:12px 26px}.tool-top h2{font-size:23px}
+          .controls{display:none}.tool-grid{display:block;height:100%}.outputs{height:100%;padding:14px 24px 0 26px;border:0;border-right:1px solid var(--line)}
+          .big-number{font-size:50px;margin:2px 0 12px}.stats{gap:7px 16px;margin:14px 0 0}.stats dd{font-size:15px}.stats dt{font-size:11px}.outputs>.small{display:none}
+          .chart-wrap{padding:12px 22px 0;border-top:0}.chart-wrap h3{font-size:19px;margin:0}.chart-intro p{margin:2px 0 0;font-size:12px}
+          .legend,.whatif,.whatif-range,.chart-wrap figcaption{display:none!important}.chart-body{display:block;margin-top:4px}
         ''')
+        page.wait_for_timeout(200)
+        page.evaluate('rocketCalculator.setWhatIf(56500)')
         page.locator('#calc-h').evaluate("e=>e.textContent='ROCKET EQUATION / CHEMICAL → ION → FUSION'")
         page.locator('.badge').evaluate("e=>e.textContent='TITAN DESIGN EXAMPLE'")
         page.screenshot(path=str(ROOT / 'images/rocket-equation-calculator.png'))
     assert not errors, errors
     browser.close()
 report = {'status': 'pass', 'numerical_cases': [c[0] for c in cases], 'checks':
-          ['inverse mode', 'unit preservation', 'fixed jet power', 'invalid input', 'zero delta-v', 'small delta-v',
+          ['inverse mode', 'what-if scrub', 'what-if pointer/keyboard/range', 'what-if commit', 'chart fits container', 'band labels', 'unit preservation', 'fixed jet power', 'invalid input', 'zero delta-v', 'small delta-v',
            'clipboard fallback', 'URL round-trip', 'input significant digits', 'no exponent notation', 'caveat budget', 'no U+A730', 'invalid shared URL', 'print', 'no console errors'], 'layouts': results,
           'caveat_counts': {k: max(c[k] for _, c in caveat_counts) for k in CAVEAT_LIMITS}}
 (OUT / 'report.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')

@@ -24,9 +24,23 @@ Pending UX revision (chart, mobile, caveat budget): `specs/rocket-equation-calcu
   pressure thrust; do not relabel calculated equivalent jet power as measured
   thermal/electrical source power. Low-thrust trajectory, drag, gravity, steering,
   engine cycling and relativistic physics are outside this tool.
-- The plot holds required ideal delta-v and directed jet power fixed while
-  changing exhaust velocity. It does not hold engineering hardware mass fixed.
-  Left propellant-fraction axis is linear; right thrust axis is logarithmic.
+- The chart is two stacked panels on one logarithmic exhaust-velocity axis
+  (`min(1, vₑ/2)` to `max(1,000, 2vₑ)` km/s): propellant share of launch mass
+  (linear, 0 to 100%) above thrust at the current jet power (log, round decades).
+  It holds required ideal delta-v, post-burn mass and directed jet power fixed
+  while exhaust velocity changes; it does not hold engineering hardware mass fixed.
+- An engine-class strip under the panels is computed in the page from the
+  comparison table's Isp × g₀ (or km/s) values: hydrazine monopropellant, the
+  350 s chemical teaching point, Hall, gridded ion, nuclear thermal, Direct
+  Fusion Drive (tagged "proposed") and Long Passage (tagged "Titan design").
+  Below 600 px the labels collapse to family names; Long Passage keeps its tag.
+- What-if: drag, tap, arrow keys (`role="slider"`) or the range input move a
+  second marker. The readout gives exhaust velocity, Isp, propellant share,
+  launch mass, thrust and engine time with the change from the current
+  configuration, and the results mass bar shows a dashed what-if outline. It
+  never edits the form; "Use this exhaust velocity" commits it (Mission mode,
+  constant jet power). `window.rocketCalculator.getWhatIf()` / `setWhatIf(ve)`
+  drive it for acceptance checks.
 
 ## Acceptance and reproduction
 
@@ -38,8 +52,9 @@ python scripts/check_rocket_equation.py --base http://127.0.0.1:8766 --render-og
 Browser QA needs Python Playwright/Chromium and the existing sibling
 `Habitat/node_modules/axe-core/axe.min.js` for axe. It tests five presets against
 independent numeric expectations, inverse mode, unit changes, fixed-power thrust,
-invalid/zero/tiny inputs, clipboard fallback, shared-URL reload, layout at 360,
-375, 768 and 1440 px in both themes, chart labels, duplicate IDs, serious/critical
+invalid/zero/tiny inputs, clipboard fallback, shared-URL reload, the what-if
+scrub (pointer, keyboard, range, commit, form untouched), layout at 360, 375,
+768 and 1440 px in both themes, chart fit and labels, duplicate IDs, serious/critical
 axe findings and runtime errors. Captures/report/print output stay local in
 `.visual-qa/rocket-equation/`; only the required OG image is committed.
 
