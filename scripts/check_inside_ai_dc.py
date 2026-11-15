@@ -109,6 +109,60 @@ for correction in corrections:
 for paragraph in soup.select("p"):
     check(words(paragraph.get_text(" ", strip=True)) <= 60, "paragraph exceeds 60 words")
 
+# Blender models (docs/specs/inside-ai-data-center-blender-models.md section 10)
+MODELS = ROOT / "models" / "inside-ai-data-center"
+MODEL_IDS = {
+    3: {"rack", "domain", "return", "nvlink-spine", "person", "rack-gpus"},
+    4: {"tray", "tray-supply", "tray-return", "power-contact"},
+}
+model_manifest = MODELS / "manifest.json"
+if model_manifest.is_file():
+    import ast
+    import hashlib
+    import struct
+
+    mf = json.loads(model_manifest.read_text(encoding="utf-8"))
+    budget = mf.get("budget", {})
+    total = 0
+    for name, entry in mf.get("files", {}).items():
+        glb = MODELS / name
+        check(glb.is_file(), f"{name} listed in manifest.json but missing")
+        if not glb.is_file():
+            continue
+        data = glb.read_bytes()
+        total += len(data)
+        check(hashlib.sha256(data).hexdigest() == entry["sha256"], f"{name}: sha256 differs from manifest.json")
+        check(len(data) == entry["bytes"], f"{name}: byte count differs from manifest.json")
+        jlen = struct.unpack_from("<I", data, 12)[0]
+        gltf = json.loads(data[20:20 + jlen])
+        check(not gltf.get("images") and not gltf.get("textures"), f"{name}: contains images or textures")
+        check("KHR_draco_mesh_compression" not in gltf.get("extensionsUsed", []), f"{name}: Draco is not allowed")
+        stop = entry["stop"]
+        section = soup.select_one(f"#stop-{stop}")
+        anchors = {c["data-anchor"] for c in section.select(".pin-wrap[data-anchor]")} if section else set()
+        anchors |= {c["data-anchor"] for c in soup.select(f'#common-mistakes .correction[data-stop="{stop}"]')}
+        for pid in sorted(part_ids[stop] | anchors | MODEL_IDS.get(stop, set())):
+            check(pid in entry["parts"], f"{name}: part id {pid} missing")
+        for pid in sorted(anchors):
+            check(pid in entry["anchors"], f"{name}: no anchor empty for callout {pid}")
+        for key, limit in (("uniqueTriangles", "uniqueTriangles"), ("renderedTriangles", "renderedTriangles"),
+                           ("drawCallEstimate", "drawCalls"), ("bytes", "bytes")):
+            if limit in budget:
+                check(entry[key] <= budget[limit], f"{name}: {key} {entry[key]} > budget {budget[limit]}")
+        check(all(t in ("vendor", "derived", "illustrative") for t in entry["tiers"].values()), f"{name}: bad tier")
+    if "totalBytes" in budget:
+        check(total <= budget["totalBytes"], f"all GLBs {total} B > {budget['totalBytes']} B")
+    check(f"MODEL_FILES={{" in html, "page has no model loader")
+    for name in mf.get("files", {}):
+        check(f"'{name}'" in html, f"page does not load {name}")
+    # runtime palette equals the Blender palette (spec 5.2)
+    lib_src = (ROOT / "scripts" / "inside_ai_dc" / "blender" / "lib.py").read_text(encoding="utf-8")
+    i = lib_src.index("PALETTE = {")
+    j = lib_src.index("}\n", i) + 1
+    lib_palette = {k: list(v) for k, v in ast.literal_eval(lib_src[i + len("PALETTE = "):j]).items()}
+    pm = re.search(r"const PALETTE=(\{.*?\});", html)
+    check(pm is not None and json.loads(pm.group(1)) == lib_palette, "page PALETTE differs from blender/lib.py PALETTE")
+
 preview = ROOT / "images" / "inside-ai-data-center.png"
 check(preview.is_file(), "social preview missing")
 if preview.is_file():
