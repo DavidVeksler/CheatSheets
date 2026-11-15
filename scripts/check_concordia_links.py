@@ -65,7 +65,7 @@ def check_url(url: str, index: dict) -> list[str]:
         if u.fragment and u.fragment not in slugs:
             errs.append(f"unknown glossary term #{u.fragment}")
     elif path != "/":
-        m = re.fullmatch(r"/(science|discover|places|station)/([a-z0-9-]+)/", path)
+        m = re.fullmatch(r"/(science|discover|places|station|research)/([a-z0-9-]+)/", path)
         if not m or not (HABITAT / "site" / "content" / m.group(1) / f"{m.group(2)}.md").is_file():
             errs.append(f"no content page for {path}")
     return errs

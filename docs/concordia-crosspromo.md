@@ -91,3 +91,7 @@ version `06b83b00-5768-4211-a0ea-d593721b817e` at 100%. The guarded deploy passe
 345-path parity and live verification. Acceptance against the public calculator
 passed image decoding, calculator edits/presets/invalid input, the Titan link,
 and mobile/desktop layout and accessibility in both themes.
+
+## Data centers in space cluster (2026-11-14)
+
+Six sheets link to Concordia's present-day research page `/research/data-centers-in-space/` (not a design-study page, so the "design value" tag does not apply): `ai-datacenter-infrastructure.html` (`#conditions`), `ai-infrastructure-numbers.html` and `datacenter-power-chain.html` (`#ceiling`), `datacenter-cooling-thresholds.html` (`#radiator-size`), `starlink-satellite-anatomy.html` (`#state-of-play`), `orbital-rockets-comparison.html` (`#launch-threshold`). The page links back to nine deep sections of these sheets. `scripts/check_concordia_links.py` now accepts `/research/` paths. Registry: `~/Projects/seo-crosslinking/crosslinks.tsv`, phase P6.
