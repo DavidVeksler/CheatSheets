@@ -5,7 +5,6 @@ propulsion reference. It promotes Titan 2100 through useful fictional worked
 configurations. Concept research and the unresolved keyword-volume check remain
 in `research/2026-11-04-titan-concept.md`. David authorized proceeding provisionally
 without search-volume estimates on 2026-11-04. No volume claim belongs in the page.
-Pending UX revision (chart, mobile, caveat budget): `specs/rocket-equation-calculator-ux-revision.md`.
 
 ## Basis and scope
 
@@ -24,9 +23,30 @@ Pending UX revision (chart, mobile, caveat budget): `specs/rocket-equation-calcu
   pressure thrust; do not relabel calculated equivalent jet power as measured
   thermal/electrical source power. Low-thrust trajectory, drag, gravity, steering,
   engine cycling and relativistic physics are outside this tool.
-- The plot holds required ideal delta-v and directed jet power fixed while
-  changing exhaust velocity. It does not hold engineering hardware mass fixed.
-  Left propellant-fraction axis is linear; right thrust axis is logarithmic.
+- The chart is two stacked panels on one logarithmic exhaust-velocity axis
+  (`min(1, vₑ/2)` to `max(1,000, 2vₑ)` km/s): propellant share of launch mass
+  (linear, 0 to 100%) above thrust at the current jet power (log, round decades).
+  It holds required ideal delta-v, post-burn mass and directed jet power fixed
+  while exhaust velocity changes; it does not hold engineering hardware mass fixed.
+- An engine-class strip under the panels is computed in the page from the
+  comparison table's Isp × g₀ (or km/s) values: hydrazine monopropellant, the
+  350 s chemical teaching point, Hall, gridded ion, nuclear thermal, Direct
+  Fusion Drive (tagged "proposed") and Long Passage (tagged "Titan design").
+  Below 600 px the labels collapse to family names; Long Passage keeps its tag.
+- What-if: drag, tap, arrow keys (`role="slider"`) or the range input move a
+  second marker. The readout gives exhaust velocity, Isp, propellant share,
+  launch mass, thrust and engine time with the change from the current
+  configuration, and the results mass bar shows a dashed what-if outline. It
+  never edits the form; "Use this exhaust velocity" commits it (Mission mode,
+  constant jet power). `window.rocketCalculator.getWhatIf()` / `setWhatIf(ve)`
+  drive it for acceptance checks.
+- Section order: calculator, quick reference, propulsion comparison, worked
+  cases, Titan (04), equations (05), gotchas (06), sources, related. Worked case C
+  hands off to the Titan section; TOC numbers and kickers follow this order.
+- Mission mode shows delta-v anchor chips under the delta-v field; Vehicle mode
+  names the largest anchor at or below the computed delta-v ("Enough for ...").
+  Comparison-table thrust bars (log scale, 1 μN to 100 kN) are computed in the
+  page from the Thrust cells' own text; "Design dependent" rows get none.
 
 ## Acceptance and reproduction
 
@@ -38,9 +58,15 @@ python scripts/check_rocket_equation.py --base http://127.0.0.1:8766 --render-og
 Browser QA needs Python Playwright/Chromium and the existing sibling
 `Habitat/node_modules/axe-core/axe.min.js` for axe. It tests five presets against
 independent numeric expectations, inverse mode, unit changes, fixed-power thrust,
-invalid/zero/tiny inputs, clipboard fallback, shared-URL reload, layout at 360,
-375, 768 and 1440 px in both themes, chart labels, duplicate IDs, serious/critical
-axe findings and runtime errors. Captures/report/print output stay local in
+invalid/zero/tiny inputs, clipboard fallback, shared-URL reload, the what-if
+scrub (pointer, keyboard, range, commit, form untouched), layout at 360, 375,
+768 and 1440 px in both themes, chart fit and labels, duplicate IDs, serious/critical
+axe findings and runtime errors. Phase 4 checks: section/TOC/kicker order, in-page
+links resolve and their arrows point the right way, field hints wired through
+`aria-describedby`, each anchor chip's delta-v, the "Enough for" line, the
+three headline stats switching with the constraint, thrust bars on numeric rows
+only, a 14 px type floor for sentence text at 1440 and 375 px, and both selects
+fitting at 320 px. Captures/report/print output stay local in
 `.visual-qa/rocket-equation/`; only the required OG image is committed.
 
 `--render-og` generates `images/rocket-equation-calculator.png` (1200x630) directly
@@ -73,6 +99,20 @@ query state. No persistence or external service is required for the calculator.
 
 Recheck NASA survey ranges against the explicitly scoped small-spacecraft Table
 4-1 when refreshing. Nuclear-thermal and DFD entries refer to dated design studies.
+
+Delta-v anchor chips (values in `data-dv`, km/s; the check script's `ANCHORS_KMS`
+must match). All sources accessed 2026-11-15; recheck each figure against its
+source when refreshing and drop a chip that no longer verifies:
+
+| Chip | Figure | Basis | Source |
+| --- | --- | --- | --- |
+| Trans-lunar injection | 10,441.0 ft/s = 3.1824168 km/s | flown (measured S-IVB burn, finite-burn losses included) | Apollo 11 Mission Report, MSC-00171 (1969), Table 7-III, `https://www.nasa.gov/wp-content/uploads/static/apollo50th/pdf/A11_MissionReport.pdf` |
+| Trans-Mars injection | ≈3.662 km/s from 407 km circular orbit, cargo, propulsive capture | ideal (table: "Gravity losses added to above ideal ΔVs") | NASA/SP-2009-566-ADD (2009), Table 5-9, `https://www.nasa.gov/wp-content/uploads/2015/09/373667main_nasa-sp-2009-566-add.pdf` |
+| Low orbit to geostationary | 4.253 km/s, 241 km at 28.5° to GEO, plane change included | ideal (Hohmann transfer equations) | Palaszewski, NASA Lewis (1990), NTRS 19910014944, `https://ntrs.nasa.gov/citations/19910014944` |
+| Earth surface to orbit | 9 km/s | with losses ("includes drag, gravity, and trajectory losses"; single-stage baseline) | Landis, NASA Glenn (2002), NTRS 20030020634, `https://ntrs.nasa.gov/citations/20030020634` |
+
+Not shipped for lack of an agency source: coplanar LEO to GTO (~2.4 to 2.5 km/s)
+and Earth to LEO at 9.3 to 9.5 km/s (found only on secondary sites).
 Reconcile fictional presets with Titan's generated budget if its inputs change;
 small differences from its rounded derived fields are expected and disclosed.
 

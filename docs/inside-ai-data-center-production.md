@@ -38,6 +38,22 @@ Each stop has four numbered callouts anchored to these parts, a nameplate, flow 
 | `nvlink-spine` domain bandwidth | 130 TB/s for NVL72 | vendor-stated | [NVIDIA Blackwell architecture](https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/) |
 | `hbm` stack and GPU bandwidth | eight HBM stacks per Blackwell GPU; up to 8 TB/s per GPU | vendor-stated | [NVIDIA Blackwell Ultra technical article](https://developer.nvidia.com/blog/?p=104887). GB200 capacity differs; do not transfer Blackwell Ultra capacity into GB200. |
 | `manifold` calculated flow | about 146 L/min for 102 kW liquid at assumed 10 K delta | derived | `102 kJ/s ÷ (4.186 kJ/kg/K × 10 K) × 60 s/min`, water density approximated 1 kg/L. The 10 K is an illustration, not a vendor setting. |
+| `power shelf` | eight shelves per rack, each six 5.5 kW PSUs, 33 kW input per shelf, N+N; 50 to 51 V DC output to the bus bar | vendor-stated | [NVIDIA hardware guide](https://docs.nvidia.com/dgx/dgxgb200-user-guide/hardware.html), accessed 2026-11-14 |
+| `tray storage and DPUs` | per compute tray: two BlueField-3 DPUs, four 3.84 TB E1.S NVMe data drives, one 1.92 TB M.2 boot drive | vendor-stated | [NVIDIA hardware guide](https://docs.nvidia.com/dgx/dgxgb200-user-guide/hardware.html), accessed 2026-11-14. The Blender spec's "8 drives" anchor was wrong; four E1.S drives are modelled. |
+| `rack rear spines` | rear carries the power bus bar, liquid manifolds running the rack height, and a passive copper NVLink cable-cartridge backplane | vendor-stated (existence); geometry illustrative | [NVIDIA hardware guide](https://docs.nvidia.com/dgx/dgxgb200-user-guide/hardware.html), accessed 2026-11-14. No cable count, cartridge count or quick-disconnect count is published there; the model draws four cartridges and one supply plus one return quick disconnect per tray, stamped illustrative. The spec anchor "more than 5,000 cables" is not used. |
+| `rack unit` | 1RU = 44.45 mm (1.75 in) | derived | EIA-310 rack unit, standard figure. Compute trays and switch trays are 1RU per the NVIDIA hardware guide. |
+| `rack frame layout` | 0.12 m base (casters, levelling feet, base frame); two management TOR switches drawn at the top; 37RU of equipment from the top of the base frame | illustrative | No GB200 rack drawing is used. TOR position is not published. |
+| `compute tray envelope` | 0.56 m wide, 43.2 mm high, 0.86 m deep; internal layout (board placement, plate shapes, tube routes, fan count) | illustrative | Proportioned from public photographs, no vendor drawing. 43.2 mm leaves a 1.25 mm gap in each 44.45 mm slot. |
+| `ID-1 card referent` | 85.60 × 53.98 × 0.76 mm | derived | ISO/IEC 7810 ID-1 format, standard figure. |
+| `hbm stack height` | eight DRAM dies per stack (Micron HBM3E 8-high 24 GB for GB200 NVL72); stack height 720 µm, the JEDEC HBM3E maximum | vendor-stated (die count); derived (height) | [Micron GTC 2025 release](https://www.nasdaq.com/press-release/micron-innovates-data-center-edge-nvidia-2025-03-18), accessed 2026-11-15; 720 µm via [TrendForce](https://www.trendforce.com/news/2026/04/01/news-jedec-reportedly-plans-to-relax-hbm-height-specs-to-900%C2%B5m-potentially-slowing-hybrid-bonding-adoption/) and Digitimes, accessed 2026-11-15 (the JEDEC document itself was not read). The split into base die, core dies, top die and bump gaps is illustrative. |
+| `hbm stack footprint` | 11 × 10 mm stack footprint; base die, mould walls and the quarter cut | illustrative | Footprint after the 10 × 11 mm earlier-stack base die in [ServeTheHome's Hot Chips 2026 SK hynix report](https://www.servethehome.com/sk-hynix-hbm-packaging-at-hot-chips-2026/), accessed 2026-11-15 (trade press, not a datasheet). |
+| `hbm via and bump scale` | TSV diameter 6 µm, microbump diameter 25 µm, bump height 40 µm | illustrative, unverified | No primary source found for HBM3E via or bump dimensions. Drawn ×20 in diameter at stop 7 (`exaggeration constants`). |
+| `gpu package geometry` | 75 × 75 mm substrate, 56 × 57.5 mm interposer, stiffener ring, layer thicknesses (balls 0.5, substrate 3.5, bumps 0.1, interposer 0.1, microbumps 0.04, die 0.75, thermal interface 0.51 mm), capacitor field, ball pitch 1.8 mm | illustrative | NVIDIA does not publish B200 package or interposer dimensions; trade figures for the interposer disagree (about 1,600 to 2,500 mm²). Proportioned to hold two reticle-field dies and eight stacks. |
+| `reticle field` | 26 × 33 mm maximum exposure field; each compute die drawn at the full field | derived | Standard lithography field size. NVIDIA describes the dies only as reticle-sized; the die size itself is not published. |
+| `superchip board` | 0.25 × 0.44 m board, 2.4 mm thick; CPU, GPU, memory and power-delivery placement; trace bundles; plate outlines | illustrative | No GB200 board drawing is used. Package positions match the tray cold plates. |
+| `fingertip referent` | 16 mm wide fingertip | illustrative | Typical adult index finger width, stated as a drawing referent, not a measured source. |
+| `hair referent` | 70 µm hair diameter | illustrative | Inside the 17 to 181 µm range listed by [BioNumbers 106856](https://bionumbers.hms.harvard.edu/bionumber.aspx?id=106856), accessed 2026-11-15, which itself flags its source as weak. |
+| `exaggeration constants` | stop 6 Slice heights ×4 (`packageSliceHeight`); stop 7 every height ×6 (`hbmHeight`), via and microbump diameters ×20 (`hbmVia`) | illustrative | Drawing constants in `reference_build.json`, exported as GLB scene extras and printed on the stage label. |
 
 No rack price or campus capex is shown: no primary source supplies a defensible figure, so the nameplate has no capex row and the worked example ends at the GPU count (three steps). Re-add both only with a primary source.
 
@@ -52,3 +68,123 @@ Visual model: rack panels use generated vent, port, and PSU textures; hall cabin
 Fail shows the blast radius per stop: the failure unit is red, only its dependents grey out (for example one tray and its 4 GPUs at the rack; the served rows at the hall), and the loss tag sits on the unit.
 
 At 375 px, part callouts collapse to tappable numbered pins. Expanded text opens in place. The QA script reports intentional pin/button overlap without failing; red correction and failure tags can still cross a pin in some states.
+
+## Blender model redesign (docs/specs/inside-ai-data-center-blender-models.md)
+
+Numeric source: `scripts/inside_ai_dc/reference_build.json`. `check_inside_ai_dc.py` fails if the page's inline `REFERENCE_BUILD` differs from its `page` block, or if `rackOrder` disagrees with `counts`.
+
+### Card 0 baseline (2026-11-14, procedural builders)
+
+`python scripts/qa_inside_ai_dc.py build/inside_ai_dc/baseline` (headless Chromium, SwiftShader). Draw calls include the shadow pass. The 2026-09-25 figures above (98 draw calls at the rack) no longer match the shipped page.
+
+| State | Draw calls | Triangles |
+|---|---:|---:|
+| 0 campus | 233 | 19,606 |
+| 1 hall | 386 | 9,350 |
+| 2 row | 228 | 17,966 |
+| 3 rack (default, separated, fault) | 354 | 10,168 |
+| 3 line-up | 307 | 8,682 |
+| 4 tray (default, plates lifted) | 180 | 4,700 |
+| 4 tray fault | 316 | 6,552 |
+| 5 superchip | 134 | 2,978 |
+| 6 GPU package | 184 | 10,754 |
+| 7 HBM | 163 | 5,154 |
+
+The baseline QA run already exits 1: desktop overlaps at stop 0 (zoom button over the worked example) and the line-up (three flow tags overlap each other). Both predate this work.
+
+Unlabelled part test, baseline (overlays and pins hidden, `scripts/inside_ai_dc/unlabelled.py`, judged by the builder agent looking at the captures, not user testing):
+
+- Stop 3. Named correctly: server rack, person, stacked 1U equipment. Not nameable: compute tray versus switch tray (a darker band in the middle reads as different, not as switches), power shelves, busbar (an orange stripe), manifolds (blue and red stripes read as "pipes or cables", not as supply and return manifolds), NVLink spine (not visible), NVLink domain (dashed line with no meaning). At 375 px the rack reads as a rack; no internal part is identifiable.
+- Stop 4. Named correctly: a flat server tray, add-in cards (the green NIC boards, as "cards"), pipes. Partly: the striped plates read as heat sinks because pipes run to them, but they float; the dark slabs with blue blocks read as "chips on a board", not as two superchips each with one CPU and two GPUs. Not nameable: power contact, rear connectors, the sealed loop (the pipes end in mid-air).
+
+Loading path proof: a one-cube GLB exported by Blender 4.5.10 (`export_scene.gltf` with `export_format='GLB', export_apply=True, export_extras=True, export_yup=True, export_vertex_color='ACTIVE', export_all_vertex_colors=False, export_image_format='NONE', export_gpu_instances=True`; options confirmed by listing the operator's RNA properties in 4.5.10), compressed by gltf-transform 4.5.1 (weld, quantize, meshopt), loaded in the page through `GLTFLoader` with `meshopt_decoder.module.js`. Node extras, scene extras (`metresPerUnit`), the `anchor:` child empty and the material name all arrive. The meshopt decoder carries its WASM inline, so no request leaves the import map; replacing its integrity hash with a wrong value blocks the import. GLTFLoader strips `:` from node names, so the runtime reads `userData.name`. The import map now also pins `three.core.js`, which `three.module.js` imports and which had no integrity entry.
+
+### Cards 1 and 2: pipeline and the rack and tray spike (2026-11-15)
+
+Build: `scripts/inside_ai_dc/build-models.sh [3|4|all]` (PowerShell twin `build-models.ps1`): Blender 4.5 composes and validates each stop (`blender/build.py`, `lib.validate`), exports a raw GLB to `build/inside_ai_dc/raw/`, `post.mjs` welds, instances (locally, under the same parent), quantizes and meshopt-compresses into `models/inside-ai-data-center/` and writes `manifest.json`, then `check_inside_ai_dc.py` runs. The procedural builders stay the default (commit 9e74447); `?models=glb` loads the Blender models for stops that have one. Measurement and QA pass `?models=glb` for the new path; `?models=procedural` is the same as no query.
+
+Measured with `scripts/inside_ai_dc/measure.py` (headless Chromium, SwiftShader software WebGL; mobile = 375 px, 4x CPU throttle, 150 ms RTT, 1.6 Mbit/s). Draw calls and triangles are `renderer.info` and include the shadow pass. Frame rates under SwiftShader are CPU-bound and only compare old against new; no real device was measured.
+
+| Stop 3 rack | Procedural | GLB |
+|---|---:|---:|
+| Unique triangles (GLB) | n/a | 18,600 |
+| Triangles per frame, GLB alone / renderer incl. shadow | 10,168 | 33,148 / 37,086 |
+| Draw calls per frame | 354 | 52 |
+| GLB bytes (raw / gzip -9) | 0 | 238,968 / 37,685 |
+| Stop change to model on screen, cold, mobile profile | 177 ms | 2,145 ms |
+| Same, model in memory, mobile / desktop | 46 ms | 72 / 18 ms |
+| Orbit fps, mobile profile, environment map on / off | 31 / 34 | 11 / 25 |
+
+| Stop 4 tray | Procedural | GLB |
+|---|---:|---:|
+| Unique triangles (GLB) | n/a | 9,180 |
+| Triangles per frame, GLB alone / renderer incl. shadow | 4,700 | 9,796 / 17,362 |
+| Draw calls per frame | 180 | 103 |
+| GLB bytes (raw / gzip -9) | 0 | 148,112 / 39,884 |
+| Stop change to model on screen, cold, mobile profile | 348 ms | 1,806 ms |
+| Same, model in memory, mobile / desktop | 30 ms | 54 / 100 ms |
+| Orbit fps, mobile profile, environment map on / off | 51 / 56 | 16 / 50 |
+
+Budget status (spec section 9): triangles, draw calls, bytes and the cold (2.5 s) and cached (150 ms) load targets pass. Orbit at 30 fps on the mobile profile fails at both stops with the `RoomEnvironment` reflections on; with them off, stop 4 passes and stop 3 reaches 25 fps. The procedural rack was itself near the line (31 to 34 fps) in this profile. Not decided here: drop the environment map on coarse-pointer devices, or measure on a real mid-range Android before deciding.
+
+Unlabelled part test on the GLB stops (same method as the baseline):
+
+- Stop 3. Named correctly: server rack with casters and an open frame, person, stacked 1U trays; the compute trays (drive and port blocks on the face) now read differently from the switch band (plain perforated faces) and from the power shelves (six light module faces each). Still not nameable from the default camera: the bus bar, manifolds and NVLink cartridges sit at the rear and show only as coloured edges; rotated to the rear they read as two pipes, a copper bar pair and four cable cartridges.
+- Stop 4. Named correctly: server tray, two motherboards, a fan row, front drive carriers and network cards, cold plates lifted off the chips, the cut plate's fins, hoses running from two rear couplings through a small block to the plates, cables to rear connector blocks, a card beside the tray. Not nameable: the power distribution board and bus bar clip read as "some board and a copper block".
+
+Deviations and limits recorded for this spike:
+
+- The Separate trays and Lift cold plates buttons cycle through the model's steps (0, 1, 2, back to 0). Stop 4: 0 lid on, 1 lid lifted, 2 lid removed and plates lifted (the default). The lid is hidden at step 2 rather than set aside, so the interior stays in frame.
+- On the GLB stops a flow toggle swaps the carrier between its flow colour and its neutral material instead of hiding it, so the carriers stay readable with colours off (spec carrier test). The return manifold and return hoses carry `flow: hot` and follow the Cooling toggle.
+- Vertex-colour ambient occlusion is per object (self-occlusion only), because instances share one mesh.
+- Palette materials are not theme-dependent; neither were the procedural materials.
+- The stop 4 camera sits higher (about 44 degrees) so the true-scale 43 mm tray stays legible at 375 px. Its stamp reads "Drawn to scale"; its scale bar is 10 cm. The intro sentence "Views are not to scale" is unchanged and is now only true for stops 0 to 2 and 5 to 7.
+- Superchip boards in the tray are a low-detail proxy (card 3 builds them). The rack's tray proxy shares the tray's front and rear geometry, but its interior is an empty pan with the runtime GPU blocks.
+
+### Spike fixes after review (2026-11-15)
+
+- Rack default view. The GLB rack opens at step 1 (one compute tray slid out on its rails) under a rear three-quarter camera over the cut side (`camera` and `defaultStep` scene extras), so the bus bar, the red and blue manifolds, the NVLink cartridges and the slid tray's rear connectors are visible without user action. Cartridge side plates are aluminium so the spines read against the dark frame. Callout 1 anchors on the compute tray's rear, callout 2 on a switch tray's cut-side face. The rack dimension sits on the rear cut-side edge, clear of the figure. The "ZOOM" highlight box now follows the tray when the step changes.
+- Person referent: palette `referent` is mid-grey `#646c76`, placed at the front of the cut side so it does not overlap the rack or the dimension labels. With the environment map (desktop) it renders lighter; at 375 px it renders as a dark slate figure.
+- Phones (`(pointer:coarse)`): no `RoomEnvironment` reflections; palette metalness x0.35 and roughness at least 0.45 so metals stay grey under the existing key, fill and hemisphere lights. On GLB stops the shadow map is 1024 instead of 2048, and model meshes cast but do not receive shadows (the floor still receives them). On all devices the repeated rack trays, the instanced GPU blocks and the rear spines do not cast; only the hero compute tray, frame and person do. The procedural path is unchanged. Measured cost order on the rack (4x throttle): shadow receiving and the shadow pass were the largest remaining costs after the environment map; casting from small instanced detail was not.
+
+| Mobile profile, after fixes | Stop 3 procedural | Stop 3 GLB | Stop 4 procedural | Stop 4 GLB |
+|---|---:|---:|---:|---:|
+| Orbit fps (measure.py) | 46.6 | 32.3 | 60.4 | 59.9 |
+| Orbit fps, five repeat runs (rack GLB) | | 30.7 to 33.0 | | |
+| Cold, stop change to model on screen | 146 ms | 2,085 ms | 187 ms | 1,627 ms |
+| Cached | 47 ms | 88 ms | 30 ms | 42 ms |
+| Draw calls / triangles incl. shadow | 354 / 10,168 | 53 / 36,222 | 180 / 4,700 | 103 / 17,362 |
+
+Desktop SwiftShader orbit (1280x800, environment map and full shadows on) is lower for the GLB stops than for the procedural ones (rack 9.7 vs 24.5, tray 14.9 vs 28.3); software rendering at that size is fill-bound, and spec section 9 sets the frame-rate budget on the mobile profile only. The host was under other load during these runs; repeat runs varied by several fps.
+
+QA overlaps that predate the model work (confirmed by running `scripts/qa_inside_ai_dc.py` on the page at e8acfaa): stop 3 line-up flow tags rendered inline and overlapped (fixed: the line-up rule now keeps `.flow-tags` a grid); stop 0 "ZOOM" button over the worked example is a QA false positive (the worked example is scrolled out of the inspector panel, clipped by its overflow); procedural stop 4 lifted state puts callouts 1 and 3 on top of each other (procedural builder anchors, not CSS; listed as known, gone on the GLB path).
+
+### Card 3: superchip, GPU package and HBM stack (stops 5 to 7, 2026-11-15)
+
+Parts: `blender/parts/superchip.py`, `gpu_package.py`, `hbm.py` (hero and proxy each); stops `s5_superchip.py`, `s6_gpu.py`, `s7_hbm.py`. Proxies are back-filled one level up: the superchip proxy replaces the placeholder boards in the tray (stop 4), the GPU package proxy sits on the superchip (stop 5), the HBM proxy sits in the GPU package (stop 6). All three new stops load only with `?models=glb`.
+
+- Stop 5 is true scale. The board carries the CPU with eight memory packages, two GPU package proxies, about 150 inductors with power stages, bulk capacitors and the input connector, so most of the board area is power conversion. NVLink-C2C is two bundles of six surface traces from the CPU substrate edge to each GPU substrate edge. `superchip-cool` draws the three plate footprints and the coolant direction (in at the left GPU plate, out at the right). Referent: a bank card beside the board.
+- Stop 6 is true scale with the cold plate lifted clear and moved back. "Slice package" (the Separate/Lift button slot) hides the front half of every package part (split at y = 0) and stands a section beside the cut: board, solder balls, substrate, bumps, interposer, microbumps, die, thermal interface, cold plate base, every height ×4 (`packageSliceHeight`). Referent: a 16 mm fingertip.
+- Stop 7 cuts one quarter out of the stack, mould walls included. Every height on the stage is ×6 (`hbmHeight`), so the 0.76 mm card edge and the 70 µm hair stay comparable with the 0.72 mm stack; via and microbump diameters are ×20 (`hbmVia`). The TSV columns stand on the cut face and continue from the base die to the top die.
+- The constants live in `reference_build.json` `exaggeration`, are exported as GLB scene extras, are copied into `manifest.json`, and are printed on the stage label ("Drawn to scale · slice heights ×4", "Heights ×6, vias ×20 · footprint to scale"). `check_inside_ai_dc.py` fails if a GLB's constant differs from the JSON or the label code does not print it.
+- Runtime additions (GLB path only): `visibleSteps` counts toward the explode steps; the explode button shows on any model stop with steps; part nodes that are themselves meshes still register; referent tags come from the scene's `referents` list; the scale bar labels in mm below 1 cm; optional `fail:<id>` empties place the fault tag where it does not cover pins; the zoom outline follows only visible geometry.
+
+Measured with `scripts/inside_ai_dc/measure.py` (same method as above). The host ran a Veeam backup and other agent sessions during every run, so frame rates and cold loads swung by 10 to 20 fps and up to 1 s between runs; the table gives the full `measure.py` run plus the range of four to five repeat orbit runs on the mobile profile (`build/inside_ai_dc/tools/ab.py`, not committed).
+
+| Stop | Procedural draws / tris | GLB draws / tris (incl. shadow) | GLB bytes (gzip) | Unique tris | Cold, mobile: procedural / GLB | Cached, mobile: procedural / GLB | Orbit fps, mobile: procedural / GLB (repeat range) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 3 rack | 354 / 10,168 | 53 / 36,222 | 240,184 (36,536) | 18,600 | 142 / 2,336 ms | 79 / 105 ms | 39.1 / 26.8 (29.8 to 33.0) |
+| 4 tray | 180 / 4,700 | 107 / 19,122 | 156,988 (41,202) | 9,620 | 186 / 1,871 ms | 30 / 70 ms | 53.6 / 49.7 |
+| 5 superchip | 134 / 2,978 | 51 / 20,038 | 161,760 (19,405) | 11,244 | 118 / 2,299 ms | 29 / 80 ms | 54.7 / 43.8 (34.5 to 49.5) |
+| 6 GPU package | 184 / 10,754 | 66 / 34,102 | 87,016 (18,682) | 4,216 | 305 / 1,841 ms | 40 / 155 ms | 27.1 / 25.6 (35.3 to 47.4) |
+| 7 HBM | 163 / 5,154 | 28 / 4,534 | 46,744 (12,461) | 3,272 | 160 / 2,646 ms | 108 / 49 ms | 25.5 / 40.2 (27.2 to 49.4) |
+
+All five GLBs total 692,692 bytes (budget 5 MB). Unique triangles, rendered triangles, draw calls and per-file bytes pass. Not passing in this run: stop 7 cold load (2,646 ms against 2.5 s; an earlier run gave 1,364 ms for the same 47 KB file, so the cold figure is dominated by host load and the loader, not bytes), stop 6 cached (155 ms against 150 ms; 71 ms in the earlier run), and orbit at stops 3 and 6 in the single `measure.py` run (repeat runs reach 30 fps or more at both). Desktop SwiftShader orbit is 9 to 11 fps for every GLB stop against 16 to 30 for the procedural ones; see the note under the spike fixes. A quiet-host re-run, or a real mid-range Android, is needed before these frame rates mean anything.
+
+Stop 6 draws only the solder balls that can be seen (three outer rings and the rows either side of the cut plane); the full 39 × 39 grid cost 42k triangles and about 10 fps on the mobile profile for no visible change.
+
+Unlabelled part test, stops 5 to 7 (`unlabelled.py`, procedural default vs `?models=glb`, judged by the builder agent from the captures):
+
+- Stop 5. Baseline: a board with one lidded chip, two chip groups with small blocks, a long connector; reads as "a motherboard with three processors". GLB: a board covered in rows of small square components with three plate outlines over three packages and a connector; reads as "a motherboard where most of the area is power components", which is the lesson. The packages are smaller than in the schematic and their dies and memory stacks are not separable by eye at desktop size.
+- Stop 6. Baseline: an exaggerated package with two big dies, eight stacked memory blocks and a die link, clearly nameable. GLB: a flat true-scale package with a stiffener ring, two dies, a lifted cold plate and a fingertip for size; the eight stacks were faint seams in the first capture; with the proxy's top die in the `dram` material (final build) they read as eight lighter blocks along the dies at desktop size, still hard to count at 375 px. In the Slice state the layered section reads as "a sandwich of board, balls, substrate, silicon and a copper plate".
+- Stop 7. Baseline: a tall stack of eight plates on a base, nameable as "stacked chips". GLB: a quarter-cut block with stripes of thin dies inside, a row of via columns and bumps on the cut, a card-edge block and a hair; nameable as "a cut-open chip stack", with the scale comparison carried by the labels.
