@@ -90,3 +90,45 @@ Unlabelled part test, baseline (overlays and pins hidden, `scripts/inside_ai_dc/
 - Stop 4. Named correctly: a flat server tray, add-in cards (the green NIC boards, as "cards"), pipes. Partly: the striped plates read as heat sinks because pipes run to them, but they float; the dark slabs with blue blocks read as "chips on a board", not as two superchips each with one CPU and two GPUs. Not nameable: power contact, rear connectors, the sealed loop (the pipes end in mid-air).
 
 Loading path proof: a one-cube GLB exported by Blender 4.5.10 (`export_scene.gltf` with `export_format='GLB', export_apply=True, export_extras=True, export_yup=True, export_vertex_color='ACTIVE', export_all_vertex_colors=False, export_image_format='NONE', export_gpu_instances=True`; options confirmed by listing the operator's RNA properties in 4.5.10), compressed by gltf-transform 4.5.1 (weld, quantize, meshopt), loaded in the page through `GLTFLoader` with `meshopt_decoder.module.js`. Node extras, scene extras (`metresPerUnit`), the `anchor:` child empty and the material name all arrive. The meshopt decoder carries its WASM inline, so no request leaves the import map; replacing its integrity hash with a wrong value blocks the import. GLTFLoader strips `:` from node names, so the runtime reads `userData.name`. The import map now also pins `three.core.js`, which `three.module.js` imports and which had no integrity entry.
+
+### Cards 1 and 2: pipeline and the rack and tray spike (2026-11-15)
+
+Build: `scripts/inside_ai_dc/build-models.sh [3|4|all]` (PowerShell twin `build-models.ps1`): Blender 4.5 composes and validates each stop (`blender/build.py`, `lib.validate`), exports a raw GLB to `build/inside_ai_dc/raw/`, `post.mjs` welds, instances (locally, under the same parent), quantizes and meshopt-compresses into `models/inside-ai-data-center/` and writes `manifest.json`, then `check_inside_ai_dc.py` runs. The page loads `s3-rack.glb` and `s4-tray.glb`; `?models=procedural` keeps the old builders.
+
+Measured with `scripts/inside_ai_dc/measure.py` (headless Chromium, SwiftShader software WebGL; mobile = 375 px, 4x CPU throttle, 150 ms RTT, 1.6 Mbit/s). Draw calls and triangles are `renderer.info` and include the shadow pass. Frame rates under SwiftShader are CPU-bound and only compare old against new; no real device was measured.
+
+| Stop 3 rack | Procedural | GLB |
+|---|---:|---:|
+| Unique triangles (GLB) | n/a | 18,600 |
+| Triangles per frame, GLB alone / renderer incl. shadow | 10,168 | 33,148 / 37,086 |
+| Draw calls per frame | 354 | 52 |
+| GLB bytes (raw / gzip -9) | 0 | 238,968 / 37,685 |
+| Stop change to model on screen, cold, mobile profile | 177 ms | 2,145 ms |
+| Same, model in memory, mobile / desktop | 46 ms | 72 / 18 ms |
+| Orbit fps, mobile profile, environment map on / off | 31 / 34 | 11 / 25 |
+
+| Stop 4 tray | Procedural | GLB |
+|---|---:|---:|
+| Unique triangles (GLB) | n/a | 9,180 |
+| Triangles per frame, GLB alone / renderer incl. shadow | 4,700 | 9,796 / 17,362 |
+| Draw calls per frame | 180 | 103 |
+| GLB bytes (raw / gzip -9) | 0 | 148,112 / 39,884 |
+| Stop change to model on screen, cold, mobile profile | 348 ms | 1,806 ms |
+| Same, model in memory, mobile / desktop | 30 ms | 54 / 100 ms |
+| Orbit fps, mobile profile, environment map on / off | 51 / 56 | 16 / 50 |
+
+Budget status (spec section 9): triangles, draw calls, bytes and the cold (2.5 s) and cached (150 ms) load targets pass. Orbit at 30 fps on the mobile profile fails at both stops with the `RoomEnvironment` reflections on; with them off, stop 4 passes and stop 3 reaches 25 fps. The procedural rack was itself near the line (31 to 34 fps) in this profile. Not decided here: drop the environment map on coarse-pointer devices, or measure on a real mid-range Android before deciding.
+
+Unlabelled part test on the GLB stops (same method as the baseline):
+
+- Stop 3. Named correctly: server rack with casters and an open frame, person, stacked 1U trays; the compute trays (drive and port blocks on the face) now read differently from the switch band (plain perforated faces) and from the power shelves (six light module faces each). Still not nameable from the default camera: the bus bar, manifolds and NVLink cartridges sit at the rear and show only as coloured edges; rotated to the rear they read as two pipes, a copper bar pair and four cable cartridges.
+- Stop 4. Named correctly: server tray, two motherboards, a fan row, front drive carriers and network cards, cold plates lifted off the chips, the cut plate's fins, hoses running from two rear couplings through a small block to the plates, cables to rear connector blocks, a card beside the tray. Not nameable: the power distribution board and bus bar clip read as "some board and a copper block".
+
+Deviations and limits recorded for this spike:
+
+- The Separate trays and Lift cold plates buttons cycle through the model's steps (0, 1, 2, back to 0). Stop 4: 0 lid on, 1 lid lifted, 2 lid removed and plates lifted (the default). The lid is hidden at step 2 rather than set aside, so the interior stays in frame.
+- On the GLB stops a flow toggle swaps the carrier between its flow colour and its neutral material instead of hiding it, so the carriers stay readable with colours off (spec carrier test). The return manifold and return hoses carry `flow: hot` and follow the Cooling toggle.
+- Vertex-colour ambient occlusion is per object (self-occlusion only), because instances share one mesh.
+- Palette materials are not theme-dependent; neither were the procedural materials.
+- The stop 4 camera sits higher (about 44 degrees) so the true-scale 43 mm tray stays legible at 375 px. Its stamp reads "Drawn to scale"; its scale bar is 10 cm. The intro sentence "Views are not to scale" is unchanged and is now only true for stops 0 to 2 and 5 to 7.
+- Superchip boards in the tray are a low-detail proxy (card 3 builds them). The rack's tray proxy shares the tray's front and rear geometry, but its interior is an empty pan with the runtime GPU blocks.
