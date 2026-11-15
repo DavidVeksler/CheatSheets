@@ -499,18 +499,19 @@ def render_body(data: dict) -> str:
     out.append(f'''<header class="mast">
 <div>
 <p class="eyebrow">{esc(meta["eyebrow"])}</p>
-<h1>{esc(meta["title"])}</h1>
+<h1>Space combat<span>The possibility space.</span></h1>
 <p class="subtitle">{esc(meta["subtitle"])}</p>
 <p class="thesis">{R(meta["thesis"])}</p>
 </div>
-<aside class="legend" aria-labelledby="legend-h">
-<h2 id="legend-h">How to read a glyph</h2>
+<aside class="brief" aria-label="Field guide overview"><span class="brief-code">SC / FIELD GUIDE 01</span><p>From breaking matter<br>to editing choices.</p><div class="brief-stats"><span><b>20</b>systems</span><span><b>05</b>target layers</span><span><b>04</b>political aims</span></div><a href="#chart">Explore the possibility space <span aria-hidden="true">↘</span></a></aside>
+</header>
+<details class="legend" name="chart-key"><summary id="legend-h">Chart key <span>Shapes, colors &amp; evidence tiers</span></summary><div class="legend-content">
+<h2>How to read a glyph</h2>
 <ul aria-label="Glyph shape: combatant substrate">{sub_li}</ul>
 <ul aria-label="Glyph color: political aim">{aim_li}</ul>
 <p>Shape is the combatant, color is the political aim; the side scales repeat both as labels. A dashed outline marks a secondary target row, a band spans every physics column, and a red dashed arrow means the threat reaches incentives.</p>
 <p>Provenance: {tiers}.</p>
-</aside>
-</header>''')
+</div></details>''')
     out.append('<nav class="toc" aria-label="On this sheet"><a href="#chart">Chart</a><a href="#thesis">Thesis</a><a href="#read">How to read</a>'
                '<a href="#laws">Laws</a><a href="#nobody-aboard">Nobody aboard</a><a href="#systems">20 systems</a><a href="#myths">Myths</a>'
                '<a href="#unconfirmed">Unconfirmed physics</a><a href="#winners">Who wins</a><a href="#arithmetic">Arithmetic</a><a href="#sources">Sources</a></nav>')
@@ -568,7 +569,7 @@ def render_body(data: dict) -> str:
     out.append(section("nobody-aboard", "04 · Substrate", "What changes when nobody is aboard", inner))
 
     # cards
-    inner = ""
+    inner = '<div class="system-tools" hidden><label for="system-search">Find a system<input type="search" id="system-search" placeholder="Search names, physics, counters…" autocomplete="off"></label><p id="system-count" role="status" aria-live="polite">20 systems</p><a href="#chart">Return to chart ↑</a></div>'
     for gr in data["groups"]:
         es = [e for e in data["entries"] if e["group"] == gr["key"]]
         inner += f'<h3 class="group-h">{esc(gr["label"])} <small>{es[0]["id"]} to {es[-1]["id"]}</small></h3><div class="cards">'
