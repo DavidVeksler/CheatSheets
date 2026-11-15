@@ -25,6 +25,15 @@ match = re.search(r"const REFERENCE_BUILD=(\{.*?\});", html, re.S)
 check(match is not None, "REFERENCE_BUILD missing")
 ref = json.loads(match.group(1)) if match else {}
 
+# reference_build.json is the single numeric source; the inline block is its page subset.
+REF_JSON = ROOT / "scripts" / "inside_ai_dc" / "reference_build.json"
+build_ref = json.loads(REF_JSON.read_text(encoding="utf-8"))
+check(build_ref.get("page") == ref, "inline REFERENCE_BUILD differs from reference_build.json 'page'")
+order = build_ref["rackOrder"]["fromTop"]
+for kind, key in (("compute", "computeTrays"), ("switch", "switchTrays"), ("power", "powerShelves"), ("tor", "torSwitches")):
+    check(order.count(kind) == build_ref["counts"][key]["value"], f"rackOrder {kind} count != counts.{key}")
+check(build_ref["counts"]["computeTrays"]["value"] == ref.get("rack", {}).get("computeTrays"), "computeTrays count drift")
+
 
 def lookup(key: str) -> float:
     value = ref
