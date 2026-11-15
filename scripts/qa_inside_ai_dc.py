@@ -5,7 +5,7 @@ Screenshots every stop and state at 1280x800 and 375x812 (mobile emulation),
 then reports overlapping overlay UI, elements pushed off-screen, page errors,
 and render metrics (draw calls, triangles, callout layout time).
 
-Run: python scripts/qa_inside_ai_dc.py [out_dir] [--query ?models=procedural]   (default: a temp dir)
+Run: python scripts/qa_inside_ai_dc.py [out_dir] [--query ?models=glb]   (default: a temp dir)
 Exits 1 if any desktop state has an overlap, the page logs an error, a model request fails, or a model stop
 exceeds its draw-call or triangle budget (docs/specs/inside-ai-data-center-blender-models.md section 9).
 Actions: 'explode*2' clicks Separate/Lift twice (the GLB stops have two steps); 'theme' toggles dark/light.

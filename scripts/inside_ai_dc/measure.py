@@ -84,7 +84,7 @@ def main() -> int:
     result = {}
     try:
         with sync_playwright() as p:
-            for label, query in (("old", "?models=procedural"), ("new", "")):
+            for label, query in (("old", "?models=procedural"), ("new", "?models=glb")):
                 for profile, mobile in (("desktop", False), ("mobile", True)):
                     result[f"{label}-{profile}"] = run(p, base, query, mobile)
                     print(label, profile, json.dumps(result[f"{label}-{profile}"]))
