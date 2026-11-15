@@ -130,6 +130,7 @@ GATES = [
     ["scripts/check_cluster_hub.py"],
     ["scripts/check_apps.py"],
     ["scripts/check_llms.py"],
+    ["scripts/check_space_combat.py"],
 ]
 
 
