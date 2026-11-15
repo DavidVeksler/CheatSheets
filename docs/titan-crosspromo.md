@@ -5,6 +5,7 @@ propulsion reference. It promotes Titan 2100 through useful fictional worked
 configurations. Concept research and the unresolved keyword-volume check remain
 in `research/2026-11-04-titan-concept.md`. David authorized proceeding provisionally
 without search-volume estimates on 2026-11-04. No volume claim belongs in the page.
+Pending UX revision (chart, mobile, caveat budget): `specs/rocket-equation-calculator-ux-revision.md`.
 
 ## Basis and scope
 
