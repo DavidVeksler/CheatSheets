@@ -8,7 +8,7 @@
 #
 # Flow: preflight (clean tree, token) -> local contract suite (npm run test:forms;
 #   no email leaves the machine) -> site not routed yet: deploy, upload a `preview`
-#   version and probe its health. Site routed (cut over): confirm, deploy, probe
+#   version and probe its health. Site routed (cut over): deploy, probe
 #   https://cheatsheets.davidveksler.com/subscribe.php?health=1 (the spelling every
 #   site Worker version forwards, so the probe holds whichever deploys first).
 # Never submits a signup: the end-to-end test is one real sign-up by David.
@@ -22,10 +22,10 @@ PREVIEW="https://preview-cheatsheets-davidveksler-com-forms.david-veksler-s-webs
 CF_ENV="$HOME/Projects/.cloudflare.env"
 HEALTHY='{"ok":true,"store":"writable","token_secret":true,"sending_key":true,"notify":true}'
 
-YES=0; SKIP_TESTS=0
+SKIP_TESTS=0
 for arg in "$@"; do
   case "$arg" in
-    --yes|-y) YES=1 ;;
+    --yes|-y) ;;  # accepted no-op: the script never prompts
     --skip-tests) SKIP_TESTS=1 ;;
     *) echo "unknown arg: $arg" >&2; exit 2 ;;
   esac
@@ -78,10 +78,6 @@ if [ "$ROUTED" -eq 0 ]; then
   exit 0
 fi
 
-if [ "$YES" -ne 1 ]; then
-  read -r -p "Deploy the forms Worker behind $PROD/subscribe and /confirm? [y/N] " reply
-  [[ "$reply" =~ ^[Yy]([Ee][Ss])?$ ]] || { echo "Cancelled."; exit 0; }
-fi
 step "Deploy"
 "$W" deploy
 sleep 5

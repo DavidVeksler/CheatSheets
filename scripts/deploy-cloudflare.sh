@@ -5,7 +5,7 @@
 # ~/Projects/cf-static-kit/docs/runbook.md
 #
 # Flow: preflight -> build + gates -> upload a preview version -> parity check
-# against production -> confirm -> promote version + apply routes -> live verify.
+# against production -> promote version + apply routes -> live verify.
 #
 # Before cutover (no "routes" in wrangler.jsonc) the run stops after the parity
 # check: nothing public changes. Cutover = add routes, commit, run with
@@ -34,10 +34,10 @@ CF_ENV="$HOME/Projects/.cloudflare.env"
 CF_KIT="${CF_KIT:-$HOME/Projects/cf-static-kit}"
 UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 
-ASSUME_YES=0; PREVIEW_ONLY=0; FORCE_FULL=0; SKIP_PARITY=0; REDEPLOY=0
+PREVIEW_ONLY=0; FORCE_FULL=0; SKIP_PARITY=0; REDEPLOY=0
 for arg in "$@"; do
   case "$arg" in
-    --yes|-y) ASSUME_YES=1 ;;
+    --yes|-y) ;;  # accepted no-op: the script never prompts
     --preview-only) PREVIEW_ONLY=1 ;;
     --full-parity) FORCE_FULL=1 ;;
     --skip-parity) SKIP_PARITY=1 ;;
@@ -200,14 +200,10 @@ if [ "$PREVIEW_ONLY" -eq 1 ] || [ "$ROUTED" -eq 0 ]; then
   exit 0
 fi
 
-# ---- 5. confirm -------------------------------------------------------------
-if [ "$ASSUME_YES" -ne 1 ]; then
-  step "Deployment plan"
-  printf '  Site:    %s\n  Target:  %s\n  Commit:  %s\n  Version: %s\n  Preview: %s\n  Parity:  %s\n' \
-    "$SITE" "$PROD_URL" "$SHA" "$VERSION_ID" "$PREVIEW_URL" "$PARITY"
-  read -r -p "Deploy to production? [y/N] " reply
-  [[ "$reply" =~ ^[Yy]([Ee][Ss])?$ ]] || { echo "Cancelled. Production is unchanged."; exit 0; }
-fi
+# ---- 5. deployment plan (no prompt: the go-ahead is the order to run this) --
+step "Deployment plan"
+printf '  Site:    %s\n  Target:  %s\n  Commit:  %s\n  Version: %s\n  Preview: %s\n  Parity:  %s\n' \
+  "$SITE" "$PROD_URL" "$SHA" "$VERSION_ID" "$PREVIEW_URL" "$PARITY"
 
 # ---- 6. promote + routes ------------------------------------------------------
 step "Promote version and apply routes"
